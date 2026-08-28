@@ -111,6 +111,8 @@ const navItems = computed(() => {
     { name: '🕸️ AI图谱', icon: icons.skill, route: '/knowledge-graph', key: 'knowledge-graph', subjectClass: 'nav-subject-3' },
     { name: '📖 知识库', icon: icons.knowledge, route: '/knowledge-base', key: 'knowledge-base', subjectClass: 'nav-subject-2' },
     { name: '🔍 错题复盘', icon: icons.search, route: '/review', key: 'review', subjectClass: '' },
+    { name: '📕 错题本', icon: icons.search, route: '/wrong-questions', key: 'wrong-questions', subjectClass: '' },
+    { name: '📅 每日计划', icon: icons.dashboard, route: '/daily-plan', key: 'daily-plan', subjectClass: '' },
     { name: '🏆 成果展示', icon: icons.palette, route: '/showcase', key: 'showcase', subjectClass: '' },
     { name: '🎖️ 成就', icon: icons.target, route: '/achievements', key: 'achievements', subjectClass: '' },
     { name: '👤 我的', icon: icons.user, route: '/profile', key: 'profile', subjectClass: '' },
@@ -137,6 +139,8 @@ const activeKey = computed(() => {
   if (path.startsWith('/practice')) return 'practice'
   if (path.startsWith('/assessment')) return 'assessment'
   if (path.startsWith('/review')) return 'review'
+  if (path.startsWith('/wrong-questions')) return 'wrong-questions'
+  if (path.startsWith('/daily-plan')) return 'daily-plan'
   if (path.startsWith('/knowledge-graph')) return 'knowledge-graph'
   if (path.startsWith('/knowledge-base')) return 'knowledge-base'
   if (path.startsWith('/knowledge')) return 'knowledge'

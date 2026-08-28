@@ -118,6 +118,16 @@ const router = createRouter({
       component: () => import('@/views/AchievementView.vue'),
     },
     {
+      path: '/wrong-questions',
+      name: 'wrong-questions',
+      component: () => import('@/views/WrongQuestionsView.vue'),
+    },
+    {
+      path: '/daily-plan',
+      name: 'daily-plan',
+      component: () => import('@/views/DailyPlanView.vue'),
+    },
+    {
       path: '/review',
       name: 'review',
       component: () => import('@/views/ReviewView.vue'),

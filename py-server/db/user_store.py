@@ -105,6 +105,36 @@ def _init_schema(conn: sqlite3.Connection):
         score REAL NOT NULL DEFAULT 0,
         submitted_at TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS user_wrong_questions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        question_id TEXT NOT NULL,
+        question_json TEXT NOT NULL DEFAULT '{}',
+        subject TEXT NOT NULL DEFAULT '',
+        chapter TEXT NOT NULL DEFAULT '',
+        knowledge_point TEXT NOT NULL DEFAULT '',
+        wrong_answer TEXT NOT NULL DEFAULT '',
+        correct_answer TEXT NOT NULL DEFAULT '',
+        error_type TEXT NOT NULL DEFAULT 'concept',
+        wrong_count INTEGER NOT NULL DEFAULT 1,
+        mastered INTEGER NOT NULL DEFAULT 0,
+        last_wrong_at TEXT NOT NULL,
+        first_wrong_at TEXT NOT NULL,
+        UNIQUE(user_id, question_id)
+    );
+    CREATE TABLE IF NOT EXISTS user_daily_plans (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        plan_date TEXT NOT NULL,
+        tasks_json TEXT NOT NULL DEFAULT '[]',
+        total_tasks INTEGER NOT NULL DEFAULT 0,
+        completed_tasks INTEGER NOT NULL DEFAULT 0,
+        target_exam_date TEXT NOT NULL DEFAULT '',
+        target_score INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        UNIQUE(user_id, plan_date)
+    );
     CREATE TABLE IF NOT EXISTS learning_resources (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         owner_user_id TEXT NOT NULL,
@@ -127,6 +157,10 @@ def _init_schema(conn: sqlite3.Connection):
     CREATE INDEX IF NOT EXISTS idx_assignment_owner ON assignments(created_by);
     CREATE INDEX IF NOT EXISTS idx_submission_assignment ON assignment_submissions(assignment_id);
     CREATE INDEX IF NOT EXISTS idx_submission_user ON assignment_submissions(user_id);
+    CREATE INDEX IF NOT EXISTS idx_wrong_user ON user_wrong_questions(user_id);
+    CREATE INDEX IF NOT EXISTS idx_wrong_subject ON user_wrong_questions(subject);
+    CREATE INDEX IF NOT EXISTS idx_wrong_mastered ON user_wrong_questions(user_id, mastered);
+    CREATE INDEX IF NOT EXISTS idx_plan_user_date ON user_daily_plans(user_id, plan_date);
     """)
     conn.commit()
 
@@ -731,3 +765,320 @@ def delete_learning_resource(resource_id: int, owner_user_id: str) -> bool:
         )
         conn.commit()
     return cursor.rowcount > 0
+
+
+# ── 错题本功能 ─────────────────────────────────────────────
+def add_wrong_question(user_id: str, question: dict, wrong_answer: str, error_type: str = "concept") -> dict:
+    """添加错题，已存在则错误次数+1"""
+    conn = _get_conn()
+    now = _now()
+    qid = question.get("id", str(hash(json.dumps(question, ensure_ascii=False))))
+    subject = question.get("subject", "")
+    chapter = question.get("chapter", "")
+    knowledge_point = question.get("knowledge_point", question.get("kp", ""))
+    correct_answer = question.get("answer", question.get("correct_answer", ""))
+    
+    with _lock:
+        existing = conn.execute(
+            "SELECT id, wrong_count FROM user_wrong_questions WHERE user_id=? AND question_id=?",
+            (user_id, qid)
+        ).fetchone()
+        
+        if existing:
+            conn.execute(
+                "UPDATE user_wrong_questions SET wrong_count=wrong_count+1, last_wrong_at=?, wrong_answer=?, error_type=?, mastered=0 WHERE id=?",
+                (now, wrong_answer, error_type, existing["id"])
+            )
+            wid = existing["id"]
+        else:
+            cursor = conn.execute(
+                """INSERT INTO user_wrong_questions 
+                (user_id, question_id, question_json, subject, chapter, knowledge_point, wrong_answer, correct_answer, error_type, wrong_count, last_wrong_at, first_wrong_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)""",
+                (user_id, qid, json.dumps(question, ensure_ascii=False), subject, chapter, knowledge_point, wrong_answer, correct_answer, error_type, now, now)
+            )
+            wid = cursor.lastrowid
+        conn.commit()
+    
+    return get_wrong_question(wid)
+
+
+def get_wrong_question(qid: int) -> Optional[dict]:
+    """获取单条错题详情"""
+    conn = _get_conn()
+    with _lock:
+        row = conn.execute("SELECT * FROM user_wrong_questions WHERE id=?", (qid,)).fetchone()
+    if not row:
+        return None
+    try:
+        question = json.loads(row["question_json"])
+    except Exception:
+        question = {}
+    return {
+        "id": row["id"],
+        "question_id": row["question_id"],
+        "question": question,
+        "subject": row["subject"],
+        "chapter": row["chapter"],
+        "knowledge_point": row["knowledge_point"],
+        "wrong_answer": row["wrong_answer"],
+        "correct_answer": row["correct_answer"],
+        "error_type": row["error_type"],
+        "wrong_count": row["wrong_count"],
+        "mastered": bool(row["mastered"]),
+        "last_wrong_at": row["last_wrong_at"],
+        "first_wrong_at": row["first_wrong_at"],
+    }
+
+
+def list_wrong_questions(user_id: str, subject: str = None, mastered: bool = None, page: int = 1, page_size: int = 20) -> dict:
+    """获取用户错题列表"""
+    conn = _get_conn()
+    offset = (page - 1) * page_size
+    query = "SELECT id FROM user_wrong_questions WHERE user_id=?"
+    params = [user_id]
+    
+    if subject:
+        query += " AND subject=?"
+        params.append(subject)
+    if mastered is not None:
+        query += " AND mastered=?"
+        params.append(1 if mastered else 0)
+    
+    count_query = query.replace("SELECT id", "SELECT COUNT(*) as total")
+    query += " ORDER BY last_wrong_at DESC LIMIT ? OFFSET ?"
+    params.extend([page_size, offset])
+    
+    with _lock:
+        total = conn.execute(count_query, params[:-2]).fetchone()["total"]
+        rows = conn.execute(query, params).fetchall()
+    
+    items = [get_wrong_question(r["id"]) for r in rows]
+    return {
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "items": items,
+    }
+
+
+def mark_wrong_question_mastered(qid: int, user_id: str, mastered: bool = True) -> bool:
+    """标记错题已掌握/未掌握"""
+    conn = _get_conn()
+    with _lock:
+        cursor = conn.execute(
+            "UPDATE user_wrong_questions SET mastered=? WHERE id=? AND user_id=?",
+            (1 if mastered else 0, qid, user_id)
+        )
+        conn.commit()
+        return cursor.rowcount > 0
+
+
+def delete_wrong_question(qid: int, user_id: str) -> bool:
+    """删除错题"""
+    conn = _get_conn()
+    with _lock:
+        cursor = conn.execute(
+            "DELETE FROM user_wrong_questions WHERE id=? AND user_id=?",
+            (qid, user_id)
+        )
+        conn.commit()
+        return cursor.rowcount > 0
+
+
+def get_wrong_question_stats(user_id: str) -> dict:
+    """获取错题统计信息"""
+    conn = _get_conn()
+    with _lock:
+        total = conn.execute("SELECT COUNT(*) as cnt FROM user_wrong_questions WHERE user_id=?", (user_id,)).fetchone()["cnt"]
+        mastered = conn.execute("SELECT COUNT(*) as cnt FROM user_wrong_questions WHERE user_id=? AND mastered=1", (user_id,)).fetchone()["cnt"]
+        subject_stats = conn.execute(
+            "SELECT subject, COUNT(*) as cnt, SUM(mastered) as mastered_cnt FROM user_wrong_questions WHERE user_id=? GROUP BY subject",
+            (user_id,)
+        ).fetchall()
+        error_type_stats = conn.execute(
+            "SELECT error_type, COUNT(*) as cnt FROM user_wrong_questions WHERE user_id=? GROUP BY error_type",
+            (user_id,)
+        ).fetchall()
+    
+    return {
+        "total": total,
+        "mastered": mastered,
+        "unmastered": total - mastered,
+        "mastery_rate": round(mastered / total * 100, 1) if total > 0 else 0,
+        "subject_distribution": [{"subject": r["subject"], "count": r["cnt"], "mastered": r["mastered_cnt"]} for r in subject_stats],
+        "error_type_distribution": [{"type": r["error_type"], "count": r["cnt"]} for r in error_type_stats],
+    }
+
+
+# ── 每日计划功能 ─────────────────────────────────────────────
+def _generate_default_daily_tasks(user_id: str) -> list:
+    """生成默认每日学习任务"""
+    base_tasks = [
+        {"id": "review_wrong", "type": "wrong_review", "title": "复习昨日错题", "subject": "综合", "chapter": "", "progress": 0, "completed": False, "estimated_minutes": 30},
+        {"id": "ds_chapter", "type": "study", "title": "数据结构知识点学习", "subject": "数据结构", "chapter": "", "progress": 0, "completed": False, "estimated_minutes": 60},
+        {"id": "co_chapter", "type": "study", "title": "计算机组成原理知识点学习", "subject": "计算机组成原理", "chapter": "", "progress": 0, "completed": False, "estimated_minutes": 60},
+        {"id": "os_chapter", "type": "study", "title": "操作系统知识点学习", "subject": "操作系统", "chapter": "", "progress": 0, "completed": False, "estimated_minutes": 60},
+        {"id": "cn_chapter", "type": "study", "title": "计算机网络知识点学习", "subject": "计算机网络", "chapter": "", "progress": 0, "completed": False, "estimated_minutes": 60},
+        {"id": "practice", "type": "practice", "title": "对应章节习题练习", "subject": "综合", "chapter": "", "progress": 0, "completed": False, "estimated_minutes": 90},
+        {"id": "summary", "type": "summary", "title": "今日知识点总结+笔记整理", "subject": "综合", "chapter": "", "progress": 0, "completed": False, "estimated_minutes": 30},
+    ]
+    return base_tasks
+
+
+def get_or_create_daily_plan(user_id: str, plan_date: str = None, target_exam_date: str = None, target_score: int = None) -> dict:
+    """获取或创建指定日期的学习计划"""
+    from datetime import datetime
+    conn = _get_conn()
+    now = _now()
+    if not plan_date:
+        plan_date = datetime.now().strftime("%Y-%m-%d")
+    
+    with _lock:
+        existing = conn.execute(
+            "SELECT * FROM user_daily_plans WHERE user_id=? AND plan_date=?",
+            (user_id, plan_date)
+        ).fetchone()
+        
+        if existing:
+            try:
+                tasks = json.loads(existing["tasks_json"])
+            except Exception:
+                tasks = []
+            return {
+                "id": existing["id"],
+                "plan_date": existing["plan_date"],
+                "tasks": tasks,
+                "total_tasks": existing["total_tasks"],
+                "completed_tasks": existing["completed_tasks"],
+                "completion_rate": round(existing["completed_tasks"] / existing["total_tasks"] * 100, 1) if existing["total_tasks"] > 0 else 0,
+                "target_exam_date": existing["target_exam_date"],
+                "target_score": existing["target_score"],
+                "created_at": existing["created_at"],
+                "updated_at": existing["updated_at"],
+            }
+        
+        tasks = _generate_default_daily_tasks(user_id)
+        total = len(tasks)
+        completed = 0
+        cursor = conn.execute(
+            """INSERT INTO user_daily_plans 
+            (user_id, plan_date, tasks_json, total_tasks, completed_tasks, target_exam_date, target_score, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (user_id, plan_date, json.dumps(tasks, ensure_ascii=False), total, completed, target_exam_date or "", target_score or 0, now, now)
+        )
+        conn.commit()
+        pid = cursor.lastrowid
+    
+    row = conn.execute("SELECT * FROM user_daily_plans WHERE id=?", (pid,)).fetchone()
+    try:
+        tasks = json.loads(row["tasks_json"])
+    except Exception:
+        tasks = []
+    return {
+        "id": row["id"],
+        "plan_date": row["plan_date"],
+        "tasks": tasks,
+        "total_tasks": row["total_tasks"],
+        "completed_tasks": row["completed_tasks"],
+        "completion_rate": round(row["completed_tasks"] / row["total_tasks"] * 100, 1) if row["total_tasks"] > 0 else 0,
+        "target_exam_date": row["target_exam_date"],
+        "target_score": row["target_score"],
+        "created_at": row["created_at"],
+        "updated_at": row["updated_at"],
+    }
+
+
+def update_daily_plan_task(pid: int, user_id: str, task_id: str, completed: bool = None, progress: int = None) -> Optional[dict]:
+    """更新计划中任务状态"""
+    conn = _get_conn()
+    now = _now()
+    with _lock:
+        row = conn.execute("SELECT * FROM user_daily_plans WHERE id=? AND user_id=?", (pid, user_id)).fetchone()
+        if not row:
+            return None
+        try:
+            tasks = json.loads(row["tasks_json"])
+        except Exception:
+            tasks = []
+        
+        found = False
+        completed_count = 0
+        for task in tasks:
+            if task["id"] == task_id:
+                found = True
+                if completed is not None:
+                    task["completed"] = completed
+                    task["progress"] = 100 if completed else progress or task.get("progress", 0)
+                if progress is not None and completed is None:
+                    task["progress"] = min(100, max(0, progress))
+                    if task["progress"] >= 100:
+                        task["completed"] = True
+            if task.get("completed", False):
+                completed_count += 1
+        
+        if not found:
+            return None
+        
+        conn.execute(
+            "UPDATE user_daily_plans SET tasks_json=?, completed_tasks=?, updated_at=? WHERE id=?",
+            (json.dumps(tasks, ensure_ascii=False), completed_count, now, pid)
+        )
+        conn.commit()
+    
+    row = conn.execute("SELECT * FROM user_daily_plans WHERE id=?", (pid,)).fetchone()
+    try:
+        tasks = json.loads(row["tasks_json"])
+    except Exception:
+        tasks = []
+    return {
+        "id": row["id"],
+        "plan_date": row["plan_date"],
+        "tasks": tasks,
+        "total_tasks": row["total_tasks"],
+        "completed_tasks": row["completed_tasks"],
+        "completion_rate": round(row["completed_tasks"] / row["total_tasks"] * 100, 1) if row["total_tasks"] > 0 else 0,
+        "target_exam_date": row["target_exam_date"],
+        "target_score": row["target_score"],
+        "created_at": row["created_at"],
+        "updated_at": row["updated_at"],
+    }
+
+
+def list_daily_plans(user_id: str, start_date: str = None, end_date: str = None, limit: int = 30) -> list:
+    """获取用户一段时间的计划列表"""
+    conn = _get_conn()
+    query = "SELECT id FROM user_daily_plans WHERE user_id=?"
+    params = [user_id]
+    
+    if start_date:
+        query += " AND plan_date >= ?"
+        params.append(start_date)
+    if end_date:
+        query += " AND plan_date <= ?"
+        params.append(end_date)
+    
+    query += " ORDER BY plan_date DESC LIMIT ?"
+    params.append(limit)
+    
+    with _lock:
+        rows = conn.execute(query, params).fetchall()
+    
+    result = []
+    for r in rows:
+        row = conn.execute("SELECT * FROM user_daily_plans WHERE id=?", (r["id"],)).fetchone()
+        try:
+            tasks = json.loads(row["tasks_json"])
+        except Exception:
+            tasks = []
+        result.append({
+            "id": row["id"],
+            "plan_date": row["plan_date"],
+            "tasks": tasks,
+            "total_tasks": row["total_tasks"],
+            "completed_tasks": row["completed_tasks"],
+            "completion_rate": round(row["completed_tasks"] / row["total_tasks"] * 100, 1) if row["total_tasks"] > 0 else 0,
+            "target_exam_date": row["target_exam_date"],
+            "target_score": row["target_score"],
+        })
+    return result

@@ -424,6 +424,7 @@ def _apply_env_overrides(config: dict) -> None:
         "DEEPSEEK_MODEL": ("deepseek", "model"),
         "XF_API_KEY": ("xfyun", "api_key"),
         "XF_APP_ID": ("xfyun", "app_id"),
+        "XF_APPID": ("xfyun", "app_id"),  # 讯飞控制台标准命名别名（README 用 XF_APP_ID，二者等价）
         "XF_API_SECRET": ("xfyun", "api_secret"),
         "XF_API_PASSWORD": ("xfyun", "api_password"),
         "XF_SEARCH_PASSWORD": ("xfyun", "search_password"),

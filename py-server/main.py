@@ -66,6 +66,8 @@ from api import (
     achievement_router,
     resource_router,
     memory_router,
+    wrong_questions_router,
+    daily_plan_router,
 )
 
 # 注：结构化日志已在模块导入期由 setup_structured_logging() 启用（D11），
@@ -596,6 +598,8 @@ _all_routers = [
     achievement_router,
     resource_router,
     memory_router,
+    wrong_questions_router,
+    daily_plan_router,
 ]
 
 api_router = APIRouter(prefix="/api")

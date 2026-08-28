@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from models import QuizSubmitRequest, QuizSubmitResponse
 from shared.auth import get_current_user
 from shared.ratelimit import require_llm_quota
-from db.user_store import save_profile, get_profile
+from db.user_store import save_profile, get_profile, add_wrong_question
 from db.llm_provider import LLMProvider
 from engines.quiz_engine import STEP_QUESTIONS, error_analyzer, weak_point_tracker, StepResult, QuestionStep
 
@@ -119,6 +119,18 @@ async def quiz_submit(req: QuizSubmitRequest, user: dict = Depends(get_current_u
         )
     except Exception as e:
         logger.debug(f"三层记忆回写失败(忽略): {e}")
+
+    # 自动错题本：答错的题目自动加入错题本
+    try:
+        for r in req.records:
+            if not r.correct:
+                q_dict = r.model_dump()
+                add_wrong_question(
+                    user_id, q_dict, r.user_answer,
+                    error_type="quiz_wrong",
+                )
+    except Exception as e:
+        logger.debug(f"错题本自动入库失败(忽略): {e}")
 
     # LLM 驱动的画像智能更新（补充启发式规则的不足）
     llm_updated = False

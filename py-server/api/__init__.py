@@ -36,6 +36,8 @@ from api.knowledge_base import router as knowledge_base_router
 from api.achievement import router as achievement_router
 from api.resource import router as resource_router
 from api.memory import router as memory_router
+from api.wrong_questions import router as wrong_questions_router
+from api.daily_plan import router as daily_plan_router
 
 __all__ = [
     "chat_router", "profile_router", "quiz_router", "rag_router",
@@ -56,4 +58,7 @@ __all__ = [
     "knowledge_base_router",
     "achievement_router",
     "resource_router",
+    "memory_router",
+    "wrong_questions_router",
+    "daily_plan_router",
 ]
