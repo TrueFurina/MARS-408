@@ -1,0 +1,15 @@
+knowledge_point chunks: 739
+knowledge_point unique subjects: 31
+knowledge_point unique texts: 739
+knowledge_point unique (chapter,subject): 350
+
+=== 查找 KG 数据文件 ===
+   .\agents\kg_dag.py
+   .\experiments\results\kg_dag_probe.txt
+   .\experiments\results\kg_full_probe.txt
+   .\experiments\results\kg_probe.txt
+   .\tests\test_knowledge_graph.py
+(查找完成)
+
+=== teaching_rules 全部属性 ===
+['_agent_affinities', '_build_408_dependencies', '_build_agent_affinities', '_dependencies', '_get_top_weighted', '_prioritize_weak_topics', '_review_order', '_topological_sort', 'get_cross_subject_prerequisites', 'get_difficulty', 'get_exam_weight', 'get_prerequisites', 'get_stats', 'prioritize_by_profile', 'suggest_agent_assignment', 'validate_schedule']

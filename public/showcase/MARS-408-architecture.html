@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MARS-408 系统架构图 · Excalidraw 手绘风格</title>
+<style>
+  :root{
+    --ink:#2b2b2b;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:#fff;color:var(--ink);
+    font-family:"Comic Sans MS","Segoe Print","Bradley Hand","PingFang SC","Microsoft YaHei",cursive,sans-serif;}
+  header{padding:16px 26px 6px;}
+  h1{font-size:23px;margin:0;letter-spacing:.5px;}
+  .sub{font-size:13px;color:#888;margin-top:5px;}
+  #wrap{position:relative;width:100%;max-width:1700px;margin:0 auto;padding:0 14px 36px;}
+  svg{width:100%;height:auto;display:block;}
+  .node{cursor:pointer;}
+  .edge{transition:opacity .15s ease;}
+  body.hovering .node{opacity:.22;transition:opacity .15s ease;}
+  body.hovering .edge{opacity:.06;transition:opacity .15s ease;}
+  body.hovering .node.hl{opacity:1;}
+  body.hovering .edge.hl{opacity:1;}
+  .legend{position:absolute;top:8px;right:24px;background:#fff;border:2px solid #cfcfcf;
+    border-radius:16px 9px 15px 7px;padding:11px 15px;box-shadow:2px 3px 0 rgba(0,0,0,.06);font-size:13px;line-height:1.7;}
+  .legend .ttl{font-weight:bold;font-size:13px;margin-bottom:3px;color:#555;}
+  .chip{display:inline-block;width:14px;height:14px;border:2px solid;border-radius:3px;vertical-align:-2px;margin-right:6px;}
+  .note{font-size:12px;color:#999;margin-top:10px;padding-left:4px;}
+  #err{color:#c0392b;font-size:13px;padding:10px 26px;}
+</style>
+</head>
+<body>
+<header>
+  <h1>MARS-408 系统架构图</h1>
+  <div class="sub">Excalidraw 手绘风格 · 真实系统（9 节点 LangGraph + FastAPI + FrugalRAG/GOMARL）· 悬停任意组件高亮其连接</div>
+</header>
+<div id="wrap">
+  <svg id="canvas" viewBox="0 0 1700 880" preserveAspectRatio="xMidYMid meet" role="img" aria-label="MARS-408 架构图">
+    <defs>
+      <pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse">
+        <path d="M 28 0 L 0 0 0 28" fill="none" stroke="#ededed" stroke-width="1"/>
+      </pattern>
+      <pattern id="gridBold" width="140" height="140" patternUnits="userSpaceOnUse">
+        <path d="M 140 0 L 0 0 0 140" fill="none" stroke="#e3e3e3" stroke-width="1.2"/>
+      </pattern>
+      <filter id="ds" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="2" dy="3" stdDeviation="2.2" flood-color="#000" flood-opacity="0.12"/>
+      </filter>
+    </defs>
+    <rect x="0" y="0" width="1700" height="880" fill="#ffffff"/>
+    <rect x="0" y="0" width="1700" height="880" fill="url(#grid)"/>
+    <rect x="0" y="0" width="1700" height="880" fill="url(#gridBold)"/>
+    <g id="edges"></g>
+    <g id="nodes"></g>
+  </svg>
+  <div class="legend" id="legend" aria-hidden="true"><div class="ttl">颜色图例</div></div>
+  <div class="note">提示：鼠标移到任意组件上，系统会高亮它所有的入站 / 出站连接（其余淡出）。灰色虚线为重试 / 降级 / 独立调用等条件边。</div>
+</div>
+
+<script>
+const ARCH_DATA = {"layers": {"client": {"stroke": "#9A9A9A", "fill": "#EFEFEF", "label": "客户端 / 外部"}, "api": {"stroke": "#2D8CC0", "fill": "#D8ECF6", "label": "API 网关层"}, "agent": {"stroke": "#6D5BD0", "fill": "#ECE9FB", "label": "多智能体编排"}, "engine": {"stroke": "#0E9F9A", "fill": "#D6F5F3", "label": "AI 引擎"}, "data": {"stroke": "#2FA37A", "fill": "#D6F0E4", "label": "数据层"}, "llm": {"stroke": "#7A5AF8", "fill": "#EFE9FF", "label": "外部 LLM"}}, "nodes": [{"id": "vue", "name": "Vue 3 SPA", "sub": "src/ 前端", "x": 40, "y": 70, "w": 250, "h": 64, "layer": "client", "dashed": false, "big": true}, {"id": "vite", "name": "Vite Dev", "sub": "5173 → /api :8002", "x": 40, "y": 160, "w": 250, "h": 52, "layer": "client", "dashed": false, "big": false}, {"id": "tutor", "name": "Tutor 智能答疑", "sub": "独立 Agent", "x": 40, "y": 250, "w": 250, "h": 54, "layer": "agent", "dashed": true, "big": false}, {"id": "fastapi", "name": "FastAPI main.py", "sub": "25 routers / ~121 APIs", "x": 360, "y": 60, "w": 270, "h": 72, "layer": "api", "dashed": false, "big": true}, {"id": "auth", "name": "JWT 认证", "sub": "shared/auth.py", "x": 360, "y": 160, "w": 270, "h": 52, "layer": "api", "dashed": false, "big": false}, {"id": "err", "name": "全局错误处理", "sub": "shared/errors.py", "x": 360, "y": 230, "w": 270, "h": 52, "layer": "api", "dashed": false, "big": false}, {"id": "co", "name": "coordinator", "sub": "全局协调", "x": 700, "y": 50, "w": 250, "h": 58, "layer": "agent", "dashed": false, "big": false}, {"id": "di", "name": "diagnostician", "sub": "学情诊断", "x": 700, "y": 124, "w": 250, "h": 58, "layer": "agent", "dashed": false, "big": false}, {"id": "pl", "name": "planner", "sub": "任务规划", "x": 700, "y": 198, "w": 250, "h": 58, "layer": "agent", "dashed": false, "big": false}, {"id": "re", "name": "retriever", "sub": "检索优化", "x": 700, "y": 272, "w": 250, "h": 58, "layer": "agent", "dashed": false, "big": false}, {"id": "gc", "name": "generator_cluster", "sub": "7 并行子 Agent", "x": 700, "y": 346, "w": 250, "h": 66, "layer": "agent", "dashed": false, "big": true}, {"id": "as", "name": "assessor", "sub": "评估反馈", "x": 700, "y": 420, "w": 250, "h": 58, "layer": "agent", "dashed": false, "big": false}, {"id": "cr", "name": "critic", "sub": "质量校验 · GOMARL", "x": 700, "y": 494, "w": 250, "h": 58, "layer": "agent", "dashed": false, "big": false}, {"id": "ec", "name": "evidence_check", "sub": "证据冲突检测", "x": 700, "y": 568, "w": 250, "h": 58, "layer": "agent", "dashed": false, "big": false}, {"id": "pp", "name": "path_planner", "sub": "路径规划", "x": 700, "y": 642, "w": 250, "h": 58, "layer": "agent", "dashed": false, "big": false}, {"id": "end", "name": "END", "sub": "", "x": 700, "y": 708, "w": 250, "h": 44, "layer": "client", "dashed": false, "big": false}, {"id": "frugal", "name": "FrugalRAG", "sub": "E5 + BM25 + 个性化重排", "x": 1080, "y": 160, "w": 260, "h": 74, "layer": "engine", "dashed": false, "big": true}, {"id": "gomarl", "name": "GOMARL", "sub": "NeuralMixer 共识融合", "x": 1080, "y": 320, "w": 260, "h": 74, "layer": "engine", "dashed": false, "big": true}, {"id": "milvus", "name": "Milvus / InMemory", "sub": "向量库 (开发回退)", "x": 1400, "y": 50, "w": 270, "h": 58, "layer": "data", "dashed": false, "big": false}, {"id": "e5", "name": "E5 Embedder", "sub": "E5-base-v2 768d", "x": 1400, "y": 124, "w": 270, "h": 50, "layer": "data", "dashed": false, "big": false}, {"id": "pg", "name": "PostgreSQL / Redis", "sub": "缺失 → SQLite 回退", "x": 1400, "y": 190, "w": 270, "h": 58, "layer": "data", "dashed": false, "big": false}, {"id": "x2", "name": "讯飞星火 X2", "sub": "主通道", "x": 1400, "y": 320, "w": 270, "h": 54, "layer": "llm", "dashed": false, "big": false}, {"id": "deepseek", "name": "DeepSeek", "sub": "降级通道", "x": 1400, "y": 390, "w": 270, "h": 54, "layer": "llm", "dashed": false, "big": false}, {"id": "xfyun", "name": "讯飞 10 能力", "sub": "xfyun_services", "x": 1400, "y": 470, "w": 270, "h": 64, "layer": "llm", "dashed": false, "big": false}], "edges": [["vue", "vite", "构建", false], ["vite", "fastapi", "/api 代理", false], ["fastapi", "auth", "鉴权", false], ["fastapi", "err", "异常", false], ["fastapi", "co", "agent_graph", false], ["fastapi", "xfyun", "10 能力", false], ["fastapi", "pg", "持久化", false], ["co", "di", "", false], ["di", "pl", "", false], ["pl", "re", "", false], ["re", "gc", "", false], ["gc", "as", "", false], ["as", "cr", "", false], ["cr", "ec", "", false], ["ec", "pp", "", false], ["pp", "end", "", false], ["re", "pl", "空·重试≤2", true], ["cr", "re", "改进·重试≤2", true], ["cr", "pp", "耗尽·降级", true], ["re", "frugal", "检索", false], ["cr", "gomarl", "共识", false], ["frugal", "milvus", "向量", false], ["frugal", "e5", "嵌入", false], ["gomarl", "x2", "X2", false], ["gomarl", "deepseek", "降级", false], ["tutor", "fastapi", "智能答疑", true]]};
+(function(){
+  "use strict";
+  var SVGNS="http://www.w3.org/2000/svg";
+  var LAYER=ARCH_DATA.layers, NODES=ARCH_DATA.nodes, EDGES=ARCH_DATA.edges;
+  function el(t,a){var e=document.createElementNS(SVGNS,t);if(a){for(var k in a)e.setAttribute(k,a[k]);}return e;}
+  function jit(a){return (Math.random()*2-1)*a;}
+  function roughLine(x1,y1,x2,y2,amp){
+    var mx=(x1+x2)/2+jit(amp*1.3),my=(y1+y2)/2+jit(amp*1.3);
+    return "M "+(x1+jit(amp)).toFixed(1)+" "+(y1+jit(amp)).toFixed(1)+" Q "+mx.toFixed(1)+" "+my.toFixed(1)+" "+(x2+jit(amp)).toFixed(1)+" "+(y2+jit(amp)).toFixed(1);
+  }
+  var byId={}; NODES.forEach(function(n){byId[n.id]=n;});
+  var adj={}; NODES.forEach(function(n){adj[n.id]={};});
+  EDGES.forEach(function(e){adj[e[0]][e[1]]=true;adj[e[1]][e[0]]=true;});
+  var nodesG=document.getElementById("nodes"), edgesG=document.getElementById("edges");
+  var nodeEls={}, edgeEls=[];
+
+  function borderPoint(n,tx,ty,gap){
+    gap=gap||8; var cx=n.x+n.w/2,cy=n.y+n.h/2,dx=tx-cx,dy=ty-cy;
+    var hw=n.w/2+gap,hh=n.h/2+gap;
+    var sx=dx!==0?hw/Math.abs(dx):Infinity, sy=dy!==0?hh/Math.abs(dy):Infinity, s=Math.min(sx,sy);
+    return {x:cx+dx*s,y:cy+dy*s};
+  }
+  function labelW(s){var w=0;for(var i=0;i<s.length;i++){w+=s.charCodeAt(i)>255?12:6.5;}return w+14;}
+
+  // edges
+  EDGES.forEach(function(e){
+    var a=byId[e[0]],b=byId[e[1]],dashed=!!e[3];
+    var ac={x:a.x+a.w/2,y:a.y+a.h/2},bc={x:b.x+b.w/2,y:b.y+b.h/2};
+    var p1=borderPoint(a,bc.x,bc.y),p2=borderPoint(b,ac.x,ac.y);
+    var g=el("g",{"class":"edge"}); g.setAttribute("data-from",e[0]); g.setAttribute("data-to",e[1]);
+    var line=el("path",{d:roughLine(p1.x,p1.y,p2.x,p2.y,1.6),fill:"none",stroke:"#5b5b5b","stroke-width":2,"stroke-linecap":"round"});
+    if(dashed)line.setAttribute("stroke-dasharray","7 6");
+    line.setAttribute("data-base","#5b5b5b"); g.appendChild(line);
+    var ang=Math.atan2(p2.y-p1.y,p2.x-p1.x),spread=0.42*Math.PI,ah=12;
+    var a1=ang+Math.PI-spread,a2=ang-Math.PI+spread;
+    var h1x=p2.x+Math.cos(a1)*ah,h1y=p2.y+Math.sin(a1)*ah,h2x=p2.x+Math.cos(a2)*ah,h2y=p2.y+Math.sin(a2)*ah;
+    var head=el("path",{d:"M "+h1x.toFixed(1)+" "+h1y.toFixed(1)+" L "+p2.x.toFixed(1)+" "+p2.y.toFixed(1)+" L "+h2x.toFixed(1)+" "+h2y.toFixed(1),fill:"none",stroke:"#5b5b5b","stroke-width":2,"stroke-linecap":"round","stroke-linejoin":"round"});
+    if(dashed)head.setAttribute("stroke-dasharray","7 6");
+    head.setAttribute("data-base","#5b5b5b"); g.appendChild(head);
+    if(e[2]){
+      var mx=(p1.x+p2.x)/2,my=(p1.y+p2.y)/2,lw=labelW(e[2]);
+      g.appendChild(el("rect",{x:(mx-lw/2).toFixed(1),y:(my-11).toFixed(1),width:lw.toFixed(1),height:20,rx:5,fill:"#fff",stroke:"#d8d8d8","stroke-width":1}));
+      var t=el("text",{x:mx.toFixed(1),y:(my+4).toFixed(1),"text-anchor":"middle","font-size":11.5,fill:"#444"});
+      t.textContent=e[2]; g.appendChild(t);
+    }
+    edgesG.appendChild(g); edgeEls.push(g);
+  });
+
+  // nodes
+  NODES.forEach(function(n){
+    var L=LAYER[n.layer], g=el("g",{"class":"node"});
+    g.setAttribute("data-id",n.id);
+    g.setAttribute("transform","rotate("+jit(0.9).toFixed(2)+" "+(n.x+n.w/2).toFixed(1)+" "+(n.y+n.h/2).toFixed(1)+")");
+    g.setAttribute("filter","url(#ds)");
+    g.appendChild(el("rect",{x:n.x,y:n.y,width:n.w,height:n.h,rx:10,ry:10,fill:L.fill,stroke:"none"}));
+    var amp=2.3,pts=[[n.x,n.y],[n.x+n.w,n.y],[n.x+n.w,n.y+n.h],[n.x,n.y+n.h]];
+    for(var pass=0;pass<2;pass++){var off=pass===0?0:jit(1.4);
+      for(var i=0;i<4;i++){var A=pts[i],B=pts[(i+1)%4];
+        g.appendChild(el("path",{d:roughLine(A[0]+off,A[1]+off,B[0]+off,B[1]+off,amp),fill:"none",stroke:L.stroke,"stroke-width":pass===0?2.6:1.4,"stroke-linecap":"round",opacity:pass===0?1:0.55,"stroke-dasharray":n.dashed?"6 5":null}));}}
+    var cx=n.x+n.w/2,cy=n.y+n.h/2;
+    var t1=el("text",{x:cx.toFixed(1),y:(cy-4).toFixed(1),"text-anchor":"middle","font-size":n.big?17:15,"font-weight":"bold",fill:"#222"});
+    t1.textContent=n.name; g.appendChild(t1);
+    if(n.sub){var t2=el("text",{x:cx.toFixed(1),y:(cy+16).toFixed(1),"text-anchor":"middle","font-size":11,fill:"#666"});t2.textContent=n.sub;g.appendChild(t2);}
+    g.addEventListener("mouseenter",function(){highlight(n.id);});
+    g.addEventListener("mouseleave",clearHl);
+    nodesG.appendChild(g); nodeEls[n.id]=g;
+  });
+
+  // legend
+  var lg=document.getElementById("legend");
+  Object.keys(LAYER).forEach(function(k){
+    var L=LAYER[k];
+    var row=document.createElement("div");
+    row.innerHTML='<span class="chip" style="border-color:'+L.stroke+';background:'+L.fill+'"></span>'+L.label;
+    lg.appendChild(row);
+  });
+
+  function highlight(id){
+    document.body.classList.add("hovering");
+    for(var nid in nodeEls){if(nid===id||adj[id][nid])nodeEls[nid].classList.add("hl");else nodeEls[nid].classList.add("dim");}
+    edgeEls.forEach(function(g){var f=g.getAttribute("data-from"),t=g.getAttribute("data-to");
+      if(f===id||t===id){g.classList.add("hl");var col=LAYER[byId[f].layer].stroke;
+        g.querySelectorAll("path").forEach(function(p){if(p.getAttribute("stroke-dasharray"))return;p.setAttribute("stroke",col);p.setAttribute("stroke-width","3.3");});
+      }else g.classList.add("dim");});
+  }
+  function clearHl(){
+    document.body.classList.remove("hovering");
+    for(var nid in nodeEls)nodeEls[nid].classList.remove("hl","dim");
+    edgeEls.forEach(function(g){g.classList.remove("hl","dim");
+      g.querySelectorAll("path").forEach(function(p){p.setAttribute("stroke",p.getAttribute("data-base"));p.setAttribute("stroke-width","2");});});
+  }
+})();
+</script>
+</body>
+</html>

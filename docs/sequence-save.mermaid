@@ -1,0 +1,12 @@
+sequenceDiagram
+    participant Frontend as StudyStore
+    participant Backend as SessionsAPI
+
+    Frontend->>Frontend: saveToStorage() — 写 localStorage
+    Frontend->>Frontend: filter conversations with messages.length > 0
+
+    loop 对每个 nonEmpty conversation
+        Frontend->>Backend: POST /api/sessions/save
+        Note right of Frontend: body = {conv_id, title, messages: [{role, content}]}
+        Backend-->>Frontend: {status: "ok", conv_id: "..."}
+    end

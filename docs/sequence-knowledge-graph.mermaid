@@ -1,0 +1,10 @@
+sequenceDiagram
+    participant Frontend as StudyStore
+    participant Backend as SubjectsAPI
+
+    Frontend->>Backend: GET /api/knowledge-graph?subject=transport
+    Backend->>Backend: 从 KNOWLEDGE_GRAPH 过滤 group=5 的 nodes 和关联 edges
+    Backend-->>Frontend: {nodes: [...], edges: [...]}
+    Frontend->>Frontend: 返回 KnowledgeGraphData
+
+    Note over Frontend: 若后端不可用，回退到本地 knowledgeGraph 数据

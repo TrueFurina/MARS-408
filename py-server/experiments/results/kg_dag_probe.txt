@@ -1,0 +1,1 @@
+module attrs: ['GROUP_PREREQS', 'Optional', 'SUBJECT_GROUP_MAP', 'SUBJECT_GROUP_SPAN', 'SUBJECT_KEYWORD_MAP', '_weak_group_for_subject', 'chapter_to_group', 'subject_chapters_in_order', 'topological_sort']

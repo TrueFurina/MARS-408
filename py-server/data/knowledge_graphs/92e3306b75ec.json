@@ -1,0 +1,15 @@
+{
+  "id": "92e3306b75ec",
+  "name": "知识图谱_92e3306b",
+  "subject": "general",
+  "created_at": "2026-08-28T20:45:11.238128",
+  "entities": [
+    {
+      "id": "e1",
+      "name": "导出测试",
+      "type": "concept"
+    }
+  ],
+  "relationships": [],
+  "stats": {}
+}

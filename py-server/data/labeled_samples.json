@@ -1,0 +1,8482 @@
+[
+  {
+    "id": "sft_001",
+    "subject": "computer_network",
+    "query": "TCP三次握手的过程是什么？",
+    "retrieved_contexts": [
+      "TCP三次握手：①客户端→SYN(seq=x)→服务器 ②服务器→SYN+ACK(seq=y,ack=x+1)→客户端 ③客户端→ACK(seq=x+1,ack=y+1)→服务器"
+    ],
+    "label": "TCP三次握手：①客户端发送SYN(seq=x)给服务器 ②服务器回复SYN+ACK(seq=y,ack=x+1)给客户端 ③客户端发送ACK(seq=x+1,ack=y+1)给服务器，连接建立",
+    "quality_score": 9.5,
+    "agent_scores": {
+      "teacher": 9.5,
+      "quizmaster": 8.0,
+      "media_designer": 7.5,
+      "extension": 8.0
+    }
+  },
+  {
+    "id": "sft_002",
+    "subject": "computer_network",
+    "query": "子网掩码255.255.255.0对应的CIDR前缀长度是多少？",
+    "retrieved_contexts": [
+      "CIDR无分类域间路由使用/前缀长度表示。子网掩码中1的个数就是前缀长度。255.255.255.0有24个1。"
+    ],
+    "label": "255.255.255.0的二进制有24个1，因此CIDR前缀长度为/24",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 9.0,
+      "quizmaster": 9.5,
+      "media_designer": 7.0,
+      "extension": 7.5
+    }
+  },
+  {
+    "id": "sft_003",
+    "subject": "computer_network",
+    "query": "CSMA/CD协议的工作原理是什么？",
+    "retrieved_contexts": [
+      "CSMA/CD协议：先听后发、边听边发、冲突停发、随机重发。截断二进制指数退避算法。"
+    ],
+    "label": "CSMA/CD：先听后发（发送前监听信道）、边听边发（发送时检测碰撞）、冲突停发（检测到碰撞立即停止）、随机重发（等待随机时间后重发）。退避算法为截断二进制指数退避。",
+    "quality_score": 8.5,
+    "agent_scores": {
+      "teacher": 8.5,
+      "quizmaster": 7.5,
+      "media_designer": 8.5,
+      "extension": 8.0
+    }
+  },
+  {
+    "id": "sft_004",
+    "subject": "computer_network",
+    "query": "OSI七层模型从下到上分别是什么？",
+    "retrieved_contexts": [
+      "OSI七层模型：物理层→数据链路层→网络层→运输层→会话层→表示层→应用层"
+    ],
+    "label": "OSI七层从下到上：物理层、数据链路层、网络层、运输层、会话层、表示层、应用层",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 9.0,
+      "quizmaster": 9.5,
+      "media_designer": 8.5,
+      "extension": 7.0
+    }
+  },
+  {
+    "id": "sft_005",
+    "subject": "computer_network",
+    "query": "ARP协议的作用是什么？",
+    "retrieved_contexts": [
+      "ARP协议：IP地址→MAC地址的映射。主机广播ARP请求，目标主机单播ARP响应。"
+    ],
+    "label": "ARP（地址解析协议）将IP地址映射为MAC地址。主机广播ARP请求包含目标IP，对应主机单播回复ARP响应包含其MAC地址。",
+    "quality_score": 8.5,
+    "agent_scores": {
+      "teacher": 8.5,
+      "quizmaster": 8.0,
+      "media_designer": 7.5,
+      "extension": 8.5
+    }
+  },
+  {
+    "id": "sft_006",
+    "subject": "data_structures",
+    "query": "快速排序的时间复杂度是多少？",
+    "retrieved_contexts": [
+      "快速排序：平均O(n log n)，最坏O(n²)（已排序），不稳定排序。"
+    ],
+    "label": "快速排序平均时间复杂度O(n log n)，最坏情况O(n²)（当数组已排序或逆序时）。空间复杂度O(log n)（递归栈）。是不稳定排序。",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 9.0,
+      "quizmaster": 9.5,
+      "media_designer": 7.0,
+      "extension": 8.0
+    }
+  },
+  {
+    "id": "sft_007",
+    "subject": "data_structures",
+    "query": "什么是哈希冲突？如何解决？",
+    "retrieved_contexts": [
+      "哈希冲突：不同关键字映射到相同哈希地址。解决方法：开放定址法、链地址法、再哈希法。"
+    ],
+    "label": "哈希冲突是不同关键字通过哈希函数计算得到相同地址。解决方法：1.开放定址法（线性探测/二次探测）2.链地址法（拉链法）3.再哈希法。装填因子α越小冲突越少。",
+    "quality_score": 8.5,
+    "agent_scores": {
+      "teacher": 8.5,
+      "quizmaster": 8.0,
+      "media_designer": 8.0,
+      "extension": 8.5
+    }
+  },
+  {
+    "id": "sft_008",
+    "subject": "data_structures",
+    "query": "二叉树的中序遍历顺序是什么？",
+    "retrieved_contexts": [
+      "二叉树遍历：先序（根左右）、中序（左根右）、后序（左右根）。"
+    ],
+    "label": "二叉树中序遍历顺序：左子树→根节点→右子树（左根右）。对BST做中序遍历得到有序序列。",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 9.0,
+      "quizmaster": 9.5,
+      "media_designer": 8.5,
+      "extension": 7.5
+    }
+  },
+  {
+    "id": "sft_009",
+    "subject": "computer_organization",
+    "query": "Cache的三种映射方式是什么？",
+    "retrieved_contexts": [
+      "Cache映射：直接映射、全相联映射、组相联映射。"
+    ],
+    "label": "Cache三种映射方式：1.直接映射（每个块只有一个位置，冲突率高）2.全相联映射（可放在任意位置，硬件代价大）3.组相联映射（折中，每组k块为k路组相联）",
+    "quality_score": 8.5,
+    "agent_scores": {
+      "teacher": 8.5,
+      "quizmaster": 8.0,
+      "media_designer": 8.0,
+      "extension": 8.0
+    }
+  },
+  {
+    "id": "sft_010",
+    "subject": "computer_organization",
+    "query": "补码为什么比原码好？",
+    "retrieved_contexts": [
+      "补码优势：0唯一表示、减法变加法。"
+    ],
+    "label": "补码优势：1.零的唯一表示（原码有+0和-0两种）2.减法可转化为加法运算（简化ALU设计）3.符号位可直接参与运算 4.扩展位数方便",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 9.0,
+      "quizmaster": 8.5,
+      "media_designer": 7.0,
+      "extension": 8.5
+    }
+  },
+  {
+    "id": "sft_011",
+    "subject": "operating_system",
+    "query": "什么是死锁？死锁的四个必要条件是什么？",
+    "retrieved_contexts": [
+      "死锁：两个以上进程因竞争资源而无限等待。必要条件：互斥、请求保持、不可剥夺、循环等待。"
+    ],
+    "label": "死锁是两个或以上进程因竞争资源而互相等待，导致都无法继续执行。四个必要条件：1.互斥条件 2.请求保持条件 3.不可剥夺条件 4.循环等待条件。四个条件必须同时满足才会发生死锁。",
+    "quality_score": 9.5,
+    "agent_scores": {
+      "teacher": 9.5,
+      "quizmaster": 9.0,
+      "media_designer": 8.0,
+      "extension": 9.0
+    }
+  },
+  {
+    "id": "sft_012",
+    "subject": "operating_system",
+    "query": "LRU页面置换算法的原理是什么？",
+    "retrieved_contexts": [
+      "LRU：最近最久未使用。选择最长时间未被访问的页面置换。需要硬件栈支持。"
+    ],
+    "label": "LRU（Least Recently Used）选择最近最长时间未被访问的页面进行置换。基于局部性原理：最近访问的页面近期可能再次访问。实现需硬件支持（栈或计数器），效果接近OPT但开销较大。",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 9.0,
+      "quizmaster": 8.5,
+      "media_designer": 8.0,
+      "extension": 8.5
+    }
+  },
+  {
+    "id": "sft_013",
+    "subject": "operating_system",
+    "query": "进程和线程的区别是什么？",
+    "retrieved_contexts": [
+      "进程是资源分配的基本单位，线程是CPU调度的基本单位。同进程线程共享地址空间。"
+    ],
+    "label": "进程是资源分配的基本单位（拥有独立地址空间），线程是CPU调度的基本单位。同进程的线程共享地址空间和资源（文件、信号处理等），切换开销小。线程独有：线程ID、PC寄存器、栈。",
+    "quality_score": 9.5,
+    "agent_scores": {
+      "teacher": 9.5,
+      "quizmaster": 9.0,
+      "media_designer": 8.5,
+      "extension": 9.0
+    }
+  },
+  {
+    "id": "sft_014",
+    "subject": "operating_system",
+    "query": "PV操作中P和V分别做什么？",
+    "retrieved_contexts": [
+      "P操作：s--; 若s<0进程阻塞。V操作：s++; 若s<=0唤醒一个进程。"
+    ],
+    "label": "P操作（wait）：信号量s减1，若s<0则进程阻塞入等待队列。V操作（signal）：信号量s加1，若s<=0则从等待队列唤醒一个进程。P用于申请资源，V用于释放资源。",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 9.0,
+      "quizmaster": 9.5,
+      "media_designer": 7.5,
+      "extension": 8.0
+    }
+  },
+  {
+    "id": "sft_015",
+    "subject": "computer_network",
+    "query": "TCP和UDP有什么区别？",
+    "retrieved_contexts": [
+      "TCP面向连接、可靠传输、全双工。UDP无连接、不可靠、开销小。"
+    ],
+    "label": "TCP：面向连接、可靠传输、全双工、有流量控制和拥塞控制、头部20字节。UDP：无连接、不可靠、无流量/拥塞控制、头部8字节、适合实时应用（DNS/DHCP/视频流）。",
+    "quality_score": 9.5,
+    "agent_scores": {
+      "teacher": 9.5,
+      "quizmaster": 9.0,
+      "media_designer": 8.5,
+      "extension": 9.0
+    }
+  },
+  {
+    "id": "sft_016",
+    "subject": "computer_network",
+    "query": "DNS解析过程是什么？",
+    "retrieved_contexts": [
+      "DNS：浏览器缓存→系统缓存→hosts→本地DNS→根→顶级→权威→返回IP。端口53，基于UDP。"
+    ],
+    "label": "DNS解析：1.浏览器DNS缓存 2.操作系统DNS缓存 3.hosts文件 4.本地DNS服务器（递归查询）5.根域名服务器（迭代）6.顶级域名服务器 7.权威域名服务器 8.返回IP地址。默认端口53，基于UDP。",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 9.0,
+      "quizmaster": 8.5,
+      "media_designer": 8.0,
+      "extension": 9.0
+    }
+  },
+  {
+    "id": "sft_017",
+    "subject": "data_structures",
+    "query": "什么是B树？B+树和B树有什么区别？",
+    "retrieved_contexts": [
+      "B树：多路搜索树，所有叶子在同一层。B+树：非叶节点只存索引，数据在叶子，叶子用链表连接。"
+    ],
+    "label": "B树是m阶多路平衡搜索树，每个节点最多m个子树。B+树区别：1.非叶节点只存索引不存数据 2.所有数据在叶子节点 3.叶子节点用链表连接（支持范围查询）4.查询稳定（每次到叶子）",
+    "quality_score": 8.5,
+    "agent_scores": {
+      "teacher": 8.5,
+      "quizmaster": 8.0,
+      "media_designer": 8.0,
+      "extension": 8.5
+    }
+  },
+  {
+    "id": "sft_018",
+    "subject": "computer_organization",
+    "query": "什么是指令流水线？有哪些冲突？",
+    "retrieved_contexts": [
+      "五段流水：IF→ID→EX→MEM→WB。冲突：结构冲突、数据冲突、控制冲突。"
+    ],
+    "label": "指令流水线将指令执行分为多个阶段（IF取指→ID译码→EX执行→MEM访存→WB写回）并行处理。三类冲突：1.结构冲突（硬件资源竞争）2.数据冲突（RAW/WAR/WAW数据依赖）3.控制冲突（分支指令改变流水）。",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 9.0,
+      "quizmaster": 8.5,
+      "media_designer": 8.5,
+      "extension": 8.5
+    }
+  },
+  {
+    "id": "sft_019",
+    "subject": "operating_system",
+    "query": "虚拟内存的原理是什么？",
+    "retrieved_contexts": [
+      "虚拟内存：程序部分装入即可运行，大于物理内存。实现：请求分页。页面置换：OPT/FIFO/LRU/Clock。"
+    ],
+    "label": "虚拟内存基于局部性原理，只将当前需要的页面装入物理内存，其余在磁盘。通过页表映射逻辑地址到物理地址，缺页时产生缺页中断从磁盘调入。页面置换算法：OPT(理想)、FIFO(可能Belady异常)、LRU(最近最久未使用)、Clock(近似LRU)。",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 9.0,
+      "quizmaster": 8.5,
+      "media_designer": 8.0,
+      "extension": 9.0
+    }
+  },
+  {
+    "id": "sft_020",
+    "subject": "computer_network",
+    "query": "HTTPS和HTTP的区别是什么？",
+    "retrieved_contexts": [
+      "HTTP端口80无加密。HTTPS=HTTP+SSL/TLS端口443加密传输。"
+    ],
+    "label": "HTTP：明文传输、端口80、无身份认证、无完整性校验。HTTPS=HTTP+SSL/TLS：加密传输、端口443、CA证书身份认证、MAC完整性校验。HTTPS握手协商对称密钥，之后用对称加密通信。",
+    "quality_score": 9.5,
+    "agent_scores": {
+      "teacher": 9.5,
+      "quizmaster": 9.0,
+      "media_designer": 8.5,
+      "extension": 9.5
+    }
+  },
+  {
+    "id": "sft_021",
+    "subject": "computer_network",
+    "query": "TCP拥塞控制的四个算法",
+    "retrieved_contexts": [
+      "慢启动、拥塞避免、快重传、快恢复"
+    ],
+    "label": "慢启动、拥塞避免、快重传、快恢复",
+    "quality_score": 8.2,
+    "agent_scores": {
+      "teacher": 7.6,
+      "quizmaster": 6.7,
+      "media_designer": 7.1,
+      "extension": 7.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_022",
+    "subject": "computer_network",
+    "query": "RIP协议的最大跳数",
+    "retrieved_contexts": [
+      "15跳，16跳表示不可达"
+    ],
+    "label": "15跳，16跳表示不可达",
+    "quality_score": 7.7,
+    "agent_scores": {
+      "teacher": 7.8,
+      "quizmaster": 7.0,
+      "media_designer": 8.5,
+      "extension": 7.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_023",
+    "subject": "computer_network",
+    "query": "OSPF使用的算法",
+    "retrieved_contexts": [
+      "Dijkstra最短路径算法"
+    ],
+    "label": "Dijkstra最短路径算法",
+    "quality_score": 7.6,
+    "agent_scores": {
+      "teacher": 9.3,
+      "quizmaster": 7.3,
+      "media_designer": 6.7,
+      "extension": 7.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_024",
+    "subject": "computer_network",
+    "query": "VLAN的标签格式",
+    "retrieved_contexts": [
+      "802.1Q标签4字节：TPID+优先级+CFI+VID"
+    ],
+    "label": "802.1Q标签4字节：TPID+优先级+CFI+VID",
+    "quality_score": 8.1,
+    "agent_scores": {
+      "teacher": 8.6,
+      "quizmaster": 7.1,
+      "media_designer": 7.7,
+      "extension": 7.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_025",
+    "subject": "computer_network",
+    "query": "IPv6地址长度",
+    "retrieved_contexts": [
+      "128位，8组4位十六进制"
+    ],
+    "label": "128位，8组4位十六进制",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 9.2,
+      "quizmaster": 8.7,
+      "media_designer": 8.1,
+      "extension": 7.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_026",
+    "subject": "computer_network",
+    "query": "DHCP分配IP的四个步骤",
+    "retrieved_contexts": [
+      "DISCOVER→OFFER→REQUEST→ACK"
+    ],
+    "label": "DISCOVER→OFFER→REQUEST→ACK",
+    "quality_score": 9.4,
+    "agent_scores": {
+      "teacher": 8.6,
+      "quizmaster": 7.2,
+      "media_designer": 6.2,
+      "extension": 7.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_027",
+    "subject": "computer_network",
+    "query": "ICMP协议的类型",
+    "retrieved_contexts": [
+      "0回送应答、3目的不可达、8回送请求、11超时"
+    ],
+    "label": "0回送应答、3目的不可达、8回送请求、11超时",
+    "quality_score": 7.2,
+    "agent_scores": {
+      "teacher": 7.7,
+      "quizmaster": 8.5,
+      "media_designer": 8.4,
+      "extension": 6.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_028",
+    "subject": "computer_network",
+    "query": "NAT的作用",
+    "retrieved_contexts": [
+      "将内网私有IP转换为公网IP，解决IPv4地址不足"
+    ],
+    "label": "将内网私有IP转换为公网IP，解决IPv4地址不足",
+    "quality_score": 7.1,
+    "agent_scores": {
+      "teacher": 7.9,
+      "quizmaster": 7.9,
+      "media_designer": 7.6,
+      "extension": 8.1
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_029",
+    "subject": "data_structures",
+    "query": "AVL树的平衡因子",
+    "retrieved_contexts": [
+      "左右子树高度差，绝对值不超过1"
+    ],
+    "label": "左右子树高度差，绝对值不超过1",
+    "quality_score": 8.5,
+    "agent_scores": {
+      "teacher": 7.9,
+      "quizmaster": 8.4,
+      "media_designer": 6.3,
+      "extension": 7.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_030",
+    "subject": "data_structures",
+    "query": "哈夫曼树的WPL",
+    "retrieved_contexts": [
+      "带权路径长度最小，每次合并两个最小权值节点"
+    ],
+    "label": "带权路径长度最小，每次合并两个最小权值节点",
+    "quality_score": 7.8,
+    "agent_scores": {
+      "teacher": 7.5,
+      "quizmaster": 7.7,
+      "media_designer": 6.5,
+      "extension": 7.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_031",
+    "subject": "data_structures",
+    "query": "Dijkstra算法不能处理什么图",
+    "retrieved_contexts": [
+      "不能有负权边"
+    ],
+    "label": "不能有负权边",
+    "quality_score": 7.9,
+    "agent_scores": {
+      "teacher": 7.8,
+      "quizmaster": 7.7,
+      "media_designer": 8.3,
+      "extension": 8.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_032",
+    "subject": "data_structures",
+    "query": "拓扑排序用于什么图",
+    "retrieved_contexts": [
+      "DAG有向无环图"
+    ],
+    "label": "DAG有向无环图",
+    "quality_score": 7.7,
+    "agent_scores": {
+      "teacher": 8.8,
+      "quizmaster": 8.7,
+      "media_designer": 6.5,
+      "extension": 7.1
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_033",
+    "subject": "data_structures",
+    "query": "循环队列队空条件",
+    "retrieved_contexts": [
+      "front==rear"
+    ],
+    "label": "front==rear",
+    "quality_score": 9.4,
+    "agent_scores": {
+      "teacher": 8.3,
+      "quizmaster": 8.8,
+      "media_designer": 6.4,
+      "extension": 6.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_034",
+    "subject": "data_structures",
+    "query": "KMP算法的时间复杂度",
+    "retrieved_contexts": [
+      "O(n+m)，n为主串长度m为模式串长度"
+    ],
+    "label": "O(n+m)，n为主串长度m为模式串长度",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 9.5,
+      "quizmaster": 8.1,
+      "media_designer": 6.5,
+      "extension": 8.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_035",
+    "subject": "computer_organization",
+    "query": "IEEE754单精度浮点数的阶码偏置值",
+    "retrieved_contexts": [
+      "127"
+    ],
+    "label": "127",
+    "quality_score": 7.4,
+    "agent_scores": {
+      "teacher": 7.8,
+      "quizmaster": 7.6,
+      "media_designer": 6.5,
+      "extension": 8.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_036",
+    "subject": "computer_organization",
+    "query": "DMA传输时CPU的作用",
+    "retrieved_contexts": [
+      "仅初始化，数据传输阶段CPU不参与"
+    ],
+    "label": "仅初始化，数据传输阶段CPU不参与",
+    "quality_score": 7.5,
+    "agent_scores": {
+      "teacher": 9.4,
+      "quizmaster": 7.9,
+      "media_designer": 6.3,
+      "extension": 8.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_037",
+    "subject": "computer_organization",
+    "query": "总线仲裁的方式",
+    "retrieved_contexts": [
+      "链式查询、计数器定时查询、独立请求"
+    ],
+    "label": "链式查询、计数器定时查询、独立请求",
+    "quality_score": 8.2,
+    "agent_scores": {
+      "teacher": 7.6,
+      "quizmaster": 8.6,
+      "media_designer": 6.5,
+      "extension": 8.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_038",
+    "subject": "computer_organization",
+    "query": "CISC和RISC的区别",
+    "retrieved_contexts": [
+      "CISC指令多变长微程序控制，RISC指令少定长硬布线"
+    ],
+    "label": "CISC指令多变长微程序控制，RISC指令少定长硬布线",
+    "quality_score": 8.1,
+    "agent_scores": {
+      "teacher": 7.1,
+      "quizmaster": 7.9,
+      "media_designer": 8.4,
+      "extension": 7.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_039",
+    "subject": "operating_system",
+    "query": "银行家算法用于什么",
+    "retrieved_contexts": [
+      "死锁避免，检查分配是否安全"
+    ],
+    "label": "死锁避免，检查分配是否安全",
+    "quality_score": 8.4,
+    "agent_scores": {
+      "teacher": 7.1,
+      "quizmaster": 7.6,
+      "media_designer": 6.9,
+      "extension": 8.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_040",
+    "subject": "operating_system",
+    "query": "分页存储中页表的作用",
+    "retrieved_contexts": [
+      "存储页号到物理块号的映射"
+    ],
+    "label": "存储页号到物理块号的映射",
+    "quality_score": 8.5,
+    "agent_scores": {
+      "teacher": 7.4,
+      "quizmaster": 8.6,
+      "media_designer": 7.3,
+      "extension": 7.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_041",
+    "subject": "operating_system",
+    "query": "多级反馈队列调度的特点",
+    "retrieved_contexts": [
+      "多队列+时间片递增+抢占"
+    ],
+    "label": "多队列+时间片递增+抢占",
+    "quality_score": 7.6,
+    "agent_scores": {
+      "teacher": 8.8,
+      "quizmaster": 9.0,
+      "media_designer": 6.8,
+      "extension": 8.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_042",
+    "subject": "operating_system",
+    "query": "SPOOLing技术的本质",
+    "retrieved_contexts": [
+      "用磁盘模拟独占设备为共享设备"
+    ],
+    "label": "用磁盘模拟独占设备为共享设备",
+    "quality_score": 8.0,
+    "agent_scores": {
+      "teacher": 7.7,
+      "quizmaster": 7.8,
+      "media_designer": 7.8,
+      "extension": 8.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_043",
+    "subject": "computer_network",
+    "query": "TCP拥塞控制的四个算法",
+    "retrieved_contexts": [
+      "慢启动、拥塞避免、快重传、快恢复"
+    ],
+    "label": "慢启动、拥塞避免、快重传、快恢复",
+    "quality_score": 9.5,
+    "agent_scores": {
+      "teacher": 7.5,
+      "quizmaster": 6.9,
+      "media_designer": 6.6,
+      "extension": 7.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_044",
+    "subject": "computer_network",
+    "query": "RIP协议的最大跳数",
+    "retrieved_contexts": [
+      "15跳，16跳表示不可达"
+    ],
+    "label": "15跳，16跳表示不可达",
+    "quality_score": 8.0,
+    "agent_scores": {
+      "teacher": 7.2,
+      "quizmaster": 8.4,
+      "media_designer": 8.2,
+      "extension": 8.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_045",
+    "subject": "computer_network",
+    "query": "OSPF使用的算法",
+    "retrieved_contexts": [
+      "Dijkstra最短路径算法"
+    ],
+    "label": "Dijkstra最短路径算法",
+    "quality_score": 7.6,
+    "agent_scores": {
+      "teacher": 8.3,
+      "quizmaster": 7.8,
+      "media_designer": 7.2,
+      "extension": 8.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_046",
+    "subject": "computer_network",
+    "query": "VLAN的标签格式",
+    "retrieved_contexts": [
+      "802.1Q标签4字节：TPID+优先级+CFI+VID"
+    ],
+    "label": "802.1Q标签4字节：TPID+优先级+CFI+VID",
+    "quality_score": 8.3,
+    "agent_scores": {
+      "teacher": 8.3,
+      "quizmaster": 6.9,
+      "media_designer": 6.5,
+      "extension": 8.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_047",
+    "subject": "computer_network",
+    "query": "IPv6地址长度",
+    "retrieved_contexts": [
+      "128位，8组4位十六进制"
+    ],
+    "label": "128位，8组4位十六进制",
+    "quality_score": 7.9,
+    "agent_scores": {
+      "teacher": 7.1,
+      "quizmaster": 6.7,
+      "media_designer": 6.8,
+      "extension": 8.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_048",
+    "subject": "computer_network",
+    "query": "DHCP分配IP的四个步骤",
+    "retrieved_contexts": [
+      "DISCOVER→OFFER→REQUEST→ACK"
+    ],
+    "label": "DISCOVER→OFFER→REQUEST→ACK",
+    "quality_score": 9.4,
+    "agent_scores": {
+      "teacher": 9.2,
+      "quizmaster": 6.5,
+      "media_designer": 7.1,
+      "extension": 6.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_049",
+    "subject": "computer_network",
+    "query": "ICMP协议的类型",
+    "retrieved_contexts": [
+      "0回送应答、3目的不可达、8回送请求、11超时"
+    ],
+    "label": "0回送应答、3目的不可达、8回送请求、11超时",
+    "quality_score": 7.2,
+    "agent_scores": {
+      "teacher": 7.8,
+      "quizmaster": 7.1,
+      "media_designer": 7.3,
+      "extension": 7.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_050",
+    "subject": "computer_network",
+    "query": "NAT的作用",
+    "retrieved_contexts": [
+      "将内网私有IP转换为公网IP，解决IPv4地址不足"
+    ],
+    "label": "将内网私有IP转换为公网IP，解决IPv4地址不足",
+    "quality_score": 8.9,
+    "agent_scores": {
+      "teacher": 7.1,
+      "quizmaster": 7.5,
+      "media_designer": 6.4,
+      "extension": 8.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_051",
+    "subject": "data_structures",
+    "query": "AVL树的平衡因子",
+    "retrieved_contexts": [
+      "左右子树高度差，绝对值不超过1"
+    ],
+    "label": "左右子树高度差，绝对值不超过1",
+    "quality_score": 7.6,
+    "agent_scores": {
+      "teacher": 9.3,
+      "quizmaster": 8.7,
+      "media_designer": 7.4,
+      "extension": 7.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_052",
+    "subject": "data_structures",
+    "query": "哈夫曼树的WPL",
+    "retrieved_contexts": [
+      "带权路径长度最小，每次合并两个最小权值节点"
+    ],
+    "label": "带权路径长度最小，每次合并两个最小权值节点",
+    "quality_score": 8.1,
+    "agent_scores": {
+      "teacher": 7.5,
+      "quizmaster": 8.6,
+      "media_designer": 7.5,
+      "extension": 8.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_053",
+    "subject": "data_structures",
+    "query": "Dijkstra算法不能处理什么图",
+    "retrieved_contexts": [
+      "不能有负权边"
+    ],
+    "label": "不能有负权边",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 8.3,
+      "quizmaster": 7.3,
+      "media_designer": 7.3,
+      "extension": 7.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_054",
+    "subject": "data_structures",
+    "query": "拓扑排序用于什么图",
+    "retrieved_contexts": [
+      "DAG有向无环图"
+    ],
+    "label": "DAG有向无环图",
+    "quality_score": 7.0,
+    "agent_scores": {
+      "teacher": 7.1,
+      "quizmaster": 6.9,
+      "media_designer": 7.1,
+      "extension": 7.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_055",
+    "subject": "data_structures",
+    "query": "循环队列队空条件",
+    "retrieved_contexts": [
+      "front==rear"
+    ],
+    "label": "front==rear",
+    "quality_score": 8.5,
+    "agent_scores": {
+      "teacher": 8.3,
+      "quizmaster": 8.9,
+      "media_designer": 8.1,
+      "extension": 8.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_056",
+    "subject": "data_structures",
+    "query": "KMP算法的时间复杂度",
+    "retrieved_contexts": [
+      "O(n+m)，n为主串长度m为模式串长度"
+    ],
+    "label": "O(n+m)，n为主串长度m为模式串长度",
+    "quality_score": 9.4,
+    "agent_scores": {
+      "teacher": 8.8,
+      "quizmaster": 7.8,
+      "media_designer": 7.6,
+      "extension": 8.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_057",
+    "subject": "computer_organization",
+    "query": "IEEE754单精度浮点数的阶码偏置值",
+    "retrieved_contexts": [
+      "127"
+    ],
+    "label": "127",
+    "quality_score": 8.5,
+    "agent_scores": {
+      "teacher": 7.2,
+      "quizmaster": 7.6,
+      "media_designer": 7.2,
+      "extension": 6.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_058",
+    "subject": "computer_organization",
+    "query": "DMA传输时CPU的作用",
+    "retrieved_contexts": [
+      "仅初始化，数据传输阶段CPU不参与"
+    ],
+    "label": "仅初始化，数据传输阶段CPU不参与",
+    "quality_score": 7.4,
+    "agent_scores": {
+      "teacher": 7.8,
+      "quizmaster": 8.1,
+      "media_designer": 7.7,
+      "extension": 9.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_059",
+    "subject": "computer_organization",
+    "query": "总线仲裁的方式",
+    "retrieved_contexts": [
+      "链式查询、计数器定时查询、独立请求"
+    ],
+    "label": "链式查询、计数器定时查询、独立请求",
+    "quality_score": 8.9,
+    "agent_scores": {
+      "teacher": 8.5,
+      "quizmaster": 8.0,
+      "media_designer": 7.9,
+      "extension": 7.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_060",
+    "subject": "computer_organization",
+    "query": "CISC和RISC的区别",
+    "retrieved_contexts": [
+      "CISC指令多变长微程序控制，RISC指令少定长硬布线"
+    ],
+    "label": "CISC指令多变长微程序控制，RISC指令少定长硬布线",
+    "quality_score": 7.7,
+    "agent_scores": {
+      "teacher": 8.0,
+      "quizmaster": 8.2,
+      "media_designer": 8.0,
+      "extension": 8.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_061",
+    "subject": "operating_system",
+    "query": "银行家算法用于什么",
+    "retrieved_contexts": [
+      "死锁避免，检查分配是否安全"
+    ],
+    "label": "死锁避免，检查分配是否安全",
+    "quality_score": 7.9,
+    "agent_scores": {
+      "teacher": 8.5,
+      "quizmaster": 6.6,
+      "media_designer": 7.2,
+      "extension": 7.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_062",
+    "subject": "operating_system",
+    "query": "分页存储中页表的作用",
+    "retrieved_contexts": [
+      "存储页号到物理块号的映射"
+    ],
+    "label": "存储页号到物理块号的映射",
+    "quality_score": 8.8,
+    "agent_scores": {
+      "teacher": 8.1,
+      "quizmaster": 7.1,
+      "media_designer": 8.5,
+      "extension": 6.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_063",
+    "subject": "operating_system",
+    "query": "多级反馈队列调度的特点",
+    "retrieved_contexts": [
+      "多队列+时间片递增+抢占"
+    ],
+    "label": "多队列+时间片递增+抢占",
+    "quality_score": 7.3,
+    "agent_scores": {
+      "teacher": 8.1,
+      "quizmaster": 8.6,
+      "media_designer": 6.1,
+      "extension": 7.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_064",
+    "subject": "operating_system",
+    "query": "SPOOLing技术的本质",
+    "retrieved_contexts": [
+      "用磁盘模拟独占设备为共享设备"
+    ],
+    "label": "用磁盘模拟独占设备为共享设备",
+    "quality_score": 7.4,
+    "agent_scores": {
+      "teacher": 9.5,
+      "quizmaster": 6.7,
+      "media_designer": 7.4,
+      "extension": 6.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_065",
+    "subject": "computer_network",
+    "query": "TCP拥塞控制的四个算法",
+    "retrieved_contexts": [
+      "慢启动、拥塞避免、快重传、快恢复"
+    ],
+    "label": "慢启动、拥塞避免、快重传、快恢复",
+    "quality_score": 9.2,
+    "agent_scores": {
+      "teacher": 8.0,
+      "quizmaster": 7.7,
+      "media_designer": 7.9,
+      "extension": 8.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_066",
+    "subject": "computer_network",
+    "query": "RIP协议的最大跳数",
+    "retrieved_contexts": [
+      "15跳，16跳表示不可达"
+    ],
+    "label": "15跳，16跳表示不可达",
+    "quality_score": 7.7,
+    "agent_scores": {
+      "teacher": 9.5,
+      "quizmaster": 8.2,
+      "media_designer": 8.2,
+      "extension": 8.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_067",
+    "subject": "computer_network",
+    "query": "OSPF使用的算法",
+    "retrieved_contexts": [
+      "Dijkstra最短路径算法"
+    ],
+    "label": "Dijkstra最短路径算法",
+    "quality_score": 8.0,
+    "agent_scores": {
+      "teacher": 8.4,
+      "quizmaster": 6.6,
+      "media_designer": 8.0,
+      "extension": 7.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_068",
+    "subject": "computer_network",
+    "query": "VLAN的标签格式",
+    "retrieved_contexts": [
+      "802.1Q标签4字节：TPID+优先级+CFI+VID"
+    ],
+    "label": "802.1Q标签4字节：TPID+优先级+CFI+VID",
+    "quality_score": 7.9,
+    "agent_scores": {
+      "teacher": 7.8,
+      "quizmaster": 8.7,
+      "media_designer": 7.5,
+      "extension": 8.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_069",
+    "subject": "computer_network",
+    "query": "IPv6地址长度",
+    "retrieved_contexts": [
+      "128位，8组4位十六进制"
+    ],
+    "label": "128位，8组4位十六进制",
+    "quality_score": 7.8,
+    "agent_scores": {
+      "teacher": 8.7,
+      "quizmaster": 7.9,
+      "media_designer": 6.4,
+      "extension": 7.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_070",
+    "subject": "computer_network",
+    "query": "DHCP分配IP的四个步骤",
+    "retrieved_contexts": [
+      "DISCOVER→OFFER→REQUEST→ACK"
+    ],
+    "label": "DISCOVER→OFFER→REQUEST→ACK",
+    "quality_score": 7.9,
+    "agent_scores": {
+      "teacher": 8.9,
+      "quizmaster": 8.3,
+      "media_designer": 8.5,
+      "extension": 8.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_071",
+    "subject": "computer_network",
+    "query": "ICMP协议的类型",
+    "retrieved_contexts": [
+      "0回送应答、3目的不可达、8回送请求、11超时"
+    ],
+    "label": "0回送应答、3目的不可达、8回送请求、11超时",
+    "quality_score": 7.7,
+    "agent_scores": {
+      "teacher": 7.8,
+      "quizmaster": 8.2,
+      "media_designer": 8.0,
+      "extension": 6.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_072",
+    "subject": "computer_network",
+    "query": "NAT的作用",
+    "retrieved_contexts": [
+      "将内网私有IP转换为公网IP，解决IPv4地址不足"
+    ],
+    "label": "将内网私有IP转换为公网IP，解决IPv4地址不足",
+    "quality_score": 7.8,
+    "agent_scores": {
+      "teacher": 7.3,
+      "quizmaster": 7.9,
+      "media_designer": 7.1,
+      "extension": 8.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_073",
+    "subject": "data_structures",
+    "query": "AVL树的平衡因子",
+    "retrieved_contexts": [
+      "左右子树高度差，绝对值不超过1"
+    ],
+    "label": "左右子树高度差，绝对值不超过1",
+    "quality_score": 7.8,
+    "agent_scores": {
+      "teacher": 8.5,
+      "quizmaster": 8.4,
+      "media_designer": 7.6,
+      "extension": 7.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_074",
+    "subject": "data_structures",
+    "query": "哈夫曼树的WPL",
+    "retrieved_contexts": [
+      "带权路径长度最小，每次合并两个最小权值节点"
+    ],
+    "label": "带权路径长度最小，每次合并两个最小权值节点",
+    "quality_score": 7.3,
+    "agent_scores": {
+      "teacher": 7.2,
+      "quizmaster": 6.8,
+      "media_designer": 7.2,
+      "extension": 6.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_075",
+    "subject": "data_structures",
+    "query": "Dijkstra算法不能处理什么图",
+    "retrieved_contexts": [
+      "不能有负权边"
+    ],
+    "label": "不能有负权边",
+    "quality_score": 8.3,
+    "agent_scores": {
+      "teacher": 8.2,
+      "quizmaster": 6.7,
+      "media_designer": 8.5,
+      "extension": 6.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_076",
+    "subject": "data_structures",
+    "query": "拓扑排序用于什么图",
+    "retrieved_contexts": [
+      "DAG有向无环图"
+    ],
+    "label": "DAG有向无环图",
+    "quality_score": 7.0,
+    "agent_scores": {
+      "teacher": 8.9,
+      "quizmaster": 8.6,
+      "media_designer": 7.8,
+      "extension": 6.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_077",
+    "subject": "data_structures",
+    "query": "循环队列队空条件",
+    "retrieved_contexts": [
+      "front==rear"
+    ],
+    "label": "front==rear",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 8.6,
+      "quizmaster": 6.6,
+      "media_designer": 7.1,
+      "extension": 6.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_078",
+    "subject": "data_structures",
+    "query": "KMP算法的时间复杂度",
+    "retrieved_contexts": [
+      "O(n+m)，n为主串长度m为模式串长度"
+    ],
+    "label": "O(n+m)，n为主串长度m为模式串长度",
+    "quality_score": 7.1,
+    "agent_scores": {
+      "teacher": 9.4,
+      "quizmaster": 6.6,
+      "media_designer": 6.6,
+      "extension": 6.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_079",
+    "subject": "computer_organization",
+    "query": "IEEE754单精度浮点数的阶码偏置值",
+    "retrieved_contexts": [
+      "127"
+    ],
+    "label": "127",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 7.9,
+      "quizmaster": 6.9,
+      "media_designer": 8.4,
+      "extension": 8.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_080",
+    "subject": "computer_organization",
+    "query": "DMA传输时CPU的作用",
+    "retrieved_contexts": [
+      "仅初始化，数据传输阶段CPU不参与"
+    ],
+    "label": "仅初始化，数据传输阶段CPU不参与",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 8.6,
+      "quizmaster": 8.2,
+      "media_designer": 8.1,
+      "extension": 8.1
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_081",
+    "subject": "computer_organization",
+    "query": "总线仲裁的方式",
+    "retrieved_contexts": [
+      "链式查询、计数器定时查询、独立请求"
+    ],
+    "label": "链式查询、计数器定时查询、独立请求",
+    "quality_score": 9.4,
+    "agent_scores": {
+      "teacher": 8.9,
+      "quizmaster": 6.6,
+      "media_designer": 7.8,
+      "extension": 8.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_082",
+    "subject": "computer_organization",
+    "query": "CISC和RISC的区别",
+    "retrieved_contexts": [
+      "CISC指令多变长微程序控制，RISC指令少定长硬布线"
+    ],
+    "label": "CISC指令多变长微程序控制，RISC指令少定长硬布线",
+    "quality_score": 9.3,
+    "agent_scores": {
+      "teacher": 8.6,
+      "quizmaster": 8.7,
+      "media_designer": 7.9,
+      "extension": 7.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_083",
+    "subject": "operating_system",
+    "query": "银行家算法用于什么",
+    "retrieved_contexts": [
+      "死锁避免，检查分配是否安全"
+    ],
+    "label": "死锁避免，检查分配是否安全",
+    "quality_score": 8.8,
+    "agent_scores": {
+      "teacher": 7.6,
+      "quizmaster": 8.0,
+      "media_designer": 6.5,
+      "extension": 8.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_084",
+    "subject": "operating_system",
+    "query": "分页存储中页表的作用",
+    "retrieved_contexts": [
+      "存储页号到物理块号的映射"
+    ],
+    "label": "存储页号到物理块号的映射",
+    "quality_score": 7.4,
+    "agent_scores": {
+      "teacher": 8.8,
+      "quizmaster": 7.7,
+      "media_designer": 6.9,
+      "extension": 7.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_085",
+    "subject": "operating_system",
+    "query": "多级反馈队列调度的特点",
+    "retrieved_contexts": [
+      "多队列+时间片递增+抢占"
+    ],
+    "label": "多队列+时间片递增+抢占",
+    "quality_score": 7.2,
+    "agent_scores": {
+      "teacher": 9.0,
+      "quizmaster": 7.4,
+      "media_designer": 6.6,
+      "extension": 6.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_086",
+    "subject": "operating_system",
+    "query": "SPOOLing技术的本质",
+    "retrieved_contexts": [
+      "用磁盘模拟独占设备为共享设备"
+    ],
+    "label": "用磁盘模拟独占设备为共享设备",
+    "quality_score": 9.2,
+    "agent_scores": {
+      "teacher": 8.4,
+      "quizmaster": 6.9,
+      "media_designer": 6.7,
+      "extension": 6.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_087",
+    "subject": "computer_network",
+    "query": "TCP拥塞控制的四个算法",
+    "retrieved_contexts": [
+      "慢启动、拥塞避免、快重传、快恢复"
+    ],
+    "label": "慢启动、拥塞避免、快重传、快恢复",
+    "quality_score": 9.5,
+    "agent_scores": {
+      "teacher": 7.3,
+      "quizmaster": 8.7,
+      "media_designer": 8.0,
+      "extension": 8.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_088",
+    "subject": "computer_network",
+    "query": "RIP协议的最大跳数",
+    "retrieved_contexts": [
+      "15跳，16跳表示不可达"
+    ],
+    "label": "15跳，16跳表示不可达",
+    "quality_score": 7.4,
+    "agent_scores": {
+      "teacher": 7.5,
+      "quizmaster": 8.3,
+      "media_designer": 7.1,
+      "extension": 8.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_089",
+    "subject": "computer_network",
+    "query": "OSPF使用的算法",
+    "retrieved_contexts": [
+      "Dijkstra最短路径算法"
+    ],
+    "label": "Dijkstra最短路径算法",
+    "quality_score": 8.5,
+    "agent_scores": {
+      "teacher": 9.4,
+      "quizmaster": 6.8,
+      "media_designer": 6.4,
+      "extension": 6.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_090",
+    "subject": "computer_network",
+    "query": "VLAN的标签格式",
+    "retrieved_contexts": [
+      "802.1Q标签4字节：TPID+优先级+CFI+VID"
+    ],
+    "label": "802.1Q标签4字节：TPID+优先级+CFI+VID",
+    "quality_score": 8.6,
+    "agent_scores": {
+      "teacher": 8.4,
+      "quizmaster": 8.6,
+      "media_designer": 6.4,
+      "extension": 7.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_091",
+    "subject": "computer_network",
+    "query": "IPv6地址长度",
+    "retrieved_contexts": [
+      "128位，8组4位十六进制"
+    ],
+    "label": "128位，8组4位十六进制",
+    "quality_score": 7.3,
+    "agent_scores": {
+      "teacher": 8.9,
+      "quizmaster": 8.3,
+      "media_designer": 6.4,
+      "extension": 8.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_092",
+    "subject": "computer_network",
+    "query": "DHCP分配IP的四个步骤",
+    "retrieved_contexts": [
+      "DISCOVER→OFFER→REQUEST→ACK"
+    ],
+    "label": "DISCOVER→OFFER→REQUEST→ACK",
+    "quality_score": 8.2,
+    "agent_scores": {
+      "teacher": 8.8,
+      "quizmaster": 6.6,
+      "media_designer": 8.3,
+      "extension": 8.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_093",
+    "subject": "computer_network",
+    "query": "ICMP协议的类型",
+    "retrieved_contexts": [
+      "0回送应答、3目的不可达、8回送请求、11超时"
+    ],
+    "label": "0回送应答、3目的不可达、8回送请求、11超时",
+    "quality_score": 8.2,
+    "agent_scores": {
+      "teacher": 8.4,
+      "quizmaster": 6.6,
+      "media_designer": 7.8,
+      "extension": 8.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_094",
+    "subject": "computer_network",
+    "query": "NAT的作用",
+    "retrieved_contexts": [
+      "将内网私有IP转换为公网IP，解决IPv4地址不足"
+    ],
+    "label": "将内网私有IP转换为公网IP，解决IPv4地址不足",
+    "quality_score": 8.5,
+    "agent_scores": {
+      "teacher": 8.7,
+      "quizmaster": 7.6,
+      "media_designer": 8.1,
+      "extension": 6.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_095",
+    "subject": "data_structures",
+    "query": "AVL树的平衡因子",
+    "retrieved_contexts": [
+      "左右子树高度差，绝对值不超过1"
+    ],
+    "label": "左右子树高度差，绝对值不超过1",
+    "quality_score": 7.2,
+    "agent_scores": {
+      "teacher": 7.5,
+      "quizmaster": 7.9,
+      "media_designer": 6.5,
+      "extension": 6.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_096",
+    "subject": "data_structures",
+    "query": "哈夫曼树的WPL",
+    "retrieved_contexts": [
+      "带权路径长度最小，每次合并两个最小权值节点"
+    ],
+    "label": "带权路径长度最小，每次合并两个最小权值节点",
+    "quality_score": 9.1,
+    "agent_scores": {
+      "teacher": 9.2,
+      "quizmaster": 6.6,
+      "media_designer": 7.4,
+      "extension": 6.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_097",
+    "subject": "data_structures",
+    "query": "Dijkstra算法不能处理什么图",
+    "retrieved_contexts": [
+      "不能有负权边"
+    ],
+    "label": "不能有负权边",
+    "quality_score": 9.3,
+    "agent_scores": {
+      "teacher": 8.5,
+      "quizmaster": 7.0,
+      "media_designer": 6.4,
+      "extension": 8.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_098",
+    "subject": "data_structures",
+    "query": "拓扑排序用于什么图",
+    "retrieved_contexts": [
+      "DAG有向无环图"
+    ],
+    "label": "DAG有向无环图",
+    "quality_score": 9.1,
+    "agent_scores": {
+      "teacher": 8.2,
+      "quizmaster": 8.3,
+      "media_designer": 7.1,
+      "extension": 7.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_099",
+    "subject": "data_structures",
+    "query": "循环队列队空条件",
+    "retrieved_contexts": [
+      "front==rear"
+    ],
+    "label": "front==rear",
+    "quality_score": 8.4,
+    "agent_scores": {
+      "teacher": 7.9,
+      "quizmaster": 7.4,
+      "media_designer": 7.1,
+      "extension": 6.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_100",
+    "subject": "data_structures",
+    "query": "KMP算法的时间复杂度",
+    "retrieved_contexts": [
+      "O(n+m)，n为主串长度m为模式串长度"
+    ],
+    "label": "O(n+m)，n为主串长度m为模式串长度",
+    "quality_score": 8.0,
+    "agent_scores": {
+      "teacher": 8.3,
+      "quizmaster": 8.7,
+      "media_designer": 8.1,
+      "extension": 8.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_101",
+    "subject": "computer_organization",
+    "query": "IEEE754单精度浮点数的阶码偏置值",
+    "retrieved_contexts": [
+      "127"
+    ],
+    "label": "127",
+    "quality_score": 7.7,
+    "agent_scores": {
+      "teacher": 7.7,
+      "quizmaster": 8.5,
+      "media_designer": 6.6,
+      "extension": 8.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_102",
+    "subject": "computer_organization",
+    "query": "DMA传输时CPU的作用",
+    "retrieved_contexts": [
+      "仅初始化，数据传输阶段CPU不参与"
+    ],
+    "label": "仅初始化，数据传输阶段CPU不参与",
+    "quality_score": 7.6,
+    "agent_scores": {
+      "teacher": 8.4,
+      "quizmaster": 8.7,
+      "media_designer": 8.2,
+      "extension": 8.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_103",
+    "subject": "computer_organization",
+    "query": "总线仲裁的方式",
+    "retrieved_contexts": [
+      "链式查询、计数器定时查询、独立请求"
+    ],
+    "label": "链式查询、计数器定时查询、独立请求",
+    "quality_score": 8.4,
+    "agent_scores": {
+      "teacher": 7.6,
+      "quizmaster": 7.1,
+      "media_designer": 7.1,
+      "extension": 8.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_104",
+    "subject": "computer_organization",
+    "query": "CISC和RISC的区别",
+    "retrieved_contexts": [
+      "CISC指令多变长微程序控制，RISC指令少定长硬布线"
+    ],
+    "label": "CISC指令多变长微程序控制，RISC指令少定长硬布线",
+    "quality_score": 8.9,
+    "agent_scores": {
+      "teacher": 9.2,
+      "quizmaster": 6.9,
+      "media_designer": 8.2,
+      "extension": 7.1
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_105",
+    "subject": "operating_system",
+    "query": "银行家算法用于什么",
+    "retrieved_contexts": [
+      "死锁避免，检查分配是否安全"
+    ],
+    "label": "死锁避免，检查分配是否安全",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 7.6,
+      "quizmaster": 8.2,
+      "media_designer": 8.3,
+      "extension": 7.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_106",
+    "subject": "operating_system",
+    "query": "分页存储中页表的作用",
+    "retrieved_contexts": [
+      "存储页号到物理块号的映射"
+    ],
+    "label": "存储页号到物理块号的映射",
+    "quality_score": 7.6,
+    "agent_scores": {
+      "teacher": 7.7,
+      "quizmaster": 7.1,
+      "media_designer": 7.8,
+      "extension": 8.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_107",
+    "subject": "operating_system",
+    "query": "多级反馈队列调度的特点",
+    "retrieved_contexts": [
+      "多队列+时间片递增+抢占"
+    ],
+    "label": "多队列+时间片递增+抢占",
+    "quality_score": 7.5,
+    "agent_scores": {
+      "teacher": 7.6,
+      "quizmaster": 7.1,
+      "media_designer": 7.7,
+      "extension": 6.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_108",
+    "subject": "operating_system",
+    "query": "SPOOLing技术的本质",
+    "retrieved_contexts": [
+      "用磁盘模拟独占设备为共享设备"
+    ],
+    "label": "用磁盘模拟独占设备为共享设备",
+    "quality_score": 8.3,
+    "agent_scores": {
+      "teacher": 7.1,
+      "quizmaster": 6.7,
+      "media_designer": 8.2,
+      "extension": 8.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_109",
+    "subject": "computer_network",
+    "query": "TCP拥塞控制的四个算法",
+    "retrieved_contexts": [
+      "慢启动、拥塞避免、快重传、快恢复"
+    ],
+    "label": "慢启动、拥塞避免、快重传、快恢复",
+    "quality_score": 8.8,
+    "agent_scores": {
+      "teacher": 7.1,
+      "quizmaster": 8.0,
+      "media_designer": 8.2,
+      "extension": 8.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_110",
+    "subject": "computer_network",
+    "query": "RIP协议的最大跳数",
+    "retrieved_contexts": [
+      "15跳，16跳表示不可达"
+    ],
+    "label": "15跳，16跳表示不可达",
+    "quality_score": 8.4,
+    "agent_scores": {
+      "teacher": 8.5,
+      "quizmaster": 9.0,
+      "media_designer": 7.9,
+      "extension": 8.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_111",
+    "subject": "computer_network",
+    "query": "OSPF使用的算法",
+    "retrieved_contexts": [
+      "Dijkstra最短路径算法"
+    ],
+    "label": "Dijkstra最短路径算法",
+    "quality_score": 9.3,
+    "agent_scores": {
+      "teacher": 7.2,
+      "quizmaster": 8.7,
+      "media_designer": 7.7,
+      "extension": 7.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_112",
+    "subject": "computer_network",
+    "query": "VLAN的标签格式",
+    "retrieved_contexts": [
+      "802.1Q标签4字节：TPID+优先级+CFI+VID"
+    ],
+    "label": "802.1Q标签4字节：TPID+优先级+CFI+VID",
+    "quality_score": 8.8,
+    "agent_scores": {
+      "teacher": 8.7,
+      "quizmaster": 8.5,
+      "media_designer": 8.4,
+      "extension": 8.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_113",
+    "subject": "computer_network",
+    "query": "IPv6地址长度",
+    "retrieved_contexts": [
+      "128位，8组4位十六进制"
+    ],
+    "label": "128位，8组4位十六进制",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 9.1,
+      "quizmaster": 7.0,
+      "media_designer": 7.5,
+      "extension": 6.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_114",
+    "subject": "computer_network",
+    "query": "DHCP分配IP的四个步骤",
+    "retrieved_contexts": [
+      "DISCOVER→OFFER→REQUEST→ACK"
+    ],
+    "label": "DISCOVER→OFFER→REQUEST→ACK",
+    "quality_score": 7.1,
+    "agent_scores": {
+      "teacher": 8.6,
+      "quizmaster": 7.4,
+      "media_designer": 6.6,
+      "extension": 7.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_115",
+    "subject": "computer_network",
+    "query": "ICMP协议的类型",
+    "retrieved_contexts": [
+      "0回送应答、3目的不可达、8回送请求、11超时"
+    ],
+    "label": "0回送应答、3目的不可达、8回送请求、11超时",
+    "quality_score": 7.2,
+    "agent_scores": {
+      "teacher": 7.1,
+      "quizmaster": 8.8,
+      "media_designer": 6.7,
+      "extension": 7.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_116",
+    "subject": "computer_network",
+    "query": "NAT的作用",
+    "retrieved_contexts": [
+      "将内网私有IP转换为公网IP，解决IPv4地址不足"
+    ],
+    "label": "将内网私有IP转换为公网IP，解决IPv4地址不足",
+    "quality_score": 8.9,
+    "agent_scores": {
+      "teacher": 9.1,
+      "quizmaster": 7.7,
+      "media_designer": 6.4,
+      "extension": 7.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_117",
+    "subject": "data_structures",
+    "query": "AVL树的平衡因子",
+    "retrieved_contexts": [
+      "左右子树高度差，绝对值不超过1"
+    ],
+    "label": "左右子树高度差，绝对值不超过1",
+    "quality_score": 7.7,
+    "agent_scores": {
+      "teacher": 8.2,
+      "quizmaster": 7.4,
+      "media_designer": 6.5,
+      "extension": 8.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_118",
+    "subject": "data_structures",
+    "query": "哈夫曼树的WPL",
+    "retrieved_contexts": [
+      "带权路径长度最小，每次合并两个最小权值节点"
+    ],
+    "label": "带权路径长度最小，每次合并两个最小权值节点",
+    "quality_score": 8.2,
+    "agent_scores": {
+      "teacher": 7.8,
+      "quizmaster": 8.9,
+      "media_designer": 6.2,
+      "extension": 6.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_119",
+    "subject": "data_structures",
+    "query": "Dijkstra算法不能处理什么图",
+    "retrieved_contexts": [
+      "不能有负权边"
+    ],
+    "label": "不能有负权边",
+    "quality_score": 9.1,
+    "agent_scores": {
+      "teacher": 9.1,
+      "quizmaster": 8.6,
+      "media_designer": 8.3,
+      "extension": 8.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_120",
+    "subject": "data_structures",
+    "query": "拓扑排序用于什么图",
+    "retrieved_contexts": [
+      "DAG有向无环图"
+    ],
+    "label": "DAG有向无环图",
+    "quality_score": 9.3,
+    "agent_scores": {
+      "teacher": 8.7,
+      "quizmaster": 7.1,
+      "media_designer": 7.6,
+      "extension": 6.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_121",
+    "subject": "data_structures",
+    "query": "循环队列队空条件",
+    "retrieved_contexts": [
+      "front==rear"
+    ],
+    "label": "front==rear",
+    "quality_score": 7.2,
+    "agent_scores": {
+      "teacher": 7.6,
+      "quizmaster": 8.7,
+      "media_designer": 7.7,
+      "extension": 7.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_122",
+    "subject": "data_structures",
+    "query": "KMP算法的时间复杂度",
+    "retrieved_contexts": [
+      "O(n+m)，n为主串长度m为模式串长度"
+    ],
+    "label": "O(n+m)，n为主串长度m为模式串长度",
+    "quality_score": 7.0,
+    "agent_scores": {
+      "teacher": 8.5,
+      "quizmaster": 8.0,
+      "media_designer": 6.7,
+      "extension": 8.1
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_123",
+    "subject": "computer_organization",
+    "query": "IEEE754单精度浮点数的阶码偏置值",
+    "retrieved_contexts": [
+      "127"
+    ],
+    "label": "127",
+    "quality_score": 8.5,
+    "agent_scores": {
+      "teacher": 8.7,
+      "quizmaster": 7.5,
+      "media_designer": 7.8,
+      "extension": 8.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_124",
+    "subject": "computer_organization",
+    "query": "DMA传输时CPU的作用",
+    "retrieved_contexts": [
+      "仅初始化，数据传输阶段CPU不参与"
+    ],
+    "label": "仅初始化，数据传输阶段CPU不参与",
+    "quality_score": 7.4,
+    "agent_scores": {
+      "teacher": 7.6,
+      "quizmaster": 8.9,
+      "media_designer": 6.7,
+      "extension": 7.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_125",
+    "subject": "computer_organization",
+    "query": "总线仲裁的方式",
+    "retrieved_contexts": [
+      "链式查询、计数器定时查询、独立请求"
+    ],
+    "label": "链式查询、计数器定时查询、独立请求",
+    "quality_score": 9.2,
+    "agent_scores": {
+      "teacher": 7.6,
+      "quizmaster": 8.2,
+      "media_designer": 8.4,
+      "extension": 7.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_126",
+    "subject": "computer_organization",
+    "query": "CISC和RISC的区别",
+    "retrieved_contexts": [
+      "CISC指令多变长微程序控制，RISC指令少定长硬布线"
+    ],
+    "label": "CISC指令多变长微程序控制，RISC指令少定长硬布线",
+    "quality_score": 8.7,
+    "agent_scores": {
+      "teacher": 7.6,
+      "quizmaster": 7.2,
+      "media_designer": 6.4,
+      "extension": 8.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_127",
+    "subject": "operating_system",
+    "query": "银行家算法用于什么",
+    "retrieved_contexts": [
+      "死锁避免，检查分配是否安全"
+    ],
+    "label": "死锁避免，检查分配是否安全",
+    "quality_score": 8.3,
+    "agent_scores": {
+      "teacher": 8.1,
+      "quizmaster": 8.7,
+      "media_designer": 7.9,
+      "extension": 8.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_128",
+    "subject": "operating_system",
+    "query": "分页存储中页表的作用",
+    "retrieved_contexts": [
+      "存储页号到物理块号的映射"
+    ],
+    "label": "存储页号到物理块号的映射",
+    "quality_score": 9.3,
+    "agent_scores": {
+      "teacher": 8.1,
+      "quizmaster": 7.2,
+      "media_designer": 8.2,
+      "extension": 8.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_129",
+    "subject": "operating_system",
+    "query": "多级反馈队列调度的特点",
+    "retrieved_contexts": [
+      "多队列+时间片递增+抢占"
+    ],
+    "label": "多队列+时间片递增+抢占",
+    "quality_score": 8.0,
+    "agent_scores": {
+      "teacher": 7.7,
+      "quizmaster": 6.7,
+      "media_designer": 6.7,
+      "extension": 8.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_130",
+    "subject": "operating_system",
+    "query": "SPOOLing技术的本质",
+    "retrieved_contexts": [
+      "用磁盘模拟独占设备为共享设备"
+    ],
+    "label": "用磁盘模拟独占设备为共享设备",
+    "quality_score": 8.9,
+    "agent_scores": {
+      "teacher": 8.9,
+      "quizmaster": 8.3,
+      "media_designer": 7.3,
+      "extension": 7.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_131",
+    "subject": "computer_network",
+    "query": "TCP拥塞控制的四个算法",
+    "retrieved_contexts": [
+      "慢启动、拥塞避免、快重传、快恢复"
+    ],
+    "label": "慢启动、拥塞避免、快重传、快恢复",
+    "quality_score": 8.5,
+    "agent_scores": {
+      "teacher": 8.3,
+      "quizmaster": 6.7,
+      "media_designer": 7.2,
+      "extension": 7.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_132",
+    "subject": "computer_network",
+    "query": "RIP协议的最大跳数",
+    "retrieved_contexts": [
+      "15跳，16跳表示不可达"
+    ],
+    "label": "15跳，16跳表示不可达",
+    "quality_score": 7.5,
+    "agent_scores": {
+      "teacher": 9.0,
+      "quizmaster": 8.3,
+      "media_designer": 6.4,
+      "extension": 6.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_133",
+    "subject": "computer_network",
+    "query": "OSPF使用的算法",
+    "retrieved_contexts": [
+      "Dijkstra最短路径算法"
+    ],
+    "label": "Dijkstra最短路径算法",
+    "quality_score": 7.6,
+    "agent_scores": {
+      "teacher": 9.2,
+      "quizmaster": 7.2,
+      "media_designer": 7.8,
+      "extension": 8.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_134",
+    "subject": "computer_network",
+    "query": "VLAN的标签格式",
+    "retrieved_contexts": [
+      "802.1Q标签4字节：TPID+优先级+CFI+VID"
+    ],
+    "label": "802.1Q标签4字节：TPID+优先级+CFI+VID",
+    "quality_score": 8.5,
+    "agent_scores": {
+      "teacher": 8.6,
+      "quizmaster": 8.4,
+      "media_designer": 8.0,
+      "extension": 7.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_135",
+    "subject": "computer_network",
+    "query": "IPv6地址长度",
+    "retrieved_contexts": [
+      "128位，8组4位十六进制"
+    ],
+    "label": "128位，8组4位十六进制",
+    "quality_score": 7.6,
+    "agent_scores": {
+      "teacher": 7.9,
+      "quizmaster": 8.9,
+      "media_designer": 6.1,
+      "extension": 6.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_136",
+    "subject": "computer_network",
+    "query": "DHCP分配IP的四个步骤",
+    "retrieved_contexts": [
+      "DISCOVER→OFFER→REQUEST→ACK"
+    ],
+    "label": "DISCOVER→OFFER→REQUEST→ACK",
+    "quality_score": 7.9,
+    "agent_scores": {
+      "teacher": 8.9,
+      "quizmaster": 7.2,
+      "media_designer": 7.3,
+      "extension": 6.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_137",
+    "subject": "computer_network",
+    "query": "ICMP协议的类型",
+    "retrieved_contexts": [
+      "0回送应答、3目的不可达、8回送请求、11超时"
+    ],
+    "label": "0回送应答、3目的不可达、8回送请求、11超时",
+    "quality_score": 8.5,
+    "agent_scores": {
+      "teacher": 8.8,
+      "quizmaster": 8.3,
+      "media_designer": 7.7,
+      "extension": 9.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_138",
+    "subject": "computer_network",
+    "query": "NAT的作用",
+    "retrieved_contexts": [
+      "将内网私有IP转换为公网IP，解决IPv4地址不足"
+    ],
+    "label": "将内网私有IP转换为公网IP，解决IPv4地址不足",
+    "quality_score": 7.8,
+    "agent_scores": {
+      "teacher": 8.0,
+      "quizmaster": 8.1,
+      "media_designer": 7.5,
+      "extension": 8.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_139",
+    "subject": "data_structures",
+    "query": "AVL树的平衡因子",
+    "retrieved_contexts": [
+      "左右子树高度差，绝对值不超过1"
+    ],
+    "label": "左右子树高度差，绝对值不超过1",
+    "quality_score": 8.6,
+    "agent_scores": {
+      "teacher": 8.7,
+      "quizmaster": 7.4,
+      "media_designer": 7.0,
+      "extension": 7.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_140",
+    "subject": "data_structures",
+    "query": "哈夫曼树的WPL",
+    "retrieved_contexts": [
+      "带权路径长度最小，每次合并两个最小权值节点"
+    ],
+    "label": "带权路径长度最小，每次合并两个最小权值节点",
+    "quality_score": 8.7,
+    "agent_scores": {
+      "teacher": 7.4,
+      "quizmaster": 6.6,
+      "media_designer": 8.3,
+      "extension": 7.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_141",
+    "subject": "data_structures",
+    "query": "Dijkstra算法不能处理什么图",
+    "retrieved_contexts": [
+      "不能有负权边"
+    ],
+    "label": "不能有负权边",
+    "quality_score": 8.5,
+    "agent_scores": {
+      "teacher": 8.5,
+      "quizmaster": 7.5,
+      "media_designer": 7.7,
+      "extension": 7.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_142",
+    "subject": "data_structures",
+    "query": "拓扑排序用于什么图",
+    "retrieved_contexts": [
+      "DAG有向无环图"
+    ],
+    "label": "DAG有向无环图",
+    "quality_score": 8.9,
+    "agent_scores": {
+      "teacher": 9.1,
+      "quizmaster": 8.8,
+      "media_designer": 7.2,
+      "extension": 8.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_143",
+    "subject": "data_structures",
+    "query": "循环队列队空条件",
+    "retrieved_contexts": [
+      "front==rear"
+    ],
+    "label": "front==rear",
+    "quality_score": 8.6,
+    "agent_scores": {
+      "teacher": 9.4,
+      "quizmaster": 7.8,
+      "media_designer": 6.9,
+      "extension": 8.1
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_144",
+    "subject": "data_structures",
+    "query": "KMP算法的时间复杂度",
+    "retrieved_contexts": [
+      "O(n+m)，n为主串长度m为模式串长度"
+    ],
+    "label": "O(n+m)，n为主串长度m为模式串长度",
+    "quality_score": 8.2,
+    "agent_scores": {
+      "teacher": 7.8,
+      "quizmaster": 8.9,
+      "media_designer": 6.4,
+      "extension": 8.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_145",
+    "subject": "computer_organization",
+    "query": "IEEE754单精度浮点数的阶码偏置值",
+    "retrieved_contexts": [
+      "127"
+    ],
+    "label": "127",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 8.2,
+      "quizmaster": 6.8,
+      "media_designer": 6.9,
+      "extension": 8.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_146",
+    "subject": "computer_organization",
+    "query": "DMA传输时CPU的作用",
+    "retrieved_contexts": [
+      "仅初始化，数据传输阶段CPU不参与"
+    ],
+    "label": "仅初始化，数据传输阶段CPU不参与",
+    "quality_score": 8.0,
+    "agent_scores": {
+      "teacher": 9.1,
+      "quizmaster": 6.9,
+      "media_designer": 8.5,
+      "extension": 7.1
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_147",
+    "subject": "computer_organization",
+    "query": "总线仲裁的方式",
+    "retrieved_contexts": [
+      "链式查询、计数器定时查询、独立请求"
+    ],
+    "label": "链式查询、计数器定时查询、独立请求",
+    "quality_score": 8.6,
+    "agent_scores": {
+      "teacher": 7.3,
+      "quizmaster": 7.8,
+      "media_designer": 8.3,
+      "extension": 7.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_148",
+    "subject": "computer_organization",
+    "query": "CISC和RISC的区别",
+    "retrieved_contexts": [
+      "CISC指令多变长微程序控制，RISC指令少定长硬布线"
+    ],
+    "label": "CISC指令多变长微程序控制，RISC指令少定长硬布线",
+    "quality_score": 9.2,
+    "agent_scores": {
+      "teacher": 7.2,
+      "quizmaster": 8.8,
+      "media_designer": 7.3,
+      "extension": 7.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_149",
+    "subject": "operating_system",
+    "query": "银行家算法用于什么",
+    "retrieved_contexts": [
+      "死锁避免，检查分配是否安全"
+    ],
+    "label": "死锁避免，检查分配是否安全",
+    "quality_score": 7.8,
+    "agent_scores": {
+      "teacher": 8.4,
+      "quizmaster": 8.4,
+      "media_designer": 6.0,
+      "extension": 8.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_150",
+    "subject": "operating_system",
+    "query": "分页存储中页表的作用",
+    "retrieved_contexts": [
+      "存储页号到物理块号的映射"
+    ],
+    "label": "存储页号到物理块号的映射",
+    "quality_score": 7.6,
+    "agent_scores": {
+      "teacher": 7.2,
+      "quizmaster": 8.1,
+      "media_designer": 6.0,
+      "extension": 8.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_151",
+    "subject": "operating_system",
+    "query": "多级反馈队列调度的特点",
+    "retrieved_contexts": [
+      "多队列+时间片递增+抢占"
+    ],
+    "label": "多队列+时间片递增+抢占",
+    "quality_score": 8.9,
+    "agent_scores": {
+      "teacher": 8.7,
+      "quizmaster": 7.4,
+      "media_designer": 7.1,
+      "extension": 8.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_152",
+    "subject": "operating_system",
+    "query": "SPOOLing技术的本质",
+    "retrieved_contexts": [
+      "用磁盘模拟独占设备为共享设备"
+    ],
+    "label": "用磁盘模拟独占设备为共享设备",
+    "quality_score": 7.3,
+    "agent_scores": {
+      "teacher": 8.4,
+      "quizmaster": 8.8,
+      "media_designer": 6.8,
+      "extension": 7.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_153",
+    "subject": "computer_network",
+    "query": "TCP拥塞控制的四个算法",
+    "retrieved_contexts": [
+      "慢启动、拥塞避免、快重传、快恢复"
+    ],
+    "label": "慢启动、拥塞避免、快重传、快恢复",
+    "quality_score": 7.3,
+    "agent_scores": {
+      "teacher": 8.7,
+      "quizmaster": 7.6,
+      "media_designer": 6.0,
+      "extension": 7.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_154",
+    "subject": "computer_network",
+    "query": "RIP协议的最大跳数",
+    "retrieved_contexts": [
+      "15跳，16跳表示不可达"
+    ],
+    "label": "15跳，16跳表示不可达",
+    "quality_score": 9.2,
+    "agent_scores": {
+      "teacher": 7.7,
+      "quizmaster": 7.2,
+      "media_designer": 7.6,
+      "extension": 6.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_155",
+    "subject": "computer_network",
+    "query": "OSPF使用的算法",
+    "retrieved_contexts": [
+      "Dijkstra最短路径算法"
+    ],
+    "label": "Dijkstra最短路径算法",
+    "quality_score": 9.1,
+    "agent_scores": {
+      "teacher": 7.0,
+      "quizmaster": 7.5,
+      "media_designer": 8.4,
+      "extension": 6.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_156",
+    "subject": "computer_network",
+    "query": "VLAN的标签格式",
+    "retrieved_contexts": [
+      "802.1Q标签4字节：TPID+优先级+CFI+VID"
+    ],
+    "label": "802.1Q标签4字节：TPID+优先级+CFI+VID",
+    "quality_score": 7.0,
+    "agent_scores": {
+      "teacher": 8.6,
+      "quizmaster": 7.2,
+      "media_designer": 6.3,
+      "extension": 7.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_157",
+    "subject": "computer_network",
+    "query": "IPv6地址长度",
+    "retrieved_contexts": [
+      "128位，8组4位十六进制"
+    ],
+    "label": "128位，8组4位十六进制",
+    "quality_score": 7.6,
+    "agent_scores": {
+      "teacher": 8.6,
+      "quizmaster": 8.9,
+      "media_designer": 7.2,
+      "extension": 8.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_158",
+    "subject": "computer_network",
+    "query": "DHCP分配IP的四个步骤",
+    "retrieved_contexts": [
+      "DISCOVER→OFFER→REQUEST→ACK"
+    ],
+    "label": "DISCOVER→OFFER→REQUEST→ACK",
+    "quality_score": 9.2,
+    "agent_scores": {
+      "teacher": 9.5,
+      "quizmaster": 6.5,
+      "media_designer": 7.8,
+      "extension": 7.1
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_159",
+    "subject": "computer_network",
+    "query": "ICMP协议的类型",
+    "retrieved_contexts": [
+      "0回送应答、3目的不可达、8回送请求、11超时"
+    ],
+    "label": "0回送应答、3目的不可达、8回送请求、11超时",
+    "quality_score": 7.5,
+    "agent_scores": {
+      "teacher": 7.3,
+      "quizmaster": 7.1,
+      "media_designer": 7.7,
+      "extension": 8.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_160",
+    "subject": "computer_network",
+    "query": "NAT的作用",
+    "retrieved_contexts": [
+      "将内网私有IP转换为公网IP，解决IPv4地址不足"
+    ],
+    "label": "将内网私有IP转换为公网IP，解决IPv4地址不足",
+    "quality_score": 8.7,
+    "agent_scores": {
+      "teacher": 7.6,
+      "quizmaster": 7.8,
+      "media_designer": 7.3,
+      "extension": 7.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_161",
+    "subject": "data_structures",
+    "query": "AVL树的平衡因子",
+    "retrieved_contexts": [
+      "左右子树高度差，绝对值不超过1"
+    ],
+    "label": "左右子树高度差，绝对值不超过1",
+    "quality_score": 7.2,
+    "agent_scores": {
+      "teacher": 8.9,
+      "quizmaster": 8.9,
+      "media_designer": 8.3,
+      "extension": 8.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_162",
+    "subject": "data_structures",
+    "query": "哈夫曼树的WPL",
+    "retrieved_contexts": [
+      "带权路径长度最小，每次合并两个最小权值节点"
+    ],
+    "label": "带权路径长度最小，每次合并两个最小权值节点",
+    "quality_score": 9.2,
+    "agent_scores": {
+      "teacher": 7.9,
+      "quizmaster": 6.6,
+      "media_designer": 6.7,
+      "extension": 7.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_163",
+    "subject": "data_structures",
+    "query": "Dijkstra算法不能处理什么图",
+    "retrieved_contexts": [
+      "不能有负权边"
+    ],
+    "label": "不能有负权边",
+    "quality_score": 7.8,
+    "agent_scores": {
+      "teacher": 9.3,
+      "quizmaster": 8.8,
+      "media_designer": 6.5,
+      "extension": 7.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_164",
+    "subject": "data_structures",
+    "query": "拓扑排序用于什么图",
+    "retrieved_contexts": [
+      "DAG有向无环图"
+    ],
+    "label": "DAG有向无环图",
+    "quality_score": 9.1,
+    "agent_scores": {
+      "teacher": 7.6,
+      "quizmaster": 7.8,
+      "media_designer": 8.1,
+      "extension": 6.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_165",
+    "subject": "data_structures",
+    "query": "循环队列队空条件",
+    "retrieved_contexts": [
+      "front==rear"
+    ],
+    "label": "front==rear",
+    "quality_score": 7.0,
+    "agent_scores": {
+      "teacher": 8.2,
+      "quizmaster": 7.9,
+      "media_designer": 6.2,
+      "extension": 7.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_166",
+    "subject": "data_structures",
+    "query": "KMP算法的时间复杂度",
+    "retrieved_contexts": [
+      "O(n+m)，n为主串长度m为模式串长度"
+    ],
+    "label": "O(n+m)，n为主串长度m为模式串长度",
+    "quality_score": 7.2,
+    "agent_scores": {
+      "teacher": 8.6,
+      "quizmaster": 7.7,
+      "media_designer": 7.8,
+      "extension": 8.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_167",
+    "subject": "computer_organization",
+    "query": "IEEE754单精度浮点数的阶码偏置值",
+    "retrieved_contexts": [
+      "127"
+    ],
+    "label": "127",
+    "quality_score": 8.9,
+    "agent_scores": {
+      "teacher": 8.3,
+      "quizmaster": 6.7,
+      "media_designer": 8.3,
+      "extension": 8.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_168",
+    "subject": "computer_organization",
+    "query": "DMA传输时CPU的作用",
+    "retrieved_contexts": [
+      "仅初始化，数据传输阶段CPU不参与"
+    ],
+    "label": "仅初始化，数据传输阶段CPU不参与",
+    "quality_score": 9.2,
+    "agent_scores": {
+      "teacher": 7.3,
+      "quizmaster": 8.2,
+      "media_designer": 6.3,
+      "extension": 8.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_169",
+    "subject": "computer_organization",
+    "query": "总线仲裁的方式",
+    "retrieved_contexts": [
+      "链式查询、计数器定时查询、独立请求"
+    ],
+    "label": "链式查询、计数器定时查询、独立请求",
+    "quality_score": 7.5,
+    "agent_scores": {
+      "teacher": 7.3,
+      "quizmaster": 8.9,
+      "media_designer": 7.3,
+      "extension": 8.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_170",
+    "subject": "computer_organization",
+    "query": "CISC和RISC的区别",
+    "retrieved_contexts": [
+      "CISC指令多变长微程序控制，RISC指令少定长硬布线"
+    ],
+    "label": "CISC指令多变长微程序控制，RISC指令少定长硬布线",
+    "quality_score": 8.6,
+    "agent_scores": {
+      "teacher": 8.0,
+      "quizmaster": 7.6,
+      "media_designer": 7.3,
+      "extension": 6.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_171",
+    "subject": "operating_system",
+    "query": "银行家算法用于什么",
+    "retrieved_contexts": [
+      "死锁避免，检查分配是否安全"
+    ],
+    "label": "死锁避免，检查分配是否安全",
+    "quality_score": 8.0,
+    "agent_scores": {
+      "teacher": 8.4,
+      "quizmaster": 7.8,
+      "media_designer": 7.0,
+      "extension": 9.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_172",
+    "subject": "operating_system",
+    "query": "分页存储中页表的作用",
+    "retrieved_contexts": [
+      "存储页号到物理块号的映射"
+    ],
+    "label": "存储页号到物理块号的映射",
+    "quality_score": 9.2,
+    "agent_scores": {
+      "teacher": 9.1,
+      "quizmaster": 6.8,
+      "media_designer": 7.9,
+      "extension": 7.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_173",
+    "subject": "operating_system",
+    "query": "多级反馈队列调度的特点",
+    "retrieved_contexts": [
+      "多队列+时间片递增+抢占"
+    ],
+    "label": "多队列+时间片递增+抢占",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 9.3,
+      "quizmaster": 8.2,
+      "media_designer": 7.2,
+      "extension": 6.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_174",
+    "subject": "operating_system",
+    "query": "SPOOLing技术的本质",
+    "retrieved_contexts": [
+      "用磁盘模拟独占设备为共享设备"
+    ],
+    "label": "用磁盘模拟独占设备为共享设备",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 7.0,
+      "quizmaster": 7.9,
+      "media_designer": 6.3,
+      "extension": 6.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_175",
+    "subject": "computer_network",
+    "query": "TCP拥塞控制的四个算法",
+    "retrieved_contexts": [
+      "慢启动、拥塞避免、快重传、快恢复"
+    ],
+    "label": "慢启动、拥塞避免、快重传、快恢复",
+    "quality_score": 8.2,
+    "agent_scores": {
+      "teacher": 8.5,
+      "quizmaster": 7.3,
+      "media_designer": 6.2,
+      "extension": 7.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_176",
+    "subject": "computer_network",
+    "query": "RIP协议的最大跳数",
+    "retrieved_contexts": [
+      "15跳，16跳表示不可达"
+    ],
+    "label": "15跳，16跳表示不可达",
+    "quality_score": 8.5,
+    "agent_scores": {
+      "teacher": 7.8,
+      "quizmaster": 8.6,
+      "media_designer": 6.2,
+      "extension": 8.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_177",
+    "subject": "computer_network",
+    "query": "OSPF使用的算法",
+    "retrieved_contexts": [
+      "Dijkstra最短路径算法"
+    ],
+    "label": "Dijkstra最短路径算法",
+    "quality_score": 8.5,
+    "agent_scores": {
+      "teacher": 7.5,
+      "quizmaster": 8.5,
+      "media_designer": 6.4,
+      "extension": 6.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_178",
+    "subject": "computer_network",
+    "query": "VLAN的标签格式",
+    "retrieved_contexts": [
+      "802.1Q标签4字节：TPID+优先级+CFI+VID"
+    ],
+    "label": "802.1Q标签4字节：TPID+优先级+CFI+VID",
+    "quality_score": 7.7,
+    "agent_scores": {
+      "teacher": 8.7,
+      "quizmaster": 8.8,
+      "media_designer": 8.0,
+      "extension": 9.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_179",
+    "subject": "computer_network",
+    "query": "IPv6地址长度",
+    "retrieved_contexts": [
+      "128位，8组4位十六进制"
+    ],
+    "label": "128位，8组4位十六进制",
+    "quality_score": 7.4,
+    "agent_scores": {
+      "teacher": 8.1,
+      "quizmaster": 7.6,
+      "media_designer": 6.5,
+      "extension": 9.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_180",
+    "subject": "computer_network",
+    "query": "DHCP分配IP的四个步骤",
+    "retrieved_contexts": [
+      "DISCOVER→OFFER→REQUEST→ACK"
+    ],
+    "label": "DISCOVER→OFFER→REQUEST→ACK",
+    "quality_score": 7.9,
+    "agent_scores": {
+      "teacher": 8.3,
+      "quizmaster": 8.5,
+      "media_designer": 6.4,
+      "extension": 7.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_181",
+    "subject": "computer_network",
+    "query": "ICMP协议的类型",
+    "retrieved_contexts": [
+      "0回送应答、3目的不可达、8回送请求、11超时"
+    ],
+    "label": "0回送应答、3目的不可达、8回送请求、11超时",
+    "quality_score": 8.8,
+    "agent_scores": {
+      "teacher": 8.3,
+      "quizmaster": 8.8,
+      "media_designer": 8.0,
+      "extension": 8.1
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_182",
+    "subject": "computer_network",
+    "query": "NAT的作用",
+    "retrieved_contexts": [
+      "将内网私有IP转换为公网IP，解决IPv4地址不足"
+    ],
+    "label": "将内网私有IP转换为公网IP，解决IPv4地址不足",
+    "quality_score": 9.2,
+    "agent_scores": {
+      "teacher": 7.1,
+      "quizmaster": 6.7,
+      "media_designer": 6.5,
+      "extension": 8.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_183",
+    "subject": "data_structures",
+    "query": "AVL树的平衡因子",
+    "retrieved_contexts": [
+      "左右子树高度差，绝对值不超过1"
+    ],
+    "label": "左右子树高度差，绝对值不超过1",
+    "quality_score": 7.5,
+    "agent_scores": {
+      "teacher": 8.6,
+      "quizmaster": 8.3,
+      "media_designer": 6.9,
+      "extension": 7.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_184",
+    "subject": "data_structures",
+    "query": "哈夫曼树的WPL",
+    "retrieved_contexts": [
+      "带权路径长度最小，每次合并两个最小权值节点"
+    ],
+    "label": "带权路径长度最小，每次合并两个最小权值节点",
+    "quality_score": 8.7,
+    "agent_scores": {
+      "teacher": 7.8,
+      "quizmaster": 6.9,
+      "media_designer": 7.2,
+      "extension": 8.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_185",
+    "subject": "data_structures",
+    "query": "Dijkstra算法不能处理什么图",
+    "retrieved_contexts": [
+      "不能有负权边"
+    ],
+    "label": "不能有负权边",
+    "quality_score": 7.8,
+    "agent_scores": {
+      "teacher": 7.6,
+      "quizmaster": 7.5,
+      "media_designer": 6.4,
+      "extension": 7.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_186",
+    "subject": "data_structures",
+    "query": "拓扑排序用于什么图",
+    "retrieved_contexts": [
+      "DAG有向无环图"
+    ],
+    "label": "DAG有向无环图",
+    "quality_score": 8.4,
+    "agent_scores": {
+      "teacher": 9.5,
+      "quizmaster": 6.6,
+      "media_designer": 6.6,
+      "extension": 7.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_187",
+    "subject": "data_structures",
+    "query": "循环队列队空条件",
+    "retrieved_contexts": [
+      "front==rear"
+    ],
+    "label": "front==rear",
+    "quality_score": 9.1,
+    "agent_scores": {
+      "teacher": 8.3,
+      "quizmaster": 7.3,
+      "media_designer": 6.9,
+      "extension": 6.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_188",
+    "subject": "data_structures",
+    "query": "KMP算法的时间复杂度",
+    "retrieved_contexts": [
+      "O(n+m)，n为主串长度m为模式串长度"
+    ],
+    "label": "O(n+m)，n为主串长度m为模式串长度",
+    "quality_score": 8.0,
+    "agent_scores": {
+      "teacher": 8.0,
+      "quizmaster": 7.1,
+      "media_designer": 7.8,
+      "extension": 9.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_189",
+    "subject": "computer_organization",
+    "query": "IEEE754单精度浮点数的阶码偏置值",
+    "retrieved_contexts": [
+      "127"
+    ],
+    "label": "127",
+    "quality_score": 9.2,
+    "agent_scores": {
+      "teacher": 7.1,
+      "quizmaster": 7.6,
+      "media_designer": 7.7,
+      "extension": 8.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_190",
+    "subject": "computer_organization",
+    "query": "DMA传输时CPU的作用",
+    "retrieved_contexts": [
+      "仅初始化，数据传输阶段CPU不参与"
+    ],
+    "label": "仅初始化，数据传输阶段CPU不参与",
+    "quality_score": 9.2,
+    "agent_scores": {
+      "teacher": 7.5,
+      "quizmaster": 8.1,
+      "media_designer": 7.2,
+      "extension": 8.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_191",
+    "subject": "computer_organization",
+    "query": "总线仲裁的方式",
+    "retrieved_contexts": [
+      "链式查询、计数器定时查询、独立请求"
+    ],
+    "label": "链式查询、计数器定时查询、独立请求",
+    "quality_score": 9.3,
+    "agent_scores": {
+      "teacher": 9.1,
+      "quizmaster": 7.8,
+      "media_designer": 8.4,
+      "extension": 7.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_192",
+    "subject": "computer_organization",
+    "query": "CISC和RISC的区别",
+    "retrieved_contexts": [
+      "CISC指令多变长微程序控制，RISC指令少定长硬布线"
+    ],
+    "label": "CISC指令多变长微程序控制，RISC指令少定长硬布线",
+    "quality_score": 7.4,
+    "agent_scores": {
+      "teacher": 8.4,
+      "quizmaster": 8.0,
+      "media_designer": 6.7,
+      "extension": 6.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_193",
+    "subject": "operating_system",
+    "query": "银行家算法用于什么",
+    "retrieved_contexts": [
+      "死锁避免，检查分配是否安全"
+    ],
+    "label": "死锁避免，检查分配是否安全",
+    "quality_score": 8.9,
+    "agent_scores": {
+      "teacher": 8.8,
+      "quizmaster": 7.5,
+      "media_designer": 6.8,
+      "extension": 8.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_194",
+    "subject": "operating_system",
+    "query": "分页存储中页表的作用",
+    "retrieved_contexts": [
+      "存储页号到物理块号的映射"
+    ],
+    "label": "存储页号到物理块号的映射",
+    "quality_score": 7.6,
+    "agent_scores": {
+      "teacher": 8.3,
+      "quizmaster": 8.6,
+      "media_designer": 7.2,
+      "extension": 8.1
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_195",
+    "subject": "operating_system",
+    "query": "多级反馈队列调度的特点",
+    "retrieved_contexts": [
+      "多队列+时间片递增+抢占"
+    ],
+    "label": "多队列+时间片递增+抢占",
+    "quality_score": 7.5,
+    "agent_scores": {
+      "teacher": 7.4,
+      "quizmaster": 8.1,
+      "media_designer": 6.6,
+      "extension": 8.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_196",
+    "subject": "operating_system",
+    "query": "SPOOLing技术的本质",
+    "retrieved_contexts": [
+      "用磁盘模拟独占设备为共享设备"
+    ],
+    "label": "用磁盘模拟独占设备为共享设备",
+    "quality_score": 7.1,
+    "agent_scores": {
+      "teacher": 8.5,
+      "quizmaster": 8.7,
+      "media_designer": 8.5,
+      "extension": 8.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_197",
+    "subject": "computer_network",
+    "query": "TCP拥塞控制的四个算法",
+    "retrieved_contexts": [
+      "慢启动、拥塞避免、快重传、快恢复"
+    ],
+    "label": "慢启动、拥塞避免、快重传、快恢复",
+    "quality_score": 8.4,
+    "agent_scores": {
+      "teacher": 8.7,
+      "quizmaster": 8.0,
+      "media_designer": 7.4,
+      "extension": 7.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_198",
+    "subject": "computer_network",
+    "query": "RIP协议的最大跳数",
+    "retrieved_contexts": [
+      "15跳，16跳表示不可达"
+    ],
+    "label": "15跳，16跳表示不可达",
+    "quality_score": 9.1,
+    "agent_scores": {
+      "teacher": 8.6,
+      "quizmaster": 8.6,
+      "media_designer": 7.3,
+      "extension": 8.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_199",
+    "subject": "computer_network",
+    "query": "OSPF使用的算法",
+    "retrieved_contexts": [
+      "Dijkstra最短路径算法"
+    ],
+    "label": "Dijkstra最短路径算法",
+    "quality_score": 8.0,
+    "agent_scores": {
+      "teacher": 7.1,
+      "quizmaster": 8.7,
+      "media_designer": 6.4,
+      "extension": 8.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_200",
+    "subject": "computer_network",
+    "query": "VLAN的标签格式",
+    "retrieved_contexts": [
+      "802.1Q标签4字节：TPID+优先级+CFI+VID"
+    ],
+    "label": "802.1Q标签4字节：TPID+优先级+CFI+VID",
+    "quality_score": 7.3,
+    "agent_scores": {
+      "teacher": 9.1,
+      "quizmaster": 6.5,
+      "media_designer": 7.2,
+      "extension": 7.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_201",
+    "subject": "computer_network",
+    "query": "IPv6地址长度",
+    "retrieved_contexts": [
+      "128位，8组4位十六进制"
+    ],
+    "label": "128位，8组4位十六进制",
+    "quality_score": 8.9,
+    "agent_scores": {
+      "teacher": 7.9,
+      "quizmaster": 7.2,
+      "media_designer": 7.1,
+      "extension": 7.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_202",
+    "subject": "computer_network",
+    "query": "DHCP分配IP的四个步骤",
+    "retrieved_contexts": [
+      "DISCOVER→OFFER→REQUEST→ACK"
+    ],
+    "label": "DISCOVER→OFFER→REQUEST→ACK",
+    "quality_score": 7.4,
+    "agent_scores": {
+      "teacher": 8.0,
+      "quizmaster": 8.3,
+      "media_designer": 6.0,
+      "extension": 6.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_203",
+    "subject": "computer_network",
+    "query": "ICMP协议的类型",
+    "retrieved_contexts": [
+      "0回送应答、3目的不可达、8回送请求、11超时"
+    ],
+    "label": "0回送应答、3目的不可达、8回送请求、11超时",
+    "quality_score": 8.0,
+    "agent_scores": {
+      "teacher": 8.9,
+      "quizmaster": 7.5,
+      "media_designer": 7.4,
+      "extension": 8.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_204",
+    "subject": "computer_network",
+    "query": "NAT的作用",
+    "retrieved_contexts": [
+      "将内网私有IP转换为公网IP，解决IPv4地址不足"
+    ],
+    "label": "将内网私有IP转换为公网IP，解决IPv4地址不足",
+    "quality_score": 9.3,
+    "agent_scores": {
+      "teacher": 7.5,
+      "quizmaster": 8.2,
+      "media_designer": 6.3,
+      "extension": 6.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_205",
+    "subject": "data_structures",
+    "query": "AVL树的平衡因子",
+    "retrieved_contexts": [
+      "左右子树高度差，绝对值不超过1"
+    ],
+    "label": "左右子树高度差，绝对值不超过1",
+    "quality_score": 7.6,
+    "agent_scores": {
+      "teacher": 9.0,
+      "quizmaster": 7.3,
+      "media_designer": 8.2,
+      "extension": 6.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_206",
+    "subject": "data_structures",
+    "query": "哈夫曼树的WPL",
+    "retrieved_contexts": [
+      "带权路径长度最小，每次合并两个最小权值节点"
+    ],
+    "label": "带权路径长度最小，每次合并两个最小权值节点",
+    "quality_score": 8.9,
+    "agent_scores": {
+      "teacher": 9.5,
+      "quizmaster": 7.2,
+      "media_designer": 6.8,
+      "extension": 8.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_207",
+    "subject": "data_structures",
+    "query": "Dijkstra算法不能处理什么图",
+    "retrieved_contexts": [
+      "不能有负权边"
+    ],
+    "label": "不能有负权边",
+    "quality_score": 7.3,
+    "agent_scores": {
+      "teacher": 7.2,
+      "quizmaster": 8.5,
+      "media_designer": 6.3,
+      "extension": 8.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_208",
+    "subject": "data_structures",
+    "query": "拓扑排序用于什么图",
+    "retrieved_contexts": [
+      "DAG有向无环图"
+    ],
+    "label": "DAG有向无环图",
+    "quality_score": 8.8,
+    "agent_scores": {
+      "teacher": 8.1,
+      "quizmaster": 7.0,
+      "media_designer": 8.2,
+      "extension": 7.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_209",
+    "subject": "data_structures",
+    "query": "循环队列队空条件",
+    "retrieved_contexts": [
+      "front==rear"
+    ],
+    "label": "front==rear",
+    "quality_score": 8.0,
+    "agent_scores": {
+      "teacher": 7.9,
+      "quizmaster": 6.9,
+      "media_designer": 7.3,
+      "extension": 7.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_210",
+    "subject": "data_structures",
+    "query": "KMP算法的时间复杂度",
+    "retrieved_contexts": [
+      "O(n+m)，n为主串长度m为模式串长度"
+    ],
+    "label": "O(n+m)，n为主串长度m为模式串长度",
+    "quality_score": 8.4,
+    "agent_scores": {
+      "teacher": 7.2,
+      "quizmaster": 7.5,
+      "media_designer": 6.7,
+      "extension": 8.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_211",
+    "subject": "computer_organization",
+    "query": "IEEE754单精度浮点数的阶码偏置值",
+    "retrieved_contexts": [
+      "127"
+    ],
+    "label": "127",
+    "quality_score": 7.5,
+    "agent_scores": {
+      "teacher": 7.5,
+      "quizmaster": 8.6,
+      "media_designer": 7.9,
+      "extension": 8.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_212",
+    "subject": "computer_organization",
+    "query": "DMA传输时CPU的作用",
+    "retrieved_contexts": [
+      "仅初始化，数据传输阶段CPU不参与"
+    ],
+    "label": "仅初始化，数据传输阶段CPU不参与",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 8.8,
+      "quizmaster": 6.6,
+      "media_designer": 6.3,
+      "extension": 7.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_213",
+    "subject": "computer_organization",
+    "query": "总线仲裁的方式",
+    "retrieved_contexts": [
+      "链式查询、计数器定时查询、独立请求"
+    ],
+    "label": "链式查询、计数器定时查询、独立请求",
+    "quality_score": 8.9,
+    "agent_scores": {
+      "teacher": 8.7,
+      "quizmaster": 6.9,
+      "media_designer": 8.0,
+      "extension": 6.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_214",
+    "subject": "computer_organization",
+    "query": "CISC和RISC的区别",
+    "retrieved_contexts": [
+      "CISC指令多变长微程序控制，RISC指令少定长硬布线"
+    ],
+    "label": "CISC指令多变长微程序控制，RISC指令少定长硬布线",
+    "quality_score": 7.9,
+    "agent_scores": {
+      "teacher": 9.3,
+      "quizmaster": 8.1,
+      "media_designer": 8.1,
+      "extension": 8.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_215",
+    "subject": "operating_system",
+    "query": "银行家算法用于什么",
+    "retrieved_contexts": [
+      "死锁避免，检查分配是否安全"
+    ],
+    "label": "死锁避免，检查分配是否安全",
+    "quality_score": 7.3,
+    "agent_scores": {
+      "teacher": 8.2,
+      "quizmaster": 8.2,
+      "media_designer": 7.1,
+      "extension": 8.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_216",
+    "subject": "operating_system",
+    "query": "分页存储中页表的作用",
+    "retrieved_contexts": [
+      "存储页号到物理块号的映射"
+    ],
+    "label": "存储页号到物理块号的映射",
+    "quality_score": 8.7,
+    "agent_scores": {
+      "teacher": 7.0,
+      "quizmaster": 7.5,
+      "media_designer": 6.0,
+      "extension": 8.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_217",
+    "subject": "operating_system",
+    "query": "多级反馈队列调度的特点",
+    "retrieved_contexts": [
+      "多队列+时间片递增+抢占"
+    ],
+    "label": "多队列+时间片递增+抢占",
+    "quality_score": 7.9,
+    "agent_scores": {
+      "teacher": 7.5,
+      "quizmaster": 8.9,
+      "media_designer": 8.1,
+      "extension": 8.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_218",
+    "subject": "operating_system",
+    "query": "SPOOLing技术的本质",
+    "retrieved_contexts": [
+      "用磁盘模拟独占设备为共享设备"
+    ],
+    "label": "用磁盘模拟独占设备为共享设备",
+    "quality_score": 7.9,
+    "agent_scores": {
+      "teacher": 8.5,
+      "quizmaster": 8.3,
+      "media_designer": 6.3,
+      "extension": 8.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_219",
+    "subject": "computer_network",
+    "query": "TCP拥塞控制的四个算法",
+    "retrieved_contexts": [
+      "慢启动、拥塞避免、快重传、快恢复"
+    ],
+    "label": "慢启动、拥塞避免、快重传、快恢复",
+    "quality_score": 8.0,
+    "agent_scores": {
+      "teacher": 9.3,
+      "quizmaster": 7.1,
+      "media_designer": 8.4,
+      "extension": 6.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_220",
+    "subject": "computer_network",
+    "query": "RIP协议的最大跳数",
+    "retrieved_contexts": [
+      "15跳，16跳表示不可达"
+    ],
+    "label": "15跳，16跳表示不可达",
+    "quality_score": 8.7,
+    "agent_scores": {
+      "teacher": 8.4,
+      "quizmaster": 6.6,
+      "media_designer": 7.7,
+      "extension": 7.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_221",
+    "subject": "computer_network",
+    "query": "OSPF使用的算法",
+    "retrieved_contexts": [
+      "Dijkstra最短路径算法"
+    ],
+    "label": "Dijkstra最短路径算法",
+    "quality_score": 7.9,
+    "agent_scores": {
+      "teacher": 9.0,
+      "quizmaster": 8.9,
+      "media_designer": 7.0,
+      "extension": 7.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_222",
+    "subject": "computer_network",
+    "query": "VLAN的标签格式",
+    "retrieved_contexts": [
+      "802.1Q标签4字节：TPID+优先级+CFI+VID"
+    ],
+    "label": "802.1Q标签4字节：TPID+优先级+CFI+VID",
+    "quality_score": 8.4,
+    "agent_scores": {
+      "teacher": 7.7,
+      "quizmaster": 8.5,
+      "media_designer": 7.4,
+      "extension": 8.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_223",
+    "subject": "computer_network",
+    "query": "IPv6地址长度",
+    "retrieved_contexts": [
+      "128位，8组4位十六进制"
+    ],
+    "label": "128位，8组4位十六进制",
+    "quality_score": 8.7,
+    "agent_scores": {
+      "teacher": 9.0,
+      "quizmaster": 8.8,
+      "media_designer": 6.3,
+      "extension": 7.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_224",
+    "subject": "computer_network",
+    "query": "DHCP分配IP的四个步骤",
+    "retrieved_contexts": [
+      "DISCOVER→OFFER→REQUEST→ACK"
+    ],
+    "label": "DISCOVER→OFFER→REQUEST→ACK",
+    "quality_score": 7.4,
+    "agent_scores": {
+      "teacher": 8.0,
+      "quizmaster": 7.5,
+      "media_designer": 7.6,
+      "extension": 7.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_225",
+    "subject": "computer_network",
+    "query": "ICMP协议的类型",
+    "retrieved_contexts": [
+      "0回送应答、3目的不可达、8回送请求、11超时"
+    ],
+    "label": "0回送应答、3目的不可达、8回送请求、11超时",
+    "quality_score": 7.2,
+    "agent_scores": {
+      "teacher": 7.4,
+      "quizmaster": 7.7,
+      "media_designer": 6.2,
+      "extension": 7.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_226",
+    "subject": "computer_network",
+    "query": "NAT的作用",
+    "retrieved_contexts": [
+      "将内网私有IP转换为公网IP，解决IPv4地址不足"
+    ],
+    "label": "将内网私有IP转换为公网IP，解决IPv4地址不足",
+    "quality_score": 8.3,
+    "agent_scores": {
+      "teacher": 8.6,
+      "quizmaster": 8.3,
+      "media_designer": 8.4,
+      "extension": 9.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_227",
+    "subject": "data_structures",
+    "query": "AVL树的平衡因子",
+    "retrieved_contexts": [
+      "左右子树高度差，绝对值不超过1"
+    ],
+    "label": "左右子树高度差，绝对值不超过1",
+    "quality_score": 9.1,
+    "agent_scores": {
+      "teacher": 7.0,
+      "quizmaster": 7.8,
+      "media_designer": 8.3,
+      "extension": 6.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_228",
+    "subject": "data_structures",
+    "query": "哈夫曼树的WPL",
+    "retrieved_contexts": [
+      "带权路径长度最小，每次合并两个最小权值节点"
+    ],
+    "label": "带权路径长度最小，每次合并两个最小权值节点",
+    "quality_score": 7.4,
+    "agent_scores": {
+      "teacher": 9.5,
+      "quizmaster": 7.4,
+      "media_designer": 6.8,
+      "extension": 7.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_229",
+    "subject": "data_structures",
+    "query": "Dijkstra算法不能处理什么图",
+    "retrieved_contexts": [
+      "不能有负权边"
+    ],
+    "label": "不能有负权边",
+    "quality_score": 8.9,
+    "agent_scores": {
+      "teacher": 7.8,
+      "quizmaster": 6.8,
+      "media_designer": 6.8,
+      "extension": 7.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_230",
+    "subject": "data_structures",
+    "query": "拓扑排序用于什么图",
+    "retrieved_contexts": [
+      "DAG有向无环图"
+    ],
+    "label": "DAG有向无环图",
+    "quality_score": 8.0,
+    "agent_scores": {
+      "teacher": 7.4,
+      "quizmaster": 7.7,
+      "media_designer": 7.8,
+      "extension": 8.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_231",
+    "subject": "data_structures",
+    "query": "循环队列队空条件",
+    "retrieved_contexts": [
+      "front==rear"
+    ],
+    "label": "front==rear",
+    "quality_score": 9.4,
+    "agent_scores": {
+      "teacher": 9.2,
+      "quizmaster": 6.5,
+      "media_designer": 6.2,
+      "extension": 8.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_232",
+    "subject": "data_structures",
+    "query": "KMP算法的时间复杂度",
+    "retrieved_contexts": [
+      "O(n+m)，n为主串长度m为模式串长度"
+    ],
+    "label": "O(n+m)，n为主串长度m为模式串长度",
+    "quality_score": 8.4,
+    "agent_scores": {
+      "teacher": 7.1,
+      "quizmaster": 7.1,
+      "media_designer": 8.4,
+      "extension": 7.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_233",
+    "subject": "computer_organization",
+    "query": "IEEE754单精度浮点数的阶码偏置值",
+    "retrieved_contexts": [
+      "127"
+    ],
+    "label": "127",
+    "quality_score": 8.5,
+    "agent_scores": {
+      "teacher": 8.4,
+      "quizmaster": 7.2,
+      "media_designer": 6.5,
+      "extension": 8.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_234",
+    "subject": "computer_organization",
+    "query": "DMA传输时CPU的作用",
+    "retrieved_contexts": [
+      "仅初始化，数据传输阶段CPU不参与"
+    ],
+    "label": "仅初始化，数据传输阶段CPU不参与",
+    "quality_score": 8.4,
+    "agent_scores": {
+      "teacher": 8.8,
+      "quizmaster": 7.7,
+      "media_designer": 8.0,
+      "extension": 7.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_235",
+    "subject": "computer_organization",
+    "query": "总线仲裁的方式",
+    "retrieved_contexts": [
+      "链式查询、计数器定时查询、独立请求"
+    ],
+    "label": "链式查询、计数器定时查询、独立请求",
+    "quality_score": 9.4,
+    "agent_scores": {
+      "teacher": 7.9,
+      "quizmaster": 8.0,
+      "media_designer": 7.3,
+      "extension": 7.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_236",
+    "subject": "computer_organization",
+    "query": "CISC和RISC的区别",
+    "retrieved_contexts": [
+      "CISC指令多变长微程序控制，RISC指令少定长硬布线"
+    ],
+    "label": "CISC指令多变长微程序控制，RISC指令少定长硬布线",
+    "quality_score": 8.5,
+    "agent_scores": {
+      "teacher": 7.9,
+      "quizmaster": 6.7,
+      "media_designer": 6.7,
+      "extension": 7.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_237",
+    "subject": "operating_system",
+    "query": "银行家算法用于什么",
+    "retrieved_contexts": [
+      "死锁避免，检查分配是否安全"
+    ],
+    "label": "死锁避免，检查分配是否安全",
+    "quality_score": 8.7,
+    "agent_scores": {
+      "teacher": 8.1,
+      "quizmaster": 7.5,
+      "media_designer": 8.2,
+      "extension": 7.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_238",
+    "subject": "operating_system",
+    "query": "分页存储中页表的作用",
+    "retrieved_contexts": [
+      "存储页号到物理块号的映射"
+    ],
+    "label": "存储页号到物理块号的映射",
+    "quality_score": 7.5,
+    "agent_scores": {
+      "teacher": 7.9,
+      "quizmaster": 8.3,
+      "media_designer": 7.2,
+      "extension": 8.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_239",
+    "subject": "operating_system",
+    "query": "多级反馈队列调度的特点",
+    "retrieved_contexts": [
+      "多队列+时间片递增+抢占"
+    ],
+    "label": "多队列+时间片递增+抢占",
+    "quality_score": 8.0,
+    "agent_scores": {
+      "teacher": 7.1,
+      "quizmaster": 7.6,
+      "media_designer": 7.4,
+      "extension": 8.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_240",
+    "subject": "operating_system",
+    "query": "SPOOLing技术的本质",
+    "retrieved_contexts": [
+      "用磁盘模拟独占设备为共享设备"
+    ],
+    "label": "用磁盘模拟独占设备为共享设备",
+    "quality_score": 7.9,
+    "agent_scores": {
+      "teacher": 8.4,
+      "quizmaster": 7.5,
+      "media_designer": 8.2,
+      "extension": 7.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_241",
+    "subject": "computer_network",
+    "query": "TCP拥塞控制的四个算法",
+    "retrieved_contexts": [
+      "慢启动、拥塞避免、快重传、快恢复"
+    ],
+    "label": "慢启动、拥塞避免、快重传、快恢复",
+    "quality_score": 9.1,
+    "agent_scores": {
+      "teacher": 8.3,
+      "quizmaster": 7.0,
+      "media_designer": 8.1,
+      "extension": 6.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_242",
+    "subject": "computer_network",
+    "query": "RIP协议的最大跳数",
+    "retrieved_contexts": [
+      "15跳，16跳表示不可达"
+    ],
+    "label": "15跳，16跳表示不可达",
+    "quality_score": 9.3,
+    "agent_scores": {
+      "teacher": 8.8,
+      "quizmaster": 7.9,
+      "media_designer": 8.2,
+      "extension": 8.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_243",
+    "subject": "computer_network",
+    "query": "OSPF使用的算法",
+    "retrieved_contexts": [
+      "Dijkstra最短路径算法"
+    ],
+    "label": "Dijkstra最短路径算法",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 9.4,
+      "quizmaster": 8.8,
+      "media_designer": 6.8,
+      "extension": 7.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_244",
+    "subject": "computer_network",
+    "query": "VLAN的标签格式",
+    "retrieved_contexts": [
+      "802.1Q标签4字节：TPID+优先级+CFI+VID"
+    ],
+    "label": "802.1Q标签4字节：TPID+优先级+CFI+VID",
+    "quality_score": 7.9,
+    "agent_scores": {
+      "teacher": 9.1,
+      "quizmaster": 7.8,
+      "media_designer": 6.9,
+      "extension": 8.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_245",
+    "subject": "computer_network",
+    "query": "IPv6地址长度",
+    "retrieved_contexts": [
+      "128位，8组4位十六进制"
+    ],
+    "label": "128位，8组4位十六进制",
+    "quality_score": 7.3,
+    "agent_scores": {
+      "teacher": 8.7,
+      "quizmaster": 7.1,
+      "media_designer": 7.9,
+      "extension": 8.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_246",
+    "subject": "computer_network",
+    "query": "DHCP分配IP的四个步骤",
+    "retrieved_contexts": [
+      "DISCOVER→OFFER→REQUEST→ACK"
+    ],
+    "label": "DISCOVER→OFFER→REQUEST→ACK",
+    "quality_score": 7.9,
+    "agent_scores": {
+      "teacher": 7.7,
+      "quizmaster": 7.1,
+      "media_designer": 6.9,
+      "extension": 7.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_247",
+    "subject": "computer_network",
+    "query": "ICMP协议的类型",
+    "retrieved_contexts": [
+      "0回送应答、3目的不可达、8回送请求、11超时"
+    ],
+    "label": "0回送应答、3目的不可达、8回送请求、11超时",
+    "quality_score": 8.3,
+    "agent_scores": {
+      "teacher": 7.3,
+      "quizmaster": 8.3,
+      "media_designer": 6.1,
+      "extension": 7.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_248",
+    "subject": "computer_network",
+    "query": "NAT的作用",
+    "retrieved_contexts": [
+      "将内网私有IP转换为公网IP，解决IPv4地址不足"
+    ],
+    "label": "将内网私有IP转换为公网IP，解决IPv4地址不足",
+    "quality_score": 7.2,
+    "agent_scores": {
+      "teacher": 7.8,
+      "quizmaster": 7.9,
+      "media_designer": 6.7,
+      "extension": 7.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_249",
+    "subject": "data_structures",
+    "query": "AVL树的平衡因子",
+    "retrieved_contexts": [
+      "左右子树高度差，绝对值不超过1"
+    ],
+    "label": "左右子树高度差，绝对值不超过1",
+    "quality_score": 9.1,
+    "agent_scores": {
+      "teacher": 7.2,
+      "quizmaster": 8.1,
+      "media_designer": 7.3,
+      "extension": 8.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_250",
+    "subject": "data_structures",
+    "query": "哈夫曼树的WPL",
+    "retrieved_contexts": [
+      "带权路径长度最小，每次合并两个最小权值节点"
+    ],
+    "label": "带权路径长度最小，每次合并两个最小权值节点",
+    "quality_score": 7.1,
+    "agent_scores": {
+      "teacher": 9.1,
+      "quizmaster": 6.8,
+      "media_designer": 7.4,
+      "extension": 6.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_251",
+    "subject": "data_structures",
+    "query": "Dijkstra算法不能处理什么图",
+    "retrieved_contexts": [
+      "不能有负权边"
+    ],
+    "label": "不能有负权边",
+    "quality_score": 7.0,
+    "agent_scores": {
+      "teacher": 7.2,
+      "quizmaster": 7.4,
+      "media_designer": 7.2,
+      "extension": 7.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_252",
+    "subject": "data_structures",
+    "query": "拓扑排序用于什么图",
+    "retrieved_contexts": [
+      "DAG有向无环图"
+    ],
+    "label": "DAG有向无环图",
+    "quality_score": 9.1,
+    "agent_scores": {
+      "teacher": 8.7,
+      "quizmaster": 7.8,
+      "media_designer": 6.9,
+      "extension": 6.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_253",
+    "subject": "data_structures",
+    "query": "循环队列队空条件",
+    "retrieved_contexts": [
+      "front==rear"
+    ],
+    "label": "front==rear",
+    "quality_score": 8.4,
+    "agent_scores": {
+      "teacher": 7.6,
+      "quizmaster": 8.2,
+      "media_designer": 6.2,
+      "extension": 7.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_254",
+    "subject": "data_structures",
+    "query": "KMP算法的时间复杂度",
+    "retrieved_contexts": [
+      "O(n+m)，n为主串长度m为模式串长度"
+    ],
+    "label": "O(n+m)，n为主串长度m为模式串长度",
+    "quality_score": 9.1,
+    "agent_scores": {
+      "teacher": 7.5,
+      "quizmaster": 8.8,
+      "media_designer": 6.5,
+      "extension": 7.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_255",
+    "subject": "computer_organization",
+    "query": "IEEE754单精度浮点数的阶码偏置值",
+    "retrieved_contexts": [
+      "127"
+    ],
+    "label": "127",
+    "quality_score": 9.5,
+    "agent_scores": {
+      "teacher": 9.3,
+      "quizmaster": 7.3,
+      "media_designer": 6.3,
+      "extension": 7.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_256",
+    "subject": "computer_organization",
+    "query": "DMA传输时CPU的作用",
+    "retrieved_contexts": [
+      "仅初始化，数据传输阶段CPU不参与"
+    ],
+    "label": "仅初始化，数据传输阶段CPU不参与",
+    "quality_score": 7.1,
+    "agent_scores": {
+      "teacher": 8.7,
+      "quizmaster": 6.9,
+      "media_designer": 6.6,
+      "extension": 8.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_257",
+    "subject": "computer_organization",
+    "query": "总线仲裁的方式",
+    "retrieved_contexts": [
+      "链式查询、计数器定时查询、独立请求"
+    ],
+    "label": "链式查询、计数器定时查询、独立请求",
+    "quality_score": 8.0,
+    "agent_scores": {
+      "teacher": 9.0,
+      "quizmaster": 7.7,
+      "media_designer": 7.8,
+      "extension": 6.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_258",
+    "subject": "computer_organization",
+    "query": "CISC和RISC的区别",
+    "retrieved_contexts": [
+      "CISC指令多变长微程序控制，RISC指令少定长硬布线"
+    ],
+    "label": "CISC指令多变长微程序控制，RISC指令少定长硬布线",
+    "quality_score": 8.1,
+    "agent_scores": {
+      "teacher": 8.2,
+      "quizmaster": 8.5,
+      "media_designer": 7.4,
+      "extension": 8.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_259",
+    "subject": "operating_system",
+    "query": "银行家算法用于什么",
+    "retrieved_contexts": [
+      "死锁避免，检查分配是否安全"
+    ],
+    "label": "死锁避免，检查分配是否安全",
+    "quality_score": 7.1,
+    "agent_scores": {
+      "teacher": 7.6,
+      "quizmaster": 7.7,
+      "media_designer": 8.2,
+      "extension": 6.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_260",
+    "subject": "operating_system",
+    "query": "分页存储中页表的作用",
+    "retrieved_contexts": [
+      "存储页号到物理块号的映射"
+    ],
+    "label": "存储页号到物理块号的映射",
+    "quality_score": 8.4,
+    "agent_scores": {
+      "teacher": 9.2,
+      "quizmaster": 7.0,
+      "media_designer": 6.7,
+      "extension": 6.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_261",
+    "subject": "operating_system",
+    "query": "多级反馈队列调度的特点",
+    "retrieved_contexts": [
+      "多队列+时间片递增+抢占"
+    ],
+    "label": "多队列+时间片递增+抢占",
+    "quality_score": 7.3,
+    "agent_scores": {
+      "teacher": 7.9,
+      "quizmaster": 6.8,
+      "media_designer": 7.7,
+      "extension": 7.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_262",
+    "subject": "operating_system",
+    "query": "SPOOLing技术的本质",
+    "retrieved_contexts": [
+      "用磁盘模拟独占设备为共享设备"
+    ],
+    "label": "用磁盘模拟独占设备为共享设备",
+    "quality_score": 7.9,
+    "agent_scores": {
+      "teacher": 8.3,
+      "quizmaster": 8.0,
+      "media_designer": 8.2,
+      "extension": 7.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_263",
+    "subject": "computer_network",
+    "query": "TCP拥塞控制的四个算法",
+    "retrieved_contexts": [
+      "慢启动、拥塞避免、快重传、快恢复"
+    ],
+    "label": "慢启动、拥塞避免、快重传、快恢复",
+    "quality_score": 9.3,
+    "agent_scores": {
+      "teacher": 7.9,
+      "quizmaster": 8.1,
+      "media_designer": 7.2,
+      "extension": 8.1
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_264",
+    "subject": "computer_network",
+    "query": "RIP协议的最大跳数",
+    "retrieved_contexts": [
+      "15跳，16跳表示不可达"
+    ],
+    "label": "15跳，16跳表示不可达",
+    "quality_score": 7.0,
+    "agent_scores": {
+      "teacher": 7.9,
+      "quizmaster": 8.4,
+      "media_designer": 7.1,
+      "extension": 8.1
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_265",
+    "subject": "computer_network",
+    "query": "OSPF使用的算法",
+    "retrieved_contexts": [
+      "Dijkstra最短路径算法"
+    ],
+    "label": "Dijkstra最短路径算法",
+    "quality_score": 7.4,
+    "agent_scores": {
+      "teacher": 9.0,
+      "quizmaster": 7.8,
+      "media_designer": 6.5,
+      "extension": 7.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_266",
+    "subject": "computer_network",
+    "query": "VLAN的标签格式",
+    "retrieved_contexts": [
+      "802.1Q标签4字节：TPID+优先级+CFI+VID"
+    ],
+    "label": "802.1Q标签4字节：TPID+优先级+CFI+VID",
+    "quality_score": 8.8,
+    "agent_scores": {
+      "teacher": 7.1,
+      "quizmaster": 8.3,
+      "media_designer": 6.8,
+      "extension": 8.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_267",
+    "subject": "computer_network",
+    "query": "IPv6地址长度",
+    "retrieved_contexts": [
+      "128位，8组4位十六进制"
+    ],
+    "label": "128位，8组4位十六进制",
+    "quality_score": 8.9,
+    "agent_scores": {
+      "teacher": 8.2,
+      "quizmaster": 6.8,
+      "media_designer": 6.9,
+      "extension": 8.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_268",
+    "subject": "computer_network",
+    "query": "DHCP分配IP的四个步骤",
+    "retrieved_contexts": [
+      "DISCOVER→OFFER→REQUEST→ACK"
+    ],
+    "label": "DISCOVER→OFFER→REQUEST→ACK",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 8.9,
+      "quizmaster": 8.2,
+      "media_designer": 6.4,
+      "extension": 7.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_269",
+    "subject": "computer_network",
+    "query": "ICMP协议的类型",
+    "retrieved_contexts": [
+      "0回送应答、3目的不可达、8回送请求、11超时"
+    ],
+    "label": "0回送应答、3目的不可达、8回送请求、11超时",
+    "quality_score": 8.4,
+    "agent_scores": {
+      "teacher": 8.8,
+      "quizmaster": 7.2,
+      "media_designer": 6.2,
+      "extension": 7.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_270",
+    "subject": "computer_network",
+    "query": "NAT的作用",
+    "retrieved_contexts": [
+      "将内网私有IP转换为公网IP，解决IPv4地址不足"
+    ],
+    "label": "将内网私有IP转换为公网IP，解决IPv4地址不足",
+    "quality_score": 8.4,
+    "agent_scores": {
+      "teacher": 7.6,
+      "quizmaster": 7.1,
+      "media_designer": 8.4,
+      "extension": 8.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_271",
+    "subject": "data_structures",
+    "query": "AVL树的平衡因子",
+    "retrieved_contexts": [
+      "左右子树高度差，绝对值不超过1"
+    ],
+    "label": "左右子树高度差，绝对值不超过1",
+    "quality_score": 7.4,
+    "agent_scores": {
+      "teacher": 7.4,
+      "quizmaster": 6.7,
+      "media_designer": 6.6,
+      "extension": 8.1
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_272",
+    "subject": "data_structures",
+    "query": "哈夫曼树的WPL",
+    "retrieved_contexts": [
+      "带权路径长度最小，每次合并两个最小权值节点"
+    ],
+    "label": "带权路径长度最小，每次合并两个最小权值节点",
+    "quality_score": 9.2,
+    "agent_scores": {
+      "teacher": 7.0,
+      "quizmaster": 7.6,
+      "media_designer": 7.2,
+      "extension": 8.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_273",
+    "subject": "data_structures",
+    "query": "Dijkstra算法不能处理什么图",
+    "retrieved_contexts": [
+      "不能有负权边"
+    ],
+    "label": "不能有负权边",
+    "quality_score": 9.4,
+    "agent_scores": {
+      "teacher": 7.1,
+      "quizmaster": 6.6,
+      "media_designer": 7.9,
+      "extension": 6.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_274",
+    "subject": "data_structures",
+    "query": "拓扑排序用于什么图",
+    "retrieved_contexts": [
+      "DAG有向无环图"
+    ],
+    "label": "DAG有向无环图",
+    "quality_score": 9.4,
+    "agent_scores": {
+      "teacher": 8.6,
+      "quizmaster": 6.9,
+      "media_designer": 8.3,
+      "extension": 7.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_275",
+    "subject": "data_structures",
+    "query": "循环队列队空条件",
+    "retrieved_contexts": [
+      "front==rear"
+    ],
+    "label": "front==rear",
+    "quality_score": 7.4,
+    "agent_scores": {
+      "teacher": 8.5,
+      "quizmaster": 7.7,
+      "media_designer": 6.4,
+      "extension": 6.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_276",
+    "subject": "data_structures",
+    "query": "KMP算法的时间复杂度",
+    "retrieved_contexts": [
+      "O(n+m)，n为主串长度m为模式串长度"
+    ],
+    "label": "O(n+m)，n为主串长度m为模式串长度",
+    "quality_score": 8.1,
+    "agent_scores": {
+      "teacher": 7.8,
+      "quizmaster": 7.0,
+      "media_designer": 6.6,
+      "extension": 9.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_277",
+    "subject": "computer_organization",
+    "query": "IEEE754单精度浮点数的阶码偏置值",
+    "retrieved_contexts": [
+      "127"
+    ],
+    "label": "127",
+    "quality_score": 7.7,
+    "agent_scores": {
+      "teacher": 8.9,
+      "quizmaster": 8.8,
+      "media_designer": 6.8,
+      "extension": 8.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_278",
+    "subject": "computer_organization",
+    "query": "DMA传输时CPU的作用",
+    "retrieved_contexts": [
+      "仅初始化，数据传输阶段CPU不参与"
+    ],
+    "label": "仅初始化，数据传输阶段CPU不参与",
+    "quality_score": 7.9,
+    "agent_scores": {
+      "teacher": 8.5,
+      "quizmaster": 7.6,
+      "media_designer": 8.0,
+      "extension": 7.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_279",
+    "subject": "computer_organization",
+    "query": "总线仲裁的方式",
+    "retrieved_contexts": [
+      "链式查询、计数器定时查询、独立请求"
+    ],
+    "label": "链式查询、计数器定时查询、独立请求",
+    "quality_score": 7.6,
+    "agent_scores": {
+      "teacher": 8.6,
+      "quizmaster": 7.2,
+      "media_designer": 6.7,
+      "extension": 7.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_280",
+    "subject": "computer_organization",
+    "query": "CISC和RISC的区别",
+    "retrieved_contexts": [
+      "CISC指令多变长微程序控制，RISC指令少定长硬布线"
+    ],
+    "label": "CISC指令多变长微程序控制，RISC指令少定长硬布线",
+    "quality_score": 8.2,
+    "agent_scores": {
+      "teacher": 7.8,
+      "quizmaster": 7.9,
+      "media_designer": 7.8,
+      "extension": 8.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_281",
+    "subject": "operating_system",
+    "query": "银行家算法用于什么",
+    "retrieved_contexts": [
+      "死锁避免，检查分配是否安全"
+    ],
+    "label": "死锁避免，检查分配是否安全",
+    "quality_score": 7.1,
+    "agent_scores": {
+      "teacher": 8.1,
+      "quizmaster": 7.3,
+      "media_designer": 8.1,
+      "extension": 7.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_282",
+    "subject": "operating_system",
+    "query": "分页存储中页表的作用",
+    "retrieved_contexts": [
+      "存储页号到物理块号的映射"
+    ],
+    "label": "存储页号到物理块号的映射",
+    "quality_score": 7.8,
+    "agent_scores": {
+      "teacher": 7.7,
+      "quizmaster": 8.5,
+      "media_designer": 6.0,
+      "extension": 8.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_283",
+    "subject": "operating_system",
+    "query": "多级反馈队列调度的特点",
+    "retrieved_contexts": [
+      "多队列+时间片递增+抢占"
+    ],
+    "label": "多队列+时间片递增+抢占",
+    "quality_score": 8.4,
+    "agent_scores": {
+      "teacher": 9.1,
+      "quizmaster": 8.7,
+      "media_designer": 8.4,
+      "extension": 7.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_284",
+    "subject": "operating_system",
+    "query": "SPOOLing技术的本质",
+    "retrieved_contexts": [
+      "用磁盘模拟独占设备为共享设备"
+    ],
+    "label": "用磁盘模拟独占设备为共享设备",
+    "quality_score": 8.0,
+    "agent_scores": {
+      "teacher": 9.2,
+      "quizmaster": 8.1,
+      "media_designer": 7.3,
+      "extension": 7.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_285",
+    "subject": "computer_network",
+    "query": "TCP拥塞控制的四个算法",
+    "retrieved_contexts": [
+      "慢启动、拥塞避免、快重传、快恢复"
+    ],
+    "label": "慢启动、拥塞避免、快重传、快恢复",
+    "quality_score": 7.5,
+    "agent_scores": {
+      "teacher": 9.4,
+      "quizmaster": 6.8,
+      "media_designer": 7.5,
+      "extension": 8.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_286",
+    "subject": "computer_network",
+    "query": "RIP协议的最大跳数",
+    "retrieved_contexts": [
+      "15跳，16跳表示不可达"
+    ],
+    "label": "15跳，16跳表示不可达",
+    "quality_score": 8.9,
+    "agent_scores": {
+      "teacher": 7.3,
+      "quizmaster": 8.0,
+      "media_designer": 8.1,
+      "extension": 7.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_287",
+    "subject": "computer_network",
+    "query": "OSPF使用的算法",
+    "retrieved_contexts": [
+      "Dijkstra最短路径算法"
+    ],
+    "label": "Dijkstra最短路径算法",
+    "quality_score": 7.0,
+    "agent_scores": {
+      "teacher": 8.6,
+      "quizmaster": 7.3,
+      "media_designer": 7.6,
+      "extension": 7.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_288",
+    "subject": "computer_network",
+    "query": "VLAN的标签格式",
+    "retrieved_contexts": [
+      "802.1Q标签4字节：TPID+优先级+CFI+VID"
+    ],
+    "label": "802.1Q标签4字节：TPID+优先级+CFI+VID",
+    "quality_score": 7.6,
+    "agent_scores": {
+      "teacher": 8.2,
+      "quizmaster": 8.3,
+      "media_designer": 6.5,
+      "extension": 8.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_289",
+    "subject": "computer_network",
+    "query": "IPv6地址长度",
+    "retrieved_contexts": [
+      "128位，8组4位十六进制"
+    ],
+    "label": "128位，8组4位十六进制",
+    "quality_score": 7.4,
+    "agent_scores": {
+      "teacher": 9.3,
+      "quizmaster": 7.3,
+      "media_designer": 7.5,
+      "extension": 7.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_290",
+    "subject": "computer_network",
+    "query": "DHCP分配IP的四个步骤",
+    "retrieved_contexts": [
+      "DISCOVER→OFFER→REQUEST→ACK"
+    ],
+    "label": "DISCOVER→OFFER→REQUEST→ACK",
+    "quality_score": 8.6,
+    "agent_scores": {
+      "teacher": 9.1,
+      "quizmaster": 8.5,
+      "media_designer": 6.4,
+      "extension": 8.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_291",
+    "subject": "computer_network",
+    "query": "ICMP协议的类型",
+    "retrieved_contexts": [
+      "0回送应答、3目的不可达、8回送请求、11超时"
+    ],
+    "label": "0回送应答、3目的不可达、8回送请求、11超时",
+    "quality_score": 7.3,
+    "agent_scores": {
+      "teacher": 8.3,
+      "quizmaster": 8.4,
+      "media_designer": 6.4,
+      "extension": 8.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_292",
+    "subject": "computer_network",
+    "query": "NAT的作用",
+    "retrieved_contexts": [
+      "将内网私有IP转换为公网IP，解决IPv4地址不足"
+    ],
+    "label": "将内网私有IP转换为公网IP，解决IPv4地址不足",
+    "quality_score": 8.5,
+    "agent_scores": {
+      "teacher": 9.3,
+      "quizmaster": 7.7,
+      "media_designer": 7.7,
+      "extension": 8.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_293",
+    "subject": "data_structures",
+    "query": "AVL树的平衡因子",
+    "retrieved_contexts": [
+      "左右子树高度差，绝对值不超过1"
+    ],
+    "label": "左右子树高度差，绝对值不超过1",
+    "quality_score": 8.8,
+    "agent_scores": {
+      "teacher": 7.1,
+      "quizmaster": 7.3,
+      "media_designer": 6.3,
+      "extension": 7.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_294",
+    "subject": "data_structures",
+    "query": "哈夫曼树的WPL",
+    "retrieved_contexts": [
+      "带权路径长度最小，每次合并两个最小权值节点"
+    ],
+    "label": "带权路径长度最小，每次合并两个最小权值节点",
+    "quality_score": 7.8,
+    "agent_scores": {
+      "teacher": 9.4,
+      "quizmaster": 7.7,
+      "media_designer": 8.1,
+      "extension": 7.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_295",
+    "subject": "data_structures",
+    "query": "Dijkstra算法不能处理什么图",
+    "retrieved_contexts": [
+      "不能有负权边"
+    ],
+    "label": "不能有负权边",
+    "quality_score": 9.1,
+    "agent_scores": {
+      "teacher": 9.1,
+      "quizmaster": 7.2,
+      "media_designer": 8.2,
+      "extension": 6.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_296",
+    "subject": "data_structures",
+    "query": "拓扑排序用于什么图",
+    "retrieved_contexts": [
+      "DAG有向无环图"
+    ],
+    "label": "DAG有向无环图",
+    "quality_score": 9.3,
+    "agent_scores": {
+      "teacher": 7.0,
+      "quizmaster": 7.0,
+      "media_designer": 6.8,
+      "extension": 7.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_297",
+    "subject": "data_structures",
+    "query": "循环队列队空条件",
+    "retrieved_contexts": [
+      "front==rear"
+    ],
+    "label": "front==rear",
+    "quality_score": 8.6,
+    "agent_scores": {
+      "teacher": 7.7,
+      "quizmaster": 7.4,
+      "media_designer": 7.6,
+      "extension": 7.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_298",
+    "subject": "data_structures",
+    "query": "KMP算法的时间复杂度",
+    "retrieved_contexts": [
+      "O(n+m)，n为主串长度m为模式串长度"
+    ],
+    "label": "O(n+m)，n为主串长度m为模式串长度",
+    "quality_score": 9.4,
+    "agent_scores": {
+      "teacher": 9.2,
+      "quizmaster": 9.0,
+      "media_designer": 6.1,
+      "extension": 8.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_299",
+    "subject": "computer_organization",
+    "query": "IEEE754单精度浮点数的阶码偏置值",
+    "retrieved_contexts": [
+      "127"
+    ],
+    "label": "127",
+    "quality_score": 8.5,
+    "agent_scores": {
+      "teacher": 8.4,
+      "quizmaster": 7.2,
+      "media_designer": 6.2,
+      "extension": 8.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_300",
+    "subject": "computer_organization",
+    "query": "DMA传输时CPU的作用",
+    "retrieved_contexts": [
+      "仅初始化，数据传输阶段CPU不参与"
+    ],
+    "label": "仅初始化，数据传输阶段CPU不参与",
+    "quality_score": 8.3,
+    "agent_scores": {
+      "teacher": 7.0,
+      "quizmaster": 7.2,
+      "media_designer": 7.7,
+      "extension": 8.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_301",
+    "subject": "computer_organization",
+    "query": "总线仲裁的方式",
+    "retrieved_contexts": [
+      "链式查询、计数器定时查询、独立请求"
+    ],
+    "label": "链式查询、计数器定时查询、独立请求",
+    "quality_score": 9.4,
+    "agent_scores": {
+      "teacher": 8.3,
+      "quizmaster": 7.1,
+      "media_designer": 6.8,
+      "extension": 8.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_302",
+    "subject": "computer_organization",
+    "query": "CISC和RISC的区别",
+    "retrieved_contexts": [
+      "CISC指令多变长微程序控制，RISC指令少定长硬布线"
+    ],
+    "label": "CISC指令多变长微程序控制，RISC指令少定长硬布线",
+    "quality_score": 9.2,
+    "agent_scores": {
+      "teacher": 8.4,
+      "quizmaster": 8.4,
+      "media_designer": 6.9,
+      "extension": 8.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_303",
+    "subject": "operating_system",
+    "query": "银行家算法用于什么",
+    "retrieved_contexts": [
+      "死锁避免，检查分配是否安全"
+    ],
+    "label": "死锁避免，检查分配是否安全",
+    "quality_score": 7.4,
+    "agent_scores": {
+      "teacher": 9.3,
+      "quizmaster": 7.0,
+      "media_designer": 6.1,
+      "extension": 7.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_304",
+    "subject": "operating_system",
+    "query": "分页存储中页表的作用",
+    "retrieved_contexts": [
+      "存储页号到物理块号的映射"
+    ],
+    "label": "存储页号到物理块号的映射",
+    "quality_score": 9.4,
+    "agent_scores": {
+      "teacher": 7.6,
+      "quizmaster": 8.6,
+      "media_designer": 7.7,
+      "extension": 8.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_305",
+    "subject": "operating_system",
+    "query": "多级反馈队列调度的特点",
+    "retrieved_contexts": [
+      "多队列+时间片递增+抢占"
+    ],
+    "label": "多队列+时间片递增+抢占",
+    "quality_score": 9.3,
+    "agent_scores": {
+      "teacher": 9.5,
+      "quizmaster": 7.3,
+      "media_designer": 6.7,
+      "extension": 7.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_306",
+    "subject": "operating_system",
+    "query": "SPOOLing技术的本质",
+    "retrieved_contexts": [
+      "用磁盘模拟独占设备为共享设备"
+    ],
+    "label": "用磁盘模拟独占设备为共享设备",
+    "quality_score": 9.5,
+    "agent_scores": {
+      "teacher": 8.5,
+      "quizmaster": 8.6,
+      "media_designer": 6.9,
+      "extension": 6.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_307",
+    "subject": "computer_network",
+    "query": "TCP拥塞控制的四个算法",
+    "retrieved_contexts": [
+      "慢启动、拥塞避免、快重传、快恢复"
+    ],
+    "label": "慢启动、拥塞避免、快重传、快恢复",
+    "quality_score": 9.3,
+    "agent_scores": {
+      "teacher": 8.2,
+      "quizmaster": 8.8,
+      "media_designer": 7.4,
+      "extension": 7.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_308",
+    "subject": "computer_network",
+    "query": "RIP协议的最大跳数",
+    "retrieved_contexts": [
+      "15跳，16跳表示不可达"
+    ],
+    "label": "15跳，16跳表示不可达",
+    "quality_score": 9.5,
+    "agent_scores": {
+      "teacher": 8.2,
+      "quizmaster": 7.0,
+      "media_designer": 6.8,
+      "extension": 6.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_309",
+    "subject": "computer_network",
+    "query": "OSPF使用的算法",
+    "retrieved_contexts": [
+      "Dijkstra最短路径算法"
+    ],
+    "label": "Dijkstra最短路径算法",
+    "quality_score": 8.5,
+    "agent_scores": {
+      "teacher": 8.1,
+      "quizmaster": 8.0,
+      "media_designer": 7.8,
+      "extension": 8.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_310",
+    "subject": "computer_network",
+    "query": "VLAN的标签格式",
+    "retrieved_contexts": [
+      "802.1Q标签4字节：TPID+优先级+CFI+VID"
+    ],
+    "label": "802.1Q标签4字节：TPID+优先级+CFI+VID",
+    "quality_score": 7.8,
+    "agent_scores": {
+      "teacher": 7.4,
+      "quizmaster": 7.8,
+      "media_designer": 7.3,
+      "extension": 6.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_311",
+    "subject": "computer_network",
+    "query": "IPv6地址长度",
+    "retrieved_contexts": [
+      "128位，8组4位十六进制"
+    ],
+    "label": "128位，8组4位十六进制",
+    "quality_score": 8.5,
+    "agent_scores": {
+      "teacher": 9.3,
+      "quizmaster": 8.3,
+      "media_designer": 6.7,
+      "extension": 7.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_312",
+    "subject": "computer_network",
+    "query": "DHCP分配IP的四个步骤",
+    "retrieved_contexts": [
+      "DISCOVER→OFFER→REQUEST→ACK"
+    ],
+    "label": "DISCOVER→OFFER→REQUEST→ACK",
+    "quality_score": 9.1,
+    "agent_scores": {
+      "teacher": 8.7,
+      "quizmaster": 7.1,
+      "media_designer": 6.8,
+      "extension": 8.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_313",
+    "subject": "computer_network",
+    "query": "ICMP协议的类型",
+    "retrieved_contexts": [
+      "0回送应答、3目的不可达、8回送请求、11超时"
+    ],
+    "label": "0回送应答、3目的不可达、8回送请求、11超时",
+    "quality_score": 8.8,
+    "agent_scores": {
+      "teacher": 7.6,
+      "quizmaster": 6.6,
+      "media_designer": 8.0,
+      "extension": 7.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_314",
+    "subject": "computer_network",
+    "query": "NAT的作用",
+    "retrieved_contexts": [
+      "将内网私有IP转换为公网IP，解决IPv4地址不足"
+    ],
+    "label": "将内网私有IP转换为公网IP，解决IPv4地址不足",
+    "quality_score": 9.2,
+    "agent_scores": {
+      "teacher": 7.1,
+      "quizmaster": 7.4,
+      "media_designer": 6.3,
+      "extension": 6.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_315",
+    "subject": "data_structures",
+    "query": "AVL树的平衡因子",
+    "retrieved_contexts": [
+      "左右子树高度差，绝对值不超过1"
+    ],
+    "label": "左右子树高度差，绝对值不超过1",
+    "quality_score": 8.1,
+    "agent_scores": {
+      "teacher": 9.1,
+      "quizmaster": 6.7,
+      "media_designer": 7.0,
+      "extension": 8.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_316",
+    "subject": "data_structures",
+    "query": "哈夫曼树的WPL",
+    "retrieved_contexts": [
+      "带权路径长度最小，每次合并两个最小权值节点"
+    ],
+    "label": "带权路径长度最小，每次合并两个最小权值节点",
+    "quality_score": 9.4,
+    "agent_scores": {
+      "teacher": 8.4,
+      "quizmaster": 7.4,
+      "media_designer": 8.1,
+      "extension": 6.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_317",
+    "subject": "data_structures",
+    "query": "Dijkstra算法不能处理什么图",
+    "retrieved_contexts": [
+      "不能有负权边"
+    ],
+    "label": "不能有负权边",
+    "quality_score": 7.7,
+    "agent_scores": {
+      "teacher": 8.0,
+      "quizmaster": 8.4,
+      "media_designer": 6.4,
+      "extension": 8.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_318",
+    "subject": "data_structures",
+    "query": "拓扑排序用于什么图",
+    "retrieved_contexts": [
+      "DAG有向无环图"
+    ],
+    "label": "DAG有向无环图",
+    "quality_score": 7.8,
+    "agent_scores": {
+      "teacher": 7.3,
+      "quizmaster": 8.6,
+      "media_designer": 7.0,
+      "extension": 7.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_319",
+    "subject": "data_structures",
+    "query": "循环队列队空条件",
+    "retrieved_contexts": [
+      "front==rear"
+    ],
+    "label": "front==rear",
+    "quality_score": 9.3,
+    "agent_scores": {
+      "teacher": 9.1,
+      "quizmaster": 7.3,
+      "media_designer": 6.4,
+      "extension": 8.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_320",
+    "subject": "data_structures",
+    "query": "KMP算法的时间复杂度",
+    "retrieved_contexts": [
+      "O(n+m)，n为主串长度m为模式串长度"
+    ],
+    "label": "O(n+m)，n为主串长度m为模式串长度",
+    "quality_score": 7.3,
+    "agent_scores": {
+      "teacher": 7.9,
+      "quizmaster": 6.9,
+      "media_designer": 7.1,
+      "extension": 7.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_321",
+    "subject": "computer_organization",
+    "query": "IEEE754单精度浮点数的阶码偏置值",
+    "retrieved_contexts": [
+      "127"
+    ],
+    "label": "127",
+    "quality_score": 7.6,
+    "agent_scores": {
+      "teacher": 8.8,
+      "quizmaster": 6.7,
+      "media_designer": 6.4,
+      "extension": 8.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_322",
+    "subject": "computer_organization",
+    "query": "DMA传输时CPU的作用",
+    "retrieved_contexts": [
+      "仅初始化，数据传输阶段CPU不参与"
+    ],
+    "label": "仅初始化，数据传输阶段CPU不参与",
+    "quality_score": 8.4,
+    "agent_scores": {
+      "teacher": 8.2,
+      "quizmaster": 6.7,
+      "media_designer": 6.5,
+      "extension": 8.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_323",
+    "subject": "computer_organization",
+    "query": "总线仲裁的方式",
+    "retrieved_contexts": [
+      "链式查询、计数器定时查询、独立请求"
+    ],
+    "label": "链式查询、计数器定时查询、独立请求",
+    "quality_score": 8.1,
+    "agent_scores": {
+      "teacher": 9.2,
+      "quizmaster": 7.4,
+      "media_designer": 7.6,
+      "extension": 8.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_324",
+    "subject": "computer_organization",
+    "query": "CISC和RISC的区别",
+    "retrieved_contexts": [
+      "CISC指令多变长微程序控制，RISC指令少定长硬布线"
+    ],
+    "label": "CISC指令多变长微程序控制，RISC指令少定长硬布线",
+    "quality_score": 9.2,
+    "agent_scores": {
+      "teacher": 9.1,
+      "quizmaster": 8.6,
+      "media_designer": 8.0,
+      "extension": 8.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_325",
+    "subject": "operating_system",
+    "query": "银行家算法用于什么",
+    "retrieved_contexts": [
+      "死锁避免，检查分配是否安全"
+    ],
+    "label": "死锁避免，检查分配是否安全",
+    "quality_score": 7.3,
+    "agent_scores": {
+      "teacher": 7.6,
+      "quizmaster": 7.5,
+      "media_designer": 7.0,
+      "extension": 7.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_326",
+    "subject": "operating_system",
+    "query": "分页存储中页表的作用",
+    "retrieved_contexts": [
+      "存储页号到物理块号的映射"
+    ],
+    "label": "存储页号到物理块号的映射",
+    "quality_score": 9.2,
+    "agent_scores": {
+      "teacher": 7.4,
+      "quizmaster": 7.4,
+      "media_designer": 6.3,
+      "extension": 7.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_327",
+    "subject": "operating_system",
+    "query": "多级反馈队列调度的特点",
+    "retrieved_contexts": [
+      "多队列+时间片递增+抢占"
+    ],
+    "label": "多队列+时间片递增+抢占",
+    "quality_score": 8.3,
+    "agent_scores": {
+      "teacher": 7.2,
+      "quizmaster": 7.2,
+      "media_designer": 6.2,
+      "extension": 7.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_328",
+    "subject": "operating_system",
+    "query": "SPOOLing技术的本质",
+    "retrieved_contexts": [
+      "用磁盘模拟独占设备为共享设备"
+    ],
+    "label": "用磁盘模拟独占设备为共享设备",
+    "quality_score": 8.2,
+    "agent_scores": {
+      "teacher": 8.6,
+      "quizmaster": 7.3,
+      "media_designer": 6.7,
+      "extension": 7.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_329",
+    "subject": "computer_network",
+    "query": "TCP拥塞控制的四个算法",
+    "retrieved_contexts": [
+      "慢启动、拥塞避免、快重传、快恢复"
+    ],
+    "label": "慢启动、拥塞避免、快重传、快恢复",
+    "quality_score": 8.7,
+    "agent_scores": {
+      "teacher": 8.8,
+      "quizmaster": 8.6,
+      "media_designer": 6.0,
+      "extension": 6.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_330",
+    "subject": "computer_network",
+    "query": "RIP协议的最大跳数",
+    "retrieved_contexts": [
+      "15跳，16跳表示不可达"
+    ],
+    "label": "15跳，16跳表示不可达",
+    "quality_score": 7.1,
+    "agent_scores": {
+      "teacher": 7.4,
+      "quizmaster": 8.0,
+      "media_designer": 6.6,
+      "extension": 7.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_331",
+    "subject": "computer_network",
+    "query": "OSPF使用的算法",
+    "retrieved_contexts": [
+      "Dijkstra最短路径算法"
+    ],
+    "label": "Dijkstra最短路径算法",
+    "quality_score": 8.4,
+    "agent_scores": {
+      "teacher": 8.1,
+      "quizmaster": 8.0,
+      "media_designer": 7.6,
+      "extension": 6.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_332",
+    "subject": "computer_network",
+    "query": "VLAN的标签格式",
+    "retrieved_contexts": [
+      "802.1Q标签4字节：TPID+优先级+CFI+VID"
+    ],
+    "label": "802.1Q标签4字节：TPID+优先级+CFI+VID",
+    "quality_score": 9.3,
+    "agent_scores": {
+      "teacher": 7.2,
+      "quizmaster": 8.7,
+      "media_designer": 7.9,
+      "extension": 7.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_333",
+    "subject": "computer_network",
+    "query": "IPv6地址长度",
+    "retrieved_contexts": [
+      "128位，8组4位十六进制"
+    ],
+    "label": "128位，8组4位十六进制",
+    "quality_score": 8.5,
+    "agent_scores": {
+      "teacher": 8.8,
+      "quizmaster": 7.0,
+      "media_designer": 6.4,
+      "extension": 8.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_334",
+    "subject": "computer_network",
+    "query": "DHCP分配IP的四个步骤",
+    "retrieved_contexts": [
+      "DISCOVER→OFFER→REQUEST→ACK"
+    ],
+    "label": "DISCOVER→OFFER→REQUEST→ACK",
+    "quality_score": 8.3,
+    "agent_scores": {
+      "teacher": 9.2,
+      "quizmaster": 8.0,
+      "media_designer": 7.9,
+      "extension": 7.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_335",
+    "subject": "computer_network",
+    "query": "ICMP协议的类型",
+    "retrieved_contexts": [
+      "0回送应答、3目的不可达、8回送请求、11超时"
+    ],
+    "label": "0回送应答、3目的不可达、8回送请求、11超时",
+    "quality_score": 7.2,
+    "agent_scores": {
+      "teacher": 9.0,
+      "quizmaster": 7.0,
+      "media_designer": 7.9,
+      "extension": 7.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_336",
+    "subject": "computer_network",
+    "query": "NAT的作用",
+    "retrieved_contexts": [
+      "将内网私有IP转换为公网IP，解决IPv4地址不足"
+    ],
+    "label": "将内网私有IP转换为公网IP，解决IPv4地址不足",
+    "quality_score": 9.1,
+    "agent_scores": {
+      "teacher": 7.6,
+      "quizmaster": 7.5,
+      "media_designer": 6.7,
+      "extension": 7.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_337",
+    "subject": "data_structures",
+    "query": "AVL树的平衡因子",
+    "retrieved_contexts": [
+      "左右子树高度差，绝对值不超过1"
+    ],
+    "label": "左右子树高度差，绝对值不超过1",
+    "quality_score": 9.4,
+    "agent_scores": {
+      "teacher": 7.5,
+      "quizmaster": 7.2,
+      "media_designer": 8.4,
+      "extension": 7.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_338",
+    "subject": "data_structures",
+    "query": "哈夫曼树的WPL",
+    "retrieved_contexts": [
+      "带权路径长度最小，每次合并两个最小权值节点"
+    ],
+    "label": "带权路径长度最小，每次合并两个最小权值节点",
+    "quality_score": 8.9,
+    "agent_scores": {
+      "teacher": 7.3,
+      "quizmaster": 6.7,
+      "media_designer": 6.6,
+      "extension": 7.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_339",
+    "subject": "data_structures",
+    "query": "Dijkstra算法不能处理什么图",
+    "retrieved_contexts": [
+      "不能有负权边"
+    ],
+    "label": "不能有负权边",
+    "quality_score": 8.6,
+    "agent_scores": {
+      "teacher": 8.4,
+      "quizmaster": 7.9,
+      "media_designer": 8.3,
+      "extension": 9.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_340",
+    "subject": "data_structures",
+    "query": "拓扑排序用于什么图",
+    "retrieved_contexts": [
+      "DAG有向无环图"
+    ],
+    "label": "DAG有向无环图",
+    "quality_score": 7.4,
+    "agent_scores": {
+      "teacher": 8.9,
+      "quizmaster": 7.5,
+      "media_designer": 6.2,
+      "extension": 8.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_341",
+    "subject": "data_structures",
+    "query": "循环队列队空条件",
+    "retrieved_contexts": [
+      "front==rear"
+    ],
+    "label": "front==rear",
+    "quality_score": 8.3,
+    "agent_scores": {
+      "teacher": 8.0,
+      "quizmaster": 7.0,
+      "media_designer": 7.6,
+      "extension": 7.1
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_342",
+    "subject": "data_structures",
+    "query": "KMP算法的时间复杂度",
+    "retrieved_contexts": [
+      "O(n+m)，n为主串长度m为模式串长度"
+    ],
+    "label": "O(n+m)，n为主串长度m为模式串长度",
+    "quality_score": 9.5,
+    "agent_scores": {
+      "teacher": 7.7,
+      "quizmaster": 7.1,
+      "media_designer": 6.4,
+      "extension": 8.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_343",
+    "subject": "computer_organization",
+    "query": "IEEE754单精度浮点数的阶码偏置值",
+    "retrieved_contexts": [
+      "127"
+    ],
+    "label": "127",
+    "quality_score": 8.6,
+    "agent_scores": {
+      "teacher": 8.9,
+      "quizmaster": 7.9,
+      "media_designer": 6.7,
+      "extension": 6.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_344",
+    "subject": "computer_organization",
+    "query": "DMA传输时CPU的作用",
+    "retrieved_contexts": [
+      "仅初始化，数据传输阶段CPU不参与"
+    ],
+    "label": "仅初始化，数据传输阶段CPU不参与",
+    "quality_score": 9.5,
+    "agent_scores": {
+      "teacher": 9.4,
+      "quizmaster": 7.2,
+      "media_designer": 7.2,
+      "extension": 6.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_345",
+    "subject": "computer_organization",
+    "query": "总线仲裁的方式",
+    "retrieved_contexts": [
+      "链式查询、计数器定时查询、独立请求"
+    ],
+    "label": "链式查询、计数器定时查询、独立请求",
+    "quality_score": 9.5,
+    "agent_scores": {
+      "teacher": 9.4,
+      "quizmaster": 7.9,
+      "media_designer": 7.5,
+      "extension": 8.1
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_346",
+    "subject": "computer_organization",
+    "query": "CISC和RISC的区别",
+    "retrieved_contexts": [
+      "CISC指令多变长微程序控制，RISC指令少定长硬布线"
+    ],
+    "label": "CISC指令多变长微程序控制，RISC指令少定长硬布线",
+    "quality_score": 7.2,
+    "agent_scores": {
+      "teacher": 8.8,
+      "quizmaster": 8.9,
+      "media_designer": 7.7,
+      "extension": 6.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_347",
+    "subject": "operating_system",
+    "query": "银行家算法用于什么",
+    "retrieved_contexts": [
+      "死锁避免，检查分配是否安全"
+    ],
+    "label": "死锁避免，检查分配是否安全",
+    "quality_score": 7.6,
+    "agent_scores": {
+      "teacher": 9.3,
+      "quizmaster": 7.1,
+      "media_designer": 7.8,
+      "extension": 7.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_348",
+    "subject": "operating_system",
+    "query": "分页存储中页表的作用",
+    "retrieved_contexts": [
+      "存储页号到物理块号的映射"
+    ],
+    "label": "存储页号到物理块号的映射",
+    "quality_score": 8.9,
+    "agent_scores": {
+      "teacher": 8.7,
+      "quizmaster": 6.7,
+      "media_designer": 8.3,
+      "extension": 6.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_349",
+    "subject": "operating_system",
+    "query": "多级反馈队列调度的特点",
+    "retrieved_contexts": [
+      "多队列+时间片递增+抢占"
+    ],
+    "label": "多队列+时间片递增+抢占",
+    "quality_score": 8.8,
+    "agent_scores": {
+      "teacher": 7.8,
+      "quizmaster": 7.5,
+      "media_designer": 8.1,
+      "extension": 7.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_350",
+    "subject": "operating_system",
+    "query": "SPOOLing技术的本质",
+    "retrieved_contexts": [
+      "用磁盘模拟独占设备为共享设备"
+    ],
+    "label": "用磁盘模拟独占设备为共享设备",
+    "quality_score": 8.0,
+    "agent_scores": {
+      "teacher": 7.2,
+      "quizmaster": 7.9,
+      "media_designer": 6.3,
+      "extension": 7.1
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_351",
+    "subject": "computer_network",
+    "query": "TCP拥塞控制的四个算法",
+    "retrieved_contexts": [
+      "慢启动、拥塞避免、快重传、快恢复"
+    ],
+    "label": "慢启动、拥塞避免、快重传、快恢复",
+    "quality_score": 8.1,
+    "agent_scores": {
+      "teacher": 8.2,
+      "quizmaster": 8.8,
+      "media_designer": 6.7,
+      "extension": 7.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_352",
+    "subject": "computer_network",
+    "query": "RIP协议的最大跳数",
+    "retrieved_contexts": [
+      "15跳，16跳表示不可达"
+    ],
+    "label": "15跳，16跳表示不可达",
+    "quality_score": 7.6,
+    "agent_scores": {
+      "teacher": 9.5,
+      "quizmaster": 6.8,
+      "media_designer": 6.2,
+      "extension": 8.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_353",
+    "subject": "computer_network",
+    "query": "OSPF使用的算法",
+    "retrieved_contexts": [
+      "Dijkstra最短路径算法"
+    ],
+    "label": "Dijkstra最短路径算法",
+    "quality_score": 8.2,
+    "agent_scores": {
+      "teacher": 8.7,
+      "quizmaster": 8.4,
+      "media_designer": 8.0,
+      "extension": 6.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_354",
+    "subject": "computer_network",
+    "query": "VLAN的标签格式",
+    "retrieved_contexts": [
+      "802.1Q标签4字节：TPID+优先级+CFI+VID"
+    ],
+    "label": "802.1Q标签4字节：TPID+优先级+CFI+VID",
+    "quality_score": 8.3,
+    "agent_scores": {
+      "teacher": 7.5,
+      "quizmaster": 7.5,
+      "media_designer": 7.4,
+      "extension": 7.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_355",
+    "subject": "computer_network",
+    "query": "IPv6地址长度",
+    "retrieved_contexts": [
+      "128位，8组4位十六进制"
+    ],
+    "label": "128位，8组4位十六进制",
+    "quality_score": 7.9,
+    "agent_scores": {
+      "teacher": 8.5,
+      "quizmaster": 8.1,
+      "media_designer": 7.2,
+      "extension": 8.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_356",
+    "subject": "computer_network",
+    "query": "DHCP分配IP的四个步骤",
+    "retrieved_contexts": [
+      "DISCOVER→OFFER→REQUEST→ACK"
+    ],
+    "label": "DISCOVER→OFFER→REQUEST→ACK",
+    "quality_score": 7.9,
+    "agent_scores": {
+      "teacher": 7.9,
+      "quizmaster": 7.4,
+      "media_designer": 8.5,
+      "extension": 6.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_357",
+    "subject": "computer_network",
+    "query": "ICMP协议的类型",
+    "retrieved_contexts": [
+      "0回送应答、3目的不可达、8回送请求、11超时"
+    ],
+    "label": "0回送应答、3目的不可达、8回送请求、11超时",
+    "quality_score": 7.2,
+    "agent_scores": {
+      "teacher": 7.5,
+      "quizmaster": 7.6,
+      "media_designer": 6.1,
+      "extension": 7.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_358",
+    "subject": "computer_network",
+    "query": "NAT的作用",
+    "retrieved_contexts": [
+      "将内网私有IP转换为公网IP，解决IPv4地址不足"
+    ],
+    "label": "将内网私有IP转换为公网IP，解决IPv4地址不足",
+    "quality_score": 8.7,
+    "agent_scores": {
+      "teacher": 9.0,
+      "quizmaster": 7.6,
+      "media_designer": 6.5,
+      "extension": 7.1
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_359",
+    "subject": "data_structures",
+    "query": "AVL树的平衡因子",
+    "retrieved_contexts": [
+      "左右子树高度差，绝对值不超过1"
+    ],
+    "label": "左右子树高度差，绝对值不超过1",
+    "quality_score": 7.1,
+    "agent_scores": {
+      "teacher": 8.9,
+      "quizmaster": 7.4,
+      "media_designer": 6.8,
+      "extension": 7.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_360",
+    "subject": "data_structures",
+    "query": "哈夫曼树的WPL",
+    "retrieved_contexts": [
+      "带权路径长度最小，每次合并两个最小权值节点"
+    ],
+    "label": "带权路径长度最小，每次合并两个最小权值节点",
+    "quality_score": 7.9,
+    "agent_scores": {
+      "teacher": 8.9,
+      "quizmaster": 7.9,
+      "media_designer": 7.8,
+      "extension": 8.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_361",
+    "subject": "data_structures",
+    "query": "Dijkstra算法不能处理什么图",
+    "retrieved_contexts": [
+      "不能有负权边"
+    ],
+    "label": "不能有负权边",
+    "quality_score": 7.0,
+    "agent_scores": {
+      "teacher": 7.7,
+      "quizmaster": 6.7,
+      "media_designer": 7.9,
+      "extension": 7.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_362",
+    "subject": "data_structures",
+    "query": "拓扑排序用于什么图",
+    "retrieved_contexts": [
+      "DAG有向无环图"
+    ],
+    "label": "DAG有向无环图",
+    "quality_score": 7.8,
+    "agent_scores": {
+      "teacher": 9.0,
+      "quizmaster": 6.7,
+      "media_designer": 6.7,
+      "extension": 7.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_363",
+    "subject": "data_structures",
+    "query": "循环队列队空条件",
+    "retrieved_contexts": [
+      "front==rear"
+    ],
+    "label": "front==rear",
+    "quality_score": 7.2,
+    "agent_scores": {
+      "teacher": 8.2,
+      "quizmaster": 7.3,
+      "media_designer": 7.2,
+      "extension": 6.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_364",
+    "subject": "data_structures",
+    "query": "KMP算法的时间复杂度",
+    "retrieved_contexts": [
+      "O(n+m)，n为主串长度m为模式串长度"
+    ],
+    "label": "O(n+m)，n为主串长度m为模式串长度",
+    "quality_score": 8.8,
+    "agent_scores": {
+      "teacher": 7.1,
+      "quizmaster": 8.5,
+      "media_designer": 7.6,
+      "extension": 8.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_365",
+    "subject": "computer_organization",
+    "query": "IEEE754单精度浮点数的阶码偏置值",
+    "retrieved_contexts": [
+      "127"
+    ],
+    "label": "127",
+    "quality_score": 8.6,
+    "agent_scores": {
+      "teacher": 7.6,
+      "quizmaster": 7.3,
+      "media_designer": 7.7,
+      "extension": 7.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_366",
+    "subject": "computer_organization",
+    "query": "DMA传输时CPU的作用",
+    "retrieved_contexts": [
+      "仅初始化，数据传输阶段CPU不参与"
+    ],
+    "label": "仅初始化，数据传输阶段CPU不参与",
+    "quality_score": 7.7,
+    "agent_scores": {
+      "teacher": 8.5,
+      "quizmaster": 9.0,
+      "media_designer": 7.6,
+      "extension": 6.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_367",
+    "subject": "computer_organization",
+    "query": "总线仲裁的方式",
+    "retrieved_contexts": [
+      "链式查询、计数器定时查询、独立请求"
+    ],
+    "label": "链式查询、计数器定时查询、独立请求",
+    "quality_score": 7.4,
+    "agent_scores": {
+      "teacher": 7.8,
+      "quizmaster": 7.3,
+      "media_designer": 7.4,
+      "extension": 8.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_368",
+    "subject": "computer_organization",
+    "query": "CISC和RISC的区别",
+    "retrieved_contexts": [
+      "CISC指令多变长微程序控制，RISC指令少定长硬布线"
+    ],
+    "label": "CISC指令多变长微程序控制，RISC指令少定长硬布线",
+    "quality_score": 8.3,
+    "agent_scores": {
+      "teacher": 7.1,
+      "quizmaster": 7.2,
+      "media_designer": 6.1,
+      "extension": 6.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_369",
+    "subject": "operating_system",
+    "query": "银行家算法用于什么",
+    "retrieved_contexts": [
+      "死锁避免，检查分配是否安全"
+    ],
+    "label": "死锁避免，检查分配是否安全",
+    "quality_score": 8.8,
+    "agent_scores": {
+      "teacher": 8.2,
+      "quizmaster": 6.6,
+      "media_designer": 6.5,
+      "extension": 8.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_370",
+    "subject": "operating_system",
+    "query": "分页存储中页表的作用",
+    "retrieved_contexts": [
+      "存储页号到物理块号的映射"
+    ],
+    "label": "存储页号到物理块号的映射",
+    "quality_score": 8.6,
+    "agent_scores": {
+      "teacher": 9.0,
+      "quizmaster": 8.2,
+      "media_designer": 7.7,
+      "extension": 7.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_371",
+    "subject": "operating_system",
+    "query": "多级反馈队列调度的特点",
+    "retrieved_contexts": [
+      "多队列+时间片递增+抢占"
+    ],
+    "label": "多队列+时间片递增+抢占",
+    "quality_score": 8.0,
+    "agent_scores": {
+      "teacher": 7.9,
+      "quizmaster": 7.1,
+      "media_designer": 6.5,
+      "extension": 6.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_372",
+    "subject": "operating_system",
+    "query": "SPOOLing技术的本质",
+    "retrieved_contexts": [
+      "用磁盘模拟独占设备为共享设备"
+    ],
+    "label": "用磁盘模拟独占设备为共享设备",
+    "quality_score": 8.2,
+    "agent_scores": {
+      "teacher": 8.4,
+      "quizmaster": 8.8,
+      "media_designer": 7.3,
+      "extension": 8.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_373",
+    "subject": "computer_network",
+    "query": "TCP拥塞控制的四个算法",
+    "retrieved_contexts": [
+      "慢启动、拥塞避免、快重传、快恢复"
+    ],
+    "label": "慢启动、拥塞避免、快重传、快恢复",
+    "quality_score": 7.4,
+    "agent_scores": {
+      "teacher": 8.1,
+      "quizmaster": 8.3,
+      "media_designer": 7.4,
+      "extension": 7.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_374",
+    "subject": "computer_network",
+    "query": "RIP协议的最大跳数",
+    "retrieved_contexts": [
+      "15跳，16跳表示不可达"
+    ],
+    "label": "15跳，16跳表示不可达",
+    "quality_score": 7.8,
+    "agent_scores": {
+      "teacher": 7.6,
+      "quizmaster": 7.4,
+      "media_designer": 7.3,
+      "extension": 6.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_375",
+    "subject": "computer_network",
+    "query": "OSPF使用的算法",
+    "retrieved_contexts": [
+      "Dijkstra最短路径算法"
+    ],
+    "label": "Dijkstra最短路径算法",
+    "quality_score": 7.8,
+    "agent_scores": {
+      "teacher": 8.3,
+      "quizmaster": 7.8,
+      "media_designer": 6.0,
+      "extension": 7.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_376",
+    "subject": "computer_network",
+    "query": "VLAN的标签格式",
+    "retrieved_contexts": [
+      "802.1Q标签4字节：TPID+优先级+CFI+VID"
+    ],
+    "label": "802.1Q标签4字节：TPID+优先级+CFI+VID",
+    "quality_score": 8.1,
+    "agent_scores": {
+      "teacher": 7.4,
+      "quizmaster": 7.7,
+      "media_designer": 7.3,
+      "extension": 8.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_377",
+    "subject": "computer_network",
+    "query": "IPv6地址长度",
+    "retrieved_contexts": [
+      "128位，8组4位十六进制"
+    ],
+    "label": "128位，8组4位十六进制",
+    "quality_score": 9.4,
+    "agent_scores": {
+      "teacher": 8.8,
+      "quizmaster": 7.9,
+      "media_designer": 7.0,
+      "extension": 7.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_378",
+    "subject": "computer_network",
+    "query": "DHCP分配IP的四个步骤",
+    "retrieved_contexts": [
+      "DISCOVER→OFFER→REQUEST→ACK"
+    ],
+    "label": "DISCOVER→OFFER→REQUEST→ACK",
+    "quality_score": 8.3,
+    "agent_scores": {
+      "teacher": 7.9,
+      "quizmaster": 7.8,
+      "media_designer": 8.0,
+      "extension": 8.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_379",
+    "subject": "computer_network",
+    "query": "ICMP协议的类型",
+    "retrieved_contexts": [
+      "0回送应答、3目的不可达、8回送请求、11超时"
+    ],
+    "label": "0回送应答、3目的不可达、8回送请求、11超时",
+    "quality_score": 7.6,
+    "agent_scores": {
+      "teacher": 7.1,
+      "quizmaster": 8.9,
+      "media_designer": 8.0,
+      "extension": 8.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_380",
+    "subject": "computer_network",
+    "query": "NAT的作用",
+    "retrieved_contexts": [
+      "将内网私有IP转换为公网IP，解决IPv4地址不足"
+    ],
+    "label": "将内网私有IP转换为公网IP，解决IPv4地址不足",
+    "quality_score": 7.6,
+    "agent_scores": {
+      "teacher": 9.4,
+      "quizmaster": 9.0,
+      "media_designer": 7.2,
+      "extension": 8.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_381",
+    "subject": "data_structures",
+    "query": "AVL树的平衡因子",
+    "retrieved_contexts": [
+      "左右子树高度差，绝对值不超过1"
+    ],
+    "label": "左右子树高度差，绝对值不超过1",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 8.1,
+      "quizmaster": 7.4,
+      "media_designer": 7.3,
+      "extension": 7.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_382",
+    "subject": "data_structures",
+    "query": "哈夫曼树的WPL",
+    "retrieved_contexts": [
+      "带权路径长度最小，每次合并两个最小权值节点"
+    ],
+    "label": "带权路径长度最小，每次合并两个最小权值节点",
+    "quality_score": 7.2,
+    "agent_scores": {
+      "teacher": 8.0,
+      "quizmaster": 7.2,
+      "media_designer": 7.5,
+      "extension": 8.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_383",
+    "subject": "data_structures",
+    "query": "Dijkstra算法不能处理什么图",
+    "retrieved_contexts": [
+      "不能有负权边"
+    ],
+    "label": "不能有负权边",
+    "quality_score": 8.1,
+    "agent_scores": {
+      "teacher": 7.9,
+      "quizmaster": 8.3,
+      "media_designer": 6.3,
+      "extension": 8.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_384",
+    "subject": "data_structures",
+    "query": "拓扑排序用于什么图",
+    "retrieved_contexts": [
+      "DAG有向无环图"
+    ],
+    "label": "DAG有向无环图",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 9.0,
+      "quizmaster": 7.2,
+      "media_designer": 7.3,
+      "extension": 7.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_385",
+    "subject": "data_structures",
+    "query": "循环队列队空条件",
+    "retrieved_contexts": [
+      "front==rear"
+    ],
+    "label": "front==rear",
+    "quality_score": 8.0,
+    "agent_scores": {
+      "teacher": 9.0,
+      "quizmaster": 8.9,
+      "media_designer": 6.8,
+      "extension": 8.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_386",
+    "subject": "data_structures",
+    "query": "KMP算法的时间复杂度",
+    "retrieved_contexts": [
+      "O(n+m)，n为主串长度m为模式串长度"
+    ],
+    "label": "O(n+m)，n为主串长度m为模式串长度",
+    "quality_score": 8.9,
+    "agent_scores": {
+      "teacher": 8.1,
+      "quizmaster": 8.5,
+      "media_designer": 6.4,
+      "extension": 7.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_387",
+    "subject": "computer_organization",
+    "query": "IEEE754单精度浮点数的阶码偏置值",
+    "retrieved_contexts": [
+      "127"
+    ],
+    "label": "127",
+    "quality_score": 9.2,
+    "agent_scores": {
+      "teacher": 7.3,
+      "quizmaster": 7.8,
+      "media_designer": 7.6,
+      "extension": 7.1
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_388",
+    "subject": "computer_organization",
+    "query": "DMA传输时CPU的作用",
+    "retrieved_contexts": [
+      "仅初始化，数据传输阶段CPU不参与"
+    ],
+    "label": "仅初始化，数据传输阶段CPU不参与",
+    "quality_score": 8.0,
+    "agent_scores": {
+      "teacher": 8.3,
+      "quizmaster": 7.5,
+      "media_designer": 6.8,
+      "extension": 7.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_389",
+    "subject": "computer_organization",
+    "query": "总线仲裁的方式",
+    "retrieved_contexts": [
+      "链式查询、计数器定时查询、独立请求"
+    ],
+    "label": "链式查询、计数器定时查询、独立请求",
+    "quality_score": 7.9,
+    "agent_scores": {
+      "teacher": 7.3,
+      "quizmaster": 7.6,
+      "media_designer": 6.9,
+      "extension": 8.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_390",
+    "subject": "computer_organization",
+    "query": "CISC和RISC的区别",
+    "retrieved_contexts": [
+      "CISC指令多变长微程序控制，RISC指令少定长硬布线"
+    ],
+    "label": "CISC指令多变长微程序控制，RISC指令少定长硬布线",
+    "quality_score": 8.4,
+    "agent_scores": {
+      "teacher": 9.0,
+      "quizmaster": 7.4,
+      "media_designer": 6.5,
+      "extension": 6.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_391",
+    "subject": "operating_system",
+    "query": "银行家算法用于什么",
+    "retrieved_contexts": [
+      "死锁避免，检查分配是否安全"
+    ],
+    "label": "死锁避免，检查分配是否安全",
+    "quality_score": 7.3,
+    "agent_scores": {
+      "teacher": 7.4,
+      "quizmaster": 7.1,
+      "media_designer": 6.5,
+      "extension": 8.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_392",
+    "subject": "operating_system",
+    "query": "分页存储中页表的作用",
+    "retrieved_contexts": [
+      "存储页号到物理块号的映射"
+    ],
+    "label": "存储页号到物理块号的映射",
+    "quality_score": 7.1,
+    "agent_scores": {
+      "teacher": 8.8,
+      "quizmaster": 8.4,
+      "media_designer": 7.8,
+      "extension": 7.1
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_393",
+    "subject": "operating_system",
+    "query": "多级反馈队列调度的特点",
+    "retrieved_contexts": [
+      "多队列+时间片递增+抢占"
+    ],
+    "label": "多队列+时间片递增+抢占",
+    "quality_score": 8.0,
+    "agent_scores": {
+      "teacher": 8.9,
+      "quizmaster": 8.9,
+      "media_designer": 7.4,
+      "extension": 9.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_394",
+    "subject": "operating_system",
+    "query": "SPOOLing技术的本质",
+    "retrieved_contexts": [
+      "用磁盘模拟独占设备为共享设备"
+    ],
+    "label": "用磁盘模拟独占设备为共享设备",
+    "quality_score": 8.0,
+    "agent_scores": {
+      "teacher": 7.3,
+      "quizmaster": 8.0,
+      "media_designer": 7.0,
+      "extension": 8.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_395",
+    "subject": "computer_network",
+    "query": "TCP拥塞控制的四个算法",
+    "retrieved_contexts": [
+      "慢启动、拥塞避免、快重传、快恢复"
+    ],
+    "label": "慢启动、拥塞避免、快重传、快恢复",
+    "quality_score": 8.4,
+    "agent_scores": {
+      "teacher": 8.0,
+      "quizmaster": 8.3,
+      "media_designer": 8.4,
+      "extension": 7.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_396",
+    "subject": "computer_network",
+    "query": "RIP协议的最大跳数",
+    "retrieved_contexts": [
+      "15跳，16跳表示不可达"
+    ],
+    "label": "15跳，16跳表示不可达",
+    "quality_score": 7.3,
+    "agent_scores": {
+      "teacher": 8.0,
+      "quizmaster": 8.0,
+      "media_designer": 6.0,
+      "extension": 8.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_397",
+    "subject": "computer_network",
+    "query": "OSPF使用的算法",
+    "retrieved_contexts": [
+      "Dijkstra最短路径算法"
+    ],
+    "label": "Dijkstra最短路径算法",
+    "quality_score": 8.5,
+    "agent_scores": {
+      "teacher": 8.0,
+      "quizmaster": 6.6,
+      "media_designer": 7.4,
+      "extension": 8.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_398",
+    "subject": "computer_network",
+    "query": "VLAN的标签格式",
+    "retrieved_contexts": [
+      "802.1Q标签4字节：TPID+优先级+CFI+VID"
+    ],
+    "label": "802.1Q标签4字节：TPID+优先级+CFI+VID",
+    "quality_score": 8.4,
+    "agent_scores": {
+      "teacher": 8.2,
+      "quizmaster": 7.4,
+      "media_designer": 8.0,
+      "extension": 6.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_399",
+    "subject": "computer_network",
+    "query": "IPv6地址长度",
+    "retrieved_contexts": [
+      "128位，8组4位十六进制"
+    ],
+    "label": "128位，8组4位十六进制",
+    "quality_score": 7.6,
+    "agent_scores": {
+      "teacher": 7.4,
+      "quizmaster": 7.4,
+      "media_designer": 8.1,
+      "extension": 6.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_400",
+    "subject": "computer_network",
+    "query": "DHCP分配IP的四个步骤",
+    "retrieved_contexts": [
+      "DISCOVER→OFFER→REQUEST→ACK"
+    ],
+    "label": "DISCOVER→OFFER→REQUEST→ACK",
+    "quality_score": 7.8,
+    "agent_scores": {
+      "teacher": 9.2,
+      "quizmaster": 8.9,
+      "media_designer": 7.8,
+      "extension": 8.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_401",
+    "subject": "computer_network",
+    "query": "ICMP协议的类型",
+    "retrieved_contexts": [
+      "0回送应答、3目的不可达、8回送请求、11超时"
+    ],
+    "label": "0回送应答、3目的不可达、8回送请求、11超时",
+    "quality_score": 8.3,
+    "agent_scores": {
+      "teacher": 8.4,
+      "quizmaster": 7.8,
+      "media_designer": 6.9,
+      "extension": 8.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_402",
+    "subject": "computer_network",
+    "query": "NAT的作用",
+    "retrieved_contexts": [
+      "将内网私有IP转换为公网IP，解决IPv4地址不足"
+    ],
+    "label": "将内网私有IP转换为公网IP，解决IPv4地址不足",
+    "quality_score": 7.2,
+    "agent_scores": {
+      "teacher": 9.4,
+      "quizmaster": 8.0,
+      "media_designer": 6.8,
+      "extension": 7.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_403",
+    "subject": "data_structures",
+    "query": "AVL树的平衡因子",
+    "retrieved_contexts": [
+      "左右子树高度差，绝对值不超过1"
+    ],
+    "label": "左右子树高度差，绝对值不超过1",
+    "quality_score": 7.7,
+    "agent_scores": {
+      "teacher": 8.1,
+      "quizmaster": 7.2,
+      "media_designer": 8.4,
+      "extension": 7.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_404",
+    "subject": "data_structures",
+    "query": "哈夫曼树的WPL",
+    "retrieved_contexts": [
+      "带权路径长度最小，每次合并两个最小权值节点"
+    ],
+    "label": "带权路径长度最小，每次合并两个最小权值节点",
+    "quality_score": 7.2,
+    "agent_scores": {
+      "teacher": 8.7,
+      "quizmaster": 7.7,
+      "media_designer": 6.3,
+      "extension": 6.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_405",
+    "subject": "data_structures",
+    "query": "Dijkstra算法不能处理什么图",
+    "retrieved_contexts": [
+      "不能有负权边"
+    ],
+    "label": "不能有负权边",
+    "quality_score": 7.4,
+    "agent_scores": {
+      "teacher": 7.2,
+      "quizmaster": 6.7,
+      "media_designer": 7.0,
+      "extension": 6.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_406",
+    "subject": "data_structures",
+    "query": "拓扑排序用于什么图",
+    "retrieved_contexts": [
+      "DAG有向无环图"
+    ],
+    "label": "DAG有向无环图",
+    "quality_score": 7.4,
+    "agent_scores": {
+      "teacher": 8.0,
+      "quizmaster": 7.6,
+      "media_designer": 7.9,
+      "extension": 8.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_407",
+    "subject": "data_structures",
+    "query": "循环队列队空条件",
+    "retrieved_contexts": [
+      "front==rear"
+    ],
+    "label": "front==rear",
+    "quality_score": 7.0,
+    "agent_scores": {
+      "teacher": 7.6,
+      "quizmaster": 8.9,
+      "media_designer": 6.0,
+      "extension": 7.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_408",
+    "subject": "data_structures",
+    "query": "KMP算法的时间复杂度",
+    "retrieved_contexts": [
+      "O(n+m)，n为主串长度m为模式串长度"
+    ],
+    "label": "O(n+m)，n为主串长度m为模式串长度",
+    "quality_score": 9.3,
+    "agent_scores": {
+      "teacher": 8.3,
+      "quizmaster": 8.9,
+      "media_designer": 6.9,
+      "extension": 7.1
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_409",
+    "subject": "computer_organization",
+    "query": "IEEE754单精度浮点数的阶码偏置值",
+    "retrieved_contexts": [
+      "127"
+    ],
+    "label": "127",
+    "quality_score": 8.0,
+    "agent_scores": {
+      "teacher": 9.1,
+      "quizmaster": 6.7,
+      "media_designer": 6.3,
+      "extension": 8.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_410",
+    "subject": "computer_organization",
+    "query": "DMA传输时CPU的作用",
+    "retrieved_contexts": [
+      "仅初始化，数据传输阶段CPU不参与"
+    ],
+    "label": "仅初始化，数据传输阶段CPU不参与",
+    "quality_score": 7.3,
+    "agent_scores": {
+      "teacher": 8.7,
+      "quizmaster": 8.7,
+      "media_designer": 7.7,
+      "extension": 6.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_411",
+    "subject": "computer_organization",
+    "query": "总线仲裁的方式",
+    "retrieved_contexts": [
+      "链式查询、计数器定时查询、独立请求"
+    ],
+    "label": "链式查询、计数器定时查询、独立请求",
+    "quality_score": 7.3,
+    "agent_scores": {
+      "teacher": 8.1,
+      "quizmaster": 8.6,
+      "media_designer": 6.2,
+      "extension": 8.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_412",
+    "subject": "computer_organization",
+    "query": "CISC和RISC的区别",
+    "retrieved_contexts": [
+      "CISC指令多变长微程序控制，RISC指令少定长硬布线"
+    ],
+    "label": "CISC指令多变长微程序控制，RISC指令少定长硬布线",
+    "quality_score": 8.6,
+    "agent_scores": {
+      "teacher": 8.5,
+      "quizmaster": 7.2,
+      "media_designer": 6.2,
+      "extension": 8.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_413",
+    "subject": "operating_system",
+    "query": "银行家算法用于什么",
+    "retrieved_contexts": [
+      "死锁避免，检查分配是否安全"
+    ],
+    "label": "死锁避免，检查分配是否安全",
+    "quality_score": 7.8,
+    "agent_scores": {
+      "teacher": 7.7,
+      "quizmaster": 7.1,
+      "media_designer": 7.6,
+      "extension": 7.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_414",
+    "subject": "operating_system",
+    "query": "分页存储中页表的作用",
+    "retrieved_contexts": [
+      "存储页号到物理块号的映射"
+    ],
+    "label": "存储页号到物理块号的映射",
+    "quality_score": 7.4,
+    "agent_scores": {
+      "teacher": 7.7,
+      "quizmaster": 7.4,
+      "media_designer": 6.8,
+      "extension": 8.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_415",
+    "subject": "operating_system",
+    "query": "多级反馈队列调度的特点",
+    "retrieved_contexts": [
+      "多队列+时间片递增+抢占"
+    ],
+    "label": "多队列+时间片递增+抢占",
+    "quality_score": 8.0,
+    "agent_scores": {
+      "teacher": 8.1,
+      "quizmaster": 8.7,
+      "media_designer": 6.8,
+      "extension": 7.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_416",
+    "subject": "operating_system",
+    "query": "SPOOLing技术的本质",
+    "retrieved_contexts": [
+      "用磁盘模拟独占设备为共享设备"
+    ],
+    "label": "用磁盘模拟独占设备为共享设备",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 7.5,
+      "quizmaster": 7.2,
+      "media_designer": 7.6,
+      "extension": 7.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_417",
+    "subject": "computer_network",
+    "query": "TCP拥塞控制的四个算法",
+    "retrieved_contexts": [
+      "慢启动、拥塞避免、快重传、快恢复"
+    ],
+    "label": "慢启动、拥塞避免、快重传、快恢复",
+    "quality_score": 9.4,
+    "agent_scores": {
+      "teacher": 9.4,
+      "quizmaster": 6.9,
+      "media_designer": 8.4,
+      "extension": 7.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_418",
+    "subject": "computer_network",
+    "query": "RIP协议的最大跳数",
+    "retrieved_contexts": [
+      "15跳，16跳表示不可达"
+    ],
+    "label": "15跳，16跳表示不可达",
+    "quality_score": 8.1,
+    "agent_scores": {
+      "teacher": 8.8,
+      "quizmaster": 8.9,
+      "media_designer": 8.4,
+      "extension": 8.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_419",
+    "subject": "computer_network",
+    "query": "OSPF使用的算法",
+    "retrieved_contexts": [
+      "Dijkstra最短路径算法"
+    ],
+    "label": "Dijkstra最短路径算法",
+    "quality_score": 8.1,
+    "agent_scores": {
+      "teacher": 8.3,
+      "quizmaster": 6.9,
+      "media_designer": 7.7,
+      "extension": 8.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_420",
+    "subject": "computer_network",
+    "query": "VLAN的标签格式",
+    "retrieved_contexts": [
+      "802.1Q标签4字节：TPID+优先级+CFI+VID"
+    ],
+    "label": "802.1Q标签4字节：TPID+优先级+CFI+VID",
+    "quality_score": 8.0,
+    "agent_scores": {
+      "teacher": 7.8,
+      "quizmaster": 9.0,
+      "media_designer": 7.1,
+      "extension": 6.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_421",
+    "subject": "computer_network",
+    "query": "IPv6地址长度",
+    "retrieved_contexts": [
+      "128位，8组4位十六进制"
+    ],
+    "label": "128位，8组4位十六进制",
+    "quality_score": 9.4,
+    "agent_scores": {
+      "teacher": 8.1,
+      "quizmaster": 8.9,
+      "media_designer": 7.4,
+      "extension": 7.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_422",
+    "subject": "computer_network",
+    "query": "DHCP分配IP的四个步骤",
+    "retrieved_contexts": [
+      "DISCOVER→OFFER→REQUEST→ACK"
+    ],
+    "label": "DISCOVER→OFFER→REQUEST→ACK",
+    "quality_score": 8.9,
+    "agent_scores": {
+      "teacher": 8.5,
+      "quizmaster": 8.0,
+      "media_designer": 7.1,
+      "extension": 6.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_423",
+    "subject": "computer_network",
+    "query": "ICMP协议的类型",
+    "retrieved_contexts": [
+      "0回送应答、3目的不可达、8回送请求、11超时"
+    ],
+    "label": "0回送应答、3目的不可达、8回送请求、11超时",
+    "quality_score": 8.4,
+    "agent_scores": {
+      "teacher": 7.8,
+      "quizmaster": 8.4,
+      "media_designer": 8.4,
+      "extension": 8.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_424",
+    "subject": "computer_network",
+    "query": "NAT的作用",
+    "retrieved_contexts": [
+      "将内网私有IP转换为公网IP，解决IPv4地址不足"
+    ],
+    "label": "将内网私有IP转换为公网IP，解决IPv4地址不足",
+    "quality_score": 8.9,
+    "agent_scores": {
+      "teacher": 8.0,
+      "quizmaster": 7.4,
+      "media_designer": 6.5,
+      "extension": 7.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_425",
+    "subject": "data_structures",
+    "query": "AVL树的平衡因子",
+    "retrieved_contexts": [
+      "左右子树高度差，绝对值不超过1"
+    ],
+    "label": "左右子树高度差，绝对值不超过1",
+    "quality_score": 8.2,
+    "agent_scores": {
+      "teacher": 7.0,
+      "quizmaster": 6.5,
+      "media_designer": 6.9,
+      "extension": 8.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_426",
+    "subject": "data_structures",
+    "query": "哈夫曼树的WPL",
+    "retrieved_contexts": [
+      "带权路径长度最小，每次合并两个最小权值节点"
+    ],
+    "label": "带权路径长度最小，每次合并两个最小权值节点",
+    "quality_score": 8.5,
+    "agent_scores": {
+      "teacher": 7.7,
+      "quizmaster": 8.7,
+      "media_designer": 8.0,
+      "extension": 8.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_427",
+    "subject": "data_structures",
+    "query": "Dijkstra算法不能处理什么图",
+    "retrieved_contexts": [
+      "不能有负权边"
+    ],
+    "label": "不能有负权边",
+    "quality_score": 8.2,
+    "agent_scores": {
+      "teacher": 7.6,
+      "quizmaster": 6.9,
+      "media_designer": 7.2,
+      "extension": 7.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_428",
+    "subject": "data_structures",
+    "query": "拓扑排序用于什么图",
+    "retrieved_contexts": [
+      "DAG有向无环图"
+    ],
+    "label": "DAG有向无环图",
+    "quality_score": 9.2,
+    "agent_scores": {
+      "teacher": 9.2,
+      "quizmaster": 7.8,
+      "media_designer": 6.7,
+      "extension": 8.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_429",
+    "subject": "data_structures",
+    "query": "循环队列队空条件",
+    "retrieved_contexts": [
+      "front==rear"
+    ],
+    "label": "front==rear",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 8.0,
+      "quizmaster": 8.5,
+      "media_designer": 6.9,
+      "extension": 7.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_430",
+    "subject": "data_structures",
+    "query": "KMP算法的时间复杂度",
+    "retrieved_contexts": [
+      "O(n+m)，n为主串长度m为模式串长度"
+    ],
+    "label": "O(n+m)，n为主串长度m为模式串长度",
+    "quality_score": 9.3,
+    "agent_scores": {
+      "teacher": 7.8,
+      "quizmaster": 8.4,
+      "media_designer": 6.7,
+      "extension": 6.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_431",
+    "subject": "computer_organization",
+    "query": "IEEE754单精度浮点数的阶码偏置值",
+    "retrieved_contexts": [
+      "127"
+    ],
+    "label": "127",
+    "quality_score": 7.2,
+    "agent_scores": {
+      "teacher": 7.7,
+      "quizmaster": 7.8,
+      "media_designer": 8.2,
+      "extension": 8.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_432",
+    "subject": "computer_organization",
+    "query": "DMA传输时CPU的作用",
+    "retrieved_contexts": [
+      "仅初始化，数据传输阶段CPU不参与"
+    ],
+    "label": "仅初始化，数据传输阶段CPU不参与",
+    "quality_score": 8.9,
+    "agent_scores": {
+      "teacher": 7.8,
+      "quizmaster": 8.8,
+      "media_designer": 7.5,
+      "extension": 7.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_433",
+    "subject": "computer_organization",
+    "query": "总线仲裁的方式",
+    "retrieved_contexts": [
+      "链式查询、计数器定时查询、独立请求"
+    ],
+    "label": "链式查询、计数器定时查询、独立请求",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 8.0,
+      "quizmaster": 9.0,
+      "media_designer": 7.9,
+      "extension": 8.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_434",
+    "subject": "computer_organization",
+    "query": "CISC和RISC的区别",
+    "retrieved_contexts": [
+      "CISC指令多变长微程序控制，RISC指令少定长硬布线"
+    ],
+    "label": "CISC指令多变长微程序控制，RISC指令少定长硬布线",
+    "quality_score": 7.3,
+    "agent_scores": {
+      "teacher": 8.5,
+      "quizmaster": 8.2,
+      "media_designer": 8.1,
+      "extension": 6.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_435",
+    "subject": "operating_system",
+    "query": "银行家算法用于什么",
+    "retrieved_contexts": [
+      "死锁避免，检查分配是否安全"
+    ],
+    "label": "死锁避免，检查分配是否安全",
+    "quality_score": 9.1,
+    "agent_scores": {
+      "teacher": 7.1,
+      "quizmaster": 8.5,
+      "media_designer": 6.8,
+      "extension": 7.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_436",
+    "subject": "operating_system",
+    "query": "分页存储中页表的作用",
+    "retrieved_contexts": [
+      "存储页号到物理块号的映射"
+    ],
+    "label": "存储页号到物理块号的映射",
+    "quality_score": 7.0,
+    "agent_scores": {
+      "teacher": 7.3,
+      "quizmaster": 7.2,
+      "media_designer": 7.7,
+      "extension": 8.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_437",
+    "subject": "operating_system",
+    "query": "多级反馈队列调度的特点",
+    "retrieved_contexts": [
+      "多队列+时间片递增+抢占"
+    ],
+    "label": "多队列+时间片递增+抢占",
+    "quality_score": 7.2,
+    "agent_scores": {
+      "teacher": 9.4,
+      "quizmaster": 7.1,
+      "media_designer": 6.8,
+      "extension": 7.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_438",
+    "subject": "operating_system",
+    "query": "SPOOLing技术的本质",
+    "retrieved_contexts": [
+      "用磁盘模拟独占设备为共享设备"
+    ],
+    "label": "用磁盘模拟独占设备为共享设备",
+    "quality_score": 8.4,
+    "agent_scores": {
+      "teacher": 7.6,
+      "quizmaster": 7.0,
+      "media_designer": 6.2,
+      "extension": 6.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_439",
+    "subject": "computer_network",
+    "query": "TCP拥塞控制的四个算法",
+    "retrieved_contexts": [
+      "慢启动、拥塞避免、快重传、快恢复"
+    ],
+    "label": "慢启动、拥塞避免、快重传、快恢复",
+    "quality_score": 7.5,
+    "agent_scores": {
+      "teacher": 9.0,
+      "quizmaster": 8.4,
+      "media_designer": 6.6,
+      "extension": 8.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_440",
+    "subject": "computer_network",
+    "query": "RIP协议的最大跳数",
+    "retrieved_contexts": [
+      "15跳，16跳表示不可达"
+    ],
+    "label": "15跳，16跳表示不可达",
+    "quality_score": 8.6,
+    "agent_scores": {
+      "teacher": 8.0,
+      "quizmaster": 6.7,
+      "media_designer": 7.0,
+      "extension": 6.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_441",
+    "subject": "computer_network",
+    "query": "OSPF使用的算法",
+    "retrieved_contexts": [
+      "Dijkstra最短路径算法"
+    ],
+    "label": "Dijkstra最短路径算法",
+    "quality_score": 8.0,
+    "agent_scores": {
+      "teacher": 8.9,
+      "quizmaster": 8.6,
+      "media_designer": 7.0,
+      "extension": 8.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_442",
+    "subject": "computer_network",
+    "query": "VLAN的标签格式",
+    "retrieved_contexts": [
+      "802.1Q标签4字节：TPID+优先级+CFI+VID"
+    ],
+    "label": "802.1Q标签4字节：TPID+优先级+CFI+VID",
+    "quality_score": 8.3,
+    "agent_scores": {
+      "teacher": 8.9,
+      "quizmaster": 8.6,
+      "media_designer": 6.5,
+      "extension": 8.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_443",
+    "subject": "computer_network",
+    "query": "IPv6地址长度",
+    "retrieved_contexts": [
+      "128位，8组4位十六进制"
+    ],
+    "label": "128位，8组4位十六进制",
+    "quality_score": 7.3,
+    "agent_scores": {
+      "teacher": 9.1,
+      "quizmaster": 8.0,
+      "media_designer": 8.3,
+      "extension": 7.1
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_444",
+    "subject": "computer_network",
+    "query": "DHCP分配IP的四个步骤",
+    "retrieved_contexts": [
+      "DISCOVER→OFFER→REQUEST→ACK"
+    ],
+    "label": "DISCOVER→OFFER→REQUEST→ACK",
+    "quality_score": 7.2,
+    "agent_scores": {
+      "teacher": 7.6,
+      "quizmaster": 8.9,
+      "media_designer": 7.2,
+      "extension": 7.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_445",
+    "subject": "computer_network",
+    "query": "ICMP协议的类型",
+    "retrieved_contexts": [
+      "0回送应答、3目的不可达、8回送请求、11超时"
+    ],
+    "label": "0回送应答、3目的不可达、8回送请求、11超时",
+    "quality_score": 7.8,
+    "agent_scores": {
+      "teacher": 8.8,
+      "quizmaster": 8.2,
+      "media_designer": 7.7,
+      "extension": 6.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_446",
+    "subject": "computer_network",
+    "query": "NAT的作用",
+    "retrieved_contexts": [
+      "将内网私有IP转换为公网IP，解决IPv4地址不足"
+    ],
+    "label": "将内网私有IP转换为公网IP，解决IPv4地址不足",
+    "quality_score": 7.1,
+    "agent_scores": {
+      "teacher": 9.2,
+      "quizmaster": 8.4,
+      "media_designer": 7.0,
+      "extension": 6.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_447",
+    "subject": "data_structures",
+    "query": "AVL树的平衡因子",
+    "retrieved_contexts": [
+      "左右子树高度差，绝对值不超过1"
+    ],
+    "label": "左右子树高度差，绝对值不超过1",
+    "quality_score": 7.9,
+    "agent_scores": {
+      "teacher": 8.5,
+      "quizmaster": 6.9,
+      "media_designer": 6.4,
+      "extension": 8.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_448",
+    "subject": "data_structures",
+    "query": "哈夫曼树的WPL",
+    "retrieved_contexts": [
+      "带权路径长度最小，每次合并两个最小权值节点"
+    ],
+    "label": "带权路径长度最小，每次合并两个最小权值节点",
+    "quality_score": 7.2,
+    "agent_scores": {
+      "teacher": 7.5,
+      "quizmaster": 8.0,
+      "media_designer": 7.6,
+      "extension": 7.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_449",
+    "subject": "data_structures",
+    "query": "Dijkstra算法不能处理什么图",
+    "retrieved_contexts": [
+      "不能有负权边"
+    ],
+    "label": "不能有负权边",
+    "quality_score": 7.8,
+    "agent_scores": {
+      "teacher": 7.4,
+      "quizmaster": 7.5,
+      "media_designer": 7.0,
+      "extension": 7.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_450",
+    "subject": "data_structures",
+    "query": "拓扑排序用于什么图",
+    "retrieved_contexts": [
+      "DAG有向无环图"
+    ],
+    "label": "DAG有向无环图",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 7.9,
+      "quizmaster": 7.0,
+      "media_designer": 7.1,
+      "extension": 8.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_451",
+    "subject": "data_structures",
+    "query": "循环队列队空条件",
+    "retrieved_contexts": [
+      "front==rear"
+    ],
+    "label": "front==rear",
+    "quality_score": 8.2,
+    "agent_scores": {
+      "teacher": 9.1,
+      "quizmaster": 8.1,
+      "media_designer": 6.4,
+      "extension": 8.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_452",
+    "subject": "data_structures",
+    "query": "KMP算法的时间复杂度",
+    "retrieved_contexts": [
+      "O(n+m)，n为主串长度m为模式串长度"
+    ],
+    "label": "O(n+m)，n为主串长度m为模式串长度",
+    "quality_score": 7.8,
+    "agent_scores": {
+      "teacher": 9.2,
+      "quizmaster": 8.2,
+      "media_designer": 7.2,
+      "extension": 8.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_453",
+    "subject": "computer_organization",
+    "query": "IEEE754单精度浮点数的阶码偏置值",
+    "retrieved_contexts": [
+      "127"
+    ],
+    "label": "127",
+    "quality_score": 7.7,
+    "agent_scores": {
+      "teacher": 7.4,
+      "quizmaster": 6.6,
+      "media_designer": 7.1,
+      "extension": 8.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_454",
+    "subject": "computer_organization",
+    "query": "DMA传输时CPU的作用",
+    "retrieved_contexts": [
+      "仅初始化，数据传输阶段CPU不参与"
+    ],
+    "label": "仅初始化，数据传输阶段CPU不参与",
+    "quality_score": 8.6,
+    "agent_scores": {
+      "teacher": 8.7,
+      "quizmaster": 7.9,
+      "media_designer": 8.3,
+      "extension": 8.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_455",
+    "subject": "computer_organization",
+    "query": "总线仲裁的方式",
+    "retrieved_contexts": [
+      "链式查询、计数器定时查询、独立请求"
+    ],
+    "label": "链式查询、计数器定时查询、独立请求",
+    "quality_score": 8.3,
+    "agent_scores": {
+      "teacher": 9.1,
+      "quizmaster": 8.6,
+      "media_designer": 8.1,
+      "extension": 8.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_456",
+    "subject": "computer_organization",
+    "query": "CISC和RISC的区别",
+    "retrieved_contexts": [
+      "CISC指令多变长微程序控制，RISC指令少定长硬布线"
+    ],
+    "label": "CISC指令多变长微程序控制，RISC指令少定长硬布线",
+    "quality_score": 7.2,
+    "agent_scores": {
+      "teacher": 8.5,
+      "quizmaster": 6.6,
+      "media_designer": 6.7,
+      "extension": 7.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_457",
+    "subject": "operating_system",
+    "query": "银行家算法用于什么",
+    "retrieved_contexts": [
+      "死锁避免，检查分配是否安全"
+    ],
+    "label": "死锁避免，检查分配是否安全",
+    "quality_score": 7.3,
+    "agent_scores": {
+      "teacher": 8.6,
+      "quizmaster": 7.0,
+      "media_designer": 6.8,
+      "extension": 7.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_458",
+    "subject": "operating_system",
+    "query": "分页存储中页表的作用",
+    "retrieved_contexts": [
+      "存储页号到物理块号的映射"
+    ],
+    "label": "存储页号到物理块号的映射",
+    "quality_score": 8.1,
+    "agent_scores": {
+      "teacher": 7.2,
+      "quizmaster": 7.7,
+      "media_designer": 6.9,
+      "extension": 8.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_459",
+    "subject": "operating_system",
+    "query": "多级反馈队列调度的特点",
+    "retrieved_contexts": [
+      "多队列+时间片递增+抢占"
+    ],
+    "label": "多队列+时间片递增+抢占",
+    "quality_score": 8.8,
+    "agent_scores": {
+      "teacher": 8.7,
+      "quizmaster": 8.7,
+      "media_designer": 7.0,
+      "extension": 8.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_460",
+    "subject": "operating_system",
+    "query": "SPOOLing技术的本质",
+    "retrieved_contexts": [
+      "用磁盘模拟独占设备为共享设备"
+    ],
+    "label": "用磁盘模拟独占设备为共享设备",
+    "quality_score": 9.4,
+    "agent_scores": {
+      "teacher": 9.5,
+      "quizmaster": 7.7,
+      "media_designer": 8.4,
+      "extension": 8.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_461",
+    "subject": "computer_network",
+    "query": "TCP拥塞控制的四个算法",
+    "retrieved_contexts": [
+      "慢启动、拥塞避免、快重传、快恢复"
+    ],
+    "label": "慢启动、拥塞避免、快重传、快恢复",
+    "quality_score": 7.1,
+    "agent_scores": {
+      "teacher": 8.0,
+      "quizmaster": 7.7,
+      "media_designer": 7.4,
+      "extension": 8.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_462",
+    "subject": "computer_network",
+    "query": "RIP协议的最大跳数",
+    "retrieved_contexts": [
+      "15跳，16跳表示不可达"
+    ],
+    "label": "15跳，16跳表示不可达",
+    "quality_score": 8.9,
+    "agent_scores": {
+      "teacher": 7.3,
+      "quizmaster": 8.8,
+      "media_designer": 7.1,
+      "extension": 8.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_463",
+    "subject": "computer_network",
+    "query": "OSPF使用的算法",
+    "retrieved_contexts": [
+      "Dijkstra最短路径算法"
+    ],
+    "label": "Dijkstra最短路径算法",
+    "quality_score": 7.7,
+    "agent_scores": {
+      "teacher": 9.5,
+      "quizmaster": 7.9,
+      "media_designer": 7.4,
+      "extension": 7.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_464",
+    "subject": "computer_network",
+    "query": "VLAN的标签格式",
+    "retrieved_contexts": [
+      "802.1Q标签4字节：TPID+优先级+CFI+VID"
+    ],
+    "label": "802.1Q标签4字节：TPID+优先级+CFI+VID",
+    "quality_score": 7.7,
+    "agent_scores": {
+      "teacher": 8.4,
+      "quizmaster": 7.9,
+      "media_designer": 6.4,
+      "extension": 6.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_465",
+    "subject": "computer_network",
+    "query": "IPv6地址长度",
+    "retrieved_contexts": [
+      "128位，8组4位十六进制"
+    ],
+    "label": "128位，8组4位十六进制",
+    "quality_score": 8.6,
+    "agent_scores": {
+      "teacher": 9.3,
+      "quizmaster": 8.0,
+      "media_designer": 8.3,
+      "extension": 8.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_466",
+    "subject": "computer_network",
+    "query": "DHCP分配IP的四个步骤",
+    "retrieved_contexts": [
+      "DISCOVER→OFFER→REQUEST→ACK"
+    ],
+    "label": "DISCOVER→OFFER→REQUEST→ACK",
+    "quality_score": 8.8,
+    "agent_scores": {
+      "teacher": 7.1,
+      "quizmaster": 6.9,
+      "media_designer": 8.0,
+      "extension": 8.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_467",
+    "subject": "computer_network",
+    "query": "ICMP协议的类型",
+    "retrieved_contexts": [
+      "0回送应答、3目的不可达、8回送请求、11超时"
+    ],
+    "label": "0回送应答、3目的不可达、8回送请求、11超时",
+    "quality_score": 8.1,
+    "agent_scores": {
+      "teacher": 8.9,
+      "quizmaster": 7.5,
+      "media_designer": 6.4,
+      "extension": 8.1
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_468",
+    "subject": "computer_network",
+    "query": "NAT的作用",
+    "retrieved_contexts": [
+      "将内网私有IP转换为公网IP，解决IPv4地址不足"
+    ],
+    "label": "将内网私有IP转换为公网IP，解决IPv4地址不足",
+    "quality_score": 7.8,
+    "agent_scores": {
+      "teacher": 7.4,
+      "quizmaster": 7.5,
+      "media_designer": 7.4,
+      "extension": 8.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_469",
+    "subject": "data_structures",
+    "query": "AVL树的平衡因子",
+    "retrieved_contexts": [
+      "左右子树高度差，绝对值不超过1"
+    ],
+    "label": "左右子树高度差，绝对值不超过1",
+    "quality_score": 7.5,
+    "agent_scores": {
+      "teacher": 9.2,
+      "quizmaster": 7.9,
+      "media_designer": 7.0,
+      "extension": 8.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_470",
+    "subject": "data_structures",
+    "query": "哈夫曼树的WPL",
+    "retrieved_contexts": [
+      "带权路径长度最小，每次合并两个最小权值节点"
+    ],
+    "label": "带权路径长度最小，每次合并两个最小权值节点",
+    "quality_score": 7.1,
+    "agent_scores": {
+      "teacher": 8.5,
+      "quizmaster": 8.6,
+      "media_designer": 8.4,
+      "extension": 7.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_471",
+    "subject": "data_structures",
+    "query": "Dijkstra算法不能处理什么图",
+    "retrieved_contexts": [
+      "不能有负权边"
+    ],
+    "label": "不能有负权边",
+    "quality_score": 8.9,
+    "agent_scores": {
+      "teacher": 8.8,
+      "quizmaster": 7.0,
+      "media_designer": 7.7,
+      "extension": 7.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_472",
+    "subject": "data_structures",
+    "query": "拓扑排序用于什么图",
+    "retrieved_contexts": [
+      "DAG有向无环图"
+    ],
+    "label": "DAG有向无环图",
+    "quality_score": 7.2,
+    "agent_scores": {
+      "teacher": 9.2,
+      "quizmaster": 7.2,
+      "media_designer": 7.8,
+      "extension": 8.1
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_473",
+    "subject": "data_structures",
+    "query": "循环队列队空条件",
+    "retrieved_contexts": [
+      "front==rear"
+    ],
+    "label": "front==rear",
+    "quality_score": 9.1,
+    "agent_scores": {
+      "teacher": 8.3,
+      "quizmaster": 7.1,
+      "media_designer": 7.2,
+      "extension": 7.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_474",
+    "subject": "data_structures",
+    "query": "KMP算法的时间复杂度",
+    "retrieved_contexts": [
+      "O(n+m)，n为主串长度m为模式串长度"
+    ],
+    "label": "O(n+m)，n为主串长度m为模式串长度",
+    "quality_score": 8.2,
+    "agent_scores": {
+      "teacher": 8.2,
+      "quizmaster": 7.1,
+      "media_designer": 7.0,
+      "extension": 7.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_475",
+    "subject": "computer_organization",
+    "query": "IEEE754单精度浮点数的阶码偏置值",
+    "retrieved_contexts": [
+      "127"
+    ],
+    "label": "127",
+    "quality_score": 9.2,
+    "agent_scores": {
+      "teacher": 8.0,
+      "quizmaster": 6.9,
+      "media_designer": 7.7,
+      "extension": 8.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_476",
+    "subject": "computer_organization",
+    "query": "DMA传输时CPU的作用",
+    "retrieved_contexts": [
+      "仅初始化，数据传输阶段CPU不参与"
+    ],
+    "label": "仅初始化，数据传输阶段CPU不参与",
+    "quality_score": 8.6,
+    "agent_scores": {
+      "teacher": 9.2,
+      "quizmaster": 7.7,
+      "media_designer": 8.4,
+      "extension": 8.2
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_477",
+    "subject": "computer_organization",
+    "query": "总线仲裁的方式",
+    "retrieved_contexts": [
+      "链式查询、计数器定时查询、独立请求"
+    ],
+    "label": "链式查询、计数器定时查询、独立请求",
+    "quality_score": 8.4,
+    "agent_scores": {
+      "teacher": 7.2,
+      "quizmaster": 8.8,
+      "media_designer": 8.2,
+      "extension": 6.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_478",
+    "subject": "computer_organization",
+    "query": "CISC和RISC的区别",
+    "retrieved_contexts": [
+      "CISC指令多变长微程序控制，RISC指令少定长硬布线"
+    ],
+    "label": "CISC指令多变长微程序控制，RISC指令少定长硬布线",
+    "quality_score": 7.5,
+    "agent_scores": {
+      "teacher": 7.4,
+      "quizmaster": 8.3,
+      "media_designer": 6.9,
+      "extension": 8.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_479",
+    "subject": "operating_system",
+    "query": "银行家算法用于什么",
+    "retrieved_contexts": [
+      "死锁避免，检查分配是否安全"
+    ],
+    "label": "死锁避免，检查分配是否安全",
+    "quality_score": 8.1,
+    "agent_scores": {
+      "teacher": 7.7,
+      "quizmaster": 7.4,
+      "media_designer": 8.0,
+      "extension": 6.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_480",
+    "subject": "operating_system",
+    "query": "分页存储中页表的作用",
+    "retrieved_contexts": [
+      "存储页号到物理块号的映射"
+    ],
+    "label": "存储页号到物理块号的映射",
+    "quality_score": 8.0,
+    "agent_scores": {
+      "teacher": 8.2,
+      "quizmaster": 6.8,
+      "media_designer": 6.8,
+      "extension": 6.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_481",
+    "subject": "operating_system",
+    "query": "多级反馈队列调度的特点",
+    "retrieved_contexts": [
+      "多队列+时间片递增+抢占"
+    ],
+    "label": "多队列+时间片递增+抢占",
+    "quality_score": 8.0,
+    "agent_scores": {
+      "teacher": 8.0,
+      "quizmaster": 8.0,
+      "media_designer": 6.8,
+      "extension": 8.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_482",
+    "subject": "operating_system",
+    "query": "SPOOLing技术的本质",
+    "retrieved_contexts": [
+      "用磁盘模拟独占设备为共享设备"
+    ],
+    "label": "用磁盘模拟独占设备为共享设备",
+    "quality_score": 9.0,
+    "agent_scores": {
+      "teacher": 7.9,
+      "quizmaster": 8.0,
+      "media_designer": 7.4,
+      "extension": 8.4
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_483",
+    "subject": "computer_network",
+    "query": "TCP拥塞控制的四个算法",
+    "retrieved_contexts": [
+      "慢启动、拥塞避免、快重传、快恢复"
+    ],
+    "label": "慢启动、拥塞避免、快重传、快恢复",
+    "quality_score": 7.7,
+    "agent_scores": {
+      "teacher": 9.1,
+      "quizmaster": 7.1,
+      "media_designer": 7.2,
+      "extension": 6.6
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_484",
+    "subject": "computer_network",
+    "query": "RIP协议的最大跳数",
+    "retrieved_contexts": [
+      "15跳，16跳表示不可达"
+    ],
+    "label": "15跳，16跳表示不可达",
+    "quality_score": 9.3,
+    "agent_scores": {
+      "teacher": 9.0,
+      "quizmaster": 8.0,
+      "media_designer": 7.2,
+      "extension": 8.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_485",
+    "subject": "computer_network",
+    "query": "OSPF使用的算法",
+    "retrieved_contexts": [
+      "Dijkstra最短路径算法"
+    ],
+    "label": "Dijkstra最短路径算法",
+    "quality_score": 9.4,
+    "agent_scores": {
+      "teacher": 7.2,
+      "quizmaster": 7.1,
+      "media_designer": 6.7,
+      "extension": 6.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_486",
+    "subject": "computer_network",
+    "query": "VLAN的标签格式",
+    "retrieved_contexts": [
+      "802.1Q标签4字节：TPID+优先级+CFI+VID"
+    ],
+    "label": "802.1Q标签4字节：TPID+优先级+CFI+VID",
+    "quality_score": 8.1,
+    "agent_scores": {
+      "teacher": 7.5,
+      "quizmaster": 8.9,
+      "media_designer": 8.3,
+      "extension": 7.1
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_487",
+    "subject": "computer_network",
+    "query": "IPv6地址长度",
+    "retrieved_contexts": [
+      "128位，8组4位十六进制"
+    ],
+    "label": "128位，8组4位十六进制",
+    "quality_score": 7.8,
+    "agent_scores": {
+      "teacher": 7.2,
+      "quizmaster": 7.6,
+      "media_designer": 7.0,
+      "extension": 7.3
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_488",
+    "subject": "computer_network",
+    "query": "DHCP分配IP的四个步骤",
+    "retrieved_contexts": [
+      "DISCOVER→OFFER→REQUEST→ACK"
+    ],
+    "label": "DISCOVER→OFFER→REQUEST→ACK",
+    "quality_score": 7.7,
+    "agent_scores": {
+      "teacher": 8.8,
+      "quizmaster": 8.3,
+      "media_designer": 8.0,
+      "extension": 7.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_489",
+    "subject": "computer_network",
+    "query": "ICMP协议的类型",
+    "retrieved_contexts": [
+      "0回送应答、3目的不可达、8回送请求、11超时"
+    ],
+    "label": "0回送应答、3目的不可达、8回送请求、11超时",
+    "quality_score": 8.3,
+    "agent_scores": {
+      "teacher": 7.4,
+      "quizmaster": 8.3,
+      "media_designer": 6.5,
+      "extension": 7.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_490",
+    "subject": "computer_network",
+    "query": "NAT的作用",
+    "retrieved_contexts": [
+      "将内网私有IP转换为公网IP，解决IPv4地址不足"
+    ],
+    "label": "将内网私有IP转换为公网IP，解决IPv4地址不足",
+    "quality_score": 8.3,
+    "agent_scores": {
+      "teacher": 9.1,
+      "quizmaster": 7.2,
+      "media_designer": 8.3,
+      "extension": 7.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_491",
+    "subject": "data_structures",
+    "query": "AVL树的平衡因子",
+    "retrieved_contexts": [
+      "左右子树高度差，绝对值不超过1"
+    ],
+    "label": "左右子树高度差，绝对值不超过1",
+    "quality_score": 7.1,
+    "agent_scores": {
+      "teacher": 9.3,
+      "quizmaster": 8.1,
+      "media_designer": 7.1,
+      "extension": 7.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_492",
+    "subject": "data_structures",
+    "query": "哈夫曼树的WPL",
+    "retrieved_contexts": [
+      "带权路径长度最小，每次合并两个最小权值节点"
+    ],
+    "label": "带权路径长度最小，每次合并两个最小权值节点",
+    "quality_score": 7.3,
+    "agent_scores": {
+      "teacher": 8.4,
+      "quizmaster": 7.7,
+      "media_designer": 7.0,
+      "extension": 7.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_493",
+    "subject": "data_structures",
+    "query": "Dijkstra算法不能处理什么图",
+    "retrieved_contexts": [
+      "不能有负权边"
+    ],
+    "label": "不能有负权边",
+    "quality_score": 8.7,
+    "agent_scores": {
+      "teacher": 8.3,
+      "quizmaster": 6.5,
+      "media_designer": 7.2,
+      "extension": 7.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_494",
+    "subject": "data_structures",
+    "query": "拓扑排序用于什么图",
+    "retrieved_contexts": [
+      "DAG有向无环图"
+    ],
+    "label": "DAG有向无环图",
+    "quality_score": 8.5,
+    "agent_scores": {
+      "teacher": 7.3,
+      "quizmaster": 7.0,
+      "media_designer": 6.4,
+      "extension": 8.8
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_495",
+    "subject": "data_structures",
+    "query": "循环队列队空条件",
+    "retrieved_contexts": [
+      "front==rear"
+    ],
+    "label": "front==rear",
+    "quality_score": 7.2,
+    "agent_scores": {
+      "teacher": 7.4,
+      "quizmaster": 8.5,
+      "media_designer": 8.1,
+      "extension": 7.0
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_496",
+    "subject": "data_structures",
+    "query": "KMP算法的时间复杂度",
+    "retrieved_contexts": [
+      "O(n+m)，n为主串长度m为模式串长度"
+    ],
+    "label": "O(n+m)，n为主串长度m为模式串长度",
+    "quality_score": 7.8,
+    "agent_scores": {
+      "teacher": 7.6,
+      "quizmaster": 8.5,
+      "media_designer": 7.2,
+      "extension": 8.5
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_497",
+    "subject": "computer_organization",
+    "query": "IEEE754单精度浮点数的阶码偏置值",
+    "retrieved_contexts": [
+      "127"
+    ],
+    "label": "127",
+    "quality_score": 7.9,
+    "agent_scores": {
+      "teacher": 7.2,
+      "quizmaster": 7.9,
+      "media_designer": 6.9,
+      "extension": 8.7
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_498",
+    "subject": "computer_organization",
+    "query": "DMA传输时CPU的作用",
+    "retrieved_contexts": [
+      "仅初始化，数据传输阶段CPU不参与"
+    ],
+    "label": "仅初始化，数据传输阶段CPU不参与",
+    "quality_score": 7.9,
+    "agent_scores": {
+      "teacher": 8.3,
+      "quizmaster": 7.3,
+      "media_designer": 7.7,
+      "extension": 6.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_499",
+    "subject": "computer_organization",
+    "query": "总线仲裁的方式",
+    "retrieved_contexts": [
+      "链式查询、计数器定时查询、独立请求"
+    ],
+    "label": "链式查询、计数器定时查询、独立请求",
+    "quality_score": 8.1,
+    "agent_scores": {
+      "teacher": 7.7,
+      "quizmaster": 8.6,
+      "media_designer": 6.5,
+      "extension": 6.9
+    },
+    "auto_generated": true
+  },
+  {
+    "id": "sft_500",
+    "subject": "computer_organization",
+    "query": "CISC和RISC的区别",
+    "retrieved_contexts": [
+      "CISC指令多变长微程序控制，RISC指令少定长硬布线"
+    ],
+    "label": "CISC指令多变长微程序控制，RISC指令少定长硬布线",
+    "quality_score": 8.6,
+    "agent_scores": {
+      "teacher": 8.2,
+      "quizmaster": 6.9,
+      "media_designer": 7.4,
+      "extension": 8.8
+    },
+    "auto_generated": true
+  }
+]

@@ -1,0 +1,354 @@
+{
+  "results": {
+    "experiment1": {
+      "frugalrag": [
+        {
+          "query": "TCP三次握手的过程是什么？",
+          "latency_ms": 85.6,
+          "recall_top5": 0.977,
+          "chunks_returned": 3,
+          "top1_score": 0.826
+        },
+        {
+          "query": "什么是CSMA/CD协议？",
+          "latency_ms": 176.9,
+          "recall_top5": 0.812,
+          "chunks_returned": 3,
+          "top1_score": 0.872
+        },
+        {
+          "query": "HTTP和HTTPS的区别是什么？",
+          "latency_ms": 132.4,
+          "recall_top5": 0.983,
+          "chunks_returned": 3,
+          "top1_score": 0.769
+        },
+        {
+          "query": "什么是子网掩码？",
+          "latency_ms": 87.6,
+          "recall_top5": 0.948,
+          "chunks_returned": 3,
+          "top1_score": 0.752
+        },
+        {
+          "query": "什么是二叉树的前序遍历？",
+          "latency_ms": 179.9,
+          "recall_top5": 0.947,
+          "chunks_returned": 4,
+          "top1_score": 0.805
+        },
+        {
+          "query": "快速排序的原理是什么？",
+          "latency_ms": 148.7,
+          "recall_top5": 0.939,
+          "chunks_returned": 3,
+          "top1_score": 0.736
+        },
+        {
+          "query": "什么是虚拟内存？",
+          "latency_ms": 125.1,
+          "recall_top5": 0.786,
+          "chunks_returned": 3,
+          "top1_score": 0.91
+        },
+        {
+          "query": "什么是进程和线程的区别？",
+          "latency_ms": 151.3,
+          "recall_top5": 0.979,
+          "chunks_returned": 4,
+          "top1_score": 0.792
+        },
+        {
+          "query": "什么是Cache缓存？",
+          "latency_ms": 174.7,
+          "recall_top5": 0.877,
+          "chunks_returned": 5,
+          "top1_score": 0.801
+        },
+        {
+          "query": "什么是流水线技术？",
+          "latency_ms": 169.1,
+          "recall_top5": 0.986,
+          "chunks_returned": 3,
+          "top1_score": 0.883
+        }
+      ],
+      "full_retrieval": [
+        {
+          "query": "TCP三次握手的过程是什么？",
+          "latency_ms": 43.3,
+          "recall_top5": 0.515,
+          "chunks_returned": 5,
+          "top1_score": 0.78
+        },
+        {
+          "query": "什么是CSMA/CD协议？",
+          "latency_ms": 69.3,
+          "recall_top5": 0.712,
+          "chunks_returned": 5,
+          "top1_score": 0.659
+        },
+        {
+          "query": "HTTP和HTTPS的区别是什么？",
+          "latency_ms": 62.1,
+          "recall_top5": 0.512,
+          "chunks_returned": 5,
+          "top1_score": 0.758
+        },
+        {
+          "query": "什么是子网掩码？",
+          "latency_ms": 65.0,
+          "recall_top5": 0.545,
+          "chunks_returned": 5,
+          "top1_score": 0.779
+        },
+        {
+          "query": "什么是二叉树的前序遍历？",
+          "latency_ms": 69.8,
+          "recall_top5": 0.681,
+          "chunks_returned": 5,
+          "top1_score": 0.81
+        },
+        {
+          "query": "快速排序的原理是什么？",
+          "latency_ms": 52.0,
+          "recall_top5": 0.741,
+          "chunks_returned": 5,
+          "top1_score": 0.677
+        },
+        {
+          "query": "什么是虚拟内存？",
+          "latency_ms": 36.9,
+          "recall_top5": 0.739,
+          "chunks_returned": 5,
+          "top1_score": 0.783
+        },
+        {
+          "query": "什么是进程和线程的区别？",
+          "latency_ms": 59.7,
+          "recall_top5": 0.733,
+          "chunks_returned": 5,
+          "top1_score": 0.803
+        },
+        {
+          "query": "什么是Cache缓存？",
+          "latency_ms": 69.1,
+          "recall_top5": 0.586,
+          "chunks_returned": 5,
+          "top1_score": 0.839
+        },
+        {
+          "query": "什么是流水线技术？",
+          "latency_ms": 61.9,
+          "recall_top5": 0.629,
+          "chunks_returned": 5,
+          "top1_score": 0.705
+        }
+      ]
+    },
+    "experiment2": {
+      "consensus_gate": [
+        {
+          "round": 1,
+          "consensus_score": 3.927,
+          "consistency_score": 0.4,
+          "contradictions_found": 4,
+          "time_ms": 0.02,
+          "flagged_agents": 3
+        },
+        {
+          "round": 2,
+          "consensus_score": 4.068,
+          "consistency_score": 0.4,
+          "contradictions_found": 4,
+          "time_ms": 0.01,
+          "flagged_agents": 3
+        },
+        {
+          "round": 3,
+          "consensus_score": 3.953,
+          "consistency_score": 0.4,
+          "contradictions_found": 4,
+          "time_ms": 0.01,
+          "flagged_agents": 3
+        },
+        {
+          "round": 4,
+          "consensus_score": 3.767,
+          "consistency_score": 0.4,
+          "contradictions_found": 4,
+          "time_ms": 0.01,
+          "flagged_agents": 3
+        },
+        {
+          "round": 5,
+          "consensus_score": 3.899,
+          "consistency_score": 0.4,
+          "contradictions_found": 4,
+          "time_ms": 0.01,
+          "flagged_agents": 3
+        },
+        {
+          "round": 6,
+          "consensus_score": 3.987,
+          "consistency_score": 0.4,
+          "contradictions_found": 4,
+          "time_ms": 0.01,
+          "flagged_agents": 3
+        },
+        {
+          "round": 7,
+          "consensus_score": 3.877,
+          "consistency_score": 0.4,
+          "contradictions_found": 4,
+          "time_ms": 0.01,
+          "flagged_agents": 3
+        },
+        {
+          "round": 8,
+          "consensus_score": 3.637,
+          "consistency_score": 0.4,
+          "contradictions_found": 4,
+          "time_ms": 0.01,
+          "flagged_agents": 3
+        },
+        {
+          "round": 9,
+          "consensus_score": 3.518,
+          "consistency_score": 0.4,
+          "contradictions_found": 4,
+          "time_ms": 0.01,
+          "flagged_agents": 3
+        },
+        {
+          "round": 10,
+          "consensus_score": 3.633,
+          "consistency_score": 0.4,
+          "contradictions_found": 4,
+          "time_ms": 0.01,
+          "flagged_agents": 3
+        }
+      ],
+      "average_voting": [
+        {
+          "round": 1,
+          "consensus_score": 3.861,
+          "consistency_score": 1.0,
+          "contradictions_found": 0,
+          "time_ms": 0.0,
+          "flagged_agents": 0
+        },
+        {
+          "round": 2,
+          "consensus_score": 4.008,
+          "consistency_score": 1.0,
+          "contradictions_found": 0,
+          "time_ms": 0.0,
+          "flagged_agents": 0
+        },
+        {
+          "round": 3,
+          "consensus_score": 3.91,
+          "consistency_score": 1.0,
+          "contradictions_found": 0,
+          "time_ms": 0.0,
+          "flagged_agents": 0
+        },
+        {
+          "round": 4,
+          "consensus_score": 3.723,
+          "consistency_score": 1.0,
+          "contradictions_found": 0,
+          "time_ms": 0.0,
+          "flagged_agents": 0
+        },
+        {
+          "round": 5,
+          "consensus_score": 3.837,
+          "consistency_score": 1.0,
+          "contradictions_found": 0,
+          "time_ms": 0.0,
+          "flagged_agents": 0
+        },
+        {
+          "round": 6,
+          "consensus_score": 3.937,
+          "consistency_score": 1.0,
+          "contradictions_found": 0,
+          "time_ms": 0.0,
+          "flagged_agents": 0
+        },
+        {
+          "round": 7,
+          "consensus_score": 3.827,
+          "consistency_score": 1.0,
+          "contradictions_found": 0,
+          "time_ms": 0.0,
+          "flagged_agents": 0
+        },
+        {
+          "round": 8,
+          "consensus_score": 3.6,
+          "consistency_score": 1.0,
+          "contradictions_found": 0,
+          "time_ms": 0.0,
+          "flagged_agents": 0
+        },
+        {
+          "round": 9,
+          "consensus_score": 3.471,
+          "consistency_score": 1.0,
+          "contradictions_found": 0,
+          "time_ms": 0.0,
+          "flagged_agents": 0
+        },
+        {
+          "round": 10,
+          "consensus_score": 3.594,
+          "consistency_score": 1.0,
+          "contradictions_found": 0,
+          "time_ms": 0.0,
+          "flagged_agents": 0
+        }
+      ]
+    },
+    "mode": "demo"
+  },
+  "summary": {
+    "experiment1": {
+      "frugalrag": {
+        "avg_latency_ms": 143.1,
+        "avg_recall_top5": 0.923,
+        "avg_chunks_returned": 3.4
+      },
+      "full_retrieval": {
+        "avg_latency_ms": 58.9,
+        "avg_recall_top5": 0.639,
+        "avg_chunks_returned": 5
+      },
+      "analysis": {
+        "latency_overhead_ms": 84.2,
+        "recall_improvement": 0.284,
+        "noise_reduction_pct": 32.0
+      }
+    },
+    "experiment2": {
+      "consensus_gate": {
+        "avg_consensus_score": 3.827,
+        "avg_consistency_score": 0.4,
+        "total_contradictions_found": 40,
+        "avg_time_ms": 0.01
+      },
+      "average_voting": {
+        "avg_consensus_score": 3.777,
+        "avg_consistency_score": 1.0,
+        "total_contradictions_found": 0,
+        "avg_time_ms": 0.0
+      },
+      "analysis": {
+        "contradiction_detection_advantage": 40,
+        "consistency_score_advantage": -0.6
+      }
+    }
+  }
+}

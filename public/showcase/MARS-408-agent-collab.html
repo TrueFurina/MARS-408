@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<!-- 设计系统：MARS-408 智能体协作可视化页 · 复用 DESIGN_TOKENS.md 基础令牌 + DESIGN_TOKENS_VIZ.md 页面级令牌（深/浅双主题）
+     令牌真相源：E:\Program\MARL\study-help-pro\DESIGN_TOKENS.md（基础）/ DESIGN_TOKENS_VIZ.md（本页 Agent/流/共识色，以该文件为准）
+     风格同源：E:\Program\MARL\study-help-pro\deliverables\MARS-408-landing-final-v2.html 与 MARS-408-profile.html（玻璃态/紫调/环境光/section结构/a11y）
+     构建师：prototype-builder（筑原型） · 单文件自包含 · 零外部依赖（无外部字体/JS库/CDN/图片）
+     a11y：focus-visible / prefers-reduced-motion / 合法标题层级 h1→h2→h3（禁 h5）/ 44px 触摸目标 / aria-label / SVG role=img+文本替代 -->
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="MARS-408 智能体协作可视化 · 7 智能体架构、Agent 节点关系图、GOMARL 共识机制（NeuralMixer + 证据冲突消解）、协作追踪、FrugalRAG 闭环与双引擎技术亮点。" />
+<title>MARS-408 · 智能体协作可视化</title>
+<style>
+/* ============================================================
+   1. 设计令牌 · :root（深色调默认 · 取自 DESIGN_TOKENS.md，未改基础色值）
+   ============================================================ */
+:root {
+  /* ============ 语义层 · 画布与表面 ============ */
+  --color-canvas:        #080812;
+  --color-surface:       rgba(255,255,255,0.03);
+  --color-surface-2:     #0f0f1a;
+  --color-surface-hover: rgba(255,255,255,0.06);
+  --color-elevated:      #1c1c2b;
+  --color-overlay:       rgba(0,0,0,0.55);
+
+  /* ============ 语义层 · 玻璃态 ============ */
+  --color-glass:         rgba(15,15,26,0.65);
+  --color-glass-hover:   rgba(15,15,26,0.80);
+  --color-glass-border:  rgba(255,255,255,0.08);
+  --glass-blur:          12px;
+  --glass-blur-heavy:    20px;
+
+  /* ============ 语义层 · 边框 ============ */
+  --color-border:        rgba(255,255,255,0.06);
+  --color-border-light:  rgba(255,255,255,0.04);
+  --color-border-focus:  rgba(124,106,242,0.45);
+  --color-border-glow:   rgba(124,106,242,0.25);
+
+  /* ============ 语义层 · 文本 ============ */
+  --color-text:          #f8fafc;
+  --color-text-2:        #94a3b8;
+  --color-text-3:        #7c8aa0;
+  --color-text-invert:   #0f0f1a;
+
+  /* ============ 品牌色（双主题恒定） ============ */
+  --accent:              #7c6af2;
+  --accent-dark:         #6b5cdb;
+  --accent-blue:         #5b8bd8;
+  --accent-cyan:         #06b6d4;
+  --accent-warm:         #f59e0b;
+  --accent-success:      #22c55e;
+  --accent-danger:       #ef4444;
+  --accent-pink:         #f472b6;
+  --accent-primary:        var(--accent);
+  --accent-primary-dark:   var(--accent-dark);
+  --accent-secondary:      var(--accent-blue);
+  --accent-tertiary:       var(--accent-cyan);
+  --accent-primary-10:   rgba(124,106,242,0.10);
+  --accent-primary-20:   rgba(124,106,242,0.20);
+  --accent-primary-30:   rgba(124,106,242,0.30);
+
+  /* ============ 408 四科色（恒定） ============ */
+  --subject-ds: #8b5cf6;
+  --subject-cn: #3b82f6;
+  --subject-co: #06b6d4;
+  --subject-os: #f472b6;
+
+  /* ============ 发光 ============ */
+  --glow-primary:        0 0 20px rgba(124,106,242,0.15), 0 0 40px rgba(124,106,242,0.08);
+  --glow-primary-strong: 0 0 20px rgba(124,106,242,0.25), 0 0 60px rgba(124,106,242,0.12);
+  --glow-secondary:      0 0 20px rgba(91,139,216,0.15), 0 0 40px rgba(91,139,216,0.08);
+  --glow-success:        0 0 20px rgba(34,197,94,0.15);
+
+  /* ============ 渐变 ============ */
+  --gradient-primary: linear-gradient(135deg, #7c6af2 0%, #5b8bd8 100%);
+  --gradient-text:    linear-gradient(135deg, #f8fafc 0%, #a5b4fc 100%);
+  --gradient-hero:    radial-gradient(ellipse 600px 400px at 30% 30%, rgba(124,106,242,0.10) 0%, transparent 70%),
+                      radial-gradient(ellipse 500px 300px at 70% 60%, rgba(91,139,216,0.08) 0%, transparent 70%);
+  --gradient-border:  linear-gradient(135deg, rgba(124,106,242,0.20), rgba(91,139,216,0.15), rgba(6,182,212,0.10));
+  --gradient-progress:linear-gradient(90deg, #7c6af2, #5b8bd8, #06b6d4);
+  --gradient-warm:    linear-gradient(135deg, #f59e0b 0%, #f472b6 100%);
+
+  /* ============ 阴影 ============ */
+  --shadow-sm:        0 1px 2px rgba(0,0,0,0.30);
+  --shadow-md:        0 4px 12px rgba(0,0,0,0.35);
+  --shadow-lg:        0 8px 24px rgba(0,0,0,0.40);
+  --shadow-xl:        0 16px 40px rgba(0,0,0,0.45);
+  --shadow-card:      0 2px 8px rgba(0,0,0,0.25), 0 0 1px rgba(255,255,255,0.06);
+  --shadow-card-hover:0 8px 24px rgba(0,0,0,0.35), 0 0 20px rgba(124,106,242,0.08);
+  --shadow-glow:      0 4px 16px rgba(124,106,242,0.12);
+
+  /* ============ 圆角 ============ */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* ============ 间距 ============ */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* ============ 排版 ============ */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', 'Consolas', 'Cascadia Code', monospace;
+  --fs-nano:    12px;
+  --fs-caption: 13px;
+  --fs-body:    14px;
+  --fs-body-lg: 16px;
+  --fs-h3:      18px;
+  --fs-h2:      24px;
+  --fs-h1:      32px;
+  --fs-display: 40px;
+  --fs-hero:    clamp(40px, 6vw, 60px);
+  --fs-hero-sub:clamp(16px, 2vw, 20px);
+  --lh-tight: 1.1;
+  --lh-snug:  1.2;
+  --lh-normal:1.6;
+  --ls-tight: -0.8px;
+  --ls-snug:  -0.5px;
+  --ls-normal:0;
+  --fw-regular: 400;
+  --fw-medium:  500;
+  --fw-semibold:600;
+  --fw-bold:    700;
+
+  /* ============ 层级 ============ */
+  --z-base: 1;
+  --z-sticky-nav: 100;
+  --z-dropdown: 200;
+  --z-overlay: 900;
+  --z-modal: 950;
+  --z-tooltip: 1000;
+
+  /* ============ 布局 ============ */
+  --container-max: 1200px;
+  --container-pad: 32px;
+  --nav-height: 72px;
+  --section-gap: 96px;
+
+  /* ============ 组件令牌 · 按钮 ============ */
+  --btn-radius: var(--radius-md);
+  --btn-radius-pill: var(--radius-full);
+  --btn-pad-y: 10px;
+  --btn-pad-x: 20px;
+  --btn-pad-y-lg: 13px;
+  --btn-pad-x-lg: 28px;
+  --btn-primary-bg: var(--gradient-primary);
+  --btn-primary-color: #ffffff;
+  --btn-primary-hover-shadow: 0 8px 20px rgba(124,106,242,0.25);
+  --btn-secondary-bg: var(--color-surface-hover);
+  --btn-secondary-color: var(--color-text);
+  --btn-secondary-border: var(--color-border);
+  --btn-ghost-color: var(--color-text-2);
+  --btn-soft-bg: var(--accent-primary-10);
+  --btn-soft-color: var(--accent-primary);
+
+  /* ============ 组件令牌 · 卡片（玻璃态） ============ */
+  --card-bg: var(--color-glass);
+  --card-border: var(--color-glass-border);
+  --card-radius: var(--radius-lg);
+  --card-padding: 24px;
+  --card-shadow: var(--shadow-card);
+  --card-hover-shadow: var(--shadow-card-hover);
+  --card-hover-transform: scale(1.02);
+  --card-blur: var(--glass-blur);
+
+  /* ============ 组件令牌 · 徽章 / 标签 ============ */
+  --badge-radius: var(--radius-full);
+  --badge-padding: 4px 12px;
+  --badge-font-size: 12px;
+  --badge-font-weight: 600;
+
+  /* ============ 组件令牌 · 导航栏 ============ */
+  --nav-bg: var(--color-glass);
+  --nav-border: var(--color-glass-border);
+  --nav-blur: var(--glass-blur);
+
+  /* ============ 组件令牌 · 分隔线 ============ */
+  --divider-color: var(--color-border);
+  --divider-light: var(--color-border-light);
+
+  /* ============ 动效 ============ */
+  --transition:        all 0.2s cubic-bezier(0.4,0,0.2,1);
+  --transition-slow:   all 0.35s cubic-bezier(0.4,0,0.2,1);
+  --transition-bounce: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  --duration-fast:   150ms;
+  --duration-normal:  300ms;
+  --duration-slow:    500ms;
+  --duration-enter:   600ms;
+
+  /* ============================================================
+     页面级令牌 · Agent / 流 / 共识（取自 DESIGN_TOKENS_VIZ.md · Deep 值）
+     仅新增下列令牌，全部走 var()；基础令牌未重定义。
+     ============================================================ */
+  --agent-coord:    #7c6af2;   /* 全局协调（编排·紫） */
+  --agent-plan:     #c4b5fd;   /* 路径规划·高亮（编排·最亮紫） */
+  --agent-diag:     #8b5cf6;   /* 学情诊断（认知·数构紫） */
+  --agent-gen:      #3b82f6;   /* 资源生成集群（生成·计网蓝） */
+  --agent-retrieve: #06b6d4;   /* 检索优化（检索·计组青） */
+  --agent-eval:     #f472b6;   /* 评估反馈（校验·OS 粉） */
+  --agent-quality:  #ec4899;   /* 质量校验（校验·OS 粉，同族明度差） */
+
+  --flow-data:      #60a5fa;   /* 数据流 · 实线蓝 */
+  --flow-control:   #a78bfa;   /* 控制/编排流 · 虚线紫 */
+  --flow-consensus: #22d3ee;   /* 共识/加权投票流 · 加粗青 */
+
+  --nm-mix-from:    #a78bfa;   /* NeuralMixer 融合渐变起（紫） */
+  --nm-mix-to:      #22d3ee;   /* NeuralMixer 融合渐变止（青） */
+  --conflict-detected: #f87171;/* 冲突检出（红） */
+  --conflict-resolved:#4ade80; /* 冲突消解裁决（绿） */
+
+  --text-danger: var(--accent-danger);
+}
+
+/* ============================================================
+   2. 浅色主题覆盖（取自 DESIGN_TOKENS.md + DESIGN_TOKENS_VIZ.md Light 值）
+   ============================================================ */
+[data-theme="light"] {
+  --color-canvas:        #f5f6fb;
+  --color-surface:       #ffffff;
+  --color-surface-2:     #eef0f6;
+  --color-surface-hover: #e7eaf3;
+  --color-elevated:      #ffffff;
+  --color-overlay:       rgba(15,18,40,0.32);
+  --color-glass:         rgba(255,255,255,0.72);
+  --color-glass-hover:   rgba(255,255,255,0.88);
+  --color-glass-border:  rgba(15,18,40,0.10);
+  --color-border:        rgba(15,18,40,0.10);
+  --color-border-light:  rgba(15,18,40,0.06);
+  --color-border-focus:  rgba(124,106,242,0.50);
+  --color-border-glow:   rgba(124,106,242,0.22);
+  --color-text:          #1a1d2e;
+  --color-text-2:        #525a72;
+  --color-text-3:        #8a92a8;
+  --color-text-invert:   #ffffff;
+  --bg-input:            rgba(15,18,40,0.04);
+  --accent-primary-10:   rgba(124,106,242,0.08);
+  --accent-primary-20:   rgba(124,106,242,0.14);
+  --accent-primary-30:   rgba(124,106,242,0.20);
+  --glow-primary:        0 0 18px rgba(124,106,242,0.10), 0 0 36px rgba(124,106,242,0.05);
+  --glow-primary-strong: 0 0 18px rgba(124,106,242,0.18), 0 0 48px rgba(124,106,242,0.09);
+  --glow-secondary:      0 0 18px rgba(91,139,216,0.10), 0 0 36px rgba(91,139,216,0.05);
+  --glow-success:        0 0 18px rgba(34,197,94,0.10);
+  --shadow-sm:        0 1px 2px rgba(15,18,40,0.06);
+  --shadow-md:        0 4px 12px rgba(15,18,40,0.08);
+  --shadow-lg:        0 8px 24px rgba(15,18,40,0.10);
+  --shadow-xl:        0 16px 40px rgba(15,18,40,0.14);
+  --shadow-card:      0 1px 3px rgba(15,18,40,0.06), 0 0 1px rgba(15,18,40,0.04);
+  --shadow-card-hover:0 8px 24px rgba(15,18,40,0.10), 0 0 18px rgba(124,106,242,0.06);
+  --shadow-glow:      0 4px 16px rgba(124,106,242,0.08);
+  --gradient-text:    linear-gradient(135deg, var(--color-text) 0%, var(--accent) 100%);
+
+  /* 页面级令牌 · Light 值（以 DESIGN_TOKENS_VIZ.md 为准） */
+  --agent-coord:    #6d5deb;
+  --agent-plan:     #7c6af2;
+  --agent-diag:     #7c3aed;
+  --agent-gen:      #2563eb;
+  --agent-retrieve: #0891b2;
+  --agent-eval:     #db2777;
+  --agent-quality:  #be185d;
+
+  --flow-data:      #2563eb;
+  --flow-control:   #7c6af2;
+  --flow-consensus: #0891b2;
+
+  --nm-mix-from:    #7c6af2;
+  --nm-mix-to:      #0891b2;
+  --conflict-detected: #dc2626;
+  --conflict-resolved: #16a34a;
+}
+
+/* ============================================================
+   3. 基础重置
+   ============================================================ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;scroll-padding-top:calc(var(--nav-height) + var(--space-4));}
+body{
+  font-family:var(--font-sans);
+  background:var(--color-canvas);
+  color:var(--color-text);
+  font-size:var(--fs-body);
+  line-height:var(--lh-normal);
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+  transition:background var(--transition),color var(--transition);
+}
+a{color:inherit;text-decoration:none;}
+img,svg{display:block;}
+.container{max-width:var(--container-max);margin:0 auto;padding:0 var(--container-pad);}
+section{padding:var(--section-gap) 0;}
+section[id]{scroll-margin-top:calc(var(--nav-height) + var(--space-4));}
+
+.skip-link{position:absolute;left:var(--space-4);top:calc(-1 * var(--space-16));z-index:var(--z-modal);
+  background:var(--color-elevated);color:var(--color-text);padding:var(--space-3) var(--space-5);
+  border-radius:var(--radius-sm);border:1px solid var(--color-border-glow);transition:var(--transition);}
+.skip-link:focus{top:var(--space-3);}
+
+/* ============================================================
+   4. 通用组件（与落地页/学情页同源）
+   ============================================================ */
+.section-head{max-width:760px;margin-bottom:var(--space-12);}
+.section-eyebrow{
+  display:inline-block;font-size:var(--fs-caption);font-weight:var(--fw-semibold);
+  letter-spacing:.12em;text-transform:uppercase;color:var(--color-text-2);
+  background:var(--accent-primary-10);padding:var(--badge-padding);border-radius:var(--badge-radius);
+  margin-bottom:var(--space-5);
+}
+.section-title{font-size:var(--fs-h2);font-weight:var(--fw-bold);letter-spacing:var(--ls-snug);line-height:var(--lh-snug);}
+.section-desc{margin-top:var(--space-4);color:var(--color-text-2);font-size:var(--fs-body-lg);}
+
+.glass{
+  background:var(--card-bg);
+  border:1px solid var(--card-border);
+  border-radius:var(--card-radius);
+  backdrop-filter:blur(var(--card-blur));
+  -webkit-backdrop-filter:blur(var(--card-blur));
+  box-shadow:var(--card-shadow);
+}
+.card{transition:var(--transition);}
+.card:hover{transform:var(--card-hover-transform);box-shadow:var(--card-hover-shadow);border-color:var(--color-border-glow);}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);
+  font-family:inherit;cursor:pointer;min-height:44px;
+  font-weight:var(--fw-semibold);border:none;border-radius:var(--btn-radius);
+  transition:var(--transition);font-size:var(--fs-body);line-height:1;text-align:center;
+}
+.btn svg{width:20px;height:20px;flex-shrink:0;}
+.btn-primary{background:var(--btn-primary-bg);color:var(--btn-primary-color);padding:var(--btn-pad-y-lg) var(--btn-pad-x-lg);box-shadow:var(--glow-primary);}
+.btn-primary:hover{box-shadow:var(--btn-primary-hover-shadow),var(--glow-primary-strong);transform:translateY(-1px);}
+.btn-secondary{background:var(--btn-secondary-bg);color:var(--btn-secondary-color);border:1px solid var(--btn-secondary-border);padding:var(--btn-pad-y-lg) var(--btn-pad-x-lg);}
+.btn-secondary:hover{background:var(--color-surface-hover);border-color:var(--color-border-glow);}
+.btn-ghost{background:transparent;color:var(--btn-ghost-color);padding:var(--btn-pad-y-lg) var(--btn-pad-x-lg);}
+.btn-ghost:hover{background:var(--color-surface-hover);color:var(--color-text);}
+.btn-soft{background:var(--btn-soft-bg);color:var(--btn-soft-color);padding:var(--btn-pad-y) var(--btn-pad-x);}
+.btn-soft:hover{background:var(--accent-primary-20);}
+.btn-sm{padding:var(--space-2) var(--space-4);font-size:var(--fs-nano);min-height:44px;}
+.btn-lg{padding:var(--btn-pad-y-lg) var(--btn-pad-x-lg);font-size:var(--fs-body-lg);min-height:48px;}
+.btn-block{width:100%;}
+.btn-pill{border-radius:var(--btn-radius-pill);}
+.btn-cta{font-size:var(--fs-body-lg);font-weight:var(--fw-semibold);}
+
+.btn-icon{
+  width:44px;height:44px;padding:0;min-height:44px;border-radius:var(--radius-md);
+  background:var(--color-surface-hover);border:1px solid var(--color-border);color:var(--color-text);
+}
+.btn-icon:hover{background:var(--accent-primary-10);border-color:var(--color-border-glow);color:var(--accent);}
+.btn-icon svg{width:20px;height:20px;}
+
+.badge{display:inline-flex;align-items:center;font-size:var(--badge-font-size);font-weight:var(--badge-font-weight);
+  padding:var(--badge-padding);border-radius:var(--badge-radius);background:var(--accent-primary-10);color:var(--accent);}
+.tag{display:inline-flex;align-items:center;gap:var(--space-2);font-size:var(--fs-nano);font-weight:var(--fw-semibold);
+  padding:var(--space-2) var(--space-3);border-radius:var(--radius-full);}
+.tag-ds{background:color-mix(in srgb,var(--subject-ds) 14%,transparent);color:var(--subject-ds);}
+.tag-cn{background:color-mix(in srgb,var(--subject-cn) 14%,transparent);color:var(--subject-cn);}
+.tag-co{background:color-mix(in srgb,var(--subject-co) 14%,transparent);color:var(--subject-co);}
+.tag-os{background:color-mix(in srgb,var(--subject-os) 14%,transparent);color:var(--subject-os);}
+
+.icon{
+  width:44px;height:44px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;
+  background:var(--accent-primary-10);color:var(--accent);flex-shrink:0;
+}
+.icon svg{width:22px;height:22px;}
+
+.divider{height:1px;background:var(--divider-color);border:0;}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+
+/* ============================================================
+   5. 吸顶导航
+   ============================================================ */
+.nav{
+  position:sticky;top:0;z-index:var(--z-sticky-nav);height:var(--nav-height);
+  background:var(--nav-bg);border-bottom:1px solid var(--nav-border);
+  backdrop-filter:blur(var(--nav-blur));-webkit-backdrop-filter:blur(var(--nav-blur));
+}
+.nav-inner{height:100%;display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);}
+.logo{display:flex;align-items:center;gap:var(--space-3);font-weight:var(--fw-bold);font-size:var(--fs-h3);letter-spacing:var(--ls-snug);min-height:44px;}
+.logo-mark{width:32px;height:32px;border-radius:var(--radius-sm);background:var(--gradient-primary);
+  display:flex;align-items:center;justify-content:center;box-shadow:var(--glow-primary);}
+.logo-mark svg{width:18px;height:18px;color:var(--btn-primary-color);}
+.nav-links{display:flex;align-items:center;gap:var(--space-7);}
+.nav-links a{display:flex;align-items:center;min-height:44px;color:var(--color-text-2);font-size:var(--fs-body);font-weight:var(--fw-medium);transition:var(--transition);}
+.nav-links a:hover{color:var(--color-text);}
+.nav-actions{display:flex;align-items:center;gap:var(--space-3);}
+.nav-toggle{display:none;align-items:center;justify-content:center;width:44px;height:44px;border-radius:var(--radius-sm);background:var(--color-surface-hover);border:1px solid var(--color-border);color:var(--color-text);cursor:pointer;}
+.nav-toggle svg{width:22px;height:22px;}
+.nav-mobile{display:none;border-top:1px solid var(--nav-border);background:var(--nav-bg);backdrop-filter:blur(var(--nav-blur));-webkit-backdrop-filter:blur(var(--nav-blur));padding:var(--space-4) var(--container-pad) var(--space-6);}
+.nav-open .nav-mobile{display:block;}
+.nav-mobile a{display:block;min-height:44px;padding:var(--space-3) 0;color:var(--color-text-2);font-size:var(--fs-body-lg);border-bottom:1px solid var(--divider-light);transition:var(--transition);}
+.nav-mobile a:last-child{border-bottom:0;}
+.nav-mobile a:hover,.nav-mobile a:focus-visible{color:var(--color-text);}
+.ic-moon{display:none;}
+[data-theme="light"] .ic-sun{display:none;}
+[data-theme="light"] .ic-moon{display:inline;}
+
+/* ============================================================
+   6. Hero（架构总览）
+   ============================================================ */
+.hero{position:relative;padding-top:var(--space-24);padding-bottom:var(--space-24);overflow:hidden;}
+.hero::before{content:"";position:absolute;inset:0;background:var(--gradient-hero);pointer-events:none;}
+.hero-inner{position:relative;max-width:900px;}
+.hero h1{font-size:var(--fs-hero);font-weight:var(--fw-bold);line-height:var(--lh-tight);letter-spacing:var(--ls-tight);animation:fade-up var(--duration-enter) ease both;}
+.hero h1 .grad{background:var(--gradient-text);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.hero-sub{margin-top:var(--space-6);font-size:var(--fs-hero-sub);color:var(--color-text-2);line-height:var(--lh-normal);max-width:760px;animation:fade-up var(--duration-enter) ease .08s both;}
+.hero-cta{margin-top:var(--space-8);display:flex;gap:var(--space-4);flex-wrap:wrap;animation:fade-up var(--duration-enter) ease .16s both;}
+
+/* 7+1 节点关系速览条 */
+.relay-bar{margin-top:var(--space-10);display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);animation:fade-up var(--duration-enter) ease .24s both;}
+.relay-chip{display:inline-flex;align-items:center;gap:var(--space-2);padding:var(--space-2) var(--space-4);border-radius:var(--radius-full);
+  background:var(--color-surface);border:1px solid var(--color-border);font-size:var(--fs-nano);font-weight:var(--fw-semibold);color:var(--color-text-2);}
+.relay-chip .dot{width:9px;height:9px;border-radius:var(--radius-full);flex-shrink:0;}
+.relay-chip.hl{background:color-mix(in srgb,var(--agent-plan) 16%,transparent);border-color:color-mix(in srgb,var(--agent-plan) 40%,transparent);color:var(--color-text);}
+.relay-arrow{color:var(--color-text-3);display:inline-flex;}
+.relay-arrow svg{width:16px;height:16px;}
+
+/* ============================================================
+   7. Agent 节点图（核心 · 内联 SVG）
+   ============================================================ */
+.graph-card{padding:var(--card-padding);position:relative;overflow:hidden;}
+.graph-svg{width:100%;height:auto;display:block;}
+.graph-svg text{font-family:var(--font-sans);}
+.node-box{stroke-width:1.6;rx:12;}
+.n-coord  {fill:color-mix(in srgb,var(--agent-coord) 20%,transparent);   stroke:var(--agent-coord);}
+.n-diag   {fill:color-mix(in srgb,var(--agent-diag) 20%,transparent);    stroke:var(--agent-diag);}
+.n-gen    {fill:color-mix(in srgb,var(--agent-gen) 20%,transparent);     stroke:var(--agent-gen);}
+.n-retrieve{fill:color-mix(in srgb,var(--agent-retrieve) 20%,transparent);stroke:var(--agent-retrieve);}
+.n-eval   {fill:color-mix(in srgb,var(--agent-eval) 20%,transparent);    stroke:var(--agent-eval);}
+.n-quality{fill:color-mix(in srgb,var(--agent-quality) 20%,transparent);  stroke:var(--agent-quality);}
+.n-plan   {fill:color-mix(in srgb,var(--agent-plan) 26%,transparent);     stroke:var(--agent-plan);
+  stroke-width:2.6;filter:drop-shadow(0 0 12px color-mix(in srgb,var(--agent-plan) 55%,transparent));}
+.node-label{fill:var(--color-text);font-weight:var(--fw-semibold);font-size:15px;text-anchor:middle;}
+.node-sub{fill:var(--color-text-2);font-size:11px;font-weight:var(--fw-medium);text-anchor:middle;letter-spacing:.04em;}
+.flow-control{stroke:var(--flow-control);stroke-width:1.6;stroke-dasharray:7 6;fill:none;}
+.flow-data{stroke:var(--flow-data);stroke-width:2.2;fill:none;}
+.flow-consensus{stroke:var(--flow-consensus);stroke-width:4;fill:none;stroke-linecap:round;}
+
+/* 图例（线型 + 节点清单表） */
+.graph-legend{margin-top:var(--space-8);display:flex;flex-wrap:wrap;gap:var(--space-6) var(--space-10);align-items:center;}
+.legend-line{display:flex;align-items:center;gap:var(--space-3);color:var(--color-text-2);font-size:var(--fs-caption);}
+.legend-line svg{width:46px;height:12px;flex-shrink:0;}
+
+.agent-table-wrap{margin-top:var(--space-10);overflow-x:auto;}
+.agent-table{width:100%;border-collapse:collapse;font-size:var(--fs-body);min-width:560px;}
+.agent-table caption{text-align:left;color:var(--color-text-2);font-size:var(--fs-caption);margin-bottom:var(--space-4);}
+.agent-table th,.agent-table td{text-align:left;padding:var(--space-3) var(--space-4);border-bottom:1px solid var(--divider-light);vertical-align:middle;}
+.agent-table thead th{color:var(--color-text-2);font-size:var(--fs-nano);font-weight:var(--fw-semibold);text-transform:uppercase;letter-spacing:.06em;}
+.agent-table tbody th{font-weight:var(--fw-semibold);color:var(--color-text);white-space:nowrap;}
+.agent-table td{color:var(--color-text-2);}
+.swatch{display:inline-block;width:12px;height:12px;border-radius:var(--radius-xs);margin-right:var(--space-3);vertical-align:middle;flex-shrink:0;}
+.role-en{display:block;font-family:var(--font-mono);font-size:var(--fs-nano);color:var(--color-text-3);font-weight:400;margin-top:2px;}
+
+/* ============================================================
+   8. GOMARL 共识机制（图文）
+   ============================================================ */
+.consensus-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-6);}
+.consensus-card{padding:var(--card-padding);display:flex;flex-direction:column;gap:var(--space-5);}
+.consensus-card h3{font-size:var(--fs-h3);font-weight:var(--fw-semibold);letter-spacing:var(--ls-snug);}
+.consensus-card .cx-desc{color:var(--color-text-2);font-size:var(--fs-body);line-height:var(--lh-normal);}
+.nm-svg{width:100%;height:auto;display:block;}
+.nm-svg text{font-family:var(--font-sans);fill:var(--color-text-2);font-size:12px;}
+.nm-src{fill:var(--color-surface-2);stroke:var(--color-border);}
+.nm-mixer{stroke:var(--accent);}
+.nm-out{fill:color-mix(in srgb,var(--accent-success) 14%,transparent);stroke:var(--accent-success);}
+.nm-arrow{stroke:var(--flow-data);stroke-width:1.8;fill:none;}
+
+/* 冲突消解状态流 */
+.conflict-flow{display:flex;flex-direction:column;gap:var(--space-4);}
+.conflict-stage{display:flex;align-items:flex-start;gap:var(--space-4);padding:var(--space-4);border-radius:var(--radius-md);
+  background:var(--color-surface);border:1px solid var(--color-border);}
+.conflict-stage .cs-no{width:28px;height:28px;border-radius:var(--radius-full);flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);font-size:var(--fs-nano);font-weight:var(--fw-bold);background:var(--accent-primary-10);color:var(--accent);}
+.conflict-stage .cs-body{display:flex;flex-direction:column;gap:var(--space-1);min-width:0;}
+.conflict-stage .cs-t{font-weight:var(--fw-semibold);color:var(--color-text);font-size:var(--fs-body);}
+.conflict-stage .cs-d{font-size:var(--fs-caption);color:var(--color-text-2);line-height:var(--lh-normal);}
+.chip-conflict{display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-nano);font-weight:var(--fw-bold);
+  padding:2px 10px;border-radius:var(--radius-full);background:color-mix(in srgb,var(--conflict-detected) 16%,transparent);color:var(--conflict-detected);}
+.chip-resolved{display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-nano);font-weight:var(--fw-bold);
+  padding:2px 10px;border-radius:var(--radius-full);background:color-mix(in srgb,var(--conflict-resolved) 16%,transparent);color:var(--conflict-resolved);}
+
+/* ============================================================
+   9. 协作追踪示例（7 步卡 · 含 PathPlanner 收口）
+   ============================================================ */
+.collab-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:var(--space-4);}
+.collab-step{position:relative;padding:var(--space-5) var(--space-4);display:flex;flex-direction:column;gap:var(--space-3);
+  border-top:3px solid var(--step-color);}
+.collab-step .cs-no{font-family:var(--font-mono);font-size:var(--fs-caption);font-weight:var(--fw-bold);color:var(--color-text-3);}
+.collab-step .cs-icon{width:36px;height:36px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;
+  background:color-mix(in srgb,var(--step-color) 16%,transparent);color:var(--step-color);}
+.collab-step .cs-icon svg{width:20px;height:20px;}
+.collab-step h3{font-size:var(--fs-body-lg);font-weight:var(--fw-semibold);line-height:var(--lh-snug);}
+.collab-step p{color:var(--color-text-2);font-size:var(--fs-caption);line-height:var(--lh-normal);}
+.collab-step.closer{background:linear-gradient(180deg,color-mix(in srgb,var(--agent-plan) 12%,transparent),transparent);
+  border-color:var(--agent-plan);border-top-width:3px;}
+.collab-step.closer .cs-no{color:var(--agent-plan);}
+.collab-example{margin-top:var(--space-8);padding:var(--space-6);border-radius:var(--radius-md);
+  background:var(--color-surface);border:1px solid var(--color-border);display:flex;flex-direction:column;gap:var(--space-3);}
+.collab-example .ce-label{font-size:var(--fs-nano);font-weight:var(--fw-semibold);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-2);}
+.collab-example .ce-flow{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);font-size:var(--fs-body);}
+.collab-example .ce-flow .ce-node{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:var(--radius-full);
+  background:var(--color-surface-2);border:1px solid var(--color-border);color:var(--color-text);font-weight:var(--fw-medium);}
+.collab-example .ce-flow .ce-node .d{width:8px;height:8px;border-radius:var(--radius-full);}
+.collab-example .ce-flow .ce-arrow{color:var(--color-text-3);}
+.collab-example .ce-note{font-size:var(--fs-caption);color:var(--color-text-2);}
+.collab-example .ce-note b{color:var(--color-text);font-weight:var(--fw-semibold);}
+
+/* ============================================================
+   10. FrugalRAG 闭环（P1 · 环形 SVG + 标注）
+   ============================================================ */
+.frugalrag-wrap{display:grid;grid-template-columns:minmax(0,360px) 1fr;gap:var(--space-10);align-items:center;padding:var(--card-padding);}
+.frugalrag-svg{width:100%;height:auto;max-width:360px;margin:0 auto;display:block;}
+.frugalrag-svg text{font-family:var(--font-sans);fill:var(--color-text);font-weight:var(--fw-semibold);font-size:14px;text-anchor:middle;}
+.fr-node{stroke-width:1.8;}
+.fr-retrieve{fill:color-mix(in srgb,var(--agent-retrieve) 18%,transparent);stroke:var(--agent-retrieve);}
+.fr-gen{fill:color-mix(in srgb,var(--agent-gen) 18%,transparent);stroke:var(--agent-gen);}
+.fr-eval{fill:color-mix(in srgb,var(--agent-eval) 18%,transparent);stroke:var(--agent-eval);}
+.fr-arrow{stroke:var(--accent);stroke-width:2;fill:none;}
+.fr-center{fill:var(--color-text);font-size:15px;}
+.frugalrag-detail{display:flex;flex-direction:column;gap:var(--space-5);}
+.frugalrag-detail h3{font-size:var(--fs-h3);font-weight:var(--fw-semibold);letter-spacing:var(--ls-snug);}
+.frugalrag-detail p{color:var(--color-text-2);font-size:var(--fs-body);line-height:var(--lh-normal);}
+.fr-params{display:flex;flex-wrap:wrap;gap:var(--space-3);}
+.param{font-family:var(--font-mono);font-size:var(--fs-nano);color:var(--color-text-2);
+  background:var(--accent-primary-10);border:1px solid var(--color-border-glow);padding:var(--space-2) var(--space-3);border-radius:var(--radius-xs);}
+.param b{color:var(--accent);font-weight:var(--fw-bold);}
+
+/* ============================================================
+   11. 技术亮点卡（P1 · 3 卡）
+   ============================================================ */
+.tech-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-6);}
+.tech-card{padding:var(--card-padding);display:flex;flex-direction:column;gap:var(--space-4);position:relative;overflow:hidden;}
+.tech-card .icon{margin-bottom:var(--space-1);}
+.tech-card h3{font-size:var(--fs-h3);font-weight:var(--fw-semibold);letter-spacing:var(--ls-snug);}
+.tech-card p{color:var(--color-text-2);font-size:var(--fs-body);line-height:var(--lh-normal);}
+.tech-card .tech-param{margin-top:var(--space-2);display:flex;flex-wrap:wrap;gap:var(--space-2);}
+
+/* ============================================================
+   12. 结尾 CTA + 页脚
+   ============================================================ */
+.cta-band{text-align:center;padding:var(--space-20) 0;}
+.cta-band h2{font-size:var(--fs-display);font-weight:var(--fw-bold);letter-spacing:var(--ls-tight);line-height:var(--lh-tight);max-width:20ch;margin:0 auto;}
+.cta-band p{margin:var(--space-5) auto 0;max-width:560px;color:var(--color-text-2);font-size:var(--fs-body-lg);}
+.cta-band .hero-cta{justify-content:center;margin-top:var(--space-8);}
+.cta-note{margin-top:var(--space-6);font-size:var(--fs-caption);color:var(--color-text-2);}
+.footer{border-top:1px solid var(--divider-color);padding:var(--space-12) 0 var(--space-16);}
+.footer-inner{display:flex;justify-content:space-between;gap:var(--space-8);flex-wrap:wrap;}
+.footer-brand{max-width:320px;}
+.footer-brand .logo{margin-bottom:var(--space-4);}
+.footer-brand p{color:var(--color-text-3);font-size:var(--fs-caption);line-height:var(--lh-normal);}
+.footer-bottom{margin-top:var(--space-10);padding-top:var(--space-6);border-top:1px solid var(--divider-light);
+  display:flex;justify-content:space-between;flex-wrap:wrap;gap:var(--space-3);font-size:var(--fs-nano);color:var(--color-text-3);}
+
+/* ============================================================
+   13. 动效关键帧
+   ============================================================ */
+@keyframes fade-up { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+@keyframes pulse-glow { 0%,100% { box-shadow: var(--glow-primary); } 50% { box-shadow: var(--glow-primary-strong); } }
+
+/* ============================================================
+   14. 无障碍 · 焦点环（WCAG 2.4.7）
+   ============================================================ */
+:focus-visible { outline:2px solid var(--accent-primary); outline-offset:2px; border-radius:var(--radius-xs); }
+a:focus-visible,button:focus-visible,[tabindex]:focus-visible,input:focus-visible,textarea:focus-visible,
+.btn:focus-visible{outline:2px solid var(--accent-primary);outline-offset:2px;border-radius:var(--radius-xs);}
+
+/* ============================================================
+   15. 响应式
+   ============================================================ */
+@media (max-width:1024px){
+  .consensus-grid{grid-template-columns:1fr;}
+  .frugalrag-wrap{grid-template-columns:1fr;gap:var(--space-8);}
+  .collab-grid{grid-template-columns:repeat(4,1fr);}
+  .tech-grid{grid-template-columns:1fr;}
+}
+@media (max-width:768px){
+  :root{--container-pad:20px;--section-gap:64px;}
+  .nav-links{display:none;}
+  .nav-toggle{display:flex;}
+  .btn{min-height:40px;}
+  .btn-lg{min-height:44px;}
+  .collab-grid{grid-template-columns:repeat(2,1fr);}
+  .hero{padding-top:var(--space-16);padding-bottom:var(--space-16);}
+  .footer-inner{flex-direction:column;gap:var(--space-8);}
+  .cta-band h2{font-size:var(--fs-h1);}
+}
+@media (max-width:480px){
+  .collab-grid{grid-template-columns:1fr;}
+  .hero-cta{flex-direction:column;align-items:stretch;}
+  .hero-cta .btn{width:100%;}
+}
+
+/* ============================================================
+   16. 无障碍 · 降低动效偏好（WCAG 2.3.3）
+   ============================================================ */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{transition-duration:.01ms !important;animation-duration:.01ms !important;animation-iteration-count:1 !important;scroll-behavior:auto !important;}
+  .hero h1,.hero-sub,.hero-cta,.relay-bar{animation:none !important;}
+}
+html.js [data-reveal]{opacity:0;transform:translateY(16px);transition:opacity var(--duration-enter) ease,transform var(--duration-enter) ease;}
+html.js [data-reveal].is-visible{opacity:1;transform:none;}
+@media (prefers-reduced-motion: reduce){
+  html.js [data-reveal]{opacity:1 !important;transform:none !important;transition:none !important;}
+}
+</style>
+</head>
+<body>
+
+<a class="skip-link" href="#main">跳到主内容</a>
+
+<!-- ====================== 1. 吸顶导航 ====================== -->
+<header class="nav">
+  <div class="container nav-inner">
+    <a class="logo" href="#top" aria-label="MARS-408 首页">
+      <span class="logo-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 3 0 1 0 18 0a9 3 0 1 0-18 0"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/><path d="M12 3v18"/></svg>
+      </span>
+      MARS-408
+    </a>
+    <nav class="nav-links" aria-label="主导航">
+      <a href="#graph">节点图</a>
+      <a href="#consensus">共识机制</a>
+      <a href="#collab">协作追踪</a>
+      <a href="#frugalrag">FrugalRAG</a>
+      <a href="#highlights">技术亮点</a>
+    </nav>
+    <div class="nav-actions">
+      <button class="theme-toggle btn-icon" type="button" id="theme-toggle" aria-label="切换浅色主题" aria-pressed="false">
+        <svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+      </button>
+      <a class="btn btn-primary" href="#highlights">查看亮点</a>
+      <button class="nav-toggle" type="button" aria-label="展开菜单" aria-expanded="false" aria-controls="nav-mobile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </div>
+  <nav class="nav-mobile" id="nav-mobile" aria-label="移动端导航">
+    <a href="#graph">节点图</a>
+    <a href="#consensus">共识机制</a>
+    <a href="#collab">协作追踪</a>
+    <a href="#frugalrag">FrugalRAG</a>
+    <a href="#highlights">技术亮点</a>
+  </nav>
+</header>
+
+<main id="main">
+<a id="top"></a>
+
+  <!-- ====================== 2. 架构总览 Hero ====================== -->
+  <section class="hero" id="hero" aria-labelledby="hero-title">
+    <div class="container hero-inner">
+      <span class="badge" style="animation:pulse-glow 4s ease-in-out infinite;">智能体协作可视化</span>
+      <h1 id="hero-title">7 智能体如何<span class="grad">接力</span>托起一次个性化学习</h1>
+      <p class="hero-sub">
+        一次提问，从学情诊断、检索供料、资源生成集群，到双校验与路径规划，由全局协调统筹、路径规划收口——
+        多智能体像一支教研团队，把「真实、可溯源、可编排」贯穿始终。
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary btn-cta btn-pill" href="#graph">查看节点图</a>
+        <a class="btn btn-secondary btn-cta btn-pill" href="#consensus">共识机制</a>
+      </div>
+
+      <!-- 7+1 节点关系速览（含 PathPlanner 高亮收口） -->
+      <div class="relay-bar" aria-label="智能体协作关系：全局协调统筹，学情诊断把脉，资源生成集群落地，检索优化供料，评估反馈与质量校验双校验，路径规划编排收口">
+        <span class="relay-chip"><span class="dot" style="background:var(--agent-coord)"></span>全局协调</span>
+        <span class="relay-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        <span class="relay-chip"><span class="dot" style="background:var(--agent-diag)"></span>学情诊断</span>
+        <span class="relay-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        <span class="relay-chip"><span class="dot" style="background:var(--agent-retrieve)"></span>检索优化</span>
+        <span class="relay-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        <span class="relay-chip"><span class="dot" style="background:var(--agent-gen)"></span>资源生成集群</span>
+        <span class="relay-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        <span class="relay-chip"><span class="dot" style="background:var(--agent-eval)"></span>评估反馈</span>
+        <span class="relay-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        <span class="relay-chip"><span class="dot" style="background:var(--agent-quality)"></span>质量校验</span>
+        <span class="relay-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        <span class="relay-chip hl"><span class="dot" style="background:var(--agent-plan)"></span>路径规划 · 收口</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== 3. Agent 节点图（核心） ====================== -->
+  <section id="graph" aria-labelledby="graph-title">
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <span class="section-eyebrow">Agent Topology</span>
+        <h2 class="section-title" id="graph-title">7 智能体节点关系图</h2>
+        <p class="section-desc">全局协调居中统筹，6 个工作智能体环绕；实线为数据流、虚线为控制/编排流、加粗青线为共识/加权投票流。路径规划 Agent 高亮收口。</p>
+      </div>
+
+      <div class="glass card graph-card" data-reveal>
+        <!-- 节点图：role=img + <title> + aria-label；连线 aria-hidden（装饰），含义见下方图例与清单表 -->
+        <svg class="graph-svg" viewBox="0 0 960 640" role="img"
+          aria-label="MARS-408 智能体节点关系图。中心为全局协调 Agent（紫），外围环绕学情诊断（数构紫）、检索优化（计组青）、资源生成（计网蓝）、评估反馈（OS 粉）、质量校验（OS 深粉）、路径规划（高亮亮紫）。全局协调以虚线控制流连接全部智能体；数据流沿诊断→检索→生成→评估→质量校验→路径规划→协调形成接力环；诊断与生成、检索与评估之间以加粗青线表示共识/加权投票流。"
+          xmlns="http://www.w3.org/2000/svg">
+          <title>7 智能体节点关系图</title>
+          <defs>
+            <marker id="arrow-data" markerWidth="10" markerHeight="10" refX="7" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+              <path d="M0,0 L9,5 L0,10 Z" style="fill:var(--flow-data)"></path>
+            </marker>
+            <marker id="arrow-control" markerWidth="10" markerHeight="10" refX="7" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+              <path d="M0,0 L9,5 L0,10 Z" style="fill:var(--flow-control)"></path>
+            </marker>
+          </defs>
+
+          <!-- 控制流（虚线紫）：coord → 各节点（装饰，aria-hidden） -->
+          <g aria-hidden="true">
+            <line class="flow-control" x1="393" y1="278" x2="230" y2="188" marker-end="url(#arrow-control)"/>
+            <line class="flow-control" x1="547" y1="278" x2="710" y2="188" marker-end="url(#arrow-control)"/>
+            <line class="flow-control" x1="558" y1="327" x2="770" y2="344" marker-end="url(#arrow-control)"/>
+            <line class="flow-control" x1="536" y1="378" x2="660" y2="487" marker-end="url(#arrow-control)"/>
+            <line class="flow-control" x1="404" y1="378" x2="280" y2="487" marker-end="url(#arrow-control)"/>
+            <line class="flow-control" x1="382" y1="327" x2="190" y2="343" marker-end="url(#arrow-control)"/>
+          </g>
+
+          <!-- 共识流（加粗青，无箭头）：diag↔gen、retrieve↔eval（装饰，aria-hidden） -->
+          <g aria-hidden="true">
+            <line class="flow-consensus" x1="237" y1="172" x2="773" y2="328"/>
+            <line class="flow-consensus" x1="768" y1="229" x2="732" y2="461"/>
+          </g>
+
+          <!-- 数据流（实线蓝）：接力环 diag→retrieve→gen→eval→quality→plan→coord（装饰，aria-hidden） -->
+          <g aria-hidden="true">
+            <line class="flow-data" x1="240" y1="150" x2="700" y2="150" marker-end="url(#arrow-data)"/>
+            <line class="flow-data" x1="806" y1="225" x2="824" y2="275" marker-end="url(#arrow-data)"/>
+            <line class="flow-data" x1="805" y1="416" x2="765" y2="474" marker-end="url(#arrow-data)"/>
+            <line class="flow-data" x1="640" y1="540" x2="300" y2="540" marker-end="url(#arrow-data)"/>
+            <line class="flow-data" x1="260" y1="609" x2="150" y2="419" marker-end="url(#arrow-data)"/>
+            <line class="flow-data" x1="190" y1="343" x2="390" y2="327" marker-end="url(#arrow-data)"/>
+          </g>
+
+          <!-- 节点（填充用 --agent-*；文字用 --color-text / --color-text-2） -->
+          <!-- 学情诊断 -->
+          <g>
+            <rect class="node-box n-diag" x="85" y="121" width="150" height="58" rx="12"/>
+            <text class="node-label" x="160" y="147">学情诊断</text>
+            <text class="node-sub" x="160" y="165">DIAGNOSTICIAN</text>
+          </g>
+          <!-- 检索优化 -->
+          <g>
+            <rect class="node-box n-retrieve" x="705" y="121" width="150" height="58" rx="12"/>
+            <text class="node-label" x="780" y="147">检索优化</text>
+            <text class="node-sub" x="780" y="165">RETRIEVER</text>
+          </g>
+          <!-- 资源生成 -->
+          <g>
+            <rect class="node-box n-gen" x="775" y="321" width="150" height="58" rx="12"/>
+            <text class="node-label" x="850" y="347">资源生成集群</text>
+            <text class="node-sub" x="850" y="365">GENERATION</text>
+          </g>
+          <!-- 评估反馈 -->
+          <g>
+            <rect class="node-box n-eval" x="645" y="511" width="150" height="58" rx="12"/>
+            <text class="node-label" x="720" y="537">评估反馈</text>
+            <text class="node-sub" x="720" y="555">EVALUATOR</text>
+          </g>
+          <!-- 质量校验 -->
+          <g>
+            <rect class="node-box n-quality" x="145" y="511" width="150" height="58" rx="12"/>
+            <text class="node-label" x="220" y="537">质量校验</text>
+            <text class="node-sub" x="220" y="555">QUALITY</text>
+          </g>
+          <!-- 路径规划（高亮收口） -->
+          <g>
+            <rect class="node-box n-plan" x="20" y="313" width="180" height="74" rx="14"/>
+            <text class="node-label" x="110" y="344" style="font-size:16px;">路径规划</text>
+            <text class="node-sub" x="110" y="364">PATHPLANNER · 收口</text>
+          </g>
+          <!-- 全局协调（中心） -->
+          <g>
+            <rect class="node-box n-coord" x="385" y="292" width="170" height="64" rx="14"/>
+            <text class="node-label" x="470" y="320">全局协调</text>
+            <text class="node-sub" x="470" y="339">COORDINATOR</text>
+          </g>
+        </svg>
+
+        <!-- 线型图例 -->
+        <div class="graph-legend" aria-hidden="true">
+          <span class="legend-line">
+            <svg viewBox="0 0 46 12" aria-hidden="true"><line x1="2" y1="6" x2="44" y2="6" stroke="var(--flow-data)" stroke-width="2.4"/></svg>
+            数据流（实线）
+          </span>
+          <span class="legend-line">
+            <svg viewBox="0 0 46 12" aria-hidden="true"><line x1="2" y1="6" x2="44" y2="6" stroke="var(--flow-control)" stroke-width="1.8" stroke-dasharray="7 6"/></svg>
+            控制 / 编排流（虚线）
+          </span>
+          <span class="legend-line">
+            <svg viewBox="0 0 46 12" aria-hidden="true"><line x1="2" y1="6" x2="44" y2="6" stroke="var(--flow-consensus)" stroke-width="4" stroke-linecap="round"/></svg>
+            共识 / 加权投票流（加粗青）
+          </span>
+        </div>
+
+        <!-- 文本替代：节点清单表（角色 + 职责 + 着色），供读屏/移动降级 -->
+        <div class="agent-table-wrap">
+          <table class="agent-table">
+            <caption>智能体节点清单（文本替代 · 角色 / 职责 / 着色）</caption>
+            <thead>
+              <tr><th scope="col">角色</th><th scope="col">层 / 着色</th><th scope="col">职责</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row"><span class="swatch" style="background:var(--agent-coord)"></span>全局协调<span class="role-en">Coordinator</span></th>
+                <td>编排层</td>
+                <td>统筹多智能体会话与任务流，分发子目标、聚合共识结果，保障协作不跑偏、不重复。</td>
+              </tr>
+              <tr>
+                <th scope="row"><span class="swatch" style="background:var(--agent-diag)"></span>学情诊断<span class="role-en">Diagnostician</span></th>
+                <td>认知层 · 数构紫</td>
+                <td>分析作答与历史数据，定位薄弱知识点与认知偏差，输出可解释的学情画像。</td>
+              </tr>
+              <tr>
+                <th scope="row"><span class="swatch" style="background:var(--agent-retrieve)"></span>检索优化<span class="role-en">Retriever</span></th>
+                <td>检索层 · 计组青</td>
+                <td>基于 Milvus + E5 召回权威资料，以真实依据抑制幻觉，保障回答可溯源。</td>
+              </tr>
+              <tr>
+                <th scope="row"><span class="swatch" style="background:var(--agent-gen)"></span>资源生成集群<span class="role-en">Generation</span></th>
+                <td>生成层 · 计网蓝</td>
+                <td>按需生成讲解、练习、代码、导图等多类型资源，覆盖讲解到练习全链路。</td>
+              </tr>
+              <tr>
+                <th scope="row"><span class="swatch" style="background:var(--agent-eval)"></span>评估反馈<span class="role-en">Evaluator</span></th>
+                <td>校验层 · OS 粉</td>
+                <td>跟踪作答表现与掌握度变化，给出形成性反馈与下一步学习建议。</td>
+              </tr>
+              <tr>
+                <th scope="row"><span class="swatch" style="background:var(--agent-quality)"></span>质量校验<span class="role-en">Quality</span></th>
+                <td>校验层 · OS 深粉</td>
+                <td>对生成资源做事实一致性与质量抽检，拦截错误与幻觉，保障交付可靠。</td>
+              </tr>
+              <tr>
+                <th scope="row"><span class="swatch" style="background:var(--agent-plan)"></span>路径规划<span class="role-en">PathPlanner · 收口</span></th>
+                <td>编排层 · 高亮亮紫</td>
+                <td>综合各智能体信号，依目标院校与剩余时间动态编排每日学习路径并实时重排。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== 4. GOMARL 共识机制 ====================== -->
+  <section id="consensus" aria-labelledby="consensus-title">
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <span class="section-eyebrow">GOMARL Consensus</span>
+        <h2 class="section-title" id="consensus-title">GOMARL 共识机制</h2>
+        <p class="section-desc">多智能体强化学习下，NeuralMixer 动态融合多路信号用于掌握度估计；当多方依据不一致时，由 FrugalRAG 检索证据进行冲突消解裁决。</p>
+      </div>
+
+      <div class="consensus-grid">
+        <!-- A. NeuralMixer 动态融合权重 -->
+        <article class="glass card consensus-card" data-reveal>
+          <h3>NeuralMixer · 动态融合权重</h3>
+          <p class="cx-desc">多路信号（诊断、检索证据、历史掌握度、练习表现）经神经混合器动态加权，融合为统一的掌握度估计——权重随学情实时调整。</p>
+          <svg class="nm-svg" viewBox="0 0 720 280" role="img"
+            aria-label="NeuralMixer 融合示意：诊断信号、检索证据、历史掌握度、练习表现四路信号，汇入中央融合器（紫到青渐变），输出掌握度估计。">
+            <title>NeuralMixer 动态融合权重</title>
+            <defs>
+              <linearGradient id="nmGrad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" style="stop-color:var(--nm-mix-from)"></stop>
+                <stop offset="100%" style="stop-color:var(--nm-mix-to)"></stop>
+              </linearGradient>
+            </defs>
+            <!-- 源信号 -->
+            <g>
+              <rect class="nm-src" x="20" y="24"  width="150" height="44" rx="10"/>
+              <text x="95" y="51" text-anchor="middle">诊断信号</text>
+              <rect class="nm-src" x="20" y="88"  width="150" height="44" rx="10"/>
+              <text x="95" y="115" text-anchor="middle">检索证据</text>
+              <rect class="nm-src" x="20" y="152" width="150" height="44" rx="10"/>
+              <text x="95" y="179" text-anchor="middle">历史掌握度</text>
+              <rect class="nm-src" x="20" y="216" width="150" height="44" rx="10"/>
+              <text x="95" y="243" text-anchor="middle">练习表现</text>
+            </g>
+            <!-- 箭头到融合器 -->
+            <g class="nm-arrow" aria-hidden="true">
+              <path d="M172 46 L300 120"/>
+              <path d="M172 110 L300 124"/>
+              <path d="M172 174 L300 128"/>
+              <path d="M172 238 L300 132"/>
+            </g>
+            <!-- 融合器（渐变） -->
+            <rect x="300" y="92" width="170" height="80" rx="16" fill="url(#nmGrad)" stroke="var(--accent)"/>
+            <text x="385" y="128" text-anchor="middle" fill="#fff" font-weight="700" style="font-size:15px;">NeuralMixer</text>
+            <text x="385" y="148" text-anchor="middle" fill="#fff" style="font-size:11px;">动态权重融合</text>
+            <!-- 箭头到输出 -->
+            <path class="nm-arrow" d="M474 132 L560 132" marker-end="url(#arrow-data)" aria-hidden="true"/>
+            <!-- 输出 -->
+            <rect class="nm-out" x="560" y="92" width="150" height="80" rx="16"/>
+            <text x="635" y="128" text-anchor="middle" fill="var(--color-text)" font-weight="700" style="font-size:15px;">掌握度估计</text>
+            <text x="635" y="148" text-anchor="middle" fill="var(--color-text-2)" style="font-size:11px;">Mastery</text>
+          </svg>
+        </article>
+
+        <!-- B. 证据冲突消解裁决 -->
+        <article class="glass card consensus-card" data-reveal>
+          <h3>证据冲突消解裁决</h3>
+          <p class="cx-desc">当多个 Agent 依据不一致（如诊断判「缓存命中」、检索判「指令流水线」），FrugalRAG 检索权威证据进行裁决，将冲突态转为已消解态。</p>
+          <div class="conflict-flow">
+            <div class="conflict-stage">
+              <span class="cs-no" aria-hidden="true">1</span>
+              <div class="cs-body">
+                <span class="cs-t">冲突检出 <span class="chip-conflict">CONFLICT</span></span>
+                <span class="cs-d">诊断 Agent 依据＝缓存命中策略；检索 Agent 依据＝指令流水线策略——两者不一致。</span>
+              </div>
+            </div>
+            <div class="conflict-stage">
+              <span class="cs-no" aria-hidden="true">2</span>
+              <div class="cs-body">
+                <span class="cs-t">FrugalRAG 检索权威证据</span>
+                <span class="cs-d">基于 Milvus + E5 召回教材与真题原文，作为可溯源的第三方依据。</span>
+              </div>
+            </div>
+            <div class="conflict-stage">
+              <span class="cs-no" aria-hidden="true">3</span>
+              <div class="cs-body">
+                <span class="cs-t">裁决 <span class="chip-resolved">RESOLVED</span></span>
+                <span class="cs-d">以「指令流水线」为准，更新掌握度并标注证据来源，冲突消解。</span>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== 5. 协作追踪示例 ====================== -->
+  <section id="collab" aria-labelledby="collab-title">
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <span class="section-eyebrow">Collaboration Trace</span>
+        <h2 class="section-title" id="collab-title">协作追踪示例</h2>
+        <p class="section-desc">一次提问如何被多智能体接力完成——从用户提问到路径规划收口，七步环环相扣。</p>
+      </div>
+
+      <div class="collab-grid">
+        <article class="glass card collab-step" data-reveal style="--step-color:var(--accent)">
+          <span class="cs-no" aria-hidden="true">01</span>
+          <span class="cs-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg></span>
+          <h3>用户提问</h3>
+          <p>「TCP 拥塞控制怎么理解？」进入协作入口。</p>
+        </article>
+        <article class="glass card collab-step" data-reveal style="--step-color:var(--agent-diag)">
+          <span class="cs-no" aria-hidden="true">02</span>
+          <span class="cs-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4 2.5 5.2.8.8 1 1.3 1 2.3V18h7v-1.5c0-1 .2-1.5 1-2.3C17.8 13 19 11.4 19 9a7 7 0 0 0-7-7Z"/><path d="M9 21h6"/></svg></span>
+          <h3>学情诊断</h3>
+          <p>诊断 Agent 判「拥塞控制」薄弱，定位慢启动/拥塞避免。</p>
+        </article>
+        <article class="glass card collab-step" data-reveal style="--step-color:var(--agent-retrieve)">
+          <span class="cs-no" aria-hidden="true">03</span>
+          <span class="cs-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.66 3.6 3 8 3s8-1.34 8-3V6"/><path d="M4 12c0 1.66 3.6 3 8 3s8-1.34 8-3"/></svg></span>
+          <h3>检索增强</h3>
+          <p>检索 Agent 召回权威教材与真题，供料可溯源。</p>
+        </article>
+        <article class="glass card collab-step" data-reveal style="--step-color:var(--agent-gen)">
+          <span class="cs-no" aria-hidden="true">04</span>
+          <span class="cs-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h11l5 5v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M14 3v5h5"/></svg></span>
+          <h3>资源生成集群</h3>
+          <p>生成 Agent 产出讲解文档 + 时序图 + 配套练习。</p>
+        </article>
+        <article class="glass card collab-step" data-reveal style="--step-color:var(--agent-eval)">
+          <span class="cs-no" aria-hidden="true">05</span>
+          <span class="cs-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0Z"/><path d="M12 7v5l3 3"/></svg></span>
+          <h3>评估反馈</h3>
+          <p>评估 Agent 跟踪作答，给出形成性反馈与建议。</p>
+        </article>
+        <article class="glass card collab-step" data-reveal style="--step-color:var(--agent-quality)">
+          <span class="cs-no" aria-hidden="true">06</span>
+          <span class="cs-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6l7-3Z"/><path d="M9 12l2 2 4-4"/></svg></span>
+          <h3>质量校验</h3>
+          <p>质量 Agent 抽检事实一致性，拦截幻觉与错误。</p>
+        </article>
+        <article class="glass card collab-step closer" data-reveal style="--step-color:var(--agent-plan)">
+          <span class="cs-no" aria-hidden="true">07</span>
+          <span class="cs-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg></span>
+          <h3>路径规划 · 收口</h3>
+          <p>PathPlanner 综合信号，编排下一日学习路径。</p>
+        </article>
+      </div>
+
+      <!-- 示例语境 -->
+      <div class="collab-example" data-reveal>
+        <span class="ce-label">示例语境 · 408</span>
+        <div class="ce-flow">
+          <span class="ce-node"><span class="d" style="background:var(--accent)"></span>用户问：TCP 拥塞控制？</span>
+          <span class="ce-arrow" aria-hidden="true">→</span>
+          <span class="ce-node"><span class="d" style="background:var(--agent-diag)"></span>诊断薄弱</span>
+          <span class="ce-arrow" aria-hidden="true">→</span>
+          <span class="ce-node"><span class="d" style="background:var(--agent-retrieve)"></span>检索</span>
+          <span class="ce-arrow" aria-hidden="true">→</span>
+          <span class="ce-node"><span class="d" style="background:var(--agent-gen)"></span>生成讲解</span>
+          <span class="ce-arrow" aria-hidden="true">→</span>
+          <span class="ce-node"><span class="d" style="background:var(--agent-eval)"></span>评估</span>
+          <span class="ce-arrow" aria-hidden="true">→</span>
+          <span class="ce-node"><span class="d" style="background:var(--agent-quality)"></span>校验</span>
+          <span class="ce-arrow" aria-hidden="true">→</span>
+          <span class="ce-node"><span class="d" style="background:var(--agent-plan)"></span>规划</span>
+        </div>
+        <p class="ce-note"><b>结果：</b>生成「慢启动 / 拥塞避免 / 快恢复」讲解 + 时序推导题，诊断将拥塞控制掌握度由薄弱调升至中等，路径规划排入次日重练清单。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== 6. FrugalRAG 闭环（P1） ====================== -->
+  <section id="frugalrag" aria-labelledby="frugalrag-title">
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <span class="section-eyebrow">FrugalRAG Loop</span>
+        <h2 class="section-title" id="frugalrag-title">FrugalRAG 闭环</h2>
+        <p class="section-desc">检索—生成—校验形成闭环，以「真实性优先」在成本与质量间取得平衡；SFT 监督微调、GRPO 群组相对策略优化与 ReAct 推理共同驱动。</p>
+      </div>
+
+      <div class="glass card frugalrag-wrap" data-reveal>
+        <!-- 环形闭环 SVG -->
+        <svg class="frugalrag-svg" viewBox="0 0 380 340" role="img"
+          aria-label="FrugalRAG 闭环：检索、生成、校验三个节点顺时针相连形成循环，中心标注 FrugalRAG。">
+          <title>FrugalRAG 检索-生成-校验闭环</title>
+          <defs>
+            <marker id="arrow-fr" markerWidth="10" markerHeight="10" refX="6" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+              <path d="M0,0 L9,5 L0,10 Z" style="fill:var(--accent)"></path>
+            </marker>
+          </defs>
+          <!-- 弧线（顺时针） -->
+          <path class="fr-arrow" d="M228 52 A 120 120 0 0 1 332 240" marker-end="url(#arrow-fr)" aria-hidden="true"/>
+          <path class="fr-arrow" d="M300 292 A 120 120 0 0 1 80 292"  marker-end="url(#arrow-fr)" aria-hidden="true"/>
+          <path class="fr-arrow" d="M48 240 A 120 120 0 0 1 152 52"  marker-end="url(#arrow-fr)" aria-hidden="true"/>
+          <!-- 节点 -->
+          <circle class="fr-node fr-retrieve" cx="190" cy="60" r="44"/>
+          <text x="190" y="56">检索</text>
+          <text x="190" y="74" style="font-size:11px;fill:var(--color-text-2);">Retrieve</text>
+          <circle class="fr-node fr-gen" cx="312" cy="250" r="44"/>
+          <text x="312" y="246">生成</text>
+          <text x="312" y="264" style="font-size:11px;fill:var(--color-text-2);">Generate</text>
+          <circle class="fr-node fr-eval" cx="68" cy="250" r="44"/>
+          <text x="68" y="246">校验</text>
+          <text x="68" y="264" style="font-size:11px;fill:var(--color-text-2);">Check</text>
+          <!-- 中心 -->
+          <text class="fr-center" x="190" y="172" style="font-size:16px;">FrugalRAG</text>
+          <text x="190" y="192" text-anchor="middle" style="font-size:11px;fill:var(--color-text-2);">真实性优先</text>
+        </svg>
+
+        <div class="frugalrag-detail">
+          <h3>检索—生成—校验，闭环自纠</h3>
+          <p>每一轮生成都先经检索取得真实依据，再由质量校验拦截幻觉；未通过则回到检索重新供料，形成可自纠的闭环，而非「看似正确」的一次性输出。</p>
+          <div class="fr-params">
+            <span class="param"><b>SFT</b> · 监督微调</span>
+            <span class="param"><b>GRPO</b> · 群组相对策略优化</span>
+            <span class="param"><b>ReAct</b> · 推理—行动循环</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== 7. 技术亮点卡（P1） ====================== -->
+  <section id="highlights" aria-labelledby="highlights-title">
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <span class="section-eyebrow">Tech Highlights</span>
+        <h2 class="section-title" id="highlights-title">技术亮点</h2>
+        <p class="section-desc">双引擎驱动、证据校验防幻觉、低样本适配——支撑「可信赖的学习效果」可验证。</p>
+      </div>
+
+      <div class="tech-grid">
+        <article class="glass card tech-card" data-reveal>
+          <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a4 4 0 0 1 4 4 4 4 0 0 1-4 4 4 4 0 0 1 0-8Z"/><path d="M5 21a7 7 0 0 1 14 0"/><path d="M19 8l2 2-2 2"/></svg></span>
+          <h3>双引擎驱动</h3>
+          <p>讯飞星火 X2 主通道 + DeepSeek 兜底通道，按可用性与成本动态切换，保障生成稳定与响应连续。</p>
+          <div class="tech-param"><span class="param">星火 X2 主</span><span class="param">DeepSeek 兜底</span></div>
+        </article>
+
+        <article class="glass card tech-card" data-reveal>
+          <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/><path d="M12 8v4"/></svg></span>
+          <h3>证据校验防幻觉</h3>
+          <p>FrugalRAG + GOMARL 冲突消解以真实依据约束生成，质量校验抽检事实一致性，抑制幻觉式输出。</p>
+          <div class="tech-param"><span class="param">FrugalRAG</span><span class="param">冲突消解</span><span class="param">可溯源</span></div>
+        </article>
+
+        <article class="glass card tech-card" data-reveal>
+          <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 3 5-6"/></svg></span>
+          <h3>低样本适配</h3>
+          <p>仅约 <b style="color:var(--color-text);">500 条</b>标注即可完成领域适配，降低数据成本，加快 408 专属能力的落地与迭代。</p>
+          <div class="tech-param"><span class="param">~500 条标注</span><span class="param">领域适配</span></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== 结尾 CTA ====================== -->
+  <section id="cta" class="cta-band" aria-labelledby="cta-title">
+    <div class="container">
+      <h2 id="cta-title">看清每一次学习背后的智能体协作</h2>
+      <p>从节点关系到共识机制，从协作追踪到 FrugalRAG 闭环——一套真实可用的多智能体架构。</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary btn-cta btn-pill" href="#top">回到顶部</a>
+        <a class="btn btn-secondary btn-cta btn-pill" href="#graph">重看节点图</a>
+      </div>
+      <p class="cta-note" role="note">原型演示 · 页面数据为示意，不构成任何承诺</p>
+    </div>
+  </section>
+
+</main>
+
+<!-- ====================== 页脚 ====================== -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="logo" href="#top" aria-label="MARS-408 首页">
+          <span class="logo-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 3 0 1 0 18 0a9 3 0 1 0-18 0"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/><path d="M12 3v18"/></svg>
+          </span>
+          MARS-408
+        </a>
+        <p>多维度学情驱动的 408 考研个性化学习系统。多智能体协同 · 真实嵌入检索 · 学情可视。</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 MARS-408 · 保留所有权利</span>
+      <span>原型演示 · 数据均为示意，不构成任何承诺</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  /* 主题切换：localStorage > matchMedia(prefers-color-scheme) > dark */
+  var root=document.documentElement;
+  var toggle=document.getElementById('theme-toggle');
+  function applyTheme(theme){
+    root.setAttribute('data-theme',theme);
+    var light=theme==='light';
+    if(toggle){
+      toggle.setAttribute('aria-pressed',light?'true':'false');
+      toggle.setAttribute('aria-label',light?'切换深色主题':'切换浅色主题');
+    }
+  }
+  var stored=null;
+  try{stored=localStorage.getItem('mars-theme');}catch(e){}
+  var initial=stored||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');
+  applyTheme(initial);
+  if(toggle){
+    toggle.addEventListener('click',function(){
+      var next=root.getAttribute('data-theme')==='light'?'dark':'light';
+      applyTheme(next);
+      try{localStorage.setItem('mars-theme',next);}catch(e){}
+    });
+  }
+
+  /* 移动端菜单 */
+  var nav=document.querySelector('.nav');
+  var navToggle=document.querySelector('.nav-toggle');
+  var menu=document.getElementById('nav-mobile');
+  if(navToggle){
+    navToggle.addEventListener('click',function(){
+      var open=nav.classList.toggle('nav-open');
+      navToggle.setAttribute('aria-expanded',open?'true':'false');
+      navToggle.setAttribute('aria-label',open?'收起菜单':'展开菜单');
+    });
+  }
+  if(menu){
+    menu.querySelectorAll('a').forEach(function(a){
+      a.addEventListener('click',function(){
+        nav.classList.remove('nav-open');
+        if(navToggle){navToggle.setAttribute('aria-expanded','false');navToggle.setAttribute('aria-label','展开菜单');}
+      });
+    });
+  }
+
+  /* 滚动揭示（尊重 reduced-motion；无 JS 时内容完全可见） */
+  document.documentElement.classList.add('js');
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var reveals=document.querySelectorAll('[data-reveal]');
+  if(reduce||!('IntersectionObserver' in window)){
+    reveals.forEach(function(el){el.classList.add('is-visible');});
+  }else{
+    var io=new IntersectionObserver(function(entries){
+      entries.forEach(function(e){if(e.isIntersecting){e.target.classList.add('is-visible');io.unobserve(e.target);}});
+    },{threshold:0.12,rootMargin:'0px 0px -10% 0px'});
+    reveals.forEach(function(el){io.observe(el);});
+  }
+})();
+</script>
+
+</body>
+</html>

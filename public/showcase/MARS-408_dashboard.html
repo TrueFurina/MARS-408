@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MARS-408 · 学习系统 Dashboard（UI 蓝本）</title>
+<style>
+  :root{
+    --color-canvas:#080812; --color-surface:rgba(255,255,255,0.03); --color-surface-2:#0f0f1a;
+    --color-glass:rgba(15,15,26,0.65); --color-glass-border:rgba(255,255,255,0.08); --color-border:rgba(255,255,255,0.06);
+    --color-text:#f8fafc; --color-text-2:#94a3b8; --color-text-3:#7c8aa0;
+    --accent-primary:#7c6af2; --accent-blue:#5b8bd8; --accent-cyan:#06b6d4;
+    --accent-warm:#f59e0b; --accent-success:#22c55e; --accent-danger:#ef4444; --accent-pink:#f472b6;
+    --subject-ds:#8b5cf6; --subject-cn:#3b82f6; --subject-co:#06b6d4; --subject-os:#f472b6;
+    --gradient-primary:linear-gradient(135deg,#7c6af2,#5b8bd8);
+    --radius-sm:10px; --radius-md:14px; --radius-lg:18px; --radius-full:9999px;
+    --shadow-card:0 2px 8px rgba(0,0,0,0.25),0 0 1px rgba(255,255,255,0.06);
+    --shadow-card-hover:0 8px 24px rgba(0,0,0,0.35),0 0 20px rgba(124,106,242,0.08);
+    --glow-primary:0 0 20px rgba(124,106,242,0.15),0 0 40px rgba(124,106,242,0.08);
+    --sidebar-w:240px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--color-canvas);color:var(--color-text);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+    font-size:14px;line-height:1.55;}
+
+  /* —— 布局 —— */
+  .layout{display:flex;min-height:100vh;}
+  .sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--color-surface-2);
+    border-right:1px solid var(--color-border);display:flex;flex-direction:column;
+    position:fixed;top:0;left:0;bottom:0;z-index:60;transition:transform .3s;}
+  .sidebar .brand{display:flex;align-items:center;gap:10px;padding:18px 20px;font-weight:700;font-size:17px;
+    border-bottom:1px solid var(--color-border);}
+  .sidebar .brand svg{width:26px;height:26px;}
+  .nav-item{display:flex;align-items:center;gap:12px;padding:11px 20px;color:var(--color-text-2);
+    cursor:pointer;font-size:14px;border-left:3px solid transparent;transition:all .2s;text-decoration:none;}
+  .nav-item svg{width:18px;height:18px;flex-shrink:0;}
+  .nav-item:hover{color:var(--color-text);background:var(--color-surface);}
+  .nav-item.active{color:var(--color-text);border-left-color:var(--accent-primary);background:rgba(124,106,242,0.1);}
+  .sidebar .spacer{flex:1;}
+  .sidebar .acct{padding:14px 20px;border-top:1px solid var(--color-border);display:flex;align-items:center;gap:10px;}
+  .sidebar .acct .av{width:34px;height:34px;border-radius:50%;background:var(--gradient-primary);
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;}
+  .sidebar .acct .nm{font-size:13px;font-weight:600;}
+  .sidebar .acct .em{font-size:11px;color:var(--color-text-3);}
+
+  .main{flex:1;margin-left:var(--sidebar-w);display:flex;flex-direction:column;min-width:0;}
+  .topbar{height:60px;display:flex;align-items:center;gap:16px;padding:0 24px;
+    border-bottom:1px solid var(--color-border);background:var(--color-glass);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);position:sticky;top:0;z-index:50;}
+  .crumbs{font-size:13px;color:var(--color-text-3);}
+  .crumbs b{color:var(--color-text);font-weight:600;}
+  .search{flex:1;max-width:380px;margin-left:auto;position:relative;}
+  .search input{width:100%;background:var(--color-surface);border:1px solid var(--color-border);
+    border-radius:var(--radius-full);padding:8px 16px 8px 38px;color:var(--color-text);font-size:13px;outline:none;}
+  .search input:focus{border-color:var(--accent-primary);}
+  .search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--color-text-3);}
+  .icon-btn{width:36px;height:36px;border-radius:50%;background:var(--color-surface);border:1px solid var(--color-border);
+    color:var(--color-text-2);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;}
+  .icon-btn:hover{color:var(--color-text);border-color:var(--accent-primary);}
+  .icon-btn .dot{position:absolute;top:8px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--accent-danger);}
+  .top-av{width:34px;height:34px;border-radius:50%;background:var(--gradient-primary);display:flex;align-items:center;
+    justify-content:center;font-weight:700;font-size:13px;color:#fff;}
+
+  .content{padding:24px;overflow:auto;flex:1;}
+  .panel{display:none;}
+  .panel.active{display:block;animation:fade .35s both;}
+  @keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+  .panel-head{margin-bottom:20px;}
+  .panel-head h1{font-size:22px;font-weight:700;letter-spacing:-.01em;}
+  .panel-head p{font-size:13px;color:var(--color-text-3);margin-top:4px;}
+
+  /* —— 卡片 —— */
+  .glass{background:var(--color-glass);border:1px solid var(--color-glass-border);border-radius:var(--radius-lg);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:var(--shadow-card);}
+  .card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:18px;
+    transition:transform .25s,box-shadow .25s;}
+  .card:hover{transform:translateY(-3px);box-shadow:var(--shadow-card-hover);}
+  .grid{display:grid;gap:16px;}
+  .grid.c2{grid-template-columns:1fr 1fr;}
+  .grid.c3{grid-template-columns:repeat(3,1fr);}
+  .grid.c4{grid-template-columns:repeat(4,1fr);}
+  h3{font-size:15px;font-weight:600;margin-bottom:6px;}
+  .muted{color:var(--color-text-3);font-size:13px;}
+
+  /* 概览统计卡 */
+  .stat .v{font-size:28px;font-weight:700;font-family:'SF Mono','Fira Code',monospace;color:var(--color-text);}
+  .stat .v span{color:var(--accent-primary);}
+  .stat .k{font-size:12px;color:var(--color-text-3);margin-top:2px;}
+
+  /* 进度条 */
+  .pbar{height:8px;background:var(--color-surface-2);border-radius:var(--radius-full);overflow:hidden;margin-top:8px;}
+  .pbar i{display:block;height:100%;border-radius:var(--radius-full);}
+  .subj-ds{background:var(--subject-ds);} .subj-cn{background:var(--subject-cn);}
+  .subj-co{background:var(--subject-co);} .subj-os{background:var(--subject-os);}
+
+  /* 时间线 */
+  .timeline{position:relative;padding-left:22px;}
+  .timeline::before{content:"";position:absolute;left:6px;top:8px;bottom:8px;width:2px;background:linear-gradient(var(--accent-primary),transparent);}
+  .tl{position:relative;margin-bottom:18px;}
+  .tl::before{content:"";position:absolute;left:-22px;top:4px;width:14px;height:14px;border-radius:50%;background:var(--color-surface-2);border:2px solid var(--accent-primary);}
+  .tl.done::before{background:var(--accent-success);border-color:var(--accent-success);}
+  .tl.active::before{background:var(--accent-primary);box-shadow:var(--glow-primary);}
+  .tl h4{font-size:14px;}
+  .tl p{font-size:12px;color:var(--color-text-3);}
+  .badge{font-size:11px;padding:2px 8px;border-radius:var(--radius-full);margin-left:8px;}
+  .badge.done{background:rgba(34,197,94,0.15);color:var(--accent-success);}
+  .badge.active{background:rgba(124,106,242,0.15);color:var(--accent-primary);}
+  .badge.todo{background:rgba(124,138,160,0.15);color:var(--color-text-3);}
+
+  /* 资源库列表 */
+  .filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+  .chip{font-size:12px;padding:6px 13px;border-radius:var(--radius-full);background:var(--color-surface);
+    border:1px solid var(--color-border);color:var(--color-text-2);cursor:pointer;transition:.2s;}
+  .chip:hover,.chip.active{color:var(--color-text);border-color:var(--accent-primary);background:rgba(124,106,242,0.1);}
+  .res-row{display:flex;align-items:center;gap:14px;padding:14px 16px;border:1px solid var(--color-border);
+    border-radius:var(--radius-md);margin-bottom:10px;background:var(--color-surface);transition:.2s;}
+  .res-row:hover{border-color:var(--accent-primary);}
+  .res-row .ic{width:38px;height:38px;border-radius:var(--radius-sm);background:rgba(124,106,242,0.1);color:var(--accent-primary);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .res-row .ic svg{width:20px;height:20px;}
+  .res-row .meta{flex:1;min-width:0;}
+  .res-row .meta .t{font-size:14px;font-weight:600;}
+  .res-row .meta .s{font-size:12px;color:var(--color-text-3);}
+  .res-row .tag2{font-size:11px;padding:3px 10px;border-radius:var(--radius-full);background:var(--color-surface-2);color:var(--color-text-2);}
+
+  /* 对话流 */
+  .chat{max-width:720px;}
+  .msg{display:flex;gap:12px;margin-bottom:16px;}
+  .msg .a{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:13px;color:#fff;}
+  .msg.user .a{background:var(--accent-blue);}
+  .msg.ai .a{background:var(--gradient-primary);}
+  .bubble{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:12px 16px;flex:1;}
+  .bubble .who{font-size:11px;color:var(--color-text-3);margin-bottom:4px;}
+  .verify{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--accent-success);
+    background:rgba(34,197,94,0.12);padding:2px 9px;border-radius:var(--radius-full);margin-top:8px;}
+
+  /* AI工坊网格 */
+  .xf{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:16px;
+    display:flex;align-items:center;gap:12px;transition:.2s;}
+  .xf:hover{transform:translateY(-3px);box-shadow:var(--shadow-card-hover);border-color:var(--accent-primary);}
+  .xf .ic{width:36px;height:36px;border-radius:var(--radius-sm);background:rgba(124,106,242,0.1);color:var(--accent-primary);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .xf .ic svg{width:19px;height:19px;}
+  .xf .t{font-size:14px;font-weight:600;}
+  .xf .s{font-size:12px;color:var(--color-text-3);}
+
+  /* 设置表单 */
+  .form-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--color-border);}
+  .form-row label{font-size:14px;}
+  .form-row .desc{font-size:12px;color:var(--color-text-3);}
+  .switch{width:42px;height:24px;border-radius:var(--radius-full);background:var(--color-surface-2);
+    border:1px solid var(--color-border);position:relative;cursor:pointer;transition:.2s;flex-shrink:0;}
+  .switch::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--color-text-3);transition:.2s;}
+  .switch.on{background:var(--accent-primary);border-color:var(--accent-primary);}
+  .switch.on::after{left:20px;background:#fff;}
+
+  .placeholder{outline:1px dashed rgba(245,158,11,0.5);outline-offset:2px;border-radius:4px;}
+  .ph-note{color:var(--accent-warm);font-size:11px;}
+  svg.chart{width:100%;height:auto;display:block;}
+
+  .hamburger{display:none;background:none;border:none;cursor:pointer;color:var(--color-text);padding:6px;}
+  .hamburger svg{width:22px;height:22px;}
+
+  @media (max-width:768px){
+    .sidebar{transform:translateX(-100%);}
+    .sidebar.open{transform:none;box-shadow:0 0 40px rgba(0,0,0,0.5);}
+    .main{margin-left:0;}
+    .hamburger{display:block;}
+    .grid.c2,.grid.c3,.grid.c4{grid-template-columns:1fr;}
+    .search{display:none;}
+  }
+  /* P2-① 键盘焦点环：仅键盘聚焦显示紫色环，满足可访问性 */
+  :focus-visible{outline:2px solid #7c6af2;outline-offset:2px;}
+</style>
+</head>
+<body>
+<div class="layout">
+  <!-- ============ 侧栏 ============ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <svg viewBox="0 0 28 28"><circle cx="14" cy="14" r="5" fill="#7c6af2"/><circle cx="6" cy="8" r="3" fill="#8b5cf6"/><circle cx="22" cy="8" r="3" fill="#3b82f6"/><circle cx="6" cy="20" r="3" fill="#06b6d4"/><circle cx="22" cy="20" r="3" fill="#f472b6"/></svg>
+      MARS-408
+    </div>
+    <a href="#" class="nav-item active" data-panel="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 3 5-6"/></svg>学情概览</a>
+    <a href="#" class="nav-item" data-panel="path"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>学习路径</a>
+    <a href="#" class="nav-item" data-panel="resources"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h6"/></svg>资源库</a>
+    <a href="#" class="nav-item" data-panel="chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>智能答疑</a>
+    <a href="#" class="nav-item" data-panel="xfyun"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>AI 工坊</a>
+    <a href="#" class="nav-item" data-panel="analytics"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19h16M7 19v-6M12 19V8M17 19v-9"/></svg>数据看板</a>
+    <a href="#" class="nav-item" data-panel="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.5-2.4 1a7 7 0 0 0-1.7-1l-.4-2.5h-4l-.4 2.5a7 7 0 0 0-1.7 1l-2.4-1-2 3.5 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.5 2.4-1a7 7 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7 7 0 0 0 1.7-1l2.4 1 2-3.5-2-1.5a7 7 0 0 0 .1-1z"/></svg>设置</a>
+    <div class="spacer"></div>
+    <div class="acct">
+      <div class="av">敏</div>
+      <div><div class="nm">张敏杰</div><div class="em">04信安1班</div></div>
+    </div>
+  </aside>
+
+  <!-- ============ 主区 ============ -->
+  <div class="main">
+    <div class="topbar">
+      <button class="hamburger" id="hamburger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+      <div class="crumbs">MARS-408 / <b id="crumb">学情概览</b></div>
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+        <input placeholder="搜索知识点 / 资源 / 对话…">
+      </div>
+      <div class="icon-btn"><span class="dot"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></div>
+      <div class="top-av">敏</div>
+    </div>
+
+    <div class="content">
+      <!-- ===== 面板1 学情概览 ===== -->
+      <section class="panel active" id="overview">
+        <div class="panel-head"><h1>学情概览</h1><p>你的 408 四科掌握度总览 · 数据每日更新</p></div>
+        <div class="grid c4" style="margin-bottom:16px;">
+          <div class="card stat"><div class="v"><span class="ph-note">71%</span></div><div class="k">综合掌握度 %</div></div>
+          <div class="card stat"><div class="v"><span class="ph-note">14.5</span>h</div><div class="k">本周学习时长</div></div>
+          <div class="card stat"><div class="v"><span class="ph-note">327</span></div><div class="k">生成资源数</div></div>
+          <div class="card stat"><div class="v"><span class="ph-note">23</span>天</div><div class="k">连续学习</div></div>
+        </div>
+        <div class="grid c2">
+          <div class="glass" style="padding:20px;">
+            <h3>四科掌握度雷达（示例）</h3>
+            <svg class="chart" viewBox="0 0 320 260" aria-label="四科雷达">
+              <g stroke="rgba(255,255,255,0.1)">
+                <polygon points="160,30 280,110 240,220 80,220 40,110" fill="none"/>
+                <polygon points="160,70 240,120 210,190 110,190 80,120" fill="none"/>
+                <polygon points="160,110 200,130 180,160 140,160 120,130" fill="none"/>
+              </g>
+              <line x1="160" y1="130" x2="160" y2="30" stroke="rgba(255,255,255,0.1)"/>
+              <line x1="160" y1="130" x2="280" y2="110" stroke="rgba(255,255,255,0.1)"/>
+              <line x1="160" y1="130" x2="240" y2="220" stroke="rgba(255,255,255,0.1)"/>
+              <line x1="160" y1="130" x2="80" y2="220" stroke="rgba(255,255,255,0.1)"/>
+              <line x1="160" y1="130" x2="40" y2="110" stroke="rgba(255,255,255,0.1)"/>
+              <polygon points="160,55 255,112 220,200 95,205 60,105" fill="rgba(124,106,242,0.25)" stroke="#7c6af2" stroke-width="2"/>
+              <text x="160" y="22" text-anchor="middle" font-size="11" fill="#8b5cf6">数据结构</text>
+              <text x="288" y="110" font-size="11" fill="#3b82f6">计网</text>
+              <text x="246" y="235" font-size="11" fill="#06b6d4">计组</text>
+              <text x="74" y="235" font-size="11" fill="#f472b6">OS</text>
+              <text x="34" y="110" font-size="11" fill="#8b5cf6">DS</text>
+            </svg>
+            <p class="ph-note" style="margin-top:8px;">* 雷达为示例数据，真实值由学情诊断回填</p>
+          </div>
+          <div class="glass" style="padding:20px;">
+            <h3>四科进度</h3>
+            <div style="margin-top:14px;">
+              <div class="muted" style="margin-bottom:4px;">数据结构 <span class="ph-note">78%</span></div>
+              <div class="pbar"><i class="subj-ds" style="width:72%"></i></div>
+              <div class="muted" style="margin:14px 0 4px;">计算机网络 <span class="ph-note">71%</span></div>
+              <div class="pbar"><i class="subj-cn" style="width:64%"></i></div>
+              <div class="muted" style="margin:14px 0 4px;">计算机组成 <span class="ph-note">65%</span></div>
+              <div class="pbar"><i class="subj-co" style="width:81%"></i></div>
+              <div class="muted" style="margin:14px 0 4px;">操作系统 <span class="ph-note">69%</span></div>
+              <div class="pbar"><i class="subj-os" style="width:58%"></i></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 面板2 学习路径 ===== -->
+      <section class="panel" id="path">
+        <div class="panel-head"><h1>学习路径</h1><p>PathPlanner 基于学情生成个性化复习路线</p></div>
+        <div class="glass" style="padding:24px;max-width:680px;">
+          <div class="timeline">
+            <div class="tl done"><h4>① 学情诊断 <span class="badge done">已完成</span></h4><p>多维画像定位薄弱知识点</p></div>
+            <div class="tl active"><h4>② 路径规划 <span class="badge active">进行中</span></h4><p>PathPlanner 生成本周复习序列</p></div>
+            <div class="tl"><h4>③ 资源生成 <span class="badge todo">待开始</span></h4><p>FrugalRAG 产出专属资料</p></div>
+            <div class="tl"><h4>④ 学习执行 <span class="badge todo">待开始</span></h4><p>按路径推进知识点攻克</p></div>
+            <div class="tl"><h4>⑤ 评估反馈 <span class="badge todo">待开始</span></h4><p>多 Agent 校验 + 成效回流</p></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 面板3 资源库 ===== -->
+      <section class="panel" id="resources">
+        <div class="panel-head"><h1>资源库</h1><p>自动生成的 7 类 408 学习资源 · 按类型筛选</p></div>
+        <div class="filter" id="filter">
+          <span class="chip active" data-f="all">全部</span>
+          <span class="chip" data-f="doc">讲解文档</span><span class="chip" data-f="quiz">练习题库</span>
+          <span class="chip" data-f="map">思维导图</span><span class="chip" data-f="read">拓展阅读</span>
+          <span class="chip" data-f="ppt">PPT 大纲</span><span class="chip" data-f="code">代码实操</span>
+          <span class="chip" data-f="audit">审核报告</span>
+        </div>
+        <div class="res-row"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h6"/></svg></div><div class="meta"><div class="t placeholder">进程与线程的区别</div><div class="s">操作系统 · 讲解文档 · <span class="ph-note">2 小时前</span></div></div><div class="tag2">OS</div></div>
+        <div class="res-row"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3 8-8"/><path d="M21 12v7H3V5h12"/></svg></div><div class="meta"><div class="t placeholder">二叉树遍历专项</div><div class="s">数据结构 · 练习题库 · <span class="ph-note">昨天</span></div></div><div class="tag2">DS</div></div>
+        <div class="res-row"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M7 8l4 8M17 8l-4 8"/></svg></div><div class="meta"><div class="t placeholder">计网分层模型导图</div><div class="s">计算机网络 · 思维导图 · <span class="ph-note">3 天前</span></div></div><div class="tag2">CN</div></div>
+        <div class="res-row"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6l-4 6 4 6M16 6l4 6-4 6"/></svg></div><div class="meta"><div class="t placeholder">CPU 数据通路代码案例</div><div class="s">计算机组成 · 代码实操 · <span class="ph-note">上周</span></div></div><div class="tag2">CO</div></div>
+        <p class="ph-note" style="margin-top:14px;">* 列表为结构示例，真实资源由系统生成后回填</p>
+      </section>
+
+      <!-- ===== 面板4 智能答疑 ===== -->
+      <section class="panel" id="chat">
+        <div class="panel-head"><h1>智能答疑</h1><p>多智能体协作作答，GOMARL 交叉校验答案可信度</p></div>
+        <div class="chat">
+          <div class="msg user"><div class="a">敏</div><div class="bubble"><div class="who">我</div>进程调度有哪些算法？分别适用什么场景？</div></div>
+          <div class="msg ai"><div class="a">AI</div><div class="bubble"><div class="who">MARS-408 多智能体</div>常见调度算法：FCFS（简单公平、长作业友好）、SJF（短作业优先、平均等待最短）、RR（时间片轮转，适合分时交互）、优先级调度（实时系统）与多级反馈队列（综合）。选择取决于系统目标——交互系统多用 RR，批处理可用 SJF。<div class="verify"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg>多 Agent 校验通过 · 一致性 0.92</div></div></div>
+          <div class="msg user"><div class="a">敏</div><div class="bubble"><div class="who">我</div>帮我出一道相关的练习题。</div></div>
+          <div class="msg ai"><div class="a">AI</div><div class="bubble"><div class="who">MARS-408 多智能体</div>【练习题】某系统采用 RR 调度，时间片 4ms，三进程 P1(10)/P2(4)/P3(6) 到达时间均为 0，求平均周转时间？<span class="ph-note">附解析：RR 调度平均周转时间 16ms（P1=22 / P2=8 / P3=18，均到达时间 0，时间片 4ms）</span></div></div>
+        </div>
+      </section>
+
+      <!-- ===== 面板5 AI 工坊 ===== -->
+      <section class="panel" id="xfyun">
+        <div class="panel-head"><h1>讯飞 AI 工坊</h1><p>已集成讯飞开放平台 10 项 AI 能力，真实可用</p></div>
+        <div class="grid c2">
+          <div class="xf"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg></div><div><div class="t">图片生成</div><div class="s">文生图辅助知识点可视化</div></div></div>
+          <div class="xf"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div><div class="t">图片理解</div><div class="s">解析截图/手绘题图</div></div></div>
+          <div class="xf"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg></div><div><div class="t">聚合搜索</div><div class="s">万搜聚合权威资料</div></div></div>
+          <div class="xf"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="14" rx="2"/><path d="M8 21h8"/></svg></div><div><div class="t">智能 PPT</div><div class="s">自动生成复习讲义</div></div></div>
+          <div class="xf"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg></div><div><div class="t">数字人</div><div class="s">讲解视频自动合成</div></div></div>
+          <div class="xf"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10"/></svg></div><div><div class="t">文本纠错</div><div class="s">资料表述自动订正</div></div></div>
+          <div class="xf"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3 8-8"/><path d="M21 12v7H3V5h12"/></svg></div><div><div class="t">公文校对</div><div class="s">规范性与格式校验</div></div></div>
+          <div class="xf"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg></div><div><div class="t">文本合规</div><div class="s">内容合规审核</div></div></div>
+          <div class="xf"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div><div><div class="t">角色模拟</div><div class="s">面试官/导师对话</div></div></div>
+          <div class="xf"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6l-4 6 4 6M16 6l4 6-4 6"/></svg></div><div><div class="t">智能简历</div><div class="s">能力画像生成简历</div></div></div>
+        </div>
+      </section>
+
+      <!-- ===== 面板6 数据看板 ===== -->
+      <section class="panel" id="analytics">
+        <div class="panel-head"><h1>数据看板</h1><p>学习成效可视化 · 趋势与分布（示例数据）</p></div>
+        <div class="grid c2">
+          <div class="glass" style="padding:20px;">
+            <h3>掌握度趋势（示例）</h3>
+            <svg class="chart" viewBox="0 0 360 180" aria-label="折线图">
+              <g stroke="rgba(255,255,255,0.08)"><line x1="30" y1="30" x2="30" y2="160"/><line x1="30" y1="160" x2="350" y2="160"/>
+              <line x1="30" y1="110" x2="350" y2="110"/><line x1="30" y1="60" x2="350" y2="60"/></g>
+              <polyline points="30,140 90,120 150,128 210,95 270,80 330,58" fill="none" stroke="#7c6af2" stroke-width="2.5"/>
+              <g fill="#7c6af2"><circle cx="30" cy="140" r="3"/><circle cx="90" cy="120" r="3"/><circle cx="150" cy="128" r="3"/><circle cx="210" cy="95" r="3"/><circle cx="270" cy="80" r="3"/><circle cx="330" cy="58" r="3"/></g>
+            </svg>
+          </div>
+          <div class="glass" style="padding:20px;">
+            <h3>四科掌握度对比（示例）</h3>
+            <svg class="chart" viewBox="0 0 360 180" aria-label="柱状图">
+              <g stroke="rgba(255,255,255,0.08)"><line x1="30" y1="160" x2="350" y2="160"/></g>
+              <rect x="55" y="60" width="40" height="100" rx="4" fill="#8b5cf6"/>
+              <rect x="125" y="84" width="40" height="76" rx="4" fill="#3b82f6"/>
+              <rect x="195" y="40" width="40" height="120" rx="4" fill="#06b6d4"/>
+              <rect x="265" y="100" width="40" height="60" rx="4" fill="#f472b6"/>
+              <text x="75" y="175" text-anchor="middle" font-size="10" fill="#94a3b8">DS</text>
+              <text x="145" y="175" text-anchor="middle" font-size="10" fill="#94a3b8">CN</text>
+              <text x="215" y="175" text-anchor="middle" font-size="10" fill="#94a3b8">CO</text>
+              <text x="285" y="175" text-anchor="middle" font-size="10" fill="#94a3b8">OS</text>
+            </svg>
+          </div>
+        </div>
+        <p class="ph-note" style="margin-top:14px;">* 图表为示例数据，真实趋势由学习记录回填</p>
+      </section>
+
+      <!-- ===== 面板7 设置 ===== -->
+      <section class="panel" id="settings">
+        <div class="panel-head"><h1>设置</h1><p>账户信息与学习偏好</p></div>
+        <div class="glass" style="padding:24px;max-width:560px;">
+          <div class="form-row"><div><label>账户</label><div class="desc">张敏杰 · 04信安1班 · <span class="placeholder ph-note">2468001320@qq.com</span></div></div><div class="tag2">已登录</div></div>
+          <div class="form-row"><div><label id="lbl-subject-color">学科分色</label><div class="desc">408 四科使用专属配色标识</div></div><div class="switch on" data-sw role="switch" aria-checked="true" tabindex="0" aria-labelledby="lbl-subject-color"></div></div>
+          <div class="form-row"><div><label id="lbl-gomarl-check">多 Agent 校验提示</label><div class="desc">答疑时显示 GOMARL 一致性评分</div></div><div class="switch on" data-sw role="switch" aria-checked="true" tabindex="0" aria-labelledby="lbl-gomarl-check"></div></div>
+          <div class="form-row"><div><label id="lbl-motion">动效</label><div class="desc">界面过渡与图表动画</div></div><div class="switch on" data-sw role="switch" aria-checked="true" tabindex="0" aria-labelledby="lbl-motion"></div></div>
+          <div class="form-row"><div><label id="lbl-dark">深色主题</label><div class="desc">当前为 MARS-408 Glass 深色</div></div><div class="switch on" data-sw role="switch" aria-checked="true" tabindex="0" aria-labelledby="lbl-dark"></div></div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // 面板切换
+  var items = document.querySelectorAll('.nav-item');
+  var crumb = document.getElementById('crumb');
+  var names = {overview:'学情概览',path:'学习路径',resources:'资源库',chat:'智能答疑',xfyun:'AI 工坊',analytics:'数据看板',settings:'设置'};
+  items.forEach(function(it){
+    it.addEventListener('click', function(){
+      items.forEach(function(x){ x.classList.remove('active'); });
+      it.classList.add('active');
+      var p = it.getAttribute('data-panel');
+      document.querySelectorAll('.panel').forEach(function(s){ s.classList.remove('active'); });
+      document.getElementById(p).classList.add('active');
+      crumb.textContent = names[p] || '';
+      document.getElementById('sidebar').classList.remove('open');
+    });
+  });
+
+  // 移动端抽屉
+  document.getElementById('hamburger').addEventListener('click', function(){
+    document.getElementById('sidebar').classList.toggle('open');
+  });
+
+  // 资源库筛选（演示）
+  var chips = document.querySelectorAll('#filter .chip');
+  chips.forEach(function(c){
+    c.addEventListener('click', function(){
+      chips.forEach(function(x){ x.classList.remove('active'); });
+      c.classList.add('active');
+    });
+  });
+
+  // 设置开关（P2-④：role=switch + 键盘可切换）
+  document.querySelectorAll('[data-sw]').forEach(function(s){
+    function toggle(){
+      s.classList.toggle('on');
+      s.setAttribute('aria-checked', s.classList.contains('on') ? 'true' : 'false');
+    }
+    s.addEventListener('click', toggle);
+    s.addEventListener('keydown', function(e){
+      if(e.key === ' ' || e.key === 'Spacebar'){ e.preventDefault(); toggle(); }
+    });
+  });
+})();
+</script>
+</body>
+</html>

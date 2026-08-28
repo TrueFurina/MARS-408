@@ -1,0 +1,192 @@
+# Build artifacts (dev copies)
+dist-accept/
+dist-rem/
+dist-test/
+
+# Trash / temp
+_trash_*/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+.DS_Store
+dist
+dist-ssr
+coverage
+*.local
+
+# Environment variables (secrets)
+.env
+py-server/.env
+
+# WorkBuddy 本地 AI 记忆 / 技能（含真实密钥，禁止入库；已 git rm --cached 移出索引）
+.workbuddy/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+*.tsbuildinfo
+
+.eslintcache
+
+# Cypress
+/cypress/videos/
+/cypress/screenshots/
+
+# Vitest
+__screenshots__/
+
+# Vite
+*.timestamp-*-*.mjs
+
+# ── 归档 / 临时产物（脚本与验证输出，非应用代码）──
+archive/
+_verify_*
+_vite_log.txt
+resource_test.txt
+
+# ── 大模型权重 / 生成产物（体积大，非源码，禁止入库）──
+py-server/models/
+.fixvenv/
+vectordb_data/
+nul
+server_proxy.py.bak.*
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+# py-server/.venv 当前为指向 C: 的符号链接(因 E: 空间不足无法容纳 2G venv)
+py-server/.venv
+
+# Generated vector DB data
+vectordb_data/
+
+# py-server 临时脚本
+py-server/_*.py
+py-server/ocr_*.log
+py-server/check_*.txt
+
+# 配置文件（含敏感信息）：忽略真实 config.json，但保留可提交的范本
+config.json
+py-server/config.json
+!py-server/config.example.json
+# DB 迁移运行器运行时状态（已应用版本记录，非源码）
+py-server/db/migrations/versions/applied.json
+
+# 数据库文件（含 PII / 密码哈希，禁止入库）
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.sqlite3-journal
+
+# 用户凭证 / 运行时 SQLite（含 PII 与密码哈希，禁止入库；data/ 下训练数据 labeled_samples.* 仍正常跟踪）
+py-server/data/*.db
+py-server/data/*.db-shm
+py-server/data/*.db-wal
+py-server/data/*.sqlite
+py-server/data/*.sqlite3
+py-server/data/*.db-journal
+# 视频生成器产物（运行时生成，不入库）
+py-server/data/videos/
+py-server/data/video_cache/
+
+# 测试临时输出
+py-server/tests/*.txt
+py-server/tests/*.log
+
+# QA 构建产物
+dist-qa/
+dist-qa-prove/
+.pytest-tmp/
+dist-verify/
+
+# 构建产物缓存
+node_modules/.tmp/
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# ── QA 评审补充排除（2026-07-19 · Yan）──
+# 临时 / 错误文件（如 err.tmp；Yan 评审确认 err.tmp 当前不存在，此处为安全网）
+*.tmp
+# 误留的构建产物目录（非 dist，原规则未覆盖）
+build/
+dist-vuecheck/
+# 本地修复 / 虚拟环境临时目录
+.fixvenv/
+.lxmlfix/
+# py-server 遗留运行日志（原规则仅忽略 _*.py，补充 _*.txt）
+py-server/_*.txt
+
+# 运行时生成的 PPT 产物（ppt_builder 落盘，测试/运行会重写，不跟踪）
+py-server/media/ppt/
+
+# ── 大模型权重（体积大，运行时从 HF 镜像下载，禁止入库）──
+py-server/models/e5-base-v2/
+models/e5-base-v2/
+
+# 内部完整性备份（非源码）
+.integrity_backup/
+
+# ── 2026-08-29 GitHub 提交净化（火山杯）──
+# 虚拟环境（禁止入库）
+**/.venv/
+.venv/
+# 教材电子书（受版权保护，禁止公开）
+documents/教材/
+*.pdf
+# 录屏/大视频（GitHub 不传，本地提交包保留）
+*.mp4
+# 历史归档快照（573MB，禁止入库）
+archive/
+# 向量数据（运行时生成）
+vectordb_data/
+py-server/vectordb_data/
+
+# ── 2026-08-29 公开仓库净化 v2：内部/敏感/无关内容 ──
+# 泄露真实 PAT 的审计文档
+docs/audit_fix_architecture.md
+# 并行会话生成的旧口径英文 README（含 554 伪证 badge + 软件杯主题）
+README_EN.md
+# AI 会话记录
+.sessions/
+.codebuddy/
+# 无关项目材料（芒得职训截图/产品策略）
+deliverables/mangde_online_screenshots/
+deliverables/product-strategy/
+# 开发内部文档（含 613 伪证断言与审计记录，共 126 份）
+documents/
+
+# ── 2026-08-29 公开仓库净化 v2：内部/敏感/无关内容 ──
+# 泄露真实 PAT 的审计文档
+docs/audit_fix_architecture.md
+# 并行会话生成的旧口径英文 README（含 554 伪证 badge + 软件杯主题）
+README_EN.md
+# AI 会话记录
+.sessions/
+.codebuddy/
+# 无关项目材料（芒得职训截图/产品策略）
+deliverables/mangde_online_screenshots/
+deliverables/product-strategy/
+# 开发内部文档（含 613 伪证断言与审计记录，共 126 份）
+documents/

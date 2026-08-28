@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<!-- MARS-408 设计系统：展示总入口页（聚合 5 个已交付原型）。
+     本页 :root 设计令牌逐字复制自 MARS-408_product_loop.html，与 SSOT 零漂移（check_tokens.py 门禁可校验）。
+     所有资源内联，无外链、无外部字体，可离线双击打开。生成者：原型构建师 筑原型（Zhu）。 -->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MARS-408 · 原型展示总入口</title>
+<style>
+/* ============ :root 设计令牌（逐字复制自 MARS-408_product_loop.html，禁止改动任何值） ============ */
+:root{ --color-canvas:#080812; --color-surface:rgba(255,255,255,.03); --color-surface-hover:rgba(255,255,255,.06); --color-glass:rgba(15,15,26,.65); --color-glass-hover:rgba(15,15,26,.80); --color-glass-border:rgba(255,255,255,.08); --glass-blur:12px; --color-border:rgba(255,255,255,.06); --color-border-glow:rgba(124,106,242,.25); --color-text:#f8fafc; --color-text-2:#94a3b8; --color-text-3:#7c8aa0; --accent:#7c6af2; --accent-blue:#5b8bd8; --accent-cyan:#06b6d4; --accent-warm:#f59e0b; --accent-success:#22c55e; --accent-danger:#ef4444; --accent-pink:#f472b6; --accent-primary:var(--accent); --accent-secondary:var(--accent-blue); --accent-tertiary:var(--accent-cyan); --accent-primary-10:rgba(124,106,242,.10); --accent-primary-20:rgba(124,106,242,.20); --accent-primary-30:rgba(124,106,242,.30); --accent-success-10:rgba(34,197,94,.10); --accent-danger-10:rgba(239,68,68,.10); --subject-ds:#8b5cf6; --subject-cn:#3b82f6; --subject-co:#06b6d4; --subject-os:#f472b6; --glow-primary:0 0 20px rgba(124,106,242,.15),0 0 40px rgba(124,106,242,.08); --glow-primary-strong:0 0 20px rgba(124,106,242,.25),0 0 60px rgba(124,106,242,.12); --glow-success:0 0 20px rgba(34,197,94,.15); --gradient-primary:linear-gradient(135deg,#7c6af2 0%,#5b8bd8 100%); --gradient-progress:linear-gradient(90deg,#7c6af2,#5b8bd8,#06b6d4); --gradient-border:linear-gradient(135deg,rgba(124,106,242,.20),rgba(91,139,216,.15),rgba(6,182,212,.10)); --gradient-warm:linear-gradient(135deg,#f59e0b 0%,#f472b6 100%); --shadow-card:0 2px 8px rgba(0,0,0,.25),0 0 1px rgba(255,255,255,.06); --shadow-card-hover:0 8px 24px rgba(0,0,0,.35),0 0 20px rgba(124,106,242,.08); --radius-md:14px; --radius-lg:18px; --radius-full:9999px; --font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif; --font-mono:'SF Mono','Fira Code','Consolas','Cascadia Code',monospace; --space-4:16px; --space-6:24px; --space-8:32px; --space-12:48px; --space-24:96px; --fs-body:14px; --fs-h3:18px; --fs-h2:24px; --fs-hero:clamp(40px,6vw,64px); }
+
+/* ============ 基础重置 ============ */
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--color-canvas);color:var(--color-text);
+  font-family:var(--font-sans);font-size:var(--fs-body);line-height:1.65;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100vh;
+}
+/* 环境光晕，与其余 MARS-408 原型视觉连续 */
+body::before{
+  content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(620px 420px at 12% 8%, rgba(124,106,242,.10), transparent 60%),
+    radial-gradient(520px 420px at 88% 26%, rgba(6,182,212,.07), transparent 62%),
+    radial-gradient(640px 520px at 50% 104%, rgba(91,139,216,.08), transparent 60%);
+}
+a{color:inherit;text-decoration:none;}
+img,svg{display:block;}
+
+/* ============ 顶部品牌条 ============ */
+.topbar{position:sticky;top:0;z-index:100;
+  background:var(--color-glass);backdrop-filter:blur(var(--glass-blur));
+  -webkit-backdrop-filter:blur(var(--glass-blur));
+  border-bottom:1px solid var(--color-glass-border);}
+.topbar-inner{display:flex;align-items:center;gap:var(--space-4);
+  max-width:1200px;margin:0 auto;padding:14px var(--space-6);}
+.logo{display:flex;align-items:center;font-weight:700;font-size:18px;letter-spacing:-.01em;}
+.logo-dot{width:11px;height:11px;border-radius:50%;background:var(--gradient-primary);
+  box-shadow:var(--glow-primary);margin-right:9px;flex-shrink:0;}
+.topbar-tag{margin-left:auto;font-size:12px;color:var(--color-text-3);
+  letter-spacing:.04em;font-family:var(--font-mono);}
+
+/* ============ 容器 ============ */
+.wrap{max-width:1200px;margin:0 auto;padding:0 var(--space-6);}
+
+/* ============ 区块① Hero ============ */
+.hero{padding:var(--space-24) 0 var(--space-12);text-align:center;}
+.eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--color-text-3);
+  font-weight:600;margin-bottom:var(--space-6);display:inline-block;
+  padding:5px 12px;border:1px solid var(--color-border);border-radius:var(--radius-full);}
+.hero-title{font-size:var(--fs-hero);font-weight:800;line-height:1.04;letter-spacing:-.02em;
+  margin-bottom:var(--space-6);
+  background:var(--gradient-primary);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.hero-sub{color:var(--color-text-2);font-size:18px;max-width:640px;margin:0 auto var(--space-4);}
+.hero-hook{color:var(--color-text);font-size:16px;max-width:600px;margin:0 auto;
+  padding:var(--space-4) var(--space-6);border-radius:var(--radius-md);
+  background:var(--accent-primary-10);border:1px solid var(--accent-primary-20);
+  font-weight:500;}
+
+/* ============ 区块② 原型卡片网格 ============ */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:var(--space-6);padding-bottom:var(--space-24);}
+.card{position:relative;display:flex;flex-direction:column;gap:var(--space-4);
+  padding:var(--space-8);border-radius:var(--radius-lg);
+  background:var(--color-glass);backdrop-filter:blur(var(--glass-blur));
+  -webkit-backdrop-filter:blur(var(--glass-blur));
+  border:1px solid var(--color-glass-border);box-shadow:var(--shadow-card);
+  transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease;
+  overflow:hidden;}
+/* 顶部细色线，呼应卡片主题色（颜色不唯一信息，仅装饰） */
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--card-accent);opacity:.85;}
+.card:hover{transform:translateY(-6px);box-shadow:var(--shadow-card-hover);
+  border-color:var(--color-border-glow);}
+.card-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  background:color-mix(in srgb,var(--card-accent) 14%,transparent);
+  border:1px solid color-mix(in srgb,var(--card-accent) 35%,transparent);color:var(--card-accent);}
+.card-icon svg{width:24px;height:24px;}
+.card-kicker{font-size:12px;font-family:var(--font-mono);letter-spacing:.04em;
+  color:var(--card-accent);font-weight:600;}
+.card h2{font-size:var(--fs-h3);font-weight:700;letter-spacing:-.01em;line-height:1.3;}
+.card p{color:var(--color-text-2);font-size:14px;line-height:1.6;flex:1;}
+.card-go{display:inline-flex;align-items:center;gap:6px;margin-top:var(--space-4);
+  font-size:13px;font-weight:600;color:var(--card-accent);}
+.card-go svg{width:15px;height:15px;transition:transform .2s ease;}
+.card:hover .card-go svg{transform:translateX(4px);}
+
+/* ============ 区块③ Footer ============ */
+.footer{max-width:1200px;margin:0 auto;padding:var(--space-8) var(--space-6) var(--space-12);
+  text-align:center;border-top:1px solid var(--color-border);color:var(--color-text-3);font-size:13px;}
+.footer a{color:var(--accent);font-weight:600;}
+.footer .note{margin-top:8px;color:var(--color-text-3);font-size:12px;}
+
+/* ============ 键盘焦点环（与 P2 一致） ============ */
+:focus-visible{outline:2px solid #7c6af2;outline-offset:2px;}
+
+/* ============ 响应式 ============ */
+@media (max-width:768px){
+  .hero{padding:var(--space-12) 0 var(--space-8);}
+  .hero-sub{font-size:16px;}
+  .hero-hook{font-size:14px;}
+  .grid{grid-template-columns:1fr;gap:var(--space-4);padding-bottom:var(--space-12);}
+  .topbar-tag{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ 顶部品牌条 ============ -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="logo" href="#" aria-label="MARS-408 首页"><span class="logo-dot"></span>MARS-408</a>
+    <span class="topbar-tag">408 考研 · 多智能体学习系统</span>
+  </div>
+</header>
+
+<main>
+  <!-- ============ 区块① Hero ============ -->
+  <section class="hero">
+    <div class="wrap">
+      <span class="eyebrow">Prototype Showcase · 原型总入口</span>
+      <h1 class="hero-title">MARS-408</h1>
+      <p class="hero-sub">计算机 408 考研个性化学习多智能体系统</p>
+      <p class="hero-hook">我们不是聊天机器人，而是一套会自愈的学习闭环。</p>
+    </div>
+  </section>
+
+  <!-- ============ 区块② 5 个原型卡片 ============ -->
+  <section class="wrap" aria-label="原型列表">
+    <div class="grid">
+
+      <!-- ① 软件杯路演落地页 -->
+      <a class="card" href="MARS-408_softwarecup_landing.html" style="--card-accent:var(--accent)">
+        <span class="card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 3h18v13H3z"/><path d="M8 20h8"/><path d="M12 16v4"/>
+            <path d="M7 8l2.5 2.5L7 13"/><path d="M12 13h4"/>
+          </svg>
+        </span>
+        <span class="card-kicker">01 · 路演</span>
+        <h2>软件杯路演落地页</h2>
+        <p>20 天冲刺赛的评委路演主页面，聚焦价值主张与差异化亮点。</p>
+        <span class="card-go">打开原型
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+        </span>
+      </a>
+
+      <!-- ② 软件杯答辩 Deck -->
+      <a class="card" href="MARS-408_dachuang_deck.html" style="--card-accent:var(--subject-ds)">
+        <span class="card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="13" height="10" rx="1.5"/><path d="M8 20h13V9"/><path d="M18 14h-3"/>
+          </svg>
+        </span>
+        <span class="card-kicker">02 · 答辩</span>
+        <h2>软件杯答辩 Deck</h2>
+        <p>11 页软件杯答辩材料，覆盖系统能力、技术内核与演示亮点。</p>
+        <span class="card-go">打开原型
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+        </span>
+      </a>
+
+      <!-- ③ 产品官网 / 品牌站 -->
+      <a class="card" href="MARS-408_official_site.html" style="--card-accent:var(--subject-cn)">
+        <span class="card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c3 3.5 3 14.5 0 18"/><path d="M12 3c-3 3.5-3 14.5 0 18"/>
+          </svg>
+        </span>
+        <span class="card-kicker">03 · 品牌</span>
+        <h2>产品官网 / 品牌站</h2>
+        <p>对外品牌展示与价值主张，呈现 MARS-408 的整体定位。</p>
+        <span class="card-go">打开原型
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+        </span>
+      </a>
+
+      <!-- ④ 学习系统 Dashboard -->
+      <a class="card" href="MARS-408_dashboard.html" style="--card-accent:var(--subject-co)">
+        <span class="card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/>
+            <rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>
+          </svg>
+        </span>
+        <span class="card-kicker">04 · 驾驶舱</span>
+        <h2>学习系统 Dashboard</h2>
+        <p>7 面板个人学习驾驶舱，集中呈现学情、进度与薄弱点。</p>
+        <span class="card-go">打开原型
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+        </span>
+      </a>
+
+      <!-- ⑤ 产品闭环 Product Loop -->
+      <a class="card" href="MARS-408_product_loop.html" style="--card-accent:var(--subject-os)">
+        <span class="card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 12a8 8 0 0 1 13-6.2"/><path d="M20 12a8 8 0 0 1-13 6.2"/>
+            <path d="M17 3.5V7h-3.5"/><path d="M7 20.5V17h3.5"/>
+          </svg>
+        </span>
+        <span class="card-kicker">05 · 闭环</span>
+        <h2>产品闭环 Product Loop</h2>
+        <p>PathPlanner 路径可视化 + GOMARL 证据校验，呈现自愈闭环。</p>
+        <span class="card-go">打开原型
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+        </span>
+      </a>
+
+      <!-- ⑥ 路演落地页 v2 · 7 智能体对齐 -->
+      <a class="card" href="MARS-408-landing-final-v2.html" style="--card-accent:var(--accent)">
+        <span class="card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/>
+          </svg>
+        </span>
+        <span class="card-kicker">06 · 路演 v2</span>
+        <h2>路演落地页 v2</h2>
+        <p>对齐大创申报书 7 智能体命名的最新路演页，评委入口首选。</p>
+        <span class="card-go">打开原型
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+        </span>
+      </a>
+
+      <!-- ⑦ 学情画像详情页 -->
+      <a class="card" href="MARS-408-profile-final.html" style="--card-accent:var(--subject-ds)">
+        <span class="card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="8" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/>
+          </svg>
+        </span>
+        <span class="card-kicker">07 · 画像</span>
+        <h2>学情画像详情页</h2>
+        <p>8 维能力画像 + 雷达图 + 薄弱点 + 学习建议，a11y 加固版。</p>
+        <span class="card-go">打开原型
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+        </span>
+      </a>
+
+      <!-- ⑧ 智能体协作可视化 -->
+      <a class="card" href="MARS-408-agent-collab.html" style="--card-accent:var(--subject-cn)">
+        <span class="card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.2 10.8 15.8 7.2M8.2 13.2 15.8 16.8"/>
+          </svg>
+        </span>
+        <span class="card-kicker">08 · 协作</span>
+        <h2>智能体协作可视化</h2>
+        <p>7 智能体节点图 + GOMARL 共识 + FrugalRAG 闭环 + 协作追踪。</p>
+        <span class="card-go">打开原型
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+        </span>
+      </a>
+
+      <!-- ⑨ 知识图谱可视化 -->
+      <a class="card" href="MARS-408-knowledge-graph.html" style="--card-accent:var(--subject-co)">
+        <span class="card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </span>
+        <span class="card-kicker">09 · 图谱</span>
+        <h2>知识图谱可视化</h2>
+        <p>408 四科 32 节点图谱 + 推荐学习路径 + 知识点详情。</p>
+        <span class="card-go">打开原型
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+        </span>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ============ 区块③ Footer ============ -->
+  <footer class="footer">
+    <div>团队邮箱：<a href="mailto:2468001320@qq.com">2468001320@qq.com</a></div>
+    <div class="note">本页原型含模拟数据，仅供演示。</div>
+  </footer>
+</main>
+
+</body>
+</html>

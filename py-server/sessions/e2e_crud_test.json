@@ -1,0 +1,13 @@
+{
+  "title": "CRUD测试",
+  "messages": [
+    {
+      "role": "user",
+      "content": "测试"
+    },
+    {
+      "role": "assistant",
+      "content": "回复"
+    }
+  ]
+}

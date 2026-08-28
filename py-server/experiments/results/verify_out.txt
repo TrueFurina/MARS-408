@@ -1,0 +1,24 @@
+2026-07-19 01:22:57,583 [netlearn.safety] INFO: 从 E:\Program\MARL\study-help-pro\py-server\config\sensitive_words.json 加载了 16 个敏感词
+2026-07-19 01:23:00,103 [netlearn.gomarl_mixer] INFO: PyTorch 可用，GoMARL NeuralMixer 使用神经网络模式
+2026-07-19 01:23:10,398 [sentence_transformers.base.model] INFO: No device provided, using cpu
+2026-07-19 01:23:10,398 [sentence_transformers.base.model] INFO: Loading SentenceTransformer model from E:\Program\MARL\study-help-pro\py-server\models\e5-base-v2.
+[1] 训练权重探测 embed_dim = 768
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 8467.93it/s]
+2026-07-19 01:23:10,596 [netlearn.embedder] INFO: 嵌入模型加载: E:\Program\MARL\study-help-pro\py-server\models\e5-base-v2
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  4.51it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  4.51it/s]
+2026-07-19 01:23:10,829 [netlearn.gomarl_mixer] INFO: NeuralMixer embed_dim 从训练权重探测为 768（原默认 384），已自动校正以匹配训练权重
+2026-07-19 01:23:10,840 [netlearn.gomarl_mixer] INFO: NeuralMixer 训练权重已加载: 48/48 参数匹配 (训练 embed_dim=768, 模型 embed_dim=768)
+2026-07-19 01:23:10,849 [netlearn.gomarl_mixer] INFO: GoMARL 动态组划分: [[0, 1, 2], [3, 4, 5]] → [[0, 1, 2], [3, 4], [5]]
+2026-07-19 01:23:10,855 [netlearn.gomarl_mixer] INFO: NeuralMixer 训练权重已加载: 48/48 参数匹配 (训练 embed_dim=768, 模型 embed_dim=768)
+[2] _mixer_net 已初始化: True
+    n_agents       = 6
+    embed_dim      = 768  (应为 768)
+    hidden_dim     = 64
+    hyper_w1[0][0].weight shape = (64, 768)  (应为 (64, 768))
+[3] 权重命中: 48/48  (应 48/48)
+[4] mix() neural_used = True
+    consensus_score   = 1.0000
+    agent_count       = 6
+    groups            = [['teacher', 'quizmaster', 'media_designer'], ['extension', 'ppt_designer'], ['code_practice']]
+
+[判定] 生产路径加载真实训练权重: ✅ 通过

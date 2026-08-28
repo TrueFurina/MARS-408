@@ -1,0 +1,28 @@
+sequenceDiagram
+    autonumber
+    actor Admin as CLI / Admin
+    participant API as POST /api/imports/submit
+    participant W as import_worker (单消费者)
+    participant PF as _process_file (threadpool)
+    participant EMB as embed (threadpool)
+    participant LK as store_lock
+    participant DB as vector_db.insert + flush
+    participant POLL as GET /api/imports/jobs/{id}
+
+    Admin->>API: POST /api/imports/submit {type, source?, params?}
+    API->>W: submit(type, source, params, user) 入队
+    W-->>API: {job_id, status: queued}
+    API-->>Admin: {job_id}
+    W->>W: _consume 循环 queue.get(job_id)
+    W->>PF: _process_file(fp) via run_in_executor
+    PF->>PF: parse + chunk (import_pdfs / import_docling)
+    PF->>EMB: embed(texts) via run_in_executor (E5 编码)
+    EMB-->>PF: embeddings[]
+    PF->>LK: async with store_lock
+    LK->>DB: vector_db.insert + flush (单写者不变式)
+    LK-->>PF: 完成
+    PF-->>W: inserted_chunks
+    W->>W: 检查 cancel_requested，处理下一文件
+    Admin->>POLL: GET /api/imports/jobs/{id}
+    POLL-->>Admin: {status, progress{...}}
+    Note over Admin,POLL: 轮询至 terminal: succeeded / failed / cancelled / interrupted

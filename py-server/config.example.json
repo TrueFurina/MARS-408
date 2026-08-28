@@ -1,0 +1,74 @@
+{
+  "_comment": "MARS-408 后端配置范本（F-013）。本文件可提交入库；真实 config.json 已被 .gitignore 忽略。请将密钥占位符替换为真实值，或通过环境变量 / .env 注入。",
+  "llm_provider": "auto",
+  "deepseek": {
+    "api_key": "REPLACE_ME_DEEPSEEK_API_KEY",
+    "base_url": "https://api.deepseek.com",
+    "model": "deepseek-chat",
+    "supports_tools": true,
+    "supports_streaming": true
+  },
+  "xfyun": {
+    "app_id": "REPLACE_ME_XFYUN_APP_ID",
+    "api_key": "REPLACE_ME_XFYUN_API_KEY",
+    "api_secret": "REPLACE_ME_XFYUN_API_SECRET",
+    "api_password": "REPLACE_ME_XFYUN_API_PASSWORD",
+    "base_url": "https://spark-api-open.xf-yun.com/v1/chat/completions",
+    "model": "4.0Ultra",
+    "supports_tools": false,
+    "supports_streaming": true,
+    "active_preset": "spark_x2",
+    "presets": {
+      "4.0Ultra": {
+        "base_url": "https://spark-api-open.xf-yun.com/v1/chat/completions",
+        "model": "4.0Ultra"
+      },
+      "spark_x2": {
+        "base_url": "https://spark-api-open.xf-yun.com/x2/chat/completions",
+        "model": "spark-x"
+      },
+      "max": {
+        "base_url": "https://spark-api-open.xf-yun.com/v1/chat/completions",
+        "model": "generalv3.5"
+      },
+      "pro128k": {
+        "base_url": "https://spark-api-open.xf-yun.com/v1/chat/completions",
+        "model": "pro-128k"
+      }
+    },
+    "tti_enabled": false,
+    "tts_enabled": false
+  },
+  "qwen": {
+    "api_key": "REPLACE_ME_QWEN_API_KEY",
+    "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+    "model": "qwen3.8-max",
+    "supports_tools": true,
+    "supports_streaming": true
+  },
+  "tavily": {
+    "api_key": "REPLACE_ME_TAVILY_API_KEY"
+  },
+  "milvus": {
+    "host": "localhost",
+    "port": 19530,
+    "enabled": false
+  },
+  "embedding": {
+    "mode": "local"
+  },
+  "redis": {
+    "enabled": false,
+    "host": "localhost",
+    "port": 6379,
+    "password": ""
+  },
+  "postgresql": {
+    "enabled": false,
+    "host": "localhost",
+    "port": 5432,
+    "database": "netlearn",
+    "user": "postgres",
+    "password": ""
+  }
+}

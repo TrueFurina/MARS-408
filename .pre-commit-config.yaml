@@ -1,0 +1,24 @@
+# study-help-pro — pre-commit 配置
+# 作用：每次 git commit 前用 gitleaks 扫描“暂存区”，阻断密钥误提交（主动防护）。
+# 安装：
+#   pip install pre-commit
+#   pre-commit install
+# 验证：
+#   pre-commit run --all-files        # 全量扫描（含未提交改动）
+#   git commit -m "..."               # 日常：仅扫描本次暂存内容
+#
+# 注意：gitleaks pre-commit hook 默认 entry 为 `gitleaks protect --staged --redact`，
+# 下面 args 会追加在其后。--staged 意味着只拦“未来误提交”，不回溯历史（历史清理见加固结论）。
+
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    # 需 v8.21.0+ 以支持 .gitleaks.toml 中的 [allowedlist] 字段；
+    # 若必须锁定 v8.18.0，请将 .gitleaks.toml 顶层 [allowedlist] 改为 [allowlist]。
+    rev: v8.21.0
+    hooks:
+      - id: gitleaks
+        args:
+          - --config
+          - .gitleaks.toml
+          - --verbose
+          - --no-banner

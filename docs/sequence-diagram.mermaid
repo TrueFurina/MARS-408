@@ -1,0 +1,63 @@
+%% NetLearn P1-4/P1-5 增量设计 — 时序图
+%% 行为画像回写 + 语义级注入防护 + 视频接入主流程
+
+sequenceDiagram
+    autonumber
+    actor U as 用户/前端
+    participant API as api/chat.py
+    participant Guard as prompt_guard+semantic_guard
+    participant LLM as LLMProvider
+    participant Tracker as behavior_tracker
+    participant DB as pg_client
+    participant GC as generator_cluster
+    participant Media as media_generator
+    participant Xfyun as xfyun_services
+
+    %% ── 行为画像回写 + 语义防护（/chat 流）──
+    rect rgb(232, 245, 255)
+        Note over U,LLM: 行为驱动画像回写（fire-and-forget）
+        U->>API: POST /chat/send {message, history}
+        API->>Guard: sanitize_user_input(message)
+        Guard-->>API: 净化文本(句法层)
+        API->>Guard: should_run_semantic_check?
+        alt 命中/采样
+            API->>Guard: classify_intent(text, llm)
+            Guard->>LLM: few-shot 意图分类
+            LLM-->>Guard: IntentVerdict
+            Guard-->>API: is_injection?
+            alt is_injection=True
+                API-->>U: 拒绝/追加强约束(降级不中断)
+            end
+        end
+        API->>LLM: text_completion(系统提示, 净化输入)
+        LLM-->>API: reply
+        API->>API: filter_sensitive(reply)
+        API-->>U: ChatSendResponse
+        API-)+Tracker: create_task(update_profile_from_behavior(user_id, [BehaviorEvent(dwell)]))
+        Tracker->>DB: log_behavior_event(event)
+        Tracker->>DB: update_profile_partial(user_id, {behavior_signals})
+        DB-->>Tracker: 更新后 profile
+        Tracker-)--API: (后台完成,不阻塞响应)
+    end
+
+    %% ── 视频接入主流程（generator_cluster）──
+    rect rgb(255, 240, 232)
+        Note over GC,Xfyun: 真数字人视频接入主流程(非阻塞)
+        GC->>GC: video_script = generate_video_script(topic, profile, ...)
+        GC->>GC: state["video_script"] = video_script
+        GC->>Media: generate_real_video(topic, video_script, profile)
+        alt Xfyun 凭证可用
+            Media->>Xfyun: generate_video(prompt=script[:2000])
+            Xfyun-->>Media: task_id
+            loop 轮询(最多 5min)
+                Media->>Xfyun: query(task_id)
+                Xfyun-->>Media: status
+            end
+            Xfyun-->>Media: VideoResult{success, video_url}
+            Media-->>GC: {ok:True, video_url, audio_url}
+        else 无凭证/失败
+            Media-->>GC: {ok:False, fallback:"script", script}
+        end
+        GC->>GC: state["video_file"] = result (try/except 不中断)
+        Note over GC: 继续后续 assessor→critic→evidence_check→path_planner
+    end

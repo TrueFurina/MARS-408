@@ -1,0 +1,16 @@
+sequenceDiagram
+    participant Frontend as StudyStore
+    participant Backend as SessionsAPI
+
+    Frontend->>Frontend: loadFromStorage() — 从 localStorage 初始化
+    Frontend->>Backend: GET /api/sessions/list
+    Backend-->>Frontend: {sessions: [{conv_id, title, msg_count, updated}]}
+
+    loop 对每个需要更新的对话
+        Frontend->>Frontend: 判断 local.updated < backend.updated
+        Frontend->>Backend: GET /api/sessions/load/{conv_id}
+        Backend-->>Frontend: {conv_id, title, messages, created_at}
+        Frontend->>Frontend: normalizeMessage + merge into conversations
+    end
+
+    Frontend->>Frontend: 更新 dataSource = 'api'

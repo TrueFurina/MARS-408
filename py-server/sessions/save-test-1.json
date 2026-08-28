@@ -1,0 +1,13 @@
+{
+  "title": "保存测试",
+  "messages": [
+    {
+      "role": "user",
+      "content": "你好"
+    },
+    {
+      "role": "assistant",
+      "content": "你好！有什么可以帮助你？"
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+/* ============================================
+ * MARS-408 — 408 考研智能学习 (v7 · 秒哒级)
+ * 风格：克制深色 · 玻璃态 · 学科分色 · 微交互
+ * 参考：Linear/Stripe 仪表盘美学，去 AI 感
+ * ============================================ */
+
+@import './_variables.css';
+@import './_layout.css';
+@import './_components.css';
+
+/* ── 基础重置（仅保留，未迁移到子文件） ── */
+*, *::before, *::after { margin:0; padding:0; box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+body { font-family: var(--font-sans); background: var(--bg-primary); color: var(--text-primary); line-height: 1.6; overflow: hidden; height: 100vh; width: 100vw; }
+#app { height: 100vh; display: flex; position: relative; z-index: 1; }
+a { text-decoration: none; color: inherit; cursor: pointer; }
+ul { list-style: none; }
+button { cursor: pointer; font-family: inherit; border: none; background: none; padding: 0; }
+button:active { transform: scale(0.97); }
+input, textarea, select { font-family: inherit; outline: none; }
+input:focus, textarea:focus, select:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px var(--accent-primary-10); }
+
+/* 全局焦点可见（WCAG 2.4.7）— 键盘导航焦点环 */
+:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: 2px; }
+input:focus-visible, textarea:focus-visible, select:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-primary-10); }
+
+/* ── 表单基础原语 ── */
+label { font-size: 0.8125rem; font-weight: 500; color: var(--text-secondary); }
+input[type="text"], input[type="email"], input[type="password"], input[type="search"], textarea, select {
+  padding: 0.625rem 0.875rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);
+  background: var(--bg-input); color: var(--text-primary); font-size: 0.875rem; transition: var(--transition);
+}
+input[type="checkbox"], input[type="radio"] { accent-color: var(--accent-primary); }
+
+/* ── 深色主题 select 下拉框修复 ── */
+select, select option, .rag-select, .rag-select option, .engine-select, .engine-select option {
+  background-color: var(--bg-elevated) !important; color: var(--text-primary) !important;
+}
+select option:hover, select option:checked,
+.rag-select option:hover, .rag-select option:checked,
+.engine-select option:hover, .engine-select option:checked {
+  background: var(--accent-primary-20) !important; color: var(--accent-primary) !important;
+}
+
+/* ── SVG 基础 ── */
+svg { display: block; flex-shrink: 0; }
+[class*="icon"] svg, [class*="Icon"] svg, .nav-item svg, button svg, .item-icon svg { width: 1.125rem; height: 1.125rem; }
+.inline-svg-icon { display: inline-flex; vertical-align: middle; }
+.inline-svg-icon svg { width: 1em; height: 1em; }
+
+/* ── 全局动画（关键帧，给各组件引用） ── */
+@keyframes fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scale-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+@keyframes slide-in-right { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+@keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 8px rgba(124, 106, 242, 0.20); } 50% { box-shadow: 0 0 16px rgba(124, 106, 242, 0.40), 0 0 32px rgba(124, 106, 242, 0.15); } }
+@keyframes gradient-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+/* ── 骨架屏（Skeleton.vue 依赖的全局类；shimmer 动画见上方 keyframes） ── */
+.skeleton {
+  border-radius: var(--radius-lg);
+  background: linear-gradient(90deg, var(--color-surface) 25%, var(--color-surface-hover) 37%, var(--color-surface) 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+.skeleton-stack { display: flex; flex-direction: column; gap: 0.5rem; }
+.skeleton-text { height: 0.75rem; border-radius: var(--radius-sm); }
+.skeleton-title { height: 1.25rem; width: 12rem; }
+.skeleton-card { height: 8rem; }
+.skeleton-avatar { width: 3rem; height: 3rem; border-radius: 50%; flex-shrink: 0; }
+.skeleton-circle { width: 3rem; height: 3rem; border-radius: 50%; flex-shrink: 0; }
+.skeleton-chart { height: 10rem; }
+.skeleton-block { height: 4rem; }
+
+/* 动效减弱（WCAG 2.3.3） */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+}

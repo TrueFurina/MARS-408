@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MARS-408 设计系统 · Showcase</title>
+<style>
+:root{
+  /* 语义层 */
+  --color-canvas:#080812; --color-surface:rgba(255,255,255,.03); --color-surface-2:#0f0f1a;
+  --color-surface-hover:rgba(255,255,255,.06); --color-elevated:#1c1c2b; --color-overlay:rgba(0,0,0,.55);
+  --color-glass:rgba(15,15,26,.65); --color-glass-hover:rgba(15,15,26,.80); --color-glass-border:rgba(255,255,255,.08);
+  --glass-blur:12px; --glass-blur-heavy:20px;
+  --color-border:rgba(255,255,255,.06); --color-border-light:rgba(255,255,255,.04);
+  --color-border-focus:rgba(124,106,242,.45); --color-border-glow:rgba(124,106,242,.25);
+  --color-text:#f8fafc; --color-text-2:#94a3b8; --color-text-3:#7c8aa0; --color-text-invert:#0f0f1a;
+  --bg-primary:var(--color-canvas); --bg-secondary:var(--color-surface-2); --bg-tertiary:var(--color-elevated);
+  --bg-card:var(--color-surface); --bg-card-hover:var(--color-surface-hover); --bg-input:rgba(255,255,255,.05);
+  --bg-overlay:var(--color-overlay); --glass-bg:var(--color-glass); --glass-bg-hover:var(--color-glass-hover);
+  --glass-border:var(--color-glass-border); --border-color:var(--color-border); --border-light:var(--color-border-light);
+  --border-focus:var(--color-border-focus); --text-primary:var(--color-text); --text-secondary:var(--color-text-2);
+  --text-muted:var(--color-text-3); --text-inverse:var(--color-text-invert); --text-user:#fff;
+  /* 品牌色 */
+  --accent:#7c6af2; --accent-dark:#6b5cdb; --accent-blue:#5b8bd8; --accent-cyan:#06b6d4;
+  --accent-warm:#f59e0b; --accent-success:#22c55e; --accent-danger:#ef4444; --accent-pink:#f472b6;
+  --accent-primary:var(--accent); --accent-primary-dark:var(--accent-dark); --accent-secondary:var(--accent-blue);
+  --accent-tertiary:var(--accent-cyan); --accent-primary-10:rgba(124,106,242,.10); --accent-primary-20:rgba(124,106,242,.20);
+  --accent-danger-10:rgba(239,68,68,.10); --accent-danger-20:rgba(239,68,68,.20); --accent-success-10:rgba(34,197,94,.10);
+  --text-danger:#fca5a5;
+  /* 四科 */
+  --subject-ds:#8b5cf6; --subject-cn:#3b82f6; --subject-co:#06b6d4; --subject-os:#f472b6;
+  /* 发光/渐变/阴影 */
+  --glow-primary:0 0 20px rgba(124,106,242,.15),0 0 40px rgba(124,106,242,.08);
+  --glow-success:0 0 20px rgba(34,197,94,.15);
+  --gradient-primary:linear-gradient(135deg,#7c6af2 0%,#5b8bd8 100%);
+  --gradient-text:linear-gradient(135deg,#f8fafc 0%,#a5b4fc 100%);
+  --gradient-progress:linear-gradient(90deg,#7c6af2,#5b8bd8,#06b6d4);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.30); --shadow-md:0 4px 12px rgba(0,0,0,.35);
+  --shadow-card:0 2px 8px rgba(0,0,0,.25),0 0 1px rgba(255,255,255,.06);
+  --shadow-card-hover:0 8px 24px rgba(0,0,0,.35),0 0 20px rgba(124,106,242,.08);
+  --shadow-glow:0 4px 16px rgba(124,106,242,.12); --shadow-xl:0 16px 40px rgba(0,0,0,.45);
+  /* 圆角/间距 */
+  --radius-xs:6px; --radius-sm:10px; --radius-md:14px; --radius-lg:18px; --radius-xl:24px; --radius-full:9999px;
+  --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-5:20px; --space-6:24px; --space-8:32px; --space-12:48px; --space-16:64px; --space-24:96px;
+  /* 字体/动效 */
+  --font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  --font-mono:'SF Mono','Fira Code','Consolas','Cascadia Code',monospace;
+  --transition:all .2s cubic-bezier(.4,0,.2,1); --transition-slow:all .35s cubic-bezier(.4,0,.2,1);
+  --duration-normal:300ms; --duration-slow:500ms;
+}
+[data-theme="light"]{
+  --color-canvas:#f5f6fb; --color-surface:#fff; --color-surface-2:#eef0f6; --color-surface-hover:#e7eaf3;
+  --color-elevated:#fff; --color-overlay:rgba(15,18,40,.32); --color-glass:rgba(255,255,255,.72);
+  --color-glass-hover:rgba(255,255,255,.88); --color-glass-border:rgba(15,18,40,.10);
+  --color-border:rgba(15,18,40,.10); --color-border-light:rgba(15,18,40,.06); --color-border-focus:rgba(124,106,242,.50);
+  --color-text:#1a1d2e; --color-text-2:#525a72; --color-text-3:#8a92a8; --color-text-invert:#fff;
+  --bg-input:rgba(15,18,40,.04); --accent-primary-10:rgba(124,106,242,.08); --accent-primary-20:rgba(124,106,242,.14);
+  --accent-danger-10:rgba(239,68,68,.08); --accent-danger-20:rgba(239,68,68,.14); --accent-success-10:rgba(34,197,94,.10);
+  --text-danger:#dc2626;
+  --shadow-sm:0 1px 2px rgba(15,18,40,.06); --shadow-md:0 4px 12px rgba(15,18,40,.08);
+  --shadow-card:0 1px 3px rgba(15,18,40,.06),0 0 1px rgba(15,18,40,.04);
+  --shadow-card-hover:0 8px 24px rgba(15,18,40,.10),0 0 18px rgba(124,106,242,.06);
+  --shadow-glow:0 4px 16px rgba(124,106,242,.08); --shadow-xl:0 16px 40px rgba(15,18,40,.14);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+body{font-family:var(--font-sans);background:var(--bg-primary);color:var(--text-primary);line-height:1.6;min-height:100vh;
+  background-image:radial-gradient(circle at 20% 20%,rgba(139,92,246,.05) 0,transparent 40%),
+    radial-gradient(circle at 70% 15%,rgba(59,130,246,.04) 0,transparent 35%),
+    radial-gradient(circle at 50% 50%,rgba(124,106,242,.02) 0,transparent 50%);}
+a{text-decoration:none;color:inherit}
+:focus-visible{outline:2px solid var(--accent-primary);outline-offset:2px}
+
+/* 顶栏 */
+.topnav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;height:64px;background:var(--glass-bg);backdrop-filter:blur(var(--glass-blur));
+  -webkit-backdrop-filter:blur(var(--glass-blur));border-bottom:1px solid var(--glass-border)}
+.brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:16px;letter-spacing:-.3px}
+.brand .logo{width:34px;height:34px;border-radius:var(--radius-sm);background:var(--gradient-primary);
+  display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:var(--shadow-glow)}
+.nav-actions{display:flex;gap:8px;align-items:center}
+.toggle{padding:8px 14px;border-radius:var(--radius-sm);border:1px solid var(--border-color);
+  background:var(--bg-secondary);color:var(--text-secondary);font-size:13px;font-weight:600;cursor:pointer;
+  transition:var(--transition);display:inline-flex;align-items:center;gap:6px}
+.toggle:hover{border-color:var(--border-focus);color:var(--text-primary)}
+
+.wrap{max-width:1200px;margin:0 auto;padding:48px 32px 96px}
+.hero{margin-bottom:64px}
+.hero h1{font-size:clamp(32px,5vw,48px);font-weight:700;letter-spacing:-.8px;line-height:1.1;
+  background:var(--gradient-text);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:16px;color:var(--text-secondary);margin-top:12px;max-width:640px}
+.hero .chips{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap}
+
+.section{margin-bottom:72px;scroll-margin-top:80px}
+.section-head{margin-bottom:24px}
+.section-head h2{font-size:24px;font-weight:700;letter-spacing:-.5px}
+.section-head p{font-size:14px;color:var(--text-secondary);margin-top:4px}
+.grid{display:grid;gap:16px}
+.swatches{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+.swatch{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-md);
+  overflow:hidden;backdrop-filter:blur(var(--glass-blur));transition:var(--transition)}
+.swatch:hover{transform:translateY(-2px);box-shadow:var(--shadow-card-hover)}
+.swatch .fill{height:64px}
+.swatch .meta{padding:12px 14px}
+.swatch .name{font-size:13px;font-weight:600}
+.swatch .var{font-size:11px;color:var(--text-muted);font-family:var(--font-mono);word-break:break-all;margin-top:2px}
+.swatch .role{font-size:11px;color:var(--text-3);margin-top:4px}
+
+.type-row{display:flex;align-items:baseline;gap:24px;padding:14px 0;border-bottom:1px solid var(--border-light)}
+.type-row .label{width:120px;font-size:12px;color:var(--text-muted);font-family:var(--font-mono);flex-shrink:0}
+.type-row .sample{color:var(--text-primary)}
+.type-display{font-size:32px;font-weight:700;letter-spacing:-.8px}
+.type-h1{font-size:24px;font-weight:700;letter-spacing:-.5px}
+.type-h2{font-size:20px;font-weight:700}
+.type-h3{font-size:16px;font-weight:600}
+.type-body{font-size:14px}
+.type-caption{font-size:13px;color:var(--text-secondary)}
+.type-nano{font-size:12px;color:var(--text-muted)}
+
+.scale-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:12px}
+.scale-item{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-md);
+  padding:16px;text-align:center;backdrop-filter:blur(var(--glass-blur))}
+.scale-box{background:var(--accent-primary);border-radius:var(--radius-xs);margin:0 auto 10px}
+.scale-item .n{font-size:12px;font-weight:600}
+.scale-item .v{font-size:11px;color:var(--text-muted);font-family:var(--font-mono)}
+
+.radius-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:16px}
+.radius-item{display:flex;flex-direction:column;align-items:center;gap:10px}
+.radius-box{width:80px;height:80px;background:var(--glass-bg);border:1px solid var(--glass-border);
+  backdrop-filter:blur(var(--glass-blur))}
+.radius-item .n{font-size:12px;font-weight:600}
+.radius-item .v{font-size:11px;color:var(--text-muted);font-family:var(--font-mono)}
+
+/* 按钮 */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:inherit;font-size:14px;
+  font-weight:600;line-height:1;padding:10px 20px;border-radius:var(--radius-md);border:1px solid transparent;
+  cursor:pointer;white-space:nowrap;user-select:none;transition:var(--transition);min-height:44px}
+.btn svg{width:18px;height:18px;flex-shrink:0}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:var(--gradient-primary);color:#fff}
+.btn-primary:hover:not(:disabled){opacity:.92;transform:translateY(-1px);box-shadow:0 8px 20px rgba(124,106,242,.25)}
+.btn-secondary{background:var(--color-surface-hover);color:var(--color-text);border-color:var(--color-border)}
+.btn-secondary:hover:not(:disabled){background:var(--color-surface-2);border-color:var(--color-border-focus)}
+.btn-ghost{background:transparent;color:var(--color-text-2)}
+.btn-ghost:hover:not(:disabled){background:var(--color-surface-hover);color:var(--color-text)}
+.btn-soft{background:var(--accent-primary-10);color:var(--accent-primary)}
+.btn-soft:hover:not(:disabled){background:var(--accent-primary-20)}
+.btn-danger{background:var(--accent-danger-10);color:var(--accent-danger)}
+.btn-danger:hover:not(:disabled){background:var(--accent-danger-20)}
+.btn-sm{padding:7px 14px;font-size:13px;border-radius:var(--radius-sm);min-height:36px}
+.btn-lg{padding:13px 28px;font-size:15px;min-height:48px}
+.btn-block{width:100%}
+.btn-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+
+/* 卡片 */
+.card{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-lg);
+  padding:20px;backdrop-filter:blur(var(--glass-blur));box-shadow:var(--shadow-card);transition:var(--transition)}
+.card:hover{transform:scale(1.02);box-shadow:var(--shadow-card-hover),0 0 0 1px rgba(124,106,242,.15)}
+.card h3{font-size:16px;font-weight:600;margin-bottom:8px}
+.card p{font-size:14px;color:var(--text-secondary)}
+.cards-3{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.stat-card{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-md);
+  padding:20px;position:relative;overflow:hidden;backdrop-filter:blur(var(--glass-blur))}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--gradient-primary);opacity:.7;border-radius:3px 3px 0 0}
+.stat-label{font-size:13px;color:var(--text-secondary);font-weight:500}
+.stat-value{font-size:30px;font-weight:700;letter-spacing:-.5px;margin-top:8px}
+.stat-change{font-size:12px;margin-top:8px;font-weight:500;color:var(--accent-success)}
+.feature-card{display:flex;align-items:center;gap:14px;padding:16px;background:var(--glass-bg);
+  border:1px solid var(--glass-border);border-radius:var(--radius-md);cursor:pointer;backdrop-filter:blur(var(--glass-blur));transition:var(--transition)}
+.feature-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-card-hover)}
+.feature-icon{width:44px;height:44px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;
+  background:var(--accent-primary-10);color:var(--accent-primary);font-size:22px;flex-shrink:0}
+.feature-title{font-size:15px;font-weight:600}
+.feature-desc{font-size:12px;color:var(--text-muted)}
+
+/* 标签 */
+.tags{display:flex;gap:8px;flex-wrap:wrap}
+.tag{padding:4px 12px;border-radius:var(--radius-full);font-size:12px;font-weight:600}
+.tag-purple{background:color-mix(in srgb,var(--subject-ds) 14%,transparent);color:var(--subject-ds)}
+.tag-blue{background:color-mix(in srgb,var(--subject-cn) 14%,transparent);color:var(--subject-cn)}
+.tag-cyan{background:color-mix(in srgb,var(--subject-co) 14%,transparent);color:var(--subject-co)}
+.tag-pink{background:color-mix(in srgb,var(--subject-os) 14%,transparent);color:var(--subject-os)}
+.tag-warm{background:color-mix(in srgb,var(--accent-warm) 14%,transparent);color:var(--accent-warm)}
+.tag-green{background:color-mix(in srgb,var(--accent-success) 14%,transparent);color:var(--accent-success)}
+.tag-primary{background:var(--accent-primary-10);color:var(--accent-primary)}
+
+/* 表单 */
+.field{margin-bottom:16px;max-width:420px}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:6px}
+.input{width:100%;padding:10px 14px;border-radius:var(--radius-md);border:1px solid var(--border-color);
+  background:var(--bg-input);color:var(--text-primary);font-size:14px;font-family:inherit;transition:var(--transition)}
+.input:focus{outline:none;border-color:var(--border-focus);box-shadow:0 0 0 3px var(--accent-primary-10)}
+select.input{background-color:var(--bg-tertiary)}
+.check{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--text-secondary);cursor:pointer}
+.check input{accent-color:var(--accent-primary);width:18px;height:18px}
+
+/* 反馈 */
+.alert{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:var(--radius-md);
+  font-size:14px;margin-bottom:12px}
+.alert svg{width:20px;height:20px;flex-shrink:0;margin-top:1px}
+.alert-error{background:var(--accent-danger-10);border:1px solid var(--accent-danger-20);color:var(--text-danger)}
+.alert-success{background:var(--accent-success-10);border:1px solid rgba(34,197,94,.20);color:var(--accent-success)}
+.alert-warm{background:color-mix(in srgb,var(--accent-warm) 14%,transparent);border:1px solid color-mix(in srgb,var(--accent-warm) 24%,transparent);color:var(--accent-warm)}
+
+/* 进度/骨架/空态 */
+.progress{height:8px;background:var(--bg-tertiary);border-radius:var(--radius-full);overflow:hidden;max-width:420px}
+.progress span{display:block;height:100%;background:var(--gradient-progress);border-radius:var(--radius-full)}
+.skeleton{background:linear-gradient(90deg,var(--bg-tertiary) 25%,var(--bg-elevated) 50%,var(--bg-tertiary) 75%);
+  background-size:200% 100%;animation:shimmer 1.5s ease-in-out infinite;border-radius:var(--radius-sm)}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.sk-line{height:14px;margin-bottom:8px;width:100%}
+.sk-line.short{width:60%}
+.sk-card{height:120px;border-radius:var(--radius-md);margin-top:8px}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:48px 24px;
+  text-align:center;color:var(--text-muted);background:var(--glass-bg);border:1px solid var(--glass-border);
+  border-radius:var(--radius-lg);backdrop-filter:blur(var(--glass-blur));max-width:420px}
+.empty svg{width:44px;height:44px;opacity:.3;color:var(--accent-primary)}
+
+/* 无障碍演示 */
+.a11y-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.a11y-card{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-md);
+  padding:20px;backdrop-filter:blur(var(--glass-blur))}
+.a11y-card h4{font-size:15px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.a11y-card p{font-size:13px;color:var(--text-secondary);margin-bottom:12px}
+.demo-focus{display:flex;gap:10px;flex-wrap:wrap}
+.tap-target{width:44px;height:44px;border-radius:var(--radius-sm);background:var(--accent-primary-10);
+  color:var(--accent-primary);display:flex;align-items:center;justify-content:center;border:1px solid var(--border-color)}
+.contrast-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.contrast-box{width:120px;height:44px;border-radius:var(--radius-sm);display:flex;align-items:center;
+  justify-content:center;font-size:13px;font-weight:600;flex-shrink:0}
+.contrast-ok{background:var(--bg-primary);color:var(--text-primary)}
+.contrast-bad{background:var(--accent-danger-10);color:var(--accent-warm)}
+.contrast-info{font-size:12px;color:var(--text-muted)}
+.ratio{font-family:var(--font-mono);font-weight:700}
+
+/* 响应式 demo */
+.responsgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.responsgrid .cell{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-md);
+  padding:20px;text-align:center;backdrop-filter:blur(var(--glass-blur));font-size:14px}
+.bp-note{display:flex;gap:16px;flex-wrap:wrap;margin-top:16px;font-size:12px;color:var(--text-muted)}
+.bp-note span{display:inline-flex;align-items:center;gap:6px}
+.bp-dot{width:8px;height:8px;border-radius:50%;background:var(--accent-primary)}
+
+/* 动效降级开关 */
+body.reduce-motion *{animation:none!important;transition:none!important}
+.badge{padding:2px 8px;border-radius:var(--radius-full);font-size:11px;font-weight:600;background:var(--accent-primary-10);color:var(--accent-primary)}
+.badge.warn{background:color-mix(in srgb,var(--accent-warm) 14%,transparent);color:var(--accent-warm)}
+.badge.ok{background:var(--accent-success-10);color:var(--accent-success)}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;
+  background:var(--glass-bg);backdrop-filter:blur(var(--glass-blur-heavy));border:1px solid var(--glass-border);
+  border-radius:var(--radius-md);padding:12px 20px;font-size:14px;box-shadow:var(--shadow-xl);z-index:1000;
+  transition:var(--transition-slow);pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media(max-width:1024px){.responsgrid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.responsgrid{grid-template-columns:1fr}.wrap{padding:32px 16px 64px}}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="brand"><span class="logo">N</span> MARS-408 设计系统</div>
+  <div class="nav-actions">
+    <button class="toggle" id="rmToggle" aria-pressed="false"><span id="rmIcon">⏸</span> 动效减弱</button>
+    <button class="toggle" id="themeToggle" aria-label="切换深/浅主题"><span id="themeIcon">☀</span> 浅色</button>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <section class="hero">
+    <h1>MARS-408 设计系统 Showcase</h1>
+    <p>克制深色 · 玻璃态 · 学科分色 · 微交互。本页是 <code>DESIGN_SYSTEM_v2.md</code> 的可视化交付：令牌、组件库、双主题、无障碍基线（焦点 / 对比度 / 动效减弱）与响应式，全部可直接预览核验。</p>
+    <div class="chips">
+      <span class="badge ok">WCAG AA</span>
+      <span class="badge">:focus-visible</span>
+      <span class="badge">prefers-reduced-motion</span>
+      <span class="badge">44px 触摸目标</span>
+      <span class="badge warn">紫主色 #7c6af2</span>
+    </div>
+  </section>
+
+  <!-- 颜色 -->
+  <section class="section" id="color">
+    <div class="section-head"><h2>颜色令牌</h2><p>语义层 / 品牌色 / 四科分色 —— 组件只引用变量，禁止硬编码。</p></div>
+    <div class="grid swatches">
+      <div class="swatch"><div class="fill" style="background:var(--color-canvas)"></div><div class="meta"><div class="name">画布</div><div class="var">--color-canvas</div><div class="role">页面底色</div></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--color-surface-2)"></div><div class="meta"><div class="name">表面-2</div><div class="var">--color-surface-2</div><div class="role">侧栏/输入底</div></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--color-glass)"></div><div class="meta"><div class="name">玻璃态</div><div class="var">--color-glass</div><div class="role">卡片表面</div></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--color-text)"></div><div class="meta"><div class="name">主文本</div><div class="var">--color-text</div><div class="role">#f8fafc</div></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--accent-primary)"></div><div class="meta"><div class="name">主色·紫</div><div class="var">--accent-primary</div><div class="role">按钮/激活态</div></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--accent-blue)"></div><div class="meta"><div class="name">辅助·蓝</div><div class="var">--accent-blue</div><div class="role">渐变收尾</div></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--accent-cyan)"></div><div class="meta"><div class="name">青</div><div class="var">--accent-cyan</div><div class="role">信息</div></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--accent-warm)"></div><div class="meta"><div class="name">琥珀</div><div class="var">--accent-warm</div><div class="role">仅高亮/警告</div></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--accent-success)"></div><div class="meta"><div class="name">成功</div><div class="var">--accent-success</div><div class="role">通过/正向</div></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--accent-danger)"></div><div class="meta"><div class="name">危险</div><div class="var">--accent-danger</div><div class="role">错误/删除</div></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--subject-ds)"></div><div class="meta"><div class="name">数据结构</div><div class="var">--subject-ds</div><div class="role">四科·紫</div></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--subject-cn)"></div><div class="meta"><div class="name">计网</div><div class="var">--subject-cn</div><div class="role">四科·蓝</div></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--subject-co)"></div><div class="meta"><div class="name">计组</div><div class="var">--subject-co</div><div class="role">四科·青</div></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--subject-os)"></div><div class="meta"><div class="name">操作系统</div><div class="var">--subject-os</div><div class="role">四科·粉</div></div></div>
+    </div>
+  </section>
+
+  <!-- 排版 -->
+  <section class="section" id="type">
+    <div class="section-head"><h2>排版阶梯</h2><p>层级靠字号 + 字重 + 负字距，不依赖颜色。单位用 rem 支 200% 文本缩放。</p></div>
+    <div class="card">
+      <div class="type-row"><span class="label">Display</span><span class="sample type-display">408 考研智能学习</span></div>
+      <div class="type-row"><span class="label">H1 / 24</span><span class="sample type-h1">页面主标题</span></div>
+      <div class="type-row"><span class="label">H2 / 20</span><span class="sample type-h2">区块标题</span></div>
+      <div class="type-row"><span class="label">H3·卡片 / 16</span><span class="sample type-h3">卡片标题</span></div>
+      <div class="type-row"><span class="label">Body / 14</span><span class="sample type-body">正文内容，行高 1.6，保证长文可读性。</span></div>
+      <div class="type-row"><span class="label">Caption / 13</span><span class="sample type-caption">次文本说明信息</span></div>
+      <div class="type-row"><span class="label">Nano / 12</span><span class="sample type-nano">徽章 · 标签 · 说明</span></div>
+    </div>
+  </section>
+
+  <!-- 间距 / 圆角 -->
+  <section class="section" id="scale">
+    <div class="section-head"><h2>间距刻度（4 倍数）</h2><p>组件内距统一 20px，区块 16–24px。间距优先 4 倍数。</p></div>
+    <div class="scale-grid">
+      <div class="scale-item"><div class="scale-box" style="width:4px;height:4px"></div><div class="n">--space-1</div><div class="v">4px</div></div>
+      <div class="scale-item"><div class="scale-box" style="width:8px;height:8px"></div><div class="n">--space-2</div><div class="v">8px</div></div>
+      <div class="scale-item"><div class="scale-box" style="width:12px;height:12px"></div><div class="n">--space-3</div><div class="v">12px</div></div>
+      <div class="scale-item"><div class="scale-box" style="width:16px;height:16px"></div><div class="n">--space-4</div><div class="v">16px</div></div>
+      <div class="scale-item"><div class="scale-box" style="width:24px;height:24px"></div><div class="n">--space-6</div><div class="v">24px</div></div>
+      <div class="scale-item"><div class="scale-box" style="width:32px;height:32px"></div><div class="n">--space-8</div><div class="v">32px</div></div>
+      <div class="scale-item"><div class="scale-box" style="width:48px;height:48px"></div><div class="n">--space-12</div><div class="v">48px</div></div>
+      <div class="scale-item"><div class="scale-box" style="width:64px;height:64px"></div><div class="n">--space-16</div><div class="v">64px</div></div>
+    </div>
+    <div class="section-head" style="margin-top:32px"><h2>圆角刻度</h2></div>
+    <div class="radius-grid">
+      <div class="radius-item"><div class="radius-box" style="border-radius:var(--radius-xs)"></div><div class="n">xs</div><div class="v">6px</div></div>
+      <div class="radius-item"><div class="radius-box" style="border-radius:var(--radius-sm)"></div><div class="n">sm</div><div class="v">10px</div></div>
+      <div class="radius-item"><div class="radius-box" style="border-radius:var(--radius-md)"></div><div class="n">md</div><div class="v">14px</div></div>
+      <div class="radius-item"><div class="radius-box" style="border-radius:var(--radius-lg)"></div><div class="n">lg</div><div class="v">18px</div></div>
+      <div class="radius-item"><div class="radius-box" style="border-radius:var(--radius-xl)"></div><div class="n">xl</div><div class="v">24px</div></div>
+      <div class="radius-item"><div class="radius-box" style="border-radius:var(--radius-full)"></div><div class="n">full</div><div class="v">9999</div></div>
+    </div>
+  </section>
+
+  <!-- 按钮 -->
+  <section class="section" id="buttons">
+    <div class="section-head"><h2>按钮 · .btn 体系</h2><p>唯一合法按钮类。禁止新增 .xxx-btn 散落类（历史 .engine-btn/.rag-btn 过渡期）。</p></div>
+    <div class="card">
+      <div class="btn-row">
+        <button class="btn btn-primary" data-toast="已发送">主操作 Primary</button>
+        <button class="btn btn-secondary">次操作 Secondary</button>
+        <button class="btn btn-ghost">低调 Ghost</button>
+        <button class="btn btn-soft">温和 Soft</button>
+        <button class="btn btn-danger">危险 Danger</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary btn-sm">小号 sm</button>
+        <button class="btn btn-primary btn-lg">大号 lg</button>
+        <button class="btn btn-primary" disabled>禁用</button>
+        <button class="btn btn-primary btn-block" style="max-width:240px">块级 block</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" aria-label="发送消息">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          图标按钮（含 aria-label）
+        </button>
+        <button class="btn btn-ghost" aria-label="上传图片">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 卡片 -->
+  <section class="section" id="cards">
+    <div class="section-head"><h2>卡片 / 数据展示</h2><p>玻璃态 + 克制发光；hover scale(1.02) 上限；统计卡顶部 3px 渐变条。</p></div>
+    <div class="grid cards-3">
+      <div class="card"><h3>玻璃卡片</h3><p>标准表面，用于内容容器与列表项。</p></div>
+      <div class="card"><h3>悬停浮起</h3><p>hover 时 scale(1.02) + accent 描边 + 阴影。</p></div>
+      <div class="card"><h3>学科着色</h3><p>四科色用 color-mix 14% 着色，深浅主题自适应。</p></div>
+    </div>
+    <div class="grid cards-3" style="margin-top:16px">
+      <div class="stat-card"><div class="stat-label">掌握度</div><div class="stat-value">78%</div><div class="stat-change">↑ 12% 本周</div></div>
+      <div class="stat-card"><div class="stat-label">练习数</div><div class="stat-value">342</div><div class="stat-change">↑ 28 本周</div></div>
+      <div class="stat-card"><div class="stat-label">薄弱点</div><div class="stat-value">5</div><div class="stat-change" style="color:var(--accent-danger)">↓ 需关注</div></div>
+    </div>
+    <div class="grid cards-3" style="margin-top:16px">
+      <div class="feature-card"><div class="feature-icon">📊</div><div><div class="feature-title">智能PPT</div><div class="feature-desc">一键生成带图课件</div></div></div>
+      <div class="feature-card"><div class="feature-icon">🎬</div><div><div class="feature-title">数字人视频</div><div class="feature-desc">讲解渲染播报</div></div></div>
+      <div class="feature-card"><div class="feature-icon">🔍</div><div><div class="feature-title">联网检索</div><div class="feature-desc">增强 RAG 知识库</div></div></div>
+    </div>
+  </section>
+
+  <!-- 标签 -->
+  <section class="section" id="tags">
+    <div class="section-head"><h2>标签 / 徽章</h2><p>学科色 + 状态色，背景 color-mix 14% tint。</p></div>
+    <div class="card"><div class="tags">
+      <span class="tag tag-purple">数据结构</span>
+      <span class="tag tag-blue">计网</span>
+      <span class="tag tag-cyan">计组</span>
+      <span class="tag tag-pink">操作系统</span>
+      <span class="tag tag-warm">高亮</span>
+      <span class="tag tag-green">通过</span>
+      <span class="tag tag-primary">激活</span>
+    </div></div>
+  </section>
+
+  <!-- 表单 -->
+  <section class="section" id="forms">
+    <div class="section-head"><h2>表单元素</h2><p>每个输入关联 label；focus 时 accent 光环。键盘可操作。</p></div>
+    <div class="card">
+      <div class="field"><label for="demo-input">知识点检索</label><input id="demo-input" class="input" placeholder="如：TCP 三次握手" /></div>
+      <div class="field"><label for="demo-select">科目</label><select id="demo-select" class="input"><option>数据结构</option><option>计网</option><option>计组</option><option>操作系统</option></select></div>
+      <div class="field"><label for="demo-text">笔记</label><textarea id="demo-text" class="input" rows="3" placeholder="写下你的理解…"></textarea></div>
+      <div class="field"><label class="check"><input type="checkbox" /> 开启深度思考模式</label></div>
+    </div>
+  </section>
+
+  <!-- 反馈 -->
+  <section class="section" id="feedback">
+    <div class="section-head"><h2>反馈与状态</h2><p>错误用 danger 系（--text-danger），<b>绝不用琥珀作错误文字</b>；告警/成功/警告分明。</p></div>
+    <div class="card">
+      <div class="alert alert-error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div><b>调用失败</b>：讯飞工坊「PPT」出错，请重试。错误提示用 danger 文字色，对比度 ≥ 4.5:1。</div></div>
+      <div class="alert alert-success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg><div>内容合规，已通过审核。</div></div>
+      <div class="alert alert-warm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><div>仅高亮/警告使用琥珀色（如「待优化」提示），不作错误。</div></div>
+    </div>
+  </section>
+
+  <!-- 进度/骨架/空态 -->
+  <section class="section" id="states">
+    <div class="section-head"><h2>加载 / 空态</h2><p>进度条四色渐变；骨架屏 shimmer；空状态玻璃卡 + fade-up。</p></div>
+    <div class="card">
+      <div class="progress" role="progressbar" aria-valuenow="68" aria-valuemin="0" aria-valuemax="100"><span style="width:68%"></span></div>
+      <p style="font-size:13px;color:var(--text-muted);margin:10px 0 20px">掌握度进度 68%</p>
+      <div class="skeleton sk-line"></div><div class="skeleton sk-line"></div><div class="skeleton sk-line short"></div>
+      <div class="skeleton sk-card"></div>
+      <div class="empty" style="margin-top:20px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <div><b>暂无学习记录</b></div>
+        <div style="font-size:13px">开始你的第一次 408 练习吧</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 无障碍 -->
+  <section class="section" id="a11y">
+    <div class="section-head"><h2>无障碍基线（A11y）</h2><p>焦点可见 · 对比度 AA · 动效减弱 · 44px 触摸目标。点右上「动效减弱」可实时关闭动画。</p></div>
+    <div class="grid a11y-grid">
+      <div class="a11y-card">
+        <h4>⌨️ 焦点可见 <span class="badge ok">2.4.7</span></h4>
+        <p>全局 :focus-visible 焦点环。用键盘 Tab 走查下方按钮，可见紫色描边。</p>
+        <div class="demo-focus">
+          <button class="btn btn-primary btn-sm">按钮 A</button>
+          <button class="btn btn-soft btn-sm">按钮 B</button>
+          <a class="tap-target" href="#" aria-label="可聚焦方块">⬚</a>
+        </div>
+      </div>
+      <div class="a11y-card">
+        <h4>🌓 对比度 AA <span class="badge ok">1.4.3</span></h4>
+        <p>正文 ≥ 4.5:1，大文本 ≥ 3:1。错误必须用 danger 文字色。</p>
+        <div class="contrast-row"><div class="contrast-box contrast-ok">正文示例</div><div class="contrast-info">主文本 on 画布<br><span class="ratio">~18:1</span> ✅</div></div>
+        <div class="contrast-row"><div class="contrast-box contrast-bad">错误示例</div><div class="contrast-info">琥珀字 on 危险底<br><span class="ratio">~1.5:1</span> ❌ 已禁</div></div>
+      </div>
+      <div class="a11y-card">
+        <h4>🎚 动效减弱 <span class="badge ok">2.3.3</span></h4>
+        <p>prefers-reduced-motion 下关闭 fade/stagger/pulse。本页开关注入等价 class。</p>
+        <div class="skeleton sk-line" style="margin-bottom:8px"></div>
+        <div class="skeleton sk-line short"></div>
+        <p style="margin-top:10px;font-size:12px">开启后上方 shimmer 动画停止。</p>
+      </div>
+      <div class="a11y-card">
+        <h4>👆 触摸目标 <span class="badge ok">2.5.5</span></h4>
+        <p>可点击元素 ≥ 44×44px。以下方块均为 44px 合规尺寸。</p>
+        <div class="demo-focus">
+          <span class="tap-target">A</span><span class="tap-target">B</span><span class="tap-target">C</span><span class="tap-target">D</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 响应式 -->
+  <section class="section" id="responsive">
+    <div class="section-head"><h2>响应式网格</h2><p>默认 4 列；≤1024px → 2 列；≤480px → 1 列。容器 max-width 1200px。</p></div>
+    <div class="responsgrid">
+      <div class="cell">卡片 1</div><div class="cell">卡片 2</div><div class="cell">卡片 3</div><div class="cell">卡片 4</div>
+    </div>
+    <div class="bp-note">
+      <span><span class="bp-dot"></span> Desktop &gt;1024px · 侧栏常驻</span>
+      <span><span class="bp-dot"></span> Tablet ≤1024px · 4→2 列</span>
+      <span><span class="bp-dot"></span> Mobile ≤768px · 顶/底栏接管</span>
+      <span><span class="bp-dot"></span> Small ≤480px · 1 列</span>
+    </div>
+  </section>
+
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const root=document.documentElement, themeToggle=document.getElementById('themeToggle'),
+  themeIcon=document.getElementById('themeIcon'), rmToggle=document.getElementById('rmToggle'),
+  rmIcon=document.getElementById('rmIcon'), toast=document.getElementById('toast');
+let toastTimer;
+function showToast(msg){toast.textContent=msg;toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),2200);}
+themeToggle.addEventListener('click',()=>{
+  const light=root.getAttribute('data-theme')==='light';
+  root.setAttribute('data-theme',light?'dark':'light');
+  themeIcon.textContent=light?'☀':'🌙';themeToggle.lastChild.textContent=light?' 浅色':' 深色';
+});
+rmToggle.addEventListener('click',()=>{
+  const on=document.body.classList.toggle('reduce-motion');
+  rmToggle.setAttribute('aria-pressed',on);rmIcon.textContent=on?'▶':'⏸';
+  showToast(on?'已开启动效减弱（prefers-reduced-motion 等效）':'已恢复动效');
+});
+document.querySelectorAll('[data-toast]').forEach(b=>b.addEventListener('click',()=>showToast(b.dataset.toast)));
+</script>
+</body>
+</html>

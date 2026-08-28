@@ -1,0 +1,143 @@
+name: P0 Regression Gate (wave-1)
+
+# wave-1 回归门禁：P0 用例最先跑且不可失败；其余分档并行。
+# 设计要点（源自测试计划 / testing-expert）：
+#  - pyproject addopts 默认排除 system/requires_milvus/slow；各分档用自身 -m 覆盖。
+#  - Windows 仅跑默认集（不触真实向量/模型原生库）；segv_env 已在 win32 自动 skip。
+#  - per-file 覆盖率门禁由 scripts/check_coverage_thresholds.py 在 fast-unit(ubuntu) 执行。
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 2 * * *"   # nightly: 触发 slow 档
+
+concurrency:
+  group: p0-regression-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  # ── 门禁：最先跑、不可失败（continue-on-error: false） ──
+  p0-regression-gate:
+    name: P0 Regression Gate (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install (.[test])
+        working-directory: py-server
+        run: pip install -e ".[test]"
+      - name: Run P0 regression
+        # 覆盖 pyproject addopts 的 -m 过滤，仅跑 p0_regression（P0 集不应含 system/milvus/slow）
+        working-directory: py-server
+        run: pytest -m p0_regression --timeout=120 -q
+        continue-on-error: false
+
+  # ── 快速单测：Win+Linux 矩阵 + 总体覆盖率 + per-file 门禁 ──
+  fast-unit:
+    name: Fast Unit (${{ matrix.os }})
+    needs: p0-regression-gate
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install (.[test])
+        working-directory: py-server
+        run: pip install -e ".[test]"
+      - name: Fast unit + coverage
+        # 不指定 -m，沿用 addopts：排除 system/requires_milvus/slow
+        working-directory: py-server
+        run: pytest --cov=. --cov-report=json:coverage.json --cov-fail-under=80 -q
+      - name: Per-file coverage gate
+        if: matrix.os == 'ubuntu-latest'
+        working-directory: py-server
+        run: python scripts/check_coverage_thresholds.py
+      - name: Upload coverage json
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-json
+          path: py-server/coverage.json
+
+  # ── 系统测试：subprocess 起真实 uvicorn ──
+  system:
+    name: System (Linux, real uvicorn)
+    needs: p0-regression-gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install (.[test])
+        working-directory: py-server
+        run: pip install -e ".[test]"
+      - name: System tests
+        working-directory: py-server
+        run: pytest -m "system and not p0_regression" --timeout=180 -q
+
+  # ── 真实向量库：milvus-lite（in-process，无需 docker 服务） ──
+  requires-milvus:
+    name: Requires Milvus (Linux, milvus-lite)
+    needs: p0-regression-gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install (.[test]) + milvus-lite
+        working-directory: py-server
+        run: pip install -e ".[test]" && pip install milvus-lite
+      - name: Start milvus-lite in background
+        working-directory: py-server
+        run: |
+          nohup python -c "from milvus_lite import MilvusServer; s=MilvusServer(); s.set_base_dir('./milvus_lite_ci'); s.start()" > milvus_lite.log 2>&1 &
+          for i in $(seq 1 30); do
+            if python -c "import socket; s=socket.socket(); s.settimeout(1); s.connect(('127.0.0.1',19530)); s.close(); exit(0)" 2>/dev/null; then
+              echo "milvus-lite ready"; break
+            fi
+            sleep 2
+          done
+      - name: Requires Milvus tests
+        working-directory: py-server
+        env:
+          MILVUS_HOST: 127.0.0.1
+          MILVUS_PORT: "19530"
+        run: pytest -m requires_milvus --timeout=300 -q
+
+  # ── 慢速：仅 nightly (schedule) 触发 ──
+  slow:
+    name: Slow (nightly)
+    if: github.event_name == 'schedule'
+    needs: [p0-regression-gate, fast-unit, system, requires-milvus]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install (.[test])
+        working-directory: py-server
+        run: pip install -e ".[test]"
+      - name: Slow tests
+        working-directory: py-server
+        run: pytest -m slow --timeout=600 -q

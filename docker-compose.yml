@@ -1,0 +1,116 @@
+# docker-compose.yml — MARS-408 408 个性化学习系统
+#
+# 开箱即跑（评委默认）:  docker-compose up -d
+#   → development 模式：自动生成 AUTH_SECRET / ADMIN_PASSWORD，播种 demo/demo123456 演示账号
+#
+# 生产部署:  docker-compose --profile production up -d
+#   → production 模式：必须显式设置 AUTH_SECRET / ADMIN_PASSWORD 环境变量，否则 fail-fast 启动失败
+#   → 同时拉起 Milvus + Redis 完整服务栈
+
+version: "3.8"
+
+services:
+  # ── 应用服务（含前端 + 后端 API） ──
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # D7：构建时注入版本/构建日期标签（避免 latest）
+      args:
+        VERSION: "${APP_TAG:-1.0.0}"
+        BUILD_DATE: "${BUILD_DATE:-}"
+    # D7：固定镜像 tag（非 latest），便于指定上一 tag 一键回滚
+    image: mars408/app:${APP_TAG:-1.0.0}
+    ports:
+      - "8002:8002"
+    environment:
+      - LLM_PROVIDER=${LLM_PROVIDER:-auto}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - DEEPSEEK_BASE_URL=${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
+      - DEEPSEEK_MODEL=${DEEPSEEK_MODEL:-deepseek-chat}
+      - XF_APP_ID=${XF_APP_ID:-}
+      - XF_API_KEY=${XF_API_KEY:-}
+      - XF_API_SECRET=${XF_API_SECRET:-}
+      - XF_API_PASSWORD=${XF_API_PASSWORD:-}
+      - XF_ACTIVE_PRESET=${XF_ACTIVE_PRESET:-spark_x2}
+      - QWEN_API_KEY=${QWEN_API_KEY:-}
+      - QWEN_BASE_URL=${QWEN_BASE_URL:-https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions}
+      - QWEN_MODEL=${QWEN_MODEL:-qwen3.8-max}
+      - TAVILY_API_KEY=${TAVILY_API_KEY:-}
+      - MILVUS_HOST=milvus
+      - MILVUS_PORT=19530
+      - MILVUS_ENABLED=${MILVUS_ENABLED:-true}
+      - PG_HOST=${PG_HOST:-postgresql}
+      - PG_PORT=${PG_PORT:-5432}
+      - PG_USER=${PG_USER:-postgres}
+      - PG_PASSWORD=${PG_PASSWORD:-}
+      - PG_DATABASE=${PG_DATABASE:-netlearn}
+      - PG_ENABLED=${PG_ENABLED:-false}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - REDIS_ENABLED=${REDIS_ENABLED:-true}
+      - MAX_REQUEST_BYTES=${MAX_REQUEST_BYTES:-52428800}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:8002,http://127.0.0.1:8002}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      # ⚠️ 安全：禁止提供默认口令。
+      # - 开发模式(NETLEARN_ENV=development，默认)：未设置时 main.py 自动生成随机口令（重启失效），不阻塞启动
+      # - 生产模式(NETLEARN_ENV=production，需 --profile production)：未设置即 fail-fast 启动失败
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      # ⚠️ 安全：AUTH_SECRET 无硬编码默认值。
+      # - 开发模式：未设置时 resolve_auth_secret() 自动生成随机密钥（重启失效），不阻塞启动
+      # - 生产模式：未设置即 fail-fast 启动失败（fail-closed，防止伪造 Token）
+      - AUTH_SECRET=${AUTH_SECRET:-}
+      # 默认 development（开箱即跑）：播种 demo/demo123456 演示账号、自动生成密钥
+      # 生产部署：docker-compose --profile production up -d 时通过 .env 或环境变量设 NETLEARN_ENV=production
+      - NETLEARN_ENV=${NETLEARN_ENV:-development}
+    volumes:
+      - ./py-server/vectordb_data:/app/vectordb_data
+      - ./py-server/milvus_lite_data:/app/milvus_lite_data
+      - ./py-server/config.json:/app/config.json
+      # ADR-007: 挂载教材目录供后台 import_worker 单写者扫描（只读）
+      - ./documents:/app/documents:ro
+    restart: unless-stopped
+    healthcheck:
+      # D4：探活 /api/status（镜像已装 curl）；start_period 给冷启动留时间
+      test: ["CMD", "curl", "-f", "http://localhost:8002/api/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ── Milvus 向量数据库（生产部署） ──
+  milvus:
+    image: milvusdb/milvus:v2.4.17
+    ports:
+      - "19530:19530"
+      - "9091:9091"
+    environment:
+      - ETCD_USE_EMBED=true
+      - ETCD_DATA_DIR=/var/lib/milvus/etcd
+      - COMMON_STORAGETYPE=local
+    volumes:
+      - milvus_data:/var/lib/milvus
+    profiles: ["production", "milvus"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9091/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      # D4：Milvus 索引加载慢，start_period 给足启动时间（120s）
+      start_period: 120s
+
+  # ── Redis 缓存（可选，提升性能） ──
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    profiles: ["production"]
+    restart: unless-stopped
+
+volumes:
+  milvus_data:
+  redis_data:

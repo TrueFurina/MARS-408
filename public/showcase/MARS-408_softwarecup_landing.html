@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MARS-408 · 大模型驱动的 408 考研个性化学习多智能体系统</title>
+<style>
+  :root{
+    /* 语义层 */
+    --color-canvas:#080812;
+    --color-surface:rgba(255,255,255,0.03);
+    --color-surface-2:#0f0f1a;
+    --color-glass:rgba(15,15,26,0.65);
+    --color-glass-border:rgba(255,255,255,0.08);
+    --color-border:rgba(255,255,255,0.06);
+    --color-text:#f8fafc;
+    --color-text-2:#94a3b8;
+    --color-text-3:#7c8aa0;
+    /* 品牌色 */
+    --accent-primary:#7c6af2;
+    --accent-blue:#5b8bd8;
+    --accent-cyan:#06b6d4;
+    --accent-warm:#f59e0b;
+    --accent-success:#22c55e;
+    --accent-danger:#ef4444;
+    --accent-pink:#f472b6;
+    /* 408 四科分色 */
+    --subject-ds:#8b5cf6;
+    --subject-cn:#3b82f6;
+    --subject-co:#06b6d4;
+    --subject-os:#f472b6;
+    --gradient-primary:linear-gradient(135deg,#7c6af2,#5b8bd8);
+    --gradient-ds:linear-gradient(135deg,#8b5cf6,#5b8bd8);
+    /* 圆角 */
+    --radius-xs:6px; --radius-sm:10px; --radius-md:14px; --radius-lg:18px; --radius-xl:24px; --radius-full:9999px;
+    /* 阴影/发光 */
+    --shadow-card:0 2px 8px rgba(0,0,0,0.25),0 0 1px rgba(255,255,255,0.06);
+    --shadow-card-hover:0 8px 24px rgba(0,0,0,0.35),0 0 20px rgba(124,106,242,0.08);
+    --glow-primary:0 0 20px rgba(124,106,242,0.15),0 0 40px rgba(124,106,242,0.08);
+    /* 字体 */
+    --font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+    --font-mono:'SF Mono','Fira Code','Consolas','Cascadia Code',monospace;
+    /* 间距 */
+    --space-2:8px; --space-3:12px; --space-4:16px; --space-5:20px; --space-6:24px;
+    --container:1200px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:var(--font-sans);
+    background:var(--color-canvas);
+    color:var(--color-text);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  a{color:inherit;text-decoration:none;}
+  .container{max-width:var(--container);margin:0 auto;padding:var(--space-6) 32px;}
+  .section-pad{padding:72px 0;}
+
+  /* 玻璃态基类 */
+  .glass{
+    background:var(--color-glass);
+    border:1px solid var(--color-glass-border);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-card);
+  }
+
+  /* 导航 */
+  .nav{
+    position:sticky;top:0;z-index:100;
+    background:rgba(8,8,18,0.72);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--color-border);
+  }
+  .nav-inner{max-width:var(--container);margin:0 auto;padding:14px 32px;display:flex;align-items:center;justify-content:space-between;}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;letter-spacing:-0.3px;}
+  .logo-mark{width:30px;height:30px;border-radius:var(--radius-sm);background:var(--gradient-primary);box-shadow:var(--glow-primary);display:flex;align-items:center;justify-content:center;}
+  .nav-links{display:flex;align-items:center;gap:28px;}
+  .nav-links a{color:var(--color-text-2);font-size:14px;font-weight:500;transition:color .2s;}
+  .nav-links a:hover{color:var(--color-text);}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    font-size:14px;font-weight:600;line-height:1;padding:10px 20px;
+    border-radius:var(--radius-md);border:1px solid transparent;cursor:pointer;transition:all .2s;font-family:inherit;
+  }
+  .btn-primary{background:var(--gradient-primary);color:#fff;}
+  .btn-primary:hover{opacity:.92;transform:translateY(-1px);box-shadow:0 8px 20px rgba(124,106,242,0.25);}
+  .btn-ghost{background:transparent;color:var(--color-text-2);border-color:var(--color-border);}
+  .btn-ghost:hover{background:var(--color-surface-hover);color:var(--color-text);}
+  .hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:6px;}
+  .hamburger span{width:22px;height:2px;background:var(--color-text);border-radius:2px;}
+  .mobile-menu{display:none;flex-direction:column;padding:12px 32px 20px;background:rgba(8,8,18,0.95);border-bottom:1px solid var(--color-border);}
+
+  /* Hero */
+  .hero{position:relative;padding:96px 0 80px;overflow:hidden;}
+  .hero-bg{position:absolute;inset:0;z-index:0;opacity:.35;pointer-events:none;}
+  .hero-inner{position:relative;z-index:1;text-align:center;max-width:900px;margin:0 auto;}
+  .badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:var(--radius-full);background:color-mix(in srgb,var(--accent-primary) 14%,transparent);color:#b3a8fb;font-size:12px;font-weight:600;letter-spacing:.2px;margin-bottom:24px;}
+  .hero h1{font-size:clamp(28px,5vw,44px);font-weight:700;line-height:1.15;letter-spacing:-0.8px;margin-bottom:18px;}
+  .hero h1 .grad{background:var(--gradient-primary);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;text-shadow:0 0 30px rgba(124,106,242,0.25);}
+  .hero .sub{font-size:17px;color:var(--color-text-2);max-width:680px;margin:0 auto 36px;}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:8px;}
+  .stat{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:22px 16px;box-shadow:var(--shadow-card);}
+  .stat .num{font-family:var(--font-mono);font-size:28px;font-weight:700;letter-spacing:-0.5px;background:var(--gradient-primary);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+  .stat .label{font-size:13px;color:var(--color-text-2);margin-top:6px;}
+
+  /* 区块标题 */
+  .section-head{text-align:center;margin-bottom:48px;}
+  .section-head .eyebrow{font-size:13px;font-weight:600;letter-spacing:.3px;color:var(--accent-primary);text-transform:uppercase;margin-bottom:10px;}
+  .section-head h2{font-size:28px;font-weight:700;letter-spacing:-0.3px;}
+  .section-head p{color:var(--color-text-2);margin-top:10px;max-width:620px;margin-left:auto;margin-right:auto;}
+
+  /* 能力亮点 */
+  .cards-3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+  .feature{padding:28px;border-radius:var(--radius-lg);background:var(--color-surface);border:1px solid var(--color-border);box-shadow:var(--shadow-card);transition:transform .25s,box-shadow .25s,border-color .25s;}
+  .feature:hover{transform:scale(1.02);border-color:transparent;box-shadow:var(--shadow-card-hover),0 0 0 1px rgba(124,106,242,0.15);}
+  .feature .icon{width:48px;height:48px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;margin-bottom:18px;background:color-mix(in srgb,var(--accent-primary) 16%,transparent);}
+  .feature h3{font-size:18px;font-weight:700;margin-bottom:8px;}
+  .feature .plain{font-size:14px;color:var(--color-text-2);}
+  .feature .tech{font-size:12px;color:var(--accent-cyan);margin-top:14px;font-family:var(--font-mono);}
+
+  /* 8-Agent 网络 */
+  .arch-wrap{padding:32px;border-radius:var(--radius-xl);background:var(--color-glass);border:1px solid var(--color-glass-border);backdrop-filter:blur(12px);box-shadow:var(--shadow-card);}
+  .agent-node{cursor:default;}
+  .agent-node circle{transition:r .2s,filter .2s;}
+  .agent-node:hover circle{filter:drop-shadow(0 0 10px currentColor);}
+  .agent-label{opacity:1;transition:opacity .2s;font-size:12px;fill:var(--color-text);font-family:var(--font-sans);text-anchor:middle;pointer-events:none;}
+  .agent-node:hover .agent-label{opacity:1;}
+  .agent-link{stroke:rgba(255,255,255,0.10);stroke-width:1.2;}
+  .arch-legend{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:24px;}
+  .arch-legend span{font-size:12px;color:var(--color-text-2);display:inline-flex;align-items:center;gap:6px;}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
+
+  /* 讯飞工坊 */
+  .grid-10{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;}
+  .xf-card{padding:18px;border-radius:var(--radius-md);background:var(--color-surface);border:1px solid var(--color-border);box-shadow:var(--shadow-card);transition:transform .2s,box-shadow .2s;}
+  .xf-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-card-hover);}
+  .xf-card .ic{width:34px;height:34px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;margin-bottom:12px;background:color-mix(in srgb,var(--accent-cyan) 16%,transparent);color:var(--accent-cyan);}
+  .xf-card h4{font-size:14px;font-weight:600;margin-bottom:4px;}
+  .xf-card p{font-size:12px;color:var(--color-text-3);}
+  .xf-card .tag{display:inline-block;margin-top:10px;font-size:11px;color:var(--accent-success);background:color-mix(in srgb,var(--accent-success) 14%,transparent);padding:2px 8px;border-radius:var(--radius-full);}
+
+  /* 演示流程 */
+  .flow{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;align-items:stretch;}
+  .flow-step{padding:20px;border-radius:var(--radius-lg);background:var(--color-surface);border:1px solid var(--color-border);box-shadow:var(--shadow-card);position:relative;}
+  .flow-step .idx{font-family:var(--font-mono);font-size:13px;color:var(--accent-primary);font-weight:700;}
+  .flow-step h4{font-size:15px;font-weight:600;margin:10px 0 6px;}
+  .flow-step p{font-size:12px;color:var(--color-text-3);}
+  .flow-shot{margin-top:14px;height:120px;border-radius:var(--radius-md);border:1px dashed var(--color-border);display:flex;align-items:center;justify-content:center;color:var(--color-text-3);font-size:12px;background:var(--color-surface-2);}
+
+  /* 数据成效 */
+  .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+  .metric{text-align:center;padding:36px 20px;border-radius:var(--radius-xl);background:var(--color-glass);border:1px solid var(--color-glass-border);backdrop-filter:blur(12px);box-shadow:var(--shadow-card);}
+  .metric .big{font-family:var(--font-mono);font-size:48px;font-weight:700;letter-spacing:-1px;background:var(--gradient-primary);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;text-shadow:0 0 30px rgba(124,106,242,0.2);}
+  .metric .cap{font-size:14px;color:var(--color-text-2);margin-top:8px;}
+  .metric .hint{font-size:11px;color:var(--color-text-3);margin-top:6px;}
+
+  /* CTA */
+  .cta{padding:56px 32px;border-radius:var(--radius-xl);background:var(--color-glass);border:1px solid var(--color-glass-border);backdrop-filter:blur(16px);text-align:center;box-shadow:var(--glow-primary);}
+  .cta h2{font-size:28px;font-weight:700;letter-spacing:-0.3px;margin-bottom:12px;}
+  .cta p{color:var(--color-text-2);margin-bottom:28px;}
+  .cta-links{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:24px;}
+  .cta-links a{font-size:13px;color:var(--color-text-2);border:1px solid var(--color-border);padding:8px 16px;border-radius:var(--radius-full);transition:all .2s;}
+  .cta-links a:hover{color:var(--color-text);border-color:var(--color-border-focus);}
+
+  /* Footer */
+  footer{border-top:1px solid var(--color-border);padding:32px 0;margin-top:72px;}
+  .footer-inner{max-width:var(--container);margin:0 auto;padding:0 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;color:var(--color-text-3);font-size:13px;}
+
+  /* 滚动渐显 */
+  .reveal{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease;}
+  .reveal.visible{opacity:1;transform:none;}
+  @keyframes breathe{0%,100%{opacity:.55;}50%{opacity:1;}}
+  .breathe{animation:breathe 3.5s ease-in-out infinite;}
+
+  /* 响应式 */
+  @media (max-width:1024px){
+    .cards-3{grid-template-columns:repeat(2,1fr);}
+    .grid-10{grid-template-columns:repeat(3,1fr);}
+    .flow{grid-template-columns:repeat(2,1fr);}
+    .stats{grid-template-columns:repeat(2,1fr);}
+  }
+  @media (max-width:768px){
+    .nav-links,.nav .btn{display:none;}
+    .hamburger{display:flex;}
+    .container{padding:var(--space-6) 20px;}
+    .nav-inner{padding:14px 20px;}
+    .cards-3,.grid-10,.flow,.metrics,.stats{grid-template-columns:1fr;}
+    .hero{padding:64px 0 56px;}
+    .section-pad{padding:56px 0;}
+    .reveal{transition:none;opacity:1;transform:none;}
+    .arch-wrap{padding:16px;}
+    .breathe{animation:none;}
+  }
+  /* P2-① 键盘焦点环：仅键盘聚焦显示紫色环，满足可访问性 */
+  :focus-visible{outline:2px solid #7c6af2;outline-offset:2px;}
+</style>
+</head>
+<body>
+
+<!-- 导航 -->
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="logo">
+      <span class="logo-mark">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
+      </span>
+      MARS-408
+    </div>
+    <div class="nav-links">
+      <a href="#features">能力</a>
+      <a href="#arch">架构</a>
+      <a href="#xfyun">工坊</a>
+      <a href="#case">案例</a>
+      <a href="#contact">联系</a>
+    </div>
+    <a href="#contact" class="btn btn-primary">立即体验</a>
+    <button class="hamburger" id="hamburger" aria-label="菜单"><span></span><span></span><span></span></button>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#features" style="padding:10px 0;color:var(--color-text-2)">能力</a>
+    <a href="#arch" style="padding:10px 0;color:var(--color-text-2)">架构</a>
+    <a href="#xfyun" style="padding:10px 0;color:var(--color-text-2)">工坊</a>
+    <a href="#case" style="padding:10px 0;color:var(--color-text-2)">案例</a>
+    <a href="#contact" style="padding:10px 0;color:var(--color-text-2)">联系</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<header class="hero">
+  <svg class="hero-bg" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <radialGradient id="hg" cx="50%" cy="40%" r="60%">
+        <stop offset="0%" stop-color="#7c6af2" stop-opacity="0.25"/>
+        <stop offset="100%" stop-color="#080812" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <rect width="1200" height="600" fill="url(#hg)"/>
+    <g stroke="rgba(124,106,242,0.18)" stroke-width="1" fill="none">
+      <circle cx="600" cy="300" r="180"/><circle cx="600" cy="300" r="260"/>
+      <line x1="600" y1="120" x2="600" y2="480"/><line x1="420" y1="300" x2="780" y2="300"/>
+      <line x1="472" y1="172" x2="728" y2="428"/><line x1="728" y1="172" x2="472" y2="428"/>
+    </g>
+    <g fill="#7c6af2" opacity="0.5">
+      <circle cx="600" cy="120" r="4"/><circle cx="780" cy="300" r="4"/><circle cx="600" cy="480" r="4"/>
+      <circle cx="420" cy="300" r="4"/><circle cx="472" cy="172" r="4"/><circle cx="728" cy="428" r="4"/>
+      <circle cx="728" cy="172" r="4"/><circle cx="472" cy="428" r="4"/>
+    </g>
+  </svg>
+  <div class="container hero-inner">
+    <span class="badge">● 软件杯参赛项目 · Lite 版</span>
+    <h1>大模型驱动的 <span class="grad">408 考研个性化学习</span> 多智能体系统</h1>
+    <p class="sub">像一支 AI 教研团队，为你量身规划复习路径、生成专属学习资料——而不是给你千篇一律的题库。</p>
+    <div class="stats">
+      <div class="stat"><div class="num" data-count="8">0</div><div class="label">协作智能体</div></div>
+      <div class="stat"><div class="num">408</div><div class="label">四科全覆盖</div></div>
+      <div class="stat"><div class="num" data-count="10">0</div><div class="label">项讯飞 AI 能力</div></div>
+      <div class="stat"><div class="num">实时</div><div class="label">个性化资源生成</div></div>
+    </div>
+  </div>
+</header>
+
+<!-- 能力亮点 -->
+<section class="section-pad" id="features">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">Core Capabilities</div>
+      <h2>三个核心能力，解决复习效率低、资源不匹配</h2>
+      <p>面向评委看技术深度，面向同学看"到底有什么用"。</p>
+    </div>
+    <div class="cards-3">
+      <div class="feature reveal">
+        <div class="icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="9"/></svg>
+        </div>
+        <h3>个性化资源生成</h3>
+        <p class="plain">基于你的知识掌握度，生成"只属于你"的讲解文档、题库与思维导图，而非千篇一律的通用资料。</p>
+        <p class="tech">FrugalRAG · 检索增强生成</p>
+      </div>
+      <div class="feature reveal">
+        <div class="icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+        </div>
+        <h3>多智能体 + 证据校验</h3>
+        <p class="plain">多个 Agent 协作作答，强化学习交叉校验答案可信度，减少"一本正经胡说八道"。</p>
+        <p class="tech">GOMARL · 多智能体强化学习证据校验</p>
+      </div>
+      <div class="feature reveal">
+        <div class="icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--subject-ds)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M12 7v4M12 11 6 17M12 11l6 6"/></svg>
+        </div>
+        <h3>408 四科全覆盖</h3>
+        <p class="plain">数据结构 / 计组 / OS / 计网，知识点级图谱与诊断，薄弱点一目了然。</p>
+        <p class="tech">Knowledge Graph · 知识点级诊断</p>
+        <svg width="100%" height="90" viewBox="0 0 300 90" style="margin-top:14px" aria-label="知识图谱示意">
+          <g stroke="rgba(255,255,255,0.12)" stroke-width="1">
+            <line x1="150" y1="45" x2="60" y2="20"/><line x1="150" y1="45" x2="240" y2="20"/>
+            <line x1="150" y1="45" x2="60" y2="70"/><line x1="150" y1="45" x2="240" y2="70"/>
+          </g>
+          <circle cx="150" cy="45" r="12" fill="var(--accent-primary)"/>
+          <circle cx="60" cy="20" r="9" fill="var(--subject-ds)"/><circle cx="240" cy="20" r="9" fill="var(--subject-cn)"/>
+          <circle cx="60" cy="70" r="9" fill="var(--subject-co)"/><circle cx="240" cy="70" r="9" fill="var(--subject-os)"/>
+          <text x="150" y="49" text-anchor="middle" font-size="9" fill="#fff" font-family="var(--font-sans)">408</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 系统架构：8-Agent 网络 -->
+<section class="section-pad" id="arch">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">System Architecture</div>
+      <h2>8 个智能体协作：从学情诊断到学习反馈闭环</h2>
+      <p>中心 PathPlanner 负责路径规划，7 个角色 Agent 分工协作，GOMARL 做答案证据校验。</p>
+    </div>
+    <div class="arch-wrap reveal">
+      <svg viewBox="0 0 800 500" width="100%" role="img" aria-label="8-Agent 多智能体协作网络">
+        <!-- 连线 -->
+        <g class="agent-link">
+          <line x1="400" y1="250" x2="400" y2="70"/>
+          <line x1="400" y1="250" x2="540.7" y2="137.8"/>
+          <line x1="400" y1="250" x2="575.5" y2="290.1"/>
+          <line x1="400" y1="250" x2="478.1" y2="412.2"/>
+          <line x1="400" y1="250" x2="321.9" y2="412.2"/>
+          <line x1="400" y1="250" x2="224.5" y2="290.1"/>
+          <line x1="400" y1="250" x2="259.3" y2="137.8"/>
+        </g>
+        <!-- 中心 PathPlanner -->
+        <g class="agent-node" style="color:var(--accent-primary)">
+          <circle cx="400" cy="250" r="34" fill="rgba(124,106,242,0.18)" stroke="var(--accent-primary)" stroke-width="2" class="breathe"/>
+          <text x="400" y="254" text-anchor="middle" font-size="12" font-weight="700" fill="#fff" font-family="var(--font-sans)">Path</text>
+          <text x="400" y="270" text-anchor="middle" font-size="9" fill="var(--color-text-2)" font-family="var(--font-sans)">Planner</text>
+          <text class="agent-label" x="400" y="300">路径规划 · 生成复习路径</text>
+        </g>
+        <!-- 7 角色 -->
+        <g class="agent-node" style="color:var(--subject-ds)">
+          <circle cx="400" cy="70" r="22" fill="rgba(139,92,246,0.18)" stroke="var(--subject-ds)" stroke-width="2"/>
+          <text x="400" y="74" text-anchor="middle" font-size="10" fill="#fff" font-family="var(--font-sans)">解析</text>
+          <text class="agent-label" x="400" y="44">知识点解析 Agent</text>
+        </g>
+        <g class="agent-node" style="color:var(--subject-cn)">
+          <circle cx="540.7" cy="137.8" r="22" fill="rgba(59,130,246,0.18)" stroke="var(--subject-cn)" stroke-width="2"/>
+          <text x="540.7" y="141.8" text-anchor="middle" font-size="10" fill="#fff" font-family="var(--font-sans)">出题</text>
+          <text class="agent-label" x="540.7" y="111">题目生成 Agent</text>
+        </g>
+        <g class="agent-node" style="color:var(--subject-co)">
+          <circle cx="575.5" cy="290.1" r="22" fill="rgba(6,182,212,0.18)" stroke="var(--subject-co)" stroke-width="2"/>
+          <text x="575.5" y="294.1" text-anchor="middle" font-size="10" fill="#fff" font-family="var(--font-sans)">诊断</text>
+          <text class="agent-label" x="575.5" y="263">错题诊断 Agent</text>
+        </g>
+        <g class="agent-node" style="color:var(--subject-os)">
+          <circle cx="478.1" cy="412.2" r="22" fill="rgba(244,114,182,0.18)" stroke="var(--subject-os)" stroke-width="2"/>
+          <text x="478.1" y="416.2" text-anchor="middle" font-size="10" fill="#fff" font-family="var(--font-sans)">校验</text>
+          <text class="agent-label" x="478.1" y="386">答案校验 Agent</text>
+        </g>
+        <g class="agent-node" style="color:var(--accent-cyan)">
+          <circle cx="321.9" cy="412.2" r="22" fill="rgba(6,182,212,0.18)" stroke="var(--accent-cyan)" stroke-width="2"/>
+          <text x="321.9" y="416.2" text-anchor="middle" font-size="10" fill="#fff" font-family="var(--font-sans)">检索</text>
+          <text class="agent-label" x="321.9" y="386">资源检索 Agent</text>
+        </g>
+        <g class="agent-node" style="color:var(--accent-blue)">
+          <circle cx="224.5" cy="290.1" r="22" fill="rgba(91,139,216,0.18)" stroke="var(--accent-blue)" stroke-width="2"/>
+          <text x="224.5" y="294.1" text-anchor="middle" font-size="10" fill="#fff" font-family="var(--font-sans)">反馈</text>
+          <text class="agent-label" x="224.5" y="263">学习反馈 Agent</text>
+        </g>
+        <g class="agent-node" style="color:var(--accent-warm)">
+          <circle cx="259.3" cy="137.8" r="22" fill="rgba(245,158,11,0.18)" stroke="var(--accent-warm)" stroke-width="2"/>
+          <text x="259.3" y="141.8" text-anchor="middle" font-size="10" fill="#fff" font-family="var(--font-sans)">答疑</text>
+          <text class="agent-label" x="259.3" y="111">答疑 Agent</text>
+        </g>
+      </svg>
+      <div class="arch-legend">
+        <span><i class="dot" style="background:var(--accent-primary)"></i>PathPlanner 路径规划</span>
+        <span><i class="dot" style="background:var(--subject-ds)"></i>知识点解析</span>
+        <span><i class="dot" style="background:var(--subject-cn)"></i>题目生成</span>
+        <span><i class="dot" style="background:var(--subject-co)"></i>错题诊断</span>
+        <span><i class="dot" style="background:var(--subject-os)"></i>答案校验</span>
+        <span><i class="dot" style="background:var(--accent-cyan)"></i>资源检索</span>
+        <span><i class="dot" style="background:var(--accent-blue)"></i>学习反馈</span>
+        <span><i class="dot" style="background:var(--accent-warm)"></i>答疑</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 讯飞 AI 工坊 -->
+<section class="section-pad" id="xfyun">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">iFlytek AI Workshop</div>
+      <h2>已集成 10 项讯飞开放平台 AI 能力</h2>
+      <p>不只是调用 API——这些能力已沉淀为前端「讯飞 AI 工坊」面板，真实可用。</p>
+    </div>
+    <div class="grid-10">
+      <div class="xf-card reveal"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.5-3.5L9 20"/></svg></div><h4>图片生成</h4><p>文生图 / 图生图</p><span class="tag">已集成</span></div>
+      <div class="xf-card reveal"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></div><h4>图片理解</h4><p>视觉问答 / 解析</p><span class="tag">已集成</span></div>
+      <div class="xf-card reveal"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></div><h4>聚合搜索</h4><p>多源检索</p><span class="tag">已集成</span></div>
+      <div class="xf-card reveal"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div><h4>智能 PPT</h4><p>大纲转演示</p><span class="tag">已集成</span></div>
+      <div class="xf-card reveal"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div><h4>数字人</h4><p>虚拟讲师</p><span class="tag">已集成</span></div>
+      <div class="xf-card reveal"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></div><h4>文本纠错</h4><p>拼写 / 语法</p><span class="tag">已集成</span></div>
+      <div class="xf-card reveal"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg></div><h4>公文校对</h4><p>正式文档</p><span class="tag">已集成</span></div>
+      <div class="xf-card reveal"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></div><h4>文本合规</h4><p>敏感词检测</p><span class="tag">已集成</span></div>
+      <div class="xf-card reveal"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><h4>角色模拟</h4><p>情境对话</p><span class="tag">已集成</span></div>
+      <div class="xf-card reveal"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l5 5v15H6Z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg></div><h4>智能简历</h4><p>自动生成</p><span class="tag">已集成</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 演示 / 案例 -->
+<section class="section-pad" id="case">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">How It Works</div>
+      <h2>一个真实学生的学习闭环</h2>
+      <p>从学情诊断到学习反馈，系统自动完成路径规划与资源生成。</p>
+    </div>
+    <div class="flow">
+      <div class="flow-step reveal"><div class="idx">01</div><h4>学情诊断</h4><p>测试知识点掌握度，定位薄弱项</p><div class="flow-shot">学情诊断界面示意</div></div>
+      <div class="flow-step reveal"><div class="idx">02</div><h4>路径规划</h4><p>PathPlanner 生成个性化复习路径</p><div class="flow-shot">PathPlanner 路径示意</div></div>
+      <div class="flow-step reveal"><div class="idx">03</div><h4>资源生成</h4><p>FrugalRAG 生成专属讲解与题库</p><div class="flow-shot">个性化资源卡片示意</div></div>
+      <div class="flow-step reveal"><div class="idx">04</div><h4>答案校验</h4><p>多 Agent 协作 + GOMARL 证据校验</p><div class="flow-shot">GOMARL 校验视图示意</div></div>
+      <div class="flow-step reveal"><div class="idx">05</div><h4>学习反馈</h4><p>闭环反馈，动态调整学习策略</p><div class="flow-shot">闭环反馈面板示意</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 数据成效 -->
+<section class="section-pad" id="metrics">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">Outcome</div>
+      <h2>数据成效</h2>
+      <p>量化指标体现个性化学习相对于通用资料的优势。</p>
+    </div>
+    <div class="metrics">
+      <div class="metric reveal"><div class="big" data-count="92" data-suffix="%">92</div><div class="cap">知识点掌握诊断准确率</div><div class="hint">模拟数据</div></div>
+      <div class="metric reveal"><div class="big" data-count="89" data-suffix="%">89</div><div class="cap">个性化资源采纳率</div><div class="hint">模拟数据</div></div>
+      <div class="metric reveal"><div class="big" data-count="37" data-suffix="%">37</div><div class="cap">复习效率提升</div><div class="hint">模拟数据</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="section-pad" id="contact">
+  <div class="container">
+    <div class="cta reveal">
+      <h2>把 408 复习交给一支 AI 教研团队</h2>
+      <p>现场演示地址、开源仓库与团队联系方式见下。</p>
+      <a href="#" class="btn btn-primary">立即体验</a>
+      <div class="cta-links">
+        <a href="#">演示地址：本机 npm run dev（localhost:5181）</a>
+        <a href="#">开源仓库：赛后开源（私有）</a>
+        <a href="#">团队邮箱：2468001320@qq.com</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div>© 2026 MARS-408 · 计算机 408 考研个性化学习多智能体系统</div>
+    <div>技术栈：Vue 3 · Vite · TypeScript · 讯飞开放平台 · FrugalRAG · GOMARL</div>
+  </div>
+</footer>
+
+<script>
+  // 移动端导航
+  (function(){
+    var h=document.getElementById('hamburger'),m=document.getElementById('mobileMenu');
+    if(h&&m){h.addEventListener('click',function(){m.style.display=m.style.display==='flex'?'none':'flex';});
+      m.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(){m.style.display='none';});});}
+  })();
+  // 滚动渐显
+  (function(){
+    var els=document.querySelectorAll('.reveal');
+    if(!('IntersectionObserver' in window)){els.forEach(function(e){e.classList.add('visible');});return;}
+    var io=new IntersectionObserver(function(entries){
+      entries.forEach(function(en){if(en.isIntersecting){en.target.classList.add('visible');io.unobserve(en.target);}});
+    },{threshold:0.12});
+    els.forEach(function(e){io.observe(e);});
+  })();
+  // 数字计数（仅桌面端，移动端直接显示）
+  (function(){
+    var reduce=window.matchMedia('(max-width:768px)').matches;
+    var nums=document.querySelectorAll('[data-count]');
+    if(reduce){nums.forEach(function(n){n.textContent=n.getAttribute('data-count')+ (n.getAttribute('data-suffix')||'');});return;}
+    var io=new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(!en.isIntersecting)return;
+        var el=en.target,target=parseInt(el.getAttribute('data-count'),10),suffix=el.getAttribute('data-suffix')||'',t0=null,dur=1200;
+        function step(ts){if(!t0)t0=ts;var p=Math.min((ts-t0)/dur,1);el.textContent=Math.floor(p*target)+suffix;if(p<1)requestAnimationFrame(step);}
+        requestAnimationFrame(step);io.unobserve(el);
+      });
+    },{threshold:0.5});
+    nums.forEach(function(n){if(n.getAttribute('data-count')!=='0'||n.getAttribute('data-suffix'))io.observe(n);});
+  })();
+</script>
+</body>
+</html>

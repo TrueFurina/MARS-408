@@ -1,0 +1,77 @@
+# study-help-pro — Gitleaks 检测配置 (gitleaks v8 语法)
+# 用途：主动防护，检测科大讯飞(XFyun)开放平台密钥的误提交/泄露。
+# 维护：gstack-security-officer (CSO)
+#
+# ⚠️ 兼容性说明：
+#   本配置使用顶层 [allowedlist]，该字段自 gitleaks v8.21.0 起为正式命名
+#   （v8.21.0 之前为 [allowlist]）。若 pre-commit 解析到 v8.18.0 等旧版本，请将
+#   rev 升级到 v8.21.0+，或将下方 [allowedlist] 整体改名为 [allowlist]。
+#
+# 设计原则：
+#   * 仅豁免“合法的假阳性”：环境变量模板 / 已脱敏片段 / 文档里的占位示例 / 归档测试桩。
+#   * 真实泄露（git 历史提交、SECURITY_AUDIT_REPORT.md、.workbuddy 记忆文件中的真实值）
+#     一律不豁免，必须由本配置检出，交由人工处置（详见加固结论“残余风险”）。
+
+title = "study-help-pro secret detection (XFyun)"
+
+# ───────────────────────────── 自定义规则 ─────────────────────────────
+
+# 规则 1：XFyun API Secret —— 32+ 位 base64，需 secret/xfyun/api 上下文
+[[rules]]
+id = "xfyun-api-secret"
+description = "iFlytek XFyun API Secret: 32+ char base64, requires secret/xfyun/api context"
+regex = '''(?i)(?:xfyun|api[_-]?secret|secret)[^0-9A-Za-z]{0,20}["']?([A-Za-z0-9+/]{32,}={0,2})["']?'''
+secret-group = 1
+keywords = ["secret", "xfyun", "api"]
+
+# 规则 2：XFyun API Key —— 32 位 hex，需 key/api/xfyun 上下文
+[[rules]]
+id = "xfyun-api-key"
+description = "iFlytek XFyun API Key: 32-char hex, requires key/api/xfyun context"
+regex = '''(?i)(?:xfyun|api[_-]?key|key)[^0-9A-Za-z]{0,20}["']?([a-f0-9]{32})["']?'''
+secret-group = 1
+keywords = ["key", "api", "xfyun"]
+
+# 规则 3：XFyun App ID —— 8 位 hex，强制上下文避免误报
+[[rules]]
+id = "xfyun-app-id"
+description = "iFlytek XFyun App ID: 8-char hex, context-limited to avoid false positives"
+regex = '''(?i)(?:xfyun|app[_-]?id|appid)[^0-9A-Za-z]{0,20}["']?([a-f0-9]{8})["']?'''
+secret-group = 1
+keywords = ["app_id", "appid", "xfyun"]
+
+# 规则 4：XFyun APIPassword —— 格式 USER:PASS（各 10-30 位字母数字）
+[[rules]]
+id = "xfyun-api-password"
+description = "iFlytek XFyun APIPassword: USER:PASS shape (10-30 + 10-30 alphanumerics)"
+regex = '''(?i)(?:api[_-]?password|apipassword|password)[^0-9A-Za-z]{0,20}["']?([A-Za-z0-9]{10,30}:[A-Za-z0-9]{10,30})["']?'''
+secret-group = 1
+keywords = ["password", "api", "xfyun"]
+
+# ───────────────────────────── 误报豁免 ─────────────────────────────
+# 注意：本段只压制“非真实密钥”的上下文。真实泄露不会被压制。
+[allowedlist]
+description = "False-positive suppression only; real leaks remain detectable."
+paths = [
+  # 环境变量本体与模板（.env 已在 .gitignore，此处双保险）
+  '''.*\.env$''',
+  '''.*\.env\.example$''',
+  '''.*\.env\.[A-Za-z0-9]+$''',     # .env.local / .env.prod 等
+  '''.*\.gitignore$''',
+  # gitleaks 自身配置（CI 全量 detect 会扫到本文件，避免规则 regex 自匹配误报）
+  '''.*\.gitleaks\.toml$''',
+  '''.*\.pre-commit-config\.yaml$''',
+  # 归档临时/测试桩（已被 .gitignore 忽略；保留显式豁免便于审计）
+  '''.*/archive/.*''',
+]
+regexes = [
+  # 已脱敏片段（如 138****、****）
+  '''138\*{4,}''',
+  '''\*{4,}''',
+  # 文档 / 模板中的占位示例值（非真实密钥）
+  '''(?i)your[_-]?xfyun[_-]?(api[_-]?key|api[_-]?secret|api[_-]?password|app[_-]?id)''',
+  '''(?i)your_deepseek_api_key_here''',
+  '''(?i)your_qwen_api_key''',
+  '''(?i)your_tavily_api_key''',
+  '''(?i)xxxxxxxx''',
+]

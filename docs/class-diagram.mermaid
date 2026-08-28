@@ -1,0 +1,98 @@
+%% NetLearn P1-4/P1-5 增量设计 — 类图
+%% 行为驱动画像 + 语义级注入防护 + 视频接入主流程 核心类关系
+
+classDiagram
+    direction LR
+
+    class BehaviorEvent {
+        +str user_id
+        +str event_type
+        +str topic
+        +int duration_ms
+        +str resource_type
+        +str timestamp
+    }
+
+    class BehaviorTracker {
+        +async update_profile_from_behavior(profile_id, events) dict
+        -_dwell_to_weak(events) list~str~
+        -_reattempt_to_priority(events) list~str~
+        -_click_to_interest(events) list~str~
+    }
+
+    class PgClient {
+        +get_profile(profile_id) dict
+        +save_profile(profile_id, profile)
+        +log_behavior_event(event) None
+        +update_profile_partial(profile_id, partial) dict
+    }
+
+    class LLMProvider {
+        +async chat(messages) dict
+        +async stream_chat(messages) AsyncIterator
+        +async text_completion(sys, user) str
+        -_sanitize_messages(messages)
+        +get_provider_info() dict
+    }
+
+    class PromptGuard {
+        +sanitize_user_input(text) str
+        +wrap_untrusted(content) str
+    }
+
+    class SemanticGuard {
+        +async classify_intent(text, llm) IntentVerdict
+        +should_run_semantic_check(text) bool
+    }
+
+    class IntentVerdict {
+        +bool is_injection
+        +float confidence
+        +str reason
+        +str raw
+    }
+
+    class MediaGenerator {
+        +async generate_real_video(topic, script, profile) dict
+        -_fallback_script(script) dict
+    }
+
+    class XfyunServices {
+        +async generate_video(prompt, word_count) VideoResult
+        +async check_compliance(text) ComplianceResult
+    }
+
+    class GeneratorCluster {
+        +async generator_cluster_node(state) AgentState
+    }
+
+    class AgentState {
+        +dict student_profile
+        +str video_script
+        +dict video_file
+    }
+
+    class VideoResult {
+        +bool success
+        +str video_url
+        +str audio_url
+        +str task_id
+    }
+
+    %% 行为画像链路
+    BehaviorEvent --> BehaviorTracker : 输入
+    BehaviorTracker --> PgClient : update_profile_partial
+    PgClient --> AgentState : 写 student_profile.behavior_signals
+
+    %% 语义防护链路
+    PromptGuard --> LLMProvider : sanitize 句法层
+    SemanticGuard --> LLMProvider : 语义层(采样触发)
+    SemanticGuard --> IntentVerdict : 输出
+    LLMProvider ..> SemanticGuard : classify_intent
+
+    %% 视频接入链路
+    GeneratorCluster --> MediaGenerator : generate_real_video
+    MediaGenerator --> XfyunServices : generate_video
+    XfyunServices --> VideoResult : 返回
+    GeneratorCluster --> AgentState : 写 video_file
+    MediaGenerator ..> AgentState : 降级写 video_script

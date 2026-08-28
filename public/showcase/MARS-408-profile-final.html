@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<!-- 设计系统：MARS-408 学情画像详情页 · 复用 DESIGN_TOKENS.md 令牌（深/浅双主题）
+     令牌真相源：E:\Program\MARL\study-help-pro\DESIGN_TOKENS.md
+     风格同源：E:\Program\MARL\study-help-pro\deliverables\MARS-408-landing-final-v2.html（玻璃态/紫调/环境光/a11y）
+     构建师：prototype-builder（筑原型） · 单文件自包含 · 零外部依赖（无外部字体/JS库/CDN）
+     a11y：focus-visible / prefers-reduced-motion / 合法标题层级 h1→h2→h3（禁用 h5）/ 44px 触摸目标 / aria-label -->
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="MARS-408 学情画像详情页 · 八维学情雷达、维度明细、薄弱知识点、正确率趋势、学习风格画像与个性化推荐路径。" />
+<title>MARS-408 · 学情画像详情</title>
+<style>
+/* ============================================================
+   1. 设计令牌 · :root（深色调默认 · 取自 DESIGN_TOKENS.md，未改色值）
+   ============================================================ */
+:root {
+  /* ============ 语义层 · 画布与表面 ============ */
+  --color-canvas:        #080812;
+  --color-surface:       rgba(255,255,255,0.03);
+  --color-surface-2:     #0f0f1a;
+  --color-surface-hover: rgba(255,255,255,0.06);
+  --color-elevated:      #1c1c2b;
+  --color-overlay:       rgba(0,0,0,0.55);
+
+  /* ============ 语义层 · 玻璃态 ============ */
+  --color-glass:         rgba(15,15,26,0.65);
+  --color-glass-hover:   rgba(15,15,26,0.80);
+  --color-glass-border:  rgba(255,255,255,0.08);
+  --glass-blur:          12px;
+  --glass-blur-heavy:    20px;
+
+  /* ============ 语义层 · 边框 ============ */
+  --color-border:        rgba(255,255,255,0.06);
+  --color-border-light:  rgba(255,255,255,0.04);
+  --color-border-focus:  rgba(124,106,242,0.45);
+  --color-border-glow:   rgba(124,106,242,0.25);
+
+  /* ============ 语义层 · 文本 ============ */
+  --color-text:          #f8fafc;
+  --color-text-2:        #94a3b8;
+  --color-text-3:        #7c8aa0;
+  --color-text-invert:   #0f0f1a;
+
+  /* ============ 品牌色（双主题恒定） ============ */
+  --accent:              #7c6af2;
+  --accent-dark:         #6b5cdb;
+  --accent-blue:         #5b8bd8;
+  --accent-cyan:         #06b6d4;
+  --accent-warm:         #f59e0b;
+  --accent-success:      #22c55e;
+  --accent-danger:       #ef4444;
+  --accent-pink:         #f472b6;
+  --accent-primary:        var(--accent);
+  --accent-primary-dark:   var(--accent-dark);
+  --accent-secondary:      var(--accent-blue);
+  --accent-tertiary:       var(--accent-cyan);
+  --accent-primary-10:   rgba(124,106,242,0.10);
+  --accent-primary-20:   rgba(124,106,242,0.20);
+  --accent-primary-30:   rgba(124,106,242,0.30);
+
+  /* ============ 408 四科色（恒定 · 语义着色用 color-mix 14%） ============ */
+  --subject-ds: #8b5cf6;
+  --subject-cn: #3b82f6;
+  --subject-co: #06b6d4;
+  --subject-os: #f472b6;
+
+  /* ============ 发光 ============ */
+  --glow-primary:        0 0 20px rgba(124,106,242,0.15), 0 0 40px rgba(124,106,242,0.08);
+  --glow-primary-strong: 0 0 20px rgba(124,106,242,0.25), 0 0 60px rgba(124,106,242,0.12);
+  --glow-secondary:      0 0 20px rgba(91,139,216,0.15), 0 0 40px rgba(91,139,216,0.08);
+  --glow-success:        0 0 20px rgba(34,197,94,0.15);
+
+  /* ============ 渐变 ============ */
+  --gradient-primary: linear-gradient(135deg, #7c6af2 0%, #5b8bd8 100%);
+  --gradient-text:    linear-gradient(135deg, #f8fafc 0%, #a5b4fc 100%);
+  --gradient-hero:    radial-gradient(ellipse 600px 400px at 30% 30%, rgba(124,106,242,0.10) 0%, transparent 70%),
+                      radial-gradient(ellipse 500px 300px at 70% 60%, rgba(91,139,216,0.08) 0%, transparent 70%);
+  --gradient-border:  linear-gradient(135deg, rgba(124,106,242,0.20), rgba(91,139,216,0.15), rgba(6,182,212,0.10));
+  --gradient-progress:linear-gradient(90deg, #7c6af2, #5b8bd8, #06b6d4);
+  --gradient-warm:    linear-gradient(135deg, #f59e0b 0%, #f472b6 100%);
+
+  /* ============ 阴影 ============ */
+  --shadow-sm:        0 1px 2px rgba(0,0,0,0.30);
+  --shadow-md:        0 4px 12px rgba(0,0,0,0.35);
+  --shadow-lg:        0 8px 24px rgba(0,0,0,0.40);
+  --shadow-xl:        0 16px 40px rgba(0,0,0,0.45);
+  --shadow-card:      0 2px 8px rgba(0,0,0,0.25), 0 0 1px rgba(255,255,255,0.06);
+  --shadow-card-hover:0 8px 24px rgba(0,0,0,0.35), 0 0 20px rgba(124,106,242,0.08);
+  --shadow-glow:      0 4px 16px rgba(124,106,242,0.12);
+
+  /* ============ 圆角 ============ */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* ============ 间距（4/8 基准） ============ */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* ============ 排版（中文系统字体栈 · 零加载） ============ */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', 'Consolas', 'Cascadia Code', monospace;
+  --fs-nano:    12px;
+  --fs-caption: 13px;
+  --fs-body:    14px;
+  --fs-body-lg: 16px;
+  --fs-h3:      18px;
+  --fs-h2:      24px;
+  --fs-h1:      32px;
+  --fs-display: 40px;
+  --lh-tight: 1.1;
+  --lh-snug:  1.2;
+  --lh-normal:1.6;
+  --ls-tight: -0.8px;
+  --ls-snug:  -0.5px;
+  --ls-normal:0;
+  --fw-regular: 400;
+  --fw-medium:  500;
+  --fw-semibold:600;
+  --fw-bold:    700;
+
+  /* ============ 层级 ============ */
+  --z-base: 1;
+  --z-sticky-nav: 100;
+  --z-dropdown: 200;
+  --z-overlay: 900;
+  --z-modal: 950;
+  --z-tooltip: 1000;
+
+  /* ============ 布局 ============ */
+  --container-max: 1200px;
+  --container-pad: 32px;
+  --nav-height: 72px;
+  --section-gap: 80px;
+
+  /* ============ 组件令牌 · 按钮 ============ */
+  --btn-radius: var(--radius-md);
+  --btn-radius-pill: var(--radius-full);
+  --btn-pad-y: 10px;
+  --btn-pad-x: 20px;
+  --btn-pad-y-lg: 13px;
+  --btn-pad-x-lg: 28px;
+  --btn-primary-bg: var(--gradient-primary);
+  --btn-primary-color: #ffffff;
+  --btn-primary-hover-shadow: 0 8px 20px rgba(124,106,242,0.25);
+  --btn-secondary-bg: var(--color-surface-hover);
+  --btn-secondary-color: var(--color-text);
+  --btn-secondary-border: var(--color-border);
+  --btn-ghost-color: var(--color-text-2);
+  --btn-soft-bg: var(--accent-primary-10);
+  --btn-soft-color: var(--accent-primary);
+
+  /* ============ 组件令牌 · 卡片（玻璃态） ============ */
+  --card-bg: var(--color-glass);
+  --card-border: var(--color-glass-border);
+  --card-radius: var(--radius-lg);
+  --card-padding: 24px;
+  --card-shadow: var(--shadow-card);
+  --card-hover-shadow: var(--shadow-card-hover);
+  --card-hover-transform: scale(1.02);   /* 上限，勿超 */
+  --card-blur: var(--glass-blur);
+
+  /* ============ 组件令牌 · 徽章 / 标签 ============ */
+  --badge-radius: var(--radius-full);
+  --badge-padding: 4px 12px;
+  --badge-font-size: 12px;
+  --badge-font-weight: 600;
+
+  /* ============ 组件令牌 · 导航栏 ============ */
+  --nav-bg: var(--color-glass);
+  --nav-border: var(--color-glass-border);
+  --nav-blur: var(--glass-blur);
+
+  /* ============ 组件令牌 · 分隔线 ============ */
+  --divider-color: var(--color-border);
+  --divider-light: var(--color-border-light);
+
+  /* ============ 动效 ============ */
+  --transition:        all 0.2s cubic-bezier(0.4,0,0.2,1);
+  --transition-slow:   all 0.35s cubic-bezier(0.4,0,0.2,1);
+  --transition-bounce: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  --duration-fast:   150ms;
+  --duration-normal:  300ms;
+  --duration-slow:    500ms;
+  --duration-enter:   600ms;
+
+  /* ============================================================
+     页面级令牌 · 八维雷达色（Deep）
+     ============================================================ */
+  --dim-mastery:#b794f6;   /* 掌握度 · 数构 */
+  --dim-goal:#e9d5ff;      /* 目标 · 数构 */
+  --dim-progress:#7aa2f7;  /* 进度 · 计网 */
+  --dim-activity:#bfdbfe;  /* 活跃 · 计网 */
+  --dim-accuracy:#2dd4bf;  /* 正确率 · 计组 */
+  --dim-time:#a5f3fc;      /* 时长 · 计组 */
+  --dim-style:#f0abfc;     /* 风格 · OS */
+  --dim-weak:#f9a8d4;      /* 薄弱 · OS */
+
+  /* 图表辅助（Deep） */
+  --chart-grid:var(--color-border);
+  --chart-axis:rgba(255,255,255,.12);
+  --chart-line:var(--accent-primary);
+  --chart-area:var(--accent-primary-20);
+  --trend-up:#22c55e;
+  --trend-down:#ef4444;
+  --urgent:#fb7185;
+  --warn:#f59e0b;
+  --ok:#34d399;
+
+  /* 掌握度三档（Deep） */
+  --mastery-low:#f87171;
+  --mastery-mid:#fbbf24;
+  --mastery-high:#4ade80;
+
+  /* 卡片密度（本页） */
+  --card-pad-page:var(--space-5);     /* 20px */
+  --card-gap-page:var(--space-3);     /* 12px */
+  --card-radius-page:var(--radius-lg);
+  --text-danger: var(--accent-danger);
+}
+
+/* ============================================================
+   2. 浅色主题覆盖（取自 DESIGN_TOKENS.md · 与已上线前端一致）
+   ============================================================ */
+[data-theme="light"] {
+  --color-canvas:        #f5f6fb;
+  --color-surface:       #ffffff;
+  --color-surface-2:     #eef0f6;
+  --color-surface-hover: #e7eaf3;
+  --color-elevated:      #ffffff;
+  --color-overlay:       rgba(15,18,40,0.32);
+  --color-glass:         rgba(255,255,255,0.72);
+  --color-glass-hover:   rgba(255,255,255,0.88);
+  --color-glass-border:  rgba(15,18,40,0.10);
+  --color-border:        rgba(15,18,40,0.10);
+  --color-border-light:  rgba(15,18,40,0.06);
+  --color-border-focus:  rgba(124,106,242,0.50);
+  --color-border-glow:   rgba(124,106,242,0.22);
+  --color-text:          #1a1d2e;
+  --color-text-2:        #525a72;
+  --color-text-3:        #8a92a8;
+  --color-text-invert:   #ffffff;
+  --bg-input:            rgba(15,18,40,0.04);
+  --accent-primary-10:   rgba(124,106,242,0.08);
+  --accent-primary-20:   rgba(124,106,242,0.14);
+  --accent-primary-30:   rgba(124,106,242,0.20);
+  --glow-primary:        0 0 18px rgba(124,106,242,0.10), 0 0 36px rgba(124,106,242,0.05);
+  --glow-primary-strong: 0 0 18px rgba(124,106,242,0.18), 0 0 48px rgba(124,106,242,0.09);
+  --glow-secondary:      0 0 18px rgba(91,139,216,0.10), 0 0 36px rgba(91,139,216,0.05);
+  --glow-success:        0 0 18px rgba(34,197,94,0.10);
+  --shadow-sm:        0 1px 2px rgba(15,18,40,0.06);
+  --shadow-md:        0 4px 12px rgba(15,18,40,0.08);
+  --shadow-lg:        0 8px 24px rgba(15,18,40,0.10);
+  --shadow-xl:        0 16px 40px rgba(15,18,40,0.14);
+  --shadow-card:      0 1px 3px rgba(15,18,40,0.06), 0 0 1px rgba(15,18,40,0.04);
+  --shadow-card-hover:0 8px 24px rgba(15,18,40,0.10), 0 0 18px rgba(124,106,242,0.06);
+  --shadow-glow:      0 4px 16px rgba(124,106,242,0.08);
+  --gradient-text:    linear-gradient(135deg, var(--color-text) 0%, var(--accent) 100%);
+
+  /* 页面级令牌 · 八维雷达色（Light） */
+  --dim-mastery:#6d28d9;
+  --dim-goal:#7e22ce;
+  --dim-progress:#1d4ed8;
+  --dim-activity:#1e40af;
+  --dim-accuracy:#0f766e;
+  --dim-time:#0e7490;
+  --dim-style:#a21caf;
+  --dim-weak:#be185d;
+
+  /* 图表辅助（Light） */
+  --chart-axis:rgba(15,18,40,.18);
+  --trend-up:#166534;
+  --trend-down:#b91c1c;
+  --urgent:#be123c;
+  --warn:#92400e;
+  --ok:#047857;
+
+  /* 掌握度三档（Light） */
+  --mastery-low:#b91c1c;
+  --mastery-mid:#b45309;
+  --mastery-high:#166534;
+}
+
+/* ============================================================
+   3. 基础重置
+   ============================================================ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;scroll-padding-top:calc(var(--nav-height) + var(--space-4));}
+body{
+  font-family:var(--font-sans);
+  background:var(--color-canvas);
+  color:var(--color-text);
+  font-size:var(--fs-body);
+  line-height:var(--lh-normal);
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+  transition:background var(--transition),color var(--transition);
+}
+a{color:inherit;text-decoration:none;}
+img,svg{display:block;}
+.container{max-width:var(--container-max);margin:0 auto;padding:0 var(--container-pad);}
+section{padding:var(--section-gap) 0;}
+section[id]{scroll-margin-top:calc(var(--nav-height) + var(--space-4));}
+
+.skip-link{position:absolute;left:var(--space-4);top:calc(-1 * var(--space-16));z-index:var(--z-modal);
+  background:var(--color-elevated);color:var(--color-text);padding:var(--space-3) var(--space-5);
+  border-radius:var(--radius-sm);border:1px solid var(--color-border-glow);transition:var(--transition);}
+.skip-link:focus{top:var(--space-3);}
+
+/* ============================================================
+   4. 通用组件（与落地页同源：玻璃卡 / 按钮 / 标签 / 图标 / 分隔线）
+   ============================================================ */
+.section-head{max-width:720px;margin-bottom:var(--space-12);}
+.section-eyebrow{
+  display:inline-block;font-size:var(--fs-caption);font-weight:var(--fw-semibold);
+  letter-spacing:.12em;text-transform:uppercase;color:var(--color-text-2);
+  background:var(--accent-primary-10);padding:var(--badge-padding);border-radius:var(--badge-radius);
+  margin-bottom:var(--space-5);
+}
+.section-title{font-size:var(--fs-h2);font-weight:var(--fw-bold);letter-spacing:var(--ls-snug);line-height:var(--lh-snug);}
+.section-desc{margin-top:var(--space-4);color:var(--color-text-2);font-size:var(--fs-body-lg);}
+
+.glass{
+  background:var(--card-bg);
+  border:1px solid var(--card-border);
+  border-radius:var(--card-radius);
+  backdrop-filter:blur(var(--card-blur));
+  -webkit-backdrop-filter:blur(var(--card-blur));
+  box-shadow:var(--card-shadow);
+}
+.card{transition:var(--transition);}
+.card:hover{transform:var(--card-hover-transform);box-shadow:var(--card-hover-shadow);border-color:var(--color-border-glow);}
+
+/* 按钮体系（统一 .btn + 变体；无散落按钮类） */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);
+  font-family:inherit;cursor:pointer;min-height:44px;
+  font-weight:var(--fw-semibold);border:none;border-radius:var(--btn-radius);
+  transition:var(--transition);font-size:var(--fs-body);line-height:1;text-align:center;
+}
+.btn svg{width:20px;height:20px;flex-shrink:0;}
+.btn-primary{background:var(--btn-primary-bg);color:var(--btn-primary-color);padding:var(--btn-pad-y-lg) var(--btn-pad-x-lg);box-shadow:var(--glow-primary);}
+.btn-primary:hover{box-shadow:var(--btn-primary-hover-shadow),var(--glow-primary-strong);transform:translateY(-1px);}
+.btn-secondary{background:var(--btn-secondary-bg);color:var(--btn-secondary-color);border:1px solid var(--btn-secondary-border);padding:var(--btn-pad-y-lg) var(--btn-pad-x-lg);}
+.btn-secondary:hover{background:var(--color-surface-hover);border-color:var(--color-border-glow);}
+.btn-ghost{background:transparent;color:var(--btn-ghost-color);padding:var(--btn-pad-y-lg) var(--btn-pad-x-lg);}
+.btn-ghost:hover{background:var(--color-surface-hover);color:var(--color-text);}
+.btn-soft{background:var(--btn-soft-bg);color:var(--btn-soft-color);padding:var(--btn-pad-y) var(--btn-pad-x);}
+.btn-soft:hover{background:var(--accent-primary-20);}
+.btn-sm{padding:var(--space-2) var(--space-4);font-size:var(--fs-nano);min-height:44px;}
+.btn-lg{padding:var(--btn-pad-y-lg) var(--btn-pad-x-lg);font-size:var(--fs-body-lg);min-height:48px;}
+.btn-block{width:100%;}
+.btn-pill{border-radius:var(--btn-radius-pill);}
+.btn-cta{font-size:var(--fs-body-lg);font-weight:var(--fw-semibold);}
+
+.btn-icon{
+  width:44px;height:44px;padding:0;min-height:44px;border-radius:var(--radius-md);
+  background:var(--color-surface-hover);border:1px solid var(--color-border);color:var(--color-text);
+}
+.btn-icon:hover{background:var(--accent-primary-10);border-color:var(--color-border-glow);color:var(--accent);}
+.btn-icon svg{width:20px;height:20px;}
+
+/* 徽章 / 学科标签 */
+.badge{display:inline-flex;align-items:center;font-size:var(--badge-font-size);font-weight:var(--badge-font-weight);
+  padding:var(--badge-padding);border-radius:var(--badge-radius);background:var(--accent-primary-10);color:var(--accent);}
+.tag{display:inline-flex;align-items:center;gap:var(--space-2);font-size:var(--fs-nano);font-weight:var(--fw-semibold);
+  padding:var(--space-2) var(--space-3);border-radius:var(--radius-full);}
+.tag-ds{background:color-mix(in srgb,var(--subject-ds) 14%,transparent);color:var(--subject-ds);}
+.tag-cn{background:color-mix(in srgb,var(--subject-cn) 14%,transparent);color:var(--subject-cn);}
+.tag-co{background:color-mix(in srgb,var(--subject-co) 14%,transparent);color:var(--subject-co);}
+.tag-os{background:color-mix(in srgb,var(--subject-os) 14%,transparent);color:var(--subject-os);}
+
+.icon{
+  width:44px;height:44px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;
+  background:var(--accent-primary-10);color:var(--accent);flex-shrink:0;
+}
+.icon svg{width:22px;height:22px;}
+
+.divider{height:1px;background:var(--divider-color);border:0;}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+
+/* ============================================================
+   5. 吸顶导航（logo + 面包屑 + 主题切换）
+   ============================================================ */
+.nav{
+  position:sticky;top:0;z-index:var(--z-sticky-nav);height:var(--nav-height);
+  background:var(--nav-bg);border-bottom:1px solid var(--nav-border);
+  backdrop-filter:blur(var(--nav-blur));-webkit-backdrop-filter:blur(var(--nav-blur));
+}
+.nav-inner{height:100%;display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);}
+.logo{display:flex;align-items:center;gap:var(--space-3);font-weight:var(--fw-bold);font-size:var(--fs-h3);letter-spacing:var(--ls-snug);min-height:44px;}
+.logo-mark{width:32px;height:32px;border-radius:var(--radius-sm);background:var(--gradient-primary);
+  display:flex;align-items:center;justify-content:center;box-shadow:var(--glow-primary);}
+.logo-mark svg{width:18px;height:18px;color:var(--btn-primary-color);}
+.breadcrumb{display:flex;align-items:center;gap:var(--space-2);color:var(--color-text-2);font-size:var(--fs-body);min-height:44px;}
+.breadcrumb .sep{opacity:.5;}
+.breadcrumb .cur{color:var(--color-text);font-weight:var(--fw-medium);}
+.nav-actions{display:flex;align-items:center;gap:var(--space-3);}
+.ic-moon{display:none;}
+[data-theme="light"] .ic-sun{display:none;}
+[data-theme="light"] .ic-moon{display:inline;}
+
+/* ============================================================
+   6. 学情页头 Hero
+   ============================================================ */
+.profile-hero{position:relative;padding-top:var(--space-16);padding-bottom:var(--space-10);overflow:hidden;}
+.profile-hero::before{content:"";position:absolute;inset:0;background:var(--gradient-hero);pointer-events:none;}
+.profile-hero-inner{position:relative;display:flex;align-items:flex-end;justify-content:space-between;gap:var(--space-6);flex-wrap:wrap;}
+.profile-hero h1{font-size:var(--fs-h1);font-weight:var(--fw-bold);letter-spacing:var(--ls-snug);line-height:var(--lh-snug);}
+.profile-hero h1 .grad{background:var(--gradient-text);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.profile-hero .sub{margin-top:var(--space-3);color:var(--color-text-2);font-size:var(--fs-body-lg);max-width:620px;}
+
+/* ============================================================
+   7. 顶部概览 hero · 三栏玻璃卡
+   ============================================================ */
+.overview-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--card-gap-page);margin-top:var(--space-8);}
+.overview-card{padding:var(--card-pad-page);display:flex;align-items:center;gap:var(--space-5);position:relative;overflow:hidden;}
+.overview-card::after{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--gradient-progress);opacity:.8;}
+.ov-ring{flex-shrink:0;}
+.ov-body{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.ov-label{font-size:var(--fs-nano);color:var(--color-text-2);font-weight:var(--fw-semibold);letter-spacing:.04em;}
+.ov-num{font-size:var(--fs-display);font-weight:var(--fw-bold);line-height:var(--lh-tight);letter-spacing:var(--ls-tight);color:var(--color-text);}
+.ov-num .u{font-size:var(--fs-h3);color:var(--color-text-2);margin-left:2px;font-weight:var(--fw-semibold);letter-spacing:0;}
+.ov-sub{font-size:var(--fs-caption);color:var(--color-text-3);}
+.ov-delta{font-size:var(--fs-caption);font-weight:var(--fw-semibold);}
+.ov-delta.up{color:var(--trend-up);}
+.ov-delta.down{color:var(--trend-down);}
+
+/* ============================================================
+   8. 八维雷达图 + 图例
+   ============================================================ */
+.radar-wrap{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:var(--space-8);align-items:center;
+  padding:var(--card-pad-page);}
+.radar-svg{width:100%;height:auto;max-width:440px;margin:0 auto;}
+.radar-legend{display:flex;flex-direction:column;gap:var(--space-2);}
+.legend-row{display:flex;align-items:center;gap:var(--space-3);font-size:var(--fs-body);color:var(--color-text-2);}
+.legend-swatch{width:12px;height:12px;border-radius:var(--radius-xs);flex-shrink:0;}
+.legend-name{flex:1;min-width:0;}
+.legend-val{font-family:var(--font-mono);font-weight:var(--fw-semibold);color:var(--color-text);}
+.legend-sub{font-size:var(--fs-nano);color:var(--color-text-3);}
+
+/* ============================================================
+   9. 维度明细卡 ×8（紧凑网格）
+   ============================================================ */
+.dim-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--card-gap-page);}
+.dim-card{padding:var(--card-pad-page);display:flex;flex-direction:column;gap:var(--space-3);}
+.dim-head{display:flex;align-items:center;gap:var(--space-2);}
+.dim-dot{width:10px;height:10px;border-radius:var(--radius-full);background:var(--dim);flex-shrink:0;}
+.dim-card h3{font-size:var(--fs-body-lg);font-weight:var(--fw-semibold);letter-spacing:var(--ls-snug);color:var(--color-text);}
+.dim-ring-wrap{display:flex;align-items:center;gap:var(--space-4);}
+.dim-ring{flex-shrink:0;}
+.dim-ring .track{stroke:var(--dim);stroke-opacity:.18;}
+.dim-ring .val{stroke-width:5;fill:none;stroke-linecap:round;}
+.m-high{stroke:var(--mastery-high);}
+.m-mid{stroke:var(--mastery-mid);}
+.m-low{stroke:var(--mastery-low);}
+.dim-meta{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.dim-score{font-size:var(--fs-h2);font-weight:var(--fw-bold);line-height:1;color:var(--color-text);letter-spacing:var(--ls-tight);}
+.dim-score .pct{font-size:var(--fs-body);color:var(--color-text-2);margin-left:1px;}
+.dim-tier{font-size:var(--fs-nano);color:var(--color-text-2);font-weight:var(--fw-semibold);}
+.dim-explain{font-size:var(--fs-caption);color:var(--color-text-2);line-height:var(--lh-normal);}
+
+/* ============================================================
+   10. 薄弱知识点清单（按紧迫度排序）
+   ============================================================ */
+.weak-list{list-style:none;display:flex;flex-direction:column;gap:var(--card-gap-page);}
+.weak-item{display:flex;align-items:center;gap:var(--space-4);padding:var(--space-4) var(--card-pad-page);
+  min-height:44px;position:relative;overflow:hidden;transition:var(--transition);}
+.weak-item::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--sev);}
+.weak-item:hover{transform:var(--card-hover-transform);box-shadow:var(--card-hover-shadow);}
+.weak-bar{flex-shrink:0;}
+.weak-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.weak-name{font-size:var(--fs-body-lg);font-weight:var(--fw-semibold);color:var(--color-text);}
+.weak-sub{font-size:var(--fs-caption);color:var(--color-text-3);}
+.weak-action{font-size:var(--fs-caption);color:var(--color-text-2);display:flex;align-items:flex-start;gap:var(--space-2);}
+.weak-action svg{width:15px;height:15px;margin-top:2px;flex-shrink:0;color:var(--color-text-3);}
+.weak-cta{flex-shrink:0;}
+.sev-urgent{--sev:var(--urgent);}
+.sev-warn{--sev:var(--warn);}
+.sev-ok{--sev:var(--ok);}
+.badge-sev{display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-nano);font-weight:var(--fw-bold);
+  padding:var(--badge-padding);border-radius:var(--badge-radius);background:color-mix(in srgb,var(--sev) 14%,transparent);color:var(--sev);}
+
+/* ============================================================
+   11. 正确率趋势图
+   ============================================================ */
+.trend-wrap{padding:var(--card-pad-page);}
+.trend-svg{width:100%;height:auto;display:block;}
+.trend-caption{margin-top:var(--space-4);display:flex;align-items:center;gap:var(--space-4);flex-wrap:wrap;
+  font-size:var(--fs-caption);color:var(--color-text-2);}
+.trend-caption .hl{color:var(--color-text);font-weight:var(--fw-semibold);}
+.trend-caption .up{color:var(--trend-up);font-weight:var(--fw-semibold);}
+
+/* ============================================================
+   12. 学习风格画像（三段条形）
+   ============================================================ */
+.style-card{padding:var(--card-pad-page);}
+.style-bars{display:flex;flex-direction:column;gap:var(--space-5);margin-top:var(--space-2);}
+.style-row{display:grid;grid-template-columns:88px 1fr auto;align-items:center;gap:var(--space-4);}
+.style-name{font-size:var(--fs-body);font-weight:var(--fw-medium);color:var(--color-text);}
+.style-track{height:12px;border-radius:var(--radius-full);background:var(--color-surface-2);overflow:hidden;}
+.style-fill{height:100%;border-radius:var(--radius-full);transition:var(--transition);}
+.style-fill.dominant{box-shadow:0 0 12px color-mix(in srgb,var(--dim-style) 40%,transparent);}
+.style-val{font-family:var(--font-mono);font-size:var(--fs-body);font-weight:var(--fw-semibold);color:var(--color-text);}
+.style-tag{display:inline-flex;align-items:center;margin-left:var(--space-2);font-size:var(--fs-nano);font-weight:var(--fw-bold);
+  padding:2px 8px;border-radius:var(--badge-radius);background:var(--accent-primary-10);color:var(--accent);vertical-align:middle;}
+
+/* ============================================================
+   13. 个性化推荐路径 CTA
+   ============================================================ */
+.cta-card{padding:var(--space-10);position:relative;overflow:hidden;display:flex;align-items:center;
+  justify-content:space-between;gap:var(--space-8);flex-wrap:wrap;}
+.cta-card::before{content:"";position:absolute;inset:0;background:var(--gradient-hero);opacity:.6;pointer-events:none;}
+.cta-inner{position:relative;max-width:640px;}
+.cta-card h3{font-size:var(--fs-h1);font-weight:var(--fw-bold);letter-spacing:var(--ls-snug);line-height:var(--lh-snug);}
+.cta-card p{margin-top:var(--space-4);color:var(--color-text-2);font-size:var(--fs-body-lg);}
+.cta-actions{position:relative;display:flex;gap:var(--space-3);flex-wrap:wrap;}
+
+/* ============================================================
+   14. 页脚
+   ============================================================ */
+.footer{border-top:1px solid var(--divider-color);padding:var(--space-12) 0 var(--space-16);margin-top:var(--space-16);}
+.footer-inner{display:flex;justify-content:space-between;gap:var(--space-8);flex-wrap:wrap;align-items:center;}
+.footer-brand{display:flex;align-items:center;gap:var(--space-3);}
+.footer-note{font-size:var(--fs-nano);color:var(--color-text-3);}
+
+/* ============================================================
+   15. 动效关键帧
+   ============================================================ */
+@keyframes fade-up { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+@keyframes pulse-glow { 0%,100% { box-shadow: var(--glow-primary); } 50% { box-shadow: var(--glow-primary-strong); } }
+.profile-hero h1{animation:fade-up var(--duration-enter) ease both;}
+
+/* ============================================================
+   16. 无障碍 · 焦点环（WCAG 2.4.7）
+   ============================================================ */
+:focus-visible { outline:2px solid var(--accent-primary); outline-offset:2px; border-radius:var(--radius-xs); }
+a:focus-visible,button:focus-visible,[tabindex]:focus-visible,input:focus-visible,textarea:focus-visible,
+.btn:focus-visible{outline:2px solid var(--accent-primary);outline-offset:2px;border-radius:var(--radius-xs);}
+
+/* ============================================================
+   17. 响应式
+   ============================================================ */
+@media (max-width:1024px){
+  .overview-grid{grid-template-columns:1fr;}
+  .radar-wrap{grid-template-columns:1fr;gap:var(--space-6);}
+  .radar-legend{max-width:440px;}
+  .dim-grid{grid-template-columns:repeat(2,1fr);}
+  .weak-item{flex-wrap:wrap;}
+  .weak-cta{width:100%;}
+  .weak-cta .btn{width:100%;}
+}
+@media (max-width:768px){
+  :root{--container-pad:20px;--section-gap:56px;}
+  .profile-hero{padding-top:var(--space-10);}
+  .btn{min-height:40px;}
+  .btn-lg{min-height:44px;}
+  .footer-inner{flex-direction:column;align-items:flex-start;gap:var(--space-4);}
+}
+@media (max-width:480px){
+  .dim-grid{grid-template-columns:1fr;}
+  .style-row{grid-template-columns:72px 1fr auto;gap:var(--space-2);}
+  .cta-card{padding:var(--space-6);}
+}
+
+/* ============================================================
+   18. 无障碍 · 降低动效偏好（WCAG 2.3.3）
+   ============================================================ */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{transition-duration:.01ms !important;animation-duration:.01ms !important;animation-iteration-count:1 !important;scroll-behavior:auto !important;}
+  .profile-hero h1{animation:none !important;}
+}
+/* JS 启用时的滚动揭示（无 JS 也完全可见） */
+html.js [data-reveal]{opacity:0;transform:translateY(16px);transition:opacity var(--duration-enter) ease,transform var(--duration-enter) ease;}
+html.js [data-reveal].is-visible{opacity:1;transform:none;}
+@media (prefers-reduced-motion: reduce){
+  html.js [data-reveal]{opacity:1 !important;transform:none !important;transition:none !important;}
+}
+</style>
+</head>
+<body>
+
+<a class="skip-link" href="#main">跳到主内容</a>
+
+<!-- ====================== 1. 吸顶导航 ====================== -->
+<header class="nav">
+  <div class="container nav-inner">
+    <a class="logo" href="#top" aria-label="MARS-408 首页">
+      <span class="logo-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 3 0 1 0 18 0a9 3 0 1 0-18 0"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/><path d="M12 3v18"/></svg>
+      </span>
+      MARS-408
+    </a>
+    <nav class="breadcrumb" aria-label="面包屑">
+      <a href="#top">系统</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="cur">学情画像</span>
+    </nav>
+    <div class="nav-actions">
+      <button class="theme-toggle btn-icon" type="button" id="theme-toggle" aria-label="切换浅色主题" aria-pressed="false">
+        <svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+<a id="top"></a>
+
+  <!-- ====================== 2. 学情页头 ====================== -->
+  <section class="profile-hero" aria-labelledby="page-title">
+    <div class="container profile-hero-inner">
+      <div>
+        <h1 id="page-title">学情画像 · <span class="grad">详情</span></h1>
+        <p class="sub">基于 8 维学情模型为你绘制的备考全景——哪里稳、哪里弱、下一步该学什么，一眼看清。</p>
+      </div>
+      <div class="hero-cta">
+        <a class="btn btn-secondary btn-cta btn-pill" href="#recommend">生成今日路径</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== 3. 顶部概览 hero · 三栏 ====================== -->
+  <section id="overview" aria-labelledby="overview-title">
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <span class="section-eyebrow">Overview</span>
+        <h2 class="section-title" id="overview-title">学情总览</h2>
+        <p class="section-desc">截至今日的核心指标快照，帮助你在进入细节前先建立全局判断。</p>
+      </div>
+
+      <div class="overview-grid">
+        <!-- 总掌握度 -->
+        <article class="glass card overview-card" data-reveal>
+          <svg class="ov-ring" width="84" height="84" viewBox="0 0 120 120" role="img" aria-label="总掌握度 78%，较上周提升 4 个百分点">
+            <circle cx="60" cy="60" r="50" fill="none" stroke="var(--color-surface-2)" stroke-width="10"/>
+            <circle cx="60" cy="60" r="50" fill="none" stroke="var(--mastery-high)" stroke-width="10" stroke-linecap="round"
+              stroke-dasharray="314.16" stroke-dashoffset="69.12" transform="rotate(-90 60 60)"/>
+            <text x="60" y="58" text-anchor="middle" font-size="26" font-weight="700" fill="var(--color-text)">78</text>
+            <text x="60" y="78" text-anchor="middle" font-size="12" fill="var(--color-text-2)">掌握度</text>
+          </svg>
+          <div class="ov-body">
+            <span class="ov-label">总掌握度</span>
+            <span class="ov-num">78<span class="u">%</span></span>
+            <span class="ov-delta up">较上周 +4pt</span>
+          </div>
+        </article>
+
+        <!-- 本周学习时长 -->
+        <article class="glass card overview-card" data-reveal>
+          <svg class="ov-ring" width="84" height="84" viewBox="0 0 120 120" role="img" aria-label="本周学习时长 12.5 小时，目标 15 小时，完成度 83%">
+            <circle cx="60" cy="60" r="50" fill="none" stroke="var(--color-surface-2)" stroke-width="10"/>
+            <circle cx="60" cy="60" r="50" fill="none" stroke="var(--dim-time)" stroke-width="10" stroke-linecap="round"
+              stroke-dasharray="314.16" stroke-dashoffset="53.4" transform="rotate(-90 60 60)"/>
+            <text x="60" y="58" text-anchor="middle" font-size="26" font-weight="700" fill="var(--color-text)">12.5</text>
+            <text x="60" y="78" text-anchor="middle" font-size="12" fill="var(--color-text-2)">小时</text>
+          </svg>
+          <div class="ov-body">
+            <span class="ov-label">本周学习时长</span>
+            <span class="ov-num">12.5<span class="u">h</span></span>
+            <span class="ov-sub">目标 15h · 完成 83%</span>
+          </div>
+        </article>
+
+        <!-- 距考试倒计时 -->
+        <article class="glass card overview-card" data-reveal>
+          <svg class="ov-ring" width="84" height="84" viewBox="0 0 120 120" role="img" aria-label="距 2026 年考研还有 96 天">
+            <circle cx="60" cy="60" r="50" fill="none" stroke="var(--color-surface-2)" stroke-width="10"/>
+            <circle cx="60" cy="60" r="50" fill="none" stroke="var(--accent)" stroke-width="10" stroke-linecap="round"
+              stroke-dasharray="314.16" stroke-dashoffset="120" transform="rotate(-90 60 60)"/>
+            <text x="60" y="58" text-anchor="middle" font-size="30" font-weight="700" fill="var(--color-text)">96</text>
+            <text x="60" y="78" text-anchor="middle" font-size="12" fill="var(--color-text-2)">天</text>
+          </svg>
+          <div class="ov-body">
+            <span class="ov-label">距考试倒计时</span>
+            <span class="ov-num">D-96</span>
+            <span class="ov-sub">2025-12-21 · 建议保持节奏</span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== 4. 八维学情雷达 ====================== -->
+  <section id="radar" aria-labelledby="radar-title">
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <span class="section-eyebrow">8-Dimension Radar</span>
+        <h2 class="section-title" id="radar-title">八维学情雷达</h2>
+        <p class="section-desc">掌握度、目标达成、学习进度、活跃度、正确率、学习时长、学习风格、薄弱控制——八维同屏，强弱一目了然。</p>
+      </div>
+
+      <div class="glass card radar-wrap" data-reveal>
+        <!-- 雷达图：8 轴，轴用 --dim-* 描边，数据多边形用 --chart-area/--chart-line 填充，随深浅主题切换 -->
+        <svg class="radar-svg" viewBox="0 0 440 440" role="img"
+          aria-label="八维学情雷达图，满分 100。掌握度 78、目标达成 65、学习进度 72、活跃度 88、正确率 68、学习时长 80、学习风格 60、薄弱控制 49。整体呈活跃度与学习时长较高、薄弱控制偏低的形态。">
+          <title>八维学情雷达图</title>
+          <!-- 网格 octagon（25/50/75/100%） -->
+          <polygon points="220,185 244.7,195.3 255,220 244.7,244.7 220,255 195.3,244.7 195,220 195.3,195.3" fill="none" stroke="var(--chart-grid)"/>
+          <polygon points="220,150 269.5,170.5 290,220 269.5,269.5 220,290 170.5,269.5 150,220 170.5,170.5" fill="none" stroke="var(--chart-grid)"/>
+          <polygon points="220,115 294.2,145.8 325,220 294.2,294.2 220,325 145.8,294.2 115,220 145.8,145.8" fill="none" stroke="var(--chart-grid)"/>
+          <polygon points="220,80 319,121 360,220 319,319 220,360 121,319 80,220 121,121" fill="none" stroke="var(--chart-grid)"/>
+          <!-- 轴线（按维度着色：--dim-*） -->
+          <line x1="220" y1="220" x2="220" y2="80"  stroke="var(--dim-mastery)"  stroke-width="1.5" stroke-opacity=".6"/>
+          <line x1="220" y1="220" x2="319" y2="121" stroke="var(--dim-goal)"      stroke-width="1.5" stroke-opacity=".6"/>
+          <line x1="220" y1="220" x2="360" y2="220" stroke="var(--dim-progress)"  stroke-width="1.5" stroke-opacity=".6"/>
+          <line x1="220" y1="220" x2="319" y2="319" stroke="var(--dim-activity)"  stroke-width="1.5" stroke-opacity=".6"/>
+          <line x1="220" y1="220" x2="220" y2="360" stroke="var(--dim-accuracy)"  stroke-width="1.5" stroke-opacity=".6"/>
+          <line x1="220" y1="220" x2="121" y2="319" stroke="var(--dim-time)"      stroke-width="1.5" stroke-opacity=".6"/>
+          <line x1="220" y1="220" x2="80"  y2="220" stroke="var(--dim-style)"     stroke-width="1.5" stroke-opacity=".6"/>
+          <line x1="220" y1="220" x2="121" y2="121" stroke="var(--dim-weak)"      stroke-width="1.5" stroke-opacity=".6"/>
+          <!-- 数据多边形 -->
+          <polygon points="220,110.8 284.4,155.6 320.8,220 304.1,304.1 220,297 152.7,287.3 108,220 160.6,160.6"
+            fill="var(--chart-area)" stroke="var(--chart-line)" stroke-width="2" stroke-linejoin="round"/>
+          <!-- 顶点（按维度着色） -->
+          <circle cx="220"   cy="110.8" r="4.5" fill="var(--dim-mastery)"/>
+          <circle cx="284.4" cy="155.6" r="4.5" fill="var(--dim-goal)"/>
+          <circle cx="320.8" cy="220"   r="4.5" fill="var(--dim-progress)"/>
+          <circle cx="304.1" cy="304.1" r="4.5" fill="var(--dim-activity)"/>
+          <circle cx="220"   cy="297"   r="4.5" fill="var(--dim-accuracy)"/>
+          <circle cx="152.7" cy="287.3" r="4.5" fill="var(--dim-time)"/>
+          <circle cx="108"   cy="220"   r="4.5" fill="var(--dim-style)"/>
+          <circle cx="160.6" cy="160.6" r="4.5" fill="var(--dim-weak)"/>
+          <!-- 轴标签（短名，--color-text-2） -->
+          <text x="220"   y="70"  text-anchor="middle" font-size="12" fill="var(--color-text-2)">掌握度</text>
+          <text x="326"   y="114" text-anchor="start"  font-size="12" fill="var(--color-text-2)">目标</text>
+          <text x="370"   y="224" text-anchor="start"  font-size="12" fill="var(--color-text-2)">进度</text>
+          <text x="326"   y="330" text-anchor="start"  font-size="12" fill="var(--color-text-2)">活跃</text>
+          <text x="220"   y="378" text-anchor="middle" font-size="12" fill="var(--color-text-2)">正确率</text>
+          <text x="114"   y="330" text-anchor="end"    font-size="12" fill="var(--color-text-2)">时长</text>
+          <text x="70"    y="224" text-anchor="end"    font-size="12" fill="var(--color-text-2)">风格</text>
+          <text x="114"   y="114" text-anchor="end"    font-size="12" fill="var(--color-text-2)">薄弱</text>
+        </svg>
+
+        <!-- 图例：8 色块 + 中文维度名（文字 --color-text-2） -->
+        <div class="radar-legend" aria-hidden="false">
+          <div class="legend-row"><span class="legend-swatch" style="background:var(--dim-mastery)"></span><span class="legend-name">掌握度 <span class="legend-sub">数据结构</span></span><span class="legend-val">78</span></div>
+          <div class="legend-row"><span class="legend-swatch" style="background:var(--dim-goal)"></span><span class="legend-name">目标达成 <span class="legend-sub">数据结构</span></span><span class="legend-val">65</span></div>
+          <div class="legend-row"><span class="legend-swatch" style="background:var(--dim-progress)"></span><span class="legend-name">学习进度 <span class="legend-sub">计网</span></span><span class="legend-val">72</span></div>
+          <div class="legend-row"><span class="legend-swatch" style="background:var(--dim-activity)"></span><span class="legend-name">活跃度 <span class="legend-sub">计网</span></span><span class="legend-val">88</span></div>
+          <div class="legend-row"><span class="legend-swatch" style="background:var(--dim-accuracy)"></span><span class="legend-name">正确率 <span class="legend-sub">计组</span></span><span class="legend-val">68</span></div>
+          <div class="legend-row"><span class="legend-swatch" style="background:var(--dim-time)"></span><span class="legend-name">学习时长 <span class="legend-sub">计组</span></span><span class="legend-val">80</span></div>
+          <div class="legend-row"><span class="legend-swatch" style="background:var(--dim-style)"></span><span class="legend-name">学习风格 <span class="legend-sub">操作系统</span></span><span class="legend-val">60</span></div>
+          <div class="legend-row"><span class="legend-swatch" style="background:var(--dim-weak)"></span><span class="legend-name">薄弱控制 <span class="legend-sub">操作系统</span></span><span class="legend-val">49</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== 5. 维度明细卡 ×8 ====================== -->
+  <section id="dimensions" aria-labelledby="dim-title">
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <span class="section-eyebrow">Dimension Details</span>
+        <h2 class="section-title" id="dim-title">维度明细</h2>
+        <p class="section-desc">逐维拆解掌握度与一句话诊断，点击「查看说明」可下钻到具体知识点。</p>
+      </div>
+
+      <div class="dim-grid">
+        <!-- 1 掌握度·数构 78 high -->
+        <article class="glass card dim-card" data-reveal style="--dim:var(--dim-mastery)">
+          <div class="dim-head"><span class="dim-dot" aria-hidden="true"></span><h3>掌握度</h3></div>
+          <div class="dim-ring-wrap">
+            <svg class="dim-ring" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="掌握度 78 分，较高">
+              <circle class="track" cx="32" cy="32" r="26" fill="none" stroke-width="6"/>
+              <circle class="val m-high" cx="32" cy="32" r="26" fill="none" stroke-dasharray="163.36" stroke-dashoffset="35.94" transform="rotate(-90 32 32)"/>
+            </svg>
+            <div class="dim-meta"><span class="dim-score">78<span class="pct">分</span></span><span class="dim-tier">较高 · 数据结构</span></div>
+          </div>
+          <p class="dim-explain">核心概念扎实，综合题得分稳定，保持节奏即可。</p>
+          <button class="btn btn-soft btn-sm btn-block" type="button">查看说明</button>
+        </article>
+
+        <!-- 2 目标达成·数构 65 mid -->
+        <article class="glass card dim-card" data-reveal style="--dim:var(--dim-goal)">
+          <div class="dim-head"><span class="dim-dot" aria-hidden="true"></span><h3>目标达成</h3></div>
+          <div class="dim-ring-wrap">
+            <svg class="dim-ring" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="目标达成 65 分，中等">
+              <circle class="track" cx="32" cy="32" r="26" fill="none" stroke-width="6"/>
+              <circle class="val m-mid" cx="32" cy="32" r="26" fill="none" stroke-dasharray="163.36" stroke-dashoffset="57.18" transform="rotate(-90 32 32)"/>
+            </svg>
+            <div class="dim-meta"><span class="dim-score">65<span class="pct">分</span></span><span class="dim-tier">中等 · 数据结构</span></div>
+          </div>
+          <p class="dim-explain">距阶段目标尚有缺口，建议把目标拆成周任务。</p>
+          <button class="btn btn-soft btn-sm btn-block" type="button">查看说明</button>
+        </article>
+
+        <!-- 3 学习进度·计网 72 mid -->
+        <article class="glass card dim-card" data-reveal style="--dim:var(--dim-progress)">
+          <div class="dim-head"><span class="dim-dot" aria-hidden="true"></span><h3>学习进度</h3></div>
+          <div class="dim-ring-wrap">
+            <svg class="dim-ring" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="学习进度 72 分，中等">
+              <circle class="track" cx="32" cy="32" r="26" fill="none" stroke-width="6"/>
+              <circle class="val m-mid" cx="32" cy="32" r="26" fill="none" stroke-dasharray="163.36" stroke-dashoffset="45.74" transform="rotate(-90 32 32)"/>
+            </svg>
+            <div class="dim-meta"><span class="dim-score">72<span class="pct">分</span></span><span class="dim-tier">中等 · 计网</span></div>
+          </div>
+          <p class="dim-explain">章节覆盖过半，传输层与网络层需加速推进。</p>
+          <button class="btn btn-soft btn-sm btn-block" type="button">查看说明</button>
+        </article>
+
+        <!-- 4 活跃度·计网 88 high -->
+        <article class="glass card dim-card" data-reveal style="--dim:var(--dim-activity)">
+          <div class="dim-head"><span class="dim-dot" aria-hidden="true"></span><h3>活跃度</h3></div>
+          <div class="dim-ring-wrap">
+            <svg class="dim-ring" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="活跃度 88 分，较高">
+              <circle class="track" cx="32" cy="32" r="26" fill="none" stroke-width="6"/>
+              <circle class="val m-high" cx="32" cy="32" r="26" fill="none" stroke-dasharray="163.36" stroke-dashoffset="19.60" transform="rotate(-90 32 32)"/>
+            </svg>
+            <div class="dim-meta"><span class="dim-score">88<span class="pct">分</span></span><span class="dim-tier">较高 · 计网</span></div>
+          </div>
+          <p class="dim-explain">连续打卡稳定，互动与练习频率均处高位。</p>
+          <button class="btn btn-soft btn-sm btn-block" type="button">查看说明</button>
+        </article>
+
+        <!-- 5 正确率·计组 68 mid -->
+        <article class="glass card dim-card" data-reveal style="--dim:var(--dim-accuracy)">
+          <div class="dim-head"><span class="dim-dot" aria-hidden="true"></span><h3>正确率</h3></div>
+          <div class="dim-ring-wrap">
+            <svg class="dim-ring" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="正确率 68 分，中等">
+              <circle class="track" cx="32" cy="32" r="26" fill="none" stroke-width="6"/>
+              <circle class="val m-mid" cx="32" cy="32" r="26" fill="none" stroke-dasharray="163.36" stroke-dashoffset="52.28" transform="rotate(-90 32 32)"/>
+            </svg>
+            <div class="dim-meta"><span class="dim-score">68<span class="pct">分</span></span><span class="dim-tier">中等 · 计组</span></div>
+          </div>
+          <p class="dim-explain">基础题正确率尚可，综合应用题失分偏多。</p>
+          <button class="btn btn-soft btn-sm btn-block" type="button">查看说明</button>
+        </article>
+
+        <!-- 6 学习时长·计组 80 high -->
+        <article class="glass card dim-card" data-reveal style="--dim:var(--dim-time)">
+          <div class="dim-head"><span class="dim-dot" aria-hidden="true"></span><h3>学习时长</h3></div>
+          <div class="dim-ring-wrap">
+            <svg class="dim-ring" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="学习时长 80 分，较高">
+              <circle class="track" cx="32" cy="32" r="26" fill="none" stroke-width="6"/>
+              <circle class="val m-high" cx="32" cy="32" r="26" fill="none" stroke-dasharray="163.36" stroke-dashoffset="32.67" transform="rotate(-90 32 32)"/>
+            </svg>
+            <div class="dim-meta"><span class="dim-score">80<span class="pct">分</span></span><span class="dim-tier">较高 · 计组</span></div>
+          </div>
+          <p class="dim-explain">投入时间充足，注意把时长转化为有效输出。</p>
+          <button class="btn btn-soft btn-sm btn-block" type="button">查看说明</button>
+        </article>
+
+        <!-- 7 学习风格·OS 60 mid -->
+        <article class="glass card dim-card" data-reveal style="--dim:var(--dim-style)">
+          <div class="dim-head"><span class="dim-dot" aria-hidden="true"></span><h3>学习风格</h3></div>
+          <div class="dim-ring-wrap">
+            <svg class="dim-ring" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="学习风格契合度 60 分，中等">
+              <circle class="track" cx="32" cy="32" r="26" fill="none" stroke-width="6"/>
+              <circle class="val m-mid" cx="32" cy="32" r="26" fill="none" stroke-dasharray="163.36" stroke-dashoffset="65.34" transform="rotate(-90 32 32)"/>
+            </svg>
+            <div class="dim-meta"><span class="dim-score">60<span class="pct">分</span></span><span class="dim-tier">中等 · 操作系统</span></div>
+          </div>
+          <p class="dim-explain">偏视觉型，可多用导图与动画强化记忆。</p>
+          <button class="btn btn-soft btn-sm btn-block" type="button">查看说明</button>
+        </article>
+
+        <!-- 8 薄弱控制·OS 49 low -->
+        <article class="glass card dim-card" data-reveal style="--dim:var(--dim-weak)">
+          <div class="dim-head"><span class="dim-dot" aria-hidden="true"></span><h3>薄弱控制</h3></div>
+          <div class="dim-ring-wrap">
+            <svg class="dim-ring" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="薄弱控制 49 分，偏低">
+              <circle class="track" cx="32" cy="32" r="26" fill="none" stroke-width="6"/>
+              <circle class="val m-low" cx="32" cy="32" r="26" fill="none" stroke-dasharray="163.36" stroke-dashoffset="83.31" transform="rotate(-90 32 32)"/>
+            </svg>
+            <div class="dim-meta"><span class="dim-score">49<span class="pct">分</span></span><span class="dim-tier">偏低 · 操作系统</span></div>
+          </div>
+          <p class="dim-explain">薄弱点回收较慢，优先排入每日重练清单。</p>
+          <button class="btn btn-soft btn-sm btn-block" type="button">查看说明</button>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== 6. 薄弱知识点清单 ====================== -->
+  <section id="weak" aria-labelledby="weak-title">
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <span class="section-eyebrow">Weak Points</span>
+        <h2 class="section-title" id="weak-title">薄弱知识点清单</h2>
+        <p class="section-desc">按紧迫度排序——先清紧急项，再补警告项，最后巩固关注项。</p>
+      </div>
+
+      <ul class="weak-list">
+        <li class="glass card weak-item sev-urgent" data-reveal>
+          <span class="weak-bar"><span class="badge-sev"><span class="legend-swatch" style="background:var(--sev);width:8px;height:8px;border-radius:var(--radius-full)"></span>紧急</span></span>
+          <div class="weak-body">
+            <span class="weak-name">进程调度与死锁避免（银行家算法）</span>
+            <span class="weak-sub"><span class="tag tag-os">操作系统</span> 近 3 次作答正确率 41%</span>
+            <span class="weak-action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4 2.5 5.2.8.8 1 1.3 1 2.3V18h7v-1.5c0-1 .2-1.5 1-2.3C17.8 13 19 11.4 19 9a7 7 0 0 0-7-7Z"/><path d="M9 21h6"/></svg>建议：重做 3 道真题，观看死锁避免动画演示</span>
+          </div>
+          <span class="weak-cta"><button class="btn btn-primary btn-sm" type="button">去攻克</button></span>
+        </li>
+
+        <li class="glass card weak-item sev-urgent" data-reveal>
+          <span class="weak-bar"><span class="badge-sev"><span class="legend-swatch" style="background:var(--sev);width:8px;height:8px;border-radius:var(--radius-full)"></span>紧急</span></span>
+          <div class="weak-body">
+            <span class="weak-name">TCP 拥塞控制（慢启动 / 拥塞避免）</span>
+            <span class="weak-sub"><span class="tag tag-cn">计网</span> 综合题连续 2 次未满分</span>
+            <span class="weak-action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4 2.5 5.2.8.8 1 1.3 1 2.3V18h7v-1.5c0-1 .2-1.5 1-2.3C17.8 13 19 11.4 19 9a7 7 0 0 0-7-7Z"/><path d="M9 21h6"/></svg>建议：补全时序图推导，做 2 道拥塞综合题</span>
+          </div>
+          <span class="weak-cta"><button class="btn btn-primary btn-sm" type="button">去攻克</button></span>
+        </li>
+
+        <li class="glass card weak-item sev-warn" data-reveal>
+          <span class="weak-bar"><span class="badge-sev"><span class="legend-swatch" style="background:var(--sev);width:8px;height:8px;border-radius:var(--radius-full)"></span>警告</span></span>
+          <div class="weak-body">
+            <span class="weak-name">磁盘调度算法（SCAN / C-SCAN）</span>
+            <span class="weak-sub"><span class="tag tag-co">计组</span> 磁道序列计算易错</span>
+            <span class="weak-action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4 2.5 5.2.8.8 1 1.3 1 2.3V18h7v-1.5c0-1 .2-1.5 1-2.3C17.8 13 19 11.4 19 9a7 7 0 0 0-7-7Z"/><path d="M9 21h6"/></svg>建议：练习 3 组磁道序列，对照动画验证</span>
+          </div>
+          <span class="weak-cta"><button class="btn btn-secondary btn-sm" type="button">去攻克</button></span>
+        </li>
+
+        <li class="glass card weak-item sev-warn" data-reveal>
+          <span class="weak-bar"><span class="badge-sev"><span class="legend-swatch" style="background:var(--sev);width:8px;height:8px;border-radius:var(--radius-full)"></span>警告</span></span>
+          <div class="weak-body">
+            <span class="weak-name">B+ 树范围查询与节点分裂</span>
+            <span class="weak-sub"><span class="tag tag-ds">数据结构</span> 插入分裂过程模糊</span>
+            <span class="weak-action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4 2.5 5.2.8.8 1 1.3 1 2.3V18h7v-1.5c0-1 .2-1.5 1-2.3C17.8 13 19 11.4 19 9a7 7 0 0 0-7-7Z"/><path d="M9 21h6"/></svg>建议：推导一次插入分裂，画出节点变化</span>
+          </div>
+          <span class="weak-cta"><button class="btn btn-secondary btn-sm" type="button">去攻克</button></span>
+        </li>
+
+        <li class="glass card weak-item sev-warn" data-reveal>
+          <span class="weak-bar"><span class="badge-sev"><span class="legend-swatch" style="background:var(--sev);width:8px;height:8px;border-radius:var(--radius-full)"></span>警告</span></span>
+          <div class="weak-body">
+            <span class="weak-name">指令流水线数据 / 控制冒险</span>
+            <span class="weak-sub"><span class="tag tag-co">计组</span> 停顿周期常算错</span>
+            <span class="weak-action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4 2.5 5.2.8.8 1 1.3 1 2.3V18h7v-1.5c0-1 .2-1.5 1-2.3C17.8 13 19 11.4 19 9a7 7 0 0 0-7-7Z"/><path d="M9 21h6"/></svg>建议：做数据/控制冒险对照练习 5 题</span>
+          </div>
+          <span class="weak-cta"><button class="btn btn-secondary btn-sm" type="button">去攻克</button></span>
+        </li>
+
+        <li class="glass card weak-item sev-ok" data-reveal>
+          <span class="weak-bar"><span class="badge-sev"><span class="legend-swatch" style="background:var(--sev);width:8px;height:8px;border-radius:var(--radius-full)"></span>关注</span></span>
+          <div class="weak-body">
+            <span class="weak-name">哈希冲突开放定址法</span>
+            <span class="weak-sub"><span class="tag tag-ds">数据结构</span> 再散列策略偶发遗忘</span>
+            <span class="weak-action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4 2.5 5.2.8.8 1 1.3 1 2.3V18h7v-1.5c0-1 .2-1.5 1-2.3C17.8 13 19 11.4 19 9a7 7 0 0 0-7-7Z"/><path d="M9 21h6"/></svg>建议：巩固再散列策略，做 2 题温习</span>
+          </div>
+          <span class="weak-cta"><button class="btn btn-ghost btn-sm" type="button">去巩固</button></span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ====================== 7. 正确率趋势（P1） ====================== -->
+  <section id="trend" aria-labelledby="trend-title">
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <span class="section-eyebrow">Accuracy Trend</span>
+        <h2 class="section-title" id="trend-title">正确率趋势</h2>
+        <p class="section-desc">近 8 次作答的整体正确率走势，用于判断近期学习是否进入上升通道。</p>
+      </div>
+
+      <div class="glass card trend-wrap" data-reveal>
+        <svg class="trend-svg" viewBox="0 0 480 240" role="img"
+          aria-label="近 8 次作答正确率折线图：62%、58%、65%、70%、67%、73%、76%、74%。整体呈上升趋势，平均 68.1%，较首次提升 12 个百分点。">
+          <title>近 8 次作答正确率趋势</title>
+          <!-- 网格 -->
+          <line x1="40" y1="24"  x2="450" y2="24"  stroke="var(--chart-grid)"/>
+          <line x1="40" y1="67"  x2="450" y2="67"  stroke="var(--chart-grid)"/>
+          <line x1="40" y1="110" x2="450" y2="110" stroke="var(--chart-grid)"/>
+          <line x1="40" y1="153" x2="450" y2="153" stroke="var(--chart-grid)"/>
+          <line x1="40" y1="196" x2="450" y2="196" stroke="var(--chart-grid)"/>
+          <text x="34" y="28"  text-anchor="end" font-size="10" fill="var(--color-text-3)">100</text>
+          <text x="34" y="71"  text-anchor="end" font-size="10" fill="var(--color-text-3)">75</text>
+          <text x="34" y="114" text-anchor="end" font-size="10" fill="var(--color-text-3)">50</text>
+          <text x="34" y="157" text-anchor="end" font-size="10" fill="var(--color-text-3)">25</text>
+          <text x="34" y="200" text-anchor="end" font-size="10" fill="var(--color-text-3)">0</text>
+          <!-- 60% 合格线 -->
+          <line x1="40" y1="84.2" x2="450" y2="84.2" stroke="var(--chart-axis)" stroke-width="1.5" stroke-dasharray="4 4"/>
+          <text x="450" y="80" text-anchor="end" font-size="10" fill="var(--color-text-3)">合格线 60%</text>
+          <!-- 面积 -->
+          <path d="M40,89.36 L98.6,96.24 L157.1,84.2 L215.7,75.6 L274.3,80.76 L332.9,70.44 L391.4,65.28 L450,68.72 L450,196 L40,196 Z"
+            fill="var(--chart-area)"/>
+          <!-- 折线 -->
+          <path d="M40,89.36 L98.6,96.24 L157.1,84.2 L215.7,75.6 L274.3,80.76 L332.9,70.44 L391.4,65.28 L450,68.72"
+            fill="none" stroke="var(--chart-line)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- 数据点 -->
+          <circle cx="40"   cy="89.36" r="3.5" fill="var(--chart-line)"/>
+          <circle cx="98.6" cy="96.24" r="3.5" fill="var(--chart-line)"/>
+          <circle cx="157.1" cy="84.2"  r="3.5" fill="var(--chart-line)"/>
+          <circle cx="215.7" cy="75.6"  r="3.5" fill="var(--chart-line)"/>
+          <circle cx="274.3" cy="80.76" r="3.5" fill="var(--chart-line)"/>
+          <circle cx="332.9" cy="70.44" r="3.5" fill="var(--chart-line)"/>
+          <circle cx="391.4" cy="65.28" r="3.5" fill="var(--chart-line)"/>
+          <circle cx="450"  cy="68.72" r="4.5" fill="var(--chart-line)" stroke="var(--color-canvas)" stroke-width="2"/>
+          <!-- 末点标注 -->
+          <text x="450" y="56" text-anchor="end" font-size="12" font-weight="700" fill="var(--trend-up)">74%</text>
+        </svg>
+        <div class="trend-caption">
+          <span>近 8 次平均正确率 <span class="hl">68.1%</span></span>
+          <span class="up">↑ 较首次 +12.0pt</span>
+          <span>最近一次 <span class="hl">74%</span></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== 8. 学习风格画像（P1） ====================== -->
+  <section id="style" aria-labelledby="style-title">
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <span class="section-eyebrow">Learning Style</span>
+        <h2 class="section-title" id="style-title">学习风格画像</h2>
+        <p class="section-desc">基于你的资源偏好与互动行为估计的三类风格占比，主导风格决定推荐资源的呈现方式。</p>
+      </div>
+
+      <div class="glass card style-card" data-reveal>
+        <div class="style-bars">
+          <div class="style-row">
+            <span class="style-name">视觉型</span>
+            <span class="style-track"><span class="style-fill dominant" style="width:46%;background:var(--dim-style)"></span></span>
+            <span><span class="style-val">46%</span><span class="style-tag">主导</span></span>
+          </div>
+          <div class="style-row">
+            <span class="style-name">文本型</span>
+            <span class="style-track"><span class="style-fill" style="width:31%;background:var(--chart-line)"></span></span>
+            <span class="style-val">31%</span>
+          </div>
+          <div class="style-row">
+            <span class="style-name">实操型</span>
+            <span class="style-track"><span class="style-fill" style="width:23%;background:var(--accent-tertiary)"></span></span>
+            <span class="style-val">23%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== 9. 个性化推荐路径（P1） ====================== -->
+  <section id="recommend" aria-labelledby="rec-title">
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <span class="section-eyebrow">Recommendation</span>
+        <h2 class="section-title" id="rec-title">个性化推荐路径</h2>
+        <p class="section-desc">综合八维学情、薄弱清单与剩余时间，由路径规划 Agent 实时编排你的今日学习路径。</p>
+      </div>
+
+      <div class="glass cta-card" data-reveal>
+        <div class="cta-inner">
+          <h3>生成今日学习路径</h3>
+          <p>已为你锁定 2 项紧急薄弱点、3 项警告项，预计 2.5 小时可完成一轮高效重练。现在就生成专属于今天的路径。</p>
+        </div>
+        <div class="cta-actions">
+          <button class="btn btn-primary btn-cta btn-pill" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
+            生成今日学习路径
+          </button>
+          <a class="btn btn-secondary btn-cta btn-pill" href="#trend">查看历史路径</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ====================== 页脚 ====================== -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="logo" href="#top" aria-label="MARS-408 首页">
+          <span class="logo-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 3 0 1 0 18 0a9 3 0 1 0-18 0"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/><path d="M12 3v18"/></svg>
+          </span>
+          MARS-408
+        </a>
+      </div>
+      <p class="footer-note">原型演示 · 页面数据均为示意，不构成任何承诺</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  /* 主题切换：localStorage > matchMedia(prefers-color-scheme) > dark */
+  var root=document.documentElement;
+  var toggle=document.getElementById('theme-toggle');
+  function applyTheme(theme){
+    root.setAttribute('data-theme',theme);
+    var light=theme==='light';
+    if(toggle){
+      toggle.setAttribute('aria-pressed',light?'true':'false');
+      toggle.setAttribute('aria-label',light?'切换深色主题':'切换浅色主题');
+    }
+  }
+  var stored=null;
+  try{stored=localStorage.getItem('mars-theme');}catch(e){}
+  var initial=stored||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');
+  applyTheme(initial);
+  if(toggle){
+    toggle.addEventListener('click',function(){
+      var next=root.getAttribute('data-theme')==='light'?'dark':'light';
+      applyTheme(next);
+      try{localStorage.setItem('mars-theme',next);}catch(e){}
+    });
+  }
+
+  /* 滚动揭示（尊重 reduced-motion；无 JS 时内容完全可见） */
+  document.documentElement.classList.add('js');
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var reveals=document.querySelectorAll('[data-reveal]');
+  if(reduce||!('IntersectionObserver' in window)){
+    reveals.forEach(function(el){el.classList.add('is-visible');});
+  }else{
+    var io=new IntersectionObserver(function(entries){
+      entries.forEach(function(e){if(e.isIntersecting){e.target.classList.add('is-visible');io.unobserve(e.target);}});
+    },{threshold:0.12,rootMargin:'0px 0px -10% 0px'});
+    reveals.forEach(function(el){io.observe(el);});
+  }
+})();
+</script>
+
+</body>
+</html>

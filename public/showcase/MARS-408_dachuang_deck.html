@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>多维度学情驱动的计算机408考研个性化教学模式研究与实践 · 中期检查</title>
+<style>
+  :root{
+    /* —— 色彩语义层（严格对齐 DESIGN.md）—— */
+    --color-canvas:#080812;
+    --color-surface:rgba(255,255,255,0.03);
+    --color-surface-2:#0f0f1a;
+    --color-glass:rgba(15,15,26,0.65);
+    --color-glass-border:rgba(255,255,255,0.08);
+    --color-border:rgba(255,255,255,0.06);
+    --color-text:#f8fafc;
+    --color-text-2:#94a3b8;
+    --color-text-3:#7c8aa0;
+    /* —— 品牌色 —— */
+    --accent-primary:#7c6af2;
+    --accent-blue:#5b8bd8;
+    --accent-cyan:#06b6d4;
+    --accent-warm:#f59e0b;
+    --accent-success:#22c55e;
+    --accent-danger:#ef4444;
+    --accent-pink:#f472b6;
+    /* —— 408 四科分色 —— */
+    --subject-ds:#8b5cf6;   /* 数据结构 */
+    --subject-cn:#3b82f6;   /* 计算机网络 */
+    --subject-co:#06b6d4;   /* 计算机组成 */
+    --subject-os:#f472b6;   /* 操作系统 */
+    --gradient-primary:linear-gradient(135deg,#7c6af2,#5b8bd8);
+    /* —— 圆角 / 阴影 / 发光 —— */
+    --radius-sm:10px; --radius-md:14px; --radius-lg:18px; --radius-xl:24px; --radius-full:9999px;
+    --shadow-card:0 2px 8px rgba(0,0,0,0.25),0 0 1px rgba(255,255,255,0.06);
+    --shadow-card-hover:0 8px 24px rgba(0,0,0,0.35),0 0 20px rgba(124,106,242,0.08);
+    --glow-primary:0 0 20px rgba(124,106,242,0.15),0 0 40px rgba(124,106,242,0.08);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;background:var(--color-canvas);color:var(--color-text);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+    overflow:hidden;}
+
+  /* —— Deck 舞台：强制 16:9，等比缩放 —— */
+  .deck{
+    position:relative;
+    width:min(100vw, calc(100vh * 16 / 9));
+    height:min(100vh, calc(100vw * 9 / 16));
+    margin:auto;
+    container-type:size;
+    background:radial-gradient(120% 120% at 50% 0%, #0d0d1c 0%, var(--color-canvas) 60%);
+    overflow:hidden;
+  }
+  /* 顶部进度条 */
+  .progress{position:absolute;top:0;left:0;height:3px;background:var(--gradient-primary);
+    box-shadow:var(--glow-primary);transition:width .4s ease;z-index:50;}
+  /* 页码 */
+  .pageno{position:absolute;top:2.4cqh;right:3.5cqw;font-size:1.9cqh;color:var(--color-text-3);
+    letter-spacing:.05em;z-index:40;}
+  .pageno b{color:var(--color-text);font-weight:600;}
+
+  /* —— 幻灯片 —— */
+  .slide{position:absolute;inset:0;opacity:0;visibility:hidden;
+    transition:opacity .45s ease;}
+  .slide.active{opacity:1;visibility:visible;}
+  .slide-inner{position:absolute;inset:0;padding:7cqh 7cqw;
+    display:flex;flex-direction:column;justify-content:center;}
+  .slide.active .slide-inner{animation:fadeUp .55s both;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(2.4cqh);}to{opacity:1;transform:none;}}
+
+  /* —— 文字层级（基于容器高度等比）—— */
+  .eyebrow{font-size:1.9cqh;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--accent-primary);font-weight:600;margin-bottom:1.6cqh;}
+  h1{font-size:clamp(20px,5.2cqh,52px);line-height:1.18;font-weight:700;letter-spacing:-0.02em;
+    background:var(--gradient-primary);-webkit-background-clip:text;background-clip:text;color:transparent;
+    text-shadow:var(--glow-primary);}
+  h2{font-size:clamp(16px,4cqh,44px);line-height:1.2;font-weight:700;letter-spacing:-0.01em;margin-bottom:2.6cqh;}
+  h2 .accent{color:var(--accent-primary);}
+  h3{font-size:2.3cqh;font-weight:600;margin-bottom:1cqh;color:var(--color-text);}
+  p{font-size:clamp(13px,2.1cqh,28px);line-height:1.65;color:var(--color-text-2);}
+  .lead{font-size:clamp(14px,2.5cqh,30px);line-height:1.6;color:var(--color-text);}
+  .sub{font-size:clamp(12px,1.95cqh,24px);color:var(--color-text-3);}
+  .hl{color:var(--accent-primary);font-weight:600;}
+
+  /* —— 玻璃卡片 —— */
+  .glass{background:var(--color-glass);border:1px solid var(--color-glass-border);
+    border-radius:var(--radius-lg);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    box-shadow:var(--shadow-card);padding:2.6cqh 2.4cqw;}
+  .grid{display:grid;gap:2.2cqh 2.2cqw;}
+  .grid.c2{grid-template-columns:1fr 1fr;}
+  .grid.c3{grid-template-columns:repeat(3,1fr);}
+  .grid.c4{grid-template-columns:repeat(4,1fr);}
+  .card{background:var(--color-surface);border:1px solid var(--color-border);
+    border-radius:var(--radius-md);padding:2.4cqh 2cqw;transition:transform .3s,box-shadow .3s;}
+  .card:hover{transform:translateY(-0.6cqh);box-shadow:var(--shadow-card-hover);}
+  .card .ico{width:5cqh;height:5cqh;border-radius:var(--radius-sm);display:flex;align-items:center;
+    justify-content:center;margin-bottom:1.4cqh;background:rgba(124,106,242,0.12);color:var(--accent-primary);}
+  .card .ico svg{width:3cqh;height:3cqh;}
+  .card h3{font-size:2.3cqh;}
+  .card p{font-size:1.9cqh;line-height:1.55;}
+
+  /* —— 标签 —— */
+  .tag{display:inline-flex;align-items:center;gap:.5cqw;font-size:1.7cqh;font-weight:600;
+    padding:.7cqh 1.3cqw;border-radius:var(--radius-full);border:1px solid transparent;}
+  .tag.purple{color:#b3a8fb;background:color-mix(in srgb,var(--accent-primary) 14%,transparent);}
+  .tag.blue{color:var(--accent-blue);background:color-mix(in srgb,var(--accent-blue) 14%,transparent);}
+  .tag.cyan{color:var(--accent-cyan);background:color-mix(in srgb,var(--accent-cyan) 14%,transparent);}
+  .tag.pink{color:var(--accent-pink);background:color-mix(in srgb,var(--accent-pink) 14%,transparent);}
+  .tag.warm{color:var(--accent-warm);background:color-mix(in srgb,var(--accent-warm) 14%,transparent);}
+
+  /* —— 进度条（slide 6）—— */
+  .bar-row{display:flex;align-items:center;gap:1.6cqw;margin-bottom:1.7cqh;}
+  .bar-row .label{width:24cqw;font-size:1.95cqh;color:var(--color-text-2);flex-shrink:0;}
+  .bar-track{flex:1;height:1.4cqh;background:var(--color-surface-2);border-radius:var(--radius-full);overflow:hidden;}
+  .bar-fill{height:100%;width:0;background:var(--gradient-primary);border-radius:var(--radius-full);
+    transition:width 1.1s cubic-bezier(.2,.8,.2,1);}
+  .bar-row .pct{width:6cqw;text-align:right;font-size:1.95cqh;color:var(--accent-primary);font-weight:600;font-family:'SF Mono','Fira Code',monospace;}
+
+  /* —— 步骤流（slide 8）—— */
+  .flow{display:flex;align-items:stretch;gap:1.4cqw;}
+  .flow .step{flex:1;background:var(--color-surface);border:1px solid var(--color-border);
+    border-radius:var(--radius-md);padding:2.2cqh 1.4cqw;text-align:center;position:relative;}
+  .flow .step .n{width:4cqh;height:4cqh;margin:0 auto 1.2cqh;border-radius:var(--radius-full);
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:2cqh;
+    background:var(--gradient-primary);color:#fff;box-shadow:var(--glow-primary);}
+  .flow .step h3{font-size:2cqh;margin-bottom:.6cqh;}
+  .flow .step p{font-size:1.7cqh;line-height:1.45;}
+  .flow .arrow{display:flex;align-items:center;color:var(--color-text-3);font-size:3cqh;}
+
+  /* —— 底部导航 —— */
+  .nav{position:absolute;bottom:2.4cqh;left:50%;transform:translateX(-50%);
+    display:flex;align-items:center;gap:1cqw;z-index:40;}
+  .nav .dot{width:1.3cqh;height:1.3cqh;border-radius:50%;background:var(--color-border);
+    cursor:pointer;transition:all .25s;border:none;padding:0;}
+  .nav .dot.active{background:var(--accent-primary);box-shadow:var(--glow-primary);width:3cqw;border-radius:var(--radius-full);}
+  .navbtn{position:absolute;bottom:1.8cqh;background:var(--color-glass);border:1px solid var(--color-glass-border);
+    color:var(--color-text-2);width:4.4cqh;height:4.4cqh;border-radius:50%;cursor:pointer;z-index:40;
+    display:flex;align-items:center;justify-content:center;backdrop-filter:blur(12px);font-size:2.2cqh;
+    transition:all .25s;}
+  .navbtn:hover{color:var(--color-text);border-color:var(--accent-primary);box-shadow:var(--shadow-card-hover);}
+  .navbtn.prev{left:3cqw;}
+  .navbtn.next{right:3cqw;}
+
+  /* —— 封面装饰网络 —— */
+  .bgnet{position:absolute;inset:0;opacity:.18;pointer-events:none;}
+
+  .foot{position:absolute;bottom:2.2cqh;left:7cqw;font-size:1.7cqh;color:var(--color-text-3);z-index:30;}
+  .placeholder{outline:1px dashed rgba(245,158,11,0.5);outline-offset:2px;border-radius:var(--radius-sm);}
+  .ph-note{font-size:1.6cqh;color:var(--accent-warm);}
+  .mini-legend{display:flex;gap:1.4cqw;flex-wrap:wrap;margin-top:1.6cqh;}
+  .mini-legend span{display:flex;align-items:center;gap:.5cqw;font-size:1.75cqh;color:var(--color-text-2);}
+  .mini-legend i{width:1.4cqh;height:1.4cqh;border-radius:50%;display:inline-block;}
+  /* P2-① 键盘焦点环：仅键盘聚焦显示紫色环，满足可访问性 */
+  :focus-visible{outline:2px solid #7c6af2;outline-offset:2px;}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+  <div class="progress" id="progress"></div>
+  <div class="pageno"><b id="cur">1</b> / <span id="total">11</span></div>
+
+  <!-- ============ Slide 1 · 封面 ============ -->
+  <section class="slide active" data-i="1">
+    <svg class="bgnet" viewBox="0 0 1280 720" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <radialGradient id="g1" cx="50%" cy="40%" r="60%">
+          <stop offset="0%" stop-color="#7c6af2" stop-opacity="0.5"/>
+          <stop offset="100%" stop-color="#7c6af2" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <circle cx="640" cy="300" r="260" fill="url(#g1)"/>
+      <g stroke="#7c6af2" stroke-opacity="0.35" stroke-width="1">
+        <circle cx="640" cy="300" r="120" fill="none"/>
+        <circle cx="640" cy="300" r="190" fill="none"/>
+        <line x1="640" y1="300" x2="430" y2="180"/><line x1="640" y1="300" x2="850" y2="180"/>
+        <line x1="640" y1="300" x2="400" y2="430"/><line x1="640" y1="300" x2="880" y2="430"/>
+        <line x1="640" y1="300" x2="640" y2="120"/><line x1="640" y1="300" x2="640" y2="480"/>
+        <line x1="640" y1="300" x2="300" y2="300"/><line x1="640" y1="300" x2="980" y2="300"/>
+      </g>
+      <g fill="#7c6af2">
+        <circle cx="430" cy="180" r="6"/><circle cx="850" cy="180" r="6"/><circle cx="400" cy="430" r="6"/>
+        <circle cx="880" cy="430" r="6"/><circle cx="640" cy="120" r="6"/><circle cx="640" cy="480" r="6"/>
+        <circle cx="300" cy="300" r="6"/><circle cx="980" cy="300" r="6"/><circle cx="640" cy="300" r="9"/>
+      </g>
+    </svg>
+    <div class="slide-inner">
+      <div class="eyebrow">大学生创新创业训练计划 · 教学改革研究</div>
+      <h1>多维度学情驱动的<br>计算机 408 考研个性化<br>教学模式研究与实践</h1>
+      <p class="lead" style="margin-top:2.6cqh;max-width:62cqw;">基于多智能体系统与个性化资源生成，构建"学情诊断 → 路径规划 → 资源生成 → 证据校验 → 反馈闭环"的个性化教学新范式</p>
+      <div style="margin-top:4cqh;display:flex;gap:1.4cqw;align-items:center;flex-wrap:wrap;">
+        <span class="tag purple">中期检查汇报</span>
+        <span class="tag blue">指导教师：吴征远（计网任课教师 · 模拟）</span>
+        <span class="tag cyan">项目团队：MARS-408</span>
+      </div>
+    </div>
+    <div class="foot">MARS-408 · 教学改革的智能化探索</div>
+  </section>
+
+  <!-- ============ Slide 2 · 项目概述 ============ -->
+  <section class="slide" data-i="2">
+    <div class="slide-inner">
+      <div class="eyebrow">Project Overview</div>
+      <h2>项目<span class="accent">概述</span></h2>
+      <div class="grid c2" style="align-items:center;">
+        <div>
+          <div class="card" style="margin-bottom:2cqh;">
+            <h3>一句话定位</h3>
+            <p>面向计算机 408 考研的个性化学习教学模式，以<span class="hl">多维度学情建模</span>驱动资源生成与复习路径规划。</p>
+          </div>
+          <div class="card" style="margin-bottom:2cqh;">
+            <h3>研究背景与痛点</h3>
+            <p>408 考生面临资源海量但<span class="hl">匹配度低</span>、复习路径不清、答疑反馈滞后——传统"经验驱动"教学难以规模化适配个体差异。</p>
+          </div>
+          <div class="card">
+            <h3>教改意义</h3>
+            <p>将"教师经验驱动"升级为<span class="hl">"数据驱动的个性化教学"</span>，模式可推广至工科考研与本科核心课程。</p>
+          </div>
+        </div>
+        <div class="glass" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+          <svg viewBox="0 0 360 300" width="100%" aria-label="408 四科知识图谱">
+            <g stroke="rgba(255,255,255,0.12)" stroke-width="1">
+              <line x1="180" y1="150" x2="60" y2="70"/><line x1="180" y1="150" x2="300" y2="70"/>
+              <line x1="180" y1="150" x2="60" y2="240"/><line x1="180" y1="150" x2="300" y2="240"/>
+              <line x1="60" y1="70" x2="300" y2="70"/><line x1="60" y1="240" x2="300" y2="240"/>
+            </g>
+            <circle cx="180" cy="150" r="14" fill="#7c6af2"/>
+            <text x="180" y="154" text-anchor="middle" font-size="11" fill="#fff">408</text>
+            <circle cx="60" cy="70" r="20" fill="var(--subject-ds)"/><text x="60" y="74" text-anchor="middle" font-size="10" fill="#fff">数据结构</text>
+            <circle cx="300" cy="70" r="20" fill="var(--subject-cn)"/><text x="300" y="74" text-anchor="middle" font-size="10" fill="#fff">计网</text>
+            <circle cx="60" cy="240" r="20" fill="var(--subject-co)"/><text x="60" y="244" text-anchor="middle" font-size="10" fill="#fff">计组</text>
+            <circle cx="300" cy="240" r="20" fill="var(--subject-os)"/><text x="300" y="244" text-anchor="middle" font-size="10" fill="#fff">操作系统</text>
+          </svg>
+          <div class="mini-legend">
+            <span><i style="background:var(--subject-ds)"></i>数据结构</span>
+            <span><i style="background:var(--subject-cn)"></i>计网</span>
+            <span><i style="background:var(--subject-co)"></i>计组</span>
+            <span><i style="background:var(--subject-os)"></i>操作系统</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Slide 3 · 研究目标 ============ -->
+  <section class="slide" data-i="3">
+    <div class="slide-inner">
+      <div class="eyebrow">Research Objectives</div>
+      <h2>研究<span class="accent">目标</span></h2>
+      <div class="grid c3">
+        <div class="card">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 3 5-6"/></svg></div>
+          <h3>多维度学情建模</h3>
+          <p>融合知识点掌握度、学习行为、错题模式三维画像，量化刻画个体学情状态。</p>
+        </div>
+        <div class="card">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></div>
+          <h3>个性化教学模式</h3>
+          <p>构建"路径规划 → 资源生成 → 智能答疑"闭环，替代千篇一律的标准化教学。</p>
+        </div>
+        <div class="card">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.2-8.6"/><path d="M21 4v5h-5"/></svg></div>
+          <h3>闭环可验证</h3>
+          <p>以学习成效数据反哺教学策略，使教学模式具备<span class="hl">可量化、可迭代</span>的教改价值。</p>
+        </div>
+      </div>
+      <p class="sub" style="margin-top:3cqh;">三者递进：先"看清学情"，再"因材施教"，最终"用数据证明有效"。</p>
+    </div>
+  </section>
+
+  <!-- ============ Slide 4 · 创新点 ============ -->
+  <section class="slide" data-i="4">
+    <div class="slide-inner">
+      <div class="eyebrow">Innovation Points</div>
+      <h2>创新点（教改<span class="accent">视角</span>）</h2>
+      <div class="grid c2">
+        <div class="card">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3 3-5 6-5s6 2 6 5M14 20c0-2 2-3.5 4-3.5s4 1.5 4 3.5"/></svg></div>
+          <h3>① 多智能体协作教学</h3>
+          <p>8 个教学角色 Agent 分工协作，模拟一支 AI 教研团队，覆盖诊断、规划、生成、答疑、校验全流程。</p>
+        </div>
+        <div class="card">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h6"/></svg></div>
+          <h3>② FrugalRAG 个性化生成</h3>
+          <p>依据掌握度生成"只属于你"的讲解文档、题库与思维导图，而非千篇一律的通用资料。</p>
+        </div>
+        <div class="card">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></div>
+          <h3>③ GOMARL 证据校验</h3>
+          <p>多 Agent 强化学习交叉校验答案与资源，显著提升输出<span class="hl">可信度</span>，契合教学严谨要求。</p>
+        </div>
+        <div class="card">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="18" r="2"/></svg></div>
+          <h3>④ 408 四科知识点级图谱</h3>
+          <p>数据结构 / 计组 / OS / 计网全覆盖，支持知识点级诊断与靶向补救，落地到具体考点。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Slide 5 · 技术方案总览 ============ -->
+  <section class="slide" data-i="5">
+    <div class="slide-inner">
+      <div class="eyebrow">Technical Architecture</div>
+      <h2>技术方案<span class="accent">总览</span></h2>
+      <div class="glass" style="padding:3cqh 3cqw;">
+        <svg viewBox="0 0 1180 320" width="100%" aria-label="8-Agent 教学角色协作网络">
+          <!-- 中心 PathPlanner -->
+          <g>
+            <circle cx="590" cy="160" r="42" fill="#7c6af2"/>
+            <text x="590" y="156" text-anchor="middle" font-size="13" fill="#fff" font-weight="700">Path</text>
+            <text x="590" y="172" text-anchor="middle" font-size="13" fill="#fff" font-weight="700">Planner</text>
+            <text x="590" y="200" text-anchor="middle" font-size="11" fill="#c9c0ff">路径规划</text>
+          </g>
+          <!-- 7 角色 -->
+          <g font-size="12" fill="#fff" text-anchor="middle">
+            <!-- 学情诊断 -->
+            <circle cx="200" cy="60" r="34" fill="var(--subject-ds)"/><text x="200" y="64">学情诊断</text>
+            <!-- 资源生成 -->
+            <circle cx="980" cy="60" r="34" fill="var(--subject-os)"/><text x="980" y="64">资源生成</text>
+            <!-- 题目生成 -->
+            <circle cx="140" cy="160" r="34" fill="var(--subject-cn)"/><text x="140" y="164">题目生成</text>
+            <!-- 答疑 -->
+            <circle cx="1040" cy="160" r="34" fill="var(--subject-co)"/><text x="1040" y="164">智能答疑</text>
+            <!-- 错题诊断 -->
+            <circle cx="200" cy="260" r="34" fill="var(--subject-ds)"/><text x="200" y="264">错题诊断</text>
+            <!-- 答案校验 -->
+            <circle cx="980" cy="260" r="34" fill="var(--subject-cn)"/><text x="980" y="264">答案校验</text>
+            <!-- 学习反馈 -->
+            <circle cx="590" cy="290" r="34" fill="var(--accent-success)"/><text x="590" y="294">学习反馈</text>
+          </g>
+          <g stroke="rgba(124,106,242,0.5)" stroke-width="1.4">
+            <line x1="590" y1="160" x2="200" y2="60"/><line x1="590" y1="160" x2="980" y2="60"/>
+            <line x1="590" y1="160" x2="140" y2="160"/><line x1="590" y1="160" x2="1040" y2="160"/>
+            <line x1="590" y1="160" x2="200" y2="260"/><line x1="590" y1="160" x2="980" y2="260"/>
+            <line x1="590" y1="160" x2="590" y2="290"/>
+          </g>
+        </svg>
+      </div>
+      <p class="sub" style="margin-top:2.4cqh;">技术栈：Vue 3 + Vite + TS（前端） · FastAPI + LangGraph（后端编排） · 讯飞开放平台 AI 能力 · Milvus 向量库（生产化中）</p>
+    </div>
+  </section>
+
+  <!-- ============ Slide 6 · 阶段性进展 ============ -->
+  <section class="slide" data-i="6">
+    <div class="slide-inner">
+      <div class="eyebrow">Progress · Completed</div>
+      <h2>阶段性<span class="accent">进展</span>（已完成）</h2>
+      <div class="glass" style="padding:3.2cqh 3cqw;">
+        <div class="bar-row"><span class="label">系统骨架与 8-Agent 编排</span><div class="bar-track"><div class="bar-fill" data-w="90"></div></div><span class="pct">90%</span></div>
+        <div class="bar-row"><span class="label">核心引擎（FrugalRAG / GOMARL / 规则）</span><div class="bar-track"><div class="bar-fill" data-w="80"></div></div><span class="pct">80%</span></div>
+        <div class="bar-row"><span class="label">408 四科知识图谱与诊断</span><div class="bar-track"><div class="bar-fill" data-w="85"></div></div><span class="pct">85%</span></div>
+        <div class="bar-row"><span class="label">讯飞 10 项 AI 能力集成</span><div class="bar-track"><div class="bar-fill" data-w="100"></div></div><span class="pct">100%</span></div>
+        <div class="bar-row"><span class="label">前端可视化与交互</span><div class="bar-track"><div class="bar-fill" data-w="75"></div></div><span class="pct">75%</span></div>
+      </div>
+      <p class="ph-note sub" style="margin-top:1.8cqh;">* 完成度为阶段性自评，需求分析 100% · 架构设计 100% · 算法集成 70% · 前端联调 65% · 中期汇报进行中（模拟）</p>
+    </div>
+  </section>
+
+  <!-- ============ Slide 7 · 阶段性成果 ============ -->
+  <section class="slide" data-i="7">
+    <div class="slide-inner">
+      <div class="eyebrow">Achievements</div>
+      <h2>阶段性<span class="accent">成果</span></h2>
+      <p class="sub" style="margin-bottom:2.4cqh;">系统已可演示，自动生成 7 类 408 学习资源，并落地讯飞开放平台 10 项 AI 能力。</p>
+      <div class="grid c4">
+        <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h6"/></svg></div><h3>讲解文档</h3><p>按掌握度生成的考点讲解</p></div>
+        <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3 8-8"/><path d="M21 12v7H3V5h12"/></svg></div><h3>练习题库</h3><p>靶向薄弱点的分层题目</p></div>
+        <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M7 8l4 8M17 8l-4 8"/></svg></div><h3>思维导图</h3><p>知识点结构可视化</p></div>
+        <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19h16M6 19V9M12 19V5M18 19v-6"/></svg></div><h3>拓展阅读</h3><p>关联资料精准推荐</p></div>
+        <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="14" rx="2"/><path d="M8 21h8"/></svg></div><h3>PPT 大纲</h3><p>复习脉络自动梳理</p></div>
+        <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6l-4 6 4 6M16 6l4 6-4 6"/></svg></div><h3>代码实操</h3><p>算法动手案例</p></div>
+        <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg></div><h3>审核报告</h3><p>资源合规性校验</p></div>
+        <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div><h3>讯飞 10 项</h3><p>图片生成/理解·搜索·PPT·数字人·纠错·校对·合规·角色·简历</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Slide 8 · 教学模式验证闭环 ============ -->
+  <section class="slide" data-i="8">
+    <div class="slide-inner">
+      <div class="eyebrow">Teaching Loop · Core</div>
+      <h2>教学模式验证<span class="accent">闭环</span></h2>
+      <div class="flow">
+        <div class="step"><div class="n">1</div><h3>学情诊断</h3><p>多维画像定位薄弱知识点</p></div>
+        <div class="arrow">→</div>
+        <div class="step"><div class="n">2</div><h3>路径规划</h3><p>PathPlanner 生成复习路径</p></div>
+        <div class="arrow">→</div>
+        <div class="step"><div class="n">3</div><h3>资源生成</h3><p>FrugalRAG 产出专属资料</p></div>
+        <div class="arrow">→</div>
+        <div class="step"><div class="n">4</div><h3>多 Agent 校验</h3><p>GOMARL 交叉核验可信度</p></div>
+        <div class="arrow">→</div>
+        <div class="step"><div class="n">5</div><h3>学习反馈</h3><p>成效数据回流优化策略</p></div>
+      </div>
+      <p class="sub" style="margin-top:3cqh;color:var(--accent-success);">↺ 反馈闭环持续迭代——这正是教改"数据驱动、可验证"的核心体现。</p>
+    </div>
+  </section>
+
+  <!-- ============ Slide 9 · 存在问题与下一步 ============ -->
+  <section class="slide" data-i="9">
+    <div class="slide-inner">
+      <div class="eyebrow">Challenges &amp; Next</div>
+      <h2>存在问题与<span class="accent">下一步</span></h2>
+      <div class="grid c2">
+        <div class="glass" style="border-color:rgba(239,68,68,0.3);">
+          <h3 style="color:var(--accent-danger);">存在问题</h3>
+          <p style="margin-top:1.4cqh;">· 算法增量（SFT+GRPO 强化、GOMARL 深度校验）仍在完善<br>· 生产级向量库 Milvus 接入待完成（当前为内存版）<br>· 真实学习成效数据尚在试点采集中</p>
+        </div>
+        <div class="glass" style="border-color:rgba(34,197,94,0.3);">
+          <h3 style="color:var(--accent-success);">下一步计划</h3>
+          <p style="margin-top:1.4cqh;">· Milvus 生产化接入，提升检索规模与稳定性<br>· 引入 GRPO 强化学习优化资源生成策略<br>· 扩展四科深度与题型覆盖<br>· 中期后开展小范围教学试点验证成效</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Slide 10 · 团队分工与进度 ============ -->
+  <section class="slide" data-i="10">
+    <div class="slide-inner">
+      <div class="eyebrow">Team &amp; Milestones</div>
+      <h2>团队分工与<span class="accent">进度</span></h2>
+      <div class="glass" style="padding:3cqh 3cqw;">
+        <div class="bar-row"><span class="label">需求与教改框架设计</span><div class="bar-track"><div class="bar-fill" data-w="100"></div></div><span class="pct">完成</span></div>
+        <div class="bar-row"><span class="label">系统架构与 8-Agent 编排</span><div class="bar-track"><div class="bar-fill" data-w="90"></div></div><span class="pct">90%</span></div>
+        <div class="bar-row"><span class="label">核心引擎研发</span><div class="bar-track"><div class="bar-fill" data-w="80"></div></div><span class="pct">80%</span></div>
+        <div class="bar-row"><span class="label">408 资源与前端</span><div class="bar-track"><div class="bar-fill" data-w="80"></div></div><span class="pct">80%</span></div>
+        <div class="bar-row"><span class="label">试点验证与成效分析</span><div class="bar-track"><div class="bar-fill" data-w="30"></div></div><span class="pct">30%</span></div>
+      </div>
+      <p class="ph-note sub" style="margin-top:1.8cqh;">* 团队成员分工与具体时间节点：张敏杰（负责人）· 架构/产品/答辩 · M1 架构定型(7月)/M3 中期(11月)；算法（模拟·李）· FrugalRAG+GOMARL · M2(9月)；前端（模拟·王）· Vue 交互 · M2(9月)；后端（模拟·陈）· FastAPI+LangGraph · M2(9月)；内容/408（模拟·赵）· 四科题库 · M1–M3</p>
+    </div>
+  </section>
+
+  <!-- ============ Slide 11 · 致谢 ============ -->
+  <section class="slide" data-i="11">
+    <div class="slide-inner" style="text-align:center;align-items:center;">
+      <div class="eyebrow">Acknowledgements</div>
+      <h1 style="font-size:4.4cqh;">感谢各位专家<br>批评指正</h1>
+      <p class="lead" style="margin-top:3cqh;max-width:60cqw;">诚挚感谢指导教师吴征远（模拟）的悉心指导，以及依托单位对本项目的支持。</p>
+      <div style="margin-top:4cqh;display:flex;gap:1.4cqw;justify-content:center;flex-wrap:wrap;">
+        <span class="tag purple">项目：MARS-408</span>
+        <span class="tag blue">演示地址：本机 npm run dev（localhost:5181）</span>
+        <span class="tag cyan">开源仓库：赛后开源（私有）</span>
+        <span class="tag warm">联系：2468001320@qq.com</span>
+      </div>
+    </div>
+    <div class="foot">多维度学情驱动的计算机 408 考研个性化教学模式研究与实践 · 中期检查</div>
+  </section>
+
+  <!-- 导航 -->
+  <button class="navbtn prev" id="prev" aria-label="上一页">‹</button>
+  <button class="navbtn next" id="next" aria-label="下一页">›</button>
+  <div class="nav" id="nav"></div>
+</div>
+
+<script>
+(function(){
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var total = slides.length;
+  var cur = 0;
+  var progress = document.getElementById('progress');
+  var curEl = document.getElementById('cur');
+  var totalEl = document.getElementById('total');
+  var nav = document.getElementById('nav');
+  totalEl.textContent = total;
+
+  // 生成页码点
+  slides.forEach(function(s, i){
+    var b = document.createElement('button');
+    b.className = 'dot' + (i===0?' active':'');
+    b.setAttribute('aria-label', '第'+(i+1)+'页');
+    b.addEventListener('click', function(){ go(i); });
+    nav.appendChild(b);
+  });
+  var dots = Array.prototype.slice.call(nav.querySelectorAll('.dot'));
+
+  function animateBars(){
+    var bars = slides[cur].querySelectorAll('.bar-fill');
+    bars.forEach(function(b){ b.style.width = (b.getAttribute('data-w')||0) + '%'; });
+  }
+
+  function go(i){
+    cur = (i % total + total) % total;
+    slides.forEach(function(s, k){ s.classList.toggle('active', k===cur); });
+    dots.forEach(function(d, k){ d.classList.toggle('active', k===cur); });
+    progress.style.width = ((cur+1)/total*100) + '%';
+    curEl.textContent = cur+1;
+    // 重置并触发进度条增长
+    var all = document.querySelectorAll('.bar-fill');
+    all.forEach(function(b){ b.style.width = '0'; });
+    setTimeout(animateBars, 120);
+  }
+
+  document.getElementById('prev').addEventListener('click', function(){ go(cur-1); });
+  document.getElementById('next').addEventListener('click', function(){ go(cur+1); });
+
+  document.addEventListener('keydown', function(e){
+    if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key===' '){ e.preventDefault(); go(cur+1); }
+    else if(e.key==='ArrowLeft'||e.key==='ArrowUp'){ e.preventDefault(); go(cur-1); }
+    else if(e.key==='Home'){ go(0); }
+    else if(e.key==='End'){ go(total-1); }
+  });
+
+  // 滚轮翻页（防抖）
+  var wheelLock = false;
+  document.getElementById('deck').addEventListener('wheel', function(e){
+    if(wheelLock) return;
+    wheelLock = true;
+    if(e.deltaY > 0) go(cur+1); else if(e.deltaY < 0) go(cur-1);
+    setTimeout(function(){ wheelLock = false; }, 700);
+  }, {passive:true});
+
+  // 触摸滑动
+  var tx = null;
+  document.getElementById('deck').addEventListener('touchstart', function(e){ tx = e.touches[0].clientX; }, {passive:true});
+  document.getElementById('deck').addEventListener('touchend', function(e){
+    if(tx===null) return;
+    var dx = e.changedTouches[0].clientX - tx;
+    if(Math.abs(dx) > 50){ if(dx < 0) go(cur+1); else go(cur-1); }
+    tx = null;
+  }, {passive:true});
+
+  go(0);
+})();
+</script>
+</body>
+</html>

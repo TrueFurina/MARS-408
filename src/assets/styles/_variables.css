@@ -1,0 +1,349 @@
+/* ============================================
+ * MARS-408 — 设计系统变量 · 语义化双主题
+ * 风格：克制深色 · 玻璃态 · 学科分色 · 微交互
+ * 参考：Linear/Stripe 仪表盘美学，去 AI 感
+ * ============================================ */
+
+/* 分层：--color- 为语义层（组件只引用此层）；--bg- / --text- / --glass- / --border- 为兼容别名，自动跟随语义层。 */
+:root {
+  /* ── 语义层：画布与表面 ── */
+  --color-canvas:        #080812;
+  --color-surface:       rgba(255,255,255,0.03);
+  --color-surface-2:     #0f0f1a;
+  --color-surface-hover:  rgba(255,255,255,0.06);
+  --color-elevated:      #1c1c2b;
+  --color-overlay:        rgba(0,0,0,0.55);
+
+  /* ── 语义层：玻璃态 ── */
+  --color-glass:          rgba(15,15,26,0.65);
+  --color-glass-hover:    rgba(15,15,26,0.80);
+  --color-glass-border:   rgba(255,255,255,0.08);
+  --glass-blur:           12px;
+  --glass-blur-heavy:     20px;
+
+  /* ── 语义层：边框 ── */
+  --color-border:         rgba(255,255,255,0.06);
+  --color-border-light:   rgba(255,255,255,0.04);
+  --color-border-focus:   rgba(124,106,242,0.45);
+  --color-border-glow:    rgba(124,106,242,0.25);
+
+  /* ── 语义层：文本 ── */
+  --color-text:           #f8fafc;
+  --color-text-2:         #94a3b8;
+  --color-text-3:         #7c8aa0;
+  --color-text-invert:    #0f0f1a;
+
+  /* ── 兼容别名（自动跟随语义层） ── */
+  --bg-primary:    var(--color-canvas);
+  --bg-secondary:  var(--color-surface-2);
+  --bg-tertiary:   var(--color-elevated);
+  --bg-elevated:   var(--color-elevated);
+  --bg-card:       var(--color-surface);
+  --bg-card-hover:  var(--color-surface-hover);
+  --bg-input:      rgba(255,255,255,0.05);
+  --bg-overlay:    var(--color-overlay);
+  --glass-bg:        var(--color-glass);
+  --glass-bg-hover:  var(--color-glass-hover);
+  --glass-border:    var(--color-glass-border);
+  --border-color:    var(--color-border);
+  --border-light:    var(--color-border-light);
+  --border-focus:    var(--color-border-focus);
+  --border-glow:     var(--color-border-glow);
+  --text-primary:    var(--color-text);
+  --text-secondary:  var(--color-text-2);
+  --text-muted:      var(--color-text-3);
+  --text-inverse:    var(--color-text-invert);
+  --text-user:       #ffffff;
+
+  /* ── 品牌色（双主题恒定） ── */
+  --accent:           #7c6af2;
+  --accent-dark:      #6b5cdb;
+  --accent-blue:      #5b8bd8;
+  --accent-cyan:      #06b6d4;
+  --accent-warm:      #f59e0b;
+  --accent-success:   #22c55e;
+  --accent-danger:    #ef4444;
+  --accent-pink:      #f472b6;
+  --accent-primary:        var(--accent);
+  --accent-primary-dark:   var(--accent-dark);
+  --accent-secondary:      var(--accent-blue);
+  --accent-tertiary:       var(--accent-cyan);
+--accent-primary-10:  rgba(124,106,242,0.10);
+  --accent-primary-15:  rgba(124,106,242,0.15);
+  --accent-primary-20:  rgba(124,106,242,0.20);
+  --accent-primary-30:  rgba(124,106,242,0.30);
+  --accent-danger-10:   rgba(239,68,68,0.10);
+  --accent-danger-20:   rgba(239,68,68,0.20);
+  --accent-success-10:  rgba(34,197,94,0.10);
+  --accent-success-20:  rgba(34,197,94,0.20);
+  --text-danger:         #fca5a5;
+
+  /* ── 408 四科色（恒定） ── */
+  --subject-ds: #8b5cf6;
+  --subject-cn: #3b82f6;
+  --subject-co: #06b6d4;
+  --subject-os: #f472b6;
+
+  /* ── 发光效果 ── */
+  --glow-primary:        0 0 20px rgba(124,106,242,0.15), 0 0 40px rgba(124,106,242,0.08);
+  --glow-primary-strong: 0 0 20px rgba(124,106,242,0.25), 0 0 60px rgba(124,106,242,0.12);
+  --glow-secondary:      0 0 20px rgba(91,139,216,0.15), 0 0 40px rgba(91,139,216,0.08);
+  --glow-success:        0 0 20px rgba(34,197,94,0.15);
+
+  /* ── 渐变 ── */
+  --gradient-primary: linear-gradient(135deg, #7c6af2 0%, #5b8bd8 100%);
+  --gradient-card:    linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  --gradient-text:     linear-gradient(135deg, #f8fafc 0%, #a5b4fc 100%);
+  --gradient-hero: radial-gradient(ellipse 600px 400px at 30% 30%, rgba(124,106,242,0.10) 0%, transparent 70%),
+                   radial-gradient(ellipse 500px 300px at 70% 60%, rgba(91,139,216,0.08) 0%, transparent 70%);
+  --gradient-sidebar: linear-gradient(180deg, rgba(124,106,242,0.03) 0%, transparent 40%);
+  --gradient-border:  linear-gradient(135deg, rgba(124,106,242,0.20), rgba(91,139,216,0.15), rgba(6,182,212,0.10));
+  --gradient-progress: linear-gradient(90deg, #7c6af2, #5b8bd8, #06b6d4);
+  --gradient-warm:    linear-gradient(135deg, #f59e0b 0%, #f472b6 100%);
+
+  /* ── 阴影（克制深色抬升 + 彩色发光） ── */
+  --shadow-sm:   0 1px 2px rgba(0,0,0,0.30);
+  --shadow-md:   0 4px 12px rgba(0,0,0,0.35);
+  --shadow-lg:   0 8px 24px rgba(0,0,0,0.40);
+  --shadow-xl:   0 16px 40px rgba(0,0,0,0.45);
+  --shadow-card:         0 2px 8px rgba(0,0,0,0.25), 0 0 1px rgba(255,255,255,0.06);
+  --shadow-card-hover:   0 8px 24px rgba(0,0,0,0.35), 0 0 20px rgba(124,106,242,0.08);
+  --shadow-glow:        0 4px 16px rgba(124,106,242,0.12);
+
+  /* ── 圆角 ── */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* ── 尺寸 ── */
+  --topbar-height: 64px;
+  --sidebar-width: 220px;
+  --sidebar-collapsed: 72px;
+  --bottom-nav-height: 64px;
+  --chat-max-width: 900px;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', 'Consolas', 'Cascadia Code', monospace;
+
+  --transition:       all 0.2s cubic-bezier(0.4,0,0.2,1);
+  --transition-slow:  all 0.35s cubic-bezier(0.4,0,0.2,1);
+  --transition-bounce: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  --duration-fast:   150ms;
+  --duration-normal:  300ms;
+  --duration-slow:    500ms;
+  --duration-enter:    600ms;
+
+  /* ── 旧别名（v4→v7 过渡，勿新增引用） ── */
+  --accent-1: var(--accent-primary);
+  --accent-2: var(--accent-secondary);
+  --accent-3: var(--accent-tertiary);
+  --accent-4: var(--accent-pink);
+  --accent-5: var(--accent-success);
+  --accent-6: var(--accent-danger);
+  --accent-1-light: var(--accent-primary-10);
+  --accent-1-mid: var(--accent-primary-20);
+  --accent-1-dark: var(--accent-primary-dark);
+  --gradient-accent: var(--gradient-primary);
+  --bg-ai-msg: var(--bg-secondary);
+
+  /* ── v9 抛光令牌（流式/微交互/可达性） ── */
+  --cursor-color: var(--accent-primary);
+  --cursor-blink: 1.1s;
+  --thinking-bg: color-mix(in srgb, var(--accent-primary) 8%, var(--color-surface));
+  --stream-fade: 200ms;
+  --ease-standard: cubic-bezier(0.4,0,0.2,1);
+  --ease-out: cubic-bezier(0.16,1,0.3,1);
+  --ease-bounce: cubic-bezier(0.34,1.56,0.64,1);
+  --focus-ring: 0 0 0 3px var(--accent-primary-20);
+  --hover-glow-cap: var(--shadow-card-hover);
+  --text-success: var(--accent-success);
+
+  /* ── MARS-408 可视化页 · 页面级令牌（VIZ/KG；deep 值，light 覆盖见下）── */
+  --agent-coord:    #7c6af2;
+  --agent-plan:     #c4b5fd;
+  --agent-diag:     #8b5cf6;
+  --agent-gen:      #3b82f6;
+  --agent-retrieve: #06b6d4;
+  --agent-eval:     #f472b6;
+  --agent-quality:  #ec4899;
+  --agent-path:     #a78bfa;   /* 路径规划输出节点（补充第 8 色）*/
+  --agent-evidence: #2dd4bf;   /* 证据校验 evidence_check（青绿）*/
+  --agent-gate:     #fbbf24;   /* 产物验收 quality_gate（琥珀）*/
+
+  --flow-data:      #60a5fa;
+  --flow-control:   #a78bfa;
+  --flow-consensus: #22d3ee;
+
+  --nm-mix-from:    #a78bfa;
+  --nm-mix-to:      #22d3ee;
+
+  --conflict-detected: #f87171;
+  --conflict-resolved: #4ade80;
+
+  --mastery-low:  #ef4444;
+  --mastery-mid:  #f59e0b;
+  --mastery-high: #22c55e;
+  --edge-prereq:  #7c6af2;
+  --edge-related: #475569;
+  --kg-node-base: 44px;
+  --urgent:       #ef4444;
+  --subject-data: var(--subject-ds);
+  --subject-net:  var(--subject-cn);
+  --subject-org:  var(--subject-co);
+  --subject-os:   var(--subject-os);
+
+  /* ── 仪表盘扩展令牌（融合自 DESIGN_TOKENS_DASH.md）── */
+  /* 图表分类色板 */
+  --series-1: var(--subject-ds);
+  --series-2: var(--subject-cn);
+  --series-3: var(--subject-co);
+  --series-4: var(--subject-os);
+  --series-5: #a78bfa;
+  --series-6: #5b8bd8;
+
+  /* 连续数值色阶（紫系深浅，热力图用） */
+  --seq-1: rgba(124,106,242,0.10);
+  --seq-2: rgba(124,106,242,0.24);
+  --seq-3: rgba(124,106,242,0.40);
+  --seq-4: rgba(124,106,242,0.58);
+  --seq-5: rgba(124,106,242,0.76);
+  --seq-6: #c4b5fd;
+
+  /* 三态状态色 + 薄弱专属 */
+  --state-success: #22c55e;
+  --state-warning: #f59e0b;
+  --state-danger:  #ef4444;
+  --state-weak:    #a78bfa;
+
+  /* 图表网格/轴 */
+  --chart-grid:        rgba(255,255,255,0.06);
+  --chart-grid-strong: rgba(255,255,255,0.10);
+  --chart-axis:        rgba(255,255,255,0.12);
+  --chart-tick:        #7c8aa0;
+
+  /* KPI 卡 */
+  --kpi-value-size:   32px;
+  --kpi-value-weight: 700;
+  --kpi-value-glow:   0 0 18px rgba(124,106,242,0.20);
+  --kpi-label-color:  var(--color-text-2);
+  --kpi-trend-up:     var(--state-success);
+  --kpi-trend-down:   var(--state-danger);
+  --kpi-trend-flat:   var(--color-text-2);
+
+  /* 角标（示意/真实） */
+  --tag-demo-bg:    rgba(148,163,184,0.14);
+  --tag-demo-color: #cbd5e1;
+  --tag-live-bg:    rgba(34,197,94,0.14);
+  --tag-live-color: var(--state-success);
+
+  /* 8 Agent 状态 */
+  --agent-online:  var(--accent);
+  --agent-busy:    var(--state-warning);
+  --agent-idle:    #94a3b8;
+  --agent-offline: #64748b;
+  --agent-error:   var(--state-danger);
+}
+
+/* ── 浅色主题：覆盖语义层即可，别名与品牌色自动跟随 ── */
+[data-theme="light"] {
+  --color-canvas:        #f5f6fb;
+  --color-surface:       #ffffff;
+  --color-surface-2:     #eef0f6;
+  --color-surface-hover:  #e7eaf3;
+  --color-elevated:      #ffffff;
+  --color-overlay:        rgba(15,18,40,0.32);
+
+  --color-glass:          rgba(255,255,255,0.72);
+  --color-glass-hover:    rgba(255,255,255,0.88);
+  --color-glass-border:   rgba(15,18,40,0.10);
+
+  --color-border:         rgba(15,18,40,0.10);
+  --color-border-light:   rgba(15,18,40,0.06);
+  --color-border-focus:   rgba(124,106,242,0.50);
+  --color-border-glow:    rgba(124,106,242,0.22);
+
+  --color-text:           #1a1d2e;
+  --color-text-2:         #525a72;
+  --color-text-3:         #8a92a8;
+  --color-text-invert:    #ffffff;
+
+  --bg-input:  rgba(15,18,40,0.04);
+--accent-primary-10: rgba(124,106,242,0.08);
+  --accent-primary-15: rgba(124,106,242,0.12);
+  --accent-primary-20: rgba(124,106,242,0.14);
+  --accent-primary-30: rgba(124,106,242,0.20);
+  --accent-danger-10:   rgba(239,68,68,0.08);
+  --accent-danger-20:   rgba(239,68,68,0.14);
+  --accent-success-10:  rgba(34,197,94,0.10);
+  --accent-success-20:  rgba(34,197,94,0.16);
+  --text-danger:         #dc2626;
+  --text-success: #15803d;
+
+  /* 浅色主题下渐变文字需由深→品牌紫，避免白底白字 */
+  --gradient-text: linear-gradient(135deg, #1a1d2e 0%, #6d5deb 100%);
+
+  --glow-primary:        0 0 18px rgba(124,106,242,0.10), 0 0 36px rgba(124,106,242,0.05);
+  --glow-primary-strong: 0 0 18px rgba(124,106,242,0.18), 0 0 48px rgba(124,106,242,0.09);
+  --glow-secondary:      0 0 18px rgba(91,139,216,0.10), 0 0 36px rgba(91,139,216,0.05);
+  --glow-success:        0 0 18px rgba(34,197,94,0.10);
+
+  --shadow-sm:   0 1px 2px rgba(15,18,40,0.06);
+  --shadow-md:   0 4px 12px rgba(15,18,40,0.08);
+  --shadow-lg:   0 8px 24px rgba(15,18,40,0.10);
+  --shadow-xl:   0 16px 40px rgba(15,18,40,0.14);
+  --shadow-card:         0 1px 3px rgba(15,18,40,0.06), 0 0 1px rgba(15,18,40,0.04);
+  --shadow-card-hover:   0 8px 24px rgba(15,18,40,0.10), 0 0 18px rgba(124,106,242,0.06);
+  --shadow-glow:        0 4px 16px rgba(124,106,242,0.08);
+
+  /* ── 可视化页令牌 · 浅色覆盖（保证浅色主题可读/可见）── */
+  --agent-coord:    #6d5deb;
+  --agent-plan:     #7c6af2;
+  --agent-diag:     #7c3aed;
+  --agent-gen:      #2563eb;
+  --agent-retrieve: #0891b2;
+  --agent-eval:     #db2777;
+  --agent-quality:  #be185d;
+  --agent-path:     #6d28d9;
+  --agent-evidence: #0d9488;   /* 证据校验 evidence_check（青绿）*/
+  --agent-gate:     #d97706;   /* 产物验收 quality_gate（琥珀）*/
+
+  --flow-data:      #2563eb;
+  --flow-control:   #7c6af2;
+  --flow-consensus: #0891b2;
+
+  --nm-mix-from:    #7c6af2;
+  --nm-mix-to:      #0891b2;
+
+  --conflict-detected: #dc2626;
+  --conflict-resolved: #16a34a;
+
+  --mastery-low:  #dc2626;
+  --mastery-mid:  #b45309;
+  --mastery-high: #15803d;
+  --edge-prereq:  #6b5cdb;
+  --edge-related: #94a3b8;
+
+  /* 仪表盘扩展 · 浅色覆盖 */
+  --chart-grid:        rgba(15,18,40,0.06);
+  --chart-grid-strong: rgba(15,18,40,0.10);
+  --chart-axis:        rgba(15,18,40,0.12);
+  --chart-tick:        #8a92a8;
+  --seq-1: rgba(124,106,242,0.14);
+  --seq-2: rgba(124,106,242,0.30);
+  --seq-3: rgba(124,106,242,0.46);
+  --seq-4: rgba(124,106,242,0.62);
+  --seq-5: rgba(124,106,242,0.80);
+  --seq-6: #6d5fe0;
+  --tag-demo-bg:    rgba(15,18,40,0.06);
+  --tag-demo-color: #525a72;
+  --tag-live-bg:    rgba(34,197,94,0.14);
+  --tag-live-color: #16a34a;
+  --agent-idle:    #525a72;
+  --agent-offline: #94a3b8;
+}
+[data-theme="light"] body::before { opacity: 0.5; }
+[data-theme="light"] .empty-state svg { opacity: 0.35; }

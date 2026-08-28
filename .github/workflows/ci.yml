@@ -1,0 +1,298 @@
+name: CI Security Gate (MARS-408 / study-help-pro)
+
+# 固化已修复的安全缺陷，防 regression。任一阻塞门禁失败即阻断 PR 合并。
+on:
+  push:
+  pull_request:
+
+# 仅读权限，密钥不在此 workflow 暴露
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ───────────────────────────────────────────────────────────────
+  # 快速确定性门禁（G1–G12）：秒级，必须绿才能合并
+  # ───────────────────────────────────────────────────────────────
+  security-gates:
+    name: Security static gates (G1-G12)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run static security gates G1-G12
+        run: |
+          fail() { echo "FAIL: $1"; exit 1; }
+
+          echo "== G1: 默认管理员口令不得回归 =="
+          grep -n "ADMIN_PASSWORD" docker-compose.yml | grep -q 'ADMIN_PASSWORD=${ADMIN_PASSWORD}$' \
+            || fail "G1 compose 缺少 ADMIN_PASSWORD=\${ADMIN_PASSWORD}（无默认值）"
+          grep -q 'ADMIN_PASSWORD=${ADMIN_PASSWORD:-' docker-compose.yml \
+            && fail "G1 compose 不得为 ADMIN_PASSWORD 提供默认口令"
+          grep -n 'AUTH_SECRET' docker-compose.yml | grep -q 'AUTH_SECRET=${AUTH_SECRET}$' \
+            || fail "G15 compose 缺少 AUTH_SECRET=\${AUTH_SECRET}（无默认值）"
+          grep -q 'AUTH_SECRET=${AUTH_SECRET:-' docker-compose.yml \
+            && fail "G15 compose 不得为 AUTH_SECRET 提供默认值"
+          # 仅扫 py-server/ src/ docker-compose.yml；不扫 Student@2026（dev 种子演示账号，不在 G1 范围）
+          grep -rn "MARS-408@2026" --include=*.py --include=*.yml --include=*.yaml --include=*.vue \
+            py-server/ src/ docker-compose.yml \
+            && fail "G1 仓库内再次出现已知弱口令 MARS-408@2026"
+          echo "  PASS G1"
+
+          echo "== G3: 代码沙箱逃逸防护在位 =="
+          grep -q "_DANGEROUS_SUBSCRIPT_BASES" py-server/api/sandbox.py \
+            || fail "G3 缺少 _DANGEROUS_SUBSCRIPT_BASES 下标绕过拦截"
+          grep -q "setrlimit" py-server/api/sandbox.py \
+            || fail "G3 缺少 setrlimit 资源上限"
+          grep -q "killpg" py-server/api/sandbox.py \
+            || fail "G3 缺少 killpg 超时整体杀进程组"
+          echo "  PASS G3"
+
+          echo "== G4: 用户凭证库不出 git =="
+          tracked=$(git ls-files | grep -E 'py-server/data/.*\.(db|db-shm|db-wal|sqlite|sqlite3|db-journal)$' || true)
+          test -z "$tracked" || fail "G4 用户凭证库被 git 跟踪: ${tracked}"
+          echo "  PASS G4"
+
+          echo "== G6: PBKDF2 >= 600_000 迭代 =="
+          grep -q "PBKDF2_ITERATIONS = 600_000" py-server/db/user_store.py \
+            || fail "G6 PBKDF2_ITERATIONS 必须为 600_000"
+          # 仅校验常量定义与 _hash_password 调用；_verify_password 保留 100_000 旧格式兼容，不应被标记
+          grep -n "pbkdf2_hmac" py-server/db/user_store.py | grep -q "PBKDF2_ITERATIONS" \
+            || fail "G6 _hash_password 必须使用 PBKDF2_ITERATIONS 常量（不得写死 100_000）"
+          echo "  PASS G6"
+
+          echo "== G8: S1 导入路径穿越拒绝（ADR-007）== "
+          grep -q "DOCS_DIR" py-server/services/import_worker.py \
+            || fail "G8 缺少 DOCS_DIR 锚点"
+          grep -q "拒绝越界" py-server/services/import_worker.py \
+            || fail "G8 缺少越界拒绝分支（拒绝越界 source）"
+          grep -q "parents" py-server/services/import_worker.py \
+            || fail "G8 缺少 parents 越界校验"
+          echo "  PASS G8"
+
+          echo "== G10: CORS/CSP 收紧 + 上传上限 =="
+          grep -n 'allow_methods=\["\*"\]' py-server/main.py \
+            && fail "G10 CORS allow_methods 不得为 ['*']"
+          grep -n 'allow_headers=\["\*"\]' py-server/main.py \
+            && fail "G10 CORS allow_headers 不得为 ['*']"
+          grep -n 'allow_origins=\["\*"\]' py-server/main.py \
+            && fail "G10 CORS allow_origins 不得为 ['*']"
+          grep -n "unsafe-eval" py-server/main.py \
+            && fail "G10 CSP 不得含 unsafe-eval"
+          grep -q "MAX_UPLOAD_MB" py-server/api/knowledge.py \
+            || fail "G10 knowledge.py 缺少 MAX_UPLOAD_MB 上传上限"
+          echo "  PASS G10"
+
+          echo "== G11: SVG 注入转义 html.escape =="
+          grep -q "import html" py-server/db/xfyun_multimodal.py \
+            || fail "G11 缺少 import html"
+          grep -q "html.escape" py-server/db/xfyun_multimodal.py \
+            || fail "G11 缺少 html.escape 转义"
+          echo "  PASS G11"
+
+          echo "== G12: 确定性文档 ID（sha256，非 abs(hash())）=="
+          grep -q "hashlib.sha256" py-server/api/knowledge.py \
+            || fail "G12 knowledge.py 缺少 hashlib.sha256"
+          # 作用域限定 knowledge.py；mindmap.py 的 abs(hash() 非安全关键，不在本门禁范围
+          grep -n "abs(hash(" py-server/api/knowledge.py \
+            && fail "G12 knowledge.py 不得出现 abs(hash( 非确定性 ID"
+          echo "  PASS G12"
+
+          echo "== G2/G5/G7/G9: AST 断言（fail-closed 限流 / AUTH_SECRET fail-fast / demo 仅非生产 / workers>1 fail-fast）=="
+          python scripts/security_gate_assert.py \
+            || fail "G2/G5/G7/G9 AST 断言失败"
+          echo "  PASS G2/G5/G7/G9"
+
+          echo "ALL SECURITY GATES PASSED"
+
+  # ───────────────────────────────────────────────────────────────
+  # 密钥扫描（gitleaks v8.21.0，全量含历史）：失败即阻断
+  # ───────────────────────────────────────────────────────────────
+  secret-scan:
+    name: Secret scan (gitleaks v8.21.0)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # 全量历史扫描，避免只扫工作树/最近提交漏掉历史密钥
+          fetch-depth: 0
+      - name: Install gitleaks v8.21.0
+        run: |
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.21.0/gitleaks_8.21.0_linux_x64.tar.gz -o gitleaks.tar.gz
+          tar -xzf gitleaks.tar.gz gitleaks
+          ./gitleaks version
+      - name: Run gitleaks detect
+        run: ./gitleaks detect --source . --config .gitleaks.toml --redact --no-banner
+
+  # ───────────────────────────────────────────────────────────────
+  # 前端质量门禁（lint + 单测 + vue-tsc 类型检查 + vite 构建）：任一失败即阻断
+  # 闭合评审指出的「前后端门禁失衡」——后端 7+ job，前端此前仅 type-check+build、0 测试
+  # ───────────────────────────────────────────────────────────────
+  lint-build:
+    name: Frontend lint + test + type-check + build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - run: npm ci
+      - name: ESLint (zero-error gate)
+        run: npm run lint
+      - name: Vitest unit tests
+        run: npm test
+      - name: Type-check + build
+        run: npm run build
+
+  # ───────────────────────────────────────────────────────────────
+  # 后端测试 · 单元/集成/API 回归（安全测试集 + 覆盖率趋势）：失败即阻断
+  # 不含 system / requires_milvus 分档，避免 Windows 本地 SIGSEGV 与重依赖
+  # ───────────────────────────────────────────────────────────────
+  backend-tests:
+    name: Backend tests (unit/integration/API + coverage)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: py-server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install backend (editable, with test extras)
+        run: pip install --upgrade pip && pip install -e ".[test]"
+      - name: Run pytest (unit/integration/API, coverage xml)
+        run: pytest -m "not system and not requires_milvus" --cov=. --cov-report=xml:coverage.xml -q
+      - name: ADR-007 single-writer gate (import_queue)
+        run: pytest -m import_queue -q
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: py-server/coverage.xml
+          if-no-files-found: warn
+
+  # ───────────────────────────────────────────────────────────────
+  # 后端系统测试（真实 uvicorn 子进程 + 进程级并发）：超时保护防挂起
+  # ───────────────────────────────────────────────────────────────
+  backend-system:
+    name: Backend system tests (real uvicorn, --timeout=180)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: py-server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install backend (editable, with test extras)
+        run: pip install --upgrade pip && pip install -e ".[test]"
+      - name: Run system tests (timeout guard)
+        run: pytest -m system --timeout=180 -q
+
+  # ───────────────────────────────────────────────────────────────
+  # 后端 Milvus 集成（真实 Milvus 服务端 + pymilvus）：
+  # startup guard 断言真连，杜绝「CI 全绿实际跑 InMemory」虚假信心（D14 闭环）
+  # ───────────────────────────────────────────────────────────────
+  backend-milvus:
+    name: Backend Milvus integration (real server + startup guard)
+    runs-on: ubuntu-latest
+    # MILVUS_HOST 置于 job 级 env，使其对 pytest/python 步骤可见
+    # （milvus 服务容器本身无需此变量；connect() 默认 host 已是 localhost，
+    #  此处显式声明以对齐草案并确保健康检查脚本拿到正确 host）
+    env:
+      MILVUS_HOST: localhost
+    defaults:
+      run:
+        working-directory: py-server
+    services:
+      milvus:
+        image: milvusdb/milvus:v2.4.17
+        ports:
+          - "19530:19530"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install backend (editable, with test extras)
+        run: pip install --upgrade pip && pip install -e ".[test]"
+      - name: "Milvus startup guard (fail-closed: 拒绝静默回退 InMemory)"
+        # 含重试（最多 ~120s，每次 5s），容忍 Milvus standalone 冷启动延迟；
+        # 仍坚持 fail-closed：必须真连上且 _milvus_connected 为真，否则作业立即红。
+        run: |
+          python - <<'PY'
+          import time
+          from db.milvus_client import MILVUS_AVAILABLE, VectorDB
+          assert MILVUS_AVAILABLE, "pymilvus 未安装：MILVUS_AVAILABLE=False"
+          last_err = None
+          for _ in range(24):  # 最多 ~120s
+              vdb = VectorDB()
+              try:
+                  connected = vdb.connect()
+              except Exception as e:  # noqa: BLE001
+                  connected = False
+                  last_err = e
+              if connected and vdb._milvus_connected:
+                  print("OK: Milvus 真实连接成功")
+                  vdb.disconnect()
+                  break
+              try:
+                  vdb.disconnect()
+              except Exception:  # noqa: BLE001
+                  pass
+              time.sleep(5)
+          else:
+              raise AssertionError(f"Milvus 连接失败并静默回退（D14 防回退断言）：{last_err}")
+          PY
+      - name: Run Milvus integration tests
+        run: pytest -m requires_milvus -q
+
+  # ───────────────────────────────────────────────────────────────
+  # 依赖 CVE 扫描（pip-audit）：HIGH/CRITICAL 升级为阻断
+  # ───────────────────────────────────────────────────────────────
+  pip-audit:
+    name: Dependency CVE scan (pip-audit --fail-on high)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install backend + pip-audit
+        run: cd py-server && pip install --upgrade pip && pip install -e . && pip install pip-audit
+      - name: Run pip-audit (fail on HIGH/CRITICAL)
+        run: cd py-server && pip-audit --fail-on high
+
+  # ───────────────────────────────────────────────────────────────
+  # 设计令牌漂移门禁（SSOT）：任何原型改动若偏离 _variables.css 单一真相源即阻断
+  # 与 P1 设计系统 SSOT 收口配套，确保零漂移成为硬约束（非仅本地手工跑）
+  # ───────────────────────────────────────────────────────────────
+  design-token-drift:
+    name: Design token SSOT drift gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run SSOT drift checker (fail on any drift)
+        run: python design-system/check_tokens.py
+
+  # ───────────────────────────────────────────────────────────────
+  # 镜像可构建性（验证 Dockerfile 的 /static 挂载与单进程 CMD）
+  # ───────────────────────────────────────────────────────────────
+  docker-build:
+    name: Docker image build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t netlearn:ci .

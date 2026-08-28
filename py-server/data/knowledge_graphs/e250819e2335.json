@@ -1,0 +1,15 @@
+{
+  "id": "e250819e2335",
+  "name": "测试图谱",
+  "subject": "test",
+  "created_at": "2026-08-28T20:41:57.530334",
+  "entities": [
+    {
+      "id": "e1",
+      "name": "测试实体",
+      "type": "concept"
+    }
+  ],
+  "relationships": [],
+  "stats": {}
+}

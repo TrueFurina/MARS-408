@@ -1,0 +1,87 @@
+# ============================================================
+# .dockerignore — MARS-408 Docker 构建上下文排除
+# 减少构建上下文大小，加快 Docker 构建速度
+# ============================================================
+
+# Git
+.git/
+.gitignore
+.gitattributes
+.gitleaks.toml
+.pre-commit-config.yaml
+
+# 文档与设计文件（非运行所需）
+documents/
+deliverables/
+archive/
+*.pptx
+*.md
+DESIGN.md
+README.md
+
+# 前端构建缓存
+node_modules/
+dist-qa/
+dist-qa-prove/
+.pytest-tmp/
+
+# 后端正则产物
+py-server/.venv/
+py-server/__pycache__/
+py-server/.pytest_cache/
+py-server/.pytest-tmp/
+py-server/milvus_lite_data/
+py-server/vectordb_data/
+py-server/data/*.db
+py-server/data/*.db-shm
+py-server/data/*.db-wal
+py-server/sessions/
+py-server/plots/
+
+# 日志
+*.log
+backend*.log
+build*.log
+
+# 临时文件
+py-server/_*.py
+py-server/iq_*.txt
+py-server/iq_*.log
+py-server/*.txt
+
+# 环境变量（本地密钥）
+.env
+.env.local
+.env.*.local
+py-server/.env
+
+# 会话与 AI 记忆
+.sessions/
+.workbuddy/
+.codebuddy/
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 临时向量/损坏文件
+py-server/data/*.tmp.*.npy
+py-server/data/*.corrupted.*
+*.tmp
+*.bak
+
+# 本地配置文件
+py-server/config.json
+
+# 根目录冗余向量库
+vectordb_data/
+
+# 前端旧构建目录
+dist-*/
+dist_旧构建/
+
+# 系统
+.DS_Store
+Thumbs.db

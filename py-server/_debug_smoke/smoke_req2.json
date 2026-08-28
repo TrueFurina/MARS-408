@@ -1,0 +1,12 @@
+{
+  "message": "请讲解 TCP 三次握手过程，并生成配套学习资源",
+  "topic": "TCP 三次握手",
+  "course": "computer_network",
+  "difficulty": "medium",
+  "profile": {
+    "learning_style": "reading",
+    "knowledge_base": "beginner",
+    "weak_points": "网络层与传输层区别"
+  },
+  "history": []
+}

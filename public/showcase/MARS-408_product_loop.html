@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<!-- MARS-408 设计系统：使用 _variables.css 中的设计令牌（:root 严格零漂移，check_tokens.py 门禁可校验）。
+     本原型为「产品闭环 Product Loop」第 5 个展示原型，深色玻璃态，与其余 4 个 MARS-408 原型视觉连续。
+     生成者：原型构建师 筑原型（Zhu）。所有资源内联，可离线双击打开。 -->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MARS-408 · 产品闭环 Product Loop</title>
+<style>
+/* ============ :root 设计令牌（严格照抄，禁止改动任何值） ============ */
+:root{ --color-canvas:#080812; --color-surface:rgba(255,255,255,.03); --color-surface-hover:rgba(255,255,255,.06); --color-glass:rgba(15,15,26,.65); --color-glass-hover:rgba(15,15,26,.80); --color-glass-border:rgba(255,255,255,.08); --glass-blur:12px; --color-border:rgba(255,255,255,.06); --color-border-glow:rgba(124,106,242,.25); --color-text:#f8fafc; --color-text-2:#94a3b8; --color-text-3:#7c8aa0; --accent:#7c6af2; --accent-blue:#5b8bd8; --accent-cyan:#06b6d4; --accent-warm:#f59e0b; --accent-success:#22c55e; --accent-danger:#ef4444; --accent-pink:#f472b6; --accent-primary:var(--accent); --accent-secondary:var(--accent-blue); --accent-tertiary:var(--accent-cyan); --accent-primary-10:rgba(124,106,242,.10); --accent-primary-20:rgba(124,106,242,.20); --accent-primary-30:rgba(124,106,242,.30); --accent-success-10:rgba(34,197,94,.10); --accent-danger-10:rgba(239,68,68,.10); --subject-ds:#8b5cf6; --subject-cn:#3b82f6; --subject-co:#06b6d4; --subject-os:#f472b6; --glow-primary:0 0 20px rgba(124,106,242,.15),0 0 40px rgba(124,106,242,.08); --glow-primary-strong:0 0 20px rgba(124,106,242,.25),0 0 60px rgba(124,106,242,.12); --glow-success:0 0 20px rgba(34,197,94,.15); --gradient-primary:linear-gradient(135deg,#7c6af2 0%,#5b8bd8 100%); --gradient-progress:linear-gradient(90deg,#7c6af2,#5b8bd8,#06b6d4); --gradient-border:linear-gradient(135deg,rgba(124,106,242,.20),rgba(91,139,216,.15),rgba(6,182,212,.10)); --gradient-warm:linear-gradient(135deg,#f59e0b 0%,#f472b6 100%); --shadow-card:0 2px 8px rgba(0,0,0,.25),0 0 1px rgba(255,255,255,.06); --shadow-card-hover:0 8px 24px rgba(0,0,0,.35),0 0 20px rgba(124,106,242,.08); --radius-md:14px; --radius-lg:18px; --radius-full:9999px; --font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif; --font-mono:'SF Mono','Fira Code','Consolas','Cascadia Code',monospace; --space-4:16px; --space-6:24px; --space-8:32px; --space-12:48px; --space-24:96px; --fs-body:14px; --fs-h3:18px; --fs-h2:24px; --fs-hero:clamp(40px,6vw,64px); }
+
+/* ============ 基础重置 ============ */
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--color-canvas);color:var(--color-text);
+  font-family:var(--font-sans);font-size:var(--fs-body);line-height:1.65;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+/* 环境光晕，呼应其余 MARS-408 原型 */
+body::before{
+  content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(620px 420px at 12% 8%, rgba(124,106,242,.10), transparent 60%),
+    radial-gradient(520px 420px at 88% 26%, rgba(6,182,212,.07), transparent 62%),
+    radial-gradient(640px 520px at 50% 104%, rgba(91,139,216,.08), transparent 60%);
+}
+a{color:inherit;text-decoration:none;}
+img,svg{display:block;}
+
+/* ============ 容器 / 区块节奏 ============ */
+.container{max-width:1200px;margin:0 auto;padding:0 var(--space-6);}
+section{padding-block:var(--space-24);}
+.sec-title{font-size:var(--fs-h2);font-weight:700;letter-spacing:-.01em;margin-bottom:var(--space-4);}
+.sec-desc{color:var(--color-text-3);font-size:15px;margin-bottom:var(--space-8);max-width:680px;}
+.eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--color-text-3);
+  font-weight:600;margin-bottom:var(--space-4);display:inline-block;
+  padding:5px 12px;border:1px solid var(--color-border);border-radius:var(--radius-full);}
+
+/* ============ 玻璃卡 ============ */
+.glass{
+  background:var(--color-glass);
+  backdrop-filter:blur(var(--glass-blur));
+  -webkit-backdrop-filter:blur(var(--glass-blur));
+  border:1px solid var(--color-glass-border);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-card);
+}
+
+/* ============ 按钮 ============ */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:11px 24px;border-radius:var(--radius-full);font-weight:600;font-size:14px;
+  cursor:pointer;transition:all .25s ease;border:1px solid transparent;white-space:nowrap;}
+.btn-primary{background:var(--gradient-primary);color:#fff;box-shadow:var(--glow-primary);}
+.btn-primary:hover{box-shadow:var(--glow-primary-strong);transform:translateY(-2px);}
+.btn-ghost{background:var(--color-surface);color:var(--color-text);border:1px solid var(--color-border);}
+.btn-ghost:hover{background:var(--color-surface-hover);border-color:var(--color-border-glow);}
+
+/* ============ 顶部吸顶玻璃导航 ============ */
+.nav{position:sticky;top:0;z-index:100;
+  background:var(--color-glass);backdrop-filter:blur(var(--glass-blur));
+  -webkit-backdrop-filter:blur(var(--glass-blur));
+  border-bottom:1px solid var(--color-glass-border);}
+.nav-inner{display:flex;align-items:center;gap:var(--space-6);height:66px;}
+.logo{display:flex;align-items:center;font-weight:700;font-size:18px;letter-spacing:-.01em;}
+.logo-dot{width:11px;height:11px;border-radius:50%;background:var(--gradient-primary);
+  box-shadow:var(--glow-primary);margin-right:9px;flex-shrink:0;}
+.nav-links{display:flex;gap:var(--space-6);margin-left:var(--space-6);}
+.nav-links a{color:var(--color-text-2);font-size:14px;font-weight:500;transition:color .2s;}
+.nav-links a:hover{color:var(--color-text);}
+.nav .btn{margin-left:auto;padding:9px 20px;}
+
+/* ============ 区块① Hero ============ */
+.hero-title{font-size:var(--fs-hero);font-weight:800;line-height:1.05;letter-spacing:-.02em;
+  margin-bottom:var(--space-4);max-width:14ch;}
+.hero-sub{color:var(--color-text-2);font-size:17px;max-width:640px;margin-bottom:var(--space-12);}
+.hero-sub b{color:var(--color-text);font-weight:600;}
+.path-wrap{padding:var(--space-8);margin-top:var(--space-4);overflow-x:auto;}
+.path-svg{width:100%;height:auto;min-width:720px;}
+.svg-cat{font-family:var(--font-sans);font-weight:700;fill:var(--color-text);}
+.svg-cat-sm{font-family:var(--font-sans);font-weight:600;fill:var(--color-text);}
+.svg-topic{font-family:var(--font-sans);fill:var(--color-text-2);}
+.svg-on{font-family:var(--font-sans);font-weight:600;fill:var(--color-text);}     /* 亮底节点上的字 */
+.svg-cap{font-family:var(--font-sans);fill:var(--color-text-2);}                  /* 说明小字 */
+.svg-badge{font-family:var(--font-sans);font-weight:600;fill:var(--accent);}
+.svg-node-label{fill:#0b0b14;font-weight:700;}   /* 落于分色圆上的节点标签：深色字，WCAG AA 对比度 >5:1 */
+
+.legend{display:flex;flex-wrap:wrap;gap:var(--space-6);margin-top:var(--space-6);
+  padding:var(--space-4) var(--space-6);align-items:center;}
+.legend .lg{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--color-text-2);}
+.legend .lg i{width:11px;height:11px;border-radius:50%;flex-shrink:0;}
+.legend .sep{width:1px;height:20px;background:var(--color-border);}
+.legend .note{margin-left:auto;font-size:12px;color:var(--color-text-3);}
+
+/* ============ 区块② 闭环逻辑条 ============ */
+.steps{display:flex;align-items:stretch;justify-content:center;gap:0;flex-wrap:wrap;margin-top:var(--space-4);}
+.step{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;
+  padding:var(--space-6) var(--space-4);min-width:150px;flex:1 1 150px;max-width:220px;}
+.step .badge{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:18px;font-family:var(--font-mono);border:1px solid var(--color-border);
+  background:var(--color-surface);color:var(--color-text-3);transition:all .25s;}
+.step p{font-size:14px;font-weight:500;color:var(--color-text-3);line-height:1.4;}
+.step.done .badge{background:var(--accent-success-10);border-color:var(--accent-success);color:var(--accent-success);}
+.step.done p{color:var(--color-text-2);}
+.step.current .badge{background:var(--accent-primary);border-color:var(--accent-primary);
+  color:#fff;box-shadow:var(--glow-primary);transform:scale(1.06);}
+.step.current p{color:var(--color-text);font-weight:600;}
+.step-arrow{flex:0 0 auto;width:54px;align-self:center;height:2px;background:var(--gradient-progress);
+  position:relative;margin:0 -4px;}
+.step-arrow::after{content:'';position:absolute;right:-1px;top:50%;transform:translateY(-50%);
+  border-left:9px solid var(--accent-cyan);border-top:6px solid transparent;border-bottom:6px solid transparent;}
+
+/* ============ 区块③ 资源 before/after ============ */
+.res-list{display:flex;flex-direction:column;gap:var(--space-6);margin-top:var(--space-4);}
+.res-card{padding:var(--space-6);transition:transform .25s,box-shadow .25s;}
+.res-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-card-hover);}
+.res-head{display:flex;align-items:center;gap:12px;margin-bottom:var(--space-4);}
+.res-idx{font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--accent);
+  background:var(--accent-primary-10);border:1px solid var(--accent-primary-20);
+  padding:3px 9px;border-radius:var(--radius-full);}
+.res-head h3{font-size:var(--fs-h3);font-weight:700;}
+.res-cols{display:grid;grid-template-columns:1fr 44px 1fr;align-items:stretch;gap:0;}
+.col{padding:var(--space-4) var(--space-6);border-radius:var(--radius-md);position:relative;}
+.col.before{background:var(--color-surface);border:1px solid var(--color-border);color:var(--color-text-3);}
+.col.after{background:var(--color-glass);border:1px solid var(--color-border-glow);
+  box-shadow:var(--glow-primary);color:var(--color-text);}
+.col .tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.04em;
+  padding:3px 10px;border-radius:var(--radius-full);margin-bottom:10px;}
+.col.before .tag{background:var(--color-surface-hover);color:var(--color-text-3);border:1px solid var(--color-border);}
+.col.after .tag{background:var(--accent-primary-10);color:var(--accent);border:1px solid var(--accent-primary-20);}
+.col p{font-size:13.5px;line-height:1.6;}
+.col.before p{color:var(--color-text-3);}
+.col-arrow{align-self:center;width:44px;display:flex;align-items:center;justify-content:center;}
+.col-arrow span{width:2px;height:46px;background:var(--gradient-progress);position:relative;}
+.col-arrow span::after{content:'';position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);
+  border-top:8px solid var(--accent-cyan);border-left:6px solid transparent;border-right:6px solid transparent;}
+.badge-ok{position:absolute;top:14px;right:14px;font-size:11px;font-weight:600;color:var(--accent-success);
+  background:var(--accent-success-10);border:1px solid rgba(34,197,94,.30);padding:3px 10px;border-radius:var(--radius-full);}
+
+/* ============ 区块④ 成效 / 校验 ============ */
+.trust-grid{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:var(--space-6);margin-top:var(--space-4);}
+.trust-cell{padding:var(--space-8);transition:transform .25s,box-shadow .25s;}
+.trust-cell:hover{transform:translateY(-4px);box-shadow:var(--shadow-card-hover);}
+.trust-label{font-size:13px;color:var(--color-text-3);margin-bottom:var(--space-4);font-weight:500;letter-spacing:.02em;}
+.score{font-family:var(--font-mono);font-weight:700;font-size:clamp(48px,8vw,76px);line-height:1;
+  background:var(--gradient-primary);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.trust-note{font-size:12px;color:var(--color-text-3);margin-top:14px;}
+.sev-row{display:flex;flex-direction:column;gap:14px;}
+.sev{display:flex;align-items:center;gap:11px;font-size:14px;color:var(--color-text-2);}
+.sev b{margin-left:auto;font-family:var(--font-mono);font-size:20px;font-weight:700;color:var(--color-text);}
+.sev .dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.dot.danger{background:var(--accent-danger);box-shadow:0 0 12px rgba(239,68,68,.5);}
+.dot.warm{background:var(--accent-warm);box-shadow:0 0 12px rgba(245,158,11,.5);}
+.dot.primary{background:var(--accent-primary);box-shadow:0 0 12px rgba(124,106,242,.5);}
+.dot.success{background:var(--accent-success);box-shadow:0 0 12px rgba(34,197,94,.5);}
+.trust-concl{margin-top:var(--space-8);padding:var(--space-6);border-radius:var(--radius-md);
+  background:var(--accent-primary-10);border:1px solid var(--accent-primary-20);
+  color:var(--color-text);font-size:15px;font-weight:500;text-align:center;}
+
+/* ============ 区块⑤ CTA ============ */
+.cta-card{max-width:760px;margin:0 auto;padding:var(--space-12) var(--space-8);text-align:center;}
+.cta-card h2{font-size:var(--fs-h2);font-weight:800;letter-spacing:-.01em;margin-bottom:var(--space-4);}
+.cta-card p{color:var(--color-text-2);font-size:15px;margin-bottom:var(--space-8);}
+.cta-btns{display:flex;gap:var(--space-4);justify-content:center;flex-wrap:wrap;}
+.footer{text-align:center;color:var(--color-text-3);font-size:13px;margin-top:var(--space-12);
+  padding-top:var(--space-6);border-top:1px solid var(--color-border);}
+
+/* ============ 滚动淡入 ============ */
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1);}
+.reveal.in{opacity:1;transform:none;}
+@media (prefers-reduced-motion: reduce){.reveal{opacity:1;transform:none;transition:none;}}
+
+/* ============ 响应式 ============ */
+@media (max-width:768px){
+  .nav-links{display:none;}
+  section{padding-block:var(--space-12);}
+  .res-cols{grid-template-columns:1fr;}
+  .col-arrow{width:100%;height:44px;}
+  .col-arrow span{width:46px;height:2px;}
+  .col-arrow span::after{content:'';position:absolute;bottom:-1px;left:50%;top:auto;
+    transform:translateX(-50%);border-top:8px solid var(--accent-cyan);
+    border-left:6px solid transparent;border-right:6px solid transparent;}
+  .trust-grid{grid-template-columns:1fr;}
+  .step-arrow{display:none;}
+  .steps{gap:var(--space-4);}
+  .hero-title{font-size:clamp(32px,9vw,44px);}
+  .path-wrap{overflow:hidden;}        /* P2-⑥ 窄屏去除横向滚动 */
+  .path-svg{min-width:0;}             /* P2-⑥ SVG 等比缩放至容器宽度，路径图完整可见 */
+}
+  /* P2-① 键盘焦点环：仅键盘聚焦显示紫色环，满足可访问性 */
+  :focus-visible{outline:2px solid #7c6af2;outline-offset:2px;}
+</style>
+</head>
+<body>
+
+<!-- ============ 顶部吸顶玻璃导航 ============ -->
+<nav class="nav">
+  <div class="container nav-inner">
+    <a class="logo" href="#hero"><span class="logo-dot"></span>MARS-408</a>
+    <div class="nav-links">
+      <a href="#hero">路径闭环</a>
+      <a href="#loop">闭环逻辑</a>
+      <a href="#resources">资源</a>
+      <a href="#trust">校验</a>
+    </div>
+    <a class="btn btn-primary" href="#cta">立即体验</a>
+  </div>
+</nav>
+
+<main>
+
+  <!-- ============ 区块① Hero — PathPlanner 路径可视化 ============ -->
+  <section id="hero" class="reveal">
+    <div class="container">
+      <span class="eyebrow">Product Loop · 产品闭环</span>
+      <h1 class="hero-title">一套会自愈的学习闭环</h1>
+      <p class="hero-sub">MARS-408 不是聊天机器人——<b>诊断 → 规划 → 生成 → 学习 → 再诊断</b>，每一轮都更贴近你的真实薄弱点。</p>
+
+      <div class="path-wrap glass">
+        <svg class="path-svg" viewBox="0 0 1000 320" role="img" aria-label="PathPlanner 学习路径可视化">
+          <defs>
+            <linearGradient id="progGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#7c6af2"/>
+              <stop offset="50%" stop-color="#5b8bd8"/>
+              <stop offset="100%" stop-color="#06b6d4"/>
+            </linearGradient>
+            <filter id="softGlow" x="-60%" y="-60%" width="220%" height="220%">
+              <feGaussianBlur stdDeviation="7" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="strongGlow" x="-90%" y="-90%" width="280%" height="280%">
+              <feGaussianBlur stdDeviation="11" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+
+          <!-- 节点间连线（紫→蓝→青 粗线） -->
+          <g stroke="url(#progGrad)" stroke-width="5" stroke-linecap="round" opacity="0.92">
+            <line x1="104" y1="170" x2="178" y2="170"/>
+            <line x1="282" y1="170" x2="362" y2="170"/>
+            <line x1="458" y1="170" x2="542" y2="170"/>
+            <line x1="638" y1="170" x2="722" y2="170"/>
+            <line x1="818" y1="170" x2="906" y2="170"/>
+          </g>
+
+          <!-- 起点圆：学情诊断（accent 实心 + glow） -->
+          <circle cx="60" cy="170" r="44" style="fill:var(--accent-primary)" filter="url(#softGlow)"/>
+          <text class="svg-node-label" x="60" y="164" text-anchor="middle" font-size="15">学情</text>
+          <text class="svg-node-label" x="60" y="184" text-anchor="middle" font-size="15">诊断</text>
+
+          <!-- 节点① 数据结构·树与图（紫，当前节点，外圈发光 + 薄弱高亮徽标） -->
+          <circle cx="230" cy="170" r="62" style="fill:none;stroke:var(--accent-primary)" stroke-width="2" opacity="0.45" filter="url(#strongGlow)"/>
+          <circle cx="230" cy="170" r="52" style="fill:var(--subject-ds);stroke:var(--color-glass-border)" stroke-width="1.5"/>
+          <text class="svg-node-label" x="230" y="164" text-anchor="middle" font-size="14">数据结构</text>
+          <text class="svg-node-label" x="230" y="184" text-anchor="middle" font-size="13">树与图</text>
+          <rect x="176" y="74" width="108" height="26" rx="13" style="fill:var(--accent-primary-10);stroke:var(--accent-primary-30)" stroke-width="1"/>
+          <text class="svg-badge" x="230" y="91" text-anchor="middle" font-size="12">薄弱 · 高亮</text>
+          <text class="svg-cap" x="230" y="252" text-anchor="middle" font-size="12">当前进度 1/4</text>
+          <text class="svg-cap" x="230" y="272" text-anchor="middle" font-size="12">预计提分 +18〔示例〕</text>
+
+          <!-- 节点② 计网·TCP拥塞控制（蓝） -->
+          <circle cx="410" cy="170" r="48" style="fill:var(--subject-cn);stroke:var(--color-glass-border)" stroke-width="1.5"/>
+          <text class="svg-node-label" x="410" y="158" text-anchor="middle" font-size="14">计网</text>
+          <text class="svg-node-label" x="410" y="176" text-anchor="middle" font-size="11">TCP</text>
+          <text class="svg-node-label" x="410" y="192" text-anchor="middle" font-size="11">拥塞控制</text>
+
+          <!-- 节点③ 计组·流水线hazard（青） -->
+          <circle cx="590" cy="170" r="48" style="fill:var(--subject-co);stroke:var(--color-glass-border)" stroke-width="1.5"/>
+          <text class="svg-node-label" x="590" y="158" text-anchor="middle" font-size="14">计组</text>
+          <text class="svg-node-label" x="590" y="176" text-anchor="middle" font-size="11">流水线</text>
+          <text class="svg-node-label" x="590" y="192" text-anchor="middle" font-size="11">hazard</text>
+
+          <!-- 节点④ 操作系统·进程同步（粉） -->
+          <circle cx="770" cy="170" r="48" style="fill:var(--subject-os);stroke:var(--color-glass-border)" stroke-width="1.5"/>
+          <text class="svg-node-label" x="770" y="162" text-anchor="middle" font-size="14">操作系统</text>
+          <text class="svg-node-label" x="770" y="182" text-anchor="middle" font-size="12">进程同步</text>
+
+          <!-- 终点圆：再诊断·闭环（success 实心 + glow） -->
+          <circle cx="950" cy="170" r="44" style="fill:var(--accent-success)" filter="url(#softGlow)"/>
+          <text class="svg-node-label" x="950" y="164" text-anchor="middle" font-size="14">再诊断</text>
+          <text class="svg-node-label" x="950" y="184" text-anchor="middle" font-size="13">·闭环</text>
+        </svg>
+
+        <!-- 图例 -->
+        <div class="legend glass">
+          <span class="lg"><i style="background:var(--subject-ds)"></i>数据结构</span>
+          <span class="lg"><i style="background:var(--subject-cn)"></i>计网</span>
+          <span class="lg"><i style="background:var(--subject-co)"></i>计组</span>
+          <span class="lg"><i style="background:var(--subject-os)"></i>操作系统</span>
+          <span class="sep"></span>
+          <span class="lg"><i style="background:var(--accent-primary)"></i>诊断 / 规划</span>
+          <span class="lg"><i style="background:var(--accent-success)"></i>再诊断闭环</span>
+          <span class="note">路径顺序与配色均来自 PathPlanner · 示例数据</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 区块② 闭环逻辑条 ============ -->
+  <section id="loop" class="reveal">
+    <div class="container">
+      <h2 class="sec-title">闭环逻辑：从诊断到自愈</h2>
+      <p class="sec-desc">五步循环，每一步都基于上一步的真实结果推进——不是一次性生成，而是持续收敛。</p>
+      <div class="steps">
+        <div class="step done">
+          <span class="badge">✓</span>
+          <p>学情诊断</p>
+        </div>
+        <div class="step-arrow"></div>
+        <div class="step current">
+          <span class="badge">2</span>
+          <p>PathPlanner 路径规划</p>
+        </div>
+        <div class="step-arrow"></div>
+        <div class="step future">
+          <span class="badge">3</span>
+          <p>7 Agent 并行生成资源</p>
+        </div>
+        <div class="step-arrow"></div>
+        <div class="step future">
+          <span class="badge">4</span>
+          <p>个性化学习</p>
+        </div>
+        <div class="step-arrow"></div>
+        <div class="step future">
+          <span class="badge">5</span>
+          <p>再诊断（自愈）</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 区块③ 七类资源 before / after ============ -->
+  <section id="resources" class="reveal">
+    <div class="container">
+      <h2 class="sec-title">七类资源：通用 AI vs MARS-408</h2>
+      <p class="sec-desc">每一类资源都从「泛泛而谈」升级为「针对你的薄弱点」。〔示例〕</p>
+
+      <div class="res-list">
+
+        <!-- 1 讲解文档 -->
+        <article class="res-card glass">
+          <div class="res-head"><span class="res-idx">01</span><h3>讲解文档</h3></div>
+          <div class="res-cols">
+            <div class="col before">
+              <span class="tag">通用 AI</span>
+              <p>一段泛泛而谈的『二叉树』概念文字，没提你的薄弱点</p>
+            </div>
+            <div class="col-arrow"><span></span></div>
+            <div class="col after">
+              <span class="badge-ok">已校验</span>
+              <span class="tag">MARS-408</span>
+              <p>针对你『平衡二叉树旋转』错误率 68% 定制：先补旋转直觉图解，再给 3 道阶梯例题 + 易错警示</p>
+            </div>
+          </div>
+        </article>
+
+        <!-- 2 练习题库 -->
+        <article class="res-card glass">
+          <div class="res-head"><span class="res-idx">02</span><h3>练习题库</h3></div>
+          <div class="res-cols">
+            <div class="col before">
+              <span class="tag">通用 AI</span>
+              <p>随机抽 20 道二叉树题，难易混排</p>
+            </div>
+            <div class="col-arrow"><span></span></div>
+            <div class="col after">
+              <span class="badge-ok">已校验</span>
+              <span class="tag">MARS-408</span>
+              <p>按错误模式分层：概念辨析→旋转模拟→综合应用，每题带解析与你的历史错因标注</p>
+            </div>
+          </div>
+        </article>
+
+        <!-- 3 思维导图 -->
+        <article class="res-card glass">
+          <div class="res-head"><span class="res-idx">03</span><h3>思维导图</h3></div>
+          <div class="res-cols">
+            <div class="col before">
+              <span class="tag">通用 AI</span>
+              <p>把『树』相关术语平铺成一张大图</p>
+            </div>
+            <div class="col-arrow"><span></span></div>
+            <div class="col after">
+              <span class="badge-ok">已校验</span>
+              <span class="tag">MARS-408</span>
+              <p>按 PathPlanner 路径组织知识脉络：依赖关系 + 优先级，标出你尚未掌握的分支(虚线)</p>
+            </div>
+          </div>
+        </article>
+
+        <!-- 4 拓展阅读 -->
+        <article class="res-card glass">
+          <div class="res-head"><span class="res-idx">04</span><h3>拓展阅读</h3></div>
+          <div class="res-cols">
+            <div class="col before">
+              <span class="tag">通用 AI</span>
+              <p>搜『数据结构学习』扔来 10 篇无关博客</p>
+            </div>
+            <div class="col-arrow"><span></span></div>
+            <div class="col after">
+              <span class="badge-ok">已校验</span>
+              <span class="tag">MARS-408</span>
+              <p>补你『红黑树』认知缺口：3 篇权威教材章节 + 论文，均经证据校验标注来源</p>
+            </div>
+          </div>
+        </article>
+
+        <!-- 5 PPT大纲 -->
+        <article class="res-card glass">
+          <div class="res-head"><span class="res-idx">05</span><h3>PPT大纲</h3></div>
+          <div class="res-cols">
+            <div class="col before">
+              <span class="tag">通用 AI</span>
+              <p>把讲解文字复制成 20 页流水账</p>
+            </div>
+            <div class="col-arrow"><span></span></div>
+            <div class="col after">
+              <span class="badge-ok">已校验</span>
+              <span class="tag">MARS-408</span>
+              <p>对应『树与图』阶段的可讲大纲：每页一个认知目标 + 例题锚点 + 时间建议</p>
+            </div>
+          </div>
+        </article>
+
+        <!-- 6 代码实操 -->
+        <article class="res-card glass">
+          <div class="res-head"><span class="res-idx">06</span><h3>代码实操</h3></div>
+          <div class="res-cols">
+            <div class="col before">
+              <span class="tag">通用 AI</span>
+              <p>给一段能跑但无注释的『建堆』代码</p>
+            </div>
+            <div class="col-arrow"><span></span></div>
+            <div class="col after">
+              <span class="badge-ok">已校验</span>
+              <span class="tag">MARS-408</span>
+              <p>可运行『堆排序』案例：注释讲解 + 边界 case(空/单元素) + 与考点映射</p>
+            </div>
+          </div>
+        </article>
+
+        <!-- 7 审核报告 -->
+        <article class="res-card glass">
+          <div class="res-head"><span class="res-idx">07</span><h3>审核报告</h3></div>
+          <div class="res-cols">
+            <div class="col before">
+              <span class="tag">通用 AI</span>
+              <p>无校验，AI 写的冲突你难辨真假</p>
+            </div>
+            <div class="col-arrow"><span></span></div>
+            <div class="col after">
+              <span class="badge-ok">已校验</span>
+              <span class="tag">MARS-408</span>
+              <p>GOMARL 多智能体辩论 + 冲突检测：3 处事实冲突(中危2/低危1)，2 采纳 1 否决，一致性 92%</p>
+            </div>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 区块④ 成效 / 可信赖（GOMARL 证据校验） ============ -->
+  <section id="trust" class="reveal">
+    <div class="container">
+      <h2 class="sec-title">GOMARL 证据校验：不是黑箱</h2>
+      <p class="sec-desc">资源生成后，多智能体辩论与冲突检测会给出可复核的处置结论。〔示例数据〕</p>
+
+      <div class="trust-grid">
+        <div class="trust-cell glass">
+          <p class="trust-label">内容一致性</p>
+          <p class="score">92%</p>
+          <p class="trust-note">多智能体辩论后一致性评分</p>
+        </div>
+
+        <div class="trust-cell glass">
+          <p class="trust-label">冲突严重度</p>
+          <div class="sev-row">
+            <div class="sev"><span class="dot danger"></span>高危<b>0</b></div>
+            <div class="sev"><span class="dot warm"></span>中危<b>2</b></div>
+            <div class="sev"><span class="dot primary"></span>低危<b>1</b></div>
+          </div>
+        </div>
+
+        <div class="trust-cell glass">
+          <p class="trust-label">处置结果</p>
+          <div class="sev-row">
+            <div class="sev"><span class="dot success"></span>采纳<b>2</b></div>
+            <div class="sev"><span class="dot danger"></span>否决<b>1</b></div>
+            <div class="sev"><span class="dot warm"></span>人工复核<b>0</b></div>
+          </div>
+        </div>
+      </div>
+
+      <p class="trust-concl">每类资源都经过多智能体证据校验，不是黑箱生成。〔示例数据〕</p>
+    </div>
+  </section>
+
+  <!-- ============ 区块⑤ CTA ============ -->
+  <section id="cta" class="reveal">
+    <div class="container">
+      <div class="cta-card glass">
+        <h2>让学习闭环为你运转</h2>
+        <p>诊断你的 408 薄弱点，生成专属学习路径与七类资源。</p>
+        <div class="cta-btns">
+          <a class="btn btn-primary" href="#">立即体验 MARS-408</a>
+          <a class="btn btn-ghost" href="#">查看软件杯方案</a>
+        </div>
+      </div>
+      <footer class="footer">MARS-408 · 计算机408考研个性化学习多智能体系统</footer>
+    </div>
+  </section>
+
+</main>
+
+<script>
+/* 轻量滚动淡入：防御式包裹，任何异常都回退为直接显示，避免白屏 */
+(function(){
+  try{
+    var els = document.querySelectorAll('.reveal');
+    if(!('IntersectionObserver' in window) || !els || els.length === 0){
+      if(els){ els.forEach(function(e){ e.classList.add('in'); }); }
+      return;
+    }
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(en && en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+      });
+    }, { threshold: 0.12 });
+    els.forEach(function(e){ if(e){ io.observe(e); } });
+  }catch(err){
+    var all = document.querySelectorAll('.reveal');
+    if(all){ all.forEach(function(e){ e.classList.add('in'); }); }
+  }
+})();
+</script>
+
+</body>
+</html>

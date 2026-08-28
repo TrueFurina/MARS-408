@@ -1,0 +1,142 @@
+# =============================================================================
+# Backend Test (Linux) — py-server (FastAPI)
+# -----------------------------------------------------------------------------
+# 为什么只在 ubuntu-latest 上跑？
+#   Windows 原生 torch/numpy 在「实际调用模型/向量路径」的测试中会触发
+#   SIGSEGV(139) 段错误，这是环境级问题、与代码正确性无关；conftest.py 在
+#   win32 下会跳过这些模块（segv_env），但会导致整轮 pytest 崩溃、拿不到结果。
+#   干净 Linux 环境历史上 `pytest py-server/tests` 可 281/281 全绿，因此 CI
+#   必须在 Linux runner 跑，才能拿到权威的全量测试结果。
+#
+# 默认档（push / pull_request / workflow_dispatch 不带 run_heavy）：
+#   仅跑离线单元 / 集成 / E2E 用例。pyproject.toml 的
+#   addopts = ["-m", "not system and not requires_milvus and not slow"]
+#   已自动排除需真实 Milvus / 起子进程 / 慢速的用例；conftest.py 用 autouse
+#   fixture（mock_llm / mock_auth / fake_embedder / isolate_vectordb）保证无需
+#   真实密钥或网络即可通过。
+#
+# 重用例档（workflow_dispatch 带 run_heavy=true）：
+#   覆盖 system / requires_milvus 等需外部依赖的用例（requires_milvus 在无
+#   Milvus 时仍会被 conftest 自动 skip），并加 --timeout=180 防止子进程挂死。
+# =============================================================================
+
+name: Backend Test (Linux)
+
+on:
+  push:
+    paths:
+      - 'py-server/**'
+      - '.github/workflows/backend-test.yml'
+  pull_request:
+    paths:
+      - 'py-server/**'
+      - '.github/workflows/backend-test.yml'
+  workflow_dispatch:
+    inputs:
+      run_heavy:
+        description: '运行需外部依赖的重用例（system / requires_milvus 等）。默认 false 仅跑离线单元/集成/E2E。'
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: pytest on ubuntu-latest
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: 'py-server/pyproject.toml'
+
+      - name: Install dependencies (editable + [test] extra)
+        working-directory: py-server
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip setuptools wheel
+          # pyproject.toml 含 [project.optional-dependencies].test 分组
+          # （pytest / pytest-asyncio / pytest-timeout / pytest-cov / respx）
+          pip install -e ".[test]"
+
+      - name: Generate minimal CI .env (from .env.example, overlay secrets)
+        working-directory: py-server
+        env:
+          XF_APP_ID: ${{ secrets.XF_APP_ID }}
+          XF_API_KEY: ${{ secrets.XF_API_KEY }}
+          XF_API_SECRET: ${{ secrets.XF_API_SECRET }}
+          XF_API_PASSWORD: ${{ secrets.XF_API_PASSWORD }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          QWEN_API_KEY: ${{ secrets.QWEN_API_KEY }}
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          # 缺省用 .env.example 的占位值即可：conftest 已 mock LLM / auth，
+          # 纯函数 / 集成 / E2E 用例无需真实密钥即可通过。
+          # 仅当仓库配置了对应 secret 时覆盖对应键（避免重复键）；脚本不打印密钥值。
+          # .env 不会被上传为 artifact（仅上传 pytest-report.xml）。
+          if [ -f .env.example ]; then
+            cp .env.example .env
+          else
+            : > .env
+          fi
+          _override() {
+            local key="$1" val="$2"
+            if [ -n "$val" ]; then
+              grep -v "^${key}=" .env > .env.tmp || true
+              printf '%s=%s\n' "$key" "$val" >> .env.tmp
+              mv .env.tmp .env
+            fi
+          }
+          _override XF_APP_ID "${XF_APP_ID:-}"
+          _override XF_API_KEY "${XF_API_KEY:-}"
+          _override XF_API_SECRET "${XF_API_SECRET:-}"
+          _override XF_API_PASSWORD "${XF_API_PASSWORD:-}"
+          _override DEEPSEEK_API_KEY "${DEEPSEEK_API_KEY:-}"
+          _override QWEN_API_KEY "${QWEN_API_KEY:-}"
+          _override TAVILY_API_KEY "${TAVILY_API_KEY:-}"
+          _override AUTH_SECRET "${AUTH_SECRET:-}"
+          _override ADMIN_PASSWORD "${ADMIN_PASSWORD:-}"
+          echo "py-server/.env generated (no secret values printed)"
+
+      - name: "Run pytest (default: offline unit/integration/e2e)"
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.run_heavy != 'true' }}
+        working-directory: py-server
+        run: |
+          set -euo pipefail
+          # 不加 -m：沿用 pyproject addopts 排除 system/requires_milvus/slow
+          python -m pytest -q --tb=short --junitxml=pytest-report.xml
+
+      - name: "Run pytest (heavy: include system/requires_milvus, run_heavy=true)"
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.run_heavy == 'true' }}
+        working-directory: py-server
+        run: |
+          set -euo pipefail
+          # 命令行 -m 覆盖 pyproject 的 addopts，纳入 system / requires_milvus；
+          # requires_milvus 在无 Milvus 时仍由 conftest 自动 skip。
+          # slow 用例留给 nightly，不在 CI 默认/手动档跑。
+          python -m pytest -q --tb=short -m "not slow" --timeout=180 --junitxml=pytest-report.xml
+
+      - name: Upload pytest junit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-report
+          path: py-server/pytest-report.xml
+          if-no-files-found: warn

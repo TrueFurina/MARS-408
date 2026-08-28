@@ -1,0 +1,61 @@
+[project]
+name = "mars-408-server"
+version = "0.1.0"
+description = "MARS-408 - 基于 GOMARL 与 FrugalRAG 的 408 考研个性化学习多智能体系统"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.136.3",
+    "filelock>=3.13.0",
+    "httpx>=0.28.1",
+    "langgraph>=1.2.0",
+    "langchain-core>=1.4.0",
+    "matplotlib>=3.11.0",
+    "mcp[cli]>=1.28.0",
+    "melotts>=0.1.0",
+    "numpy>=2.4.6",
+    "pymilvus>=2.4.0",  # INC-04：与 docker 镜像 milvusdb/milvus:v2.4.17 匹配（客户端 2.4.x / 3.x 均可）
+    "pymupdf>=1.27.2.3",
+    "psycopg2-binary>=2.9.0",
+    "pydantic>=2.0.0",
+    "python-docx>=1.2.0",
+    "python-multipart>=0.0.32",
+    "redis>=5.0.0",
+    "sentence-transformers>=3.0.0",
+    "sse-starlette>=3.0.0",
+    "uvicorn[standard]>=0.49.0",
+]
+
+[project.optional-dependencies]
+# B1: 测试专属依赖组。CI 用 `pip install -e ".[test]"` 安装，
+# 引入 pytest-timeout / pytest-cov（原 dependencies 的 pytest/pytest-asyncio 保持不变）。
+test = ["pytest>=8.0.0","pytest-asyncio>=0.23.0","pytest-timeout>=2.2.0","pytest-cov>=5.0.0","respx>=0.21.0"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+# wave-1 默认集：排除需真实向量/模型/慢速用例。各 CI 分档用自身 -m 覆盖本项。
+# Windows 默认 pytest 即以此过滤，避免触碰原生 torch/numpy（segv_env 已在 win32 自动 skip）。
+# T4：在 wave-1 默认排除（system/requires_milvus/slow）基础上追加全局超时；
+# --timeout-method=thread 对 asyncio 用例安全；Linux CI 默认档仍会跑 segv_env（不在此排除）。
+addopts = ["-m", "not system and not requires_milvus and not slow"]
+markers = [
+    "import_queue: 导入队列单写者保证与任务生命周期测试 (ADR-007)",
+    "unit: 单元测试（最快，纯逻辑，无进程/无网络）",
+    "integration: 集成测试（真实 InMemoryVectorStore + worker 单例，进程内）",
+    "e2e: 端到端测试（TestClient 全链路，lifespan 拉起 worker）",
+    "system: 系统测试（起真实 uvicorn 子进程，进程级并发，CI 单独分档 --timeout=180）",
+    "requires_milvus: 需要真实 Milvus（pymilvus + 服务端）的测试，CI 默认跳过",
+    "segv_env: 在 Windows 原生 torch/numpy 下触发 SIGSEGV 的测试（仅 CI/干净环境运行，本地自动跳过）",
+    "slow: 慢速测试（nightly 运行，CI 默认 addopts 跳过）",
+    "p0_regression: P0 回归门禁用例（wave-1 最先跑，必须全绿）",
+]
+
+[tool.coverage.run]
+# 仅统计应用代码，排除测试与迁移，使 cov-fail-under=80 反映业务覆盖率
+source = ["."]
+omit = ["tests/*", "*/__pycache__/*", "*/migrations/*"]
+
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
