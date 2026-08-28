@@ -190,3 +190,12 @@ deliverables/mangde_online_screenshots/
 deliverables/product-strategy/
 # 开发内部文档（含 613 伪证断言与审计记录，共 126 份）
 documents/
+# 伪证数字生产脚本（86→613 替换工具/写死虚假数字的报告生成器/替换留痕日志）
+scripts/_unify_numbers.py
+build_midterm_report.py
+scripts/build_final_report.py
+scripts/build_research_report.py
+docs/_unify_changelog.md
+# 根目录大创官方表格/通知（含个人信息，禁止入库）
+/*.doc
+/*.docx
