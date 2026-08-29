@@ -21,7 +21,12 @@ import pytest
 # ── Project paths ──
 PY_SERVER_DIR = os.path.dirname(os.path.dirname(__file__))
 PROJECT_DIR = os.path.dirname(PY_SERVER_DIR)
-CONFIG_JSON_PATH = os.path.join(PY_SERVER_DIR, "config.json")
+# 安全门禁扫描「可提交的配置范本」(config.example.json)；真实 config.json 被 .gitignore
+# 忽略、不入库，不应作为 CI 安全门禁的扫描目标（仓库里不存在也无法保证无密钥）。
+# 本地开发若存在真实 config.json 仍优先扫描，兼顾本地自查。
+_CONFIG_JSON = os.path.join(PY_SERVER_DIR, "config.json")
+_CONFIG_EXAMPLE_JSON = os.path.join(PY_SERVER_DIR, "config.example.json")
+CONFIG_JSON_PATH = _CONFIG_JSON if os.path.exists(_CONFIG_JSON) else _CONFIG_EXAMPLE_JSON
 ENV_EXAMPLE_PATH = os.path.join(PY_SERVER_DIR, ".env.example")
 GITIGNORE_PATH = os.path.join(PROJECT_DIR, ".gitignore")
 SAFETY_PATH = os.path.join(PY_SERVER_DIR, "utils", "safety.py")
@@ -842,8 +847,13 @@ class TestRound2_SandboxEdgeCases:
                 )
 
 
-class TestRound2_FrontendBuildCheck:
-    """Verify frontend compiles without errors related to audit fixes."""
+class TestRound2_FrontendChecks:
+    """Frontend-related audit checks (typos, etc.).
+
+    注：前端「能否成功构建」由 CI 的 lint-build 作业（npm run build）与
+    Dockerfile 多阶段构建共同把关，不在 Python 后端测试套件里重复断言
+    dist/index.html（backend 作业无 node、不构建前端，该断言永远失败且冗余）。
+    """
 
     def test_no_renderMarkdownSafeSafe_anywhere(self):
         """No Vue/TS file should contain the typo 'renderMarkdownSafeSafe'."""
@@ -851,12 +861,4 @@ class TestRound2_FrontendBuildCheck:
         assert len(matches) == 0, (
             f"Found typo 'renderMarkdownSafeSafe' in: {matches}. "
             f"All references should be 'renderMarkdownSafe' (correct export name)."
-        )
-
-    def test_vite_build_produces_dist(self):
-        """Verify vite build produced dist/index.html (build was successful)."""
-        dist_index = os.path.join(PROJECT_DIR, "dist", "index.html")
-        assert os.path.exists(dist_index), (
-            "Frontend build should produce dist/index.html. "
-            "If build failed, this indicates compilation errors in the Vue/TS source."
         )
