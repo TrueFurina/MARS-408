@@ -158,7 +158,7 @@ function getSpeakableText(msg: { role: string; content?: string; segments?: Arra
     const parts = msg.segments
       .filter(s => s.type === 'content' && s.content)
       .map(s => s.content!.replace(/```[\s\S]*?```/g, '')  // 移除代码块
-        .replace(/[#*`~\[\]()>|]/g, '')  // 移除 markdown 标记
+        .replace(/[#*`~[\]()>|]/g, '')  // 移除 markdown 标记
         .replace(/\n{3,}/g, '\n\n')
         .trim())
       .filter(Boolean)
@@ -167,7 +167,7 @@ function getSpeakableText(msg: { role: string; content?: string; segments?: Arra
   // 降级使用 content
   if (msg.content) {
     return msg.content.replace(/```[\s\S]*?```/g, '')
-      .replace(/[#*`~\[\]()>|]/g, '')
+      .replace(/[#*`~[\]()>|]/g, '')
       .replace(/\n{3,}/g, '\n\n')
       .trim()
   }
