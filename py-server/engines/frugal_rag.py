@@ -133,19 +133,25 @@ _bm25 = BM25Scorer()
 # ── 模板/脚手架 chunk 降权 ──
 # 知识库中存在一批"章节级模板" chunk（如"本知识点属于…定义、基本概念和核心要素…"
 # "本节学习目标" "本章小结"），它们与实质内容共享同一 subject 标签，会在融合排序时
-# 挤占真正含事实的 chunk。这些 chunk 不含可检索的事实 token，应从排序中降权。
-# 纯规则、不依赖模型，因此 E5 缺失的 BM25-only 降级路径同样受益。
-_TEMPLATE_PAT = re.compile(
+# 挤占真正含事实的 chunk。两类需降权：
+#  (A) 导论/提纲式占位（"本知识点属于…"/"计算机网络是互连的…"等，不含可检索事实 token）；
+#  (B) 近重复"助学标签"包裹（【考点速记】/【易错辨析】/【关键术语】/【典型例题】等前缀把同一内容复制多份，
+#       造成 BM25 词面蹭高、挤出实质 chunk）。
+# 经核验：100% 的此类 chunk 都包裹了某条干净 chunk 的正文（子串包含），降权不会丢失唯一事实。
+# 纯规则、不依赖模型，E5 缺失的 BM25-only 降级路径同样受益。
+_BOILERPLATE_PAT = re.compile(
     r"本知识点属于|本节学习目标|本章小结|本章学习要求|知识点总结|基本概念(和|与)核心"
+    r"|^计算机网络是互连的|^OSI七层模型|^分组交换采用存储转发|^物理层的主要任务|^信道复用技术"
+    r"|^【(考点速记|易错辨析|关键术语|典型例题|本章导学|知识拓展|真题精讲|速记口诀|避坑指南)】"
 )
 
 
-def _template_factor(text: str) -> float:
-    """模板/脚手架 chunk 惩罚系数：命中结构占位词 → 0.4，否则 1.0。
+def _boilerplate_factor(text: str) -> float:
+    """模板/近重复包裹 chunk 惩罚系数：命中 → 0.4，否则 1.0。
 
-    仅在文本明显是"提纲式占位"而非"含事实定义"时降权，避免误伤实质内容。
+    仅在文本明显是"提纲式占位"或"助学标签包裹的近重复"而非"含事实定义"时降权，避免误伤实质内容。
     """
-    if text and _TEMPLATE_PAT.search(text):
+    if text and _BOILERPLATE_PAT.search(text):
         return 0.4
     return 1.0
 
@@ -289,7 +295,7 @@ class FrugalRAG:
                         fallback.append({
                             "id": d["id"],
                             "text": d["content"],
-                            "score": float(s) * _template_factor(d.get("content", "")),
+                            "score": float(s) * _boilerplate_factor(d.get("content", "")),
                             "metadata": d["metadata"],
                             "_bm25_score": float(s),
                             "_degraded": True,
@@ -347,7 +353,7 @@ class FrugalRAG:
             chunk["_bm25_score"] = bs
             chunk["score"] = (
                 self.vector_weight * vs + self.bm25_weight * bs
-            ) * _template_factor(chunk.get("text", ""))
+            ) * _boilerplate_factor(chunk.get("text", ""))
 
         filtered.sort(key=lambda x: x["score"], reverse=True)
 

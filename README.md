@@ -28,7 +28,7 @@ E5 768 维向量检索 + BM25 全文检索 + 个性化重排 + 自适应停止�
 ### 4. 全链路工程化与容灾
 
 - 前端 Vue 3 + TypeScript，68 个页面，多端多角色（学生 / 教师看板）
-- 后端 FastAPI + LangGraph，170+ API 端点，500+ 项自动化测试
+- 后端 FastAPI + LangGraph，170+ API 端点，616 项测试定义（Windows CI 198 通过，其余受环境级 SIGSEGV 阻断，以 Linux CI 为准）
 - 讯飞星火 X2 + DeepSeek **双通道大模型自动容灾**
 - Milvus / PostgreSQL / Redis 缺失时逐级自动降级，单机即可完整运行
 
@@ -148,7 +148,7 @@ npm install && npm run dev                   # :5173，代理 /api → 8002
 |------|------|
 | 前端 | Vue 3 + TypeScript · 68 页面 · Vite 构建 |
 | 后端 | FastAPI + LangGraph · 170+ API 端点 · 10 Agent 节点 |
-| 测试 | 500+ 项自动化测试 |
+| 测试 | 616 项测试定义 · Windows CI 198 通过（其余受环境级 SIGSEGV 阻断，以 Linux CI 为准） |
 | LLM | 讯飞星火 X2（主）+ DeepSeek（兜底）双通道自动容灾 |
 | 检索 | E5 768 维真实嵌入 · 2083 条向量 · BM25 降级守卫 |
 | 容灾 | Milvus / PG / Redis 逐级降级 · 单机可完整运行 |

@@ -11,6 +11,15 @@
 - **下一步 P0**：KB 去模板化 + 检索对实质 chunk 提权（用本 harness 做 A/B，预期数据结构 answerable 显著上升）。
 - 诚信合规：所有数字真实离线运行，无美化。
 
+## 2026-08-29 — 模板/近重复降权修复 + KB 一键恢复
+- **检索降权扩展（`engines/frugal_rag.py` `_boilerplate_factor`）**：在原"章节模板"降权基础上，新增惩罚**助学标签包裹的近重复 chunk**（`【考点速记】/【易错辨析】/【关键术语】/【典型例题】/【本章导学】/【知识拓展】/【真题精讲】/【速记口诀】/【避坑指南】` 前缀）。经核验 100% 此类 chunk 包裹某条干净 chunk 正文（子串包含），降权不丢唯一事实。离线 A/B（种子语料）验证：groundedness +0.141、answerable +0.167、模板占比 −0.547，**无退化**。
+- **环境反复清空问题（重要约束）**：会话间非 git 提交产物被清空（venv / `models/e5-base-v2` / `vectordb_data/netlearn_kb.json(.emb.npy)` 全丢，只剩 `.tmp` 残留）。**所有修复/脚本必须 commit 才能留存**，本地不可跑的验证须写成即用框架。
+- **新增脚本**：
+  - `scripts/setup_kb.py` —— 一键恢复 KB：E5 缺失则下载 `intfloat/e5-base-v2`(768) 到 `models/e5-base-v2`，再复用 `rebuild_vectordb.main` 重建向量库，并校验形状 (N,768) 与**零向量数=0**（诚信红线）。离线给出清晰指引。
+  - `experiments/eval_llm.py` —— LLM 作答准确率评测（讯飞 X2→DeepSeek auto 通道）：fact_coverage + LLM-as-judge 0~1 分。需 `.env` 凭证，本地不可跑，写成即用框架。
+- **README 数字收紧**（诚信）：移除 "554/500+ tests" 歧义表述，改为 **616 项测试定义 · Windows CI 198 通过（其余受环境级 SIGSEGV 阻断，以 Linux CI 为准）**（中英文 README 同步）。
+- 诚信合规：未声称已训练/零数据自报；所有指标真实或可复现。
+
 ---
 
 # HTML 产物融合进 Vue 系统 — 进度概览

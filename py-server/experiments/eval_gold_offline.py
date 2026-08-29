@@ -58,14 +58,16 @@ class BM25Scorer:
         return words + chinese
 
 
-# ── 真实模板降权（与 engines/frugal_rag.py 一致，纯复制）──
-_TEMPLATE_PAT = re.compile(
+# ── 真实模板/近重复降权（与 engines/frugal_rag.py 一致，纯复制）──
+_BOILERPLATE_PAT = re.compile(
     r"本知识点属于|本节学习目标|本章小结|本章学习要求|知识点总结|基本概念(和|与)核心"
+    r"|^计算机网络是互连的|^OSI七层模型|^分组交换采用存储转发|^物理层的主要任务|^信道复用技术"
+    r"|^【(考点速记|易错辨析|关键术语|典型例题|本章导学|知识拓展|真题精讲|速记口诀|避坑指南)】"
 )
 
 
-def template_factor(text):
-    if text and _TEMPLATE_PAT.search(text):
+def boilerplate_factor(text):
+    if text and _BOILERPLATE_PAT.search(text):
         return 0.4
     return 1.0
 
@@ -107,7 +109,7 @@ def retrieve(query, course, docs, use_penalty, top_k=5):
     for d, s in ranked[:top_k * 6]:
         if s <= 0:
             continue
-        factor = template_factor(d["text"]) if use_penalty else 1.0
+        factor = boilerplate_factor(d["text"]) if use_penalty else 1.0
         out.append((d, s * factor))
     out.sort(key=lambda x: x[1], reverse=True)
     return out[:top_k]
@@ -147,11 +149,11 @@ def evaluate(use_penalty):
         ctx = " ".join(d["text"] for d, _ in res)
         subj_hit = any(d["subject"] == exp for d, _ in res)
         subj_hit_subst = any(
-            d["subject"] == exp and template_factor(d["text"]) == 1.0
+            d["subject"] == exp and boilerplate_factor(d["text"]) == 1.0
             for d, _ in res
         )
         gd = groundedness(g["answer_facts"], ctx)
-        template_share = sum(1 for d, _ in res if template_factor(d["text"]) < 1.0) / max(len(res), 1)
+        template_share = sum(1 for d, _ in res if boilerplate_factor(d["text"]) < 1.0) / max(len(res), 1)
         per.append({
             "id": g["id"], "course": course, "subject_recall@5": 1.0 if subj_hit else 0.0,
             "substantive_hit": 1.0 if subj_hit_subst else 0.0,

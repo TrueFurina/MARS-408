@@ -46,7 +46,7 @@ chain fails, the system **degrades to BM25-only** so demos and usage never break
 ### 4. Production-Grade Engineering and Graceful Degradation
 
 - Frontend: Vue 3 + TypeScript, **68 pages**, multi-role (student / teacher dashboard)
-- Backend: FastAPI + LangGraph, **196+ API endpoints**, **554 automated tests**
+- Backend: FastAPI + LangGraph, **196+ API endpoints**, **616 defined tests** (198 passing on Windows CI; the rest blocked by environment-level SIGSEGV, authority on Linux CI)
 - **Dual-channel LLM failover**: iFlytek Spark X2 (primary) + DeepSeek (fallback)
 - Milvus / PostgreSQL / Redis each degrade independently — a single machine runs the system end to end
 
@@ -172,7 +172,7 @@ core features still run.
 |-----------|--------|
 | Frontend | Vue 3 + TypeScript · 68 pages · Vite build |
 | Backend | FastAPI + LangGraph · 196+ API endpoints · 10 agent nodes |
-| Tests | 554 automated tests |
+| Tests | 616 defined tests · 198 passing on Windows CI (rest blocked by env-level SIGSEGV, authority on Linux CI) |
 | LLM | iFlytek Spark X2 (primary) + DeepSeek (fallback), dual-channel failover |
 | Retrieval | Real E5 768-dim embeddings · 2,083 vectors · BM25 degradation guard |
 | Resilience | Milvus / PG / Redis degrade independently · runs fully on one machine |
