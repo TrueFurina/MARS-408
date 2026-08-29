@@ -115,7 +115,7 @@ async function speakText(text: string, language = 'zh') {
     audioRef.value = null
   }
   try {
-    const clean = text.replace(/```[\s\S]*?```/g, '').replace(/[#*`~\[\]()>|]/g, '').replace(/\n{3,}/g, '\n\n').trim()
+    const clean = text.replace(/```[\s\S]*?```/g, '').replace(/[#*`~[\]()>|]/g, '').replace(/\n{3,}/g, '\n\n').trim()
     if (!clean) return
     const blob = await ttsSynthesize(clean, language)
     if (!blob) return
