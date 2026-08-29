@@ -46,6 +46,7 @@ async function loadCompiler(id: string): Promise<any> {
 
 function limitOutput(value: unknown): string {
   // eslint-disable-next-line no-control-regex -- ANSI escape stripping is intentional
+// eslint-disable-next-line no-control-regex -- ANSI escape stripping is intentional
 const text = String(value || '').replace(/\u001b\[[0-?]*[ -/]*[@-~]/g, '')
   if (text.length <= MAX_OUTPUT_CHARS) return text
   const suffix = '\n[输出已截断]'
