@@ -162,6 +162,12 @@ def _init_schema(conn: sqlite3.Connection):
     CREATE INDEX IF NOT EXISTS idx_wrong_mastered ON user_wrong_questions(user_id, mastered);
     CREATE INDEX IF NOT EXISTS idx_plan_user_date ON user_daily_plans(user_id, plan_date);
     """)
+    # 迁移：错题表增加 attribution_json 列（智能归因结果），已存在则跳过
+    _cols = [r[1] for r in conn.execute("PRAGMA table_info(user_wrong_questions)")]
+    if "attribution_json" not in _cols:
+        conn.execute(
+            "ALTER TABLE user_wrong_questions ADD COLUMN attribution_json TEXT NOT NULL DEFAULT '{}'"
+        )
     conn.commit()
 
 
@@ -768,8 +774,8 @@ def delete_learning_resource(resource_id: int, owner_user_id: str) -> bool:
 
 
 # ── 错题本功能 ─────────────────────────────────────────────
-def add_wrong_question(user_id: str, question: dict, wrong_answer: str, error_type: str = "concept") -> dict:
-    """添加错题，已存在则错误次数+1"""
+def add_wrong_question(user_id: str, question: dict, wrong_answer: str, error_type: str = "concept", attribution: Optional[dict] = None) -> dict:
+    """添加错题，已存在则错误次数+1。attribution 为智能归因结果（可空）。"""
     conn = _get_conn()
     now = _now()
     qid = question.get("id", str(hash(json.dumps(question, ensure_ascii=False))))
@@ -777,29 +783,30 @@ def add_wrong_question(user_id: str, question: dict, wrong_answer: str, error_ty
     chapter = question.get("chapter", "")
     knowledge_point = question.get("knowledge_point", question.get("kp", ""))
     correct_answer = question.get("answer", question.get("correct_answer", ""))
-    
+    attr_json = json.dumps(attribution, ensure_ascii=False) if attribution else "{}"
+
     with _lock:
         existing = conn.execute(
             "SELECT id, wrong_count FROM user_wrong_questions WHERE user_id=? AND question_id=?",
             (user_id, qid)
         ).fetchone()
-        
+
         if existing:
             conn.execute(
-                "UPDATE user_wrong_questions SET wrong_count=wrong_count+1, last_wrong_at=?, wrong_answer=?, error_type=?, mastered=0 WHERE id=?",
-                (now, wrong_answer, error_type, existing["id"])
+                "UPDATE user_wrong_questions SET wrong_count=wrong_count+1, last_wrong_at=?, wrong_answer=?, error_type=?, attribution_json=?, mastered=0 WHERE id=?",
+                (now, wrong_answer, error_type, attr_json, existing["id"])
             )
             wid = existing["id"]
         else:
             cursor = conn.execute(
                 """INSERT INTO user_wrong_questions 
-                (user_id, question_id, question_json, subject, chapter, knowledge_point, wrong_answer, correct_answer, error_type, wrong_count, last_wrong_at, first_wrong_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)""",
-                (user_id, qid, json.dumps(question, ensure_ascii=False), subject, chapter, knowledge_point, wrong_answer, correct_answer, error_type, now, now)
+                (user_id, question_id, question_json, subject, chapter, knowledge_point, wrong_answer, correct_answer, error_type, attribution_json, wrong_count, last_wrong_at, first_wrong_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)""",
+                (user_id, qid, json.dumps(question, ensure_ascii=False), subject, chapter, knowledge_point, wrong_answer, correct_answer, error_type, attr_json, now, now)
             )
             wid = cursor.lastrowid
         conn.commit()
-    
+
     return get_wrong_question(wid)
 
 
@@ -824,11 +831,79 @@ def get_wrong_question(qid: int) -> Optional[dict]:
         "wrong_answer": row["wrong_answer"],
         "correct_answer": row["correct_answer"],
         "error_type": row["error_type"],
+        "attribution": _parse_attr(row["attribution_json"]),
         "wrong_count": row["wrong_count"],
         "mastered": bool(row["mastered"]),
         "last_wrong_at": row["last_wrong_at"],
         "first_wrong_at": row["first_wrong_at"],
     }
+
+
+def _parse_attr(raw) -> Optional[dict]:
+    """安全解析 attribution_json（容忍空/非法）。"""
+    if not raw:
+        return None
+    try:
+        v = json.loads(raw)
+        return v if isinstance(v, dict) else None
+    except Exception:
+        return None
+
+
+def get_error_profile(user_id: str) -> dict:
+    """聚合用户的错题『错误画像』：错误类型分布、知识点频次、LLM 归因占比。"""
+    conn = _get_conn()
+    with _lock:
+        rows = conn.execute(
+            "SELECT error_type, attribution_json FROM user_wrong_questions WHERE user_id=?",
+            (user_id,),
+        ).fetchall()
+
+    type_dist: dict = {}
+    kp_freq: dict = {}
+    llm_cnt = 0
+    degraded_cnt = 0
+    total = 0
+    for r in rows:
+        total += 1
+        et = r["error_type"] or "concept"
+        type_dist[et] = type_dist.get(et, 0) + 1
+        attr = _parse_attr(r["attribution_json"])
+        if attr:
+            if attr.get("degraded"):
+                degraded_cnt += 1
+            else:
+                llm_cnt += 1
+            for kp in (attr.get("knowledge_points") or []):
+                if kp:
+                    kp_freq[kp] = kp_freq.get(kp, 0) + 1
+
+    return {
+        "total": total,
+        "error_type_distribution": [
+            {"type": k, "label": _ERROR_LABELS.get(k, k), "count": v}
+            for k, v in sorted(type_dist.items(), key=lambda x: -x[1])
+        ],
+        "top_knowledge_points": [
+            {"knowledge_point": k, "count": v}
+            for k, v in sorted(kp_freq.items(), key=lambda x: -x[1])[:10]
+        ],
+        "attribution_source": {
+            "llm": llm_cnt,
+            "rule_fallback": degraded_cnt,
+        },
+    }
+
+
+# error_type 中文标签（供画像展示）
+_ERROR_LABELS = {
+    "concept": "概念混淆",
+    "misread": "审题错误",
+    "calculation": "计算失误",
+    "logic": "思路偏差",
+    "memory": "记忆遗忘",
+    "blindspot": "知识盲区",
+}
 
 
 def list_wrong_questions(user_id: str, subject: str = None, mastered: bool = None, page: int = 1, page_size: int = 20) -> dict:

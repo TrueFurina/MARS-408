@@ -13,8 +13,10 @@ from db.user_store import (
     mark_wrong_question_mastered,
     delete_wrong_question,
     get_wrong_question_stats,
+    get_error_profile,
 )
 from shared.auth import get_current_user
+from engines.error_attributor import attribute_error
 
 logger = logging.getLogger("netlearn.wrong_questions")
 router = APIRouter(prefix="/wrong-questions", tags=["wrong-questions"])
@@ -26,6 +28,7 @@ class AddWrongQuestionRequest(BaseModel):
     question: dict
     wrong_answer: str
     error_type: str = "concept"
+    auto_attrib: bool = True  # 是否自动调用 LLM 做智能归因（失败则降级规则，并标注 degraded）
 
 
 class MasteryUpdateRequest(BaseModel):
@@ -78,11 +81,28 @@ async def get_wrong_question_detail(qid: int, user: dict = Depends(get_current_u
 
 @router.post("")
 async def add_wrong_question_api(req: AddWrongQuestionRequest, user: dict = Depends(get_current_user)):
-    """手动添加错题"""
+    """手动添加错题；auto_attrib=True 时自动做智能归因（LLM 不可用则规则降级并标注）。"""
+    attribution = None
+    error_type = req.error_type
+    if req.auto_attrib:
+        correct_answer = req.question.get("answer", req.question.get("correct_answer", ""))
+        try:
+            attribution = await attribute_error(req.question, req.wrong_answer, correct_answer)
+            # LLM 成功归因时，用更细的错误类型覆盖默认单标签（degraded 时保留用户/默认标签）
+            if attribution and not attribution.get("degraded"):
+                error_type = attribution.get("error_type", error_type)
+        except Exception as e:
+            logger.warning("错题归因异常，跳过: %s", e)
     item = add_wrong_question(
-        user["user_id"], req.question, req.wrong_answer, req.error_type,
+        user["user_id"], req.question, req.wrong_answer, error_type, attribution,
     )
     return item
+
+
+@router.get("/error-profile")
+async def get_error_profile_api(user: dict = Depends(get_current_user)):
+    """获取用户错题『错误画像』：错误类型分布、高频知识点、归因来源(LLM/规则)。"""
+    return get_error_profile(user["user_id"])
 
 
 @router.put("/{qid}/mastery")

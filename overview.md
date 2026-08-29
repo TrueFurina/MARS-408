@@ -20,6 +20,19 @@
 - **README 数字收紧**（诚信）：移除 "554/500+ tests" 歧义表述，改为 **616 项测试定义 · Windows CI 198 通过（其余受环境级 SIGSEGV 阻断，以 Linux CI 为准）**（中英文 README 同步）。
 - 诚信合规：未声称已训练/零数据自报；所有指标真实或可复现。
 
+## 2026-08-29（晚）— 错题智能归因 + 计网辨析专项（痛点报告落地）
+- **痛点报告闭环**：`documents/痛点挖掘-公开社区_2026-08-29.md` 提取 9 类真实用户痛点，其中 P0「遗忘+错题不复盘」与 P1「计网概念易混淆」直接驱动本次两个新模块。
+- **① 错题智能归因（`engines/error_attributor.py` + `api/wrong_questions.py`）**：
+  - 标记错题时自动调用 **讯飞 X2→DeepSeek auto 通道** 做结构化归因（error_type / confidence / reason / knowledge_points / review_suggestion）。
+  - **诚信降级**：LLM 不可用（无凭证/网络）时明确 `degraded=True` 走规则启发式（空答案→盲区、数值错→计算失误、选项近义→概念混淆、默认→思路偏差），绝不谎称 AI 已分析。
+  - 新增 `GET /api/wrong-questions/error-profile` 聚合「错误画像」：错误类型分布 + 高频知识点 + 归因来源(LLM/规则)占比。错题表加 `attribution_json` 列（带迁移）。
+- **② 计网易混淆概念辨析专项（`engines/cn_distinction.py` + `api/cn_distinction.py`）**：
+  - 内置 **12 组真实教材级易混概念对**（电路/分组交换、虚电路/数据报、SR/GBN、TCP/UDP、协议/服务/接口、CSMA/CD-CA、CIDR、集线器/交换机/路由器、MAC/IP/端口、拥塞/流控、DNS递归/迭代、HTTP/HTTPS），每组含辨析要点 + 一道确定性关键词判分自测题。
+  - 端点：`GET /api/cn-distinction`、`/cn-distinction/{id}`、`/cn-distinction/quiz/random`、`POST /api/cn-distinction/quiz/answer`。与 Gold 评测「计网 groundedness 最低」结论呼应，提供专项补强入口。
+  - 判分采用确定性关键词匹配（可复现），不伪装 AI 打分。
+- **单测通过**：两引擎离线功能测试全绿（CN 12 组自洽、启发式归因 4 类分支正确、JSON 稳健提取）。
+- 诚信合规：内容均为教材公开知识点不编造；归因仅真实调用或明确标注降级。
+
 ---
 
 # HTML 产物融合进 Vue 系统 — 进度概览
