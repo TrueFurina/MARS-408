@@ -151,7 +151,8 @@ export function renderMarkdownSafe(text: string): string {
 
 /**
  * Sanitize SVG markup for safe inline rendering (功能④多模态导师答疑).
- * Allows SVG elements/attributes while stripping <script> and event handlers.
+ * Allows SVG elements/attributes while stripping executable tags and event handlers
+ * (DOMPurify's default profile already drops inline executable markup and on* handlers).
  */
 export function sanitizeSvg(svg: string): string {
   return DOMPurify.sanitize(svg, {

@@ -41,10 +41,12 @@ def _kill_proc_group(proc) -> None:
 # 沙箱安全：拦截危险模块的代码前缀
 SANDBOX_PREFIX = """
 import sys
-# F-003 扩展阻断名单：在原有基础上新增 pickle / tempfile / inspect / gc / sys / mmap / code
-# 等危险模块。注意：builtins 不放入此运行时集合，否则会破坏下方 `import builtins as _builtins`
-# （仅通过 _BLOCKED_IMPORTS 的 AST 检查拦截 `import builtins`）。
-_BLOCKED = {'os', 'subprocess', 'socket', 'shutil', 'ctypes', 'importlib', 'io', 'pathlib', 'http', 'urllib', 'ftplib', 'smtplib', 'telnetlib', 'multiprocessing', 'threading', 'signal', 'resource', 'pickle', 'tempfile', 'inspect', 'gc', 'sys', 'mmap', 'code'}
+# F-003 扩展阻断名单：在原有基础上新增 pickle / tempfile / inspect / gc / mmap / code
+# 等危险模块。注意：builtins 与 sys 不放入此运行时集合——builtins 用于下方
+# `import builtins as _builtins`；sys 用于本前缀 `sys.modules[mod] = _Blocker()` 的拦截机制，
+# 若把 sys 也列入 _BLOCKED，会令 `sys.modules['sys']` 自身被覆盖为 _Blocker() 而自伤机制
+# （仅通过 _BLOCKED_IMPORTS 的 AST 检查拦截 `import builtins`）。sys 由 _safe_getattr 兜底防护。
+_BLOCKED = {'os', 'subprocess', 'socket', 'shutil', 'ctypes', 'importlib', 'io', 'pathlib', 'http', 'urllib', 'ftplib', 'smtplib', 'telnetlib', 'multiprocessing', 'threading', 'signal', 'resource', 'pickle', 'tempfile', 'inspect', 'gc', 'mmap', 'code'}
 class _Blocker:
     def __getattr__(self, name):
         if name.startswith('__') and name.endswith('__'):

@@ -314,7 +314,7 @@ async def lifespan(app: FastAPI):
                     logger.debug("memory lifecycle sweep skipped: %s", _me)
             except Exception as _ce:
                 logger.debug("artifact cleanup sweep skipped: %s", _ce)
-    _cleanup_task = _asyncio.create_task(_cleanup_old_sessions())
+    _cleanup_task = asyncio.create_task(_cleanup_old_sessions())
 
     # ── 408 教材自动扩充：经进程内导入队列（ADR-007 单写者），非阻塞后台执行 ──
     if _textbook_import_pending:
