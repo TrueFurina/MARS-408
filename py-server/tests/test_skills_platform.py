@@ -279,7 +279,11 @@ class TestSkillRuntime:
         resp = self.client.post(f"/api/skills/run/{self.skill_id}", json={
             "message": "你好",
         })
-        assert resp.status_code == 200
+        # 带上响应体：5xx 的 detail 里有 api 层拼的异常原文（"技能执行失败: ..."），
+        # 只断言状态码的话 CI 日志里什么都看不到，根因无从查起。
+        assert resp.status_code == 200, (
+            f"skill run 失败: status={resp.status_code} body={resp.text[:2000]}"
+        )
         data = resp.json()
         assert data["status"] == "ok"
         assert data["response"]  # 应该有响应内容
@@ -301,7 +305,9 @@ class TestSkillRuntime:
             "message": "你好",
         })
         # 创建者可以执行自己的草稿
-        assert resp.status_code == 200
+        assert resp.status_code == 200, (
+            f"草稿 skill run 失败: status={resp.status_code} body={resp.text[:2000]}"
+        )
 
 
 class TestSkillBatch:

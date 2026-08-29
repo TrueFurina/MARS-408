@@ -357,17 +357,27 @@ class TestNeuralGroupMixer:
 
     @pytest.mark.asyncio
     async def test_mix_with_mock_results(self):
-        """共识混合 — 模拟Agent结果（使用实际Agent名称）"""
+        """共识混合 — 模拟Agent结果（使用实际Agent名称）
+
+        量纲约定：consensus_score 为 **10 分制**（与 QualityScore.overall /
+        quality_threshold=7 对齐），见 gomarl_mixer.mix() 中 `max(0, min(10, cs*10))`。
+        因此入参 score 也必须是 10 分制，断言区间为 [0, 10]。
+
+        随机性：此处必须用固定种子的 np.random，不能用裸 randn —— 神经网络路径的
+        输出随输入 embedding 变化，随机数据会让本用例时红时绿（flaky）。
+        """
         agent_results = [
-            {"agent_name": "teacher", "content": "TCP三次握手", "score": 0.9},
-            {"agent_name": "quizmaster", "content": "TCP连接练习题", "score": 0.8},
-            {"agent_name": "media_designer", "content": "TCP思维导图", "score": 0.85},
+            {"agent_name": "teacher", "content": "TCP三次握手", "score": 9.0},
+            {"agent_name": "quizmaster", "content": "TCP连接练习题", "score": 8.0},
+            {"agent_name": "media_designer", "content": "TCP思维导图", "score": 8.5},
         ]
         student_profile = {"level": "medium", "weak_points": ["TCP"]}
 
         with patch("engines.gomarl_mixer.AgentOutputEncoder") as mock_enc_cls:
             mock_enc = MagicMock()
-            mock_enc.encode_batch = MagicMock(return_value=np.random.randn(3, 768))
+            # 固定种子：避免随机 embedding 导致共识分抖动
+            rng = np.random.default_rng(20260829)
+            mock_enc.encode_batch = MagicMock(return_value=rng.standard_normal((3, 768)))
             mock_enc_cls.return_value = mock_enc
 
             result = await self.mixer.mix(agent_results, student_profile, "TCP")
@@ -375,7 +385,8 @@ class TestNeuralGroupMixer:
             assert "dynamic_weights" in result
             assert "weighted_scores" in result
             assert isinstance(result["consensus_score"], float)
-            assert 0 <= result["consensus_score"] <= 1.0
+            # 10 分制契约（原断言写成 [0,1]，与实现不符）
+            assert 0.0 <= result["consensus_score"] <= 10.0
 
     @pytest.mark.asyncio
     async def test_mix_fallback_no_torch(self):

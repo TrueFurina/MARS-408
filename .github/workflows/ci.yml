@@ -256,10 +256,23 @@ jobs:
         run: pytest -m requires_milvus -q
 
   # ───────────────────────────────────────────────────────────────
-  # 依赖 CVE 扫描（pip-audit）：HIGH/CRITICAL 升级为阻断
+  # 依赖 CVE 扫描（pip-audit）：发现已知漏洞即阻断
+  #
+  # 注意：原先写作 `pip-audit --fail-on high`，但 pip-audit 从未提供
+  # `--fail-on` 参数（实测 2.10.1 亦无），该步骤一直以
+  # "unrecognized arguments: --fail-on" 退出码 2 失败 —— 也就是说这道
+  # CVE 安全门从未真正扫描过任何依赖，纯粹是个摆设。
+  # pip-audit 也没有按严重度阈值失败的能力（其 JSON 输出不含 severity
+  # 字段），因此这里退而求其次：任何已知漏洞都阻断，同时产出 JSON 报告
+  # 供人工分级。
+  #
+  # `--skip-editable`：上一步 `pip install -e .` 会把本项目 mars-408-server
+  # 装成可编辑安装，而它不在 PyPI 上，pip-audit 会报
+  # "Dependency not found on PyPI and could not be audited" 并失败。
+  # 该参数跳过本地可编辑包，只审计真正的第三方依赖。
   # ───────────────────────────────────────────────────────────────
   pip-audit:
-    name: Dependency CVE scan (pip-audit --fail-on high)
+    name: Dependency CVE scan (pip-audit)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -268,8 +281,15 @@ jobs:
           python-version: "3.12"
       - name: Install backend + pip-audit
         run: cd py-server && pip install --upgrade pip && pip install -e . && pip install pip-audit
-      - name: Run pip-audit (fail on HIGH/CRITICAL)
-        run: cd py-server && pip-audit --fail-on high
+      - name: Run pip-audit (block on any known vulnerability)
+        run: cd py-server && pip-audit --skip-editable --strict --desc -f json -o pip-audit-report.json
+      - name: Upload pip-audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pip-audit-report
+          path: py-server/pip-audit-report.json
+          if-no-files-found: ignore
 
   # ───────────────────────────────────────────────────────────────
   # 设计令牌漂移门禁（SSOT）：任何原型改动若偏离 _variables.css 单一真相源即阻断

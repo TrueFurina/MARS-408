@@ -24,7 +24,12 @@ import httpx
 
 import pytest
 
-_PY = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# 本文件位于 py-server/tests/system/ 下，需向上 3 层才到 py-server/（main.py 所在处）：
+#   tests/system/test_concurrent_writes.py → tests/system → tests → py-server
+# 原先只 dirname 两层，算出的是 py-server/tests，导致 uvicorn 子进程报
+# "Error loading ASGI app. Could not import module \"main\"."，三条 system 用例
+# 全部以「启动超时」失败（子进程输出被管道吞掉，此前一直看不到这句错误）。
+_PY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, _PY)
 AUTH_SECRET = "test-secret-import-queue-system"
 
@@ -72,7 +77,27 @@ def _admin_token():
     return create_token("admin", "admin")
 
 
-def _wait_status(base, timeout=120.0):
+def _dump_proc_output(proc, base):
+    """启动超时时把 uvicorn 子进程的输出 dump 到 stdout。
+
+    子进程以 stdout=PIPE / stderr=STDOUT 启动，输出全堵在管道里，且失败断言
+    并不打印它 —— CI 日志里只剩一句「启动超时」，真正的异常栈永远看不到。
+    这里在超时后终止进程并回读管道，避免这类失败无法诊断。
+    """
+    try:
+        proc.terminate()
+    except Exception:
+        pass
+    try:
+        out, _ = proc.communicate(timeout=15)
+    except Exception:
+        out = None
+    print(f"\n===== uvicorn 启动失败 ({base}) 子进程输出 =====", flush=True)
+    print((out or "<无输出>")[-8000:], flush=True)
+    print("===== 子进程输出结束 =====\n", flush=True)
+
+
+def _wait_status(base, timeout=120.0, proc=None):
     deadline = time.time() + timeout
     while time.time() < deadline:
         try:
@@ -81,6 +106,8 @@ def _wait_status(base, timeout=120.0):
         except Exception:
             pass
         time.sleep(0.3)
+    if proc is not None:
+        _dump_proc_output(proc, base)
     return False
 
 
@@ -198,7 +225,7 @@ def test_tc12_single_writer_no_loss(tmp_path):
     out = ""
     try:
         base = "http://127.0.0.1:8123"
-        assert _wait_status(base), "single-worker 启动超时"
+        assert _wait_status(base, proc=proc), "single-worker 启动超时"
         token = _admin_token()
         client = httpx.Client(base, headers={"Authorization": f"Bearer {token}"})
 
@@ -257,7 +284,7 @@ def test_tc12_online_vs_worker_concurrent(tmp_path):
     out = ""
     try:
         base = "http://127.0.0.1:8125"
-        assert _wait_status(base), "single-worker 启动超时"
+        assert _wait_status(base, proc=proc), "single-worker 启动超时"
         token = _admin_token()
         client = httpx.Client(base, headers={"Authorization": f"Bearer {token}"})
 
@@ -325,7 +352,7 @@ def test_tc14_multiworker_lww_regression(tmp_path):
     out = ""
     try:
         base = "http://127.0.0.1:8124"
-        assert _wait_status(base, timeout=120), "multi-worker 启动超时"
+        assert _wait_status(base, timeout=120, proc=proc), "multi-worker 启动超时"
 
         # 多 worker 下仍应可提交并跑通一个 import job（系统可用）
         token = _admin_token()
