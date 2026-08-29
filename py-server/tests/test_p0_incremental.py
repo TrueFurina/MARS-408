@@ -34,6 +34,11 @@ if str(_ROOT) not in sys.path:
 _AGENTS_DIR = _ROOT / "agents"
 _SEED_FILE = _ROOT / "seed_data_expanded.py"
 _CONFIG_FILE = _ROOT / "config.json"
+# 净化后 config.json 不入库（gitignore）：缺失时回退已入库的脱敏范本，保证评委克隆后测试可跑
+if not _CONFIG_FILE.exists():
+    _example = _ROOT / "config.example.json"
+    if _example.exists():
+        _CONFIG_FILE = _example
 _TS_EVIDENCE = (
     Path(__file__).resolve().parent.parent.parent / "src" / "utils" / "evidence.ts"
 )

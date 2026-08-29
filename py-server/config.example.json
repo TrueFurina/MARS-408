@@ -52,7 +52,7 @@
   "milvus": {
     "host": "localhost",
     "port": 19530,
-    "enabled": false
+    "enabled": true
   },
   "embedding": {
     "mode": "local"
@@ -70,5 +70,13 @@
     "database": "netlearn",
     "user": "postgres",
     "password": ""
+  },
+  "knowledge": {
+    "courses": [
+      "data_structures",
+      "computer_network",
+      "operating_system",
+      "computer_organization"
+    ]
   }
 }
