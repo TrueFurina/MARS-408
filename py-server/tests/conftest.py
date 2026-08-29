@@ -230,3 +230,17 @@ def client():
 # - 隔离测试（test_p0_incremental / test_teacher_role）设计为 `--noconftest` 运行，
 #   其覆盖率由单独的 `pytest tests/test_X.py --noconftest` 保证，不在完整套件下跑。
 
+
+@pytest.fixture(autouse=True)
+def _mock_llm_chat(monkeypatch):
+    """CI / 无真实 LLM 环境下，mock LLMProvider.chat 返回固定响应，
+    使 skill 运行等依赖 LLM 的测试可独立验证业务逻辑（不触达真实模型）。"""
+    try:
+        from db.llm_provider import LLMProvider
+    except Exception:
+        return
+
+    async def _fake_chat(self, messages, temperature=None, max_tokens=None, **kwargs):
+        return "（测试 mock 响应）技能执行成功，已接收输入"
+
+    monkeypatch.setattr(LLMProvider, 'chat', _fake_chat)
