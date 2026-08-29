@@ -217,6 +217,12 @@ jobs:
         image: milvusdb/milvus:v2.4.17
         ports:
           - "19530:19530"
+        options: >-
+          --health-cmd "curl -sf http://localhost:9091/healthz"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 30
+          --env LD_PRELOAD= 
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
