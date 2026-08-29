@@ -130,6 +130,26 @@ class BM25Scorer:
 _bm25 = BM25Scorer()
 
 
+# ── 模板/脚手架 chunk 降权 ──
+# 知识库中存在一批"章节级模板" chunk（如"本知识点属于…定义、基本概念和核心要素…"
+# "本节学习目标" "本章小结"），它们与实质内容共享同一 subject 标签，会在融合排序时
+# 挤占真正含事实的 chunk。这些 chunk 不含可检索的事实 token，应从排序中降权。
+# 纯规则、不依赖模型，因此 E5 缺失的 BM25-only 降级路径同样受益。
+_TEMPLATE_PAT = re.compile(
+    r"本知识点属于|本节学习目标|本章小结|本章学习要求|知识点总结|基本概念(和|与)核心"
+)
+
+
+def _template_factor(text: str) -> float:
+    """模板/脚手架 chunk 惩罚系数：命中结构占位词 → 0.4，否则 1.0。
+
+    仅在文本明显是"提纲式占位"而非"含事实定义"时降权，避免误伤实质内容。
+    """
+    if text and _TEMPLATE_PAT.search(text):
+        return 0.4
+    return 1.0
+
+
 # ── FrugalRAG 主类 ──
 
 class FrugalRAG:
@@ -269,7 +289,7 @@ class FrugalRAG:
                         fallback.append({
                             "id": d["id"],
                             "text": d["content"],
-                            "score": float(s),
+                            "score": float(s) * _template_factor(d.get("content", "")),
                             "metadata": d["metadata"],
                             "_bm25_score": float(s),
                             "_degraded": True,
@@ -319,13 +339,15 @@ class FrugalRAG:
         doc_texts = [c.get("text", "") for c in filtered]
         bm25_scores = await asyncio.to_thread(_bm25.score, query, doc_texts)
 
-        # 5. 加权融合排序
+        # 5. 加权融合排序（含模板/脚手架 chunk 降权）
         for i, chunk in enumerate(filtered):
             vs = chunk.get("score", 0)
             bs = bm25_scores[i]
             chunk["_vector_score"] = vs
             chunk["_bm25_score"] = bs
-            chunk["score"] = self.vector_weight * vs + self.bm25_weight * bs
+            chunk["score"] = (
+                self.vector_weight * vs + self.bm25_weight * bs
+            ) * _template_factor(chunk.get("text", ""))
 
         filtered.sort(key=lambda x: x["score"], reverse=True)
 
