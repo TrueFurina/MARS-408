@@ -24,7 +24,12 @@ import httpx
 
 import pytest
 
-_PY = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# 本文件位于 py-server/tests/system/ 下，需向上 3 层才到 py-server/（main.py 所在处）：
+#   tests/system/test_concurrent_writes.py → tests/system → tests → py-server
+# 原先只 dirname 两层，算出的是 py-server/tests，导致 uvicorn 子进程报
+# "Error loading ASGI app. Could not import module \"main\"."，三条 system 用例
+# 全部以「启动超时」失败（子进程输出被管道吞掉，此前一直看不到这句错误）。
+_PY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, _PY)
 AUTH_SECRET = "test-secret-import-queue-system"
 
