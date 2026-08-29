@@ -194,7 +194,8 @@
   --subject-data: var(--subject-ds);
   --subject-net:  var(--subject-cn);
   --subject-org:  var(--subject-co);
-  --subject-os:   var(--subject-os);
+  /* --subject-os 无需别名：它本身就是主题色令牌（见上方 #f472b6 定义）。
+     此处曾误写自引用 var(--subject-os)（CSS 循环定义，非法且污染 SSOT 漂移检测），已删除。 */
 
   /* ── 仪表盘扩展令牌（融合自 DESIGN_TOKENS_DASH.md）── */
   /* 图表分类色板 */

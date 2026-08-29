@@ -12,7 +12,8 @@ dependencies = [
     "langchain-core>=1.4.0",
     "matplotlib>=3.11.0",
     "mcp[cli]>=1.28.0",
-    "melotts>=0.1.0",
+    # MeloTTS 不入硬依赖：PyPI 上游 sdist 缺 requirements.txt，pip/uv 构建必失败（CI 事故根因之一）。
+    # TTS 走懒加载：services/tts_service.py 里 import 失败自动回退讯飞 TTS API，运行时零影响。
     "numpy>=2.4.6",
     "pymilvus>=2.4.0",  # INC-04：与 docker 镜像 milvusdb/milvus:v2.4.17 匹配（客户端 2.4.x / 3.x 均可）
     "pymupdf>=1.27.2.3",

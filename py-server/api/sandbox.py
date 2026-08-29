@@ -20,6 +20,24 @@ logger = logging.getLogger("netlearn.sandbox")
 
 router = APIRouter(prefix="", tags=["sandbox"])
 
+
+def _kill_proc_group(proc) -> None:
+    """超时击杀：优先 os.killpg 杀整个进程组，防止被沙箱代码 fork 出的子进程成为孤儿继续运行。
+
+    - POSIX：子进程以 start_new_session=True 启动（自身为进程组长），killpg 可整组歼灭
+    - Windows / killpg 不可用：回退 proc.kill()
+    """
+    try:
+        if os.name == "posix" and hasattr(os, "killpg"):
+            os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+            return
+    except (ProcessLookupError, PermissionError, OSError):
+        pass  # 进程已退出或权限不足，回退单杀
+    try:
+        proc.kill()
+    except Exception:
+        pass
+
 # 沙箱安全：拦截危险模块的代码前缀
 SANDBOX_PREFIX = """
 import sys
@@ -161,11 +179,14 @@ async def sandbox_run(req: SandboxRequest, user: dict = Depends(require_admin), 
             f.write(safe_code)
             tmpfile = f.name
         # 使用 asyncio subprocess 避免阻塞事件循环
+        # POSIX 下 start_new_session=True：子进程自成进程组，超时可用 killpg 整组击杀
+        _popen_kwargs = {"start_new_session": True} if os.name == "posix" else {}
         try:
             proc = await asyncio.create_subprocess_exec(
                 sys.executable, tmpfile,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
+                **_popen_kwargs,
             )
             try:
                 out_bytes, err_bytes = await asyncio.wait_for(
@@ -174,10 +195,7 @@ async def sandbox_run(req: SandboxRequest, user: dict = Depends(require_admin), 
                 out = out_bytes.decode("utf-8", errors="replace") if out_bytes else ""
                 err = err_bytes.decode("utf-8", errors="replace") if err_bytes else ""
             except asyncio.TimeoutError:
-                try:
-                    proc.kill()
-                except Exception:
-                    pass
+                _kill_proc_group(proc)
                 try:
                     os.unlink(tmpfile)
                 except Exception:
@@ -193,10 +211,7 @@ async def sandbox_run(req: SandboxRequest, user: dict = Depends(require_admin), 
                 )
                 out, err = proc.communicate(timeout=timeout_sec)
             except subprocess.TimeoutExpired:
-                try:
-                    proc.kill()
-                except Exception:
-                    pass
+                _kill_proc_group(proc)
                 try:
                     os.unlink(tmpfile)
                 except Exception:

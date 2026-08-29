@@ -56,11 +56,11 @@ services:
       # ⚠️ 安全：禁止提供默认口令。
       # - 开发模式(NETLEARN_ENV=development，默认)：未设置时 main.py 自动生成随机口令（重启失效），不阻塞启动
       # - 生产模式(NETLEARN_ENV=production，需 --profile production)：未设置即 fail-fast 启动失败
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       # ⚠️ 安全：AUTH_SECRET 无硬编码默认值。
       # - 开发模式：未设置时 resolve_auth_secret() 自动生成随机密钥（重启失效），不阻塞启动
       # - 生产模式：未设置即 fail-fast 启动失败（fail-closed，防止伪造 Token）
-      - AUTH_SECRET=${AUTH_SECRET:-}
+      - AUTH_SECRET=${AUTH_SECRET}
       # 默认 development（开箱即跑）：播种 demo/demo123456 演示账号、自动生成密钥
       # 生产部署：docker-compose --profile production up -d 时通过 .env 或环境变量设 NETLEARN_ENV=production
       - NETLEARN_ENV=${NETLEARN_ENV:-development}
