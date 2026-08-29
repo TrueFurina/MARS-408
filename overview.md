@@ -81,4 +81,26 @@
 
 ### 3. 验证
 - `vue-tsc --noEmit` → Exit 0（零类型错误）
+
+---
+
+## 2026-08-29（深夜）— 遗忘曲线排程 + 思路引导式解析（痛点报告落地续）
+
+> 延续 `痛点挖掘-公开社区_2026-08-29.md` 建议②（遗忘曲线自动排程）与③（思路引导式解析）。两者均为**纯规则、离线可复现**模块，不依赖 E5/LLM 即可运行；LLM 可用时增强，不可用时明确 `degraded=True` 降级。
+
+### ① 遗忘曲线排程（`engines/review_scheduler.py` + `db/user_store.py`）
+- **算法**：基于间隔复习（spaced repetition）的艾宾浩斯经验间隔 `[1, 2, 4, 7, 15, 30]` 天。每道错题维护 `review_stage`（0..5）；复习「答对」→ 阶段+1（间隔拉长），「答错/忘记」→ 回到阶段 0（重新巩固）；达最高阶段且仍答对 → 标记 `mastered`（建议移出错题本）。
+- **DB 迁移**：错题表加 `review_stage` / `next_review_at` / `review_history_json` 三列（带 ALTER 迁移，已存在则跳过）。`add_wrong_question` 自动写初始排程（阶段0，下次=首次错+1天）。
+- **API**：`GET /api/wrong-questions/due`（到期待复习列表）、`POST /api/wrong-questions/{id}/review`（记录回忆结果、推进排程）。
+- **DB 层端到端单测全绿**：加题→stage0/next+1d；3 次答对→stage3；答错→归零；驱动至毕业→mastered；错误画像聚合；毕业题不进待复习。
+
+### ② 思路引导式解析（`engines/guided_parse.py` + `api/guided_parse.py`）
+- **算法**：苏格拉底式分步引导。LLM 可用时（`use_llm=True`）生成真实步骤；不可用时走规则模板（按题型：选择/计算/简答/通用），明确 `degraded=True` 不伪装。
+- **题型识别**：规则启发式（含「计算/求/算」→ calc；含选项 → choice；含「简述/论述/为什么」→ explain）。
+- **API**：`POST /api/guide/quiz`，返回 `steps` + `source`(llm/template) + `degraded` + `qtype`。
+- 诚信：模板降级路径清晰标注，绝不谎称 AI 已分析。
+
+### 诚实声明
+- 本轮**未重建全量 KB**（HuggingFace 不可达 + venv 依赖被清空），故变体前缀降权对 CN groundedness 的真实回升效应**尚未用全量 2083 语料验证**，待联网后 `scripts/setup_kb.py` 重建再跑 `eval_gold_offline.py` / `eval_llm.py`。
+- 两模块均为离线规则，单测全绿，可立即并入产品，无需等待 KB。
 - Vite dev server :5173 → HTTP 200（可实时预览）

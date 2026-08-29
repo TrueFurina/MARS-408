@@ -69,6 +69,7 @@ from api import (
     wrong_questions_router,
     daily_plan_router,
     cn_distinction_router,
+    guided_parse_router,
 )
 
 # 注：结构化日志已在模块导入期由 setup_structured_logging() 启用（D11），
@@ -602,6 +603,7 @@ _all_routers = [
     wrong_questions_router,
     daily_plan_router,
     cn_distinction_router,
+    guided_parse_router,
 ]
 
 api_router = APIRouter(prefix="/api")

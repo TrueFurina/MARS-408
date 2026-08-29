@@ -168,6 +168,19 @@ def _init_schema(conn: sqlite3.Connection):
         conn.execute(
             "ALTER TABLE user_wrong_questions ADD COLUMN attribution_json TEXT NOT NULL DEFAULT '{}'"
         )
+    # 迁移：遗忘曲线排程列（review_stage / next_review_at / review_history_json）
+    if "review_stage" not in _cols:
+        conn.execute(
+            "ALTER TABLE user_wrong_questions ADD COLUMN review_stage INTEGER NOT NULL DEFAULT 0"
+        )
+    if "next_review_at" not in _cols:
+        conn.execute(
+            "ALTER TABLE user_wrong_questions ADD COLUMN next_review_at TEXT NOT NULL DEFAULT ''"
+        )
+    if "review_history_json" not in _cols:
+        conn.execute(
+            "ALTER TABLE user_wrong_questions ADD COLUMN review_history_json TEXT NOT NULL DEFAULT '[]'"
+        )
     conn.commit()
 
 
@@ -775,7 +788,9 @@ def delete_learning_resource(resource_id: int, owner_user_id: str) -> bool:
 
 # ── 错题本功能 ─────────────────────────────────────────────
 def add_wrong_question(user_id: str, question: dict, wrong_answer: str, error_type: str = "concept", attribution: Optional[dict] = None) -> dict:
-    """添加错题，已存在则错误次数+1。attribution 为智能归因结果（可空）。"""
+    """添加错题，已存在则错误次数+1。attribution 为智能归因结果（可空）。
+    新错题自动按遗忘曲线设置初始复习排程（阶段0，下次复习=首次错+1天）。"""
+    from engines.review_scheduler import compute_initial_review
     conn = _get_conn()
     now = _now()
     qid = question.get("id", str(hash(json.dumps(question, ensure_ascii=False))))
@@ -784,6 +799,7 @@ def add_wrong_question(user_id: str, question: dict, wrong_answer: str, error_ty
     knowledge_point = question.get("knowledge_point", question.get("kp", ""))
     correct_answer = question.get("answer", question.get("correct_answer", ""))
     attr_json = json.dumps(attribution, ensure_ascii=False) if attribution else "{}"
+    sched = compute_initial_review(now)
 
     with _lock:
         existing = conn.execute(
@@ -800,9 +816,9 @@ def add_wrong_question(user_id: str, question: dict, wrong_answer: str, error_ty
         else:
             cursor = conn.execute(
                 """INSERT INTO user_wrong_questions 
-                (user_id, question_id, question_json, subject, chapter, knowledge_point, wrong_answer, correct_answer, error_type, attribution_json, wrong_count, last_wrong_at, first_wrong_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)""",
-                (user_id, qid, json.dumps(question, ensure_ascii=False), subject, chapter, knowledge_point, wrong_answer, correct_answer, error_type, attr_json, now, now)
+                (user_id, question_id, question_json, subject, chapter, knowledge_point, wrong_answer, correct_answer, error_type, attribution_json, wrong_count, last_wrong_at, first_wrong_at, review_stage, next_review_at, review_history_json)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?)""",
+                (user_id, qid, json.dumps(question, ensure_ascii=False), subject, chapter, knowledge_point, wrong_answer, correct_answer, error_type, attr_json, now, now, sched["review_stage"], sched["next_review_at"], "[]")
             )
             wid = cursor.lastrowid
         conn.commit()
@@ -836,6 +852,9 @@ def get_wrong_question(qid: int) -> Optional[dict]:
         "mastered": bool(row["mastered"]),
         "last_wrong_at": row["last_wrong_at"],
         "first_wrong_at": row["first_wrong_at"],
+        "review_stage": row["review_stage"],
+        "next_review_at": row["next_review_at"],
+        "review_history": _parse_review_history(row["review_history_json"]),
     }
 
 
@@ -848,6 +867,17 @@ def _parse_attr(raw) -> Optional[dict]:
         return v if isinstance(v, dict) else None
     except Exception:
         return None
+
+
+def _parse_review_history(raw) -> list:
+    """安全解析 review_history_json（容忍空/非法）。"""
+    if not raw:
+        return []
+    try:
+        v = json.loads(raw)
+        return v if isinstance(v, list) else []
+    except Exception:
+        return []
 
 
 def get_error_profile(user_id: str) -> dict:
@@ -893,6 +923,69 @@ def get_error_profile(user_id: str) -> dict:
             "rule_fallback": degraded_cnt,
         },
     }
+
+
+def record_review(wid: int, recalled_correct: bool, now: str = None) -> Optional[dict]:
+    """记录一次复习回忆结果，按遗忘曲线推进排程。返回更新后的错题（含新排程）。"""
+    from engines.review_scheduler import schedule_after_review, is_due
+    conn = _get_conn()
+    now = now or _now()
+    with _lock:
+        row = conn.execute(
+            "SELECT review_stage, next_review_at, review_history_json, mastered FROM user_wrong_questions WHERE id=?",
+            (wid,),
+        ).fetchone()
+        if not row:
+            return None
+        sched = schedule_after_review(row["review_stage"], row["next_review_at"], recalled_correct, _coerce_dt_safe(now))
+        history = _parse_review_history(row["review_history_json"])
+        history.append({
+            "at": now,
+            "recalled": bool(recalled_correct),
+            "stage_after": sched["review_stage"],
+        })
+        # 毕业：达最高阶段且答对 -> 标记 mastered
+        graduated = sched["graduated"]
+        mastered = 1 if graduated else row["mastered"]
+        conn.execute(
+            "UPDATE user_wrong_questions SET review_stage=?, next_review_at=?, review_history_json=?, mastered=? WHERE id=?",
+            (sched["review_stage"], sched["next_review_at"], json.dumps(history, ensure_ascii=False), mastered, wid),
+        )
+        conn.commit()
+    return get_wrong_question(wid)
+
+
+def get_due_reviews(user_id: str, now: str = None) -> list:
+    """返回该用户「当前到期且未毕业」的待复习错题列表（按 next_review_at 升序）。"""
+    from engines.review_scheduler import is_due
+    conn = _get_conn()
+    now = now or _now()
+    with _lock:
+        rows = conn.execute(
+            "SELECT id, next_review_at, mastered FROM user_wrong_questions WHERE user_id=?",
+            (user_id,),
+        ).fetchall()
+    due = []
+    for r in rows:
+        if r["mastered"]:
+            continue
+        if is_due(r["next_review_at"], _coerce_dt_safe(now)):
+            item = get_wrong_question(r["id"])
+            if item:
+                due.append(item)
+    due.sort(key=lambda x: x.get("next_review_at") or "")
+    return due
+
+
+def _coerce_dt_safe(value):
+    """把字符串/时间戳转 datetime（失败返回 None，交由 is_due 兜底）。"""
+    if value is None:
+        return None
+    try:
+        from engines.review_scheduler import _coerce_dt
+        return _coerce_dt(value)
+    except Exception:
+        return None
 
 
 # error_type 中文标签（供画像展示）
