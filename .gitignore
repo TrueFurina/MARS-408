@@ -166,8 +166,8 @@ py-server/vectordb_data/
 # ── 2026-08-29 公开仓库净化 v2：内部/敏感/无关内容 ──
 # 泄露真实 PAT 的审计文档
 docs/audit_fix_architecture.md
-# 并行会话生成的旧口径英文 README（含 554 伪证 badge + 软件杯主题）
-README_EN.md
+# 英文 README 已于 2026-08-29 按当前中文版重写（移除 554 伪证 badge 与软件杯旧口径），恢复入库
+# README_EN.md
 # AI 会话记录
 .sessions/
 .codebuddy/
@@ -180,8 +180,8 @@ documents/
 # ── 2026-08-29 公开仓库净化 v2：内部/敏感/无关内容 ──
 # 泄露真实 PAT 的审计文档
 docs/audit_fix_architecture.md
-# 并行会话生成的旧口径英文 README（含 554 伪证 badge + 软件杯主题）
-README_EN.md
+# 英文 README 已于 2026-08-29 按当前中文版重写（移除 554 伪证 badge 与软件杯旧口径），恢复入库
+# README_EN.md
 # AI 会话记录
 .sessions/
 .codebuddy/
