@@ -37,6 +37,8 @@ export default [
       '@typescript-eslint/ban-types': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-empty-function': 'off',
+      '@typescript-eslint/no-unused-expressions': 'off',
+      'vue/no-parsing-error': 'off',
       '@typescript-eslint/no-unused-vars': [
         'warn',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
