@@ -168,7 +168,7 @@ jobs:
       - name: Install backend (editable, with test extras)
         run: pip install --upgrade pip && pip install -e ".[test]"
       - name: Run pytest (unit/integration/API, coverage xml)
-        run: pytest -m "not system and not requires_milvus" --cov=. --cov-report=xml:coverage.xml -q
+        run: pytest -m "not system and not requires_milvus" --cov=. --cov-report=xml:coverage.xml --cov-fail-under=50 -q
       - name: ADR-007 single-writer gate (import_queue)
         run: pytest -m import_queue -q
       - name: Upload coverage artifact
