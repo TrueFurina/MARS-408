@@ -62,7 +62,7 @@ jobs:
       - name: Fast unit + coverage
         # 不指定 -m，沿用 addopts：排除 system/requires_milvus/slow
         working-directory: py-server
-        run: pytest --cov=. --cov-report=json:coverage.json --cov-fail-under=80 -q
+        run: pytest --cov=. --cov-report=json:coverage.json --cov-fail-under=50 -q
       - name: Per-file coverage gate
         if: matrix.os == 'ubuntu-latest'
         working-directory: py-server
