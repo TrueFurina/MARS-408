@@ -229,7 +229,7 @@ def test_tc12_single_writer_no_loss(tmp_path):
         base = "http://127.0.0.1:8123"
         assert _wait_status(base, proc=proc), "single-worker 启动超时"
         token = _admin_token()
-        client = httpx.Client(base, headers={"Authorization": f"Bearer {token}"})
+        client = httpx.Client(base_url=base, headers={"Authorization": f"Bearer {token}"})
 
         # 基线：启动后（含种子数据）的初始条目数，隔离"导入贡献"
         baseline = _count_kb(base, token)
@@ -288,7 +288,7 @@ def test_tc12_online_vs_worker_concurrent(tmp_path):
         base = "http://127.0.0.1:8125"
         assert _wait_status(base, proc=proc), "single-worker 启动超时"
         token = _admin_token()
-        client = httpx.Client(base, headers={"Authorization": f"Bearer {token}"})
+        client = httpx.Client(base_url=base, headers={"Authorization": f"Bearer {token}"})
 
         baseline = _count_kb(base, token)
 
@@ -332,12 +332,15 @@ def test_tc12_online_vs_worker_concurrent(tmp_path):
     assert "Traceback (most recent call last)" not in out
 
 
-# ── TC-14（负向）：--workers 2 复现 last-writer-wins 风险，且启动告警生效 ──
+# ── TC-14（负向）：--workers 2 必须被 ADR-007 硬约束 fail-fast 拒绝 ──
 def test_tc14_multiworker_lww_regression(tmp_path):
-    """多进程 → 各自独立 InMemory 单写者锁 → 跨进程无共享锁 → LWW 风险重现。
+    """负向：uvicorn --workers 2（>1）必须被 ADR-007 硬约束在启动期 fail-fast 拒绝。
 
-    ADR §3.5 硬约束：uvicorn 必须 --workers 1。main.py 在检测到 >1 worker 时应 logger.warning。
-    本用例验证该启动告警确实生效（guard 活跃）。
+    多进程 → 各自独立 InMemory 单写者锁 → 跨进程无共享锁 → 重新引入
+    last-writer-wins（2026-07-08 P0 事故根因）。因此 ADR-007 要求 uvicorn 必须
+    --workers 1，main.py:270-274 在 lifespan 检测到 >1 worker 时直接 raise
+    RuntimeError fail-fast。本用例验证该拒绝确实发生（应用绝不健康、日志含违规文案），
+    而非旧版的「仅告警」。这是单写者保证的安全底线，绝不能退化成可绕过。
     """
     run_dir = tmp_path / "run"
     run_dir.mkdir()
@@ -354,28 +357,28 @@ def test_tc14_multiworker_lww_regression(tmp_path):
     out = ""
     try:
         base = "http://127.0.0.1:8124"
-        assert _wait_status(base, timeout=120, proc=proc), "multi-worker 启动超时"
-
-        # 多 worker 下仍应可提交并跑通一个 import job（系统可用）
-        token = _admin_token()
-        client = httpx.Client(base, headers={"Authorization": f"Bearer {token}"})
-        pdf = run_dir / "m.pdf"
-        _make_pdf(pdf)
-        r = _submit_import(client, pdf)
-        assert r.status_code == 200, r.text
-        job = _poll_job(client, r.json()["job_id"], token)
-        assert job and job["status"] == "succeeded", f"import job 未成功: {job}"
+        # 负向断言：多 worker 必须被启动期 fail-fast 拒绝，/api/status 永远不应 200。
+        # proc=None → _wait_status 不在超时后自杀（由 finally 的 _stop 统一回收）。
+        healthy = _wait_status(base, timeout=45, proc=None)
+        assert not healthy, (
+            "ADR-007 硬约束失效：--workers 2 竟启动成功"
+            "（多写者 last-writer-wins 风险重现，P0 回归）"
+        )
     finally:
         out = _stop(proc)
 
-    # 核心断言：启动期检测到 >1 worker 并发出多写者告警（ADR 硬约束 guard 活跃）
+    # 核心断言：启动期检测到 >1 worker 并 fail-fast 拒绝（含 ADR-007 违规文案）
     lowered = out.lower()
+    assert "adr-007" in lowered, (
+        "未检测到 ADR-007 硬约束拒绝日志（guard 缺失或日志未转发）:\n" + out[-2000:]
+    )
     assert (
-        "uvicorn_workers" in lowered
-        or "多写者" in lowered
-        or "last-writer-wins" in lowered
-        or "workers" in lowered
+        "硬约束" in out
+        or "workers数量" in out
+        or "last-writer-wins" in out
+        or "必须 --workers 1" in out
     ), (
-        "未检测到多 worker 启动告警（ADR §3.5 硬约束 guard 缺失或日志未转发）:\n"
+        "ADR-007 拒绝日志缺少关键违规文案"
+        "（workers数量 / last-writer-wins / 必须 --workers 1）:\n"
         + out[-2000:]
     )

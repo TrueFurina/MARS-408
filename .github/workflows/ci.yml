@@ -277,7 +277,7 @@ jobs:
   # "Dependency not found on PyPI and could not be audited" 并失败。
   # 该参数跳过本地可编辑包，只审计真正的第三方依赖。
   # ───────────────────────────────────────────────────────────────
-pip-audit --skip-editable:
+pip-audit-skip-editable:
     name: Dependency CVE scan (pip-audit)
     runs-on: ubuntu-latest
     steps:
