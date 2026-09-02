@@ -21,6 +21,7 @@ import threading
 import time
 import signal
 import httpx
+from pathlib import Path
 
 import pytest
 
@@ -34,6 +35,12 @@ sys.path.insert(0, _PY)
 # 必须 >= 32 字符，否则 shared.auth.resolve_auth_secret() 在 startup 触发 fail-fast，
 # 真实 uvicorn 子进程起不来 -> system 测试「启动超时」失败（D14 之前 CI 一直红的根因）。
 AUTH_SECRET = "test-secret-import-queue-system-0123456789"
+
+# import_worker.DOCS_DIR = py-server/documents/教材（由 import_worker 模块路径推导，
+# 与子进程 cwd 无关）。系统测试起真实 uvicorn 子进程，monkeypatch 无法穿透到子进程，
+# 故测试 PDF 必须真实落盘到该目录（documents/教材 已被 .gitignore 忽略，不污染提交）；
+# 提交时 source 用该绝对路径即可通过 api/imports 的路径越界护栏（F-012）。
+_DOCS_DIR = os.path.join(_PY, "documents", "教材")
 
 pytestmark = pytest.mark.system
 
@@ -164,15 +171,20 @@ def _stop(proc):
     return out
 
 
+# 超时放宽：CIRunner 上首次请求会触发 embedding 模型加载（数秒~数十秒），
+# 原 5s 会在慢机/冷缓存下误判为 ReadTimeout，属于测试脆弱性而非产品缺陷。
+_HTTP_TIMEOUT = 120.0
+
+
 def _count_kb(base, token):
     r = httpx.get(f"{base}/api/knowledge/stats",
-                  headers={"Authorization": f"Bearer {token}"}, timeout=5)
+                  headers={"Authorization": f"Bearer {token}"}, timeout=_HTTP_TIMEOUT)
     return r.json()["total_docs"]
 
 
 def _list_kb(base, token):
     r = httpx.get(f"{base}/api/knowledge/list?limit=10000",
-                  headers={"Authorization": f"Bearer {token}"}, timeout=5)
+                  headers={"Authorization": f"Bearer {token}"}, timeout=_HTTP_TIMEOUT)
     data = r.json()
     return data["items"], data["total"]
 
@@ -225,17 +237,21 @@ def test_tc12_single_writer_no_loss(tmp_path):
     _write_env_file(envf, str(vdb))
     proc = _start(1, str(envf), 8123, run_dir)
     out = ""
+    a_pdf = b_pdf = None
     try:
         base = "http://127.0.0.1:8123"
         assert _wait_status(base, proc=proc), "single-worker 启动超时"
         token = _admin_token()
-        client = httpx.Client(base_url=base, headers={"Authorization": f"Bearer {token}"})
+        client = httpx.Client(base_url=base, headers={"Authorization": f"Bearer {token}"}, timeout=120.0)
 
         # 基线：启动后（含种子数据）的初始条目数，隔离"导入贡献"
         baseline = _count_kb(base, token)
 
-        a_pdf = run_dir / "a.pdf"
-        b_pdf = run_dir / "b.pdf"
+        # PDF 必须落在 import_worker.DOCS_DIR（py-server/documents/教材）内，
+        # 否则 api/imports 的路径越界护栏会以 400 拒绝（F-012）。
+        os.makedirs(_DOCS_DIR, exist_ok=True)
+        a_pdf = Path(_DOCS_DIR) / "a.pdf"
+        b_pdf = Path(_DOCS_DIR) / "b.pdf"
         _make_pdf(a_pdf)
         _make_pdf(b_pdf)
 
@@ -265,6 +281,12 @@ def test_tc12_single_writer_no_loss(tmp_path):
         assert len(ids) == len(set(ids)), "单写者下出现重复条目（条目爆炸）"
     finally:
         out = _stop(proc)
+        for _p in (a_pdf, b_pdf):
+            try:
+                if _p and _p.exists():
+                    _p.unlink()
+            except Exception:
+                pass
     assert "Traceback (most recent call last)" not in out
 
 
@@ -284,15 +306,18 @@ def test_tc12_online_vs_worker_concurrent(tmp_path):
     _write_env_file(envf, str(vdb))
     proc = _start(1, str(envf), 8125, run_dir)
     out = ""
+    pdf = None
     try:
         base = "http://127.0.0.1:8125"
         assert _wait_status(base, proc=proc), "single-worker 启动超时"
         token = _admin_token()
-        client = httpx.Client(base_url=base, headers={"Authorization": f"Bearer {token}"})
+        client = httpx.Client(base_url=base, headers={"Authorization": f"Bearer {token}"}, timeout=120.0)
 
         baseline = _count_kb(base, token)
 
-        pdf = run_dir / "w.pdf"
+        # PDF 必须落在 import_worker.DOCS_DIR 内，否则路径越界护栏会以 400 拒绝（F-012）。
+        os.makedirs(_DOCS_DIR, exist_ok=True)
+        pdf = Path(_DOCS_DIR) / "w.pdf"
         _make_pdf(pdf)
 
         # 并发：在线 upsert + worker import（两条写路径共享同一把 store_lock）
@@ -329,6 +354,11 @@ def test_tc12_online_vs_worker_concurrent(tmp_path):
         )
     finally:
         out = _stop(proc)
+        try:
+            if pdf and Path(pdf).exists():
+                Path(pdf).unlink()
+        except Exception:
+            pass
     assert "Traceback (most recent call last)" not in out
 
 
