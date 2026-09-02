@@ -80,10 +80,11 @@ jobs:
     needs: p0-regression-gate
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    env:
-      # CI 系统测试用 AUTH_SECRET 哨兵值（≥32 位，满足 app fail-fast 下限；
-      # 以 "-" 分段避免被 xfyun-api-secret 规则误判为真实密钥）。非真实凭据。
-      AUTH_SECRET: "test-secret-0123-4567-89ab-cdef-ghij-klmn-opqr-stuv-wxyz"
+    # 注意：本 job 不再在 job 级设 AUTH_SECRET。系统测试（test_concurrent_writes.py /
+    # test_p0_f6_regression.py）会显式把自己签发 token 所用的 AUTH_SECRET 注入 uvicorn
+    # 子进程环境（uvicorn --env-file 默认不覆盖已存在的 os.environ，job 级 AUTH_SECRET
+    # 会泄漏进子进程并造成 token 校验 401 → KeyError 的伪绿/顺序依赖陷阱）。app 的
+    # AUTH_SECRET fail-fast 下限由测试 .env.test 中的合规哨兵值满足。
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

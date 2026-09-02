@@ -143,6 +143,17 @@ def _start(workers, env_file, port, run_dir, log_config=None, extra_env=None):
     _write_skip_marker(run_dir)
     env = os.environ.copy()
     env["PYTHONPATH"] = _PY + os.pathsep + env.get("PYTHONPATH", "")
+    # 关键修复（D15）：把本测试用于签发 token 的 AUTH_SECRET 显式注入子进程环境。
+    #
+    # 根因：uvicorn --env-file 走 python-dotenv，`--env-file` 中的变量【默认不覆盖】
+    # 已存在于 os.environ 的变量。若 CI job 在 job 级设了 AUTH_SECRET（p0-regression.yml
+    # 的 system 作业即如此），该值会泄漏进子进程 os.environ 并被应用采用，与测试
+    # 签发 token 的密钥不一致 → /api/knowledge/stats 返回 401（无 total_docs）→ KeyError。
+    #
+    # 次生陷阱：_admin_token() 会改写【本进程】os.environ["AUTH_SECRET"]，造成用例顺序依赖
+    # —— 首个调用 _count_kb 的用例失败，后续用例因 env 已被改写而「伪绿」。显式注入
+    # 彻底消除 job env 泄漏与用例顺序依赖，保证每个子进程都用与 token 一致的密钥。
+    env["AUTH_SECRET"] = AUTH_SECRET
     if extra_env:
         env.update(extra_env)
     cmd = [
@@ -179,6 +190,10 @@ _HTTP_TIMEOUT = 120.0
 def _count_kb(base, token):
     r = httpx.get(f"{base}/api/knowledge/stats",
                   headers={"Authorization": f"Bearer {token}"}, timeout=_HTTP_TIMEOUT)
+    assert r.status_code == 200, (
+        f"/api/knowledge/stats 返回异常：HTTP {r.status_code}，"
+        f"响应={str(r.json())[:300]}（疑似 token 密钥不一致或应用启动异常）"
+    )
     return r.json()["total_docs"]
 
 
