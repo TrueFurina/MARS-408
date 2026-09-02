@@ -229,8 +229,11 @@ jobs:
     #  此处显式声明以对齐草案并确保健康检查脚本拿到正确 host）
     env:
       MILVUS_HOST: localhost
-      # docker run 起的 milvus-standalone 映射在 localhost:19530，connect() 默认即连此处；
-      # 此处显式声明以对齐草案并确保 python 步骤拿到正确 host。
+      MILVUS_PORT: "19530"
+      MILVUS_ENABLED: "true"
+      # docker run 起的 milvus-standalone 映射在 localhost:19530；本 job 显式启用
+      # Milvus（config 默认 enabled=False），让 startup guard 真正去连真实服务端，
+      # 拒绝静默回退 InMemory。
     defaults:
       run:
         working-directory: py-server
