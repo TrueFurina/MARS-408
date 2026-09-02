@@ -165,6 +165,26 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Start Milvus standalone (docker run, real server)
+        # milvusdb/milvus 镜像的 entrypoint 为 `tini --`；作为 GitHub service container
+        # 启动时其默认 CMD 未被正确传递，tini 收不到要启动的程序，会打印 usage 并
+        # 立即退出（实测容器 1 秒后 unhealthy，作业 0 秒失败）。
+        # 故改为显式 `docker run ... milvus run standalone` + embedded etcd + 本地存储，
+        # 对齐仓库 docker-compose.yml 的 standalone 配置；用 healthz 探针等待就绪。
+        run: |
+          docker run -d --name milvus-standalone \
+            -p 19530:19530 \
+            -e ETCD_USE_EMBED=true \
+            -e ETCD_DATA_DIR=/var/lib/milvus/etcd \
+            -e COMMON_STORAGETYPE=local \
+            milvusdb/milvus:v2.4.17 milvus run standalone
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:9091/healthz >/dev/null; then
+              echo "Milvus healthz OK after ~$((i*5))s"; break
+            fi
+            echo "waiting for Milvus... ($i/30)"; sleep 5
+          done
+          curl -sf http://localhost:9091/healthz || { echo "::error::Milvus 未在超时内就绪"; docker logs milvus-standalone; exit 1; }
       - name: Install backend (editable, with test extras)
         run: pip install --upgrade pip && pip install -e ".[test]"
       - name: Run pytest (unit/integration/API, coverage xml)
@@ -209,37 +229,11 @@ jobs:
     #  此处显式声明以对齐草案并确保健康检查脚本拿到正确 host）
     env:
       MILVUS_HOST: localhost
+      # docker run 起的 milvus-standalone 映射在 localhost:19530，connect() 默认即连此处；
+      # 此处显式声明以对齐草案并确保 python 步骤拿到正确 host。
     defaults:
       run:
         working-directory: py-server
-    services:
-      milvus:
-        image: milvusdb/milvus:v2.4.17
-        ports:
-          - "19530:19530"
-        # 与仓库 docker-compose.yml 中已验证可跑通的 standalone 配置保持一致：
-        # 内置 etcd（ETCD_USE_EMBED=true）+ 本地存储（COMMON_STORAGETYPE=local），
-        # 无需额外的 etcd / minio 容器。
-        env:
-          ETCD_USE_EMBED: "true"
-          ETCD_DATA_DIR: /var/lib/milvus/etcd
-          COMMON_STORAGETYPE: local
-        # ⚠️ 关键：必须有 --health-start-period。
-        # 缺少它时 start_period 默认为 0，docker 在容器启动后**立即**执行首次健康检查，
-        # 而 Milvus standalone 冷启动需数十秒 → 首次探针必失败 → 状态瞬间变成
-        # "unhealthy"，GitHub 见到 unhealthy 立刻判定服务容器失败：
-        #   ##[error]Failed to initialize container milvusdb/milvus:v2.4.17
-        #   ##[error]One or more containers failed to start.
-        #（实测：docker start 后不到 1 秒即 unhealthy，作业 0 秒失败）
-        # 加上 120s 宽限期（对齐 docker-compose.yml 的 start_period: 120s）后，
-        # 容器在 start_period 内保持 "starting"，不会误判。
-        options: >-
-          --health-cmd "curl -sf http://localhost:9091/healthz"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 30
-          --health-start-period 120s
-          --env LD_PRELOAD= 
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -247,6 +241,28 @@ jobs:
           python-version: "3.12"
       - name: Install backend (editable, with test extras)
         run: pip install --upgrade pip && pip install -e ".[test]"
+      - name: Start Milvus standalone (docker run, embedded etcd + local storage)
+        # 不使用 GitHub service 容器：milvusdb/milvus 镜像的 tini 入口点在
+        # service-container 模式下收不到启动程序、会秒退打印 -h 帮助即退出。
+        # 改为显式 `docker run ... milvus run standalone`（GitHub 托管 runner 自带 docker），
+        # 直接让 tini 执行 milvus 子命令，绕开该包装问题。
+        run: |
+          docker run -d --name milvus-standalone \
+            -p 19530:19530 -p 9091:9091 \
+            -e ETCD_USE_EMBED=true \
+            -e ETCD_DATA_DIR=/var/lib/milvus/etcd \
+            -e COMMON_STORAGETYPE=local \
+            --health-cmd "curl -f http://localhost:9091/healthz || exit 1" \
+            --health-interval 10s --health-timeout 5s --health-retries 30 \
+            milvusdb/milvus:v2.4.17 \
+            milvus run standalone
+          echo "waiting for Milvus health (max ~120s)..."
+          for i in $(seq 1 60); do
+            status=$(docker inspect -f '{{.State.Health.Status}}' milvus-standalone 2>/dev/null || echo starting)
+            if [ "$status" = "healthy" ]; then echo "Milvus healthy after ~$((i*5))s"; break; fi
+            echo "  [$i] status=$status"
+            sleep 5
+          done
       - name: "Milvus startup guard (fail-closed: 拒绝静默回退 InMemory)"
         # 含重试（最多 ~120s，每次 5s），容忍 Milvus standalone 冷启动延迟；
         # 仍坚持 fail-closed：必须真连上且 _milvus_connected 为真，否则作业立即红。
