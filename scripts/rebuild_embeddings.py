@@ -126,8 +126,11 @@ def main() -> int:
     os.replace(tmp_json, KB_JSON)
     print(f"[rebuild] JSON 已更新 {KB_JSON.stat().st_size / 1e6:.1f} MB")
 
-    tmp_npy = KB_NPY.with_suffix(f".npy.tmp.{os.getpid()}")
-    np.save(tmp_npy, vecs)
+    # 注意：np.save(path) 会自行追加 ".npy" 后缀，导致 os.replace 找不到文件。
+    # 必须显式传文件句柄，保证写入路径与预期完全一致。
+    tmp_npy = KB_NPY.with_name(f"{KB_NPY.name}.tmp.{os.getpid()}")
+    with open(tmp_npy, "wb") as f:
+        np.save(f, vecs)
     os.replace(tmp_npy, KB_NPY)
     print(f"[rebuild] NPY 缓存已更新 {KB_NPY.stat().st_size / 1e6:.1f} MB")
 

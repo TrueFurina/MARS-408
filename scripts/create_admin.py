@@ -50,7 +50,10 @@ def main() -> int:
 
     before = us.get_user_by_username(username) if hasattr(us, "get_user_by_username") else None
     if before:
-        print(f"[create-admin] 账号 {username} 已存在（role={before.get('role')}），未做修改")
+        # 账号已存在：若显式配置了口令（.env/环境变量），则同步，
+        # 避免首次启动生成的随机口令导致登录失败（ensure_admin 不更新既有密码）。
+        ok = us.set_password(username, password)
+        print(f"[create-admin] 账号 {username} 已存在（role={before.get('role')}），已同步口令（生效={ok}）")
         return 0
 
     us.ensure_admin(username, password, display_name="系统管理员")

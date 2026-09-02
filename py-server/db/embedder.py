@@ -70,6 +70,22 @@ def _hash_text(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
+# ── e5 官方前缀（intfloat/e5 系列的硬性要求）──
+# 实测（2026-09-02，2113 条真实 408 语料 / 30 题 gold）：
+#   不加前缀时 E5 单路 Recall@5 仅 0.70，明显劣于 BM25 的 0.90；
+#   加 "query: "/"passage: " 后 groundedness 0.2933 → 0.3250、混合 0.5811 → 0.6011。
+# 逃生舱：E5_PREFIX=off 时退回无前缀行为（兼容基于无前缀向量训练的 NeuralMixer 权重）。
+_PREFIX_MODE = os.environ.get("E5_PREFIX", "on").strip().lower()
+_PREFIX_ENABLED = _PREFIX_MODE not in ("off", "0", "false", "none", "")
+
+
+def _apply_prefix(text: str, prefix: str) -> str:
+    """给文本加 e5 前缀；hash 也基于加前缀后的文本，保证前缀方案切换自动绕过旧缓存。"""
+    if not _PREFIX_ENABLED or not prefix:
+        return text
+    return f"{prefix}: {text}"
+
+
 def _load_cache():
     """加载磁盘缓存到内存（模型不匹配则视为空，避免维度错配）。"""
     global _CACHE, _CACHE_MODEL, _CACHE_DIM
@@ -168,8 +184,13 @@ def _get_e5_model():
         raise
 
 
-def embed_batch(texts: list[str]) -> list[list[float]]:
+def embed_batch(texts: list[str], prefix: str = "query") -> list[list[float]]:
     """批量文本 → 向量（768维，e5-base-v2）。命中缓存的文本跳过模型推理。
+
+    prefix: "query"（检索侧）或 "passage"（入库/文档侧），"" 表示不加前缀。
+            intfloat/e5 系列要求两侧分别加前缀，否则语义质量显著退化。
+            缓存键是"加前缀后的文本"的哈希，因此切换前缀方案会自动绕过旧缓存，
+            不会让新旧向量在同一缓存里混血。
 
     返回顺序与输入严格一致。缓存 miss 的文本才调用模型；同一 batch 内的重复文本
     也只在模型侧计算一次（batch 内去重），推理结果写回内存缓存并原子落盘
@@ -177,6 +198,7 @@ def embed_batch(texts: list[str]) -> list[list[float]]:
     """
     _ensure_cache()
     dim = get_embedding_config().get("dimension", EMBED_DIM)
+    inputs = [_apply_prefix(t, prefix) for t in texts]
     results: list = [None] * len(texts)
     miss_entries: list[tuple[int, str]] = []   # (result_index, hash)
     miss_unique: list[tuple[str, str]] = []    # (hash, text) 去重后的待编码文本
@@ -184,7 +206,7 @@ def embed_batch(texts: list[str]) -> list[list[float]]:
 
     global _CACHE_HITS, _CACHE_MISSES, _CACHE_DIRTY
     with _CACHE_LOCK:
-        for i, t in enumerate(texts):
+        for i, t in enumerate(inputs):
             h = _hash_text(t)
             cached = _CACHE.get(h)
             if cached is not None:
@@ -199,9 +221,10 @@ def embed_batch(texts: list[str]) -> list[list[float]]:
 
     if miss_unique:
         model = _get_e5_model()
-        # e5-base-v2 检索场景建议加 "query:"/"passage:" 前缀，
-        # 但现有向量库(netlearn_kb.json, 2083条)与 NeuralMixer 训练权重均基于无前缀编码，
-        # 为保持一致性此处不加前缀；如需启用需重建索引并重训权重。
+        # e5-base-v2 官方要求 query/passage 两侧分别加前缀。
+        # 当前向量库(netlearn_kb.json, 2113条)已用 passage 前缀重建(embedding_status=e5_real)，
+        # 检索侧 embed_query 默认 query 前缀 —— 两侧前缀匹配，向量检索生效。
+        # 逃生舱 E5_PREFIX=off 可退回无前缀（兼容无前缀训练的 NeuralMixer 权重）。
         uniq_texts = [t for _, t in miss_unique]
         computed = model.encode(uniq_texts, normalize_embeddings=True)
         computed = np.asarray(computed, dtype=np.float32)
@@ -232,9 +255,9 @@ def embed_batch(texts: list[str]) -> list[list[float]]:
     return results
 
 
-def embed_text(text: str) -> list[float]:
+def embed_text(text: str, prefix: str = "query") -> list[float]:
     """文本 → 向量（768维，e5-base-v2）"""
-    return embed_batch([text])[0]
+    return embed_batch([text], prefix=prefix)[0]
 
 
 def get_embed_dim() -> int:

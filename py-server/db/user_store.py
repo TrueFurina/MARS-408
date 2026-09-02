@@ -271,6 +271,40 @@ def ensure_admin(username: str, password: str, display_name: str = "系统管理
     logger.info(f"已创建管理员账号: {username}")
 
 
+def get_user_by_username(username: str) -> Optional[dict]:
+    """按用户名查用户（不含密码哈希/盐）。"""
+    conn = _get_conn()
+    row = conn.execute(
+        "SELECT id, username, display_name, role, created_at FROM users WHERE username=?",
+        ((username or "").strip(),),
+    ).fetchone()
+    if not row:
+        return None
+    return {
+        "id": row["id"], "username": row["username"],
+        "display_name": row["display_name"], "role": row["role"],
+        "created_at": row["created_at"],
+    }
+
+
+def set_password(username: str, password: str) -> bool:
+    """更新指定用户密码（管理员维护用）。返回是否命中并更新。"""
+    if not password or len(password) < MIN_PASSWORD_LENGTH:
+        raise ValueError(f"密码长度至少 {MIN_PASSWORD_LENGTH} 位")
+    conn = _get_conn()
+    with _lock:
+        row = conn.execute("SELECT id FROM users WHERE username=?", ((username or "").strip(),)).fetchone()
+        if not row:
+            return False
+        pw_hash, salt = _hash_password(password)
+        conn.execute(
+            "UPDATE users SET password_hash=?, salt=? WHERE username=?",
+            (pw_hash, salt, username),
+        )
+        conn.commit()
+    return True
+
+
 # ── 每用户画像 ──
 
 def save_profile(user_id: str, profile: dict):

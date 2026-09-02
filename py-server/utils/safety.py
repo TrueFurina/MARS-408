@@ -2,7 +2,7 @@
 # 内容安全工具 - 敏感词过滤 + 知识性错误检查
 # 从 deps.py 迁移，供 api/ 路由模块独立导入
 #
-# 敏感词从 config/sensitive_words.json 加载（生产环境可通过编辑JSON配置）
+# 敏感词从 app_config/sensitive_words.json 加载（生产环境可通过编辑JSON配置）
 # 如文件不存在，使用代码内置默认值
 # ============================================================
 
@@ -35,7 +35,7 @@ _DEFAULT_SENSITIVE_WORDS = [
 
 def _load_sensitive_words() -> list[str]:
     """加载敏感词：优先外部JSON，回退到内置默认"""
-    config_path = Path(__file__).parent.parent / "config" / "sensitive_words.json"
+    config_path = Path(__file__).parent.parent / "app_config" / "sensitive_words.json"
     try:
         if config_path.exists():
             data = json.loads(config_path.read_text(encoding="utf-8"))

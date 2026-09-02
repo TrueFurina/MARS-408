@@ -384,7 +384,9 @@ class FrugalRAG:
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
         """批量向量化文档（用于写入 Milvus）"""
-        return embed_batch(texts)
+        # 入库侧必须用 passage 前缀，与检索侧 embed_query 的 query 前缀、以及
+        # 已重建的 netlearn_kb 向量库（passage 前缀）保持一致。
+        return embed_batch(texts, prefix="passage")
 
     def embed_query(self, query: str) -> list[float]:
         """向量化查询文本"""

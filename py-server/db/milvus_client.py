@@ -767,7 +767,8 @@ class VectorDB:
             try:
                 from db.embedder import embed_batch
                 texts_for_embed = [c["text"] for c in chunks]
-                computed = embed_batch(texts_for_embed)
+                # 入库侧用 passage 前缀，与检索侧 query 前缀、netlearn_kb 向量库一致
+                computed = embed_batch(texts_for_embed, prefix="passage")
                 precomputed_embeddings = computed
                 has_precomputed = True
                 logger.info(f"E5 嵌入计算成功（{len(chunks)} 条文档）")
