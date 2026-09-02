@@ -27,15 +27,17 @@ async def rag_status(user: dict = Depends(get_current_user)):
 
     total = vector_db.count("netlearn_kb")
     # 按科目统计（从 metadata 中读取）
+    # 注意：不能用零向量 search（query() 对零向量直接 return []），
+    # 否则 by_subject 永远为空。改为枚举全库统计。
     subject_counts = Counter()
     try:
-        all_docs = vector_db.search("netlearn_kb", query_vector=[0.0] * 768, top_k=total)
+        all_docs, _ = vector_db.get_all_with_texts("netlearn_kb", 0, total)
         for doc in all_docs:
             meta = doc.get("metadata", {})
             subject = meta.get("subject", "unknown")
             subject_counts[subject] += 1
     except Exception as e:
-        logger.warning("RAG stats: vector search failed (non-blocking): %s", e)
+        logger.warning("RAG stats: 枚举文档失败 (non-blocking): %s", e)
 
     return {
         "total_docs": total,
