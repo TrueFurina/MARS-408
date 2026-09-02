@@ -80,6 +80,8 @@ jobs:
     needs: p0-regression-gate
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      AUTH_SECRET: test-secret-0123456789abcdefghijklmnopqrstuvwxyz
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
