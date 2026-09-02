@@ -48,12 +48,12 @@ function levelLabel(level: string): string {
 // ── 行动转化：记忆薄弱点 → 具体学习动作 ──
 function goDrill(weakPoint: string) {
   // 跳转到刷题页并带薄弱点关键词（PracticeView 可读取）
-  sessionStorage.setItem('netlearn_practice_topic', weakPoint)
+  sessionStorage.setItem('mars408_practice_topic', weakPoint)
   window.location.hash = '#/practice'
 }
 
 function goPractice() {
-  sessionStorage.setItem('netlearn_practice_focus', 'weak')
+  sessionStorage.setItem('mars408_practice_focus', 'weak')
   window.location.hash = '#/practice'
 }
 

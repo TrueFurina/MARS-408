@@ -199,3 +199,16 @@ docs/_unify_changelog.md
 # 根目录大创官方表格/通知（含个人信息，禁止入库）
 /*.doc
 /*.docx
+
+# 密码学项目 copy 副本（并行会话产物，禁止入库，目标目录在密码学项目 workspace）
+crypto_platform/
+
+# 大创/竞赛官方表格（含个人敏感信息，禁止入库，仅本地留档）
+references/**/*.doc
+references/**/*.docx
+references/**/*.xls
+references/**/*.xlsx
+
+# 环境凭证备份 & 打包元数据
+py-server/.env.bak*
+*.egg-info/

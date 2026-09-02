@@ -102,13 +102,13 @@ function recommendSimilar() {
   const wp = stepResult.value?.weak_points || []
   const concept = wp[0]?.concept || currentStepQuestion.value?.chapter || ''
   if (concept) {
-    sessionStorage.setItem('netlearn_practice_topic', concept)
+    sessionStorage.setItem('mars408_practice_topic', concept)
   }
   window.location.hash = '#/practice'
 }
 
 function goPractice() {
-  sessionStorage.setItem('netlearn_practice_focus', 'weak')
+  sessionStorage.setItem('mars408_practice_focus', 'weak')
   window.location.hash = '#/practice'
 }
 
