@@ -119,12 +119,23 @@ class BM25Scorer:
 
     @staticmethod
     def _tokenize(text: str) -> list[str]:
-        """简单分词（中文按字 + 英文按词）"""
+        """分词：英文按词，中文按二元（bigram）。
+
+        中文按单字做 BM25 会退化为虚词（的/是/了）匹配，失去关键词判别力；
+        二元分词让「快速排序」→ 快速/速排/排序，与含「快速排序/快排」的条目
+        产生真实关键词重合，修复中文检索长期排不准的根因。
+        """
         # 英文分词
         words = re.findall(r'[a-zA-Z0-9_]+', text.lower())
-        # 中文按字
-        chinese = re.findall(r'[\u4e00-\u9fff]', text)
-        return words + chinese
+        tokens = list(words)
+        # 中文按连续汉字串提取，再生成二元
+        for run in re.findall(r'[\u4e00-\u9fff]+', text):
+            if len(run) == 1:
+                tokens.append(run)
+            else:
+                for i in range(len(run) - 1):
+                    tokens.append(run[i:i + 2])
+        return tokens
 
 
 _bm25 = BM25Scorer()
@@ -171,7 +182,7 @@ class FrugalRAG:
         # 课程约束检索的候选池上限：E5 有时把查询语义拉向其它课程文本，
         # 导致真正相关的本课程条目排在 top-30 之外（如"快速排序"最佳 ds 条目在
         # 第 67–82 位）。扩大候选池确保课程过滤能兜住相关条目，再施加 subject 约束。
-        self._course_search_top_k = int(config.get("course_search_top_k", 150))
+        self._course_search_top_k = int(config.get("course_search_top_k", 300))
 
         # 缓存 key 前缀
         self._cache_prefix = "frugalrag:"
@@ -190,7 +201,7 @@ class FrugalRAG:
     # 种子数据中 subject 字段 → 课程名的映射
     _COURSE_SUBJECTS = {
         "computer_network": [
-            "overview", "architecture", "switching", "physical",
+            "cn", "overview", "architecture", "switching", "physical",
             "datalink", "csma", "ethernet", "vlan", "network",
             "ip", "arp", "routing", "transport", "tcp", "udp",
             "application", "dns", "http", "ftp", "dhcp",
@@ -199,16 +210,16 @@ class FrugalRAG:
             "ddos", "web_attack", "ids", "vpn",
         ],
         "data_structures": [
-            "ds_linear", "ds_stack", "ds_queue",
+            "ds", "ds_linear", "ds_stack", "ds_queue",
             "ds_string", "ds_tree", "ds_graph",
             "ds_search", "ds_sort",
         ],
         "computer_organization": [
-            "co_overview", "co_data", "co_memory",
+            "co", "co_overview", "co_data", "co_memory",
             "co_isa", "co_cpu", "co_bus", "co_io",
         ],
         "operating_system": [
-            "os_overview", "os_process", "os_memory",
+            "os", "os_overview", "os_process", "os_memory",
             "os_file", "os_io",
         ],
     }

@@ -183,6 +183,9 @@ class InMemoryVectorStore:
             # 排除零向量占位文档
             if meta.get("embedding_status") == "fallback_zero":
                 continue
+            # 排除模板废话填充条目（无实质内容，仅污染向量空间）
+            if meta.get("exclude_retrieval"):
+                continue
             # 应用用户过滤条件
             if filter_dict:
                 match = True
