@@ -173,7 +173,7 @@ jobs:
         # 对齐仓库 docker-compose.yml 的 standalone 配置；用 healthz 探针等待就绪。
         run: |
           docker run -d --name milvus-standalone \
-            -p 19530:19530 \
+            -p 19530:19530 -p 9091:9091 \
             -e ETCD_USE_EMBED=true \
             -e ETCD_DATA_DIR=/var/lib/milvus/etcd \
             -e COMMON_STORAGETYPE=local \
