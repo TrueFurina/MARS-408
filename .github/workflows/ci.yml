@@ -272,13 +272,23 @@ jobs:
   # 字段），因此这里退而求其次：任何已知漏洞都阻断，同时产出 JSON 报告
   # 供人工分级。
   #
-  # `--skip-editable`：上一步 `pip install -e .` 会把本项目 mars-408-server
-  # 装成可编辑安装，而它不在 PyPI 上，pip-audit 会报
-  # "Dependency not found on PyPI and could not be audited" 并失败。
-  # 该参数跳过本地可编辑包，只审计真正的第三方依赖。
+  # ⚠️ 死锁陷阱（实测 pip-audit 2.10.1 源码，此前本 job 必然 100% 失败）：
+  #   上一步 `pip install -e .` 把本项目 mars-408-server 装成可编辑安装。
+  #   - `--skip-editable` 会把它变成 SkippedDependency(
+  #       skip_reason="distribution marked as editable")；
+  #   - 而 `--strict`(-S) 的定义是「依赖收集在任何依赖上失败则整个审计失败」，
+  #     _cli.py 中对**任何** is_skipped() 的依赖直接 _fatal()。
+  #   ⇒ `--skip-editable` + `--strict` 语义自相矛盾：跳过即失败。
+  #   不加 `--skip-editable` 时若用默认的 PyPI 服务，本地包不在 PyPI 上会
+  #   404 → 同样变成 SkippedDependency → `--strict` 依然判死。
+  #
+  # 正确解法：改用 **OSV 服务**（-s osv）。pypi.py 对未知包返回 SkippedDependency，
+  # 而 osv.py 对未知包返回**空漏洞列表**（HTTP 200 + 空 JSON，不产生 skip）。
+  # 于是本地包被正常审计并返回 0 漏洞，`--strict` 得以保留：
+  # 任何「版本非法 / 网络不可达」这类真实盲区仍会让 job 失败。
   # ───────────────────────────────────────────────────────────────
-  pip-audit-skip-editable:
-    name: Dependency CVE scan (pip-audit)
+  pip-audit-dep-cve:
+    name: Dependency CVE scan (pip-audit / OSV)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -288,7 +298,7 @@ jobs:
       - name: Install backend + pip-audit
         run: cd py-server && pip install --upgrade pip && pip install -e . && pip install pip-audit
       - name: Run pip-audit (block on any known vulnerability)
-        run: cd py-server && pip-audit --skip-editable --strict --desc -f json -o pip-audit-report.json
+        run: cd py-server && pip-audit -s osv --strict --desc -f json -o pip-audit-report.json
       - name: Upload pip-audit report
         if: always()
         uses: actions/upload-artifact@v4
