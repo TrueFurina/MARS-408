@@ -189,6 +189,11 @@ const router = createRouter({
       component: () => import('@/views/KnowledgeGraphView.vue'),
     },
     {
+      path: '/course-explorer',
+      name: 'course-explorer',
+      component: () => import('@/views/CourseExplorerView.vue'),
+    },
+    {
       path: '/knowledge-base',
       name: 'knowledge-base',
       component: () => import('@/views/KnowledgeBaseView.vue'),

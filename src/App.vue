@@ -109,6 +109,7 @@ const navItems = computed(() => {
     { name: '⚙️ 算法引擎', icon: icons.engine, route: '/engine', key: 'engine', subjectClass: 'nav-subject-0' },
     { name: '🧠 知识图谱', icon: icons.knowledge, route: '/knowledge', key: 'knowledge', subjectClass: 'nav-subject-2' },
     { name: '🕸️ AI图谱', icon: icons.skill, route: '/knowledge-graph', key: 'knowledge-graph', subjectClass: 'nav-subject-3' },
+    { name: '🗺️ 课程查看器', icon: icons.knowledge, route: '/course-explorer', key: 'course-explorer', subjectClass: 'nav-subject-2' },
     { name: '📖 知识库', icon: icons.knowledge, route: '/knowledge-base', key: 'knowledge-base', subjectClass: 'nav-subject-2' },
     { name: '🔍 错题复盘', icon: icons.search, route: '/review', key: 'review', subjectClass: '' },
     { name: '📕 错题本', icon: icons.search, route: '/wrong-questions', key: 'wrong-questions', subjectClass: '' },
@@ -142,6 +143,7 @@ const activeKey = computed(() => {
   if (path.startsWith('/wrong-questions')) return 'wrong-questions'
   if (path.startsWith('/daily-plan')) return 'daily-plan'
   if (path.startsWith('/knowledge-graph')) return 'knowledge-graph'
+  if (path.startsWith('/course-explorer')) return 'course-explorer'
   if (path.startsWith('/knowledge-base')) return 'knowledge-base'
   if (path.startsWith('/knowledge')) return 'knowledge'
   if (path.startsWith('/resource') || path.startsWith('/learning-path') || path.startsWith('/sandbox')) return 'agent'
