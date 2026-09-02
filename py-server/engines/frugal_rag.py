@@ -168,6 +168,10 @@ class FrugalRAG:
         self.bm25_weight = config.get("bm25_weight", 0.3)
         self.vector_weight = config.get("vector_weight", 0.7)
         self.max_rewrite_rounds = config.get("max_rewrite_rounds", 2)
+        # 课程约束检索的候选池上限：E5 有时把查询语义拉向其它课程文本，
+        # 导致真正相关的本课程条目排在 top-30 之外（如"快速排序"最佳 ds 条目在
+        # 第 67–82 位）。扩大候选池确保课程过滤能兜住相关条目，再施加 subject 约束。
+        self._course_search_top_k = int(config.get("course_search_top_k", 150))
 
         # 缓存 key 前缀
         self._cache_prefix = "frugalrag:"
@@ -312,12 +316,17 @@ class FrugalRAG:
 
         # 2. 向量检索：放入线程池避免 InMemoryVectorStore 全量扫描阻塞事件循环
         import functools as _ft
+        # 课程约束时扩大候选池，确保相关课程条目不被排挤出 top-k*6（见 _course_search_top_k 说明）
+        course_subjects_for_pool = self._get_course_subjects(course)
+        search_top_k = k * 6
+        if course_subjects_for_pool:
+            search_top_k = max(search_top_k, self._course_search_top_k)
         candidates = await asyncio.to_thread(
             _ft.partial(
                 vector_db.search,
                 collection_name="netlearn_kb",
                 query_vector=query_vec,
-                top_k=k * 6,
+                top_k=search_top_k,
             )
         )
         # 软性课程过滤：优先保留命中本课程 subject 的片段；
@@ -330,6 +339,19 @@ class FrugalRAG:
                 or c.get("metadata", {}).get("course", "") == course]
             if subject_matched:
                 candidates = subject_matched
+            else:
+                # 扩池后仍无本课程命中（KB 确无该课程相关内容），退回全局 top-k 兜底
+                logger.info(
+                    f"FrugalRAG 课程过滤无命中，回退全局 top-k: course={course}, pool={search_top_k}"
+                )
+                candidates = await asyncio.to_thread(
+                    _ft.partial(
+                        vector_db.search,
+                        collection_name="netlearn_kb",
+                        query_vector=query_vec,
+                        top_k=k,
+                    )
+                )
 
         if not candidates:
             logger.info(f"FrugalRAG 无检索结果: course={course}, query_len={len(query)}")
