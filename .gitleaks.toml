@@ -74,4 +74,9 @@ regexes = [
   '''(?i)your_qwen_api_key''',
   '''(?i)your_tavily_api_key''',
   '''(?i)xxxxxxxx''',
+  # CI 系统测试桩（合法假阳性）：p0-regression.yml 的 AUTH_SECRET 仅为
+  #   ≥32 位测试哨兵值（形如 test-secret-0123-…-wxyz），并非真实 XFyun 凭据。
+  #   xfyun-api-secret 规则因关键词 "secret" 过宽会误命中本测试值，此处精确豁免。
+  #   真实 XFyun 密钥不会以 "test[-_]secret" 开头，故不会因此条被遗漏。
+  '''(?i)AUTH_SECRET[^A-Za-z0-9]{0,3}test[-_]?secret''',
 ]
