@@ -183,10 +183,30 @@ def _count_kb(base, token):
 
 
 def _list_kb(base, token):
-    r = httpx.get(f"{base}/api/knowledge/list?limit=10000",
-                  headers={"Authorization": f"Bearer {token}"}, timeout=_HTTP_TIMEOUT)
-    data = r.json()
-    return data["items"], data["total"]
+    """分页取回全量条目。
+
+    /api/knowledge/list 的 limit 约束为 Query(20, ge=1, le=100)（api/knowledge.py:85），
+    原先请求 limit=10000 会触发 FastAPI 422 校验失败，响应体是 {"detail": [...]}，
+    导致 `data["items"]` 抛 KeyError —— 这是测试缺陷，不是产品缺陷（限流上限本身合理）。
+    这里按 100/页翻页取全量，并显式断言响应结构，避免断言只覆盖首页而漏掉跨页重复。
+    """
+    page_size = 100
+    items, total, skip = [], 0, 0
+    while True:
+        r = httpx.get(f"{base}/api/knowledge/list?skip={skip}&limit={page_size}",
+                      headers={"Authorization": f"Bearer {token}"}, timeout=_HTTP_TIMEOUT)
+        data = r.json()
+        assert "items" in data, (
+            f"/api/knowledge/list 返回异常：HTTP {r.status_code}，"
+            f"响应={str(data)[:300]}（注意 limit 上限为 100）"
+        )
+        batch = data["items"]
+        items.extend(batch)
+        total = data["total"]
+        skip += page_size
+        if len(batch) < page_size or skip >= total:
+            break
+    return items, total
 
 
 def _make_pdf(path, pages=3):
