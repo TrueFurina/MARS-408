@@ -217,11 +217,28 @@ jobs:
         image: milvusdb/milvus:v2.4.17
         ports:
           - "19530:19530"
+        # 与仓库 docker-compose.yml 中已验证可跑通的 standalone 配置保持一致：
+        # 内置 etcd（ETCD_USE_EMBED=true）+ 本地存储（COMMON_STORAGETYPE=local），
+        # 无需额外的 etcd / minio 容器。
+        env:
+          ETCD_USE_EMBED: "true"
+          ETCD_DATA_DIR: /var/lib/milvus/etcd
+          COMMON_STORAGETYPE: local
+        # ⚠️ 关键：必须有 --health-start-period。
+        # 缺少它时 start_period 默认为 0，docker 在容器启动后**立即**执行首次健康检查，
+        # 而 Milvus standalone 冷启动需数十秒 → 首次探针必失败 → 状态瞬间变成
+        # "unhealthy"，GitHub 见到 unhealthy 立刻判定服务容器失败：
+        #   ##[error]Failed to initialize container milvusdb/milvus:v2.4.17
+        #   ##[error]One or more containers failed to start.
+        #（实测：docker start 后不到 1 秒即 unhealthy，作业 0 秒失败）
+        # 加上 120s 宽限期（对齐 docker-compose.yml 的 start_period: 120s）后，
+        # 容器在 start_period 内保持 "starting"，不会误判。
         options: >-
           --health-cmd "curl -sf http://localhost:9091/healthz"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 30
+          --health-start-period 120s
           --env LD_PRELOAD= 
     steps:
       - uses: actions/checkout@v4
