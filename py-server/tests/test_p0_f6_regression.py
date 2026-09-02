@@ -26,7 +26,9 @@ import pytest
 pytestmark = pytest.mark.p0_regression
 
 _PY = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-AUTH_SECRET = "test-secret-f6-system"
+# >= 32 字符：F6 系统测试期望 app 因 --workers 4 被拒而启动失败（非 200），
+# 但若 AUTH_SECRET 过短会在 F6 之前就 fail-fast，掩盖真实失败模式，故用合规长度。
+AUTH_SECRET = "test-secret-f6-system-0123456789abcdef"
 
 
 # ── 单元：_resolve_uvicorn_workers 解析 CLI / 环境变量 ──

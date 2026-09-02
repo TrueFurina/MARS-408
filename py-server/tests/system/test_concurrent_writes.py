@@ -31,7 +31,9 @@ import pytest
 # 全部以「启动超时」失败（子进程输出被管道吞掉，此前一直看不到这句错误）。
 _PY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, _PY)
-AUTH_SECRET = "test-secret-import-queue-system"
+# 必须 >= 32 字符，否则 shared.auth.resolve_auth_secret() 在 startup 触发 fail-fast，
+# 真实 uvicorn 子进程起不来 -> system 测试「启动超时」失败（D14 之前 CI 一直红的根因）。
+AUTH_SECRET = "test-secret-import-queue-system-0123456789"
 
 pytestmark = pytest.mark.system
 
