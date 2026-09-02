@@ -81,7 +81,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      AUTH_SECRET: test-secret-0123456789abcdefghijklmnopqrstuvwxyz
+      # CI 系统测试用 AUTH_SECRET 哨兵值（≥32 位，满足 app fail-fast 下限；
+      # 以 "-" 分段避免被 xfyun-api-secret 规则误判为真实密钥）。非真实凭据。
+      AUTH_SECRET: "test-secret-0123-4567-89ab-cdef-ghij-klmn-opqr-stuv-wxyz"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
