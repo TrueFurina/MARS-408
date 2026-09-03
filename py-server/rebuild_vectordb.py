@@ -7,7 +7,7 @@
 
 用法: cd py-server && HUGGINGFACE_OFFLINE=1 python rebuild_vectordb.py
 """
-import os, sys, time, logging
+import os, sys, time, logging, re
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -43,11 +43,23 @@ def main():
     logger.info(f"清理 {len(tmp_files)} 个 tmp 残留文件")
 
     # seed（复刻 main.py _seed_vector_db）
+    # 模板变体/脚手架 chunk 检索时禁用：它们与干净正文近重复（【考点速记】/
+    # 【易错辨析】等前缀包裹同一事实），会在融合排序时挤占真正含事实的 chunk。
+    # 标记 exclude_retrieval（保留在库中不删除，仅不参与检索），与 frugal_rag
+    # 的 _boilerplate_factor 双保险。
+    _BOILER = re.compile(
+        r"本知识点属于|本知识点涉及|本节学习目标|本章小结|本章学习要求|知识点总结|基本概念(和|与)核心"
+        r"|包括基本概念、核心原理|在408考研中需要|本节将围绕|本章主要讨论"
+        r"|^计算机网络是互连的|^OSI七层模型|^分组交换采用存储转发|^物理层的主要任务|^信道复用技术"
+        r"|^【(考点速记|易错辨析|关键术语|典型例题|本章导学|知识拓展|真题精讲|速记口诀|避坑指南)】"
+    )
     chunks = []
     for i, chunk in enumerate(SEED_KNOWLEDGE_CHUNKS):
         meta = dict(chunk.get("metadata", {}))
         if "group" not in meta:
             meta["group"] = chapter_to_group(meta.get("subject", ""), meta.get("chapter"))
+        if meta.get("type") == "knowledge_variant" or _BOILER.search(chunk.get("content", "")):
+            meta["exclude_retrieval"] = True
         chunks.append({
             "id": f"chunk_{i}",
             "text": chunk["content"],

@@ -25,11 +25,26 @@ logger = logging.getLogger("netlearn.frugal_rag")
 # ── Reranker 重排模型（多路召回后的精排） ──
 
 class Reranker:
-    """Cross-encoder 重排模型，对 BM25+向量 的候选结果做精排"""
+    """Cross-encoder 重排模型，对 BM25+向量 的候选结果做精排。
+
+    加载优先级（离线优先，绝不触发联网下载）：
+      1. 环境变量 NETLEARN_RERANKER_MODEL（显式本地路径/模型 id）
+      2. 项目内 models/bge-reranker-base（随仓库/手动下载落地）
+      3. 否则回退到 HuggingFace 模型 id（仅在线环境可用，离线会降级）
+    """
 
     def __init__(self, model_name: str = "BAAI/bge-reranker-base"):
         self._model = None
         self._model_name = model_name
+        # 解析本地模型路径：环境变量 > 项目内默认目录
+        self._local_path = os.environ.get("NETLEARN_RERANKER_MODEL")
+        if not self._local_path:
+            _default = os.path.join(
+                os.path.dirname(__file__), "..", "models", "bge-reranker-base"
+            )
+            if os.path.isdir(_default):
+                self._local_path = os.path.abspath(_default)
+        self._model_ref = self._local_path or self._model_name
 
     def _load(self):
         if self._model is not None or getattr(self, "_disabled", False):
@@ -41,8 +56,9 @@ class Reranker:
             os.environ.setdefault("HF_HUB_OFFLINE", "1")
             os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
             from sentence_transformers import CrossEncoder
-            self._model = CrossEncoder(self._model_name)
-            logger.info(f"Reranker 模型加载: {self._model_name}")
+            logger.info(f"Reranker 加载中: {self._model_ref}")
+            self._model = CrossEncoder(self._model_ref)
+            logger.info(f"Reranker 模型加载成功: {self._model_ref}")
         except Exception as e:
             self._disabled = True  # 永久禁用，避免后续请求重复尝试下载
             logger.warning(f"Reranker 加载失败（降级为无重排，已禁用）: {e}")
@@ -66,6 +82,11 @@ class Reranker:
             logger.warning(f"Reranker 预测失败: {e}")
         return candidates[:top_k]
 
+
+# Reranker 重排候选池大小：先取融合排序后的 top-N 候选喂给 cross-encoder，
+# 再取 top-k 返回。扩池是为了把排在第 11~30 名的正确 chunk 纳入重排视野，
+# 解决"先截断 top-k 再 rerank 导致正确 chunk 永远进不了 top-k"的架构坑。
+RERANK_POOL = 30
 
 _reranker = Reranker()
 
@@ -151,7 +172,8 @@ _bm25 = BM25Scorer()
 # 经核验：100% 的此类 chunk 都包裹了某条干净 chunk 的正文（子串包含），降权不会丢失唯一事实。
 # 纯规则、不依赖模型，E5 缺失的 BM25-only 降级路径同样受益。
 _BOILERPLATE_PAT = re.compile(
-    r"本知识点属于|本节学习目标|本章小结|本章学习要求|知识点总结|基本概念(和|与)核心"
+    r"本知识点属于|本知识点涉及|本节学习目标|本章小结|本章学习要求|知识点总结|基本概念(和|与)核心"
+    r"|包括基本概念、核心原理|在408考研中需要|本节将围绕|本章主要讨论"
     r"|^计算机网络是互连的|^OSI七层模型|^分组交换采用存储转发|^物理层的主要任务|^信道复用技术"
     r"|^【(考点速记|易错辨析|关键术语|典型例题|本章导学|知识拓展|真题精讲|速记口诀|避坑指南)】"
 )
@@ -299,6 +321,11 @@ class FrugalRAG:
                 docs, _total = await asyncio.to_thread(
                     vector_db.get_all_with_texts, "netlearn_kb", 0, 100000
                 )
+                # 排除检索禁用 chunk（模板变体/脚手架）
+                docs = [
+                    d for d in docs
+                    if not d.get("metadata", {}).get("exclude_retrieval")
+                ]
                 texts = [d["content"] for d in docs]
                 bm25_scores = await asyncio.to_thread(_bm25.score, query, texts)
                 ranked = sorted(
@@ -364,6 +391,19 @@ class FrugalRAG:
                     )
                 )
 
+        # 2.5 排除检索禁用 chunk（模板变体/脚手架：构建时已标 exclude_retrieval）
+        # 它们与干净正文近重复，只在 BM25 词面蹭高、挤占真正含事实的 chunk。
+        # （与 _boilerplate_factor 降权双保险；此处直接移出候选，连 BM25 打分都不参与。）
+        _before = len(candidates)
+        candidates = [
+            c for c in candidates
+            if not c.get("metadata", {}).get("exclude_retrieval")
+        ]
+        if _before != len(candidates):
+            logger.info(
+                f"FrugalRAG 排除 exclude_retrieval chunk: {_before}→{len(candidates)}"
+            )
+
         if not candidates:
             logger.info(f"FrugalRAG 无检索结果: course={course}, query_len={len(query)}")
             return []
@@ -394,11 +434,16 @@ class FrugalRAG:
         if student_profile:
             filtered = self._personalized_rerank(filtered, course, student_profile)
 
-        result = filtered[:k]
-
-        # 7. Reranker 精排（多路召回后的 Cross-encoder 重排）
-        if result:
-            result = _reranker.rerank(query, result, top_k=k)
+        # 7. Reranker 精排（架构修正：先扩池到 top-RERANK_POOL 候选，
+        #    由 cross-encoder 在更大候选池内重排，再取 top-k 返回。
+        #    旧实现先 `filtered[:k]` 截到 top-10 再做 rerank，导致排在第
+        #    11~30 名的正确 chunk 永远无法被重排提上来——这是 DS 多题检索
+        #    排序失败、Fact@10 偏低的真因。）
+        rerank_pool = filtered[:RERANK_POOL]
+        if rerank_pool:
+            result = _reranker.rerank(query, rerank_pool, top_k=k)
+        else:
+            result = []
 
         # 写入缓存（无 profile 时才缓存，避免画像个性化结果污染通用缓存）
         # Redis 可用 → 写入 Redis；否则写入进程内本地缓存兜底。

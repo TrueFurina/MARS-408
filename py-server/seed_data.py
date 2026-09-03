@@ -18,15 +18,19 @@ SEED_KNOWLEDGE_CHUNKS = [
     # ---- 第4章 网络层 ----
     {"content": "IP地址是32位二进制数（IPv4），通常用点分十进制表示。A类(0-127)、B类(128-191)、C类(192-223)是主分类。", "metadata": {"subject": "network", "chapter": "IP地址", "type": "knowledge_point"}},
     {"content": "子网划分：将IP地址的主机号部分借位作为子网号。子网掩码中1对应网络号+子网号，0对应主机号。CIDR无分类域间路由使用/前缀长度表示。", "metadata": {"subject": "network", "chapter": "子网划分", "type": "knowledge_point"}},
-    {"content": "ARP协议：IP地址→MAC地址的映射。主机广播ARP请求，目标主机单播ARP响应。ARP缓存有生存期（通常20分钟）。", "metadata": {"subject": "network", "chapter": "ARP", "type": "knowledge_point"}},
+    {"content": "ARP协议（地址解析协议）：将IP地址解析为MAC地址，用于同一局域网内寻址。主机广播ARP请求（含目标IP），目标主机单播ARP响应（含自身MAC），请求方将IP-MAC映射写入ARP缓存（生存期通常20分钟）。", "metadata": {"subject": "network", "chapter": "ARP", "type": "knowledge_point"}},
     {"content": "路由选择协议：RIP（距离向量，跳数≤15，30s更新）、OSPF（链路状态，Dijkstra算法，区域划分）、BGP（路径向量，策略路由）。", "metadata": {"subject": "network", "chapter": "路由协议", "type": "knowledge_point"}},
+    {"content": "IP协议（网际协议）提供无连接、不可靠的网络层服务：不建立连接、不保证交付、不保证顺序、无差错恢复（尽力交付）。IPv4首部固定部分20字节（含可选字段总长20~60字节），含版本、首部长度、总长度、标识/标志/片偏移、TTL、协议、首部校验和、源/目的IP地址。", "metadata": {"subject": "network", "chapter": "IP服务", "type": "knowledge_point"}},
+    {"content": "路由器按路由表转发分组：提取分组目的IP地址，查路由表匹配表项，选出对应下一跳(nexthop)与出接口。匹配采用最长前缀匹配(LPM)：目的IP与表项目的网络前缀按位与，选取子网掩码最长（最具体）的匹配项；缺省路由(0.0.0.0/0)作最后兜底。", "metadata": {"subject": "network", "chapter": "路由转发", "type": "knowledge_point"}},
     # ---- 第5章 运输层 ----
     {"content": "TCP是面向连接的可靠传输协议，提供全双工通信。UDP是无连接的不可靠传输协议，开销小，适合实时应用。", "metadata": {"subject": "transport", "chapter": "概述", "type": "knowledge_point"}},
     {"content": "TCP三次握手：①客户端→SYN(seq=x)→服务器 ②服务器→SYN+ACK(seq=y,ack=x+1)→客户端 ③客户端→ACK(seq=x+1,ack=y+1)→服务器。", "metadata": {"subject": "transport", "chapter": "TCP", "type": "knowledge_point"}},
     {"content": "TCP拥塞控制四种算法：慢启动（指数增长）、拥塞避免（线性增长/加法增大）、快重传（收到3个冗余ACK立即重传）、快恢复（减半阈值后进入拥塞避免）。", "metadata": {"subject": "transport", "chapter": "拥塞控制", "type": "knowledge_point"}},
+    {"content": "TCP可靠传输四大机制：(1)序号与确认——发送方为每个字节编号，接收方用累计确认(ACK)告知期望接收的下一字节序号；(2)重传——超时重传+快速重传(收到3个重复ACK立即重传)；(3)滑动窗口——接收方通告窗口大小实现流量控制，发送方在窗口内连续发送无需逐包等待；(4)拥塞控制——慢启动/拥塞避免/快重传/快恢复防止网络过载。", "metadata": {"subject": "transport", "chapter": "可靠传输", "type": "knowledge_point"}},
     # ---- 第6章 应用层 ----
     {"content": "DNS域名解析：递归查询和迭代查询两种方式。顶级域名包括.com/.org/.cn等，二级域名如baidu.com。", "metadata": {"subject": "application", "chapter": "DNS", "type": "knowledge_point"}},
     {"content": "HTTP是超文本传输协议（80端口），无状态、无连接。HTTPS=HTTP+SSL/TLS（443端口），提供加密传输和身份认证。", "metadata": {"subject": "application", "chapter": "HTTP/HTTPS", "type": "knowledge_point"}},
+    {"content": "HTTP本身是无状态协议（每次请求独立、服务器不保留前次状态）。维持会话状态常用：Cookie（服务器经Set-Cookie下发，浏览器后续请求自动携带、存于客户端）、Session（服务端保存会话状态、客户端仅持会话ID存于Cookie）、Token（如JWT无状态令牌携鉴权信息）。", "metadata": {"subject": "application", "chapter": "HTTP会话", "type": "knowledge_point"}},
     {"content": "FTP（文件传输协议，20/21端口）采用客户端/服务器模式，基于TCP。控制连接(21)和数据连接(20)分开。", "metadata": {"subject": "application", "chapter": "FTP", "type": "knowledge_point"}},
     {"content": "HTTP请求方法：GET（获取资源）、POST（提交数据）、PUT（更新资源）、DELETE（删除资源）、HEAD（获取首部）。状态码：1xx信息、2xx成功(200 OK)、3xx重定向(301永久/302临时)、4xx客户端错误(404 Not Found)、5xx服务器错误(500)。", "metadata": {"subject": "application", "chapter": "HTTP", "type": "knowledge_point"}},
     {"content": "HTTP首部字段：通用首部(Cache-Control/Connection)、请求首部(Host/User-Agent/Accept)、响应首部(Server/WWW-Authenticate)、实体首部(Content-Type/Content-Length/Content-Encoding)。", "metadata": {"subject": "application", "chapter": "HTTP", "type": "knowledge_point"}},
@@ -38,7 +42,7 @@ SEED_KNOWLEDGE_CHUNKS = [
     {"content": "WWW万维网由URL(统一资源定位符)、HTTP(传输协议)、HTML(超文本标记语言)三部分组成。URL格式：协议://主机:端口/路径?查询#片段。", "metadata": {"subject": "application", "chapter": "WWW", "type": "knowledge_point"}},
     {"content": "P2P应用：BitTorrent(文件共享)、Skype(VoIP)。与C/S模式对比：P2P每个节点既是客户端又是服务器，扩展性好，但管理困难。CDN内容分发网络缓存就近服务。", "metadata": {"subject": "application", "chapter": "P2P/CDN", "type": "knowledge_point"}},
     # ---- 第7章 网络安全 ----
-    {"content": "SSL/TLS协议在传输层之上提供安全服务：握手协议（身份认证+密钥协商）、记录协议（数据加密+完整性校验）。", "metadata": {"subject": "security", "chapter": "SSL/TLS", "type": "knowledge_point"}},
+    {"content": "SSL/TLS协议在传输层之上提供安全服务：握手协议（身份认证+密钥协商）、记录协议（数据加密+完整性校验）。HTTPS由此提供四大保证：机密性（对称加密防窃听）、完整性（MAC/哈希防篡改）、身份认证（证书+非对称加密验证对方身份）、不可否认性；对称密钥用于加密数据、非对称加密用于协商对称会话密钥。", "metadata": {"subject": "security", "chapter": "SSL/TLS", "type": "knowledge_point"}},
     {"content": "防火墙是位于网络边界的安全设备，通过规则集控制进出网络的流量。常见类型：包过滤防火墙、状态检测防火墙、应用代理防火墙。", "metadata": {"subject": "security", "chapter": "防火墙", "type": "knowledge_point"}},
     {"content": "常见的网络攻击类型：DDoS（分布式拒绝服务攻击）、SQL注入、XSS跨站脚本、中间人攻击MITM、ARP欺骗、DNS劫持。", "metadata": {"subject": "security", "chapter": "网络攻击", "type": "knowledge_point"}},
     {"content": "密码学两大类：对称加密(加密解密同一密钥，DES/AES/3DES，速度快适合大批量)、非对称加密(公钥加密私钥解密，RSA/ECC，安全但慢)。混合加密：用非对称交换对称密钥，再用对称加密数据。", "metadata": {"subject": "security", "chapter": "密码学", "type": "knowledge_point"}},
@@ -603,7 +607,7 @@ DS_SEED_KNOWLEDGE_CHUNKS = [
     {"content": "双端队列(deque)：两端都可入出。受限双端队列：一端可入出+另一端只入(输出受限)或一端可入出+另一端只出(输入受限)。", "metadata": {"subject": "ds_queue", "chapter": "双端队列", "type": "knowledge_point"}},
     # ---- 第3章 串 ----
     {"content": "串是字符组成的有限序列。空串：长度为0。空格串：由空格字符组成，长度≥1。子串：串中任意连续字符序列。主串：包含子串的串。子串位置：子串第一个字符在主串中的序号。", "metadata": {"subject": "ds_string", "chapter": "串", "type": "knowledge_point"}},
-    {"content": "KMP算法核心：利用已匹配信息避免主串指针回退。next数组：next[j]=模式串T[1..j-1]中最长相同前后缀长度+1。匹配失败时主串i不变，模式串j=next[j]。时间复杂度O(n+m)。", "metadata": {"subject": "ds_string", "chapter": "KMP", "type": "knowledge_point"}},
+    {"content": "KMP算法核心：利用已匹配信息避免主串指针回退。next数组（部分匹配表，即最长公共前后缀表）：next[j]=模式串T[1..j-1]中最长相同前后缀长度+1。匹配失败时主串i不变，模式串j=next[j]。时间复杂度O(n+m)。", "metadata": {"subject": "ds_string", "chapter": "KMP", "type": "knowledge_point"}},
     {"content": "next数组计算：next[1]=0, next[2]=1。一般：若T[k]==T[j]则next[j+1]=next[j]+1=k+1；否则k=next[k]继续比较直到k=0。nextval优化：若T[next[j]]==T[j]则nextval[j]=nextval[next[j]]。", "metadata": {"subject": "ds_string", "chapter": "KMP优化", "type": "knowledge_point"}},
     # ---- 第4章 树 ----
     {"content": "树是n个节点的有限集。n=0时为空树。根节点唯一，子树互不相交。节点的度：拥有的子树数。树的度：各节点度的最大值。叶子节点：度为0。深度：从根到该节点路径长度+1。", "metadata": {"subject": "ds_tree", "chapter": "树", "type": "knowledge_point"}},
@@ -621,12 +625,12 @@ DS_SEED_KNOWLEDGE_CHUNKS = [
     # ---- 第6章 查找 ----
     {"content": "顺序查找：O(n)。折半查找(二分)：有序表，O(logn)。判定树是平衡二叉树，n个元素树高h=floor(log2(n))+1。ASL成功=(1*1+2*2+...+h*2^(h-1))/n。", "metadata": {"subject": "ds_search", "chapter": "线性查找", "type": "knowledge_point"}},
     {"content": "B树(m阶)：每个节点最多m个子树m-1个关键字；非根节点至少m/2个子树(m/2-1向上取整)个关键字；根至少2个子树(非叶时)；所有叶在同一层。B+树：叶节点包含全部关键字+指向记录的指针，非叶节点仅索引。", "metadata": {"subject": "ds_search", "chapter": "B树", "type": "knowledge_point"}},
-    {"content": "散列表(哈希表)：根据关键字直接计算存储地址。常用哈希函数：直接定址(H(key)=a*key+b)、除留余数(H(key)=key%p, p<=表长且为质数)、数字分析。冲突处理：开放定址(线性探测/二次探测/双重哈希)、拉链法。", "metadata": {"subject": "ds_search", "chapter": "哈希", "type": "knowledge_point"}},
+    {"content": "散列表(哈希表)：根据关键字直接计算存储地址。常用哈希函数：直接定址(H(key)=a*key+b)、除留余数(H(key)=key%p, p<=表长且为质数)、数字分析。冲突处理：开放定址(线性探测/二次探测/双重哈希)、拉链法(又称链地址法)。", "metadata": {"subject": "ds_search", "chapter": "哈希", "type": "knowledge_point"}},
     {"content": "哈希冲突：线性探测容易堆积(聚集)。二次探测：H_i=(H(key)+d_i)%m, d_i=1^2,-1^2,2^2,-2^2,...。双重哈希：d_i=i*H2(key)。拉链法：同义词链表，不堆积，删除方便，适合动态表。", "metadata": {"subject": "ds_search", "chapter": "哈希冲突", "type": "knowledge_point"}},
     # ---- 第7章 排序 ----
     {"content": "插入排序：直接插入(无序序列逐个插入有序序列,O(n^2)稳定)、折半插入(查找用二分但仍需移动,O(n^2)稳定)、希尔排序(按增量分组直接插入,增量递减至1,不稳定,O(n^1.3)~O(n^2))。", "metadata": {"subject": "ds_sort", "chapter": "插入排序", "type": "knowledge_point"}},
-    {"content": "交换排序：冒泡排序(相邻比较交换,一趟确定一个最终位置,O(n^2)稳定)、快速排序(选枢轴划分左右递归,平均O(nlogn)最坏O(n^2)不稳定,空间O(logn)最坏O(n))。快排是最常用排序。", "metadata": {"subject": "ds_sort", "chapter": "交换排序", "type": "knowledge_point"}},
-    {"content": "选择排序：简单选择(每趟选最小交换,O(n^2)不稳定)、堆排序(建大根堆,堆顶与末尾交换再调整,O(nlogn)不稳定)。堆：完全二叉树，大根堆根>=子树所有节点。建堆O(n)，调整O(logn)。", "metadata": {"subject": "ds_sort", "chapter": "选择排序", "type": "knowledge_point"}},
+    {"content": "交换排序：冒泡排序(相邻比较交换,一趟确定一个最终位置,O(n^2)稳定)、快速排序(基于分治法,选基准pivot将序列分区partition为左≤基准右≥基准两部分再递归,平均O(nlogn)最坏O(n^2)不稳定,空间O(logn)最坏O(n))。快排是最常用排序。", "metadata": {"subject": "ds_sort", "chapter": "交换排序", "type": "knowledge_point"}},
+    {"content": "选择排序：简单选择(每趟选最小交换,O(n^2)不稳定)、堆排序(建大根堆,堆顶与末尾交换再调整,O(nlogn)不稳定)。堆：完全二叉树，大顶堆(大根堆)根>=子树所有节点，小顶堆(小根堆)根<=子树所有节点。优先队列常用堆实现：大顶堆取最大/小顶堆取最小，插入删除O(logn)。建堆O(n)，调整O(logn)。", "metadata": {"subject": "ds_sort", "chapter": "选择排序", "type": "knowledge_point"}},
     {"content": "归并排序：分治合并,稳定,O(nlogn),空间O(n)。基数排序：按关键字各位分别排序(LSD/MSD),稳定,O(d(n+r)),空间O(r)。外部排序：多路归并+置换选择+最佳归并树。", "metadata": {"subject": "ds_sort", "chapter": "归并基数", "type": "knowledge_point"}},
     {"content": "排序算法比较：稳定：直接插入/冒泡/归并/基数。不稳定：希尔/快排/简单选择/堆排序。O(nlogn)：快排(平均)/堆排/归并。O(n^2)：直接插入/冒泡/简单选择。快排平均最快但最坏退化。归并稳定但空间大。堆排空间小但不稳定。", "metadata": {"subject": "ds_sort", "chapter": "比较", "type": "knowledge_point"}},
 ]
@@ -966,7 +970,7 @@ OS_SEED_KNOWLEDGE_CHUNKS = [
     {"content": "线程是CPU调度的基本单位。同一进程的线程共享：地址空间、打开文件、信号处理等；独有：线程ID、PC寄存器、栈。用户级线程（ULT）：OS不可见,调度在用户空间；内核级线程（KLT）：OS调度和支持。", "metadata": {"subject": "os_process", "chapter": "线程", "type": "knowledge_point"}},
     {"content": "进程同步：临界区是访问共享资源的代码段。互斥四个条件——空闲让进、忙则等待、有限等待、让权等待。Peterson算法（2进程软件互斥）、硬件方法（关中断/TestAndSet/Swap指令）。", "metadata": {"subject": "os_process", "chapter": "进程同步", "type": "knowledge_point"}},
     {"content": "信号量机制：P操作（wait：s--; 若s<0进程阻塞入等待队列）、V操作（signal：s++; 若s<=0从队列唤醒一个进程）。应用：生产者-消费者（empty/full/mutex三个信号量）、读者-写者（读互斥、写独占）。", "metadata": {"subject": "os_process", "chapter": "信号量", "type": "knowledge_point"}},
-    {"content": "死锁：两个以上进程因竞争资源而无限等待。必要条件（4个必须同时满足）：互斥、请求保持、不可剥夺、循环等待。预防：破坏四个条件之一；避免：银行家算法(安全状态判断)；检测：资源分配图化简。", "metadata": {"subject": "os_process", "chapter": "死锁", "type": "knowledge_point"}},
+    {"content": "死锁：两个以上进程因竞争资源而无限等待。必要条件（4个必须同时满足）：互斥、请求和保持（占有并等待）、不可剥夺、循环等待。预防：破坏四个条件之一；避免：银行家算法(安全状态判断)；检测：资源分配图化简。", "metadata": {"subject": "os_process", "chapter": "死锁", "type": "knowledge_point"}},
     # ---- 第3章 内存管理 ----
     {"content": "连续分配：单一连续（仅单道）、固定分区（分区大小固定,内部碎片）、动态分区（按需分割,外部碎片）。动态分区分配算法：首次适应FF、最佳适应BF(碎片最多)、最差适应WF、邻近适应NF。", "metadata": {"subject": "os_memory", "chapter": "连续分配", "type": "knowledge_point"}},
     {"content": "分页存储：逻辑地址分为页号+页内偏移。页表存页号→物理块号映射。快表TLB：高速缓冲最近使用的页表项,命中则无需访存查页表。缺页中断：访问的页不在内存→调入→更新页表。", "metadata": {"subject": "os_memory", "chapter": "分页", "type": "knowledge_point"}},

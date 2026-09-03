@@ -9,7 +9,7 @@
 
 用法：.venv/Scripts/python.exe scripts/eval_retrieval_gold.py
 """
-import asyncio, sys, json, datetime
+import asyncio, sys, json, datetime, re
 from collections import defaultdict
 
 sys.path.insert(0, '.')
@@ -69,7 +69,11 @@ async def main():
             per[course]['subj5'] += 1
 
         joined = ' '.join(r.get('text', '') for r in res)
-        fh = (sum(1 for f in facts if f in joined) / len(facts)) if facts else 0.0
+        # 去空格归一化：消除 gold 事实与 chunk 文本间的空格/异体词假象
+        # （如 "O(n log n)" vs "O(nlogn)"、"next 数组" vs "next数组"、"20 字节" vs "20字节"）
+        _norm = lambda s: re.sub(r'\s+', '', s)
+        joined_n = _norm(joined)
+        fh = (sum(1 for f in facts if _norm(f) in joined_n) / len(facts)) if facts else 0.0
         fact_hits.append(fh)
         per[course]['fact'].append(fh)
         per[course]['n'] += 1
@@ -97,13 +101,20 @@ async def main():
 
     # 落盘：可复现结果（大创"改实"证据链交付物）
     corpus_size = vector_db.count("netlearn_kb")
+    # Reranker 实际状态（懒加载，评测循环内首次 retrieve 时已触发加载）
+    _rk = getattr(frugal_rag, "_reranker", None)
+    reranker_status = (
+        "enabled(local:bge-reranker-base)"
+        if _rk is not None and not getattr(_rk, "_disabled", False)
+        else "disabled(load_failed_or_offline)"
+    )
     out = {
         "generated_at": datetime.datetime.now().isoformat(timespec="seconds"),
         "harness": "gold_qa",
         "corpus_size": corpus_size,
         "gold_size": n,
         "vector_status": "e5_real",
-        "reranker": "disabled(offline_huggingface_unreachable)",
+        "reranker": reranker_status,
         "metrics": {
             "subject_recall@k": {str(k): round(subj_hit[k] / n, 4) for k in KS},
             "mrr": round(sum(mrr_ranks) / n, 4) if mrr_ranks else 0.0,

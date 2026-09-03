@@ -1,45 +1,45 @@
 {
-  "generated_at": "2026-09-03T03:05:11",
+  "generated_at": "2026-09-03T13:16:13",
   "harness": "gold_qa",
-  "corpus_size": 2113,
+  "corpus_size": 2117,
   "gold_size": 30,
   "vector_status": "e5_real",
-  "reranker": "disabled(offline_huggingface_unreachable)",
+  "reranker": "disabled(load_failed_or_offline)",
   "metrics": {
     "subject_recall@k": {
-      "1": 0.6,
-      "3": 0.8333,
-      "5": 0.8667,
-      "10": 0.9
+      "1": 0.8,
+      "3": 0.9333,
+      "5": 1.0,
+      "10": 1.0
     },
-    "mrr": 0.7122,
-    "fact_recall@10": 0.5389,
+    "mrr": 0.88,
+    "fact_recall@10": 0.8139,
     "cross_course_pollution": 0.0
   },
   "per_course": {
     "computer_network": {
       "n": 8,
-      "subj@5": 0.875,
-      "mrr": 0.7619,
-      "fact@10": 0.4437
+      "subj@5": 1.0,
+      "mrr": 0.9375,
+      "fact@10": 0.875
     },
     "computer_organization": {
       "n": 7,
       "subj@5": 1.0,
-      "mrr": 0.8857,
-      "fact@10": 0.8214
+      "mrr": 1.0,
+      "fact@10": 0.9643
     },
     "data_structures": {
       "n": 8,
-      "subj@5": 0.625,
-      "mrr": 0.6667,
-      "fact@10": 0.275
+      "subj@5": 1.0,
+      "mrr": 0.6125,
+      "fact@10": 0.5938
     },
     "operating_system": {
       "n": 7,
       "subj@5": 1.0,
-      "mrr": 0.8333,
-      "fact@10": 0.6667
+      "mrr": 1.0,
+      "fact@10": 0.8452
     }
   }
 }
