@@ -1,0 +1,97 @@
+{
+  "generated_at": "2026-09-03",
+  "experiment": "mixer_before_after (random-init vs trained vs rule)",
+  "summary": {
+    "n_questions": 12,
+    "n_trials_per_q": 8,
+    "n_samples": 96,
+    "accuracy_before_random": 82.29,
+    "accuracy_after_trained": 80.21,
+    "accuracy_rule_weighted_voting": 82.29,
+    "mean_consensus_before": -0.4765,
+    "mean_consensus_after": 6.4561,
+    "std_consensus_before": 0.0473,
+    "std_consensus_after": 0.3757,
+    "mean_sd_loss_before": 0.0785,
+    "mean_sd_loss_after": 0.0785,
+    "mean_attn_quality_pearson_before": -0.1513,
+    "mean_attn_quality_pearson_after": 0.2185,
+    "mean_selected_agent_quality_before": 8.3859,
+    "mean_selected_agent_quality_after": 8.208,
+    "weights_matched": "48/48"
+  },
+  "per_question": [
+    {
+      "id": "q01",
+      "type": "concept",
+      "stem": "进程的三种基本状态是?",
+      "answer": 0
+    },
+    {
+      "id": "q02",
+      "type": "concept",
+      "stem": "下列关于虚拟内存的描述正确的是?",
+      "answer": 1
+    },
+    {
+      "id": "q03",
+      "type": "calculation",
+      "stem": "一个LRU页面置换序列的缺页次数是?",
+      "answer": 2
+    },
+    {
+      "id": "q05",
+      "type": "algorithm",
+      "stem": "快速排序第一趟划分后的结果是?",
+      "answer": 3
+    },
+    {
+      "id": "q08",
+      "type": "diagram",
+      "stem": "TCP三次握手的状态转换正确的是?",
+      "answer": 0
+    },
+    {
+      "id": "q10",
+      "type": "comparison",
+      "stem": "栈和队列的本质区别是?",
+      "answer": 2
+    },
+    {
+      "id": "q13",
+      "type": "concept",
+      "stem": "死锁的四个必要条件是?",
+      "answer": 1
+    },
+    {
+      "id": "q16",
+      "type": "algorithm",
+      "stem": "哈希表线性探测冲突后的最终位置是?",
+      "answer": 3
+    },
+    {
+      "id": "q21",
+      "type": "summary",
+      "stem": "数据结构中逻辑结构的四大类型是?",
+      "answer": 2
+    },
+    {
+      "id": "q24",
+      "type": "comparison",
+      "stem": "中断与DMA方式的对比正确的是?",
+      "answer": 1
+    },
+    {
+      "id": "q28",
+      "type": "algorithm",
+      "stem": "归并排序的时间复杂度是?",
+      "answer": 1
+    },
+    {
+      "id": "q30",
+      "type": "comparison",
+      "stem": "顺序存储与链式存储的对比正确的是?",
+      "answer": 3
+    }
+  ]
+}
