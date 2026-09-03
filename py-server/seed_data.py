@@ -605,6 +605,7 @@ DS_SEED_KNOWLEDGE_CHUNKS = [
     {"content": "链队列：front指向头节点，rear指向尾节点。入队：rear->next=s, rear=s。出队：p=front->next, front->next=p->next, 若原队仅一个元素则rear=front。", "metadata": {"subject": "ds_queue", "chapter": "链队列", "type": "knowledge_point"}},
     {"content": "栈的应用：括号匹配(遇左括号入栈遇右括号出栈比对)、表达式求值(双栈：操作数栈+运算符栈)、递归(系统调用栈)、DFS深度优先遍历。队列应用：BFS广度优先遍历、打印缓冲、CPU任务调度。", "metadata": {"subject": "ds_stack", "chapter": "栈应用", "type": "knowledge_point"}},
     {"content": "双端队列(deque)：两端都可入出。受限双端队列：一端可入出+另一端只入(输出受限)或一端可入出+另一端只出(输入受限)。", "metadata": {"subject": "ds_queue", "chapter": "双端队列", "type": "knowledge_point"}},
+    {"content": "栈和队列的主要区别：栈是后进先出(LIFO)的线性表，只允许在栈顶一端插入删除；队列是先进先出(FIFO)的线性表，在队尾入队、队头出队。二者最核心区别是操作受限位置不同——栈「后进先出」、队列「先进先出」。", "metadata": {"subject": "ds_stack", "chapter": "栈和队列", "type": "knowledge_point"}},
     # ---- 第3章 串 ----
     {"content": "串是字符组成的有限序列。空串：长度为0。空格串：由空格字符组成，长度≥1。子串：串中任意连续字符序列。主串：包含子串的串。子串位置：子串第一个字符在主串中的序号。", "metadata": {"subject": "ds_string", "chapter": "串", "type": "knowledge_point"}},
     {"content": "KMP算法核心：利用已匹配信息避免主串指针回退。next数组（部分匹配表，即最长公共前后缀表）：next[j]=模式串T[1..j-1]中最长相同前后缀长度+1。匹配失败时主串i不变，模式串j=next[j]。时间复杂度O(n+m)。", "metadata": {"subject": "ds_string", "chapter": "KMP", "type": "knowledge_point"}},
@@ -977,6 +978,10 @@ OS_SEED_KNOWLEDGE_CHUNKS = [
     {"content": "多级页表：页目录+页表。32位地址：10位页目录(1024项)+10位页表(1024项)+12位页内偏移(4KB页)。分段存储：逻辑地址=段号+段内偏移,段表存段号→基址+限长。段页式：先分段再分页。", "metadata": {"subject": "os_memory", "chapter": "多级页表与分段", "type": "knowledge_point"}},
     {"content": "虚拟内存：程序部分装入即可运行,大于物理内存的程序也可运行。实现：请求分页或请求分段。页面置换算法：OPT（最佳,无法实现）、FIFO（Belady异常：帧多缺页也多）、LRU（最近最久未使用）、Clock（NRU,访问位+修改位）。", "metadata": {"subject": "os_memory", "chapter": "虚拟内存", "type": "knowledge_point"}},
     {"content": "页面置换算法比较：FIFO实现简单但有Belady异常；LRU效果接近OPT但需硬件支持（栈）；Clock（NRU）是LRU近似,用访问位A和修改位M,选择(A=0,M=0)优先→(0,1)→(1,0)→(1,1)。缺页率取决于工作集。", "metadata": {"subject": "os_memory", "chapter": "页面置换", "type": "knowledge_point"}},
+    {"content": "页面置换算法主要有：OPT（最佳置换，选最远将来使用的页，理论最优但无法实现）、FIFO（先进先出，按调入顺序淘汰，可能出现Belady异常）、LRU（最近最久未使用，命中率接近OPT但需硬件栈支持）、CLOCK（时钟/最近未用NRU算法，用访问位A与修改位M近似LRU，是LRU的低成本实现，扫描找(A=0,M=0)的页淘汰）。", "metadata": {"subject": "os_memory", "chapter": "页面置换", "type": "knowledge_point"}},
+    {"content": "请求调页（请求分页）是虚拟内存的核心机制：进程运行时只把部分页面装入内存，当访问的页不在内存时触发缺页中断，操作系统将所需页从外存调入内存、修改页表后重新执行指令。请求调页使程序能使用比物理内存更大的逻辑地址空间。", "metadata": {"subject": "os_memory", "chapter": "虚拟内存", "type": "knowledge_point"}},
+    {"content": "虚拟内存的作用：①扩充内存容量——以磁盘（外存）作为内存扩充，使程序可用比物理内存更大的逻辑地址空间；②支持请求调页——按需把页面调入内存；③地址变换——逻辑地址经页表/段表由MMU转换为物理地址（地址变换），并用TLB快表加速。虚拟内存建立在离散分配和局部性原理之上。", "metadata": {"subject": "os_memory", "chapter": "虚拟内存", "type": "knowledge_point"}},
+    {"content": "缓冲技术的作用：①缓和CPU与I/O设备之间的速度不匹配（速度不匹配）；②减少对CPU的中断频率（中断），放宽CPU对中断的响应时间要求；③提高CPU与I/O设备的并行工作能力。常见：单缓冲、双缓冲、循环缓冲、缓冲池。", "metadata": {"subject": "os_io", "chapter": "缓冲", "type": "knowledge_point"}},
     # ---- 第4章 文件系统 ----
     {"content": "文件逻辑结构：无结构（流式文件/字节序列）和有结构（记录式文件）。文件物理结构：连续分配（顺序快,外碎片）、链接分配（无外碎片,随机访问慢,隐式链接）、索引分配（每个文件一个索引块,FAT是变种）。", "metadata": {"subject": "os_file", "chapter": "文件结构", "type": "knowledge_point"}},
     {"content": "文件目录结构：单级目录（全系统唯一）、两级目录（主目录MFD+用户目录UFD）、树形目录（多级,路径名:绝对路径/相对路径）。FCB（文件控制块）：文件名、物理位置、大小、权限、时间戳。", "metadata": {"subject": "os_file", "chapter": "目录结构", "type": "knowledge_point"}},

@@ -1,45 +1,45 @@
 {
-  "generated_at": "2026-09-03T13:16:13",
+  "generated_at": "2026-09-03T14:03:25",
   "harness": "gold_qa",
-  "corpus_size": 2117,
+  "corpus_size": 2122,
   "gold_size": 30,
   "vector_status": "e5_real",
-  "reranker": "disabled(load_failed_or_offline)",
+  "reranker": "enabled(local:bge-reranker-base)",
   "metrics": {
     "subject_recall@k": {
-      "1": 0.8,
-      "3": 0.9333,
-      "5": 1.0,
+      "1": 0.9667,
+      "3": 0.9667,
+      "5": 0.9667,
       "10": 1.0
     },
-    "mrr": 0.88,
-    "fact_recall@10": 0.8139,
+    "mrr": 0.9722,
+    "fact_recall@10": 1.0,
     "cross_course_pollution": 0.0
   },
   "per_course": {
     "computer_network": {
       "n": 8,
       "subj@5": 1.0,
-      "mrr": 0.9375,
-      "fact@10": 0.875
+      "mrr": 1.0,
+      "fact@10": 1.0
     },
     "computer_organization": {
       "n": 7,
       "subj@5": 1.0,
       "mrr": 1.0,
-      "fact@10": 0.9643
+      "fact@10": 1.0
     },
     "data_structures": {
       "n": 8,
-      "subj@5": 1.0,
-      "mrr": 0.6125,
-      "fact@10": 0.5938
+      "subj@5": 0.875,
+      "mrr": 0.8958,
+      "fact@10": 1.0
     },
     "operating_system": {
       "n": 7,
       "subj@5": 1.0,
       "mrr": 1.0,
-      "fact@10": 0.8452
+      "fact@10": 1.0
     }
   }
 }

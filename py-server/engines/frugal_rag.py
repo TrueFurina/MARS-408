@@ -86,7 +86,10 @@ class Reranker:
 # Reranker 重排候选池大小：先取融合排序后的 top-N 候选喂给 cross-encoder，
 # 再取 top-k 返回。扩池是为了把排在第 11~30 名的正确 chunk 纳入重排视野，
 # 解决"先截断 top-k 再 rerank 导致正确 chunk 永远进不了 top-k"的架构坑。
-RERANK_POOL = 30
+# 2026-09-03：课程候选池已扩至 800，故 reranker 池同步扩到 60，确保被 E5 排在
+# 中段（但语义正确的）富定义 chunk 能进入 cross-encoder 视野被提上来。
+# 注：CPU 上 bge-reranker-base 重排 ~0.03s/pair，60 对约 2s，属可接受检索延迟。
+RERANK_POOL = 60
 
 _reranker = Reranker()
 
@@ -204,7 +207,10 @@ class FrugalRAG:
         # 课程约束检索的候选池上限：E5 有时把查询语义拉向其它课程文本，
         # 导致真正相关的本课程条目排在 top-30 之外（如"快速排序"最佳 ds 条目在
         # 第 67–82 位）。扩大候选池确保课程过滤能兜住相关条目，再施加 subject 约束。
-        self._course_search_top_k = int(config.get("course_search_top_k", 300))
+        # 2026-09-03 实测：DS 查询（"栈和队列的区别"等）的 E5 近邻被 os/co 干扰项
+        # （0.83–0.87）霸占 top-300，正确 ds 富定义 chunk（余弦 0.76）被截断在 top-300
+        # 之外、连课程过滤都救不回。扩到 800 让这类 ds 富 chunk 活过 E5 截断。
+        self._course_search_top_k = int(config.get("course_search_top_k", 800))
 
         # 缓存 key 前缀
         self._cache_prefix = "frugalrag:"

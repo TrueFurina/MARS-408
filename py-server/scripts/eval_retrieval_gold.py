@@ -14,7 +14,7 @@ from collections import defaultdict
 
 sys.path.insert(0, '.')
 from db.milvus_client import vector_db
-from engines.frugal_rag import frugal_rag
+from engines.frugal_rag import frugal_rag, _reranker
 
 K = 10
 KS = [1, 3, 5, 10]
@@ -101,11 +101,15 @@ async def main():
 
     # 落盘：可复现结果（大创"改实"证据链交付物）
     corpus_size = vector_db.count("netlearn_kb")
-    # Reranker 实际状态（懒加载，评测循环内首次 retrieve 时已触发加载）
-    _rk = getattr(frugal_rag, "_reranker", None)
+    # Reranker 实际状态（懒加载，评测循环内首次 retrieve 时已触发加载）。
+    # 注意：retrieve 使用的是「模块级全局 _reranker」(engines/frugal_rag.py:94)，
+    # 而非 frugal_rag 实例的 _reranker 属性（FrugalRAG.__init__ 并未设置该属性），
+    # 故必须读取模块全局 _reranker 才能反映真实加载状态。
+    _rk = _reranker
     reranker_status = (
         "enabled(local:bge-reranker-base)"
-        if _rk is not None and not getattr(_rk, "_disabled", False)
+        if _rk is not None and getattr(_rk, "_model", None) is not None
+        and not getattr(_rk, "_disabled", False)
         else "disabled(load_failed_or_offline)"
     )
     out = {
