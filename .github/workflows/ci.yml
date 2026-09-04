@@ -165,10 +165,30 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Start Milvus standalone (docker run, real server)
+        # milvusdb/milvus 镜像的 entrypoint 为 `tini --`；作为 GitHub service container
+        # 启动时其默认 CMD 未被正确传递，tini 收不到要启动的程序，会打印 usage 并
+        # 立即退出（实测容器 1 秒后 unhealthy，作业 0 秒失败）。
+        # 故改为显式 `docker run ... milvus run standalone` + embedded etcd + 本地存储，
+        # 对齐仓库 docker-compose.yml 的 standalone 配置；用 healthz 探针等待就绪。
+        run: |
+          docker run -d --name milvus-standalone \
+            -p 19530:19530 -p 9091:9091 \
+            -e ETCD_USE_EMBED=true \
+            -e ETCD_DATA_DIR=/var/lib/milvus/etcd \
+            -e COMMON_STORAGETYPE=local \
+            milvusdb/milvus:v2.4.17 milvus run standalone
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:9091/healthz >/dev/null; then
+              echo "Milvus healthz OK after ~$((i*5))s"; break
+            fi
+            echo "waiting for Milvus... ($i/30)"; sleep 5
+          done
+          curl -sf http://localhost:9091/healthz || { echo "::error::Milvus 未在超时内就绪"; docker logs milvus-standalone; exit 1; }
       - name: Install backend (editable, with test extras)
         run: pip install --upgrade pip && pip install -e ".[test]"
       - name: Run pytest (unit/integration/API, coverage xml)
-        run: pytest -m "not system and not requires_milvus" --cov=. --cov-report=xml:coverage.xml -q
+        run: pytest -m "not system and not requires_milvus" --cov=. --cov-report=xml:coverage.xml --cov-fail-under=50 -q
       - name: ADR-007 single-writer gate (import_queue)
         run: pytest -m import_queue -q
       - name: Upload coverage artifact
@@ -209,14 +229,14 @@ jobs:
     #  此处显式声明以对齐草案并确保健康检查脚本拿到正确 host）
     env:
       MILVUS_HOST: localhost
+      MILVUS_PORT: "19530"
+      MILVUS_ENABLED: "true"
+      # docker run 起的 milvus-standalone 映射在 localhost:19530；本 job 显式启用
+      # Milvus（config 默认 enabled=False），让 startup guard 真正去连真实服务端，
+      # 拒绝静默回退 InMemory。
     defaults:
       run:
         working-directory: py-server
-    services:
-      milvus:
-        image: milvusdb/milvus:v2.4.17
-        ports:
-          - "19530:19530"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -224,6 +244,28 @@ jobs:
           python-version: "3.12"
       - name: Install backend (editable, with test extras)
         run: pip install --upgrade pip && pip install -e ".[test]"
+      - name: Start Milvus standalone (docker run, embedded etcd + local storage)
+        # 不使用 GitHub service 容器：milvusdb/milvus 镜像的 tini 入口点在
+        # service-container 模式下收不到启动程序、会秒退打印 -h 帮助即退出。
+        # 改为显式 `docker run ... milvus run standalone`（GitHub 托管 runner 自带 docker），
+        # 直接让 tini 执行 milvus 子命令，绕开该包装问题。
+        run: |
+          docker run -d --name milvus-standalone \
+            -p 19530:19530 -p 9091:9091 \
+            -e ETCD_USE_EMBED=true \
+            -e ETCD_DATA_DIR=/var/lib/milvus/etcd \
+            -e COMMON_STORAGETYPE=local \
+            --health-cmd "curl -f http://localhost:9091/healthz || exit 1" \
+            --health-interval 10s --health-timeout 5s --health-retries 30 \
+            milvusdb/milvus:v2.4.17 \
+            milvus run standalone
+          echo "waiting for Milvus health (max ~120s)..."
+          for i in $(seq 1 60); do
+            status=$(docker inspect -f '{{.State.Health.Status}}' milvus-standalone 2>/dev/null || echo starting)
+            if [ "$status" = "healthy" ]; then echo "Milvus healthy after ~$((i*5))s"; break; fi
+            echo "  [$i] status=$status"
+            sleep 5
+          done
       - name: "Milvus startup guard (fail-closed: 拒绝静默回退 InMemory)"
         # 含重试（最多 ~120s，每次 5s），容忍 Milvus standalone 冷启动延迟；
         # 仍坚持 fail-closed：必须真连上且 _milvus_connected 为真，否则作业立即红。
@@ -266,13 +308,23 @@ jobs:
   # 字段），因此这里退而求其次：任何已知漏洞都阻断，同时产出 JSON 报告
   # 供人工分级。
   #
-  # `--skip-editable`：上一步 `pip install -e .` 会把本项目 mars-408-server
-  # 装成可编辑安装，而它不在 PyPI 上，pip-audit 会报
-  # "Dependency not found on PyPI and could not be audited" 并失败。
-  # 该参数跳过本地可编辑包，只审计真正的第三方依赖。
+  # ⚠️ 死锁陷阱（实测 pip-audit 2.10.1 源码，此前本 job 必然 100% 失败）：
+  #   上一步 `pip install -e .` 把本项目 mars-408-server 装成可编辑安装。
+  #   - `--skip-editable` 会把它变成 SkippedDependency(
+  #       skip_reason="distribution marked as editable")；
+  #   - 而 `--strict`(-S) 的定义是「依赖收集在任何依赖上失败则整个审计失败」，
+  #     _cli.py 中对**任何** is_skipped() 的依赖直接 _fatal()。
+  #   ⇒ `--skip-editable` + `--strict` 语义自相矛盾：跳过即失败。
+  #   不加 `--skip-editable` 时若用默认的 PyPI 服务，本地包不在 PyPI 上会
+  #   404 → 同样变成 SkippedDependency → `--strict` 依然判死。
+  #
+  # 正确解法：改用 **OSV 服务**（-s osv）。pypi.py 对未知包返回 SkippedDependency，
+  # 而 osv.py 对未知包返回**空漏洞列表**（HTTP 200 + 空 JSON，不产生 skip）。
+  # 于是本地包被正常审计并返回 0 漏洞，`--strict` 得以保留：
+  # 任何「版本非法 / 网络不可达」这类真实盲区仍会让 job 失败。
   # ───────────────────────────────────────────────────────────────
-  pip-audit:
-    name: Dependency CVE scan (pip-audit)
+  pip-audit-dep-cve:
+    name: Dependency CVE scan (pip-audit / OSV)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -282,7 +334,7 @@ jobs:
       - name: Install backend + pip-audit
         run: cd py-server && pip install --upgrade pip && pip install -e . && pip install pip-audit
       - name: Run pip-audit (block on any known vulnerability)
-        run: cd py-server && pip-audit --skip-editable --strict --desc -f json -o pip-audit-report.json
+        run: cd py-server && pip-audit -s osv --strict --desc -f json -o pip-audit-report.json
       - name: Upload pip-audit report
         if: always()
         uses: actions/upload-artifact@v4

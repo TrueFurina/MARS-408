@@ -111,7 +111,7 @@ jobs:
           _override DEEPSEEK_API_KEY "${DEEPSEEK_API_KEY:-}"
           _override QWEN_API_KEY "${QWEN_API_KEY:-}"
           _override TAVILY_API_KEY "${TAVILY_API_KEY:-}"
-          _override AUTH_SECRET "${AUTH_SECRET:-}"
+          _override AUTH_SECRET "$(python3 -c 'import os; v=os.environ.get("AUTH_SECRET",""); print(v if len(v)>=32 else "test-secret-"+"x"*48)')"
           _override ADMIN_PASSWORD "${ADMIN_PASSWORD:-}"
           echo "py-server/.env generated (no secret values printed)"
 

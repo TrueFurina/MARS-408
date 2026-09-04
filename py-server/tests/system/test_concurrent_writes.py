@@ -21,6 +21,7 @@ import threading
 import time
 import signal
 import httpx
+from pathlib import Path
 
 import pytest
 
@@ -31,7 +32,15 @@ import pytest
 # 全部以「启动超时」失败（子进程输出被管道吞掉，此前一直看不到这句错误）。
 _PY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, _PY)
-AUTH_SECRET = "test-secret-import-queue-system"
+# 必须 >= 32 字符，否则 shared.auth.resolve_auth_secret() 在 startup 触发 fail-fast，
+# 真实 uvicorn 子进程起不来 -> system 测试「启动超时」失败（D14 之前 CI 一直红的根因）。
+AUTH_SECRET = "test-secret-import-queue-system-0123456789"
+
+# import_worker.DOCS_DIR = py-server/documents/教材（由 import_worker 模块路径推导，
+# 与子进程 cwd 无关）。系统测试起真实 uvicorn 子进程，monkeypatch 无法穿透到子进程，
+# 故测试 PDF 必须真实落盘到该目录（documents/教材 已被 .gitignore 忽略，不污染提交）；
+# 提交时 source 用该绝对路径即可通过 api/imports 的路径越界护栏（F-012）。
+_DOCS_DIR = os.path.join(_PY, "documents", "教材")
 
 pytestmark = pytest.mark.system
 
@@ -134,6 +143,17 @@ def _start(workers, env_file, port, run_dir, log_config=None, extra_env=None):
     _write_skip_marker(run_dir)
     env = os.environ.copy()
     env["PYTHONPATH"] = _PY + os.pathsep + env.get("PYTHONPATH", "")
+    # 关键修复（D15）：把本测试用于签发 token 的 AUTH_SECRET 显式注入子进程环境。
+    #
+    # 根因：uvicorn --env-file 走 python-dotenv，`--env-file` 中的变量【默认不覆盖】
+    # 已存在于 os.environ 的变量。若 CI job 在 job 级设了 AUTH_SECRET（p0-regression.yml
+    # 的 system 作业即如此），该值会泄漏进子进程 os.environ 并被应用采用，与测试
+    # 签发 token 的密钥不一致 → /api/knowledge/stats 返回 401（无 total_docs）→ KeyError。
+    #
+    # 次生陷阱：_admin_token() 会改写【本进程】os.environ["AUTH_SECRET"]，造成用例顺序依赖
+    # —— 首个调用 _count_kb 的用例失败，后续用例因 env 已被改写而「伪绿」。显式注入
+    # 彻底消除 job env 泄漏与用例顺序依赖，保证每个子进程都用与 token 一致的密钥。
+    env["AUTH_SECRET"] = AUTH_SECRET
     if extra_env:
         env.update(extra_env)
     cmd = [
@@ -162,17 +182,46 @@ def _stop(proc):
     return out
 
 
+# 超时放宽：CIRunner 上首次请求会触发 embedding 模型加载（数秒~数十秒），
+# 原 5s 会在慢机/冷缓存下误判为 ReadTimeout，属于测试脆弱性而非产品缺陷。
+_HTTP_TIMEOUT = 120.0
+
+
 def _count_kb(base, token):
     r = httpx.get(f"{base}/api/knowledge/stats",
-                  headers={"Authorization": f"Bearer {token}"}, timeout=5)
+                  headers={"Authorization": f"Bearer {token}"}, timeout=_HTTP_TIMEOUT)
+    assert r.status_code == 200, (
+        f"/api/knowledge/stats 返回异常：HTTP {r.status_code}，"
+        f"响应={str(r.json())[:300]}（疑似 token 密钥不一致或应用启动异常）"
+    )
     return r.json()["total_docs"]
 
 
 def _list_kb(base, token):
-    r = httpx.get(f"{base}/api/knowledge/list?limit=10000",
-                  headers={"Authorization": f"Bearer {token}"}, timeout=5)
-    data = r.json()
-    return data["items"], data["total"]
+    """分页取回全量条目。
+
+    /api/knowledge/list 的 limit 约束为 Query(20, ge=1, le=100)（api/knowledge.py:85），
+    原先请求 limit=10000 会触发 FastAPI 422 校验失败，响应体是 {"detail": [...]}，
+    导致 `data["items"]` 抛 KeyError —— 这是测试缺陷，不是产品缺陷（限流上限本身合理）。
+    这里按 100/页翻页取全量，并显式断言响应结构，避免断言只覆盖首页而漏掉跨页重复。
+    """
+    page_size = 100
+    items, total, skip = [], 0, 0
+    while True:
+        r = httpx.get(f"{base}/api/knowledge/list?skip={skip}&limit={page_size}",
+                      headers={"Authorization": f"Bearer {token}"}, timeout=_HTTP_TIMEOUT)
+        data = r.json()
+        assert "items" in data, (
+            f"/api/knowledge/list 返回异常：HTTP {r.status_code}，"
+            f"响应={str(data)[:300]}（注意 limit 上限为 100）"
+        )
+        batch = data["items"]
+        items.extend(batch)
+        total = data["total"]
+        skip += page_size
+        if len(batch) < page_size or skip >= total:
+            break
+    return items, total
 
 
 def _make_pdf(path, pages=3):
@@ -223,17 +272,21 @@ def test_tc12_single_writer_no_loss(tmp_path):
     _write_env_file(envf, str(vdb))
     proc = _start(1, str(envf), 8123, run_dir)
     out = ""
+    a_pdf = b_pdf = None
     try:
         base = "http://127.0.0.1:8123"
         assert _wait_status(base, proc=proc), "single-worker 启动超时"
         token = _admin_token()
-        client = httpx.Client(base, headers={"Authorization": f"Bearer {token}"})
+        client = httpx.Client(base_url=base, headers={"Authorization": f"Bearer {token}"}, timeout=120.0)
 
         # 基线：启动后（含种子数据）的初始条目数，隔离"导入贡献"
         baseline = _count_kb(base, token)
 
-        a_pdf = run_dir / "a.pdf"
-        b_pdf = run_dir / "b.pdf"
+        # PDF 必须落在 import_worker.DOCS_DIR（py-server/documents/教材）内，
+        # 否则 api/imports 的路径越界护栏会以 400 拒绝（F-012）。
+        os.makedirs(_DOCS_DIR, exist_ok=True)
+        a_pdf = Path(_DOCS_DIR) / "a.pdf"
+        b_pdf = Path(_DOCS_DIR) / "b.pdf"
         _make_pdf(a_pdf)
         _make_pdf(b_pdf)
 
@@ -263,6 +316,12 @@ def test_tc12_single_writer_no_loss(tmp_path):
         assert len(ids) == len(set(ids)), "单写者下出现重复条目（条目爆炸）"
     finally:
         out = _stop(proc)
+        for _p in (a_pdf, b_pdf):
+            try:
+                if _p and _p.exists():
+                    _p.unlink()
+            except Exception:
+                pass
     assert "Traceback (most recent call last)" not in out
 
 
@@ -282,15 +341,18 @@ def test_tc12_online_vs_worker_concurrent(tmp_path):
     _write_env_file(envf, str(vdb))
     proc = _start(1, str(envf), 8125, run_dir)
     out = ""
+    pdf = None
     try:
         base = "http://127.0.0.1:8125"
         assert _wait_status(base, proc=proc), "single-worker 启动超时"
         token = _admin_token()
-        client = httpx.Client(base, headers={"Authorization": f"Bearer {token}"})
+        client = httpx.Client(base_url=base, headers={"Authorization": f"Bearer {token}"}, timeout=120.0)
 
         baseline = _count_kb(base, token)
 
-        pdf = run_dir / "w.pdf"
+        # PDF 必须落在 import_worker.DOCS_DIR 内，否则路径越界护栏会以 400 拒绝（F-012）。
+        os.makedirs(_DOCS_DIR, exist_ok=True)
+        pdf = Path(_DOCS_DIR) / "w.pdf"
         _make_pdf(pdf)
 
         # 并发：在线 upsert + worker import（两条写路径共享同一把 store_lock）
@@ -327,15 +389,23 @@ def test_tc12_online_vs_worker_concurrent(tmp_path):
         )
     finally:
         out = _stop(proc)
+        try:
+            if pdf and Path(pdf).exists():
+                Path(pdf).unlink()
+        except Exception:
+            pass
     assert "Traceback (most recent call last)" not in out
 
 
-# ── TC-14（负向）：--workers 2 复现 last-writer-wins 风险，且启动告警生效 ──
+# ── TC-14（负向）：--workers 2 必须被 ADR-007 硬约束 fail-fast 拒绝 ──
 def test_tc14_multiworker_lww_regression(tmp_path):
-    """多进程 → 各自独立 InMemory 单写者锁 → 跨进程无共享锁 → LWW 风险重现。
+    """负向：uvicorn --workers 2（>1）必须被 ADR-007 硬约束在启动期 fail-fast 拒绝。
 
-    ADR §3.5 硬约束：uvicorn 必须 --workers 1。main.py 在检测到 >1 worker 时应 logger.warning。
-    本用例验证该启动告警确实生效（guard 活跃）。
+    多进程 → 各自独立 InMemory 单写者锁 → 跨进程无共享锁 → 重新引入
+    last-writer-wins（2026-07-08 P0 事故根因）。因此 ADR-007 要求 uvicorn 必须
+    --workers 1，main.py:270-274 在 lifespan 检测到 >1 worker 时直接 raise
+    RuntimeError fail-fast。本用例验证该拒绝确实发生（应用绝不健康、日志含违规文案），
+    而非旧版的「仅告警」。这是单写者保证的安全底线，绝不能退化成可绕过。
     """
     run_dir = tmp_path / "run"
     run_dir.mkdir()
@@ -352,28 +422,28 @@ def test_tc14_multiworker_lww_regression(tmp_path):
     out = ""
     try:
         base = "http://127.0.0.1:8124"
-        assert _wait_status(base, timeout=120, proc=proc), "multi-worker 启动超时"
-
-        # 多 worker 下仍应可提交并跑通一个 import job（系统可用）
-        token = _admin_token()
-        client = httpx.Client(base, headers={"Authorization": f"Bearer {token}"})
-        pdf = run_dir / "m.pdf"
-        _make_pdf(pdf)
-        r = _submit_import(client, pdf)
-        assert r.status_code == 200, r.text
-        job = _poll_job(client, r.json()["job_id"], token)
-        assert job and job["status"] == "succeeded", f"import job 未成功: {job}"
+        # 负向断言：多 worker 必须被启动期 fail-fast 拒绝，/api/status 永远不应 200。
+        # proc=None → _wait_status 不在超时后自杀（由 finally 的 _stop 统一回收）。
+        healthy = _wait_status(base, timeout=45, proc=None)
+        assert not healthy, (
+            "ADR-007 硬约束失效：--workers 2 竟启动成功"
+            "（多写者 last-writer-wins 风险重现，P0 回归）"
+        )
     finally:
         out = _stop(proc)
 
-    # 核心断言：启动期检测到 >1 worker 并发出多写者告警（ADR 硬约束 guard 活跃）
+    # 核心断言：启动期检测到 >1 worker 并 fail-fast 拒绝（含 ADR-007 违规文案）
     lowered = out.lower()
+    assert "adr-007" in lowered, (
+        "未检测到 ADR-007 硬约束拒绝日志（guard 缺失或日志未转发）:\n" + out[-2000:]
+    )
     assert (
-        "uvicorn_workers" in lowered
-        or "多写者" in lowered
-        or "last-writer-wins" in lowered
-        or "workers" in lowered
+        "硬约束" in out
+        or "workers数量" in out
+        or "last-writer-wins" in out
+        or "必须 --workers 1" in out
     ), (
-        "未检测到多 worker 启动告警（ADR §3.5 硬约束 guard 缺失或日志未转发）:\n"
+        "ADR-007 拒绝日志缺少关键违规文案"
+        "（workers数量 / last-writer-wins / 必须 --workers 1）:\n"
         + out[-2000:]
     )

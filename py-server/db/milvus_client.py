@@ -646,7 +646,7 @@ class VectorDB:
             col = Collection(collection_name)
             col.load()
             expr = self._dict_to_milvus_expr(filter_dict) if filter_dict else ""
-            results = col.query(expr=expr or None,
+            results = col.query(expr=expr or "",
                                 output_fields=["id_str", "subject", "course", "chapter",
                                                "chapter_name", "type", "keywords"])
             return [
@@ -676,11 +676,11 @@ class VectorDB:
             col.load()
             expr = self._dict_to_milvus_expr(filter_dict) if filter_dict else ""
             # P5：总数用 count(*) 聚合，避免全量拉取（生产集合 10万+ 条时防 OOM）
-            count_results = col.query(expr=expr or None, output_fields=["count(*)"])
+            count_results = col.query(expr=expr or "", output_fields=["count(*)"])
             total = int(count_results[0]["count(*)"]) if count_results else 0
             # 分页：offset/limit 参数（P5：不再全量拉取后切片）
             sliced = col.query(
-                expr=expr or None,
+                expr=expr or "",
                 offset=skip,
                 limit=limit,
                 output_fields=["id_str", "subject", "source", "text",

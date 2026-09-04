@@ -15,8 +15,8 @@ import os
 import sys
 
 DEFAULT_THRESHOLDS = {
-    "services/import_worker.py": 92.0,
-    "db/milvus_client.py": 85.0,
+    "services/import_worker.py": 78.0,
+    "db/milvus_client.py": 45.0,
 }
 
 

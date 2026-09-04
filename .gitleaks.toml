@@ -2,10 +2,11 @@
 # 用途：主动防护，检测科大讯飞(XFyun)开放平台密钥的误提交/泄露。
 # 维护：gstack-security-officer (CSO)
 #
-# ⚠️ 兼容性说明：
-#   本配置使用顶层 [allowedlist]，该字段自 gitleaks v8.21.0 起为正式命名
-#   （v8.21.0 之前为 [allowlist]）。若 pre-commit 解析到 v8.18.0 等旧版本，请将
-#   rev 升级到 v8.21.0+，或将下方 [allowedlist] 整体改名为 [allowlist]。
+# ⚠️ 兼容性说明（经验证修正）：
+#   gitleaks v8.21.0 实际只识别顶层 [allowlist]（单 L）。[allowedlist]（双 L）会被
+#   静默忽略，导致整段豁免完全失效（历史坑：本仓库 secret-scan 曾因此持续误报）。
+#   若 pre-commit 解析到 v8.18.0 等旧版本且只认 [allowedlist]，请将下方块改名；
+#   但 CI 用的 v8.21.0 必须以 [allowlist] 为准。
 #
 # 设计原则：
 #   * 仅豁免“合法的假阳性”：环境变量模板 / 已脱敏片段 / 文档里的占位示例 / 归档测试桩。
@@ -50,7 +51,7 @@ keywords = ["password", "api", "xfyun"]
 
 # ───────────────────────────── 误报豁免 ─────────────────────────────
 # 注意：本段只压制“非真实密钥”的上下文。真实泄露不会被压制。
-[allowedlist]
+[allowlist]
 description = "False-positive suppression only; real leaks remain detectable."
 paths = [
   # 环境变量本体与模板（.env 已在 .gitignore，此处双保险）
@@ -74,4 +75,11 @@ regexes = [
   '''(?i)your_qwen_api_key''',
   '''(?i)your_tavily_api_key''',
   '''(?i)xxxxxxxx''',
+  # CI 系统测试桩（合法假阳性）：p0-regression.yml 历史提交的 AUTH_SECRET 哨兵值
+  #   为 ≥32 位测试值，xfyun-api-secret 规则会把 "secret"+连续字母数字段误判为真实
+  #   密钥。gitleaks 将 [allowlist].regexes 作用于“捕获的 secret 本身”（secret-group=1
+  #   的 32+ 位字母数字段），故此处直接以哨兵明文豁免；真实 XFyun 密钥不会是这种顺序
+  #   哨兵，不会被遗漏。当前文件已改为分段写法（test-secret-0123-4567-…）使连续段不足
+  #   32 位、工作树不再触发；本豁免仅消除 git 历史中旧提交的误报。
+  '''(?i)0123456789abcdefghijklmnopqrstuvwxyz''',
 ]

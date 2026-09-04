@@ -26,7 +26,9 @@ import pytest
 pytestmark = pytest.mark.p0_regression
 
 _PY = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-AUTH_SECRET = "test-secret-f6-system"
+# >= 32 字符：F6 系统测试期望 app 因 --workers 4 被拒而启动失败（非 200），
+# 但若 AUTH_SECRET 过短会在 F6 之前就 fail-fast，掩盖真实失败模式，故用合规长度。
+AUTH_SECRET = "test-secret-f6-system-0123456789abcdef"
 
 
 # ── 单元：_resolve_uvicorn_workers 解析 CLI / 环境变量 ──
@@ -100,6 +102,10 @@ def test_f6_system_uvicorn_workers_4_rejected(tmp_path):
 
     env = os.environ.copy()
     env["PYTHONPATH"] = _PY + os.pathsep + env.get("PYTHONPATH", "")
+    # 显式注入本测试签发所用 AUTH_SECRET，避免 CI job 级 AUTH_SECRET 经 os.environ 泄漏
+    # 进子进程（uvicorn --env-file 默认不覆盖已存在的 os.environ 变量）。本用例不校验鉴权，
+    # 但保持与 test_concurrent_writes.py 一致可消除潜在顺序依赖/环境陷阱。
+    env["AUTH_SECRET"] = AUTH_SECRET
     # 走 InMemory 回退（规避原生库；F6 与存储后端无关，只看 writer 锁）
     env["MILVUS_ENABLED"] = "false"
 
