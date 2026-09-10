@@ -59,6 +59,7 @@ def test_f6_unit_start_rejects_cli_workers_via_parser(monkeypatch):
 
 
 # ── 系统：真实 uvicorn --workers 4 必须被拒（仅 Linux CI）──
+@pytest.mark.slow
 @pytest.mark.system
 def test_f6_system_uvicorn_workers_4_rejected(tmp_path):
     """起真实 `uvicorn main:app --workers 4`：多写者必须被拒（filelock / CLI 解析兜底）。

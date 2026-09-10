@@ -16,7 +16,7 @@ import pytest
 
 from db.milvus_client import VectorDB, MILVUS_AVAILABLE
 
-pytestmark = pytest.mark.requires_milvus
+pytestmark = [pytest.mark.requires_milvus, pytest.mark.slow]
 
 COLLECTION = "netlearn_kb"
 

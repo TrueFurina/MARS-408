@@ -42,7 +42,7 @@ AUTH_SECRET = "test-secret-import-queue-system-0123456789"
 # 提交时 source 用该绝对路径即可通过 api/imports 的路径越界护栏（F-012）。
 _DOCS_DIR = os.path.join(_PY, "documents", "教材")
 
-pytestmark = pytest.mark.system
+pytestmark = [pytest.mark.system, pytest.mark.slow]
 
 
 def _write_env_file(path, vectordb_dir):

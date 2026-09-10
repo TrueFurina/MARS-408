@@ -140,9 +140,22 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Install (.[test])
+      - name: Install (.[test]) + milvus-lite
         working-directory: py-server
-        run: pip install -e ".[test]"
+        run: pip install -e ".[test]" && pip install milvus-lite
+      - name: Start milvus-lite in background
+        working-directory: py-server
+        run: |
+          nohup python -c "from milvus_lite import MilvusServer; s=MilvusServer(); s.set_base_dir('./milvus_lite_ci'); s.start()" > milvus_lite.log 2>&1 &
+          for i in $(seq 1 30); do
+            if python -c "import socket; s=socket.socket(); s.settimeout(1); s.connect(('127.0.0.1',19530)); s.close(); exit(0)" 2>/dev/null; then
+              echo "milvus-lite ready"; break
+            fi
+            sleep 2
+          done
       - name: Slow tests
         working-directory: py-server
+        env:
+          MILVUS_HOST: 127.0.0.1
+          MILVUS_PORT: "19530"
         run: pytest -m slow --timeout=600 -q
