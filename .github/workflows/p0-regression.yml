@@ -12,6 +12,7 @@ on:
   pull_request:
   schedule:
     - cron: "0 2 * * *"   # nightly: 触发 slow 档
+  workflow_dispatch:       # 允许手动触发（用于排查 / 验证 nightly slow 档）
 
 concurrency:
   group: p0-regression-${{ github.workflow }}-${{ github.ref }}
@@ -131,7 +132,7 @@ jobs:
   # ── 慢速：仅 nightly (schedule) 触发 ──
   slow:
     name: Slow (nightly)
-    if: github.event_name == 'schedule'
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     needs: [p0-regression-gate, fast-unit, system, requires-milvus]
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -145,4 +146,13 @@ jobs:
         run: pip install -e ".[test]"
       - name: Slow tests
         working-directory: py-server
-        run: pytest -m slow --timeout=600 -q
+        run: |
+          pytest -m slow --timeout=600 -q
+          rc=$?
+          if [ "$rc" -eq 5 ]; then
+            echo "No slow-marked tests are currently collected (pytest exit 5)."
+            echo "The nightly slow gate has nothing to enforce; passing to keep CI green."
+            echo "Add @pytest.mark.slow to long-running tests to (re)activate this gate."
+            exit 0
+          fi
+          exit $rc
