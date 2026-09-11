@@ -4,8 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概要
 
-MARS-408 — 第十五届中国软件杯 A3 赛题参赛作品（出题企业：科大讯飞）。
-基于 LangGraph 多智能体 + GOMARL 共识引擎 + FrugalRAG 检索的 408 考研个性化学习平台。
+**双分支 · 双身份**（同一技术底座服务两个项目）：
+- **\main\ 分支 — MARS-408**：第十五届中国软件杯 A3 赛题参赛作品（出题企业：科大讯飞），基于 LangGraph 多智能体 + GOMARL 共识引擎 + FrugalRAG 检索的 408 考研个性化学习平台。国家级大创项目，结题中。
+- **\career-literacy\ 分支 — 芒得很职**：新一代多智能体赋能的计算机类学生职业素养对抗实训平台，第十六届三创赛参赛作品。基于 ECD（证据中心设计）的大模型多智能体对话式软素养评估，所有新增代码使用 \career_*\ 前缀，零侵入 408 代码。
+
+> 当前分支为 \career-literacy\，开发芒得很职。408 考研代码在 \main\ 分支，通过 \main → career-literacy\ 单向同步共享底座改进。芒得很职已完成 P0 后端（e5c6fb\）和 P1 学生端前端（ņ5f7b\），详见 \docs/职业素养对抗实训改造方案.md\。
 
 技术栈：**FastAPI + LangGraph + PyTorch**（后端）· **Vue 3 + TypeScript + Pinia**（前端）· **Milvus / SQLite / Redis**（数据层）
 
