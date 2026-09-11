@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MARS-408 → 芒得很职 双图并存改造架构</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'PingFang SC','Microsoft YaHei',Segoe UI,Arial,sans-serif;
+         background:#F4F3EE; color:#1A1B1C; padding:20px; line-height:1.5; }
+  .wrap { max-width:1080px; margin:0 auto; }
+  h1 { font-size:20px; font-weight:700; margin-bottom:4px; }
+  .sub { font-size:13px; color:#6B7280; margin-bottom:18px; }
+  .band { background:#fff; border:1px solid #E4E3DD; border-radius:14px; padding:16px; margin-bottom:14px; }
+  .band-title { font-size:15px; font-weight:600; margin-bottom:4px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .tag { font-size:11px; font-weight:500; padding:2px 8px; border-radius:10px; }
+  .tag-old { background:rgba(155,187,244,.22); color:#3b5bb5; }
+  .tag-new { background:rgba(148,216,195,.30); color:#1f7a5c; }
+  .band-desc { font-size:12px; color:#6B7280; margin-bottom:12px; }
+  .flow { display:flex; align-items:stretch; gap:6px; flex-wrap:wrap; }
+  .node { border-radius:10px; padding:9px 10px; font-size:12px; min-width:96px; flex:1 1 96px;
+          display:flex; flex-direction:column; justify-content:center; gap:2px; border:1px solid rgba(0,0,0,.08);}
+  .node b { font-size:12.5px; }
+  .node span { font-size:10.5px; color:#6B7280; }
+  .n-old { background:linear-gradient(135deg,rgba(155,187,244,.18),rgba(155,187,244,.34)); }
+  .n-new { background:linear-gradient(135deg,rgba(148,216,195,.18),rgba(148,216,195,.36)); }
+  .n-core { background:linear-gradient(135deg,rgba(244,179,147,.22),rgba(244,179,147,.42)); border-color:rgba(234,106,104,.3);}
+  .n-reuse { background:linear-gradient(135deg,rgba(228,212,143,.22),rgba(228,212,143,.42)); }
+  .arrow { align-self:center; font-size:16px; color:#9aa0a6; font-weight:700; }
+  .loop-box { border:1.5px dashed #1f7a5c; border-radius:12px; padding:12px; margin:6px 0; background:rgba(148,216,195,.08);}
+  .loop-label { font-size:11.5px; color:#1f7a5c; font-weight:600; margin-bottom:8px; }
+  .human { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:8px 0; font-size:11.5px; }
+  .human-chip { background:#fff; border:1px solid #E4E3DD; border-radius:8px; padding:6px 10px; }
+  .interrupt { background:rgba(234,106,104,.10); border:1px solid rgba(234,106,104,.35); color:#b03a3c;
+               border-radius:8px; padding:4px 8px; font-size:11px; font-weight:600; }
+  .base-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; }
+  .base-cell { background:rgba(0,0,0,.03); border:1px solid #E4E3DD; border-radius:8px; padding:8px 10px; font-size:11.5px; text-align:center;}
+  .legend { display:flex; gap:14px; flex-wrap:wrap; font-size:11.5px; color:#6B7280; margin-top:6px;}
+  .dot { display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:5px; vertical-align:-1px;}
+  .stage-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;}
+  .stage { flex:1 1 150px; min-width:140px; border-left:3px solid #94D8C3; background:#fff; border-radius:0 8px 8px 0;
+           padding:8px 10px; font-size:11.5px; box-shadow:0 1px 2px rgba(0,0,0,.04);}
+  .stage b { display:block; font-size:12px; margin-bottom:2px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>MARS-408 → 芒得很职：双图并存改造架构</h1>
+  <div class="sub">main 分支保留 408 考研流水线（国家级大创）；career-literacy 分支新建对抗实训图，共用同一技术底座</div>
+
+  <!-- 旧流水线 -->
+  <div class="band">
+    <div class="band-title">① 现有 408 系统：一次性「学习资源生成」流水线
+      <span class="tag tag-old">main 分支 · 保留</span></div>
+    <div class="band-desc">一次 invoke 跑到 END，产出 7 种学习资料；Critic 只对资料做一次性事实核查（机器对机器）</div>
+    <div class="flow">
+      <div class="node n-old"><b>协调</b><span>coordinator</span></div><div class="arrow">→</div>
+      <div class="node n-old"><b>学情诊断</b><span>diagnostician</span></div><div class="arrow">→</div>
+      <div class="node n-old"><b>规划/检索</b><span>planner·retriever</span></div><div class="arrow">→</div>
+      <div class="node n-old"><b>7资源生成</b><span>generator_cluster</span></div><div class="arrow">→</div>
+      <div class="node n-old"><b>评估/审阅</b><span>assessor·critic</span></div><div class="arrow">→</div>
+      <div class="node n-reuse"><b>证据/闸门</b><span>evidence·gate</span></div><div class="arrow">→</div>
+      <div class="node n-old"><b>学习路径</b><span>path_planner</span></div>
+    </div>
+  </div>
+
+  <!-- 新对抗图 -->
+  <div class="band">
+    <div class="band-title">② 芒得很职：多轮「对话式对抗实训 + ECD 证据评估」循环
+      <span class="tag tag-new">career-literacy · 新建</span></div>
+    <div class="band-desc">画像→脚本后进入人机多轮循环，每轮问答即一条评估证据；结束后按证据做 6 维评分，每分可溯源到原话</div>
+
+    <div class="flow">
+      <div class="node n-new"><b>场景路由</b><span>career_coordinator</span></div><div class="arrow">→</div>
+      <div class="node n-new"><b>6维画像</b><span>career_diagnostician</span></div><div class="arrow">→</div>
+      <div class="node n-new"><b>情景脚本</b><span>scenario_planner</span></div><div class="arrow">→</div>
+      <div class="node n-reuse"><b>情景检索</b><span>retriever 复用</span></div>
+    </div>
+
+    <div class="loop-box">
+      <div class="loop-label">▼ 对抗循环（6–8 轮，LangGraph interrupt-resume 人机协同；竞赛期可先用「API 持状态、adversary 无状态逐轮调」简化版）</div>
+      <div class="flow">
+        <div class="node n-core"><b>对抗 Agent</b><span>adversary · 三模式</span></div><div class="arrow">→</div>
+        <div class="node" style="background:#fff;border:1px dashed #b03a3c;"><b class="interrupt">interrupt 抛问</b><span>暂停·落检查点</span></div><div class="arrow">→</div>
+        <div class="node" style="background:#fff;border:1px solid #E4E3DD;"><b>学生作答</b><span>前端 resume 回图</span></div><div class="arrow">→</div>
+        <div class="node n-core"><b>证据采集</b><span>evidence_collector</span></div><div class="arrow">↺</div>
+      </div>
+      <div class="human">
+        <span class="human-chip">normal 常规追问</span>
+        <span class="human-chip" style="border-color:rgba(234,106,104,.4);">escalating 加压</span>
+        <span class="human-chip" style="border-color:rgba(234,106,104,.5);background:rgba(234,106,104,.06);"><b>鲶鱼 Catfish</b>：检测模板化/维度无证据/过度自信 → 反事实追问，破「平顺过关」</span>
+      </div>
+    </div>
+
+    <div class="flow">
+      <div class="node n-core"><b>6维 ECD 评分</b><span>career_assessor 分必挂证据</span></div><div class="arrow">→</div>
+      <div class="node n-reuse"><b>证据一致性</b><span>evidence_check 复用</span></div><div class="arrow">→</div>
+      <div class="node n-reuse"><b>质量闸门</b><span>quality_gate 小改</span></div><div class="arrow">→</div>
+      <div class="node n-new"><b>提升路径</b><span>career_path_planner</span></div><div class="arrow">→</div>
+      <div class="node n-new"><b>证据链报告</b><span>6维雷达·点击溯源</span></div>
+    </div>
+  </div>
+
+  <!-- 共享底座 -->
+  <div class="band">
+    <div class="band-title">③ 共用技术底座（零改动 / 仅配置，约 70% 复用）</div>
+    <div class="base-grid" style="margin-top:8px;">
+      <div class="base-cell">LLMProvider 双通道<br>chat / stream / completion</div>
+      <div class="base-cell">FrugalRAG 检索框架<br>retriever + 向量库</div>
+      <div class="base-cell">evidence_check<br>证据核查（19KB 最成熟）</div>
+      <div class="base-cell">quality_gate<br>PASS/FIX/REJECT 闸门</div>
+      <div class="base-cell">三层记忆<br>memory_service</div>
+      <div class="base-cell">PG / Redis / Milvus<br>+ SQLite 回退</div>
+      <div class="base-cell">鉴权·限流·内容护栏<br>shared/</div>
+      <div class="base-cell">Vue3 + ECharts + SSE<br>布局/登录/雷达/对话流</div>
+    </div>
+    <div class="legend">
+      <span><span class="dot" style="background:#9BBBF4;"></span>408 改造复用</span>
+      <span><span class="dot" style="background:#94D8C3;"></span>职业新建</span>
+      <span><span class="dot" style="background:#F4B393;"></span>核心新代码（对抗/取证/评估）</span>
+      <span><span class="dot" style="background:#E4D48F;"></span>直接复用</span>
+    </div>
+  </div>
+
+  <!-- 12周阶段 -->
+  <div class="band">
+    <div class="band-title">④ 12 周实施节奏（OPC 一人可执行）</div>
+    <div class="stage-row">
+      <div class="stage"><b>P0 W1–2 地基</b>分支/状态/5张表/4情景种子/出第1问</div>
+      <div class="stage"><b>P1 W3–5 对抗循环</b>简化版逐轮对话+取证，打通完整一场</div>
+      <div class="stage"><b>P2 W6–7 ECD评估</b>6维BARS+证据绑定+溯源报告</div>
+      <div class="stage"><b>P3 W8 鲶鱼+路径</b>三模式对抗、提升建议</div>
+      <div class="stage"><b>P4 W9–10 教师端</b>建班/46人名单/发任务/学情看板</div>
+      <div class="stage"><b>P5–P6 W11–12</b>真 interrupt 升级 + 试点预实验</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
