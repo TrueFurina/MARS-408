@@ -105,6 +105,7 @@ const navItems = computed(() => {
     { name: '🤖 资源生成', icon: icons.agent, route: '/resource', key: 'agent', subjectClass: 'nav-subject-3' },
     { name: '📊 学习路径', icon: icons.dashboard, route: '/dashboard', key: 'dashboard', subjectClass: '' },
     { name: '📝 智能出题', icon: icons.quiz, route: '/practice', key: 'practice', subjectClass: 'nav-subject-0' },
+  { name: '🥊 素养对抗', icon: icons.target, route: '/career/training', key: 'career-training', subjectClass: '' },
     { name: '📈 学习评估', icon: icons.barChart, route: '/assessment', key: 'assessment', subjectClass: '' },
     { name: '⚙️ 算法引擎', icon: icons.engine, route: '/engine', key: 'engine', subjectClass: 'nav-subject-0' },
     { name: '🧠 知识图谱', icon: icons.knowledge, route: '/knowledge', key: 'knowledge', subjectClass: 'nav-subject-2' },

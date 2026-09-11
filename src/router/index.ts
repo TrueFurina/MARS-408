@@ -128,6 +128,11 @@ const router = createRouter({
       component: () => import('@/views/DailyPlanView.vue'),
     },
     {
+      path: '/career/training',
+      name: 'career-training',
+      component: () => import('@/views/CareerTrainingView.vue'),
+    },
+    {
       path: '/review',
       name: 'review',
       component: () => import('@/views/ReviewView.vue'),

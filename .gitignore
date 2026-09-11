@@ -212,3 +212,6 @@ references/**/*.xlsx
 # 环境凭证备份 & 打包元数据
 py-server/.env.bak*
 *.egg-info/
+
+# 一次性调试/联调脚本
+py-server/_scratch/
