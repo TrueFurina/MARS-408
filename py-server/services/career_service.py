@@ -189,14 +189,31 @@ async def _finish(state: dict) -> dict:
     )
     improvement = await nodes.build_improvement_plan(assessment, state.get("scenario_label", ""))
 
-    # 证据链：维度 → 支撑轮次
+    # 证据链：维度 → 支撑轮次 + 原话引用 + 逐轮证据聚合（ECD Claim-Evidence 对齐）
+    # 先从每轮 collect_evidence 的 dimension_hits 聚合该维度的所有证据 note
+    per_dim_turn_evidence = {}
+    for t in turns:
+        ev = t.get("evidence") or {}
+        for h in ev.get("dimension_hits", []) or []:
+            dk = h.get("dimension")
+            if dk:
+                per_dim_turn_evidence.setdefault(dk, []).append({
+                    "turn": t.get("turn_index"),
+                    "polarity": h.get("polarity", "neutral"),
+                    "note": h.get("note", ""),
+                })
     evidence_chain = []
     for dim, item in (assessment.get("dimensions") or {}).items():
         evidence_chain.append({
             "dimension": dim,
             "label": DIMENSION_LABELS.get(dim, dim),
             "score": item.get("score"),
+            "level": item.get("level"),
+            "confidence": item.get("confidence"),
             "evidence_turns": item.get("evidence_turns", []),
+            "evidence_quotes": item.get("evidence_quotes", []),
+            "rationale": item.get("rationale", ""),
+            "per_turn_evidence": per_dim_turn_evidence.get(dim, []),
         })
 
     overall = assessment.get("overall")

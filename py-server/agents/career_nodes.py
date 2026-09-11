@@ -293,7 +293,7 @@ async def assess_session(script: dict, scenario_label: str, title: str, turns: l
     try:
         from db.llm_provider import LLMProvider
         llm = LLMProvider()
-        raw = await llm.text_completion(CAREER_ASSESS_SYSTEM, user, temperature=0.2, max_tokens=1500)
+        raw = await llm.text_completion(CAREER_ASSESS_SYSTEM, user, temperature=0.2, max_tokens=2000)
         data = extract_json(raw)
         if isinstance(data, dict) and data.get("dimensions"):
             return _normalize_assessment(data, script)
@@ -329,6 +329,7 @@ def _normalize_assessment(data: dict, script: dict) -> dict:
             "level": item.get("level", "insufficient" if score is None else "average"),
             "confidence": float(item.get("confidence", 0.5) or 0.5),
             "evidence_turns": [int(x) for x in item.get("evidence_turns", []) if str(x).isdigit()],
+            "evidence_quotes": [q for q in (item.get("evidence_quotes") or []) if isinstance(q, str) and q.strip()][:3],
             "rationale": item.get("rationale", ""),
         }
         if score is not None:
@@ -357,7 +358,7 @@ def _rule_based_assessment(turns: list[dict], script: dict) -> dict:
         hit_dim = False
         for h in (t.get("evidence") or {}).get("dimension_hits", []):
             if h.get("dimension") in DIMENSIONS:
-                dim_evidence[h["dimension"]].append((t.get("turn_index"), h.get("polarity"), dens))
+                dim_evidence[h["dimension"]].append((t.get("turn_index"), h.get("polarity"), dens, h.get("note", "")))
                 hit_dim = True
         pd = t.get("probe_dimension")
         ans_len = len((t.get("answer") or "").strip())
@@ -367,12 +368,13 @@ def _rule_based_assessment(turns: list[dict], script: dict) -> dict:
     for d in DIMENSIONS:
         ev = dim_evidence[d]
         if ev:
-            pos = sum(1 for _, p, _ in ev if p == "positive")
-            neg = sum(1 for _, p, _ in ev if p == "negative")
-            dens = sum(x for _, _, x in ev) / len(ev)
+            pos = sum(1 for _, p, _, _ in ev if p == "positive")
+            neg = sum(1 for _, p, _, _ in ev if p == "negative")
+            dens = sum(x for _, _, x, _ in ev) / len(ev)
             score = round(max(1.0, min(5.0, 2.5 + (pos - neg) * 0.6 + dens)), 1)
             rationale = "【规则评估】基于单轮证据正负向与信息密度粗估，建议启用LLM复评"
-            turns_used = [i for i, _, _ in ev]
+            turns_used = [i for i, _, _, _ in ev]
+            quotes = [n for _, _, _, n in ev if n and isinstance(n, str)][:3]
             conf = 0.4
         elif dim_probed[d]:
             # 被考察但结构化取证缺失：按答案信息密度给保守中性分，明确低置信
@@ -380,14 +382,24 @@ def _rule_based_assessment(turns: list[dict], script: dict) -> dict:
             score = round(max(1.5, min(4.0, 2.2 + dens * 0.8)), 1)
             rationale = "【规则评估·保守】缺少结构化取证，仅依据被考察轮次的作答信息量给中性分，建议启用LLM复评"
             turns_used = [i for i, _ in dim_probed[d]]
+            # 从被考察轮次的学生回答中截取片段作为弱证据引用
+            quotes = []
+            for ti, _ in dim_probed[d]:
+                for t in turns:
+                    if t.get("turn_index") == ti and t.get("answer"):
+                        quotes.append(t["answer"][:50])
+                        break
+            quotes = quotes[:3]
             conf = 0.25
         else:
             dims[d] = {"score": None, "label": DIMENSION_LABELS[d], "level": "insufficient",
-                       "confidence": 0.0, "evidence_turns": [], "rationale": "无有效证据，不予评分"}
+                       "confidence": 0.0, "evidence_turns": [], "evidence_quotes": [],
+                       "rationale": "无有效证据，不予评分"}
             continue
         dims[d] = {"score": score, "label": DIMENSION_LABELS[d],
                    "level": "average", "confidence": conf,
-                   "evidence_turns": turns_used, "rationale": rationale}
+                   "evidence_turns": turns_used, "evidence_quotes": quotes,
+                   "rationale": rationale}
         w = float(weights.get(d, 1.0)); ws += score * w; wt += w
     return {
         "dimensions": dims,
