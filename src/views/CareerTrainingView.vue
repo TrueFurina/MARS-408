@@ -296,6 +296,10 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
             </div>
             <div class="dim-bar"><div class="dim-fill" :style="{ width: ((row.score || 0) / 5 * 100) + '%' }"></div></div>
             <div class="dim-rationale">{{ row.rationale }}</div>
+            <div v-if="row.evidence_quotes?.length" class="dim-evidence">
+              <span class="ev-label">证据引用</span>
+              <span v-for="(q, i) in row.evidence_quotes" :key="i" class="ev-quote">「{{ q }}」</span>
+            </div>
           </div>
         </div>
       </div>
@@ -439,6 +443,9 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
 .dim-bar { height: 6px; border-radius: 4px; background: var(--bg-secondary, rgba(0,0,0,.08)); overflow: hidden; }
 .dim-fill { height: 100%; background: linear-gradient(90deg, var(--accent-primary, #7c6af2), var(--accent-secondary, #5b8bd8)); border-radius: 4px; transition: width .5s; }
 .dim-rationale { font-size: 11.5px; color: var(--text-secondary, #6b7280); margin-top: 4px; line-height: 1.5; }
+.dim-evidence { margin-top: 5px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.ev-label { font-size: 10px; color: var(--accent-primary, #7c6af2); font-weight: 600; background: rgba(124,106,242,0.1); padding: 1px 6px; border-radius: 4px; }
+.ev-quote { font-size: 10.5px; color: var(--text-secondary, #6b7280); background: var(--bg-soft, rgba(0,0,0,0.03)); padding: 1px 6px; border-radius: 4px; border-left: 2px solid var(--accent-primary, #7c6af2); }
 
 .sw-block { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
 @media (max-width: 720px) { .sw-block { grid-template-columns: 1fr; } }
