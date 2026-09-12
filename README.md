@@ -28,7 +28,7 @@
 **芒得很职已实现能力（career-literacy 分支）：**
 - **P0 后端闭环**（commit `5e5c6fb`）：6维ECD评估 + 常规/加压/鲶鱼三模式对抗 + 5张新表 + 6个API端点
 - **P1 学生端前端**（commit `5065f7b`）：四步状态机（选情景→简报→多轮对抗→六维报告）+ 纯SVG六维雷达 + 对话证据链回放
-- HTTP端到端联调通过：真实LLM对抗追问 + LLM六维评估 + 越权403归属校验
+- HTTP端到端联调通过（mock/离线）：对抗追问 + 六维评估 + 越权403归属校验；真实LLM冒烟 overall=4.50（2026-09-13 落盘，`py-server/experiments/results/career_llm_smoke_20260913.json`）
 
 详见 [`docs/职业素养对抗实训改造方案.md`](docs/职业素养对抗实训改造方案.md)。
 
@@ -276,7 +276,7 @@ npm install && npm run dev                   # :5173，代理 /api → 8002
 
 | 阶段 | 内容 | Commit | 验证方式 |
 |---|---|---|---|
-| P0 后端 | 6维ECD评估+三模式对抗+5张新表+6个API | `5e5c6fb` | 兜底闭环测试+真实LLM冒烟+OpenAPI路由校验 |
+| P0 后端 | 6维ECD评估+三模式对抗+5张新表+6个API | `5e5c6fb` | 验证脚本+正式测试（`tests/test_career_p0.py` 18用例）+OpenAPI路由校验 |
 | P1 前端 | 四步状态机+纯SVG六维雷达+证据链回放 | `5065f7b` | vue-tsc零错误+vite build+HTTP端到端联调 |
 
 ### 11.5 12周路线图

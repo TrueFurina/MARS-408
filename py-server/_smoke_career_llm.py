@@ -1,21 +1,24 @@
 # -*- coding: utf-8 -*-
-"""真实 LLM 冒烟：start + 1轮answer，检查脚本/取证/对抗问题是否由 LLM 结构化产出（无key则自动兜底）。
+"""真实 LLM 冒烟：start + 1轮answer + end 强制终评，检查脚本/取证/对抗问题/六维评估全链路。
 
-CTO 盘点短板②整改：加关键断言 + 结果落盘到 documents/大创真版-career冒烟_<日期>.json，
-对外引用（答辩/申报）以落盘文件为准，不再只是控制台输出。
+CTO 对外口径修正令（2026-09-12）整改：
+- 补关键断言：六维齐全 / 0≤score≤5 / 证据链非空
+- 结果输出到 experiments/results/career_llm_smoke_YYYYMMDD.json（对外引用以落盘为准）
+- 数字治理规则：无落盘不出数字——README 引用 overall 必须出自本文件的落盘 JSON
 """
 import asyncio, json, os, sys, datetime
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-RESULT_PATH = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "..", "documents",
-    f"大创真版-career冒烟_{datetime.date.today().isoformat()}.json")
+RESULT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                           "experiments", "results",
+                           f"career_llm_smoke_{datetime.date.today():%Y%m%d}.json")
 
 
 async def main() -> int:
     from services import career_service
     from db import career_store
+    from agents.career_state import DIMENSIONS
 
     result: dict = {"date": datetime.date.today().isoformat(),
                     "script": "_smoke_career_llm.py", "checks": {}}
@@ -31,7 +34,7 @@ async def main() -> int:
     result["script_gen"] = {"probe_plan": n_probe, "success_signals": n_signals,
                             "llm_generated": n_signals > 0}
     print("场景 =", started["title"])
-    print("脚本 probe_plan 条数 =", n_probe, "；success_signals =", n_signals,
+    print("脚本 probe_plan =", n_probe, "；success_signals =", n_signals,
           "（>0 说明LLM脚本生成成功）")
     print("开场 =", started["next_question"]["question"][:60])
 
@@ -54,12 +57,34 @@ async def main() -> int:
     print("取证套话嫌疑/密度 =", ev.get("template_suspect"), ev.get("density"))
     print("LLM下一问 =", r["next_question"]["question"][:80])
 
-    # ── 关键断言（此前 0 断言，CTO 短板②）──
+    # ── 终评：强制结束触发六维 ECD 评估 + 证据链 ──
+    fin = await career_service.end_session(started["session_id"], force=True)
+    assessment = fin.get("assessment") or {}
+    chain = fin.get("evidence_chain") or []
+    dims = assessment.get("dimensions") or {}
+    scored = {d: v.get("score") for d, v in dims.items() if v.get("score") is not None}
+    result["assessment"] = {
+        "source": assessment.get("assessment_source"),
+        "overall": assessment.get("overall"),
+        "dims_present": sorted(dims.keys()),
+        "scores": scored,
+        "evidence_chain_len": len(chain),
+        "chain_with_quotes": sum(1 for c in chain if c.get("evidence_quotes") or c.get("per_turn_evidence")),
+    }
+    print("终评 source =", assessment.get("assessment_source"),
+          "overall =", assessment.get("overall"))
+    print("六维分 =", scored)
+    print("证据链条数 =", len(chain))
+
+    # ── 关键断言（修正令：六维齐全 / 0≤score≤5 / 证据链非空）──
     checks = result["checks"]
     checks["scenario_started"] = bool(started.get("session_id"))
     checks["script_has_probe_plan"] = n_probe >= 1
     checks["evidence_collected"] = isinstance(ev, dict) and "density" in ev
     checks["next_question_returned"] = bool(r["next_question"].get("question"))
+    checks["six_dims_complete"] = set(dims.keys()) == set(DIMENSIONS)
+    checks["scores_in_range"] = all(0 <= float(x) <= 5 for x in scored.values()) if scored else False
+    checks["evidence_chain_nonempty"] = len(chain) >= 1
     result["passed"] = all(checks.values())
 
     with open(RESULT_PATH, "w", encoding="utf-8") as f:
