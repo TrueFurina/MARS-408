@@ -78,6 +78,15 @@ CREATE TABLE IF NOT EXISTS career_assessments (
     report_md TEXT,
     created_at TIMESTAMP DEFAULT NOW()
 );
+CREATE TABLE IF NOT EXISTS career_class_students (
+    id VARCHAR(64) PRIMARY KEY,
+    class_id VARCHAR(64) NOT NULL,
+    student_no VARCHAR(32) DEFAULT '',
+    name VARCHAR(128) NOT NULL,
+    user_id VARCHAR(64),
+    joined_at TIMESTAMP DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_career_students_class ON career_class_students(class_id);
 """
 
 # SQLite 建表脚本（TEXT 代替 JSONB，AUTOINCREMENT）
@@ -141,6 +150,15 @@ CREATE TABLE IF NOT EXISTS career_assessments (
     report_md TEXT,
     created_at TEXT DEFAULT (datetime('now'))
 );
+CREATE TABLE IF NOT EXISTS career_class_students (
+    id TEXT PRIMARY KEY,
+    class_id TEXT NOT NULL,
+    student_no TEXT DEFAULT '',
+    name TEXT NOT NULL,
+    user_id TEXT,
+    joined_at TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_career_students_class ON career_class_students(class_id);
 """
 
 
@@ -154,6 +172,13 @@ def ensure_tables(force: bool = False) -> bool:
             pg_client.connect()
         ddl = _DDL_SQLITE if pg_client.is_fallback else _DDL_PG
         pg_client.migrate_exec(ddl)
+        # P4: career_tasks 补 join_code 列（旧库幂等迁移；新库 DDL 已含或迁移后含）
+        try:
+            pg_client.migrate_exec(
+                "ALTER TABLE career_tasks ADD COLUMN join_code VARCHAR(16)" if not pg_client.is_fallback
+                else "ALTER TABLE career_tasks ADD COLUMN join_code TEXT")
+        except Exception:
+            pass  # 列已存在
         _TABLES_READY = True
         logger.info("career_* 表已就绪（%s）", "SQLite" if pg_client.is_fallback else "PostgreSQL")
         return True
@@ -349,3 +374,176 @@ def get_assessment_by_session(session_id: str) -> Optional[dict]:
         for k in ("dimension_scores", "evidence_chain", "improvement_plan"):
             result[k] = _loads(result.get(k))
     return result
+
+
+# ────────────────────────────────────────────────────────────
+# P4 教师端：班级 / 花名册 / 任务（任务码）/ 班级看板
+# ────────────────────────────────────────────────────────────
+def _exec(sql: str, params: tuple):
+    if pg_client.is_fallback:
+        with pg_client._lock:
+            pg_client._conn.execute(sql, params); pg_client._conn.commit()
+    else:
+        with pg_client._conn.cursor() as cur:
+            cur.execute(sql, params)
+
+
+def _query(sql: str, params: tuple) -> list[dict]:
+    if pg_client.is_fallback:
+        with pg_client._lock:
+            rows = pg_client._conn.execute(sql, params).fetchall()
+            return [dict(r) for r in rows]
+    with pg_client._conn.cursor() as cur:
+        cur.execute(sql, params)
+        cols = [d[0] for d in cur.description]
+        return [dict(zip(cols, r)) for r in cur.fetchall()]
+
+
+def create_class(teacher_id: str, class_name: str) -> dict:
+    ensure_tables()
+    cid = new_id("cls")
+    _exec(f"INSERT INTO career_classes (id,teacher_id,class_name) VALUES ({_ph(3)})",
+          (cid, teacher_id, class_name))
+    return {"class_id": cid, "class_name": class_name, "student_count": 0}
+
+
+def get_class(cid: str, teacher_id: str) -> Optional[dict]:
+    ensure_tables()
+    q = "?" if pg_client.is_fallback else "%s"
+    rows = _query(f"SELECT * FROM career_classes WHERE id={q} AND teacher_id={q}", (cid, teacher_id))
+    return rows[0] if rows else None
+
+
+def list_classes_by_teacher(teacher_id: str) -> list[dict]:
+    ensure_tables()
+    q = "?" if pg_client.is_fallback else "%s"
+    return _query(
+        f"SELECT c.id AS class_id, c.class_name, c.created_at, "
+        f"(SELECT COUNT(*) FROM career_class_students s WHERE s.class_id=c.id) AS student_count "
+        f"FROM career_classes c WHERE c.teacher_id={q} ORDER BY c.created_at DESC", (teacher_id,))
+
+
+def add_students(cid: str, teacher_id: str, students: list[dict]) -> int:
+    """students: [{student_no, name}]；批量插入花名册并同步 student_count"""
+    ensure_tables()
+    if not get_class(cid, teacher_id):
+        raise KeyError("班级不存在或无权操作")
+    n = 0
+    for stu in students:
+        name = (stu.get("name") or "").strip()
+        if not name:
+            continue
+        _exec(f"INSERT INTO career_class_students (id,class_id,student_no,name) VALUES ({_ph(4)})",
+              (new_id("stu"), cid, (stu.get("student_no") or "").strip(), name))
+        n += 1
+    q = "?" if pg_client.is_fallback else "%s"
+    _exec(f"UPDATE career_classes SET student_count="
+          f"(SELECT COUNT(*) FROM career_class_students WHERE class_id={q}) WHERE id={q}", (cid, cid))
+    return n
+
+
+def list_students(cid: str, teacher_id: str) -> list[dict]:
+    ensure_tables()
+    if not get_class(cid, teacher_id):
+        raise KeyError("班级不存在或无权操作")
+    q = "?" if pg_client.is_fallback else "%s"
+    return _query(f"SELECT student_no,name,user_id,joined_at FROM career_class_students "
+                  f"WHERE class_id={q} ORDER BY student_no ASC", (cid,))
+
+
+def create_task(teacher_id: str, class_id: str, scenario_id: str,
+                scenario_type: str = "", scenario_subtype: str = "",
+                difficulty: str = "medium", max_turns: int = 8,
+                due_at: Optional[str] = None) -> dict:
+    ensure_tables()
+    if not get_class(class_id, teacher_id):
+        raise KeyError("班级不存在或无权操作")
+    tid = new_id("task")
+    code = uuid.uuid4().hex[:6].upper()  # 6 位任务码
+    _exec("INSERT INTO career_tasks "
+          "(id,class_id,teacher_id,scenario_id,scenario_type,scenario_subtype,difficulty,max_turns,due_at,join_code) "
+          f"VALUES ({_ph(10)})",
+          (tid, class_id, teacher_id, scenario_id, scenario_type, scenario_subtype,
+           difficulty, int(max_turns), due_at, code))
+    return {"task_id": tid, "join_code": code, "class_id": class_id,
+            "scenario_id": scenario_id, "difficulty": difficulty,
+            "max_turns": int(max_turns), "due_at": due_at}
+
+
+def get_task_by_code(code: str) -> Optional[dict]:
+    ensure_tables()
+    q = "?" if pg_client.is_fallback else "%s"
+    rows = _query(f"SELECT * FROM career_tasks WHERE join_code={q} ORDER BY created_at DESC LIMIT 1",
+                  ((code or "").strip().upper(),))
+    return rows[0] if rows else None
+
+
+def get_task_by_id(tid: str) -> Optional[dict]:
+    ensure_tables()
+    q = "?" if pg_client.is_fallback else "%s"
+    rows = _query(f"SELECT * FROM career_tasks WHERE id={q}", (tid,))
+    return rows[0] if rows else None
+
+
+def list_tasks_by_teacher(teacher_id: str, class_id: Optional[str] = None) -> list[dict]:
+    ensure_tables()
+    q = "?" if pg_client.is_fallback else "%s"
+    if class_id:
+        return _query(f"SELECT id AS task_id,class_id,scenario_id,scenario_type,difficulty,max_turns,due_at,join_code,created_at "
+                      f"FROM career_tasks WHERE teacher_id={q} AND class_id={q} ORDER BY created_at DESC",
+                      (teacher_id, class_id))
+    return _query(f"SELECT id AS task_id,class_id,scenario_id,scenario_type,difficulty,max_turns,due_at,join_code,created_at "
+                  f"FROM career_tasks WHERE teacher_id={q} ORDER BY created_at DESC", (teacher_id,))
+
+
+def class_dashboard(cid: str, teacher_id: str) -> Optional[dict]:
+    """班级学情看板：每生实训完成状态 + 六维均分 + overall（聚合 career_sessions/assessments）"""
+    cls = get_class(cid, teacher_id)
+    if not cls:
+        return None
+    q = "?" if pg_client.is_fallback else "%s"
+    roster = list_students(cid, teacher_id)
+    students = []
+    for stu in roster:
+        rows = _query(
+            "SELECT s.id AS session_id, s.status, s.turn_count, a.dimension_scores, a.consistency_score "
+            f"FROM career_sessions s LEFT JOIN career_assessments a ON a.session_id = s.id "
+            f"WHERE s.user_id={q} AND s.task_id IN (SELECT id FROM career_tasks WHERE class_id={q}) "
+            f"ORDER BY s.started_at DESC", (stu.get("user_id") or "", cid))
+        sessions = []
+        dim_acc: dict = {}
+        overall_best = None
+        for r in rows:
+            dims = _loads(r.get("dimension_scores"), {}) or {}
+            scores = {d: v.get("score") for d, v in dims.items()
+                      if isinstance(v, dict) and v.get("score") is not None}
+            for d, v in scores.items():
+                dim_acc.setdefault(d, []).append(float(v))
+            ov = r.get("consistency_score")
+            if ov is not None:
+                overall_best = max(overall_best or 0, float(ov))
+            sessions.append({"session_id": r.get("session_id"), "status": r.get("status"),
+                             "turn_count": r.get("turn_count"), "overall": ov})
+        dim_avg = {d: round(sum(v) / len(v), 2) for d, v in dim_acc.items() if v}
+        students.append({
+            "student_no": stu.get("student_no"), "name": stu.get("name"),
+            "user_id": stu.get("user_id"), "bound": bool(stu.get("user_id")),
+            "session_count": len(sessions),
+            "finished_count": sum(1 for s in sessions if s.get("status") == "finished"),
+            "dimension_avg": dim_avg, "overall_best": overall_best,
+            "sessions": sessions[:5],
+        })
+    return {"class_id": cid, "class_name": cls.get("class_name"),
+            "student_count": len(students), "students": students}
+
+
+def bind_student(class_id: str, user_id: str) -> bool:
+    """学生凭任务码加入后绑定 user_id（按姓名匹配未绑定行，取第一个未绑定者）"""
+    ensure_tables()
+    q = "?" if pg_client.is_fallback else "%s"
+    rows = _query(f"SELECT id FROM career_class_students WHERE class_id={q} AND user_id IS NULL LIMIT 1",
+                  (class_id,))
+    if not rows:
+        return False
+    _exec(f"UPDATE career_class_students SET user_id={q} WHERE id={q}", (user_id, rows[0]["id"]))
+    return True
