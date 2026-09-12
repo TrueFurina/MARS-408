@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MARS-408 · 三评审 + MAPPO 教学策略演示面板</title>
+<style>
+  :root{
+    --bg:#0b1220; --panel:#111a2e; --panel2:#0e1628; --line:#1f2b45;
+    --txt:#e8eefc; --sub:#93a4c8; --dim:#5f7397;
+    --cyan:#38e1ff; --teal:#2dd4bf; --amber:#fbbf24; --rose:#fb7185; --lime:#a3e635;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;padding:28px 22px 60px;line-height:1.6}
+  .wrap{max-width:1180px;margin:0 auto}
+  header h1{font-size:26px;letter-spacing:.5px}
+  header p{color:var(--sub);margin-top:6px;font-size:14px}
+  .tag{display:inline-block;font-size:12px;color:var(--cyan);border:1px solid var(--line);border-radius:20px;padding:2px 12px;margin:14px 6px 0 0;background:var(--panel)}
+  h2{font-size:18px;margin:36px 0 14px;display:flex;align-items:center;gap:10px}
+  h2::before{content:"";width:4px;height:18px;background:var(--cyan);border-radius:2px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:16px}
+  .grid{display:grid;gap:14px}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g2{grid-template-columns:1fr 1fr}
+  .node{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .node h4{font-size:14px;margin-bottom:6px}
+  .node p{font-size:12.5px;color:var(--sub)}
+  .kbd{font-size:12px;color:var(--amber);background:#1c2740;border:1px solid var(--line);border-radius:6px;padding:1px 8px;margin:0 3px}
+  .pill{font-size:12px;border-radius:6px;padding:2px 10px;display:inline-block;margin:2px 4px 2px 0}
+  .p-low{background:#14331f;color:var(--lime)}
+  .p-high{background:#3a1420;color:var(--rose)}
+  .p-pass{background:#12301f;color:var(--teal)}
+  .p-flag{background:#3a2a12;color:var(--amber)}
+  .btn{background:#1c2740;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;transition:.15s}
+  .btn:hover{border-color:var(--cyan);color:var(--cyan)}
+  .btn.on{background:#0e3a47;border-color:var(--cyan);color:var(--cyan)}
+  .flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px}
+  .flow .step{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-size:12px;color:var(--sub)}
+  .flow .step.done{border-color:var(--teal);color:var(--teal)}
+  .flow .arrow{color:var(--dim);font-size:12px}
+  .bar-row{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:12.5px}
+  .bar-row .name{width:64px;color:var(--sub);flex:none}
+  .bar-track{flex:1;background:#0a1120;border-radius:4px;height:18px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;font-size:11px;color:#06121f;font-weight:600;min-width:24px}
+  .bar-row .val{width:130px;color:var(--txt);flex:none;font-variant-numeric:tabular-nums}
+  .legend{font-size:12px;color:var(--dim);margin-top:8px}
+  .hint{color:var(--dim);font-size:12px;margin-top:8px}
+  .ok{color:var(--teal)} .warn{color:var(--amber)} .bad{color:var(--rose)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left}
+  th{color:var(--sub);font-weight:500}
+  td.num{font-variant-numeric:tabular-nums;text-align:right}
+  .best{color:var(--cyan);font-weight:600}
+  svg text{font-family:inherit}
+  @media(max-width:900px){.g3,.g2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>MARS-408 · 多智能体学习系统 —— 三评审 &amp; MAPPO 教学策略演示</h1>
+  <p>让复杂决策逻辑看得见：Triage 分级路由 → 三元评审校验壳 → MAPPO 教学策略层（本页全部数据为 2026-09-12 实测）</p>
+  <span class="tag">三创赛 · 答辩素材</span>
+  <span class="tag">大创 Nov 2026 中期检查</span>
+  <span class="tag">火山杯 Agent 大赛</span>
+</header>
+
+<!-- ============ 1. 架构总览 ============ -->
+<h2>一、系统架构总览（生产流水线 · LangGraph 13 节点实测）</h2>
+<div class="card">
+  <div class="flow" id="archFlow">
+    <span class="step done">triage 分级路由</span><span class="arrow">→</span>
+    <span class="step done">coordinator 全局协调 + <b>教学策略决策</b></span><span class="arrow">→</span>
+    <span class="step done">diagnostician 学情诊断</span><span class="arrow">→</span>
+    <span class="step done">planner 任务规划</span><span class="arrow">→</span>
+    <span class="step done">retriever 检索优化</span><span class="arrow">→</span>
+    <span class="step done">generator_cluster 7 智能体生成集群</span><span class="arrow">→</span>
+    <span class="step done">assessor 评估反馈</span><span class="arrow">→</span>
+    <span class="step done">critic 批评者 + 证据门禁</span><span class="arrow">→</span>
+    <span class="step done">evidence_check 证据校验</span><span class="arrow">→</span>
+    <span class="step done">quality_gate 产物闸门</span><span class="arrow">→</span>
+    <span class="step done">path_planner 路径规划</span>
+  </div>
+  <div class="grid g3" style="margin-top:14px">
+    <div class="node"><h4>🔀 Triage 分级路由（M1）</h4><p>零 LLM 规则分类器，安全默认 high。寒暄/简短答疑 → <span class="pill p-low">low 短路</span>快速回答，零评审、低时延；学习类请求 → <span class="pill p-high">high</span> 进完整流水线 + 三评审。</p></div>
+    <div class="node"><h4>🔍 三元评审校验壳（M2）</h4><p><b>诚实 Agent</b> 如实产出（无事实不编造）→ <b>共识 Agent</b> GOMARL 证据加权合成 + 置信度 → <b>批评者 Agent</b> 结构化 JSON 审阅，<b>证据门禁</b>拦截无证据批评。</p></div>
+    <div class="node"><h4>🧠 MAPPO 教学策略层（M3/M4）</h4><p>协调阶段决策 难度档位 / 讲解方式 / 评审强度；CTDE 共享 Critic，3-seed 实测正确率 0.963±0.000 与专家规则持平。</p></div>
+  </div>
+  <p class="hint">实测节点顺序（mock LLM 端到端冒烟）：triage → coordinator → diagnostician → planner → retriever → planner → retriever → generator_cluster → assessor → critic → evidence_check → quality_gate → path_planner ✅</p>
+</div>
+
+<!-- ============ 2. 交互演示 ============ -->
+<h2>二、决策链路交互演示</h2>
+<div class="card">
+  <div class="grid g2">
+    <div>
+      <div style="margin-bottom:10px">
+        <button class="btn on" id="msg1">教我 TCP 三次握手</button>
+        <button class="btn" id="msg2">你好</button>
+        <button class="btn" id="msg3">讲一下操作系统死锁</button>
+      </div>
+      <div id="triageBox" class="node">
+        <h4>Triage 判定</h4>
+        <div id="triageResult"><span class="pill p-high">high</span> 学习类请求 → 进完整流水线（理由：包含学习主题，需检索+生成+评审）</div>
+      </div>
+      <div class="node" style="margin-top:10px">
+        <h4>教学策略决策（MAPPO / 规则）</h4>
+        <div id="policyBox" style="font-size:13px">
+          <span class="kbd">难度档位: basic</span>
+          <span class="kbd">讲解方式: sequential</span>
+          <span class="kbd">评审强度: spot</span>
+          <span class="kbd">来源: rules（use_mappo_policy=False 灰度态）</span>
+        </div>
+        <div style="margin-top:10px">
+          <span style="font-size:12px;color:var(--sub);margin-right:8px">学生水平：</span>
+          <button class="btn on" id="lv1">beginner</button>
+          <button class="btn" id="lv2">intermediate</button>
+          <button class="btn" id="lv3">advanced</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="node">
+        <h4>三元评审流转</h4>
+        <div class="flow" id="reviewFlow">
+          <span class="step" data-s="honest">诚实 Agent<br>如实产出</span><span class="arrow">→</span>
+          <span class="step" data-s="consensus">共识 Agent<br>证据加权合成</span><span class="arrow">→</span>
+          <span class="step" data-s="critic">批评者 Agent<br>结构化审阅</span><span class="arrow">→</span>
+          <span class="step" data-s="gate">证据门禁<br>无据批评拦截</span>
+        </div>
+        <div id="reviewLog" style="font-size:12.5px;color:var(--sub);margin-top:10px;min-height:110px">
+          <div>① 诚实 Agent：7 个子智能体（Teacher/QuizMaster/MindMap/…）基于检索知识如实生成，无证据不编造。</div>
+          <div>② 共识 Agent：GOMARL 对 7 份产出证据加权合成 → <span class="ok">consensus.status=passed</span>，置信度 0.95。</div>
+          <div>③ 批评者 Agent：结构化 JSON 审阅（verdict + issues[point/evidence/suggestion]）。</div>
+          <div>④ 证据门禁：无证据批评（evidence=null）不触发重生成 → 记入 filtered_issues 并降级通过。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 3. 实测对比 ============ -->
+<h2>三、MARL 算法实测对比（3-seed，教学决策 MDP）</h2>
+<div class="card">
+  <div class="grid g3">
+    <div class="node">
+      <h4>正确率（越高越好 · 规则基线 0.963）</h4>
+      <div id="accChart"></div>
+      <p class="hint">MAPPO 三档水平全 0.963±0.000（零方差，跨 seed 稳定）；QMIX 次之；VDN 加性分解在强耦合动作下失效。</p>
+    </div>
+    <div class="node">
+      <h4>回合奖励（越高越好）</h4>
+      <div id="rewChart"></div>
+      <p class="hint">beginner 档 QMIX 1.721 第一，MAPPO 1.713 紧随；VDN 因训练不稳定（std 0.75）垫底。</p>
+    </div>
+    <div class="node">
+      <h4>token 成本（越低越好）</h4>
+      <div id="costChart"></div>
+      <p class="hint">QMIX 与规则持平（1.86-2.31）；MAPPO 学习到"成本-质量"权衡，未显著超支。</p>
+    </div>
+  </div>
+  <table style="margin-top:14px">
+    <thead><tr><th>算法</th><th>beginner 正确率</th><th>beginner 奖励</th><th>intermediate 奖励</th><th>advanced 奖励</th><th>方差</th></tr></thead>
+    <tbody>
+      <tr><td>MAPPO</td><td class="num best">0.963±0.000</td><td class="num">1.713±0.032</td><td class="num best">1.706±0.012</td><td class="num">1.673±0.069</td><td class="num ok">最低</td></tr>
+      <tr><td>QMIX</td><td class="num">0.962±0.002</td><td class="num best">1.721±0.018</td><td class="num">1.660±0.047</td><td class="num">1.672±0.046</td><td class="num ok">低</td></tr>
+      <tr><td>IQL</td><td class="num">0.948±0.026</td><td class="num">1.624±0.172</td><td class="num">1.660±0.078</td><td class="num">1.656±0.080</td><td class="num warn">中</td></tr>
+      <tr><td>VDN</td><td class="num bad">0.816±0.218</td><td class="num bad">1.146±0.752</td><td class="num bad">1.230±0.675</td><td class="num">1.431±0.314</td><td class="num bad">高</td></tr>
+    </tbody>
+  </table>
+  <p class="hint">结论与 MARL 理论一致：CTDE 策略梯度（MAPPO）&gt; 单调值分解（QMIX）&gt; 独立学习（IQL）&gt; 加性分解（VDN）。数据源：experiments/results/marl_algorithms_eval_20260912.json</p>
+</div>
+
+<footer style="margin-top:30px;color:var(--dim);font-size:12px;text-align:center">
+  MARS-408 多智能体学习系统 · 三评审集成（M1 Triage / M2 证据门禁 / M3 MAPPO / M4 对比实测）· 全量回归 592 passed
+</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  // ── 真实实测数据（experiments/results/marl_algorithms_eval_20260912.json）──
+  var DATA = {
+    beginner: {rules:{acc:0.963,rew:1.677,cost:2.00}, mappo:{acc:0.963,rew:1.713,cost:2.02}, qmix:{acc:0.962,rew:1.721,cost:1.86}, iql:{acc:0.948,rew:1.624,cost:2.10}, vdn:{acc:0.816,rew:1.146,cost:2.31}},
+    intermediate: {rules:{acc:0.963,rew:1.677,cost:2.00}, mappo:{acc:0.963,rew:1.706,cost:2.16}, qmix:{acc:0.952,rew:1.660,cost:2.14}, iql:{acc:0.955,rew:1.660,cost:2.47}, vdn:{acc:0.842,rew:1.230,cost:2.40}},
+    advanced: {rules:{acc:0.964,rew:1.684,cost:2.00}, mappo:{acc:0.964,rew:1.673,cost:2.23}, qmix:{acc:0.956,rew:1.672,cost:2.31}, iql:{acc:0.952,rew:1.656,cost:2.44}, vdn:{acc:0.904,rew:1.431,cost:2.37}}
+  };
+  // 规则版教学策略（teaching_rules.decide_policy_action 真实映射）
+  var POLICY = {
+    beginner:{d:"basic", m:"sequential", i:"spot"},
+    intermediate:{d:"medium", m:"sequential", i:"spot"},
+    advanced:{d:"advanced", m:"sequential", i:"spot"}
+  };
+  var TRIAGE = {
+    msg1:{lv:"high", txt:"学习类请求 → 进完整流水线（包含学习主题，需检索+生成+评审）"},
+    msg2:{lv:"low", txt:"寒暄/简短 → 短路快路径 quick_answer（零评审、低时延）"},
+    msg3:{lv:"high", txt:"学习类请求 → 进完整流水线（操作系统科目，需检索+生成+评审）"}
+  };
+  var ORDER = ["rules","mappo","qmix","iql","vdn"];
+  var COLOR = {rules:"#93a4c8", mappo:"#38e1ff", qmix:"#a3e635", iql:"#fbbf24", vdn:"#fb7185"};
+
+  function bars(el, level, key, max, fmt){
+    var d = DATA[level], html = "";
+    ORDER.forEach(function(k){
+      var v = d[k][key];
+      var pct = Math.max(4, Math.round(v/max*100));
+      html += '<div class="bar-row"><span class="name">'+k+'</span><div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:'+COLOR[k]+'">'+(key==="acc"?v.toFixed(3):v.toFixed(2))+'</div></div><span class="val"></span></div>';
+    });
+    el.innerHTML = html;
+  }
+  function renderCharts(level){
+    bars(document.getElementById("accChart"), level, "acc", 1, "");
+    bars(document.getElementById("rewChart"), level, "rew", 2, "");
+    bars(document.getElementById("costChart"), level, "cost", 3, "");
+  }
+  renderCharts("beginner");
+
+  // ── 交互：消息 / 水平 ──
+  function setBtn(grp, id){ var b=document.querySelectorAll(grp); b.forEach(function(x){x.classList.remove("on");}); document.getElementById(id).classList.add("on"); }
+
+  function renderTriage(msgId){
+    var t = TRIAGE[msgId];
+    document.getElementById("triageResult").innerHTML =
+      '<span class="pill '+(t.lv==="high"?"p-high":"p-low")+'">'+t.lv+'</span> '+t.txt;
+  }
+  function renderPolicy(lv){
+    var p = POLICY[lv];
+    document.getElementById("policyBox").innerHTML =
+      '<span class="kbd">难度档位: '+p.d+'</span><span class="kbd">讲解方式: '+p.m+'</span>'+
+      '<span class="kbd">评审强度: '+p.i+'</span><span class="kbd">来源: rules（灰度态，MAPPO 可切换）</span>'+
+      '<div style="margin-top:8px;font-size:12px;color:var(--dim)">规则版：难度按学生水平映射（beginner→basic…）；薄弱点≥2 改例题先行；重试轮/门禁 fix → 全评审 full</div>';
+  }
+
+  document.getElementById("msg1").addEventListener("click", function(){ setBtn("#msg1,#msg2,#msg3","msg1"); renderTriage("msg1"); playReview(); });
+  document.getElementById("msg2").addEventListener("click", function(){ setBtn("#msg1,#msg2,#msg3","msg2"); renderTriage("msg2"); playReview(); });
+  document.getElementById("msg3").addEventListener("click", function(){ setBtn("#msg1,#msg2,#msg3","msg3"); renderTriage("msg3"); playReview(); });
+  document.getElementById("lv1").addEventListener("click", function(){ setBtn("#lv1,#lv2,#lv3","lv1"); renderPolicy("beginner"); renderCharts("beginner"); });
+  document.getElementById("lv2").addEventListener("click", function(){ setBtn("#lv1,#lv2,#lv3","lv2"); renderPolicy("intermediate"); renderCharts("intermediate"); });
+  document.getElementById("lv3").addEventListener("click", function(){ setBtn("#lv1,#lv2,#lv3","lv3"); renderPolicy("advanced"); renderCharts("advanced"); });
+
+  function playReview(){
+    var steps = document.querySelectorAll("#reviewFlow .step");
+    steps.forEach(function(s,i){
+      s.classList.remove("done");
+      setTimeout(function(){ s.classList.add("done"); }, 400*(i+1));
+    });
+  }
+  playReview();
+})();
+</script>
+</body>
+</html>

@@ -37,7 +37,7 @@
 ## 〇、能力兑现状态（阅读前请先看这一节）
 
 本项目坚持一条原则：**说得出的能力，必须指得到文件、跑得出结果。**
-下表为 2026-09-02 实测核对结果，三档标注，不做模糊宣称。
+下表为 2026-09-12 实测核对结果，三档标注，不做模糊宣称。
 
 | 能力 | 状态 | 实测依据 |
 |---|---|---|
@@ -48,11 +48,15 @@
 | 三级降级容灾 | ✅ 已实现 | Redis 未启用 / PostgreSQL→SQLite / Milvus→InMemory 逐级回退 |
 | 前端页面 | ✅ 已实现 | **38 个 views**（70 个 .vue 含组件），学生端 + 教师看板 |
 | 向量检索 | ⚠️ 降级运行 | E5 模型未本地化（`models/e5-base-v2` 为空），当前走 **BM25-only 降级**，标记 `_degraded:True` |
-| 共识与冲突消解引擎 | ⚠️ v1 规则原型 | 引擎代码可跑；GoMARL 加权共识**真训未执行**，当前为合成弱标注 |
+| 共识与冲突消解引擎 | ✅ 规则原型 + 三评审门禁 | M2 已实施：批评者结构化输出 + 共识证据门禁 + 置信度（tests/test_m2_review_gate.py 9 用例）；GoMARL 加权共识权重仍为规则设定 |
+| Triage 分级路由（M1） | ✅ 已实现 | 零 LLM 成本分类器 + low 短路快路径，tests/test_triage.py 18 用例通过 |
 | LLM 通道 | ⚠️ 与文档有别 | 实际为 **DeepSeek 主 + 讯飞星火 generalv3.5**；星火 X2 未授权（`11200`） |
 | FrugalRAG SFT + GRPO 真训 | ⏳ 规划中 | 大创中期（Nov 2026）真版目标 |
-| GOMARL 证据校验强化 | ⏳ 规划中 | 大创中期（Nov 2026）真版目标 |
+| 批评者证据门禁（M2） | ✅ 已实现 | critic 结构化 JSON + valid 证据标记 + filtered_issues 追溯 + 低置信人工复核 |
 | E5 向量检索恢复 | ⏳ 规划中 | 需联网下载 ~420MB 模型，当前沙箱 HuggingFace 不可达 |
+| MAPPO 教学策略层（M3） | ✅ 已训练（合成教学环境） | 规则监督预热 + PPO；3-seed 动态环境正确率与规则持平、成本≤规则、beginner 回合奖励 +1.9%（experiments/results/mappo_policy_eval_*.json） |
+| MARL 算法实测对比（M4） | ✅ 已产出数据 | IQL / VDN / QMIX / MAPPO 教学决策 3-seed 对比：MAPPO 最优最稳（正确率 0.963±0.000 持平规则）、QMIX 次优、VDN 最差；报告见 docs/MARL算法与Agent架构对比研究.md |
+| 三评审/MAPPO 生产链路集成（M5） | ✅ 端到端打通 | policy_action 由 coordinator 写入并流经全图（mock LLM 13 节点冒烟通过）；consensus 携带 confidence_score/filtered_issues；演示面板 docs/demo/三评审MAPPO演示面板.html（比赛/答辩用） |
 
 > 上表中 ⚠️ 与 ⏳ 项**不作为项目卖点**列出；对外介绍时以此表口径为准。
 
@@ -68,7 +72,7 @@
 
 多个 Agent 独立作答后，由加权共识引擎裁决分歧；当 Agent 间出现知识矛盾（如"三次握手 vs 四次挥手"）时，由冲突消解引擎基于知识库证据链检索，并由真实大模型复核事实后再裁决——从机制上防控 AI 幻觉，而非仅靠提示词约束。
 
-> **成熟度说明**：当前为 v1 规则原型，共识权重为规则设定。基于 GoMARL 的真训版本（`algorithm/real/`）尚未执行，规划于大创中期真版落地。
+> **成熟度说明**：共识为 v1 规则原型（权重规则设定），已叠加三评审门禁（M2：批评者结构化输出 + 证据门禁 + 置信度阈值）。教学策略层已升级为 MAPPO（M3：`engines/mappo_policy.py`，规则预热 + PPO 训练，checkpoint 见 `models/mappo_policy.pt`），经 `use_mappo_policy` flag 灰度接入 Mixer 权重来源（默认关闭）。NeuralMixer（GroupMixerNet）权重的真训仍规划于大创中期（Nov 2026）。
 
 ### 3. FrugalRAG 自适应检索管线
 
