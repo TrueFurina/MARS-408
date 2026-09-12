@@ -40,6 +40,39 @@ async def langgraph_stream(req: LangGraphStreamRequest, request: Request, user: 
             from agents.graph import agent_graph
             from agents.state import AgentState
 
+            # ── Triage 分级路由（三评审集成·增量一）──
+            # 低风险请求（寒暄/简短答疑）短路到快路径 quick_answer，零评审、低时延；
+            # 高风险请求进入完整 10 节点流水线 + 三评审。快路径失败自动回退流水线。
+            from agents.triage import classify_request, LEVEL_LOW
+            _triage = classify_request(
+                user_request=req.message,
+                topic=req.topic or "",
+                course=req.course or "",
+                difficulty=req.difficulty or "",
+                profile=req.profile or {},
+            )
+            _triage_level = _triage.level
+            _triage_reason = _triage.reason
+            if _triage_level == LEVEL_LOW:
+                logger.info(f"Triage 判定 low，短路快路径: {_triage_reason}")
+                yield _sse("status", "triage_skip", f"低风险请求，走快速答疑（{_triage_reason}）")
+                try:
+                    from agents.tutor import quick_answer
+                    from db.llm_provider import LLMProvider
+                    _llm = LLMProvider()
+                    _answer = await quick_answer(req.message, req.profile or {}, _llm)
+                    _safe, _notes = await audit_output(_answer, "langgraph/stream/triage_skip")
+                    if _notes:
+                        yield _sse("safety_alert", "triage_skip", "; ".join(_notes))
+                    yield _sse("content", "teacher", _safe)
+                except Exception as _te:
+                    logger.warning(f"快路径答疑失败，回退完整流水线: {_te}")
+                    _triage_level = "high"   # 回退后按高风险处理，state 交由 graph 内 triage 节点复判
+                else:
+                    yield _sse("status", "done", "快速答疑完成（Triage 跳过完整流水线）")
+                    yield "data: [DONE]\n\n"
+                    return
+
             # 构建初始状态
             user_id = user.get("user_id") or user.get("id") or ""
             memory_context = ""
@@ -84,6 +117,9 @@ async def langgraph_stream(req: LangGraphStreamRequest, request: Request, user: 
                 "error": None,
                 "status": "coordinating",
                 "regenerate_round": 0,
+                "triage_level": _triage_level,
+                "triage_reason": _triage_reason,
+                "triage_hits": {"high": _triage.hit_high, "low": _triage.hit_low},
             }
 
             yield _sse("status", "coordinating", "Coordinator 正在解析请求...")
@@ -114,6 +150,9 @@ async def langgraph_stream(req: LangGraphStreamRequest, request: Request, user: 
                     yield _sse("node_done", node_name, _node_summary(node_name, node_state))
 
                     # 按 node_name 推送具体内容事件
+                    if node_name == "triage":
+                        yield _sse("status", "triage", f"分级: {node_state.get('triage_level', 'high')}（{node_state.get('triage_reason', '')}）")
+
                     if node_name == "coordinator":
                         yield _sse("status", "coordinating", f"请求解析完成: 主题={node_state.get('topic', '')}, 难度={node_state.get('difficulty', '')}")
 
@@ -248,6 +287,7 @@ def _sse(event_type: str, field: str, content: str) -> str:
 def _node_summary(node_name: str, state: dict) -> str:
     """为各节点生成简短摘要"""
     summaries = {
+        "triage": f"分级={state.get('triage_level', 'high')}",
         "coordinator": f"主题={state.get('topic', '')}, 难度={state.get('difficulty', '')}",
         "diagnostician": f"诊断: 薄弱点={((state.get('diagnosis') or {}).get('weak_areas', []))}",
         "planner": "学习计划已生成",

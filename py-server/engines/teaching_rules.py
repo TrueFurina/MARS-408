@@ -517,6 +517,44 @@ class TeachingRuleEngine:
         scored.sort(reverse=True)
         return [tid for _, tid in scored]
 
+    def decide_policy_action(
+        self,
+        profile: Optional[dict] = None,
+        topic: str = "",
+        difficulty: str = "",
+        round_num: int = 0,
+        gate_result: Optional[dict] = None,
+    ) -> dict:
+        """教学策略决策（M3 接口）：难度档位 / 讲解方式 / 评审强度。
+
+        规则版实现（MAPPO 激活时由 engines.mappo_policy.select_action 覆盖，见增量四）：
+          - 难度：按学生水平映射（beginner→basic，intermediate→medium，advanced→advanced）；
+            显式传 difficulty 时优先采用；
+          - 讲解方式：默认顺序讲解（sequential），薄弱点多（>=2）改例题先行（example_first）；
+          - 评审强度：首轮默认抽查（spot，降本）；重试轮 / 门禁 fix / 薄弱点多 → 全评审（full）。
+        返回 dict 含 source="rules"，供链路追溯与对比实验（规则基线）。
+        """
+        profile = profile or {}
+        level = profile.get("level", "intermediate")
+        diff_map = {"beginner": "basic", "intermediate": "medium", "advanced": "advanced"}
+        d = difficulty or diff_map.get(level, "medium")
+
+        weak_count = len(profile.get("weak_topics", []) or []) + len(profile.get("weak_subjects", []) or [])
+        mode = "example_first" if weak_count >= 2 else "sequential"
+
+        retried = (gate_result or {}).get("verdict") in ("fix", "reject")
+        if round_num > 0 or retried or weak_count >= 3:
+            intensity = "full"
+        else:
+            intensity = "spot"
+
+        return {
+            "difficulty": d,
+            "teaching_mode": mode,
+            "review_intensity": intensity,
+            "source": "rules",
+        }
+
     def get_stats(self) -> dict:
         """引擎统计信息"""
         course_counts = {}

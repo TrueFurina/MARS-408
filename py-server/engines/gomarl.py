@@ -47,6 +47,8 @@ class ConsensusResult:
     flagged_issues: list[str]
     regenerate_agents: list[str]
     weight_snapshot: dict[str, float]
+    filtered_issues: list[str] = field(default_factory=list)   # M2: 证据门禁拦截的无效批评
+    confidence_score: float = 0.0                              # M2: 共识置信度(0-1)
 
 
 class GOMARLConsensus:
@@ -96,6 +98,7 @@ class GOMARLConsensus:
         student_profile: dict,
         topic: str,
         round_num: int = 0,
+        critic_issues: Optional[list[dict]] = None,
     ) -> ConsensusResult:
         """
         对多个 Agent 结果进行共识评估
@@ -109,6 +112,23 @@ class GOMARLConsensus:
         Returns:
             ConsensusResult: 共识结果
         """
+        # Step 0: 批评者证据门禁预处理（M2）——无证据批评不参与 regenerate 触发
+        filtered_critic_issues: list[str] = []
+        valid_critic_issues: list[str] = []
+        if critic_issues:
+            for it in critic_issues:
+                if not isinstance(it, dict):
+                    continue
+                point = str(it.get("point", "")).strip()
+                if not point:
+                    continue
+                if it.get("valid"):
+                    valid_critic_issues.append(f"Critic: {point}")
+                else:
+                    filtered_critic_issues.append(
+                        f"Critic 无证据批评被门禁拦截: {point[:50]}"
+                    )
+
         if round_num >= self.max_regenerate_rounds:
             # 重试耗尽，强制通过 + 标记人工审核
             combined = self._merge_all(results)
@@ -120,6 +140,8 @@ class GOMARLConsensus:
                 flagged_issues=["重生成轮数已达上限，建议人工审核"],
                 regenerate_agents=[],
                 weight_snapshot={},
+                filtered_issues=filtered_critic_issues,
+                confidence_score=0.1,
             )
 
         # Step 1: 质量评分
@@ -133,12 +155,20 @@ class GOMARLConsensus:
         flagged_issues = await self._check_consistency_enhanced(results, topic, student_profile)
         # 合入教学规则校验发现的问题
         flagged_issues.extend(schedule_issues)
+        # M2: 合入批评者有效批评（带证据）
+        flagged_issues.extend(valid_critic_issues)
 
         low_scorers = [s for s in scores if s.overall < self.quality_threshold]
 
         # Step 3: Neural GroupMixer 共识混合（真版增量）
         mixer_result = await self._neural_mix(results, scores, student_profile, topic)
         neural_consensus_score = mixer_result.get("consensus_score", avg_score)
+
+        # Step 3.5: 共识置信度（M2，0-1）：平均质量分 + 冲突惩罚
+        confidence = round(
+            max(0.1, min(1.0, avg_score / 10.0 - min(len(flagged_issues) * 0.05, 0.4))),
+            3,
+        )
 
         # Step 4: 决策
         if flagged_issues or low_scorers:
@@ -160,7 +190,13 @@ class GOMARLConsensus:
                 flagged_issues=flagged_issues,
                 regenerate_agents=regenerate,
                 weight_snapshot=mixer_result.get("dynamic_weights", self._get_dynamic_weights()),
+                filtered_issues=filtered_critic_issues,
+                confidence_score=confidence,
             )
+
+        # M2: 置信度阈值提示（不改变 verdict，仅建议人工复核）
+        if confidence < 0.6:
+            flagged_issues.append(f"共识置信度偏低({confidence})，建议人工复核")
 
         # 通过：合并输出
         combined = self._merge_all(results)
@@ -176,9 +212,11 @@ class GOMARLConsensus:
             overall_score=neural_consensus_score,
             agent_scores=scores,
             merged_content=combined,
-            flagged_issues=[],
+            flagged_issues=flagged_issues,
             regenerate_agents=[],
             weight_snapshot=weights,
+            filtered_issues=filtered_critic_issues,
+            confidence_score=confidence,
         )
 
     # ── 质量评分 ──

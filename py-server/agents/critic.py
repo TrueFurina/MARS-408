@@ -13,6 +13,21 @@ from prompts import CRITIC_PROMPT
 logger = logging.getLogger("netlearn.critic")
 
 
+def _critic_confidence(verdict: str, valid_count: int, invalid_count: int) -> float:
+    """批评者置信度（M2 口径，独立可复算）：供 consensus 展示与前端呈现。
+
+    passed：高置信（无有效批评）；有无效批评被门禁拦截 → 略降（体现"在校错"）；
+    flagged / regenerate：中低置信（存在有效问题）。
+    """
+    if verdict == "passed":
+        base = 0.95 - 0.05 * invalid_count
+    elif verdict == "flagged":
+        base = 0.60
+    else:
+        base = 0.40
+    return max(0.1, min(1.0, base))
+
+
 async def critic_node(state: AgentState) -> AgentState:
     """审阅 Agent：检查生成内容准确性"""
     state["status"] = "reviewing"
@@ -46,30 +61,53 @@ async def critic_node(state: AgentState) -> AgentState:
         # 要求 LLM 以 JSON 格式输出审阅结果（避免靠 "❌" 关键词的不可靠判定）
         review_prompt = (
             f"{content_to_review}\n\n"
-            f"请以 JSON 格式输出审阅结果，必须包含 verdict 字段。\n"
-            f'格式: {{"verdict": "passed"|"flagged"|"regenerate", "issues": ["..."]}}'
+            f"请以 JSON 格式输出审阅结果，必须包含 verdict 和 issues 字段。\n"
+            f'格式: {{"verdict": "passed"|"flagged"|"regenerate", "issues": [{{"point": "问题描述", "evidence": "知识库/RFC/教材证据，无证据填 null", "suggestion": "具体修改建议"}}]}}\n'
+            f"要求：每条 issue 必须附 evidence 证据；无法给出证据的问题不要列入 issues。"
         )
         critic_report = await llm.text_completion(
             CRITIC_PROMPT, review_prompt, temperature=0.3, max_tokens=600
         )
         state["critic_report"] = critic_report
 
-        # 解析 LLM 输出的 JSON 判定（降级：字符串匹配兜底）
-        verdict = _parse_critic_verdict(critic_report)
-        if verdict in ("flagged", "regenerate"):
+        # 结构化解析（M2：point/evidence/suggestion + valid 标记）
+        parsed = _parse_critic_report(critic_report)
+        issues = parsed["issues"]
+        state["critic_issues"] = issues
+
+        # 解析 LLM 输出的 JSON 判定（结构化优先，降级：字符串匹配兜底）
+        verdict = parsed["verdict"] or _parse_critic_verdict(critic_report)
+        valid_issues = [i for i in issues if i.get("valid")]
+        invalid_issues = [i for i in issues if not i.get("valid")]
+
+        if verdict in ("flagged", "regenerate") and not valid_issues:
+            # 证据门禁（M2）：全部为无证据批评 → 不触发重生成，无效批评记入 filtered_issues
+            verdict = "passed"
+            consensus = state.get("consensus", {})
+            consensus["status"] = "passed"
+            consensus["confidence_score"] = _critic_confidence("passed", 0, len(invalid_issues))
+            consensus["filtered_issues"] = consensus.get("filtered_issues", []) + [
+                f"Critic 无证据批评被门禁拦截: {i['point'][:50]}" for i in invalid_issues
+            ]
+            state["consensus"] = consensus
+            logger.info(f"Critic 证据门禁: {len(invalid_issues)} 条无证据批评被拦截，判定 passed")
+        elif verdict in ("flagged", "regenerate"):
             consensus = state.get("consensus", {})
             consensus["status"] = verdict
-            consensus["flagged_issues"] = consensus.get("flagged_issues", []) + [
-                "Critic 审阅发现问题（见 critic_report）"
-            ]
+            consensus["confidence_score"] = _critic_confidence(verdict, len(valid_issues), len(invalid_issues))
+            new_flags = [f"Critic 审阅发现问题: {i['point']}" for i in valid_issues]
+            consensus["flagged_issues"] = consensus.get("flagged_issues", []) + (
+                new_flags or ["Critic 审阅发现问题（见 critic_report）"]
+            )
             state["consensus"] = consensus
             # 在节点内自增重试计数（路由函数是纯函数，修改不持久化，必须在节点内自增）
             r = state.get("regenerate_round", 0)
             state["regenerate_round"] = r + 1
-            logger.info(f"Critic 标记: verdict={verdict}, round={r + 1}")
+            logger.info(f"Critic 标记: verdict={verdict}, round={r + 1}, 有效批评={len(valid_issues)}")
         elif verdict == "passed":
             consensus = state.get("consensus", {})
             consensus["status"] = "passed"
+            consensus["confidence_score"] = _critic_confidence("passed", 0, 0)
             state["consensus"] = consensus
 
     except Exception as e:
@@ -103,3 +141,41 @@ def _parse_critic_verdict(report: str) -> str:
     if has_error_marker and not has_negation:
         return "flagged"
     return "passed"
+
+
+def _parse_critic_report(report: str) -> dict:
+    """结构化解析批评者输出（M2）。
+
+    返回 {"verdict": str, "issues": [{"point", "evidence", "suggestion", "valid"}]}。
+    - evidence 为空/None 的 issue 标记 valid=False（无证据批评）。
+    - 解析失败时 verdict=""（调用方降级关键词判定），issues=[]（fail-open）。
+    """
+    import json as _json
+    try:
+        start = report.find("{")
+        end = report.rfind("}")
+        if start != -1 and end != -1:
+            data = _json.loads(report[start:end + 1])
+            verdict = data.get("verdict", "")
+            if verdict not in ("passed", "flagged", "regenerate"):
+                verdict = ""
+            raw_issues = data.get("issues") or []
+            issues = []
+            for it in raw_issues:
+                if not isinstance(it, dict):
+                    continue
+                point = str(it.get("point", "")).strip()
+                if not point:
+                    continue
+                evidence = str(it.get("evidence") or "").strip()
+                suggestion = str(it.get("suggestion") or "").strip()
+                issues.append({
+                    "point": point,
+                    "evidence": evidence or None,
+                    "suggestion": suggestion or None,
+                    "valid": bool(evidence),
+                })
+            return {"verdict": verdict, "issues": issues}
+    except (_json.JSONDecodeError, ValueError):
+        pass
+    return {"verdict": "", "issues": []}

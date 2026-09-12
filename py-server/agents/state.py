@@ -63,3 +63,14 @@ class AgentState(TypedDict):
     error: Optional[str]                # 错误信息
     status: str                         # "planning" | "diagnosing" | "retrieving" | "generating" | "assessing" | "path_planning" | "consensus" | "reviewing" | "done"
     regenerate_round: int               # 当前重生成轮数
+
+    # ── Triage 分级路由（三评审集成·增量一）──
+    triage_level: str                   # "low" | "high"（triage 节点写入，安全默认 high）
+    triage_reason: str                  # 分级判定依据（可展示/调试）
+    triage_hits: Optional[dict]         # 命中的高低风险信号 {high: [...], low: [...]}
+
+    # ── 批评者结构化输出（三评审集成·增量二，critic 节点写入）──
+    critic_issues: Optional[list]       # [{point, evidence, suggestion, valid}]，无证据 issue valid=False
+
+    # ── MAPPO 教学策略动作（三评审集成·增量四，策略层写入）──
+    policy_action: Optional[dict]       # {difficulty, teaching_mode, review_intensity, ...}

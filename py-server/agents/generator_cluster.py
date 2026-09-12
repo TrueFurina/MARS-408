@@ -199,6 +199,9 @@ async def generator_cluster_node(state: AgentState) -> AgentState:
         "flagged_issues": consensus_result.flagged_issues,
         "regenerate_agents": consensus_result.regenerate_agents,
         "merged_content": consensus_result.merged_content,
+        # M2/M3：生产链路补全置信度与门禁追溯（前端展示/答辩证据）
+        "confidence_score": getattr(consensus_result, "confidence_score", 0.0),
+        "filtered_issues": getattr(consensus_result, "filtered_issues", []),
     }
 
     return state

@@ -1,0 +1,394 @@
+{
+  "generated_at": "2026-09-12",
+  "algorithms": [
+    "iql",
+    "vdn",
+    "qmix",
+    "mappo"
+  ],
+  "levels": {
+    "beginner": {
+      "rules": {
+        "avg_reward": 1.6772,
+        "avg_accuracy": 0.9626,
+        "avg_cost": 2.0
+      },
+      "mappo": {
+        "avg_reward": {
+          "mean": 1.7126,
+          "std": 0.0321,
+          "per_seed": [
+            1.678,
+            1.7414,
+            1.7183
+          ]
+        },
+        "avg_accuracy": {
+          "mean": 0.9626,
+          "std": 0.0,
+          "per_seed": [
+            0.9626,
+            0.9626,
+            0.9626
+          ]
+        },
+        "avg_cost": {
+          "mean": 2.0183,
+          "std": 0.7227,
+          "per_seed": [
+            1.305,
+            2.0,
+            2.75
+          ]
+        }
+      },
+      "iql": {
+        "avg_reward": {
+          "mean": 1.6241,
+          "std": 0.1722,
+          "per_seed": [
+            1.7287,
+            1.7183,
+            1.4253
+          ]
+        },
+        "avg_accuracy": {
+          "mean": 0.948,
+          "std": 0.0256,
+          "per_seed": [
+            0.9626,
+            0.963,
+            0.9185
+          ]
+        },
+        "avg_cost": {
+          "mean": 2.1017,
+          "std": 0.5004,
+          "per_seed": [
+            1.54,
+            2.5,
+            2.265
+          ]
+        }
+      },
+      "vdn": {
+        "avg_reward": {
+          "mean": 1.146,
+          "std": 0.7519,
+          "per_seed": [
+            0.2943,
+            1.7183,
+            1.4253
+          ]
+        },
+        "avg_accuracy": {
+          "mean": 0.8155,
+          "std": 0.2181,
+          "per_seed": [
+            0.565,
+            0.963,
+            0.9185
+          ]
+        },
+        "avg_cost": {
+          "mean": 2.3083,
+          "std": 0.1741,
+          "per_seed": [
+            2.16,
+            2.5,
+            2.265
+          ]
+        }
+      },
+      "qmix": {
+        "avg_reward": {
+          "mean": 1.721,
+          "std": 0.0182,
+          "per_seed": [
+            1.7022,
+            1.7384,
+            1.7223
+          ]
+        },
+        "avg_accuracy": {
+          "mean": 0.9615,
+          "std": 0.0023,
+          "per_seed": [
+            0.9626,
+            0.9588,
+            0.963
+          ]
+        },
+        "avg_cost": {
+          "mean": 1.86,
+          "std": 0.2438,
+          "per_seed": [
+            1.58,
+            1.975,
+            2.025
+          ]
+        }
+      }
+    },
+    "intermediate": {
+      "rules": {
+        "avg_reward": 1.6765,
+        "avg_accuracy": 0.9633,
+        "avg_cost": 2.0
+      },
+      "mappo": {
+        "avg_reward": {
+          "mean": 1.706,
+          "std": 0.0121,
+          "per_seed": [
+            1.6925,
+            1.7158,
+            1.7098
+          ]
+        },
+        "avg_accuracy": {
+          "mean": 0.9633,
+          "std": 0.0,
+          "per_seed": [
+            0.9633,
+            0.9633,
+            0.9633
+          ]
+        },
+        "avg_cost": {
+          "mean": 2.1567,
+          "std": 0.5326,
+          "per_seed": [
+            1.72,
+            2.0,
+            2.75
+          ]
+        }
+      },
+      "iql": {
+        "avg_reward": {
+          "mean": 1.6596,
+          "std": 0.078,
+          "per_seed": [
+            1.7404,
+            1.6537,
+            1.5848
+          ]
+        },
+        "avg_accuracy": {
+          "mean": 0.955,
+          "std": 0.0076,
+          "per_seed": [
+            0.9633,
+            0.953,
+            0.9486
+          ]
+        },
+        "avg_cost": {
+          "mean": 2.47,
+          "std": 0.2594,
+          "per_seed": [
+            2.26,
+            2.76,
+            2.39
+          ]
+        }
+      },
+      "vdn": {
+        "avg_reward": {
+          "mean": 1.2301,
+          "std": 0.6749,
+          "per_seed": [
+            0.4518,
+            1.6537,
+            1.5848
+          ]
+        },
+        "avg_accuracy": {
+          "mean": 0.8421,
+          "std": 0.1882,
+          "per_seed": [
+            0.6247,
+            0.953,
+            0.9486
+          ]
+        },
+        "avg_cost": {
+          "mean": 2.405,
+          "std": 0.3477,
+          "per_seed": [
+            2.065,
+            2.76,
+            2.39
+          ]
+        }
+      },
+      "qmix": {
+        "avg_reward": {
+          "mean": 1.6599,
+          "std": 0.047,
+          "per_seed": [
+            1.7117,
+            1.6202,
+            1.6478
+          ]
+        },
+        "avg_accuracy": {
+          "mean": 0.9519,
+          "std": 0.0119,
+          "per_seed": [
+            0.9633,
+            0.9395,
+            0.953
+          ]
+        },
+        "avg_cost": {
+          "mean": 2.1367,
+          "std": 0.1495,
+          "per_seed": [
+            2.27,
+            1.975,
+            2.165
+          ]
+        }
+      }
+    },
+    "advanced": {
+      "rules": {
+        "avg_reward": 1.6843,
+        "avg_accuracy": 0.9641,
+        "avg_cost": 2.0
+      },
+      "mappo": {
+        "avg_reward": {
+          "mean": 1.6735,
+          "std": 0.0691,
+          "per_seed": [
+            1.717,
+            1.7098,
+            1.5939
+          ]
+        },
+        "avg_accuracy": {
+          "mean": 0.9641,
+          "std": 0.0,
+          "per_seed": [
+            0.9641,
+            0.9641,
+            0.9641
+          ]
+        },
+        "avg_cost": {
+          "mean": 2.2333,
+          "std": 0.4481,
+          "per_seed": [
+            1.95,
+            2.0,
+            2.75
+          ]
+        }
+      },
+      "iql": {
+        "avg_reward": {
+          "mean": 1.6556,
+          "std": 0.08,
+          "per_seed": [
+            1.7421,
+            1.5843,
+            1.6404
+          ]
+        },
+        "avg_accuracy": {
+          "mean": 0.9522,
+          "std": 0.0181,
+          "per_seed": [
+            0.9641,
+            0.9313,
+            0.9612
+          ]
+        },
+        "avg_cost": {
+          "mean": 2.4433,
+          "std": 0.3139,
+          "per_seed": [
+            2.55,
+            2.69,
+            2.09
+          ]
+        }
+      },
+      "vdn": {
+        "avg_reward": {
+          "mean": 1.4315,
+          "std": 0.3144,
+          "per_seed": [
+            1.0699,
+            1.5843,
+            1.6404
+          ]
+        },
+        "avg_accuracy": {
+          "mean": 0.9042,
+          "std": 0.0744,
+          "per_seed": [
+            0.82,
+            0.9313,
+            0.9612
+          ]
+        },
+        "avg_cost": {
+          "mean": 2.3667,
+          "std": 0.3027,
+          "per_seed": [
+            2.32,
+            2.69,
+            2.09
+          ]
+        }
+      },
+      "qmix": {
+        "avg_reward": {
+          "mean": 1.6719,
+          "std": 0.0459,
+          "per_seed": [
+            1.7232,
+            1.6579,
+            1.6347
+          ]
+        },
+        "avg_accuracy": {
+          "mean": 0.956,
+          "std": 0.008,
+          "per_seed": [
+            0.9641,
+            0.9558,
+            0.9482
+          ]
+        },
+        "avg_cost": {
+          "mean": 2.3117,
+          "std": 0.4351,
+          "per_seed": [
+            2.78,
+            1.92,
+            2.235
+          ]
+        }
+      }
+    }
+  },
+  "train": {
+    "mappo": {
+      "episodes": 1000
+    },
+    "iql": {
+      "episodes": 1200
+    },
+    "vdn": {
+      "episodes": 1200
+    },
+    "qmix": {
+      "episodes": 1200
+    }
+  }
+}

@@ -153,6 +153,12 @@ DEFAULTS = {
         "group_change_threshold": 0.3,   # 动态组划分阈值
         "min_group_size": 2,             # 最小组大小
         "use_teaching_rules": True,      # 教学业务规则引擎（报告§3.3.3）
+        # M3：MAPPO 教学策略层（三评审集成·增量四）
+        "use_mappo_policy": False,       # 权重来源接入 MAPPO（灰度，默认关闭 → EWMA 规则）
+        "mappo_checkpoint": "",          # MAPPO checkpoint 路径（空=默认 models/mappo_policy.pt）
+        "mappo_hidden_dim": 64,          # 策略网络隐藏层维度
+        "mappo_lr": 3e-4,                # PPO 学习率
+        "mappo_episodes": 1000,          # 训练回合数（实验脚本默认）
     },
 
     # ── 大创真版算法增量：feature flag（D1 默认 lite 保护软件杯稳定）──

@@ -2,13 +2,13 @@
 # LangGraph StateGraph — 多智能体编排（10 节点）
 #
 # 节点顺序:
-#   coordinator → diagnostician → planner → retriever
+#   triage → coordinator → diagnostician → planner → retriever
 #   → generator_cluster → assessor → critic
 #   → evidence_check → quality_gate → [PASS] → path_planner → END
 #                                    → [FIX]  → generator_cluster (重试)
 #                                    → [REJECT] → END
 #
-# 10 节点 (7种角色 + evidence_check + quality_gate + 1辅助PathPlanner):
+# 10 节点 (7种角色 + evidence_check + quality_gate + 1辅助PathPlanner) + triage 分级路由:
 #   全局协调(coordinator)、学情诊断(diagnostician)、任务规划(planner)、检索优化(retriever)、
 #   资源生成集群(generator_cluster: 7个并行子Agent)、评估反馈(assessor)、
 #   质量校验(critic)、证据校验(evidence_check)、产物验收闸门(quality_gate)、路径规划(path_planner)
@@ -27,6 +27,7 @@ from typing import Literal
 from langgraph.graph import StateGraph, END
 
 from agents.state import AgentState
+from agents.triage import triage_node
 from agents.coordinator import coordinator_node
 from agents.diagnostician import diagnostician_node
 from agents.planner import planner_node
@@ -95,6 +96,7 @@ def create_agent_graph() -> StateGraph:
     workflow = StateGraph(AgentState)
 
     # 添加节点（7种角色 + evidence_check + quality_gate + 1辅助PathPlanner = 10节点）
+    workflow.add_node("triage", triage_node)       # Triage 分级路由（三评审集成·增量一）
     workflow.add_node("coordinator", coordinator_node)       # 全局协调
     workflow.add_node("diagnostician", diagnostician_node)   # 学情诊断
     workflow.add_node("planner", planner_node)               # 任务规划
@@ -107,7 +109,10 @@ def create_agent_graph() -> StateGraph:
     workflow.add_node("path_planner", path_planner_node)     # 路径规划
 
     # 入口
-    workflow.set_entry_point("coordinator")
+    workflow.set_entry_point("triage")          # 入口先分级（低风险在 API 层短路，高风险进完整流水线）
+
+    # 边 — 分级 → 协调
+    workflow.add_edge("triage", "coordinator")
 
     # 边 — 主流程
     workflow.add_edge("coordinator", "diagnostician")

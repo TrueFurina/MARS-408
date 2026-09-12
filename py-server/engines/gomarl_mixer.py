@@ -346,6 +346,8 @@ class NeuralGroupMixer:
         # use_neural 只看配置；实际 torch/onnx 可用性在 _init_mixer 中延迟探测
         # （__init__ 在模块加载时执行，此时 _TORCH_AVAILABLE 必为 None，若在此判定会永远 False）
         self.use_neural = bool(config.get("use_neural_mixer", True))
+        # M3：MAPPO 教学策略层（权重来源灰度；默认关闭 → EWMA 规则，零影响）
+        self._use_mappo = bool(config.get("use_mappo_policy", False))
 
         # Agent 名称 → 索引映射
         self._agent_names = [
@@ -730,6 +732,22 @@ class NeuralGroupMixer:
         total = sum(weights.values())
         if total > 0:
             weights = {k: v / total * len(weights) for k, v in weights.items()}
+
+        # M3：MAPPO 教学策略权重调整（flag 灰度；未开启 / 未训练 → 零影响）
+        if self._use_mappo:
+            try:
+                from engines.mappo_policy import mappo_policy
+                adjust = mappo_policy.agent_weight_adjust(student_profile or {})
+                changed = {k: v for k, v in adjust.items() if k in weights}
+                if changed:
+                    for k, v in changed.items():
+                        weights[k] *= v
+                    total = sum(weights.values())
+                    if total > 0:
+                        weights = {k: v / total * len(weights) for k, v in weights.items()}
+                    logger.info(f"MAPPO 权重调整已应用: {changed}")
+            except Exception as e:
+                logger.warning(f"MAPPO 权重调整失败，保持规则权重: {e}")
 
         return weights
 
