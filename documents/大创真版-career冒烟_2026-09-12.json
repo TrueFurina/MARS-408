@@ -1,0 +1,25 @@
+{
+  "date": "2026-09-12",
+  "script": "_smoke_career_llm.py",
+  "checks": {
+    "scenario_started": true,
+    "script_has_probe_plan": true,
+    "evidence_collected": true,
+    "next_question_returned": true
+  },
+  "scenario_title": "需求评审会：产品经理临时加需求且工期不变",
+  "script_gen": {
+    "probe_plan": 6,
+    "success_signals": 4,
+    "llm_generated": true
+  },
+  "turn1": {
+    "status": "ongoing",
+    "mode": "normal",
+    "evidence_hits": 3,
+    "template_suspect": false,
+    "density": 0.95,
+    "next_question": "既然说能出排期表，那现在就凭经验把每天的开发量和产出列出来，别光说三周，给我个精确到天的说法，要不老板没法拍板。"
+  },
+  "passed": true
+}
