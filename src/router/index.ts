@@ -71,9 +71,10 @@ const router = createRouter({
       component: () => import('@/views/PracticeView.vue'),
     },
     {
+      // P3 归并：答题记录并入「错题本」页内 Tab（?tab=history），老 URL 经 redirect 保持可用
       path: '/quiz-history',
       name: 'quiz-history',
-      component: () => import('@/views/QuizHistoryView.vue'),
+      redirect: { path: '/wrong-questions', query: { tab: 'history' } },
     },
     {
       path: '/profile/build',
@@ -133,9 +134,10 @@ const router = createRouter({
       component: () => import('@/views/CareerTrainingView.vue'),
     },
     {
+      // P3 归并：错题复盘并入「错题本」页内 Tab（?tab=review），老 URL 经 redirect 保持可用
       path: '/review',
       name: 'review',
-      component: () => import('@/views/ReviewView.vue'),
+      redirect: { path: '/wrong-questions', query: { tab: 'review' } },
     },
     {
       path: '/benchmark',
@@ -189,14 +191,16 @@ const router = createRouter({
       component: () => import('@/views/CreatorDashboardView.vue'),
     },
     {
+      // P3 归并：从文本构建并入「知识图谱」页内 Tab（?tab=build），老 URL 经 redirect 保持可用
       path: '/knowledge-graph',
       name: 'knowledge-graph',
-      component: () => import('@/views/KnowledgeGraphView.vue'),
+      redirect: { path: '/knowledge', query: { tab: 'build' } },
     },
     {
+      // P3 归并：按科目浏览并入「知识图谱」页内 Tab（?tab=course），老 URL 经 redirect 保持可用
       path: '/course-explorer',
       name: 'course-explorer',
-      component: () => import('@/views/CourseExplorerView.vue'),
+      redirect: { path: '/knowledge', query: { tab: 'course' } },
     },
     {
       path: '/knowledge-base',

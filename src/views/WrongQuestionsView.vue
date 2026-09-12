@@ -1,6 +1,9 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { api, friendlyError } from '@/utils/api'
+import ReviewView from '@/views/ReviewView.vue'
+import QuizHistoryView from '@/views/QuizHistoryView.vue'
 
 interface WrongQuestion {
   id: number
@@ -57,7 +60,15 @@ const page = ref(1)
 const pageSize = 20
 const filterSubject = ref('')
 const filterMastered = ref<'' | 'true' | 'false'>('')
-const activeTab = ref<'list' | 'stats'>('list')
+const activeTab = ref<'list' | 'stats' | 'review' | 'history'>('list')
+const route = useRoute()
+const WQ_TAB_VALUES = ['list', 'stats', 'review', 'history'] as const
+function syncTabFromRoute() {
+  const t = route.query.tab
+  if (typeof t === 'string' && (WQ_TAB_VALUES as readonly string[]).includes(t)) {
+    activeTab.value = t as typeof activeTab.value
+  }
+}
 
 const subjectOptions = computed(() => {
   if (!stats.value) return []
@@ -165,14 +176,16 @@ function changePage(p: number) {
 }
 
 onMounted(() => {
+  syncTabFromRoute()
   loadStats()
   loadList()
 })
+watch(() => route.query.tab, syncTabFromRoute)
 </script>
 
 <template>
   <div class="page-section">
-    <div class="section-title">📕 错题本</div>
+    <div class="section-title"> 错题本</div>
     <div class="section-desc">自动收录答错的题目，按科目和知识点分类，支持标记掌握</div>
 
     <!-- 统计概览条 -->
@@ -197,8 +210,8 @@ onMounted(() => {
 
     <!-- Tab -->
     <div class="tab-bar">
-      <button class="tab-btn" :class="{ active: activeTab === 'list' }" @click="activeTab = 'list'">📋 错题列表</button>
-      <button class="tab-btn" :class="{ active: activeTab === 'stats' }" @click="activeTab = 'stats'">📊 统计分析</button>
+      <button class="tab-btn" :class="{ active: activeTab === 'list' }" @click="activeTab = 'list'"> 错题列表</button>
+      <button class="tab-btn" :class="{ active: activeTab === 'stats' }" @click="activeTab = 'stats'"> 统计分析</button>
     </div>
 
     <!-- 列表视图 -->
@@ -219,12 +232,12 @@ onMounted(() => {
 
       <div v-if="loading" class="empty-state"><div class="empty-title">加载中...</div></div>
       <div v-else-if="error" class="empty-state">
-        <div class="empty-title">⚠️ 加载失败</div>
+        <div class="empty-title"> 加载失败</div>
         <div class="empty-desc">{{ error }}</div>
         <button class="engine-btn" @click="loadList">重新加载</button>
       </div>
       <div v-else-if="questions.length === 0" class="empty-state">
-        <div class="empty-title">🎉 暂无错题</div>
+        <div class="empty-title"> 暂无错题</div>
         <div class="empty-desc">继续练习，答错的题目会自动收录到这里</div>
       </div>
       <div v-else class="question-list">
@@ -233,8 +246,8 @@ onMounted(() => {
             <span class="q-subject">{{ subjectName(q.subject) }}</span>
             <span v-if="q.chapter" class="q-chapter">{{ q.chapter }}</span>
             <span class="q-count" v-if="q.wrong_count > 1">×{{ q.wrong_count }}</span>
-            <span v-if="q.mastered" class="q-badge mastered-badge">✅ 已掌握</span>
-            <span v-else class="q-badge unmastered-badge">❌ 未掌握</span>
+            <span v-if="q.mastered" class="q-badge mastered-badge"> 已掌握</span>
+            <span v-else class="q-badge unmastered-badge"> 未掌握</span>
           </div>
           <div class="q-text" v-html="getQuestionText(q)"></div>
           <div v-if="getQuestionOptions(q).length" class="q-options">
@@ -273,7 +286,7 @@ onMounted(() => {
       <div v-if="!stats" class="empty-state">暂无统计数据</div>
       <div v-else>
         <div class="stats-section">
-          <div class="stats-section-title">📚 科目分布</div>
+          <div class="stats-section-title"> 科目分布</div>
           <div class="bar-list">
             <div v-for="s in stats.subject_distribution" :key="s.subject" class="bar-item">
               <div class="bar-label">{{ subjectName(s.subject) }}</div>
@@ -287,7 +300,7 @@ onMounted(() => {
         </div>
 
         <div class="stats-section">
-          <div class="stats-section-title">⚠️ 错误类型分布</div>
+          <div class="stats-section-title"> 错误类型分布</div>
           <div class="tag-list">
             <div v-for="e in stats.error_type_distribution" :key="e.type" class="tag-item">
               <span class="tag-name">{{ errorTypeName(e.type) }}</span>
@@ -296,6 +309,16 @@ onMounted(() => {
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- 归并页：错题复盘（原 /review，经 router redirect 可达） -->
+    <div v-if="activeTab === 'review'">
+      <ReviewView />
+    </div>
+
+    <!-- 归并页：答题记录（原 /quiz-history，经 router redirect 可达） -->
+    <div v-if="activeTab === 'history'">
+      <QuizHistoryView />
     </div>
   </div>
 </template>

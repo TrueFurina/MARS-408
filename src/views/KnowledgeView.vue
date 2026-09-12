@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useStudyStore } from '@/stores/studyStore'
 import { icons } from '@/components/icons'
 import EmptyState from '@/components/EmptyState.vue'
 import ForceGraph from '@/components/ForceGraph.vue'
+import CourseExplorerView from '@/views/CourseExplorerView.vue'
+import KnowledgeGraphView from '@/views/KnowledgeGraphView.vue'
 import { api } from '@/utils/api'
 
 interface GraphNode {
@@ -30,6 +33,23 @@ const nodes = ref<GraphNode[]>([])
 const edges = ref<GraphEdge[]>([])
 const loading = ref(true)
 const error = ref('')
+
+// P3 归并：知识图谱页内 Tab（关系图谱 / 按科目浏览 / 从文本构建）
+// 用 string 类型避免 vue-tsc 在模板 v-if 间错误收窄字面量联合类型；取值前已用 KG_TAB_VALUES 校验
+const activeTab = ref<string>('graph')
+const route = useRoute()
+const KG_TAB_VALUES = ['graph', 'course', 'build'] as const
+function syncTabFromRoute() {
+  const t = route.query.tab
+  if (typeof t === 'string' && (KG_TAB_VALUES as readonly string[]).includes(t)) {
+    activeTab.value = t
+  }
+}
+
+// 用 computed 布尔量驱动模板 v-if/高亮，规避 vue-tsc 在模板 v-if 间的字面量类型收窄泄漏
+const isGraph = computed(() => activeTab.value === 'graph')
+const isCourse = computed(() => activeTab.value === 'course')
+const isBuild = computed(() => activeTab.value === 'build')
 
 const SUBJECT_TOKENS: string[] = [
   '--subject-cn',  // 计网 — 蓝
@@ -142,6 +162,8 @@ function zoomOut() { forceGraphRef.value?.zoomOut() }
 function resetZoom() { forceGraphRef.value?.resetZoom() }
 
 onMounted(async () => {
+  syncTabFromRoute()
+  watch(() => route.query.tab, syncTabFromRoute)
   await loadData()
   loadMemoryOverview()
 })
@@ -167,9 +189,18 @@ watch(currentSubject, () => {
     <div class="section-title">知识图谱</div>
     <div class="section-desc">408考研四科知识点之间的关联关系可视化</div>
 
+    <!-- P3 归并：知识图谱页内 Tab（关系图谱 / 按科目浏览 / 从文本构建） -->
+    <div class="tab-bar kg-tab-bar">
+      <button class="tab-btn" :class="{ active: isGraph }" @click="activeTab = 'graph'"> 关系图谱</button>
+      <button class="tab-btn" :class="{ active: isCourse }" @click="activeTab = 'course'"> 按科目浏览</button>
+      <button class="tab-btn" :class="{ active: isBuild }" @click="activeTab = 'build'"> 从文本构建</button>
+    </div>
+
+    <!-- 关系图谱（默认） -->
+    <div v-if="isGraph">
     <!-- L1/L2/L3 三层学情记忆薄弱点提示（低侵入联动） -->
     <div v-if="memoryOverview?.weak_points?.length" class="memory-mini-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-size:12px;">
-      <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);">🧠 记忆薄弱点:</span>
+      <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);"> 记忆薄弱点:</span>
       <span v-for="w in memoryOverview.weak_points.slice(0, 6)" :key="w" style="padding:3px 10px;border-radius:12px;background:rgba(239,68,68,0.12);color:var(--accent-danger);">{{ w }}</span>
     </div>
 
@@ -224,6 +255,17 @@ watch(currentSubject, () => {
         :group-to-label="groupToLabel"
         @group-click="onGroupClick"
       />
+    </div>
+    </div>
+
+    <!-- 按科目浏览（P3 归并：从 /knowledge?tab=course 进入） -->
+    <div v-if="isCourse">
+      <CourseExplorerView />
+    </div>
+
+    <!-- 从文本构建（P3 归并：从 /knowledge?tab=build 进入） -->
+    <div v-if="isBuild">
+      <KnowledgeGraphView />
     </div>
   </div>
 </template>
@@ -280,6 +322,15 @@ watch(currentSubject, () => {
   width: 100%;
   height: 100%;
 }
+
+/* ── P3 归并：知识图谱页内 Tab 栏 ── */
+.kg-tab-bar { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid var(--glass-border); }
+.kg-tab-bar .tab-btn {
+  padding: 8px 18px; background: transparent; border: none; cursor: pointer;
+  font-size: 14px; color: var(--text-muted); border-bottom: 2px solid transparent;
+  transition: var(--transition);
+}
+.kg-tab-bar .tab-btn.active { color: var(--accent-primary); border-bottom-color: var(--accent-primary); font-weight: 600; }
 
 /* ── 多角色2：移动端响应式适配 ── */
 @media (max-width: 768px) {
