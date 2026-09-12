@@ -1,350 +1,857 @@
-/* ============================================
- * MARS-408 — 设计系统变量 · 语义化双主题
- * 风格：克制深色 · 玻璃态 · 学科分色 · 微交互
- * 参考：Linear/Stripe 仪表盘美学，去 AI 感
- * ============================================ */
+/* ============================================================================
+ * MARS-408 — 设计令牌 · 单一真相源 (SSOT)
+ * 版本：v10 「砚 · Ink & Clay」
+ * ----------------------------------------------------------------------------
+ * 【设计哲学】
+ *   1. 阅读优先：这是单次 1–3 小时的高强度学习工具，正文字色用 #E6E9ED 而非纯白，
+ *      画布用蓝灰而非纯黑，一切以降低长时间阅读的眩光与疲劳为先。
+ *   2. 信息密度优先：考研工具要一眼看到进度与薄弱点。表面只做极轻的明度分层
+ *      （canvas → surface-1 → surface-2 → surface-3），靠间距与字重分组，不靠装饰。
+ *   3. 克制用色：全站只有 1 个强调色（陶土 Clay）。四科分色是"数据色"不是"装饰色"，
+ *      只出现在学科标签、图表与掌握度上。语义色（成功/警告/危险/信息）只表达状态。
+ *   4. 零霓虹：删除所有彩色发光（glow）令牌，改用中性投影 + 1px 描边表达高度。
+ *   5. 动效只动 GPU：所有过渡只允许 transform / opacity / filter / clip-path
+ *      以及色彩类属性（background-color / border-color / color / box-shadow）；
+ *      严禁过渡 width / height / top / left / margin / padding / font-size。
+ *
+ * 【主题切换方式】
+ *   由 src/App.vue 的 applyTheme() 写入：document.documentElement.dataset.theme
+ *   → 'dark' | 'light'，并持久化到 localStorage['mars408-theme']。
+ *   - 默认（无 data-theme 属性 或 data-theme="dark"）→ 深色主题（下面第 2 节）
+ *   - data-theme="light" → 浅色主题（下面第 3 节）
+ *   组件**只引用语义层**（--color-* / --subject-*），绝不在组件里写死颜色。
+ *   旧别名（--bg-* / --text-* / --glass-* / --border-* / --accent*）全部
+ *   用 var() 指向语义层，因此改主题时自动跟随，无需改动 72 个组件。
+ *
+ * 【主色选择理由】为什么是陶土 Clay #CE8256（HSL 22 / 55% / 57%）
+ *   - 反 AI 紫：旧主色 #7c6af2（HSL 249/79%/68%）正是被明令禁止的"AI 紫"。
+ *     新主色落在暖橙陶土区（H≈22°），与紫/蓝彻底脱钩。
+ *   - 饱和度 55% < 80%：满足"主色饱和度 < 80%"的硬约束，长时间注视不刺眼。
+ *   - 色相位置是唯一解：四科已占用 258°(DS 紫) / 215°(计网 蓝) / 189°(计组 青) /
+ *     334°(OS 粉)，语义色占用 139°(成功绿) / 38°(警告琥珀) / 5°(危险红) / 209°(信息蓝)。
+ *     色轮上唯一宽敞的空隙在 0°~38° 之间，取中点 ≈22°，与最近邻（危险红 5°、
+ *     警告琥珀 38°）各留 17°~19° 间隔，再靠饱和度差（55% vs 68%/70%）与用法差异
+ *     （强调色用于控件，语义色用于带文案的状态角标）二次区隔。
+ *   - 情绪匹配：品牌关键词是"专业 · 克制 · 陪伴"。冷蓝灰画布 + 暖陶土强调色＝
+ *     深夜台灯下的一支红笔，是"陪伴"而非"冷冰冰的工具感"，也贴合考研赛道
+ *     （研途 / 墨墨等）的暖色约定。
+ *   - 可读性已验证：深色下对画布 6.22:1、对卡片 5.79:1；浅色下 #9E5A30 对白 5.30:1，
+ *     均过 WCAG AA（≥4.5:1）。
+ * ========================================================================== */
 
-/* 分层：--color- 为语义层（组件只引用此层）；--bg- / --text- / --glass- / --border- 为兼容别名，自动跟随语义层。 */
+
+/* ============================================================================
+ * 1. 主题无关原语（Primitives）— 不随主题变化
+ *    排版 / 间距 / 圆角 / 高度 / 动效 / z-index / 尺寸
+ * ========================================================================== */
 :root {
-  /* ── 语义层：画布与表面 ── */
-  --color-canvas:        #080812;
-  --color-surface:       rgba(255,255,255,0.03);
-  --color-surface-2:     #0f0f1a;
-  --color-surface-hover:  rgba(255,255,255,0.06);
-  --color-elevated:      #1c1c2b;
-  --color-overlay:        rgba(0,0,0,0.55);
+  /* ── 1.1 字体族 ──
+     禁用 Inter。首选现代无衬线（未安装则逐级回退），仪表盘一律无衬线、禁用衬线体。 */
+  --font-sans: 'Geist', 'Outfit', 'Satoshi', 'Space Grotesk',
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  --font-display: var(--font-sans);            /* 标题字（与正文字同族，仅靠字重/字号区分）*/
+  --font-mono: 'Geist Mono', 'SF Mono', 'JetBrains Mono', 'Fira Code',
+    'Consolas', 'Cascadia Code', monospace;
+  --font-numeric: tabular-nums;                /* 时长/分数等数字用等宽数字，便于纵向对齐 */
 
-  /* ── 语义层：玻璃态 ── */
-  --color-glass:          rgba(15,15,26,0.65);
-  --color-glass-hover:    rgba(15,15,26,0.80);
-  --color-glass-border:   rgba(255,255,255,0.08);
-  --glass-blur:           12px;
-  --glass-blur-heavy:     20px;
+  /* ── 1.2 字号阶梯（1.15–1.22 比值，正文基准 14px）── */
+  --text-2xs:  0.6875rem;  /* 11px 角标/徽章 */
+  --text-xs:   0.75rem;    /* 12px 辅助说明 */
+  --text-sm:   0.8125rem;  /* 13px 次要正文 */
+  --text-base: 0.875rem;   /* 14px 正文基准 */
+  --text-md:   0.9375rem;  /* 15px 强调正文 */
+  --text-lg:   1rem;       /* 16px 小标题 */
+  --text-xl:   1.125rem;   /* 18px 卡片标题 */
+  --text-2xl:  1.25rem;    /* 20px 区块标题 */
+  --text-3xl:  1.5rem;     /* 24px 页面标题 */
+  --text-4xl:  1.875rem;   /* 30px KPI 数值 */
+  --text-5xl:  2.25rem;    /* 36px Hero */
+  --text-6xl:  2.75rem;    /* 44px 大屏 Hero */
 
-  /* ── 语义层：边框 ── */
-  --color-border:         rgba(255,255,255,0.06);
-  --color-border-light:   rgba(255,255,255,0.04);
-  --color-border-focus:   rgba(124,106,242,0.45);
-  --color-border-glow:    rgba(124,106,242,0.25);
+  /* ── 1.3 行高 ── */
+  --leading-none:    1;
+  --leading-tight:   1.2;    /* 大标题 */
+  --leading-snug:    1.35;   /* 小标题 */
+  --leading-normal:  1.55;   /* 正文（长文阅读）*/
+  --leading-relaxed: 1.7;    /* 讲解/长段落 */
 
-  /* ── 语义层：文本 ── */
-  --color-text:           #f8fafc;
-  --color-text-2:         #94a3b8;
-  --color-text-3:         #7c8aa0;
-  --color-text-invert:    #0f0f1a;
+  /* ── 1.4 字重 ── */
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
 
-  /* ── 兼容别名（自动跟随语义层） ── */
-  --bg-primary:    var(--color-canvas);
-  --bg-secondary:  var(--color-surface-2);
-  --bg-tertiary:   var(--color-elevated);
-  --bg-elevated:   var(--color-elevated);
-  --bg-card:       var(--color-surface);
-  --bg-card-hover:  var(--color-surface-hover);
-  --bg-input:      rgba(255,255,255,0.05);
-  --bg-overlay:    var(--color-overlay);
-  --glass-bg:        var(--color-glass);
-  --glass-bg-hover:  var(--color-glass-hover);
-  --glass-border:    var(--color-glass-border);
-  --border-color:    var(--color-border);
-  --border-light:    var(--color-border-light);
-  --border-focus:    var(--color-border-focus);
-  --border-glow:     var(--color-border-glow);
-  --text-primary:    var(--color-text);
-  --text-secondary:  var(--color-text-2);
-  --text-muted:      var(--color-text-3);
-  --text-inverse:    var(--color-text-invert);
-  --text-user:       #ffffff;
+  /* ── 1.5 字间距 ── */
+  --tracking-tighter: -0.022em;  /* 大标题收紧 */
+  --tracking-tight:   -0.011em;
+  --tracking-normal:  0;
+  --tracking-wide:    0.03em;
+  --tracking-caps:    0.08em;    /* 全大写 overline */
 
-  /* ── 品牌色（双主题恒定） ── */
-  --accent:           #7c6af2;
-  --accent-dark:      #6b5cdb;
-  --accent-blue:      #5b8bd8;
-  --accent-cyan:      #06b6d4;
-  --accent-warm:      #f59e0b;
-  --accent-success:   #22c55e;
-  --accent-danger:    #ef4444;
-  --accent-pink:      #f472b6;
-  --accent-primary:        var(--accent);
-  --accent-primary-dark:   var(--accent-dark);
-  --accent-secondary:      var(--accent-blue);
-  --accent-tertiary:       var(--accent-cyan);
---accent-primary-10:  rgba(124,106,242,0.10);
-  --accent-primary-15:  rgba(124,106,242,0.15);
-  --accent-primary-20:  rgba(124,106,242,0.20);
-  --accent-primary-30:  rgba(124,106,242,0.30);
-  --accent-danger-10:   rgba(239,68,68,0.10);
-  --accent-danger-20:   rgba(239,68,68,0.20);
-  --accent-success-10:  rgba(34,197,94,0.10);
-  --accent-success-20:  rgba(34,197,94,0.20);
-  --text-danger:         #fca5a5;
+  /* ── 1.6 间距刻度 ──
+     约定：--space-N == N × 4px（自解释，无需查表）。基准 4px。
+     组件只允许使用本刻度，禁止出现 5px / 13px / 18px 这类随意间距。 */
+  --space-0:  0;
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-7:  28px;
+  --space-8:  32px;
+  --space-9:  36px;
+  --space-10: 40px;
+  --space-11: 44px;
+  --space-12: 48px;
+  --space-14: 56px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+  --space-32: 128px;
 
-  /* ── 408 四科色（恒定） ── */
-  --subject-ds: #8b5cf6;
-  --subject-cn: #3b82f6;
-  --subject-co: #06b6d4;
-  --subject-os: #f472b6;
-
-  /* ── 发光效果 ── */
-  --glow-primary:        0 0 20px rgba(124,106,242,0.15), 0 0 40px rgba(124,106,242,0.08);
-  --glow-primary-strong: 0 0 20px rgba(124,106,242,0.25), 0 0 60px rgba(124,106,242,0.12);
-  --glow-secondary:      0 0 20px rgba(91,139,216,0.15), 0 0 40px rgba(91,139,216,0.08);
-  --glow-success:        0 0 20px rgba(34,197,94,0.15);
-
-  /* ── 渐变 ── */
-  --gradient-primary: linear-gradient(135deg, #7c6af2 0%, #5b8bd8 100%);
-  --gradient-card:    linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
-  --gradient-text:     linear-gradient(135deg, #f8fafc 0%, #a5b4fc 100%);
-  --gradient-hero: radial-gradient(ellipse 600px 400px at 30% 30%, rgba(124,106,242,0.10) 0%, transparent 70%),
-                   radial-gradient(ellipse 500px 300px at 70% 60%, rgba(91,139,216,0.08) 0%, transparent 70%);
-  --gradient-sidebar: linear-gradient(180deg, rgba(124,106,242,0.03) 0%, transparent 40%);
-  --gradient-border:  linear-gradient(135deg, rgba(124,106,242,0.20), rgba(91,139,216,0.15), rgba(6,182,212,0.10));
-  --gradient-progress: linear-gradient(90deg, #7c6af2, #5b8bd8, #06b6d4);
-  --gradient-warm:    linear-gradient(135deg, #f59e0b 0%, #f472b6 100%);
-
-  /* ── 阴影（克制深色抬升 + 彩色发光） ── */
-  --shadow-sm:   0 1px 2px rgba(0,0,0,0.30);
-  --shadow-md:   0 4px 12px rgba(0,0,0,0.35);
-  --shadow-lg:   0 8px 24px rgba(0,0,0,0.40);
-  --shadow-xl:   0 16px 40px rgba(0,0,0,0.45);
-  --shadow-card:         0 2px 8px rgba(0,0,0,0.25), 0 0 1px rgba(255,255,255,0.06);
-  --shadow-card-hover:   0 8px 24px rgba(0,0,0,0.35), 0 0 20px rgba(124,106,242,0.08);
-  --shadow-glow:        0 4px 16px rgba(124,106,242,0.12);
-
-  /* ── 圆角 ── */
-  --radius-xs: 6px;
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 18px;
-  --radius-xl: 24px;
+  /* ── 1.7 圆角刻度（沿用 v7 数值，避免既有布局跳动）── */
+  --radius-none: 0;
+  --radius-2xs:  4px;
+  --radius-xs:   6px;
+  --radius-sm:   10px;
+  --radius-md:   14px;
+  --radius-lg:   18px;
+  --radius-xl:   24px;
+  --radius-2xl:  32px;
   --radius-full: 9999px;
 
-  /* ── 尺寸 ── */
-  --topbar-height: 64px;
-  --sidebar-width: 220px;
+  /* ── 1.8 动效：全局开关 ──
+     --motion-scale 是唯一的动效总闸：1 = 正常，0 = 关闭（reduced-motion），
+     0.7 = 触屏降级。所有时长都是 calc(基准 × --motion-scale)，一处改动全站生效。 */
+  --motion-scale: 1;
+
+  /* 时长（层级：micro 微反馈 / transition 常规 / emphasis 强调） */
+  --duration-instant: calc(80ms  * var(--motion-scale));   /* 按压反馈 */
+  --duration-fast:    calc(140ms * var(--motion-scale));   /* micro：hover、焦点 */
+  --duration-normal:  calc(220ms * var(--motion-scale));   /* transition：入场、展开 */
+  --duration-slow:    calc(340ms * var(--motion-scale));   /* emphasis：抽屉、转场 */
+  --duration-slower:  calc(520ms * var(--motion-scale));   /* 页面级转场 */
+  --duration-enter:   calc(400ms * var(--motion-scale));   /* 兼容旧 --duration-enter */
+
+  /* 缓动曲线 */
+  --ease-linear:     linear;
+  --ease-standard:   cubic-bezier(0.2, 0, 0, 1);           /* 通用：起步快、收尾稳 */
+  --ease-out:        cubic-bezier(0.16, 1, 0.3, 1);        /* 入场：快速进入后缓停 */
+  --ease-in:         cubic-bezier(0.4, 0, 1, 1);           /* 退场：缓慢起步后加速 */
+  --ease-emphasized: cubic-bezier(0.05, 0.7, 0.1, 1);      /* 强调：转场/抽屉 */
+  --ease-spring:     cubic-bezier(0.34, 1.42, 0.64, 1);    /* 轻微回弹（仅用于 transform）*/
+
+  /* 动效位移/缩放基准值 */
+  --distance-enter:    8px;    /* 入场位移：小元素 */
+  --distance-enter-lg: 16px;   /* 入场位移：卡片/区块 */
+  --scale-press:       0.97;   /* 按压（tap 触觉反馈）*/
+  --scale-hover:       1.02;   /* 悬浮放大 */
+  --rotate-none:       0deg;
+
+  /* 组合令牌：动效三层级（建议新代码直接用这三个） */
+  --motion-micro:     transform var(--duration-fast) var(--ease-standard),
+                      opacity   var(--duration-fast) var(--ease-standard);
+  --motion-transition: transform var(--duration-normal) var(--ease-out),
+                      opacity   var(--duration-normal) var(--ease-out);
+  --motion-emphasis:  transform var(--duration-slow) var(--ease-emphasized),
+                      opacity   var(--duration-normal) var(--ease-out);
+  --motion-gpu:       transform var(--duration-normal) var(--ease-out),
+                      opacity   var(--duration-normal) var(--ease-out),
+                      filter    var(--duration-normal) var(--ease-out);
+  --motion-colors:    background-color var(--duration-fast) var(--ease-standard),
+                      border-color     var(--duration-fast) var(--ease-standard),
+                      color            var(--duration-fast) var(--ease-standard);
+
+  /* ── 1.9 兼容旧 transition 令牌 ──
+     旧值 `all 0.2s ...` 会连 width/height/top/left/margin/padding 一起过渡，
+     违反"只动 GPU 属性"约束，故改为显式安全属性清单。
+     ⚠ 影响：依赖 transition:all 做宽高动画的元素（如进度条）将不再补间，
+     需改用 transform: scaleX()/scaleY()（见 deliverables/gstack/design-system-motion-*.md）。 */
+  --transition: transform var(--duration-fast) var(--ease-standard),
+                opacity var(--duration-fast) var(--ease-standard),
+                background-color var(--duration-fast) var(--ease-standard),
+                border-color var(--duration-fast) var(--ease-standard),
+                color var(--duration-fast) var(--ease-standard),
+                box-shadow var(--duration-fast) var(--ease-standard);
+  --transition-slow: transform var(--duration-slow) var(--ease-standard),
+                opacity var(--duration-slow) var(--ease-standard),
+                background-color var(--duration-slow) var(--ease-standard),
+                border-color var(--duration-slow) var(--ease-standard),
+                color var(--duration-slow) var(--ease-standard),
+                box-shadow var(--duration-slow) var(--ease-standard);
+  --transition-bounce: transform var(--duration-slow) var(--ease-spring),
+                opacity var(--duration-normal) var(--ease-out),
+                background-color var(--duration-slow) var(--ease-spring),
+                border-color var(--duration-slow) var(--ease-spring),
+                color var(--duration-slow) var(--ease-spring),
+                box-shadow var(--duration-slow) var(--ease-spring);
+  --transition-fast:  var(--transition);
+  --transition-colors: background-color var(--duration-fast) var(--ease-standard),
+                border-color var(--duration-fast) var(--ease-standard),
+                color var(--duration-fast) var(--ease-standard);
+  --transition-transform: transform var(--duration-normal) var(--ease-out);
+  --transition-opacity:  opacity var(--duration-normal) var(--ease-out);
+
+  /* 兼容旧时长令牌（v9）*/
+  --stream-fade:  calc(200ms * var(--motion-scale));
+  --cursor-blink: 1.1s;
+
+  /* ── 1.10 层级 z-index 刻度 ── */
+  --z-base:     0;
+  --z-raised:   10;
+  --z-sticky:   100;   /* 吸顶栏 */
+  --z-dropdown: 200;   /* 下拉菜单 */
+  --z-overlay:  300;   /* 遮罩 */
+  --z-modal:    400;   /* 模态框（旧 --z-modal 保留同名同义）*/
+  --z-popover:  500;   /* 气泡/抽屉 */
+  --z-toast:    600;   /* 轻提示 */
+  --z-tooltip:  700;   /* 悬浮提示 */
+  --z-top:      1000;  /* 极端置顶（路由进度条等）*/
+
+  /* ── 1.11 布局尺寸 ── */
+  --topbar-height:     64px;
+  --sidebar-width:     220px;
   --sidebar-collapsed: 72px;
   --bottom-nav-height: 64px;
-  --chat-max-width: 900px;
+  --chat-max-width:    900px;
+  --content-max-width: 1280px;
 
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
-    'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-  --font-mono: 'SF Mono', 'Fira Code', 'Consolas', 'Cascadia Code', monospace;
+  /* ── 1.11a 响应式断点（语义令牌；具体媒体查询写在 _layout.css）──
+     取 4 档：手机 / 移动-桌面分界 / 平板 / 大屏。
+     注：768px 为「侧栏 ⇄ 顶栏+底栏」总开关；1024px 为「侧栏 ⇄ 图标栏」平板开关。 */
+  --bp-sm: 480px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
+  --bp-xl: 1280px;
 
-  --transition:       all 0.2s cubic-bezier(0.4,0,0.2,1);
-  --transition-slow:  all 0.35s cubic-bezier(0.4,0,0.2,1);
-  --transition-bounce: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
-  --duration-fast:   150ms;
-  --duration-normal:  300ms;
-  --duration-slow:    500ms;
-  --duration-enter:    600ms;
+  /* ── 1.12 组件局部变量的兜底默认值 ──
+     这些令牌由组件用 inline style 注入（如 :style="{'--pill-color': c.color}"），
+     此处仅提供兜底，避免组件未注入时取到无效值。 */
+  --card-accent:   var(--color-accent);
+  --card-gradient: none;
+  --course-color:  var(--color-accent);
+  --pill-color:    var(--color-accent);
+  --node-color:    var(--color-accent);
+  --subj-color:    var(--color-accent);
+  --step-accent:   var(--color-accent);
+}
 
-  /* ── 旧别名（v4→v7 过渡，勿新增引用） ── */
-  --accent-1: var(--accent-primary);
-  --accent-2: var(--accent-secondary);
-  --accent-3: var(--accent-tertiary);
-  --accent-4: var(--accent-pink);
-  --accent-5: var(--accent-success);
-  --accent-6: var(--accent-danger);
-  --accent-1-light: var(--accent-primary-10);
-  --accent-1-mid: var(--accent-primary-20);
-  --accent-1-dark: var(--accent-primary-dark);
-  --gradient-accent: var(--gradient-primary);
-  --bg-ai-msg: var(--bg-secondary);
 
-  /* ── v9 抛光令牌（流式/微交互/可达性） ── */
-  --cursor-color: var(--accent-primary);
-  --cursor-blink: 1.1s;
-  --thinking-bg: color-mix(in srgb, var(--accent-primary) 8%, var(--color-surface));
-  --stream-fade: 200ms;
-  --ease-standard: cubic-bezier(0.4,0,0.2,1);
-  --ease-out: cubic-bezier(0.16,1,0.3,1);
-  --ease-bounce: cubic-bezier(0.34,1.56,0.64,1);
-  --focus-ring: 0 0 0 3px var(--accent-primary-20);
-  --hover-glow-cap: var(--shadow-card-hover);
-  --text-success: var(--accent-success);
+/* ============================================================================
+ * 2. 深色主题（默认）— 语义层
+ *    :root 无 data-theme 属性时即深色；显式 data-theme="dark" 亦命中本块。
+ * ========================================================================== */
+:root,
+[data-theme="dark"] {
+  /* ── 2.1 画布与表面（明度递进：只靠亮度分层，不靠彩色）── */
+  --color-canvas:        #0E1217;   /* 蓝灰画布，非纯黑 */
+  --color-surface:       #151A20;   /* surface-1：卡片 */
+  --color-surface-2:     #1B2129;   /* surface-2：嵌套块 / 输入区 */
+  --color-surface-3:     #232A34;   /* surface-3：最高层（选中、代码区）*/
+  --color-surface-hover: #1D242C;   /* 卡片悬浮态 */
+  --color-elevated:      #1B2129;   /* 浮层：弹窗 / 菜单 / 下拉 */
+  --color-overlay:       rgba(6, 9, 13, 0.62);
 
-  /* ── MARS-408 可视化页 · 页面级令牌（VIZ/KG；deep 值，light 覆盖见下）── */
-  --agent-coord:    #7c6af2;
-  --agent-plan:     #c4b5fd;
-  --agent-diag:     #8b5cf6;
-  --agent-gen:      #3b82f6;
-  --agent-retrieve: #06b6d4;
-  --agent-eval:     #f472b6;
-  --agent-quality:  #ec4899;
-  --agent-path:     #a78bfa;   /* 路径规划输出节点（补充第 8 色）*/
-  --agent-evidence: #2dd4bf;   /* 证据校验 evidence_check（青绿）*/
-  --agent-gate:     #fbbf24;   /* 产物验收 quality_gate（琥珀）*/
+  /* ── 2.2 玻璃态（克制：仅顶栏 / 侧边抽屉 / 悬浮按钮使用）── */
+  --color-glass:        rgba(21, 26, 32, 0.72);
+  --color-glass-hover:  rgba(29, 36, 44, 0.86);
+  --color-glass-border: rgba(255, 255, 255, 0.09);
+  --glass-blur:         10px;
+  --glass-blur-heavy:   18px;
+  --glass-saturate:     115%;
 
-  --flow-data:      #60a5fa;
-  --flow-control:   #a78bfa;
-  --flow-consensus: #22d3ee;
+  /* ── 2.3 边框 ── */
+  --color-border:       rgba(255, 255, 255, 0.09);
+  --color-border-light: rgba(255, 255, 255, 0.05);
+  --color-border-strong:rgba(255, 255, 255, 0.16);
+  --color-border-focus: rgba(206, 130, 86, 0.55);
+  --color-border-glow:  rgba(206, 130, 86, 0.22);   /* 细描边，非发光 */
 
-  --nm-mix-from:    #a78bfa;
-  --nm-mix-to:      #22d3ee;
+  /* ── 2.4 文本层级 ── */
+  --color-text:          #E6E9ED;   /* 15.4:1  正文 */
+  --color-text-2:        #9AA4B0;   /*  7.4:1  次要 */
+  --color-text-3:        #79838F;   /*  4.9:1  弱化/时间戳 */
+  --color-text-disabled: #565F6B;   /*  2.9:1  禁用 */
+  --color-text-invert:   #0E1217;   /* 反色（用于浅底上的深色字）*/
+  --color-text-on-accent:#FFFFFF;   /* 强调色实底上的文字（配 --color-accent-solid）*/
 
-  --conflict-detected: #f87171;
-  --conflict-resolved: #4ade80;
+  /* ── 2.5 强调色（全站唯一色相，双色调）──
+     为什么必须拆成"墨色"与"实底色"两个调子：
+       作为**深色画布上的文字/图标**，需要亮度 L ≥ 0.205（对画布 4.5:1）；
+       作为**承载白字的实底按钮**，需要亮度 L ≤ 0.183（白字 4.5:1）。
+     两者无交集 —— 单一色值不可能同时满足，故拆成两调：
+       ① 墨色 ink（--color-accent）：文字、链接、图标、描边、焦点环
+       ② 实底 solid（--color-accent-solid）：按钮/头像/选中态实底，其上永远放白字
+     （浅色主题无此冲突：#9E5A30 同时满足两个条件，故 solid 直接指向 ink。）*/
+  --color-accent:        #CE8256;   /* ① 墨色 HSL 22/55/57 · 对画布 6.22:1 */
+  --color-accent-hover:  #D99168;   /*    墨色悬浮态 */
+  --color-accent-active: #B26E43;   /*    墨色按下态 */
+  --color-accent-text:   #E0A07A;   /*    深色底上的强调文字（比墨色更亮，长文更舒适）*/
 
-  --mastery-low:  #ef4444;
-  --mastery-mid:  #f59e0b;
-  --mastery-high: #22c55e;
-  --edge-prereq:  #7c6af2;
-  --edge-related: #475569;
-  --kg-node-base: 44px;
-  --urgent:       #ef4444;
-  --subject-data: var(--subject-ds);
-  --subject-net:  var(--subject-cn);
-  --subject-org:  var(--subject-co);
-  /* --subject-os 无需别名：它本身就是主题色令牌（见上方 #f472b6 定义）。
-     此处曾误写自引用 var(--subject-os)（CSS 循环定义，非法且污染 SSOT 漂移检测），已删除。 */
+  --color-accent-solid:        #9C5F35;  /* ② 实底 · 白字 5.12:1 · 对画布 3.67:1 */
+  --color-accent-solid-hover:  #A5663C;  /*    实底悬浮（更亮）· 白字 4.60:1 */
+  --color-accent-solid-active: #8A5230;  /*    实底按下（更暗）· 白字 6.1:1 */
 
-  /* ── 仪表盘扩展令牌（融合自 DESIGN_TOKENS_DASH.md）── */
-  /* 图表分类色板 */
+  --color-accent-subtle: rgba(206, 130, 86, 0.14);  /* 强调色淡底（选中态）*/
+  --color-accent-border: rgba(206, 130, 86, 0.35);
+  --accent-rgb:          206, 130, 86;              /* 供 rgba(var(--accent-rgb), α) 使用 */
+  --accent-solid-rgb:    156, 95, 53;
+
+  /* ── 2.6 语义色 ── */
+  --color-success:        #4FA96B;
+  --color-success-bg:     rgba(79, 169, 107, 0.14);
+  --color-success-border: rgba(79, 169, 107, 0.32);
+  --color-warning:        #DCA03C;
+  --color-warning-bg:     rgba(220, 160, 60, 0.14);
+  --color-warning-border: rgba(220, 160, 60, 0.32);
+  --color-danger:         #E0685E;
+  --color-danger-bg:      rgba(224, 104, 94, 0.14);
+  --color-danger-border:  rgba(224, 104, 94, 0.34);
+  --color-info:           #5E93C4;
+  --color-info-bg:        rgba(94, 147, 196, 0.14);
+  --color-info-border:    rgba(94, 147, 196, 0.32);
+  --success-rgb:          79, 169, 107;
+  --warning-rgb:          220, 160, 60;
+  --danger-rgb:           224, 104, 94;
+  --info-rgb:             94, 147, 196;
+
+  /* ── 2.7 408 四科分色（数据色）──
+     只用于学科标签、图表系列、知识图谱节点。饱和度较旧版下调，避免与强调色抢注意力。*/
+  --subject-ds:      #A98CDD;   /* 数据结构 · 紫  6.7:1 */
+  --subject-cn:      #6E9BD9;   /* 计算机网络 · 蓝 6.6:1 */
+  --subject-co:      #4FA9B8;   /* 计算机组成原理 · 青 6.9:1 */
+  --subject-os:      #DE85AC;   /* 操作系统 · 粉  7.2:1 */
+  --subject-ds-rgb:  169, 140, 221;
+  --subject-cn-rgb:  110, 155, 217;
+  --subject-co-rgb:   79, 169, 184;
+  --subject-os-rgb:  222, 133, 172;
+
+  /* ── 2.8 多智能体 / 流程可视化色（8 Agent + 3 流程 + 2 产物）── */
+  --agent-coord:    #CE8256;   /* 协调 = 品牌强调色 */
+  --agent-plan:     #C9A45E;   /* 规划 = 金 */
+  --agent-diag:     #A98CDD;   /* 诊断 = 紫 */
+  --agent-gen:      #6E9BD9;   /* 生成 = 蓝 */
+  --agent-retrieve: #4FA9B8;   /* 检索 = 青 */
+  --agent-eval:     #DE85AC;   /* 评估 = 粉 */
+  --agent-quality:  #7FA98C;   /* 质检 = 苔绿 */
+  --agent-path:     #9A93B8;   /* 路径 = 灰紫（低饱和，区别于诊断紫）*/
+  --agent-evidence: #5AA396;   /* 证据校验 = 青绿 */
+  --agent-gate:     #DCA03C;   /* 产物验收 = 琥珀 */
+
+  --flow-data:      #6E9BD9;
+  --flow-control:   #A98CDD;
+  --flow-consensus: #4FA9B8;
+
+  --nm-mix-from: #A98CDD;
+  --nm-mix-to:   #4FA9B8;
+
+  /* ── 2.9 状态 / 掌握度 / 图谱 ── */
+  --conflict-detected: #E0685E;
+  --conflict-resolved: #4FA96B;
+  --mastery-low:       #E0685E;
+  --mastery-mid:       #DCA03C;
+  --mastery-high:      #4FA96B;
+  --mastery-none:      #4B545F;
+  --edge-prereq:       #A98CDD;   /* 前驱关系边 */
+  --edge-related:      #4B545F;   /* 相关关系边 */
+  --kg-node-base:      44px;
+  --urgent:            #E0685E;
+
+  /* ── 2.10 图表 ── */
   --series-1: var(--subject-ds);
   --series-2: var(--subject-cn);
   --series-3: var(--subject-co);
   --series-4: var(--subject-os);
-  --series-5: #a78bfa;
-  --series-6: #5b8bd8;
+  --series-5: #7FA98C;
+  --series-6: #C9A45E;
 
-  /* 连续数值色阶（紫系深浅，热力图用） */
-  --seq-1: rgba(124,106,242,0.10);
-  --seq-2: rgba(124,106,242,0.24);
-  --seq-3: rgba(124,106,242,0.40);
-  --seq-4: rgba(124,106,242,0.58);
-  --seq-5: rgba(124,106,242,0.76);
-  --seq-6: #c4b5fd;
+  --seq-1: rgba(var(--accent-rgb), 0.10);   /* 连续色阶（热力图）*/
+  --seq-2: rgba(var(--accent-rgb), 0.22);
+  --seq-3: rgba(var(--accent-rgb), 0.38);
+  --seq-4: rgba(var(--accent-rgb), 0.55);
+  --seq-5: rgba(var(--accent-rgb), 0.72);
+  --seq-6: var(--color-accent);
 
-  /* 三态状态色 + 薄弱专属 */
-  --state-success: #22c55e;
-  --state-warning: #f59e0b;
-  --state-danger:  #ef4444;
-  --state-weak:    #a78bfa;
+  --state-success: var(--color-success);
+  --state-warning: var(--color-warning);
+  --state-danger:  var(--color-danger);
+  --state-weak:    var(--subject-ds);       /* 薄弱知识点标记 */
 
-  /* 图表网格/轴 */
-  --chart-grid:        rgba(255,255,255,0.06);
-  --chart-grid-strong: rgba(255,255,255,0.10);
-  --chart-axis:        rgba(255,255,255,0.12);
-  --chart-tick:        #7c8aa0;
+  --chart-grid:        rgba(255, 255, 255, 0.06);
+  --chart-grid-strong: rgba(255, 255, 255, 0.10);
+  --chart-axis:        rgba(255, 255, 255, 0.14);
+  --chart-tick:        #79838F;
 
-  /* KPI 卡 */
   --kpi-value-size:   32px;
   --kpi-value-weight: 700;
-  --kpi-value-glow:   0 0 18px rgba(124,106,242,0.20);
+  --kpi-value-glow:   0 1px 2px rgba(0, 0, 0, 0.28);   /* 已去除彩色光晕 */
   --kpi-label-color:  var(--color-text-2);
-  --kpi-trend-up:     var(--state-success);
-  --kpi-trend-down:   var(--state-danger);
+  --kpi-trend-up:     var(--color-success);
+  --kpi-trend-down:   var(--color-danger);
   --kpi-trend-flat:   var(--color-text-2);
 
-  /* 角标（示意/真实） */
-  --tag-demo-bg:    rgba(148,163,184,0.14);
-  --tag-demo-color: #cbd5e1;
-  --tag-live-bg:    rgba(34,197,94,0.14);
-  --tag-live-color: var(--state-success);
+  --tag-demo-bg:    rgba(154, 164, 176, 0.14);
+  --tag-demo-color: #C3CAD3;
+  --tag-live-bg:    rgba(79, 169, 107, 0.16);
+  --tag-live-color: #5BAE74;
 
-  /* 8 Agent 状态 */
-  --agent-online:  var(--accent);
-  --agent-busy:    var(--state-warning);
-  --agent-idle:    #94a3b8;
-  --agent-offline: #64748b;
-  --agent-error:   var(--state-danger);
+  --agent-online:  var(--color-accent);
+  --agent-busy:    var(--color-warning);
+  --agent-idle:    #8A94A0;
+  --agent-offline: #5B636E;
+  --agent-error:   var(--color-danger);
+
+  /* ── 2.11 高度 / 阴影（纯中性，无彩色泛光）── */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.40);
+  --shadow-2: 0 2px 4px rgba(0, 0, 0, 0.32), 0 1px 2px rgba(0, 0, 0, 0.24);
+  --shadow-3: 0 4px 12px rgba(0, 0, 0, 0.36), 0 1px 3px rgba(0, 0, 0, 0.28);
+  --shadow-4: 0 12px 28px rgba(0, 0, 0, 0.44), 0 2px 6px rgba(0, 0, 0, 0.30);
+  --shadow-5: 0 24px 56px rgba(0, 0, 0, 0.52);
+  --shadow-card:       0 1px 2px rgba(0, 0, 0, 0.34), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.42), 0 0 0 1px rgba(255, 255, 255, 0.07);
+  --shadow-glow:       0 4px 16px rgba(0, 0, 0, 0.34), 0 0 0 1px rgba(var(--accent-rgb), 0.18);
+  --shadow-edge:       14px 0 36px -18px rgba(0, 0, 0, 0.45);   /* 侧边栏右缘投影（中性，无彩色泛光）*/
+
+  /* 旧 glow-* 令牌：已去除霓虹泛光，退化为中性柔和投影。
+     保留令牌名以兼容 33 处引用（box-shadow 必须收到合法值，不能设为 none）。*/
+  --glow-primary:        var(--shadow-2);
+  --glow-primary-strong: var(--shadow-3);
+  --glow-secondary:      var(--shadow-2);
+  --glow-success:        var(--shadow-2);
+
+  /* ── 2.12 渐变（低对比、无彩色光污染）── */
+  /* 主渐变 = 实底色（承载白字），由 --color-accent-solid → 其按下态 */
+  --gradient-primary: linear-gradient(135deg, #9C5F35 0%, #8A5230 100%);
+  --gradient-card:    linear-gradient(180deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0.008) 100%);
+  --gradient-text:    linear-gradient(135deg, #E6E9ED 0%, #CE8256 100%);
+  --gradient-hero:    radial-gradient(ellipse 600px 400px at 30% 30%, rgba(206, 130, 86, 0.09) 0%, transparent 70%),
+                      radial-gradient(ellipse 500px 300px at 70% 60%, rgba(94, 147, 196, 0.06) 0%, transparent 70%);
+  --gradient-sidebar: linear-gradient(180deg, rgba(206, 130, 86, 0.03) 0%, transparent 40%);
+  --gradient-border:  linear-gradient(135deg, rgba(206, 130, 86, 0.22), rgba(110, 155, 217, 0.14));
+  --gradient-progress: linear-gradient(90deg, #CE8256, #D99168);
+  --gradient-warm:    linear-gradient(135deg, #DCA03C 0%, #CE8256 100%);
+  --gradient-hero-veil: linear-gradient(180deg, rgba(14, 18, 23, 0) 0%, rgba(14, 18, 23, 0.85) 100%);
+
+  /* ── 2.13 视觉杂项 ── */
+  --focus-ring:       0 0 0 3px rgba(var(--accent-rgb), 0.28);
+  --focus-ring-width: 3px;
+  --scrim:            rgba(6, 9, 13, 0.62);
+  --hover-glow-cap:   var(--shadow-card-hover);
+  --cursor-color:     var(--color-accent);
+  --thinking-bg:      color-mix(in srgb, var(--color-accent) 8%, var(--color-surface));
+  --skeleton-base:    var(--color-surface);
+  --skeleton-sheen:   var(--color-surface-hover);
 }
 
-/* ── 浅色主题：覆盖语义层即可，别名与品牌色自动跟随 ── */
+
+/* ============================================================================
+ * 3. 浅色主题 — 仅覆盖语义层；第 4 节的所有兼容别名自动跟随
+ * ========================================================================== */
 [data-theme="light"] {
-  --color-canvas:        #f5f6fb;
-  --color-surface:       #ffffff;
-  --color-surface-2:     #eef0f6;
-  --color-surface-hover:  #e7eaf3;
-  --color-elevated:      #ffffff;
-  --color-overlay:        rgba(15,18,40,0.32);
+  /* ── 3.1 画布与表面 ── */
+  --color-canvas:        #F5F6F7;
+  --color-surface:       #FFFFFF;
+  --color-surface-2:     #EFF1F3;
+  --color-surface-3:     #E5E8EB;
+  --color-surface-hover: #EDF0F2;
+  --color-elevated:      #FFFFFF;
+  --color-overlay:       rgba(20, 24, 30, 0.34);
 
-  --color-glass:          rgba(255,255,255,0.72);
-  --color-glass-hover:    rgba(255,255,255,0.88);
-  --color-glass-border:   rgba(15,18,40,0.10);
+  /* ── 3.2 玻璃态（浅色下更不透明，保证文字对比度）── */
+  --color-glass:        rgba(255, 255, 255, 0.78);
+  --color-glass-hover:  rgba(255, 255, 255, 0.92);
+  --color-glass-border: rgba(16, 20, 26, 0.10);
+  --glass-blur:         10px;
+  --glass-blur-heavy:   18px;
+  --glass-saturate:     100%;
 
-  --color-border:         rgba(15,18,40,0.10);
-  --color-border-light:   rgba(15,18,40,0.06);
-  --color-border-focus:   rgba(124,106,242,0.50);
-  --color-border-glow:    rgba(124,106,242,0.22);
+  /* ── 3.3 边框 ── */
+  --color-border:        rgba(16, 20, 26, 0.11);
+  --color-border-light:  rgba(16, 20, 26, 0.06);
+  --color-border-strong: rgba(16, 20, 26, 0.20);
+  --color-border-focus:  rgba(158, 90, 48, 0.55);
+  --color-border-glow:   rgba(158, 90, 48, 0.24);
 
-  --color-text:           #1a1d2e;
-  --color-text-2:         #525a72;
-  --color-text-3:         #8a92a8;
-  --color-text-invert:    #ffffff;
+  /* ── 3.4 文本层级 ── */
+  --color-text:          #16191D;   /* 17.6:1 */
+  --color-text-2:        #545B66;   /*  6.9:1 */
+  --color-text-3:        #6E7783;   /*  4.5:1 */
+  --color-text-disabled: #A3ABB5;   /*  2.3:1 */
+  --color-text-invert:   #FFFFFF;
+  --color-text-on-accent:#FFFFFF;
 
-  --bg-input:  rgba(15,18,40,0.04);
---accent-primary-10: rgba(124,106,242,0.08);
-  --accent-primary-15: rgba(124,106,242,0.12);
-  --accent-primary-20: rgba(124,106,242,0.14);
-  --accent-primary-30: rgba(124,106,242,0.20);
-  --accent-danger-10:   rgba(239,68,68,0.08);
-  --accent-danger-20:   rgba(239,68,68,0.14);
-  --accent-success-10:  rgba(34,197,94,0.10);
-  --accent-success-20:  rgba(34,197,94,0.16);
-  --text-danger:         #dc2626;
-  --text-success: #15803d;
+  /* ── 3.5 强调色 ── */
+  --color-accent:        #9E5A30;   /* HSL 23/53/40 — 对白 5.3:1 */
+  --color-accent-hover:  #8A4C26;
+  --color-accent-active: #7A4322;
+  --color-accent-text:   #9E5A30;
+  /* 浅色主题无"墨色/实底"冲突：#9E5A30 对白底 5.30:1，白字在其上亦 5.30:1，
+     故 solid 三态直接指向 ink 三态，保持单一色调。 */
+  --color-accent-solid:        #9E5A30;
+  --color-accent-solid-hover:  #8A4C26;
+  --color-accent-solid-active: #7A4322;
+  --color-accent-subtle: rgba(158, 90, 48, 0.10);
+  --color-accent-border: rgba(158, 90, 48, 0.35);
+  --accent-rgb:          158, 90, 48;
+  --accent-solid-rgb:    158, 90, 48;
 
-  /* 浅色主题下渐变文字需由深→品牌紫，避免白底白字 */
-  --gradient-text: linear-gradient(135deg, #1a1d2e 0%, #6d5deb 100%);
+  /* ── 3.6 语义色 ── */
+  --color-success:        #2F7D4F;
+  --color-success-bg:     rgba(47, 125, 79, 0.10);
+  --color-success-border: rgba(47, 125, 79, 0.28);
+  --color-warning:        #8A6210;
+  --color-warning-bg:     rgba(138, 98, 16, 0.10);
+  --color-warning-border: rgba(138, 98, 16, 0.26);
+  --color-danger:         #B8392F;
+  --color-danger-bg:      rgba(184, 57, 47, 0.09);
+  --color-danger-border:  rgba(184, 57, 47, 0.26);
+  --color-info:           #2F6DA8;
+  --color-info-bg:        rgba(47, 109, 168, 0.10);
+  --color-info-border:    rgba(47, 109, 168, 0.26);
+  --success-rgb:          47, 125, 79;
+  --warning-rgb:          138, 98, 16;
+  --danger-rgb:           184, 57, 47;
+  --info-rgb:             47, 109, 168;
 
-  --glow-primary:        0 0 18px rgba(124,106,242,0.10), 0 0 36px rgba(124,106,242,0.05);
-  --glow-primary-strong: 0 0 18px rgba(124,106,242,0.18), 0 0 48px rgba(124,106,242,0.09);
-  --glow-secondary:      0 0 18px rgba(91,139,216,0.10), 0 0 36px rgba(91,139,216,0.05);
-  --glow-success:        0 0 18px rgba(34,197,94,0.10);
+  /* ── 3.7 408 四科分色（浅色分支：压暗以在白底上达标）── */
+  --subject-ds:      #6B52B8;   /* 5.96:1 */
+  --subject-cn:      #2F6BB8;   /* 5.36:1 */
+  --subject-co:      #1F7E8C;   /* 4.75:1 */
+  --subject-os:      #B2477F;   /* 5.12:1 */
+  --subject-ds-rgb:  107, 82, 184;
+  --subject-cn-rgb:   47, 107, 184;
+  --subject-co-rgb:   31, 126, 140;
+  --subject-os-rgb:  178, 71, 127;
 
-  --shadow-sm:   0 1px 2px rgba(15,18,40,0.06);
-  --shadow-md:   0 4px 12px rgba(15,18,40,0.08);
-  --shadow-lg:   0 8px 24px rgba(15,18,40,0.10);
-  --shadow-xl:   0 16px 40px rgba(15,18,40,0.14);
-  --shadow-card:         0 1px 3px rgba(15,18,40,0.06), 0 0 1px rgba(15,18,40,0.04);
-  --shadow-card-hover:   0 8px 24px rgba(15,18,40,0.10), 0 0 18px rgba(124,106,242,0.06);
-  --shadow-glow:        0 4px 16px rgba(124,106,242,0.08);
+  /* ── 3.8 多智能体 / 流程可视化色 · 浅色覆盖 ── */
+  --agent-coord:    #9E5A30;
+  --agent-plan:     #8A6A1F;
+  --agent-diag:     #6B52B8;
+  --agent-gen:      #2F6BB8;
+  --agent-retrieve: #1F7E8C;
+  --agent-eval:     #B2477F;
+  --agent-quality:  #3F7A57;
+  --agent-path:     #5F5A78;
+  --agent-evidence: #1F7A6B;
+  --agent-gate:     #8A6210;
 
-  /* ── 可视化页令牌 · 浅色覆盖（保证浅色主题可读/可见）── */
-  --agent-coord:    #6d5deb;
-  --agent-plan:     #7c6af2;
-  --agent-diag:     #7c3aed;
-  --agent-gen:      #2563eb;
-  --agent-retrieve: #0891b2;
-  --agent-eval:     #db2777;
-  --agent-quality:  #be185d;
-  --agent-path:     #6d28d9;
-  --agent-evidence: #0d9488;   /* 证据校验 evidence_check（青绿）*/
-  --agent-gate:     #d97706;   /* 产物验收 quality_gate（琥珀）*/
+  --flow-data:      #2F6BB8;
+  --flow-control:   #6B52B8;
+  --flow-consensus: #1F7E8C;
 
-  --flow-data:      #2563eb;
-  --flow-control:   #7c6af2;
-  --flow-consensus: #0891b2;
+  --nm-mix-from: #6B52B8;
+  --nm-mix-to:   #1F7E8C;
 
-  --nm-mix-from:    #7c6af2;
-  --nm-mix-to:      #0891b2;
+  /* ── 3.9 状态 / 掌握度 / 图谱 · 浅色覆盖 ── */
+  --conflict-detected: #B8392F;
+  --conflict-resolved: #2F7D4F;
+  --mastery-low:       #B8392F;
+  --mastery-mid:       #8A6210;
+  --mastery-high:      #2F7D4F;
+  --mastery-none:      #C3CAD3;
+  --edge-prereq:       #6B52B8;
+  --edge-related:      #9AA2AC;
+  --urgent:            #B8392F;
 
-  --conflict-detected: #dc2626;
-  --conflict-resolved: #16a34a;
+  /* ── 3.10 图表 · 浅色覆盖 ── */
+  --series-5: #3F7A57;
+  --series-6: #8A6A1F;
 
-  --mastery-low:  #dc2626;
-  --mastery-mid:  #b45309;
-  --mastery-high: #15803d;
-  --edge-prereq:  #6b5cdb;
-  --edge-related: #94a3b8;
+  --chart-grid:        rgba(16, 20, 26, 0.07);
+  --chart-grid-strong: rgba(16, 20, 26, 0.11);
+  --chart-axis:        rgba(16, 20, 26, 0.16);
+  --chart-tick:        #6E7783;
 
-  /* 仪表盘扩展 · 浅色覆盖 */
-  --chart-grid:        rgba(15,18,40,0.06);
-  --chart-grid-strong: rgba(15,18,40,0.10);
-  --chart-axis:        rgba(15,18,40,0.12);
-  --chart-tick:        #8a92a8;
-  --seq-1: rgba(124,106,242,0.14);
-  --seq-2: rgba(124,106,242,0.30);
-  --seq-3: rgba(124,106,242,0.46);
-  --seq-4: rgba(124,106,242,0.62);
-  --seq-5: rgba(124,106,242,0.80);
-  --seq-6: #6d5fe0;
-  --tag-demo-bg:    rgba(15,18,40,0.06);
-  --tag-demo-color: #525a72;
-  --tag-live-bg:    rgba(34,197,94,0.14);
-  --tag-live-color: #16a34a;
-  --agent-idle:    #525a72;
-  --agent-offline: #94a3b8;
+  --kpi-value-glow: 0 1px 2px rgba(16, 20, 26, 0.10);
+
+  --tag-demo-bg:    rgba(16, 20, 26, 0.06);
+  --tag-demo-color: #545B66;
+  --tag-live-bg:    rgba(47, 125, 79, 0.12);
+  --tag-live-color: #2F7D4F;
+
+  --agent-idle:    #6E7783;
+  --agent-offline: #9AA2AC;
+
+  /* ── 3.11 高度 / 阴影 · 浅色覆盖（更淡、更扩散）── */
+  --shadow-1: 0 1px 2px rgba(16, 20, 26, 0.06);
+  --shadow-2: 0 2px 4px rgba(16, 20, 26, 0.07), 0 1px 2px rgba(16, 20, 26, 0.05);
+  --shadow-3: 0 4px 12px rgba(16, 20, 26, 0.09), 0 1px 3px rgba(16, 20, 26, 0.05);
+  --shadow-4: 0 12px 28px rgba(16, 20, 26, 0.12), 0 2px 6px rgba(16, 20, 26, 0.06);
+  --shadow-5: 0 24px 56px rgba(16, 20, 26, 0.16);
+  --shadow-card:       0 1px 3px rgba(16, 20, 26, 0.07), 0 0 0 1px rgba(16, 20, 26, 0.04);
+  --shadow-card-hover: 0 8px 24px rgba(16, 20, 26, 0.11), 0 0 0 1px rgba(16, 20, 26, 0.07);
+  --shadow-glow:       0 4px 16px rgba(16, 20, 26, 0.10), 0 0 0 1px rgba(var(--accent-rgb), 0.22);
+  --shadow-edge:       14px 0 36px -18px rgba(16, 20, 26, 0.16);
+
+  /* ── 3.12 渐变 · 浅色覆盖 ── */
+  --gradient-primary: linear-gradient(135deg, #9E5A30 0%, #7A4322 100%);
+  --gradient-card:    linear-gradient(180deg, rgba(16, 20, 26, 0.015) 0%, rgba(16, 20, 26, 0.005) 100%);
+  --gradient-text:    linear-gradient(135deg, #16191D 0%, #9E5A30 100%);
+  --gradient-hero:    radial-gradient(ellipse 600px 400px at 30% 30%, rgba(158, 90, 48, 0.07) 0%, transparent 70%),
+                      radial-gradient(ellipse 500px 300px at 70% 60%, rgba(47, 109, 168, 0.05) 0%, transparent 70%);
+  --gradient-sidebar: linear-gradient(180deg, rgba(158, 90, 48, 0.025) 0%, transparent 40%);
+  --gradient-border:  linear-gradient(135deg, rgba(158, 90, 48, 0.24), rgba(47, 107, 184, 0.14));
+  --gradient-progress: linear-gradient(90deg, #9E5A30, #8A4C26);
+  --gradient-warm:    linear-gradient(135deg, #8A6210 0%, #9E5A30 100%);
+  --gradient-hero-veil: linear-gradient(180deg, rgba(245, 246, 247, 0) 0%, rgba(245, 246, 247, 0.90) 100%);
+
+  /* ── 3.13 视觉杂项 · 浅色覆盖 ── */
+  --focus-ring:     0 0 0 3px rgba(var(--accent-rgb), 0.24);
+  --scrim:          rgba(20, 24, 30, 0.34);
+  --skeleton-base:  var(--color-surface-2);
+  --skeleton-sheen: var(--color-surface-3);
 }
+
+
+/* ============================================================================
+ * 4. 向后兼容别名层（Compat Aliases）
+ *    现有 72 个组件大量使用 v4–v9 的旧令牌名。这一层把它们全部 var() 到语义层，
+ *    因此：① 组件零改动；② 切主题时自动跟随；③ 后续可逐个组件迁移到语义层。
+ *    ⚠ 新代码请使用第 2/3 节的 --color-* / --subject-* 语义名，不要新增旧别名引用。
+ * ========================================================================== */
+:root {
+  /* ── 4.1 背景别名（旧 --bg-*）── */
+  --bg-primary:    var(--color-canvas);
+  --bg-secondary:  var(--color-surface-2);
+  --bg-tertiary:   var(--color-surface-3);
+  --bg-elevated:   var(--color-elevated);
+  --bg-card:       var(--color-surface);
+  --bg-card-hover: var(--color-surface-hover);
+  --bg-input:      var(--color-surface-2);
+  --bg-overlay:    var(--color-overlay);
+  --bg-ai-msg:     var(--color-surface-2);
+
+  /* ── 4.2 玻璃态别名（旧 --glass-*）── */
+  --glass-bg:       var(--color-glass);
+  --glass-bg-hover: var(--color-glass-hover);
+  --glass-border:   var(--color-glass-border);
+
+  /* ── 4.3 边框别名（旧 --border-*）── */
+  --border-color:  var(--color-border);
+  --border-light:  var(--color-border-light);
+  --border-strong: var(--color-border-strong);
+  --border-focus:  var(--color-border-focus);
+  --border-glow:   var(--color-border-glow);
+
+  /* ── 4.4 文本别名（旧 --text-*）── */
+  --text-primary:   var(--color-text);
+  --text-secondary: var(--color-text-2);
+  --text-muted:     var(--color-text-3);
+  --text-disabled:  var(--color-text-disabled);
+  --text-inverse:   var(--color-text-invert);
+  --text-invert:    var(--color-text-invert);
+  --text-user:      #FFFFFF;                    /* 用户气泡：始终白字（配渐变底）*/
+  --text-danger:    var(--color-danger);
+  --text-success:   var(--color-success);
+  --text-warning:   var(--color-warning);
+  --text-info:      var(--color-info);
+
+  /* ── 4.5 强调色别名（旧 --accent*）──
+     旧 --accent 曾为 AI 紫 #7c6af2，现指向新的陶土强调色。 */
+  --accent:               var(--color-accent);
+  --accent-primary:       var(--color-accent);
+  --accent-primary-hover: var(--color-accent-hover);
+  --accent-primary-dark:  var(--color-accent-active);
+  --accent-dark:          var(--color-accent-active);
+  --accent-secondary:     var(--color-info);       /* 旧"蓝"→ 语义信息色 */
+  --accent-tertiary:      var(--subject-co);       /* 旧"青"→ 计组分色 */
+  --accent-blue:          var(--color-info);
+  --accent-cyan:          var(--subject-co);
+  --accent-pink:          var(--subject-os);
+  --accent-warm:          var(--color-warning);
+  --accent-amber:         var(--color-warning);
+  --accent-warning-light: var(--color-warning-bg);
+  --accent-success:       var(--color-success);
+  --accent-danger:        var(--color-danger);
+  /* 实底调别名：旧代码中"实底 + 白字"的写法应逐步迁到这两个 */
+  --accent-solid:         var(--color-accent-solid);
+  --accent-primary-solid: var(--color-accent-solid);
+  --accent-solid-hover:   var(--color-accent-solid-hover);
+  --accent-solid-active:  var(--color-accent-solid-active);
+
+  /* 强调色透明度阶梯（基于 --accent-rgb，随主题自动换色）*/
+  --accent-primary-05: rgba(var(--accent-rgb), 0.05);
+  --accent-primary-10: rgba(var(--accent-rgb), 0.10);
+  --accent-primary-15: rgba(var(--accent-rgb), 0.15);
+  --accent-primary-20: rgba(var(--accent-rgb), 0.20);
+  --accent-primary-30: rgba(var(--accent-rgb), 0.30);
+  --accent-danger-10:  rgba(var(--danger-rgb), 0.10);
+  --accent-danger-20:  rgba(var(--danger-rgb), 0.20);
+  --accent-success-10: rgba(var(--success-rgb), 0.10);
+  --accent-success-20: rgba(var(--success-rgb), 0.20);
+  --accent-warning-10: rgba(var(--warning-rgb), 0.10);
+  --accent-warning-20: rgba(var(--warning-rgb), 0.20);
+  --accent-info-10:    rgba(var(--info-rgb), 0.10);
+  --accent-info-20:    rgba(var(--info-rgb), 0.20);
+
+  /* 旧数字序号别名（v4→v7 过渡，勿新增引用）*/
+  --accent-1:       var(--accent-primary);
+  --accent-2:       var(--color-info);
+  --accent-3:       var(--subject-co);
+  --accent-4:       var(--subject-os);
+  --accent-5:       var(--color-success);
+  --accent-6:       var(--color-danger);
+  --accent-1-light: var(--accent-primary-10);
+  --accent-1-mid:   var(--accent-primary-20);
+  --accent-1-dark:  var(--accent-primary-dark);
+  --gradient-accent: var(--gradient-primary);
+
+  /* ── 4.6 学科别名（旧 --subject-* 缩写）── */
+  --subject-data: var(--subject-ds);   /* 数据结构 */
+  --subject-net:  var(--subject-cn);   /* 计算机网络 */
+  --subject-org:  var(--subject-co);   /* 计算机组成原理 */
+  /* --subject-os 本身即语义名（操作系统），无需别名 */
+
+  /* ── 4.7 阴影别名（旧 --shadow-sm/md/lg/xl）── */
+  --shadow-sm: var(--shadow-1);
+  --shadow-md: var(--shadow-2);
+  --shadow-lg: var(--shadow-3);
+  --shadow-xl: var(--shadow-4);
+
+  /* ── 4.8 流式 / 可达性别名 ── */
+  --hover-glow-cap: var(--shadow-card-hover);
+}
+
+
+/* ============================================================================
+ * 5. 动效关键帧（全局可用 · 纯 CSS，零依赖）
+ *    命名统一加 mars- 前缀，避免与 main.css 中已有的 fade-in / shimmer 等冲突。
+ *    全部只动 transform / opacity / background-position —— 不触发布局与重排。
+ *    用法规范见：deliverables/gstack/design-system-motion-2026-09-12.md
+ * ========================================================================== */
+
+/* 入场 */
+@keyframes mars-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes mars-fade-up {
+  from { opacity: 0; transform: translate3d(0, var(--distance-enter), 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes mars-fade-up-lg {
+  from { opacity: 0; transform: translate3d(0, var(--distance-enter-lg), 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes mars-scale-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes mars-slide-in-right {
+  from { opacity: 0; transform: translate3d(16px, 0, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes mars-slide-in-left {
+  from { opacity: 0; transform: translate3d(-16px, 0, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+/* 骨架屏 shimmer：只动 background-position（绘制层，不触发重排）；
+   如需纯 GPU 版本，用下面的 mars-sheen 配合 ::after + translate3d。 */
+@keyframes mars-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@keyframes mars-sheen {
+  0%   { transform: translate3d(-100%, 0, 0); }
+  100% { transform: translate3d(100%, 0, 0); }
+}
+
+/* 呼吸：用于"思考中 / 流式输出中"，只动 opacity，绝不动 box-shadow 的模糊半径 */
+@keyframes mars-pulse-soft {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+/* 不确定进度条：transform: translateX，禁止动画 width */
+@keyframes mars-progress-indeterminate {
+  0%   { transform: translate3d(-100%, 0, 0) scaleX(0.4); }
+  50%  { transform: translate3d(40%, 0, 0)  scaleX(0.7); }
+  100% { transform: translate3d(220%, 0, 0) scaleX(0.4); }
+}
+/* 流式光标 */
+@keyframes mars-caret-blink {
+  0%, 45%   { opacity: 1; }
+  55%, 100% { opacity: 0; }
+}
+
+
+/* ============================================================================
+ * 6. 状态样式基类（loading / empty / error）
+ *    骨架屏依赖第 5 节的 mars-shimmer；空态与错误态只提供令牌，结构由组件实现。
+ * ========================================================================== */
+.skeleton {
+  border-radius: var(--radius-sm);
+  background-color: var(--skeleton-base);
+  background-image: linear-gradient(
+    90deg,
+    var(--skeleton-base) 25%,
+    var(--skeleton-sheen) 37%,
+    var(--skeleton-base) 63%
+  );
+  background-size: 400% 100%;
+  animation: mars-shimmer 1.4s var(--ease-linear) infinite;
+}
+
+/* 流式光标（打字机效果）*/
+.stream-caret {
+  display: inline-block;
+  width: 0.5ch;
+  height: 1em;
+  background: var(--cursor-color);
+  vertical-align: text-bottom;
+  animation: mars-caret-blink var(--cursor-blink) steps(1, end) infinite;
+}
+
+
+/* ============================================================================
+ * 7. 降级规则
+ * ========================================================================== */
+
+/* 7.1 减弱动效偏好（WCAG 2.3.3）：把总闸归零，全站动效即时关闭。
+       与 main.css 中的全局 !important 兜底互为双保险。 */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-scale: 0;
+    --cursor-blink: 0s;      /* 光标不闪烁，改为常亮 */
+    --distance-enter: 0px;
+    --distance-enter-lg: 0px;
+    --scale-hover: 1;
+    --scale-press: 1;
+  }
+  .skeleton { animation: none; background-image: none; }
+  .stream-caret { animation: none; opacity: 1; }
+}
+
+/* 7.2 触屏降级（pointer: coarse）：动画幅度与模糊降级，避免移动端掉帧 */
+@media (pointer: coarse) {
+  :root {
+    --motion-scale: 0.7;
+    --distance-enter: 6px;
+    --distance-enter-lg: 10px;
+    --glass-blur: 6px;
+    --glass-blur-heavy: 10px;
+  }
+}
+
+/* 7.3 降低透明度偏好：玻璃态退化为实色，保证可读性 */
+@media (prefers-reduced-transparency: reduce) {
+  :root,
+  [data-theme="dark"] {
+    --color-glass: #151A20;
+    --color-glass-hover: #1B2129;
+    --glass-blur: 0px;
+    --glass-blur-heavy: 0px;
+  }
+  [data-theme="light"] {
+    --color-glass: #FFFFFF;
+    --color-glass-hover: #FFFFFF;
+    --glass-blur: 0px;
+    --glass-blur-heavy: 0px;
+  }
+}
+
+/* 7.4 浅色主题下背景装饰与空态插画的透明度修正（沿用 v7 规则，勿删） */
 [data-theme="light"] body::before { opacity: 0.5; }
 [data-theme="light"] .empty-state svg { opacity: 0.35; }

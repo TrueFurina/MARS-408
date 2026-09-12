@@ -23,7 +23,7 @@ function reset() {
 
 <template>
   <div v-if="hasError" class="error-boundary">
-    <div class="eb-icon">⚠️</div>
+    <div class="eb-icon"></div>
     <div class="eb-title">{{ title || '页面加载异常' }}</div>
     <div class="eb-desc">{{ error?.message || '发生了意外错误，请刷新重试' }}</div>
     <button class="eb-btn" @click="reset">重试</button>

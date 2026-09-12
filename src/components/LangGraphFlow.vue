@@ -9,7 +9,7 @@
  * 每节点有 4 种状态：
  *   pending   — 灰色圆圈，等待中
  *   active    — 发光脉冲 + Lottie-like spinner，正在执行
- *   completed — 绿色发光 ✓ checkmark，已完成
+ *   completed — 绿色发光  checkmark，已完成
  *   skipped   — （保留，暂未使用）
  *
  * Props:

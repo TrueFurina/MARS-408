@@ -5,6 +5,7 @@ import { api } from '@/utils/api'
 import EmptyState from '@/components/EmptyState.vue'
 import ErrorBoundary from '@/components/ErrorBoundary.vue'
 import { useStudyStore, SUBJECT_TO_COURSE, COURSE_MAP } from '@/stores/studyStore'
+import { icons } from '@/components/icons'
 
 const router = useRouter()
 const store = useStudyStore()
@@ -88,21 +89,21 @@ function goPractice(courseKey: string) {
 <template>
   <div class="page-section">
     <ErrorBoundary title="错题复盘异常">
-      <div class="section-title">🔍 错题复盘</div>
+      <div class="section-title"> 错题复盘</div>
     <div class="section-desc">按 408 四科统计错题情况，点击科目进入针对性练习</div>
 
     <!-- L1/L2/L3 三层学情记忆薄弱点提示（低侵入联动） -->
     <div v-if="memoryOverview?.weak_points?.length" class="memory-mini-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-size:12px;">
-      <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);">🧠 记忆薄弱点:</span>
+      <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);"> 记忆薄弱点:</span>
       <span v-for="w in memoryOverview.weak_points.slice(0, 6)" :key="w" style="padding:3px 10px;border-radius:12px;background:rgba(239,68,68,0.12);color:var(--accent-danger);">{{ w }}</span>
     </div>
 
     <div v-if="loading" class="empty-state"><div class="empty-title">加载中...</div></div>
-    <EmptyState v-else-if="error" icon="❌" :title="error" />
+    <EmptyState v-else-if="error" :icon="icons.xCircle" :title="error" />
     <div v-else-if="summary">
       <div class="dashboard-grid">
         <div class="dash-card">
-          <div class="dash-card-title">📊 答题概览</div>
+          <div class="dash-card-title"> 答题概览</div>
           <div class="dash-stats">
             <div class="dash-stat"><span class="dash-value">{{ summary.total_questions }}</span><span class="dash-label">总题数</span></div>
             <div class="dash-stat"><span class="dash-value">{{ summary.total_wrong }}</span><span class="dash-label">错题数</span></div>
@@ -111,7 +112,7 @@ function goPractice(courseKey: string) {
         </div>
 
         <div class="dash-card" v-if="byCourse.length">
-          <div class="dash-card-title">📚 408 四科统计</div>
+          <div class="dash-card-title"> 408 四科统计</div>
           <div v-for="s in byCourse" :key="s.subject" class="subject-row" role="button" tabindex="0" :aria-label="'复习 ' + s.subject_name" @click="goPractice(s.subject)" @keydown.enter="goPractice(s.subject)" @keydown.space.prevent="goPractice(s.subject)">
             <span class="subject-name">{{ s.subject_name }}</span>
             <span class="subject-accuracy" :style="{ color: s.accuracy >= 0.7 ? 'var(--accent-success)' : s.accuracy >= 0.4 ? 'var(--accent-warm)' : 'var(--accent-danger)' }">{{ (s.accuracy * 100).toFixed(0) }}%</span>
@@ -121,18 +122,18 @@ function goPractice(courseKey: string) {
       </div>
 
       <div class="card" style="margin-top:20px;" v-if="summary.weak_topics?.length">
-        <div class="card-title" style="margin-bottom:12px;">⚠️ 薄弱知识点</div>
+        <div class="card-title" style="margin-bottom:12px;"> 薄弱知识点</div>
         <div class="tag-list">
           <span v-for="topic in summary.weak_topics" :key="topic" class="tag tag-warning">{{ topic }}</span>
         </div>
       </div>
 
       <div class="card" style="margin-top:20px;" v-if="summary.recommendation">
-        <div class="card-title" style="margin-bottom:8px;">💡 学习建议</div>
+        <div class="card-title" style="margin-bottom:8px;"> 学习建议</div>
         <div class="recommendation-text">{{ summary.recommendation }}</div>
       </div>
     </div>
-    <EmptyState v-else icon="📝" title="暂无答题记录" description="去做一些练习题，错题会自动记录在这里" />
+    <EmptyState v-else :icon="icons.search" title="暂无答题记录" description="去做一些练习题，错题会自动记录在这里" />
     </ErrorBoundary>
   </div>
 </template>

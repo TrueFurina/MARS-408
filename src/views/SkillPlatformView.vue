@@ -24,7 +24,7 @@ const skills: SkillShowcase[] = [
   {
     id: 's1',
     name: '考研重点提炼',
-    emoji: '🎯',
+    emoji: '',
     category: 'teaching',
     categoryLabel: '教学讲解',
     desc: '自动提取 408 各章节高频考点，结合历年真题权重生成重点清单，附带记忆口诀与易错预警。',
@@ -38,7 +38,7 @@ const skills: SkillShowcase[] = [
   {
     id: 's2',
     name: '错题变式出题',
-    emoji: '🔄',
+    emoji: '',
     category: 'quiz',
     categoryLabel: '出题练习',
     desc: '基于学生错题记录，自动生成同知识点不同题型的变式题目，确保「错过的不再错」。',
@@ -52,7 +52,7 @@ const skills: SkillShowcase[] = [
   {
     id: 's3',
     name: '知识点诊断',
-    emoji: '🔍',
+    emoji: '',
     category: 'diagnosis',
     categoryLabel: '诊断评估',
     desc: '通过对话式追问定位学生知识盲区，生成可视化诊断报告与针对性补救路径。',
@@ -66,7 +66,7 @@ const skills: SkillShowcase[] = [
   {
     id: 's4',
     name: '代码实战辅导',
-    emoji: '💻',
+    emoji: '',
     category: 'code',
     categoryLabel: '代码实践',
     desc: '数据结构算法实战：自动生成编程题、实时代码审查、复杂度分析与优化建议。',
@@ -80,7 +80,7 @@ const skills: SkillShowcase[] = [
   {
     id: 's5',
     name: '思维导图生成',
-    emoji: '🧠',
+    emoji: '',
     category: 'mindmap',
     categoryLabel: '思维导图',
     desc: '一键将任意知识点转化为结构化思维导图，标注先修关系与考点权重。',
@@ -94,7 +94,7 @@ const skills: SkillShowcase[] = [
   {
     id: 's6',
     name: '苏格拉底追问',
-    emoji: '🗣️',
+    emoji: '',
     category: 'teaching',
     categoryLabel: '教学讲解',
     desc: '不直接给答案，而是通过层层追问引导学生自主发现知识漏洞，培养深度理解。',
@@ -113,21 +113,21 @@ const flowSteps = [
     step: '01',
     title: '定义技能',
     desc: '命名技能、选择分类、编写 System Prompt',
-    icon: '📝',
+    icon: '',
     accent: 'var(--accent-primary)',
   },
   {
     step: '02',
     title: '配置引擎',
     desc: '选择 LLM 通道、调节温度、启用 RAG 检索',
-    icon: '⚙️',
+    icon: '',
     accent: 'var(--accent-cyan)',
   },
   {
     step: '03',
     title: '发布市场',
     desc: '一键发布到技能市场，供全校师生使用',
-    icon: '🚀',
+    icon: '',
     accent: 'var(--accent-pink)',
   },
 ]
@@ -249,8 +249,8 @@ const platformStats = [
             </div>
             <div class="sp-card-footer">
               <div class="sp-card-meta">
-                <span class="sp-meta-uses">🔥 {{ s.uses }}</span>
-                <span class="sp-meta-rating">⭐ {{ s.rating }}</span>
+                <span class="sp-meta-uses"> {{ s.uses }}</span>
+                <span class="sp-meta-rating"> {{ s.rating }}</span>
               </div>
               <span v-if="s.rag" class="sp-rag-badge">RAG</span>
             </div>
@@ -303,7 +303,7 @@ const platformStats = [
             </div>
             <div class="sp-editor-field">
               <span class="sp-field-label">评分</span>
-              <span class="sp-field-value">⭐ {{ selectedSkill.rating }}</span>
+              <span class="sp-field-value"> {{ selectedSkill.rating }}</span>
             </div>
           </div>
 
@@ -334,13 +334,13 @@ const platformStats = [
         >
           <div class="sp-compare-feature">{{ c.feature }}</div>
           <div class="sp-compare-mars">
-            <span v-if="c.mars === true" class="sp-check sp-check-yes">✓</span>
+            <span v-if="c.mars === true" class="sp-check sp-check-yes"></span>
             <span v-else class="sp-check-text">{{ c.mars }}</span>
           </div>
           <div class="sp-compare-comp">
-            <span v-if="c.competitor === false" class="sp-check sp-check-no">✕</span>
+            <span v-if="c.competitor === false" class="sp-check sp-check-no"></span>
             <span v-else-if="c.competitor === '部分'" class="sp-check-text-muted">部分</span>
-            <span v-else class="sp-check sp-check-yes">✓</span>
+            <span v-else class="sp-check sp-check-yes"></span>
           </div>
         </div>
       </div>
@@ -405,8 +405,7 @@ const platformStats = [
   width: 8px; height: 8px;
   border-radius: 50%;
   background: var(--accent-primary);
-  box-shadow: 0 0 8px var(--accent-primary);
-  animation: pulse-glow 2s ease-in-out infinite;
+  animation: mars-pulse-soft 2s var(--ease-standard) infinite;
 }
 .sp-hero-title {
   font-size: clamp(28px, 4vw, 44px);

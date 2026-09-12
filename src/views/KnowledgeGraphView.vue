@@ -29,11 +29,11 @@ const masteryStats = computed(() => {
 })
 
 const viewModes: { value: 'graph' | 'outline' | 'mindmap' | 'map' | 'sphere'; label: string; icon: string }[] = [
-  { value: 'graph', label: '图谱模式', icon: '🕸️' },
-  { value: 'outline', label: '大纲模式', icon: '📋' },
-  { value: 'mindmap', label: '思维导图', icon: '🧠' },
-  { value: 'map', label: '学习地图', icon: '🗺️' },
-  { value: 'sphere', label: '3D 球体', icon: '🌐' },
+  { value: 'graph', label: '图谱模式', icon: '' },
+  { value: 'outline', label: '大纲模式', icon: '' },
+  { value: 'mindmap', label: '思维导图', icon: '' },
+  { value: 'map', label: '学习地图', icon: '' },
+  { value: 'sphere', label: '3D 球体', icon: '' },
 ]
 
 const subjects = [
@@ -103,7 +103,7 @@ onMounted(() => {
     <div class="section-header">
       <div class="section-title-group">
         <div>
-          <div class="section-title">🕸️ AI 知识图谱</div>
+          <div class="section-title"> AI 知识图谱</div>
           <div class="section-desc">从课程文本自动抽取知识点实体和关系，构建可视化知识图谱</div>
         </div>
       </div>
@@ -134,14 +134,14 @@ onMounted(() => {
 
         <button class="btn btn-primary" @click="extractGraph" :disabled="loading || !inputText.trim()" style="width:100%;">
           <span v-if="loading" class="loading-spinner-sm"></span>
-          {{ loading ? '提取中...' : '🕸️ 提取知识图谱' }}
+          {{ loading ? '提取中...' : ' 提取知识图谱' }}
         </button>
 
         <div v-if="error" class="form-error" style="margin-top:8px;">{{ error }}</div>
 
         <!-- 统计信息 -->
         <div v-if="stats" class="kg-stats">
-          <div class="kg-stats-title">📊 图谱统计</div>
+          <div class="kg-stats-title"> 图谱统计</div>
           <div class="kg-stats-grid">
             <div class="kg-stat">
               <span class="stat-value">{{ stats.entity_count }}</span>
@@ -154,17 +154,17 @@ onMounted(() => {
           </div>
           <!-- 掌握度统计 -->
           <div class="kg-mastery-stats" v-if="masteryStats.total > 0">
-            <div class="kg-stats-title" style="margin-top:10px;">📈 掌握度分布</div>
+            <div class="kg-stats-title" style="margin-top:10px;"> 掌握度分布</div>
             <div class="kg-mastery-bar">
               <div class="kg-mastery-seg" :style="{ flex: masteryStats.mastered || 1, background: '#22c55e' }" :title="'已掌握: ' + masteryStats.mastered"></div>
               <div class="kg-mastery-seg" :style="{ flex: masteryStats.weak || 1, background: '#f59e0b' }" :title="'薄弱: ' + masteryStats.weak"></div>
               <div class="kg-mastery-seg" :style="{ flex: masteryStats.unlearned || 1, background: '#ef4444' }" :title="'未学: ' + masteryStats.unlearned"></div>
             </div>
             <div class="kg-mastery-labels">
-              <span>✅ {{ masteryStats.mastered }} 已掌握</span>
-              <span>⚠️ {{ masteryStats.weak }} 薄弱</span>
-              <span>📕 {{ masteryStats.unlearned }} 未学</span>
-              <span v-if="masteryStats.memoryWeak" style="color:var(--accent-primary);">🧠 {{ masteryStats.memoryWeak }} 记忆薄弱</span>
+              <span> {{ masteryStats.mastered }} 已掌握</span>
+              <span> {{ masteryStats.weak }} 薄弱</span>
+              <span> {{ masteryStats.unlearned }} 未学</span>
+              <span v-if="masteryStats.memoryWeak" style="color:var(--accent-primary);"> {{ masteryStats.memoryWeak }} 记忆薄弱</span>
             </div>
           </div>
           <div v-if="stats.entity_types" class="kg-type-list">
@@ -177,7 +177,7 @@ onMounted(() => {
 
         <!-- 已保存图谱 -->
         <div v-if="savedGraphs.length" class="kg-saved">
-          <div class="kg-stats-title">📁 已保存图谱</div>
+          <div class="kg-stats-title"> 已保存图谱</div>
           <div v-for="g in savedGraphs.slice(0, 5)" :key="g.id" class="kg-saved-item" role="button" tabindex="0" :aria-label="'加载图谱 ' + g.subject" @click="loadGraph(g.id)" @keydown.enter="loadGraph(g.id)" @keydown.space.prevent="loadGraph(g.id)">
             <span class="kg-saved-subject">{{ g.subject }}</span>
             <span class="kg-saved-count">{{ g.entity_count }} 实体</span>
@@ -188,7 +188,7 @@ onMounted(() => {
       <!-- 右侧：可视化 -->
       <div class="kg-vis-panel">
         <div class="panel-title-row">
-          <div class="panel-title">🕸️ 知识图谱可视化</div>
+          <div class="panel-title"> 知识图谱可视化</div>
           <div class="view-mode-tabs">
             <button v-for="m in viewModes" :key="m.value" class="view-mode-tab" :class="{ active: viewMode === m.value }" @click="viewMode = m.value">
               {{ m.icon }} {{ m.label }}

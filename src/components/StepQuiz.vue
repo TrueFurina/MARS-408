@@ -139,7 +139,7 @@ onUnmounted(() => {
   <div class="step-quiz">
     <div class="step-quiz-header">
       <button class="step-back-btn" @click="emit('back')">← 返回普通出题</button>
-      <span class="step-quiz-title">📋 步骤化答题</span>
+      <span class="step-quiz-title"> 步骤化答题</span>
     </div>
     <div class="step-quiz-desc">复杂题目拆成多步，每步独立判断，系统分析错因并追踪薄弱点</div>
 
@@ -189,19 +189,19 @@ onUnmounted(() => {
 
       <div v-if="stepAnswers.length > 0" class="step-history">
         <div v-for="(sa, si) in stepAnswers" :key="si" class="step-history-item" :class="{ correct: sa.correct, wrong: !sa.correct }">
-          <span class="step-h-icon">{{ sa.correct ? '✅' : '❌' }}</span>
+          <span class="step-h-icon">{{ sa.correct ? '' : '' }}</span>
           <span class="step-h-hint">{{ sa.hint }}</span>
         </div>
       </div>
 
       <div v-if="stepFinished" class="step-result">
-        <div class="step-result-title">🎉 答题完成</div>
+        <div class="step-result-title"> 答题完成</div>
         <div class="step-result-stats">
           正确 {{ stepAnswers.filter(a => a.correct).length }}/{{ stepAnswers.length }}
           | 错因: {{ [...new Set(stepAnswers.filter(a => !a.correct).map(a => a.error_type))].join(', ') || '无' }}
         </div>
         <div v-if="stepResult?.weak_points?.length" class="step-weak-points">
-          <div class="step-wp-title">📊 薄弱点分析</div>
+          <div class="step-wp-title"> 薄弱点分析</div>
           <div v-for="wp in stepResult.weak_points.slice(0,5)" :key="wp.concept" class="step-wp-item">
             <span class="step-wp-concept">{{ wp.concept }}</span>
             <span class="step-wp-count">出错 {{ wp.count }} 次</span>
@@ -209,9 +209,9 @@ onUnmounted(() => {
         </div>
         <!-- P2-6：错因 → 推荐同类题引导（薄弱点闭环） -->
         <div class="step-recommend" v-if="stepAnswers.some(a => !a.correct)">
-          <div class="step-rec-title">🎯 针对薄弱点，建议下一步</div>
-          <button class="engine-btn" @click="recommendSimilar">📝 做同类题巩固</button>
-          <button class="engine-btn glow-secondary" @click="goPractice">🔍 查看薄弱点专项练习</button>
+          <div class="step-rec-title"> 针对薄弱点，建议下一步</div>
+          <button class="engine-btn" @click="recommendSimilar"> 做同类题巩固</button>
+          <button class="engine-btn glow-secondary" @click="goPractice"> 查看薄弱点专项练习</button>
         </div>
         <button class="engine-btn" style="margin-top:1rem;" @click="reset">继续答题</button>
       </div>
@@ -242,7 +242,7 @@ onUnmounted(() => {
 .step-option:hover { border-color: var(--accent-primary); }
 .step-option.selected { border-color: var(--accent-primary); box-shadow: 0 0 0 2px var(--accent-primary-10); }
 .step-opt-letter { width:1.625rem; height:1.625rem; border-radius:50%; display: flex; align-items: center; justify-content: center; font-size:0.75rem; font-weight: 700; background: var(--bg-tertiary); color: var(--text-secondary); flex-shrink: 0; }
-.step-option.selected .step-opt-letter { background: var(--accent-primary); color: var(--text-user); }
+.step-option.selected .step-opt-letter { background: var(--color-accent-solid); color: var(--text-user); }
 .step-input { width:100%; padding:0.625rem 0.875rem; border-radius:var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-primary); font-size:0.875rem; }
 .step-input:focus { border-color: var(--accent-primary); outline: none; }
 .step-history { margin-top:1rem; display: flex; flex-direction: column; gap:0.375rem; }

@@ -54,8 +54,9 @@ svg { display: block; flex-shrink: 0; }
 @keyframes scale-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 @keyframes slide-in-right { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-@keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 8px rgba(124, 106, 242, 0.20); } 50% { box-shadow: 0 0 16px rgba(124, 106, 242, 0.40), 0 0 32px rgba(124, 106, 242, 0.15); } }
-@keyframes gradient-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+/* 已删除 @keyframes pulse-glow：硬编码已废弃的紫色且动画 box-shadow 模糊半径（违反"只动 GPU 属性"与"禁止霓虹发光"）。
+   引用方已全部改指 _variables.css 的 mars-pulse-soft（只动 opacity）。
+   已删除 @keyframes gradient-shift：全仓无引用，属死代码。 */
 
 /* ── 骨架屏（Skeleton.vue 依赖的全局类；shimmer 动画见上方 keyframes） ── */
 .skeleton {
@@ -76,4 +77,16 @@ svg { display: block; flex-shrink: 0; }
 /* 动效减弱（WCAG 2.3.3） */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+}
+
+/* ── 移动端全局防护（零风险）：媒体限宽 + 长内容横向滚动，杜绝移动端横向溢出 ── */
+img,
+video,
+canvas { max-width: 100%; height: auto; }
+
+pre,
+code,
+.hljs {
+  overflow-x: auto;
+  max-width: 100%;
 }

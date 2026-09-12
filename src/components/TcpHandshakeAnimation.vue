@@ -182,7 +182,7 @@ function drawScene() {
       ctx.fillStyle = '#ef4444'
       ctx.font = '13px -apple-system, sans-serif'
       ctx.textAlign = 'center'
-      ctx.fillText('⚠️ 半连接队列满！正常连接被拒绝', CX2, serverY + 130)
+      ctx.fillText(' 半连接队列满！正常连接被拒绝', CX2, serverY + 130)
     }
     return
   }
@@ -207,12 +207,12 @@ function drawScene() {
     const p = step === 3 ? progress : 1
     drawArrow(CX1, clientY + 5, CX2, serverY + 5, 'ACK\nseq=x+1,ack=y+1', '#22C55E', p)
     if (p >= 0.95) {
-      drawStateBox('ESTABLISHED ✓', CX1, clientY + 30, '#22C55E')
-      drawStateBox('ESTABLISHED ✓', CX2, serverY + 30, '#22C55E')
+      drawStateBox('ESTABLISHED ', CX1, clientY + 30, '#22C55E')
+      drawStateBox('ESTABLISHED ', CX2, serverY + 30, '#22C55E')
       ctx.fillStyle = '#22C55E'
       ctx.font = '700 16px -apple-system, sans-serif'
       ctx.textAlign = 'center'
-      ctx.fillText('✅ TCP 连接建立成功', (CX1 + CX2) / 2, midY)
+      ctx.fillText(' TCP 连接建立成功', (CX1 + CX2) / 2, midY)
     }
   }
 }
@@ -275,7 +275,7 @@ onUnmounted(() => {
   <div class="tcp-animation-wrapper">
     <div class="tcp-controls">
       <div class="tcp-title">
-        {{ mode === 'synflood' ? '⚠️ SYN Flood 攻击模拟' : 'TCP 三次握手过程' }}
+        {{ mode === 'synflood' ? ' SYN Flood 攻击模拟' : 'TCP 三次握手过程' }}
       </div>
       <div class="tcp-step-info" v-if="currentStep > 0 && mode !== 'synflood'">
         <span :style="{color: 'var(--accent-primary)'}">① SYN</span>

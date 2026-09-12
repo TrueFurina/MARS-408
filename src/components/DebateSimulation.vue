@@ -10,7 +10,7 @@ const error = ref('')
 async function simulate() {
   active.value = true
   error.value = ''
-  log.value = ['🚀 正在调用后端冲突检测引擎...']
+  log.value = [' 正在调用后端冲突检测引擎...']
   
   try {
     const result = await api.post<any>('/engine/conflict-check', {
@@ -23,12 +23,12 @@ async function simulate() {
     })
     
     log.value = []
-    log.value.push('✅ 后端冲突检测完成')
+    log.value.push(' 后端冲突检测完成')
     log.value.push('')
     
     if (result.conflicts && result.conflicts.length > 0) {
       for (const c of result.conflicts) {
-        log.value.push(`⚡ 冲突: ${c.agent_a} vs ${c.agent_b}`)
+        log.value.push(` 冲突: ${c.agent_a} vs ${c.agent_b}`)
         log.value.push(`   类型: ${c.type}`)
         log.value.push(`   描述: ${c.description}`)
         log.value.push(`   消解: ${c.resolution}`)
@@ -36,19 +36,19 @@ async function simulate() {
         log.value.push(`   证据数: ${c.evidence_count}`)
         log.value.push('')
       }
-      log.value.push(`📊 一致性评分: ${((result.overall_consistency ?? 0) * 100).toFixed(0)}%`)
+      log.value.push(` 一致性评分: ${((result.overall_consistency ?? 0) * 100).toFixed(0)}%`)
     } else {
-      log.value.push('✅ 未检测到冲突，所有 Agent 内容一致')
+      log.value.push(' 未检测到冲突，所有 Agent 内容一致')
       log.value.push('')
-      log.value.push('📊 一致性评分: 100%')
+      log.value.push(' 一致性评分: 100%')
     }
-    log.value.push(`🔍 共检测 ${result.total_conflicts} 个冲突，已消解 ${result.resolved} 个`)
+    log.value.push(` 共检测 ${result.total_conflicts} 个冲突，已消解 ${result.resolved} 个`)
     
   } catch (e: any) {
     error.value = e?.message || '调用后端失败'
-    log.value.push(`❌ 错误: ${error.value}`)
+    log.value.push(` 错误: ${error.value}`)
     log.value.push('')
-    log.value.push('💡 请确保后端已启动 (http://127.0.0.1:8002)')
+    log.value.push(' 请确保后端已启动 (http://127.0.0.1:8002)')
   } finally {
     active.value = false
   }
@@ -64,7 +64,7 @@ async function simulate() {
       </button>
     </div>
     <div v-if="error" class="debate-error">
-      ⚠️ {{ error }} — <button class="retry-btn" @click="simulate">重试</button>
+       {{ error }} — <button class="retry-btn" @click="simulate">重试</button>
     </div>
     <div v-if="log.length > 0" class="debate-log">
       <div v-for="(line, i) in log" :key="i" class="debate-line">{{ line }}</div>

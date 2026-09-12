@@ -252,7 +252,7 @@ onMounted(async () => {
       if (res?.skill) {
         skillInfo.value = { name: res.skill.name, icon: res.skill.icon }
         // 在第一条消息中提示用户
-        const msg = `🧠 当前使用技能: ${res.skill.icon} ${res.skill.name}\n\n请输入你的问题，此技能将使用自定义配置回答。`
+        const msg = ` 当前使用技能: ${res.skill.icon} ${res.skill.name}\n\n请输入你的问题，此技能将使用自定义配置回答。`
         const conv = store.getCurrentConversation()
         if (conv) {
           conv.messages.push({ role: 'assistant', content: msg, id: Date.now().toString(), segments: [], timestamp: new Date() })
@@ -280,7 +280,7 @@ async function sendMessage(text: string) {
     const videoCmd = text.match(/^(生成|制作|创建)\s*(教学)?\s*视频[:：]?\s*(.+)?$/i)
     if (videoCmd) {
       const topic = videoCmd[3]?.trim() || text.replace(/^(生成|制作|创建)\s*(教学)?\s*视频[:：]?\s*/i, '').trim() || '计算机408知识点'
-      await store.sendMessageStream(`📺 正在生成「${topic}」的教学视频...`, () => { scrollToBottom() })
+      await store.sendMessageStream(` 正在生成「${topic}」的教学视频...`, () => { scrollToBottom() })
       try {
         const res: any = await api.post('/multimodal/generate-teaching-video', { topic, difficulty: 'medium', output_format: 'html' })
         if (res?.html) {
@@ -289,7 +289,7 @@ async function sendMessage(text: string) {
           showTeachingVideo.value = true
         }
       } catch (e: any) {
-        await store.sendMessageStream(`❌ 视频生成失败: ${e?.message || '未知错误'}`, () => { scrollToBottom() })
+        await store.sendMessageStream(` 视频生成失败: ${e?.message || '未知错误'}`, () => { scrollToBottom() })
       }
       const conv = store.getCurrentConversation()
       if (conv && conv.messages.length > 0 && !route.params.convId) {
@@ -459,12 +459,12 @@ onBeforeUnmount(() => {
       <!-- 画像快捷入口 -->
       <div class="chat-profile-bar">
         <button v-if="currentUser" class="chat-profile-btn" @click="showProfile = true" title="查看学生画像">
-          <span class="cpb-avatar">🧑</span>
+          <span class="cpb-avatar"></span>
           <span class="cpb-level">{{ profileLevelLabel }}</span>
           <span class="cpb-weak" v-if="profileWeakCount > 0">{{ profileWeakCount }} 个薄弱点</span>
         </button>
         <button v-if="memoryOverview" class="chat-memory-btn" @click="router.push('/memory')" title="查看学情记忆中心">
-          <span>🧠</span>
+          <span></span>
           <span class="cpb-weak" v-if="memoryOverview.weak_points?.length">{{ memoryOverview.weak_points.length }} 个记忆薄弱点</span>
         </button>
         <button v-if="skillInfo" class="chat-skill-badge" @click="router.push(`/skills/${route.query.skill}`)">
@@ -502,7 +502,7 @@ onBeforeUnmount(() => {
                 <!-- 非 content 片段（thinking、tool_call）统一为弱化的卡片 -->
                 <div v-if="seg.type !== 'content'" class="meta-card" :class="{ collapsed: collapsedReasons.has(currentMessages[vItem.index]!.id + '-' + si) }">
                   <div class="meta-card-header" role="button" tabindex="0" @click.stop="toggleReason(currentMessages[vItem.index]!.id + '-' + si)" @keydown.enter.stop="toggleReason(currentMessages[vItem.index]!.id + '-' + si)" @keydown.space.prevent.stop="toggleReason(currentMessages[vItem.index]!.id + '-' + si)">
-                    <span class="meta-card-label">{{ seg.type === 'reasoning' ? '💭 Thinking' : '🔧 ' + seg.toolName }}</span>
+                    <span class="meta-card-label">{{ seg.type === 'reasoning' ? ' Thinking' : ' ' + seg.toolName }}</span>
                     <span v-if="seg.duration" class="meta-card-duration">{{ (seg.duration / 1000).toFixed(1) }}s</span>
                     <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M11.8486 5.5L11.4238 5.92383L8.69727 8.65137C8.44157 8.90706 8.21562 9.13382 8.01172 9.29785C7.79912 9.46883 7.55595 9.61756 7.25 9.66602C7.08435 9.69222 6.91565 9.69222 6.75 9.66602C6.44405 9.61756 6.20088 9.46883 5.98828 9.29785C5.78438 9.13382 5.55843 8.90706 5.30273 8.65137L2.57617 5.92383L2.15137 5.5L3 4.65137L3.42383 5.07617L6.15137 7.80273C6.42595 8.07732 6.59876 8.24849 6.74023 8.3623C6.87291 8.46904 6.92272 8.47813 6.9375 8.48047C6.97895 8.48703 7.02105 8.48703 7.0625 8.48047C7.07728 8.47813 7.12709 8.46904 7.25977 8.3623C7.40124 8.24849 7.57405 8.07732 7.84863 7.80273L10.5762 5.07617L11 4.65137L11.8486 5.5Z" fill="currentColor"/></svg>
                   </div>
@@ -555,8 +555,8 @@ onBeforeUnmount(() => {
               </div>
               <!-- 快捷操作按钮 -->
               <div class="quick-actions" v-if="currentMessages[vItem.index]!.role === 'assistant' && getSpeakableText(currentMessages[vItem.index]!)">
-                <button class="qa-btn" @click="router.push('/practice')" title="做一道相关练习题">📝 做练习题</button>
-                <button class="qa-btn" @click="router.push('/resource')" title="生成相关学习资源">🤖 生成资源</button>
+                <button class="qa-btn" @click="router.push('/practice')" title="做一道相关练习题"> 做练习题</button>
+                <button class="qa-btn" @click="router.push('/resource')" title="生成相关学习资源"> 生成资源</button>
               </div>
             </div>
           </template>
@@ -572,7 +572,7 @@ onBeforeUnmount(() => {
       <div v-if="pendingImage" class="image-preview-chip">
         <img :src="pendingImage" alt="预览" />
         <span class="image-preview-name">{{ pendingImageName || '图片' }}</span>
-        <button class="image-preview-remove" @click="clearPendingImage" title="移除图片">✕</button>
+        <button class="image-preview-remove" @click="clearPendingImage" title="移除图片"></button>
         <span class="image-preview-hint">将使用讯飞图片理解回答你的问题</span>
       </div>
       <div class="chat-mode-bar">
@@ -583,7 +583,7 @@ onBeforeUnmount(() => {
         <span v-if="tutorMode" class="mode-hint">提问将获得 文字解答 + SVG图解 + 短视频脚本 的多模态答疑</span>
       </div>
       <div v-if="sendError" class="chat-send-error" role="button" tabindex="0" aria-label="关闭错误提示" @click="sendError = null" @keydown.enter="sendError = null" title="点击关闭">
-        ⚠️ {{ sendError }}
+         {{ sendError }}
       </div>
       <div class="chat-input-wrapper">
         <ChatInput ref="chatInputRef" :disabled="isLoading" @send="sendMessage" @image="onImageSelected" />
@@ -618,7 +618,7 @@ onBeforeUnmount(() => {
 .sidebar-conversations { flex: 1; overflow-y: auto; padding:0.375rem; }
 .sidebar-conv-item { display: flex; align-items: center; gap:0.5rem; padding:0.625rem; border-radius:var(--radius-sm); cursor: pointer; transition: var(--transition); font-size:0.8125rem; color: var(--text-secondary); }
 .sidebar-conv-item:hover { background: var(--bg-card-hover); color: var(--text-primary); }
-.sidebar-conv-item.active { background: var(--accent-primary); color: var(--text-user); }
+.sidebar-conv-item.active { background: var(--color-accent-solid); color: var(--text-user); }
 .conv-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .conv-delete { width:1.5rem; height:1.5rem; display: flex; align-items: center; justify-content: center; border-radius:0.25rem; border: none; background: transparent; color: var(--text-muted); cursor: pointer; opacity: 0; transition: var(--transition); flex-shrink: 0; }
 .sidebar-conv-item:hover .conv-delete { opacity: 1; }

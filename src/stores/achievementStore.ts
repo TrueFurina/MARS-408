@@ -24,41 +24,41 @@ export interface Achievement {
 // 成就定义表
 const ACHIEVEMENT_DEFS: Omit<Achievement, 'unlocked' | 'unlockedAt' | 'progress' | 'progressLabel'>[] = [
   // ── 学习里程碑 ──
-  { id: 'first_login', name: '初次见面', description: '首次登录 MARS-408 学习系统', icon: '👋', category: 'milestone', color: '#7c6af2' },
-  { id: 'profile_built', name: '画像大师', description: '完成学生画像构建', icon: '🧠', category: 'milestone', color: '#8b5cf6' },
-  { id: 'first_chat', name: '初次对话', description: '完成第一次 AI 对话', icon: '💬', category: 'milestone', color: '#3b82f6' },
-  { id: 'first_resource', name: '资源猎人', description: '生成第一份学习资源', icon: '📄', category: 'milestone', color: '#06b6d4' },
-  { id: 'first_path', name: '路线规划', description: '查看个性化学习路径', icon: '🗺️', category: 'milestone', color: '#22c55e' },
+  { id: 'first_login', name: '初次见面', description: '首次登录 MARS-408 学习系统', icon: '', category: 'milestone', color: '#7c6af2' },
+  { id: 'profile_built', name: '画像大师', description: '完成学生画像构建', icon: '', category: 'milestone', color: '#8b5cf6' },
+  { id: 'first_chat', name: '初次对话', description: '完成第一次 AI 对话', icon: '', category: 'milestone', color: '#3b82f6' },
+  { id: 'first_resource', name: '资源猎人', description: '生成第一份学习资源', icon: '', category: 'milestone', color: '#06b6d4' },
+  { id: 'first_path', name: '路线规划', description: '查看个性化学习路径', icon: '', category: 'milestone', color: '#22c55e' },
 
   // ── 练习达人 ──
-  { id: 'quiz_10', name: '初出茅庐', description: '完成 10 道练习题', icon: '📝', category: 'practice', color: '#f59e0b' },
-  { id: 'quiz_50', name: '题海战士', description: '完成 50 道练习题', icon: '⚔️', category: 'practice', color: '#f97316' },
-  { id: 'quiz_100', name: '刷题狂人', description: '完成 100 道练习题', icon: '🏆', category: 'practice', color: '#ef4444' },
-  { id: 'quiz_300', name: '题王之王', description: '完成 300 道练习题', icon: '👑', category: 'practice', color: '#ec4899' },
-  { id: 'accuracy_80', name: '精准射手', description: '答题正确率达到 80%', icon: '🎯', category: 'practice', color: '#22c55e' },
-  { id: 'accuracy_90', name: '学霸模式', description: '答题正确率达到 90%', icon: '🌟', category: 'practice', color: '#14b8a6' },
-  { id: 'perfect_10', name: '十全十美', description: '连续答对 10 题', icon: '💎', category: 'practice', color: '#8b5cf6' },
+  { id: 'quiz_10', name: '初出茅庐', description: '完成 10 道练习题', icon: '', category: 'practice', color: '#f59e0b' },
+  { id: 'quiz_50', name: '题海战士', description: '完成 50 道练习题', icon: '', category: 'practice', color: '#f97316' },
+  { id: 'quiz_100', name: '刷题狂人', description: '完成 100 道练习题', icon: '', category: 'practice', color: '#ef4444' },
+  { id: 'quiz_300', name: '题王之王', description: '完成 300 道练习题', icon: '', category: 'practice', color: '#ec4899' },
+  { id: 'accuracy_80', name: '精准射手', description: '答题正确率达到 80%', icon: '', category: 'practice', color: '#22c55e' },
+  { id: 'accuracy_90', name: '学霸模式', description: '答题正确率达到 90%', icon: '', category: 'practice', color: '#14b8a6' },
+  { id: 'perfect_10', name: '十全十美', description: '连续答对 10 题', icon: '', category: 'practice', color: '#8b5cf6' },
 
   // ── 知识探索 ──
-  { id: 'knowledge_10', name: '知识学徒', description: '浏览 10 个知识点', icon: '📚', category: 'knowledge', color: '#3b82f6' },
-  { id: 'knowledge_50', name: '知识探索者', description: '浏览 50 个知识点', icon: '🔍', category: 'knowledge', color: '#6366f1' },
-  { id: 'knowledge_all', name: '博学家', description: '覆盖全部 4 门课程', icon: '🎓', category: 'knowledge', color: '#7c6af2' },
-  { id: 'kg_built', name: '图谱构建者', description: '生成知识图谱', icon: '🕸️', category: 'knowledge', color: '#06b6d4' },
-  { id: 'mindmap_view', name: '思维导图', description: '查看思维导图', icon: '🧩', category: 'knowledge', color: '#f59e0b' },
+  { id: 'knowledge_10', name: '知识学徒', description: '浏览 10 个知识点', icon: '', category: 'knowledge', color: '#3b82f6' },
+  { id: 'knowledge_50', name: '知识探索者', description: '浏览 50 个知识点', icon: '', category: 'knowledge', color: '#6366f1' },
+  { id: 'knowledge_all', name: '博学家', description: '覆盖全部 4 门课程', icon: '', category: 'knowledge', color: '#7c6af2' },
+  { id: 'kg_built', name: '图谱构建者', description: '生成知识图谱', icon: '', category: 'knowledge', color: '#06b6d4' },
+  { id: 'mindmap_view', name: '思维导图', description: '查看思维导图', icon: '', category: 'knowledge', color: '#f59e0b' },
 
   // ── 坚持学习 ──
-  { id: 'streak_3', name: '三天打鱼', description: '连续学习 3 天', icon: '🔥', category: 'streak', color: '#f97316' },
-  { id: 'streak_7', name: '一周坚持', description: '连续学习 7 天', icon: '📅', category: 'streak', color: '#ef4444' },
-  { id: 'streak_14', name: '半月长征', description: '连续学习 14 天', icon: '🚀', category: 'streak', color: '#ec4899' },
-  { id: 'streak_30', name: '月度冠军', description: '连续学习 30 天', icon: '🏅', category: 'streak', color: '#14b8a6' },
-  { id: 'streak_60', name: '学习铁人', description: '连续学习 60 天', icon: '🦾', category: 'streak', color: '#8b5cf6' },
+  { id: 'streak_3', name: '三天打鱼', description: '连续学习 3 天', icon: '', category: 'streak', color: '#f97316' },
+  { id: 'streak_7', name: '一周坚持', description: '连续学习 7 天', icon: '', category: 'streak', color: '#ef4444' },
+  { id: 'streak_14', name: '半月长征', description: '连续学习 14 天', icon: '', category: 'streak', color: '#ec4899' },
+  { id: 'streak_30', name: '月度冠军', description: '连续学习 30 天', icon: '', category: 'streak', color: '#14b8a6' },
+  { id: 'streak_60', name: '学习铁人', description: '连续学习 60 天', icon: '', category: 'streak', color: '#8b5cf6' },
 
   // ── 成就大师 ──
-  { id: 'collector_5', name: '收藏家', description: '解锁 5 个成就', icon: '🏅', category: 'master', color: '#f59e0b' },
-  { id: 'collector_10', name: '成就猎人', description: '解锁 10 个成就', icon: '🎖️', category: 'master', color: '#f97316' },
-  { id: 'collector_20', name: '成就大师', description: '解锁 20 个成就', icon: '👑', category: 'master', color: '#ec4899' },
-  { id: 'four_in_one', name: '全科通关', description: '四门课程都有练习记录', icon: '🌈', category: 'master', color: '#7c6af2' },
-  { id: 'speed_learner', name: '速学者', description: '单日完成 20+ 题', icon: '⚡', category: 'master', color: '#06b6d4' },
+  { id: 'collector_5', name: '收藏家', description: '解锁 5 个成就', icon: '', category: 'master', color: '#f59e0b' },
+  { id: 'collector_10', name: '成就猎人', description: '解锁 10 个成就', icon: '', category: 'master', color: '#f97316' },
+  { id: 'collector_20', name: '成就大师', description: '解锁 20 个成就', icon: '', category: 'master', color: '#ec4899' },
+  { id: 'four_in_one', name: '全科通关', description: '四门课程都有练习记录', icon: '', category: 'master', color: '#7c6af2' },
+  { id: 'speed_learner', name: '速学者', description: '单日完成 20+ 题', icon: '', category: 'master', color: '#06b6d4' },
 ]
 
 export const useAchievementStore = defineStore('achievements', () => {

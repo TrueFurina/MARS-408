@@ -152,7 +152,7 @@ const nextStepNode = computed<PathNode | null>(() => {
 
     <!-- L1/L2/L3 三层学情记忆健康度（低侵入联动） -->
     <div v-if="memoryOverview" class="memory-mini-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
-      <span class="memory-mini-chip" style="font-size:11px;padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);">🧠 {{ memoryOverview.memory_level || 'L3' }}</span>
+      <span class="memory-mini-chip" style="font-size:11px;padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);"> {{ memoryOverview.memory_level || 'L3' }}</span>
       <span class="memory-mini-chip" style="font-size:11px;padding:3px 10px;border-radius:12px;background:var(--bg-tertiary);color:var(--text-secondary);">薄弱点: {{ memoryOverview.weak_points?.length ?? 0 }} 个</span>
       <span class="memory-mini-chip" style="font-size:11px;padding:3px 10px;border-radius:12px;background:var(--bg-tertiary);color:var(--text-secondary);">掌握度: {{ memoryOverview.mastery_points ?? 0 }} 点</span>
     </div>
@@ -189,7 +189,7 @@ const nextStepNode = computed<PathNode | null>(() => {
 
     <!-- 错误提示 -->
     <div v-else-if="error" class="path-error">
-      <div class="path-error-title">⚠️ 加载失败</div>
+      <div class="path-error-title"> 加载失败</div>
       <div class="path-error-msg">{{ error }}</div>
       <button class="path-error-retry" @click="loadPath">重试</button>
     </div>

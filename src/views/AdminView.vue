@@ -156,7 +156,7 @@ onMounted(load)
       <div class="card glass-card" style="margin-top:16px;">
         <div class="card-header">
           <span class="card-title"><span v-html="icons.user" class="card-title-icon"></span>用户总览（{{ users.length }} 人）</span>
-          <button class="rag-btn" style="background:var(--accent-2);" @click="goKnowledge">🗂️ 知识库管理</button>
+          <button class="rag-btn" style="background:var(--accent-2);" @click="goKnowledge"> 知识库管理</button>
         </div>
 
         <div class="table-wrap">
@@ -295,11 +295,11 @@ onMounted(load)
 .admin-error { display: flex; flex-direction: column; gap: 1rem; align-items: flex-start; }
 .engine-btn {
   padding:0.5625rem 1.25rem; border: none; border-radius:0.625rem; cursor: pointer; color: var(--text-user); font-weight: 600;
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-2));
+  background: var(--gradient-primary);
 }
 .rag-btn {
   padding:0.5rem 1rem; border: none; border-radius:0.625rem; cursor: pointer; color: var(--text-user); font-size:0.8125rem; font-weight: 600;
-  background: var(--accent-primary);
+  background: var(--color-accent-solid);
 }
 .skeleton { border-radius: var(--radius-lg); background: linear-gradient(90deg, var(--color-surface) 25%, var(--color-surface-hover) 37%, var(--color-surface) 63%); background-size: 400% 100%; animation: shimmer 1.4s ease infinite; }
 </style>

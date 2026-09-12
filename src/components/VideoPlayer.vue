@@ -39,9 +39,9 @@ onUnmounted(() => {
     <div class="video-overlay" @click.self="emit('close')" role="dialog" aria-modal="true" :aria-label="'视频播放器: ' + (title || '教学视频')">
       <div class="video-player">
         <div class="video-header">
-          <span class="video-title">🎬 {{ title || '教学视频' }}</span>
+          <span class="video-title"> {{ title || '教学视频' }}</span>
           <div class="video-actions">
-            <button class="video-btn" @click="emit('close')" title="关闭 (Esc)" aria-label="关闭视频">✕</button>
+            <button class="video-btn" @click="emit('close')" title="关闭 (Esc)" aria-label="关闭视频"></button>
           </div>
         </div>
         <div class="video-body">

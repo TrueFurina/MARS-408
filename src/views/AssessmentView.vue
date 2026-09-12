@@ -405,7 +405,7 @@ function goToLearningPath() {
         </div>
         <!-- L1/L2/L3 三层学情记忆健康度（低侵入联动） -->
         <div v-if="memoryOverview" class="memory-mini-strip">
-          <span class="memory-mini-chip">🧠 {{ memoryOverview.memory_level || 'L3' }}</span>
+          <span class="memory-mini-chip"> {{ memoryOverview.memory_level || 'L3' }}</span>
           <span class="memory-mini-chip">画像 {{ memoryOverview.profile_dimensions ?? 0 }}/8 维</span>
           <span class="memory-mini-chip">掌握度 {{ memoryOverview.mastery_points ?? 0 }} 点</span>
           <span class="memory-mini-chip">情景事件 {{ memoryOverview.episodic_count ?? 0 }}</span>

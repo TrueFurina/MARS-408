@@ -193,9 +193,9 @@ watch(() => [props.nodes], () => { initSphere() })
       class="sphere-canvas"
       @click="onClick"
     ></canvas>
-    <div class="sphere-hint">🌐 3D 球体视图 · 鼠标点击节点查看详情</div>
+    <div class="sphere-hint"> 3D 球体视图 · 鼠标点击节点查看详情</div>
     <div v-if="nodes.length === 0" class="sphere-empty">
-      <div class="empty-icon">🌐</div>
+      <div class="empty-icon"></div>
       <div class="empty-text">暂无数据</div>
     </div>
   </div>

@@ -17,211 +17,241 @@
    1. 设计令牌 · :root（深色调默认 · 取自 DESIGN_TOKENS.md，未改色值、未裸写 hex）
    ============================================================ */
 :root {
-  /* ============ 语义层 · 画布与表面 ============ */
-  --color-canvas:        #080812;
-  --color-surface:       rgba(255,255,255,0.03);
-  --color-surface-2:     #0f0f1a;
-  --color-surface-hover: rgba(255,255,255,0.06);
-  --color-elevated:      #1c1c2b;
-  --color-overlay:       rgba(0,0,0,0.55);
-
-  /* ============ 语义层 · 玻璃态 ============ */
-  --color-glass:         rgba(15,15,26,0.65);
-  --color-glass-hover:   rgba(15,15,26,0.80);
-  --color-glass-border:  rgba(255,255,255,0.08);
-  --glass-blur:          12px;
-  --glass-blur-heavy:    20px;
-
-  /* ============ 语义层 · 边框 ============ */
-  --color-border:        rgba(255,255,255,0.06);
-  --color-border-light:  rgba(255,255,255,0.04);
-  --color-border-focus:  rgba(124,106,242,0.45);
-  --color-border-glow:   rgba(124,106,242,0.25);
-
-  /* ============ 语义层 · 文本 ============ */
-  --color-text:          #f8fafc;
-  --color-text-2:        #94a3b8;
-  --color-text-3:        #7c8aa0;
-  --color-text-invert:   #0f0f1a;
-
-  /* ============ 品牌色（双主题恒定） ============ */
-  --accent:              #7c6af2;   /* 主色 · 紫 */
-  --accent-dark:         #6b5cdb;
-  --accent-blue:         #5b8bd8;
-  --accent-cyan:         #06b6d4;
-  --accent-warm:         #f59e0b;
-  --accent-success:      #22c55e;
-  --accent-danger:       #ef4444;
-  --accent-pink:         #f472b6;
-  --accent-primary:        var(--accent);
-  --accent-primary-dark:   var(--accent-dark);
-  --accent-secondary:      var(--accent-blue);
-  --accent-tertiary:       var(--accent-cyan);
-  --accent-primary-10:   rgba(124,106,242,0.10);
-  --accent-primary-20:   rgba(124,106,242,0.20);
-  --accent-primary-30:   rgba(124,106,242,0.30);
-
-  /* ============ 408 四科色（恒定 · 语义着色用 color-mix 14%） ============ */
-  --subject-ds: #8b5cf6;  /* 数据结构 */
-  --subject-cn: #3b82f6;  /* 计网 */
-  --subject-co: #06b6d4;  /* 计组 */
-  --subject-os: #f472b6;  /* 操作系统 */
-
-  /* ============ 发光 ============ */
-  --glow-primary:        0 0 20px rgba(124,106,242,0.15), 0 0 40px rgba(124,106,242,0.08);
-  --glow-primary-strong: 0 0 20px rgba(124,106,242,0.25), 0 0 60px rgba(124,106,242,0.12);
-  --glow-secondary:      0 0 20px rgba(91,139,216,0.15), 0 0 40px rgba(91,139,216,0.08);
-  --glow-success:        0 0 20px rgba(34,197,94,0.15);
-
-  /* ============ 渐变 ============ */
-  --gradient-primary: linear-gradient(135deg, #7c6af2 0%, #5b8bd8 100%);
-  --gradient-text:    linear-gradient(135deg, #f8fafc 0%, #a5b4fc 100%);
-  --gradient-hero:    radial-gradient(ellipse 600px 400px at 30% 30%, rgba(124,106,242,0.10) 0%, transparent 70%),
-                      radial-gradient(ellipse 500px 300px at 70% 60%, rgba(91,139,216,0.08) 0%, transparent 70%);
-  --gradient-border:  linear-gradient(135deg, rgba(124,106,242,0.20), rgba(91,139,216,0.15), rgba(6,182,212,0.10));
-  --gradient-progress:linear-gradient(90deg, #7c6af2, #5b8bd8, #06b6d4);
-
-  /* ============ 阴影 ============ */
-  --shadow-sm:        0 1px 2px rgba(0,0,0,0.30);
-  --shadow-md:        0 4px 12px rgba(0,0,0,0.35);
-  --shadow-lg:        0 8px 24px rgba(0,0,0,0.40);
-  --shadow-xl:        0 16px 40px rgba(0,0,0,0.45);
-  --shadow-card:      0 2px 8px rgba(0,0,0,0.25), 0 0 1px rgba(255,255,255,0.06);
-  --shadow-card-hover:0 8px 24px rgba(0,0,0,0.35), 0 0 20px rgba(124,106,242,0.08);
-  --shadow-glow:      0 4px 16px rgba(124,106,242,0.12);
-
-  /* ============ 圆角 ============ */
-  --radius-xs: 6px;
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 18px;
-  --radius-xl: 24px;
-  --radius-full: 9999px;
-
-  /* ============ 间距（4/8 基准） ============ */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-7: 28px;
-  --space-8: 32px;
-  --space-10: 40px;
-  --space-12: 48px;
-  --space-16: 64px;
-  --space-20: 80px;
-  --space-24: 96px;
-
-  /* ============ 排版（中文系统字体栈 · 零加载） ============ */
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-  --font-mono: 'SF Mono', 'Fira Code', 'Consolas', 'Cascadia Code', monospace;
-  --fs-nano:    12px;
-  --fs-caption: 13px;
-  --fs-body:    14px;
-  --fs-body-lg: 16px;
-  --fs-h3:      18px;
-  --fs-h2:      24px;
-  --fs-h1:      32px;
-  --fs-display: 40px;
-  --lh-tight: 1.1;
-  --lh-snug:  1.2;
-  --lh-normal:1.6;
-  --ls-tight: -0.8px;
-  --ls-snug:  -0.5px;
-  --ls-normal:0;
-  --fw-regular: 400;
-  --fw-medium:  500;
-  --fw-semibold:600;
-  --fw-bold:    700;
-
-  /* ============ 层级 ============ */
-  --z-base: 1;
-  --z-sticky-nav: 100;
-  --z-dropdown: 200;
-  --z-overlay: 900;
-  --z-modal: 950;
-  --z-tooltip: 1000;
-
-  /* ============ 布局 ============ */
-  --container-max: 1200px;
-  --container-pad: 32px;
-  --nav-height: 72px;
-  --section-gap: 80px;
-
-  /* ============ 组件令牌 · 按钮 ============ */
-  --btn-radius: var(--radius-md);
-  --btn-radius-pill: var(--radius-full);
-  --btn-pad-y: 10px;
-  --btn-pad-x: 20px;
-  --btn-pad-y-lg: 13px;
-  --btn-pad-x-lg: 28px;
-  --btn-primary-bg: var(--gradient-primary);
-  --btn-primary-color: #ffffff;
-  --btn-primary-hover-shadow: 0 8px 20px rgba(124,106,242,0.25);
-  --btn-secondary-bg: var(--color-surface-hover);
-  --btn-secondary-color: var(--color-text);
-  --btn-secondary-border: var(--color-border);
-  --btn-ghost-color: var(--color-text-2);
-  --btn-soft-bg: var(--accent-primary-10);
-  --btn-soft-color: var(--accent-primary);
-
-  /* ============ 组件令牌 · 卡片 ============ */
-  --card-bg: var(--color-glass);
-  --card-border: var(--color-glass-border);
-  --card-radius: var(--radius-lg);
-  --card-padding: 24px;
-  --card-shadow: var(--shadow-card);
-  --card-hover-shadow: var(--shadow-card-hover);
-  --card-hover-transform: scale(1.02);
-  --card-blur: var(--glass-blur);
-
-  /* ============ 组件令牌 · 徽章 / 标签 ============ */
-  --badge-radius: var(--radius-full);
-  --badge-padding: 4px 12px;
-  --badge-font-size: 12px;
-  --badge-font-weight: 600;
-
-  /* ============ 组件令牌 · 导航栏 ============ */
-  --nav-bg: var(--color-glass);
-  --nav-border: var(--color-glass-border);
-  --nav-blur: var(--glass-blur);
-
-  /* ============ 组件令牌 · 分隔线 ============ */
-  --divider-color: var(--color-border);
-  --divider-light: var(--color-border-light);
-
-  /* ============ 动效 ============ */
-  --transition:        all 0.2s cubic-bezier(0.4,0,0.2,1);
-  --transition-slow:   all 0.35s cubic-bezier(0.4,0,0.2,1);
-  --transition-bounce: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
-  --duration-fast:   150ms;
-  --duration-normal:  300ms;
-  --duration-slow:    500ms;
-  --duration-enter:   600ms;
-
-  /* ============================================================
-     页面级令牌 · 知识图谱（以 DESIGN_TOKENS_KG.md 为准 · 均 var()，不重定义基础令牌）
-     ============================================================ */
-  --subject-data: var(--subject-ds);   /* 别名：数据结构 */
-  --subject-net:  var(--subject-cn);   /* 别名：计网 */
-  --subject-org:  var(--subject-co);   /* 别名：计组 */
-  /* 掌握度三档（Deep） */
-  --mastery-low:  #ef4444;   /* 薄弱 */
-  --mastery-mid:  #f59e0b;   /* 一般 */
-  --mastery-high: #22c55e;   /* 扎实 */
-  /* 边类型（Deep） */
-  --edge-prereq:  #7c6af2;   /* 实线 · 先修依赖 */
-  --edge-related: #475569;   /* 虚线 · 关联 */
-  /* 节点与描边 */
-  --kg-node-base: 44px;
-  --urgent: var(--mastery-low);   /* 低掌握度优先补强环（= --mastery-low） */
-
-  /* 卡片密度（本页） */
-  --card-pad-page: var(--space-5);
-  --card-gap-page: var(--space-3);
-  --text-danger: #fca5a5;
-}
+    --font-sans: 'Geist', 'Outfit', 'Satoshi', 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+    --font-display: var(--font-sans);
+    --font-mono: 'Geist Mono', 'SF Mono', 'JetBrains Mono', 'Fira Code', 'Consolas', 'Cascadia Code', monospace;
+    --font-numeric: tabular-nums;
+    --text-2xs: 0.6875rem;
+    --text-xs: 0.75rem;
+    --text-sm: 0.8125rem;
+    --text-base: 0.875rem;
+    --text-md: 0.9375rem;
+    --text-lg: 1rem;
+    --text-xl: 1.125rem;
+    --text-2xl: 1.25rem;
+    --text-3xl: 1.5rem;
+    --text-4xl: 1.875rem;
+    --text-5xl: 2.25rem;
+    --text-6xl: 2.75rem;
+    --leading-none: 1;
+    --leading-tight: 1.2;
+    --leading-snug: 1.35;
+    --leading-normal: 1.55;
+    --leading-relaxed: 1.7;
+    --weight-regular: 400;
+    --weight-medium: 500;
+    --weight-semibold: 600;
+    --weight-bold: 700;
+    --tracking-tighter: -0.022em;
+    --tracking-tight: -0.011em;
+    --tracking-normal: 0;
+    --tracking-wide: 0.03em;
+    --tracking-caps: 0.08em;
+    --space-0: 0;
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-7: 28px;
+    --space-8: 32px;
+    --space-9: 36px;
+    --space-10: 40px;
+    --space-11: 44px;
+    --space-12: 48px;
+    --space-14: 56px;
+    --space-16: 64px;
+    --space-20: 80px;
+    --space-24: 96px;
+    --space-32: 128px;
+    --radius-none: 0;
+    --radius-2xs: 4px;
+    --radius-xs: 6px;
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-lg: 18px;
+    --radius-xl: 24px;
+    --radius-2xl: 32px;
+    --radius-full: 9999px;
+    --motion-scale: 1;
+    --duration-instant: calc(80ms * var(--motion-scale));
+    --duration-fast: calc(140ms * var(--motion-scale));
+    --duration-normal: calc(220ms * var(--motion-scale));
+    --duration-slow: calc(340ms * var(--motion-scale));
+    --duration-slower: calc(520ms * var(--motion-scale));
+    --duration-enter: calc(400ms * var(--motion-scale));
+    --ease-linear: linear;
+    --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-in: cubic-bezier(0.4, 0, 1, 1);
+    --ease-emphasized: cubic-bezier(0.05, 0.7, 0.1, 1);
+    --ease-spring: cubic-bezier(0.34, 1.42, 0.64, 1);
+    --distance-enter: 8px;
+    --distance-enter-lg: 16px;
+    --scale-press: 0.97;
+    --scale-hover: 1.02;
+    --rotate-none: 0deg;
+    --motion-micro: transform var(--duration-fast) var(--ease-standard), opacity var(--duration-fast) var(--ease-standard);
+    --motion-transition: transform var(--duration-normal) var(--ease-out), opacity var(--duration-normal) var(--ease-out);
+    --motion-emphasis: transform var(--duration-slow) var(--ease-emphasized), opacity var(--duration-normal) var(--ease-out);
+    --motion-gpu: transform var(--duration-normal) var(--ease-out), opacity var(--duration-normal) var(--ease-out), filter var(--duration-normal) var(--ease-out);
+    --motion-colors: background-color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard);
+    --transition: transform var(--duration-fast) var(--ease-standard), opacity var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
+    --transition-slow: transform var(--duration-slow) var(--ease-standard), opacity var(--duration-slow) var(--ease-standard), background-color var(--duration-slow) var(--ease-standard), border-color var(--duration-slow) var(--ease-standard), color var(--duration-slow) var(--ease-standard), box-shadow var(--duration-slow) var(--ease-standard);
+    --transition-bounce: transform var(--duration-slow) var(--ease-spring), opacity var(--duration-normal) var(--ease-out), background-color var(--duration-slow) var(--ease-spring), border-color var(--duration-slow) var(--ease-spring), color var(--duration-slow) var(--ease-spring), box-shadow var(--duration-slow) var(--ease-spring);
+    --transition-fast: var(--transition);
+    --transition-colors: background-color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard);
+    --transition-transform: transform var(--duration-normal) var(--ease-out);
+    --transition-opacity: opacity var(--duration-normal) var(--ease-out);
+    --stream-fade: calc(200ms * var(--motion-scale));
+    --cursor-blink: 1.1s;
+    --z-base: 0;
+    --z-raised: 10;
+    --z-sticky: 100;
+    --z-dropdown: 200;
+    --z-overlay: 300;
+    --z-modal: 400;
+    --z-popover: 500;
+    --z-toast: 600;
+    --z-tooltip: 700;
+    --z-top: 1000;
+    --topbar-height: 64px;
+    --sidebar-width: 220px;
+    --sidebar-collapsed: 72px;
+    --bottom-nav-height: 64px;
+    --chat-max-width: 900px;
+    --content-max-width: 1280px;
+    --card-accent: var(--color-accent);
+    --card-gradient: none;
+    --course-color: var(--color-accent);
+    --pill-color: var(--color-accent);
+    --node-color: var(--color-accent);
+    --subj-color: var(--color-accent);
+    --step-accent: var(--color-accent);
+    --color-canvas: #080812;
+    --color-surface: rgba(255,255,255,0.03);
+    --color-surface-2: #0f0f1a;
+    --color-surface-hover: rgba(255,255,255,0.06);
+    --color-elevated: #1c1c2b;
+    --color-overlay: rgba(0,0,0,0.55);
+    --color-glass: rgba(15,15,26,0.65);
+    --color-glass-hover: rgba(15,15,26,0.80);
+    --color-glass-border: rgba(255,255,255,0.08);
+    --glass-blur: 12px;
+    --glass-blur-heavy: 20px;
+    --color-border: rgba(255,255,255,0.06);
+    --color-border-light: rgba(255,255,255,0.04);
+    --color-border-focus: rgba(124,106,242,0.45);
+    --color-border-glow: rgba(124,106,242,0.25);
+    --color-text: #f8fafc;
+    --color-text-2: #94a3b8;
+    --color-text-3: #7c8aa0;
+    --color-text-invert: #0f0f1a;
+    --accent: #7c6af2;
+    --accent-dark: #6b5cdb;
+    --accent-blue: #5b8bd8;
+    --accent-cyan: #06b6d4;
+    --accent-warm: #f59e0b;
+    --accent-success: #22c55e;
+    --accent-danger: #ef4444;
+    --accent-pink: #f472b6;
+    --accent-primary: var(--accent);
+    --accent-primary-dark: var(--accent-dark);
+    --accent-secondary: var(--accent-blue);
+    --accent-tertiary: var(--accent-cyan);
+    --accent-primary-10: rgba(124,106,242,0.10);
+    --accent-primary-20: rgba(124,106,242,0.20);
+    --accent-primary-30: rgba(124,106,242,0.30);
+    --subject-ds: #8b5cf6;
+    --subject-cn: #3b82f6;
+    --subject-co: #06b6d4;
+    --subject-os: #f472b6;
+    --glow-primary: 0 0 20px rgba(124,106,242,0.15), 0 0 40px rgba(124,106,242,0.08);
+    --glow-primary-strong: 0 0 20px rgba(124,106,242,0.25), 0 0 60px rgba(124,106,242,0.12);
+    --glow-secondary: 0 0 20px rgba(91,139,216,0.15), 0 0 40px rgba(91,139,216,0.08);
+    --glow-success: 0 0 20px rgba(34,197,94,0.15);
+    --gradient-primary: linear-gradient(135deg, #7c6af2 0%, #5b8bd8 100%);
+    --gradient-text: linear-gradient(135deg, #f8fafc 0%, #a5b4fc 100%);
+    --gradient-hero: radial-gradient(ellipse 600px 400px at 30% 30%, rgba(124,106,242,0.10) 0%, transparent 70%), radial-gradient(ellipse 500px 300px at 70% 60%, rgba(91,139,216,0.08) 0%, transparent 70%);
+    --gradient-border: linear-gradient(135deg, rgba(124,106,242,0.20), rgba(91,139,216,0.15), rgba(6,182,212,0.10));
+    --gradient-progress: linear-gradient(90deg, #7c6af2, #5b8bd8, #06b6d4);
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.30);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.35);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.40);
+    --shadow-xl: 0 16px 40px rgba(0,0,0,0.45);
+    --shadow-card: 0 2px 8px rgba(0,0,0,0.25), 0 0 1px rgba(255,255,255,0.06);
+    --shadow-card-hover: 0 8px 24px rgba(0,0,0,0.35), 0 0 20px rgba(124,106,242,0.08);
+    --shadow-glow: 0 4px 16px rgba(124,106,242,0.12);
+    --fs-nano: 12px;
+    --fs-caption: 13px;
+    --fs-body: 14px;
+    --fs-body-lg: 16px;
+    --fs-h3: 18px;
+    --fs-h2: 24px;
+    --fs-h1: 32px;
+    --fs-display: 40px;
+    --lh-tight: 1.1;
+    --lh-snug: 1.2;
+    --lh-normal: 1.6;
+    --ls-tight: -0.8px;
+    --ls-snug: -0.5px;
+    --ls-normal: 0;
+    --fw-regular: 400;
+    --fw-medium: 500;
+    --fw-semibold: 600;
+    --fw-bold: 700;
+    --z-sticky-nav: 100;
+    --container-max: 1200px;
+    --container-pad: 32px;
+    --nav-height: 72px;
+    --section-gap: 80px;
+    --btn-radius: var(--radius-md);
+    --btn-radius-pill: var(--radius-full);
+    --btn-pad-y: 10px;
+    --btn-pad-x: 20px;
+    --btn-pad-y-lg: 13px;
+    --btn-pad-x-lg: 28px;
+    --btn-primary-bg: var(--gradient-primary);
+    --btn-primary-color: #ffffff;
+    --btn-primary-hover-shadow: 0 8px 20px rgba(124,106,242,0.25);
+    --btn-secondary-bg: var(--color-surface-hover);
+    --btn-secondary-color: var(--color-text);
+    --btn-secondary-border: var(--color-border);
+    --btn-ghost-color: var(--color-text-2);
+    --btn-soft-bg: var(--accent-primary-10);
+    --btn-soft-color: var(--accent-primary);
+    --card-bg: var(--color-glass);
+    --card-border: var(--color-glass-border);
+    --card-radius: var(--radius-lg);
+    --card-padding: 24px;
+    --card-shadow: var(--shadow-card);
+    --card-hover-shadow: var(--shadow-card-hover);
+    --card-hover-transform: scale(1.02);
+    --card-blur: var(--glass-blur);
+    --badge-radius: var(--radius-full);
+    --badge-padding: 4px 12px;
+    --badge-font-size: 12px;
+    --badge-font-weight: 600;
+    --nav-bg: var(--color-glass);
+    --nav-border: var(--color-glass-border);
+    --nav-blur: var(--glass-blur);
+    --divider-color: var(--color-border);
+    --divider-light: var(--color-border-light);
+    --subject-data: var(--subject-ds);
+    --subject-net: var(--subject-cn);
+    --subject-org: var(--subject-co);
+    --mastery-low: #ef4444;
+    --mastery-mid: #f59e0b;
+    --mastery-high: #22c55e;
+    --edge-prereq: #7c6af2;
+    --edge-related: #475569;
+    --kg-node-base: 44px;
+    --urgent: var(--mastery-low);
+    --card-pad-page: var(--space-5);
+    --card-gap-page: var(--space-3);
+    --text-danger: #fca5a5;
+  }
 
 /* ============================================================
    2. 浅色主题覆盖（取自 DESIGN_TOKENS.md + KG 页面级令牌 Light 值）

@@ -33,11 +33,11 @@ async function saveProfile() {
       subject_count: editSubjectCount.value,
     })
     saveOk.value = true
-    saveMsg.value = '✅ 保存成功'
+    saveMsg.value = ' 保存成功'
     setTimeout(() => { showEdit.value = false; saveMsg.value = '' }, 2000)
   } catch (e: any) {
     saveOk.value = false
-    saveMsg.value = '❌ ' + (e?.message || '保存失败')
+    saveMsg.value = ' ' + (e?.message || '保存失败')
   } finally {
     saving.value = false
   }
@@ -53,13 +53,13 @@ const traits = computed(() => {
   const p = store.studentProfile
   if (!p) return store.data?.profileTraits ?? []
   return [
-    { id: 'knowledge', label: '知识基础', value: baseToPercent(p.knowledge_base), icon: '🧠', desc: '当前知识掌握水平' },
+    { id: 'knowledge', label: '知识基础', value: baseToPercent(p.knowledge_base), icon: '', desc: '当前知识掌握水平' },
     { id: 'style', label: '学习风格', value: styleToPercent(p.learning_style), icon: getStyleIcon(p.learning_style), desc: '最佳学习方式' },
-    { id: 'goal', label: '学习目标', value: goalToPercent(p.goal), icon: '🎯', desc: '目标明确程度' },
-    { id: 'progress', label: '学习进度', value: Math.min(100, (p.progress ?? 0) * 14), icon: '📈', desc: '整体学习完成度' },
-    { id: 'weakness', label: '薄弱攻克', value: weaknessToPercent(p.weak_points), icon: '💪', desc: '薄弱点覆盖进度' },
-    { id: 'accuracy', label: '答题准确率', value: calculateAccuracy(), icon: '🎯', desc: '近7天答题正确率' },
-    { id: 'activeness', label: '学习活跃度', value: calculateActiveness(), icon: '🔥', desc: '日均学习时长' },
+    { id: 'goal', label: '学习目标', value: goalToPercent(p.goal), icon: '', desc: '目标明确程度' },
+    { id: 'progress', label: '学习进度', value: Math.min(100, (p.progress ?? 0) * 14), icon: '', desc: '整体学习完成度' },
+    { id: 'weakness', label: '薄弱攻克', value: weaknessToPercent(p.weak_points), icon: '', desc: '薄弱点覆盖进度' },
+    { id: 'accuracy', label: '答题准确率', value: calculateAccuracy(), icon: '', desc: '近7天答题正确率' },
+    { id: 'activeness', label: '学习活跃度', value: calculateActiveness(), icon: '', desc: '日均学习时长' },
     { id: 'discipline', label: '自律性', value: calculateDiscipline(), icon: '⏰', desc: '学习计划完成率' },
   ]
 })
@@ -84,19 +84,19 @@ const recommendations = computed(() => {
   if (!p) return []
   const items: { icon: string; text: string; action: string; route: string }[] = []
   if (baseToPercent(p.knowledge_base) < 50) {
-    items.push({ icon: '📚', text: '基础薄弱，建议从基础概念开始系统学习', action: '去学习', route: '/knowledge' })
+    items.push({ icon: '', text: '基础薄弱，建议从基础概念开始系统学习', action: '去学习', route: '/knowledge' })
   }
   if (p.weak_points) {
     const weaks = p.weak_points.split(/[,，、]/).filter(Boolean)
     weaks.slice(0, 3).forEach(w => {
-      items.push({ icon: '🎯', text: `薄弱点「${w}」需要重点突破`, action: '生成练习', route: `/practice?focus=${w}` })
+      items.push({ icon: '', text: `薄弱点「${w}」需要重点突破`, action: '生成练习', route: `/practice?focus=${w}` })
     })
   }
   if ((p.progress ?? 0) < 3) {
-    items.push({ icon: '🗺️', text: '学习进度较慢，建议制定每日学习计划', action: '规划路径', route: '/learning-path' })
+    items.push({ icon: '', text: '学习进度较慢，建议制定每日学习计划', action: '规划路径', route: '/learning-path' })
   }
   if (calculateAccuracy() < 50) {
-    items.push({ icon: '📝', text: '答题准确率偏低，建议先复习再做题', action: '复习知识点', route: '/knowledge' })
+    items.push({ icon: '', text: '答题准确率偏低，建议先复习再做题', action: '复习知识点', route: '/knowledge' })
   }
   return items
 })
@@ -122,8 +122,8 @@ function weaknessToPercent(weak: string | undefined): number {
   return Math.min(100, count * 12)
 }
 function getStyleIcon(style: string | undefined): string {
-  const map: Record<string, string> = { visual: '👁️', reading: '📖', 'hands-on': '🛠️', auditory: '👂' }
-  return map[style ?? ''] || '📖'
+  const map: Record<string, string> = { visual: '', reading: '', 'hands-on': '', auditory: '' }
+  return map[style ?? ''] || ''
 }
 function calculateAccuracy(): number {
   const history = quizHistory.value
@@ -271,13 +271,13 @@ onUnmounted(() => {
     </div>
     <template v-else>
       <div class="section-header">
-        <div class="section-title">🧑‍🎓 学生画像</div>
+        <div class="section-title"> 学生画像</div>
         <div class="section-desc">基于学习行为数据构建的 8 维个性化能力图谱 | <button class="btn-link" @click="showEdit = !showEdit">{{ showEdit ? '收起编辑' : '编辑目标' }}</button></div>
       </div>
 
       <!-- L1/L2/L3 三层学情记忆健康度（低侵入联动） -->
       <div v-if="memoryOverview" class="memory-mini-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-size:12px;">
-        <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);">🧠 {{ memoryOverview.memory_level || 'L3' }}</span>
+        <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);"> {{ memoryOverview.memory_level || 'L3' }}</span>
         <span style="padding:3px 10px;border-radius:12px;background:var(--bg-tertiary);color:var(--text-secondary);">掌握度 {{ memoryOverview.mastery_points ?? 0 }} 点</span>
         <span style="padding:3px 10px;border-radius:12px;background:var(--bg-tertiary);color:var(--text-secondary);">情景事件 {{ memoryOverview.episodic_count ?? 0 }}</span>
         <span v-if="memoryOverview.weak_points?.length" style="padding:3px 10px;border-radius:12px;background:rgba(239,68,68,0.12);color:var(--accent-danger);">记忆薄弱: {{ memoryOverview.weak_points.slice(0, 4).join('、') }}</span>
@@ -285,7 +285,7 @@ onUnmounted(() => {
 
       <!-- 编辑目标 -->
       <div v-if="showEdit" class="card" style="margin-bottom:20px;">
-        <div class="card-header"><span class="card-title">✏️ 编辑学习目标</span></div>
+        <div class="card-header"><span class="card-title"> 编辑学习目标</span></div>
         <div class="edit-grid">
           <div class="edit-field">
             <label class="edit-label">目标分数</label>
@@ -317,7 +317,7 @@ onUnmounted(() => {
           </div>
         </div>
         <div class="edit-actions">
-          <button class="btn btn-primary" @click="saveProfile" :disabled="saving">{{ saving ? '保存中...' : '💾 保存' }}</button>
+          <button class="btn btn-primary" @click="saveProfile" :disabled="saving">{{ saving ? '保存中...' : ' 保存' }}</button>
           <span v-if="saveMsg" class="save-msg" :class="{ success: saveOk, error: !saveOk }">{{ saveMsg }}</span>
         </div>
       </div>
@@ -331,13 +331,13 @@ onUnmounted(() => {
             <div class="profile-strength" :class="profileSummary.strength === '优势明显' ? 'strong' : profileSummary.strength === '稳步提升' ? 'stable' : 'weak'">{{ profileSummary.strength }}</div>
           </div>
           <div class="profile-meta-row">
-            <span class="profile-meta-tag">📊 {{ profileSummary.level }}</span>
+            <span class="profile-meta-tag"> {{ profileSummary.level }}</span>
             <span class="profile-meta-tag">{{ getStyleIcon(store.studentProfile?.learning_style) }} {{ profileSummary.style }}</span>
-            <span class="profile-meta-tag">💪 {{ profileSummary.weakCount }} 个薄弱点</span>
+            <span class="profile-meta-tag"> {{ profileSummary.weakCount }} 个薄弱点</span>
           </div>
           <div class="profile-hero-actions">
-            <button class="btn btn-sm btn-soft" @click="router.push('/practice')">📝 针对性练习</button>
-            <button class="btn btn-sm btn-ghost" @click="router.push('/skills')">🤖 推荐AI技能</button>
+            <button class="btn btn-sm btn-soft" @click="router.push('/practice')"> 针对性练习</button>
+            <button class="btn btn-sm btn-ghost" @click="router.push('/skills')"> 推荐AI技能</button>
           </div>
         </div>
       </div>
@@ -360,16 +360,16 @@ onUnmounted(() => {
       <!-- 雷达图 + 学习风格 -->
       <div class="grid-2" style="margin-top: 20px;">
         <div class="card">
-          <div class="card-header"><span class="card-title">🕸️ 8 维能力雷达图</span></div>
+          <div class="card-header"><span class="card-title"> 8 维能力雷达图</span></div>
           <div v-if="traits.length < 3" class="radar-placeholder">
-            <div style="font-size:40px;margin-bottom:8px;">📊</div>
+            <div style="font-size:40px;margin-bottom:8px;"></div>
             <div style="font-size:14px;color:var(--text-muted);">完成入学测评后自动生成雷达图</div>
             <button class="engine-btn" style="margin-top:12px;" @click="router.push('/diagnostic/start')">去测评</button>
           </div>
           <div v-else class="radar-wrapper"><canvas id="profileRadar" class="radar-canvas"></canvas></div>
         </div>
         <div class="card">
-          <div class="card-header"><span class="card-title">💡 个性化建议</span></div>
+          <div class="card-header"><span class="card-title"> 个性化建议</span></div>
           <div class="recommend-list">
             <div v-for="(rec, i) in recommendations" :key="i" class="recommend-item">
               <span class="recommend-icon">{{ rec.icon }}</span>
@@ -379,7 +379,7 @@ onUnmounted(() => {
               </div>
             </div>
             <div v-if="recommendations.length === 0" class="recommend-empty">
-              <div style="font-size:32px;margin-bottom:8px;">🎉</div>
+              <div style="font-size:32px;margin-bottom:8px;"></div>
               <div style="color:var(--text-muted);font-size:14px;">所有维度表现良好，继续保持！</div>
             </div>
           </div>
@@ -389,7 +389,7 @@ onUnmounted(() => {
       <!-- 科目掌握度 -->
       <div class="card" style="margin-top: 20px;">
         <div class="card-header">
-          <span class="card-title">📊 科目掌握度</span>
+          <span class="card-title"> 科目掌握度</span>
           <button class="btn btn-sm btn-ghost" @click="router.push('/learning-path')">查看完整路径 →</button>
         </div>
         <div class="mastery-grid">
@@ -407,7 +407,7 @@ onUnmounted(() => {
       <!-- 薄弱点 + 评价 -->
       <div class="grid-2" style="margin-top: 20px;">
         <div class="card">
-          <div class="card-header"><span class="card-title">⚠️ 待加强知识点</span></div>
+          <div class="card-header"><span class="card-title"> 待加强知识点</span></div>
           <div>
             <div v-for="w in (store.studentProfile?.weak_points || '').split(/[,，、]/).filter(Boolean).slice(0, 5)" :key="w" class="weakness-item">
               <span class="weakness-bullet"></span>
@@ -418,7 +418,7 @@ onUnmounted(() => {
           </div>
         </div>
         <div class="card">
-          <div class="card-header"><span class="card-title">📋 学习评估</span></div>
+          <div class="card-header"><span class="card-title"> 学习评估</span></div>
           <div class="assessment-stats">
             <div class="assessment-stat">
               <span class="stat-value" style="color:var(--accent-primary)">{{ calculateAccuracy() }}%</span>
@@ -443,7 +443,7 @@ onUnmounted(() => {
       <!-- 成就系统预览 -->
       <div class="card" style="margin-top: 20px;">
         <div class="card-header">
-          <span class="card-title">🏆 成就徽章</span>
+          <span class="card-title"> 成就徽章</span>
           <button class="btn btn-sm btn-ghost" @click="router.push('/achievements')">查看全部 →</button>
         </div>
         <div class="achievement-preview">
@@ -469,7 +469,7 @@ onUnmounted(() => {
               <span class="ach-preview-name">{{ ach.name }}</span>
             </div>
             <div v-if="achStore.recentAchievements.length === 0" class="ach-preview-empty">
-              <div style="font-size: 2rem; margin-bottom: 4px;">🏆</div>
+              <div style="font-size: 2rem; margin-bottom: 4px;"></div>
               <div style="font-size: 13px; color: var(--text-muted);">开始学习，解锁你的第一个成就！</div>
             </div>
           </div>

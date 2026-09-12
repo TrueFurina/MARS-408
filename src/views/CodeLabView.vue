@@ -223,7 +223,7 @@ onBeforeUnmount(() => {
 <template>
   <div class="page-section active">
     <div class="section-header" style="text-align:center;">
-      <div class="section-title">⚙️ 浏览器 C/C++ 实验室</div>
+      <div class="section-title"> 浏览器 C/C++ 实验室</div>
       <div class="section-desc">在浏览器内编译运行 C/C++（WASI），无需安装本地工具链</div>
       <div class="workspace-switch" aria-label="实验工作区">
         <button
@@ -302,7 +302,7 @@ onBeforeUnmount(() => {
 
       <div class="sandbox-output-panel">
         <div class="sandbox-toolbar">
-          <span class="sandbox-title">📥 标准输入</span>
+          <span class="sandbox-title"> 标准输入</span>
           <span class="sandbox-title" v-if="lastResult">exit {{ lastResult.code }} · {{ formatDuration(lastResult.durationMs) }}</span>
           <span class="sandbox-title" v-if="running">{{ progressLabel }}</span>
         </div>
@@ -315,7 +315,7 @@ onBeforeUnmount(() => {
           maxlength="8000"
         ></textarea>
         <div class="sandbox-toolbar" style="border-top:1px solid var(--border-light);border-bottom:none;">
-          <span class="sandbox-title">📤 运行输出</span>
+          <span class="sandbox-title"> 运行输出</span>
         </div>
         <div class="sandbox-output">
           <pre class="output-text" :class="{ 'has-error': lastResult && lastResult.code !== 0 }">{{ terminalOutput }}</pre>

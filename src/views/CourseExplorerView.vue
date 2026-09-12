@@ -5,10 +5,10 @@ import KnowledgeGraph from '@/components/KnowledgeGraph.vue'
 
 // ── 四科「专属查看器」定义（真实映射后端 KNOWLEDGE_GRAPH 节点 id 前缀）──
 const COURSES = [
-  { key: 'ds', label: '数据结构', prefix: 'ds_', color: '#06b6d4', icon: '🧮', tagline: '线性表 · 树 · 图 · 查找 · 排序' },
-  { key: 'co', label: '计算机组成原理', prefix: 'co_', color: '#f59e0b', icon: '⚙️', tagline: '数据表示 · 存储 · CPU · 总线 · I/O' },
-  { key: 'os', label: '操作系统', prefix: 'os_', color: '#22c55e', icon: '🖥️', tagline: '进程 · 调度 · 内存 · 文件 · I/O' },
-  { key: 'cn', label: '计算机网络', prefix: '', color: '#7c6af2', icon: '🌐', tagline: '体系结构 · 各层协议 · 安全' },
+  { key: 'ds', label: '数据结构', prefix: 'ds_', color: '#06b6d4', icon: '', tagline: '线性表 · 树 · 图 · 查找 · 排序' },
+  { key: 'co', label: '计算机组成原理', prefix: 'co_', color: '#f59e0b', icon: '', tagline: '数据表示 · 存储 · CPU · 总线 · I/O' },
+  { key: 'os', label: '操作系统', prefix: 'os_', color: '#22c55e', icon: '', tagline: '进程 · 调度 · 内存 · 文件 · I/O' },
+  { key: 'cn', label: '计算机网络', prefix: '', color: '#7c6af2', icon: '', tagline: '体系结构 · 各层协议 · 安全' },
 ] as const
 
 type CourseKey = (typeof COURSES)[number]['key']
@@ -21,10 +21,10 @@ const graph = ref<{ nodes: any[]; edges: any[] }>({ nodes: [], edges: [] })
 const viewMode = ref<'graph' | 'outline' | 'mindmap' | 'map'>('graph')
 
 const viewModes = [
-  { value: 'graph', label: '关系图谱', icon: '🕸️' },
-  { value: 'mindmap', label: '思维导图', icon: '🧠' },
-  { value: 'map', label: '学习地图', icon: '🗺️' },
-  { value: 'outline', label: '大纲', icon: '📋' },
+  { value: 'graph', label: '关系图谱', icon: '' },
+  { value: 'mindmap', label: '思维导图', icon: '' },
+  { value: 'map', label: '学习地图', icon: '' },
+  { value: 'outline', label: '大纲', icon: '' },
 ] as const
 
 const activeCourseMeta = computed(() => COURSES.find((c) => c.key === activeCourse.value)!)
@@ -145,7 +145,7 @@ onMounted(load)
       <!-- 左：章节路线图 -->
       <section class="ce-panel ce-roadmap">
         <div class="ce-panel-head">
-          <span class="ce-panel-title">📚 章节路线图</span>
+          <span class="ce-panel-title"> 章节路线图</span>
           <span class="ce-panel-hint">密度 = 该章知识点数量（真实）</span>
         </div>
         <div class="ce-chapter-list">
@@ -165,7 +165,7 @@ onMounted(load)
       <!-- 右：知识图谱 -->
       <section class="ce-panel ce-graph-panel">
         <div class="ce-panel-head">
-          <span class="ce-panel-title">🕸️ {{ activeCourseMeta.label }} 知识图谱</span>
+          <span class="ce-panel-title"> {{ activeCourseMeta.label }} 知识图谱</span>
           <div class="view-mode-tabs">
             <button
               v-for="m in viewModes"

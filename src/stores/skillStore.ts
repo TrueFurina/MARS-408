@@ -250,7 +250,7 @@ export const useSkillStore = defineStore('skills', () => {
     loading.value = true
     error.value = ''
     try {
-      const res: any = await api.post(`/skills/from-template/${templateId}`, { name, description: description || '', icon: icon || '🤖' })
+      const res: any = await api.post(`/skills/from-template/${templateId}`, { name, description: description || '', icon: icon || '' })
       return res.skill || null
     } catch (e: any) {
       error.value = friendlyError(e, '从模板创建失败')

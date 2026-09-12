@@ -336,8 +336,7 @@ function goToSkills() {
   width: 8px; height: 8px;
   border-radius: 50%;
   background: var(--accent-primary);
-  box-shadow: 0 0 8px var(--accent-primary);
-  animation: pulse-glow 2s ease-in-out infinite;
+  animation: mars-pulse-soft 2s var(--ease-standard) infinite;
 }
 .hero-title {
   margin: 0;

@@ -10,6 +10,15 @@ import DOMPurify from 'dompurify'
 import { useStudyStore } from '@/stores/studyStore'
 import { useAuthStore } from '@/stores/authStore'
 import { api } from '@/utils/api'
+import {
+  NAV_GROUPS,
+  BOTTOM_NAV_KEYS,
+  visibleGroups,
+  flattenItems,
+  resolveActiveKey,
+  resolveRole,
+  type NavItem,
+} from '@/router/navConfig'
 
 /** 防御性 SVG 净化 — 虽然 icons.ts 硬编码，但竞赛评审要求所有 v-html 做净化 */
 function safeIcon(html: string): string {
@@ -24,11 +33,10 @@ const authStore = useAuthStore()
 // 登录页判定
 const isLoginPage = computed(() => route.path === '/login')
 const currentUser = computed(() => authStore.currentUser)
-const isAdmin = computed(() => authStore.isAdmin)
-const isStaff = computed(() => {
-  const role = authStore.currentUser?.role
-  return role === 'admin' || role === 'teacher'
-})
+const currentRole = computed(() => resolveRole(authStore.currentUser?.role))
+const roleLabel = computed(() =>
+  ({ admin: '管理员', teacher: '教师', student: '学生' })[currentRole.value] ?? '学生',
+)
 function doLogout() {
   authStore.logout()
   router.push('/login')
@@ -99,62 +107,39 @@ function toggleTheme() {
   applyTheme(theme.value === 'dark' ? 'light' : 'dark')
 }
 
-const navItems = computed(() => {
-  const items = [
-    { name: '💬 智能对话', icon: icons.chat, route: '/chat', key: 'chat', subjectClass: 'nav-subject-1' },
-    { name: '🤖 资源生成', icon: icons.agent, route: '/resource', key: 'agent', subjectClass: 'nav-subject-3' },
-    { name: '📊 学习路径', icon: icons.dashboard, route: '/dashboard', key: 'dashboard', subjectClass: '' },
-    { name: '📝 智能出题', icon: icons.quiz, route: '/practice', key: 'practice', subjectClass: 'nav-subject-0' },
-  { name: '🥊 素养对抗', icon: icons.target, route: '/career/training', key: 'career-training', subjectClass: '' },
-    { name: '📈 学习评估', icon: icons.barChart, route: '/assessment', key: 'assessment', subjectClass: '' },
-    { name: '⚙️ 算法引擎', icon: icons.engine, route: '/engine', key: 'engine', subjectClass: 'nav-subject-0' },
-    { name: '🧠 知识图谱', icon: icons.knowledge, route: '/knowledge', key: 'knowledge', subjectClass: 'nav-subject-2' },
-    { name: '🕸️ AI图谱', icon: icons.skill, route: '/knowledge-graph', key: 'knowledge-graph', subjectClass: 'nav-subject-3' },
-    { name: '🗺️ 课程查看器', icon: icons.knowledge, route: '/course-explorer', key: 'course-explorer', subjectClass: 'nav-subject-2' },
-    { name: '📖 知识库', icon: icons.knowledge, route: '/knowledge-base', key: 'knowledge-base', subjectClass: 'nav-subject-2' },
-    { name: '🔍 错题复盘', icon: icons.search, route: '/review', key: 'review', subjectClass: '' },
-    { name: '📕 错题本', icon: icons.search, route: '/wrong-questions', key: 'wrong-questions', subjectClass: '' },
-    { name: '📅 每日计划', icon: icons.dashboard, route: '/daily-plan', key: 'daily-plan', subjectClass: '' },
-    { name: '🏆 成果展示', icon: icons.palette, route: '/showcase', key: 'showcase', subjectClass: '' },
-    { name: '🎖️ 成就', icon: icons.target, route: '/achievements', key: 'achievements', subjectClass: '' },
-    { name: '👤 我的', icon: icons.user, route: '/profile', key: 'profile', subjectClass: '' },
-  ]
-  // 审计日志：仅 admin/teacher 可见
-  if (isStaff.value) {
-    items.push({ name: '审计日志', icon: icons.shield, route: '/audit-log', key: 'audit-log', subjectClass: '' })
+// ── 导航：全部由 src/router/navConfig.ts 单一真值源派生 ────────────────
+// 此前侧栏 17 项 / 底部 5 项 / 更多菜单 14 项三处硬编码，新增页面极易漏改。
+const navGroups = computed(() => visibleGroups(currentRole.value))
+const bottomNavItems = computed(() =>
+  BOTTOM_NAV_KEYS
+    .map((k) => flattenItems(navGroups.value).find((i) => i.key === k))
+    .filter((i): i is NavItem => !!i),
+)
+
+// 分组折叠状态：初始取 defaultCollapsed（实验室默认收起）
+const collapsed = ref<Record<string, boolean>>(
+  Object.fromEntries(NAV_GROUPS.map((g) => [g.id, !!g.defaultCollapsed])),
+)
+const activeTab = computed(() => (typeof route.query.tab === 'string' ? route.query.tab : undefined))
+
+// 高亮：由配置解析，取代原先 17 行 path.startsWith 硬编码
+const activeKey = computed(() => resolveActiveKey(navGroups.value, route.path, activeTab.value))
+// 当前激活项所属的分组（用于自动展开）
+const activeGroupId = computed(() => {
+  const all: Array<NavItem & { groupId: string }> = []
+  for (const g of navGroups.value) {
+    for (const i of g.items) {
+      all.push({ ...i, groupId: g.id })
+      if (i.children?.length) all.push(...i.children.map((c) => ({ ...c, groupId: g.id })))
+    }
   }
-  return items
+  return all.find((i) => i.key === activeKey.value)?.groupId ?? ''
 })
+// 跳到某个折叠分组内的页面时（例如从更多菜单进入 /engine），自动展开该分组
+watch(activeGroupId, (id) => { if (id) collapsed.value[id] = false }, { immediate: true })
 
-const bottomNavItems = [
-  { name: '对话', icon: icons.chat, route: '/chat', key: 'chat' },
-  { name: '资源', icon: icons.agent, route: '/resource', key: 'agent' },
-  { name: '练习', icon: icons.quiz, route: '/practice', key: 'practice' },
-  { name: '路径', icon: icons.dashboard, route: '/dashboard', key: 'dashboard' },
-  { name: '我的', icon: icons.user, route: '/profile', key: 'profile' },
-]
-
-const activeKey = computed(() => {
-  const path = route.path
-  if (path === '/' || path === '/dashboard') return 'dashboard'
-  if (path.startsWith('/chat')) return 'chat'
-  if (path.startsWith('/practice')) return 'practice'
-  if (path.startsWith('/assessment')) return 'assessment'
-  if (path.startsWith('/review')) return 'review'
-  if (path.startsWith('/wrong-questions')) return 'wrong-questions'
-  if (path.startsWith('/daily-plan')) return 'daily-plan'
-  if (path.startsWith('/knowledge-graph')) return 'knowledge-graph'
-  if (path.startsWith('/course-explorer')) return 'course-explorer'
-  if (path.startsWith('/knowledge-base')) return 'knowledge-base'
-  if (path.startsWith('/knowledge')) return 'knowledge'
-  if (path.startsWith('/resource') || path.startsWith('/learning-path') || path.startsWith('/sandbox')) return 'agent'
-  if (path.startsWith('/engine')) return 'engine'
-  if (path.startsWith('/benchmark')) return 'benchmark'
-  if (path.startsWith('/profile') || path.startsWith('/profile/')) return 'profile'
-  if (path.startsWith('/achievements')) return 'achievements'
-  if (path.startsWith('/showcase')) return 'showcase'
-  return 'dashboard'
-})
+function toggleGroup(id: string) { collapsed.value[id] = !collapsed.value[id] }
+function isCollapsed(id: string) { return !!collapsed.value[id] }
 
 function goTo(routePath: string) {
   router.push(routePath)
@@ -176,16 +161,53 @@ function goTo(routePath: string) {
       </div>
 
       <nav class="sidebar-nav">
-        <div
-          v-for="item in navItems"
-          :key="item.key"
-          class="nav-item"
-          :class="[item.subjectClass, { active: activeKey === item.key }]"
-          @click="goTo(item.route)"
-        >
-          <span v-html="safeIcon(item.icon)"></span>
-          <span>{{ item.name }}</span>
-        </div>
+        <section v-for="group in navGroups" :key="group.id" class="nav-group">
+          <!-- 分组标题：可折叠分组带展开箭头与徽标 -->
+          <div
+            class="nav-group-title"
+            :class="{ clickable: group.collapsible }"
+            role="button"
+            tabindex="0"
+            :aria-expanded="group.collapsible ? !isCollapsed(group.id) : true"
+            @click="group.collapsible && toggleGroup(group.id)"
+            @keydown.enter="group.collapsible && toggleGroup(group.id)"
+            @keydown.space.prevent="group.collapsible && toggleGroup(group.id)"
+          >
+            <span class="nav-group-icon" v-html="safeIcon(group.icon)"></span>
+            <span class="nav-group-label">{{ group.title }}</span>
+            <span v-if="group.badge" class="nav-group-badge">{{ group.badge }}</span>
+            <span
+              v-if="group.collapsible"
+              class="nav-group-chevron"
+              :class="{ collapsed: isCollapsed(group.id) }"
+              v-html="safeIcon(icons.chevronRight)"
+            ></span>
+          </div>
+
+          <template v-if="!isCollapsed(group.id)">
+            <template v-for="item in group.items" :key="item.key">
+              <div
+                class="nav-item"
+                :class="[item.subjectClass, { active: activeKey === item.key }]"
+                @click="goTo(item.route)"
+              >
+                <span v-html="safeIcon(item.icon)"></span>
+                <span>{{ item.name }}</span>
+              </div>
+              <!-- 归并后的子项：功能重叠页降一级，不再占据主导航 -->
+              <div
+                v-for="child in item.children"
+                :key="child.key"
+                class="nav-item nav-subitem"
+                :class="{ active: activeKey === child.key }"
+                @click="goTo(child.route)"
+              >
+                <span v-html="safeIcon(child.icon)"></span>
+                <span>{{ child.name }}</span>
+              </div>
+            </template>
+          </template>
+        </section>
       </nav>
 
       <div class="sidebar-footer">
@@ -193,7 +215,7 @@ function goTo(routePath: string) {
           <div class="user-avatar" v-html="safeIcon(icons.user)"></div>
           <div class="user-info">
             <div class="user-name">{{ currentUser?.display_name || currentUser?.username || '未登录' }}</div>
-            <div class="user-role">{{ isAdmin ? '管理员' : '学生' }} · 查看画像</div>
+            <div class="user-role">{{ roleLabel }} · 查看画像</div>
           </div>
         </div>
         <button class="logout-btn" @click="doLogout" title="退出登录">退出</button>
@@ -318,8 +340,7 @@ function goTo(routePath: string) {
   justify-content: center;
   color: var(--accent-primary);
   flex-shrink: 0;
-  filter: drop-shadow(0 4px 14px rgba(124, 106, 242, 0.40));
-  animation: pulse-glow 3.4s ease-in-out infinite;
+  animation: mars-pulse-soft 3.4s var(--ease-standard) infinite;
 }
 
 .logo-icon svg {

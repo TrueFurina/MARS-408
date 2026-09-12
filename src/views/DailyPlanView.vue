@@ -61,12 +61,12 @@ function toast(type: string, msg: string) {
 
 function taskIcon(type: string) {
   const icons: Record<string, string> = {
-    wrong_review: '📕',
-    study: '📖',
-    practice: '✏️',
-    summary: '📝',
+    wrong_review: '',
+    study: '',
+    practice: '',
+    summary: '',
   }
-  return icons[type] || '📌'
+  return icons[type] || ''
 }
 
 function subjectColor(subject: string) {
@@ -168,13 +168,13 @@ onMounted(() => {
 
 <template>
   <div class="page-section">
-    <div class="section-title">📅 每日学习计划</div>
+    <div class="section-title"> 每日学习计划</div>
     <div class="section-desc">为你自动生成每日学习任务，追踪学习进度</div>
 
     <!-- Tab -->
     <div class="tab-bar">
-      <button class="tab-btn" :class="{ active: activeTab === 'today' }" @click="activeTab = 'today'">🎯 今日计划</button>
-      <button class="tab-btn" :class="{ active: activeTab === 'history' }" @click="activeTab = 'history'">📆 历史回顾</button>
+      <button class="tab-btn" :class="{ active: activeTab === 'today' }" @click="activeTab = 'today'"> 今日计划</button>
+      <button class="tab-btn" :class="{ active: activeTab === 'history' }" @click="activeTab = 'history'"> 历史回顾</button>
     </div>
 
     <!-- 今日计划 -->
@@ -191,7 +191,7 @@ onMounted(() => {
 
       <div v-if="loading" class="empty-state"><div class="empty-title">加载中...</div></div>
       <div v-else-if="error" class="empty-state">
-        <div class="empty-title">⚠️ 加载失败</div>
+        <div class="empty-title"> 加载失败</div>
         <div class="empty-desc">{{ error }}</div>
         <button class="engine-btn" @click="loadPlan(selectedDate)">重新加载</button>
       </div>
@@ -224,7 +224,7 @@ onMounted(() => {
             </div>
           </div>
           <div class="overview-actions">
-            <button class="action-btn" @click="resetPlan">🔄 重置计划</button>
+            <button class="action-btn" @click="resetPlan"> 重置计划</button>
           </div>
         </div>
 
@@ -233,7 +233,7 @@ onMounted(() => {
           <div v-for="task in plan.tasks" :key="task.id" class="task-card glass-card" :class="{ completed: task.completed }">
             <div class="task-left">
               <button class="check-btn" :class="{ checked: task.completed }" @click="toggleTask(task)">
-                <span v-if="task.completed">✓</span>
+                <span v-if="task.completed"></span>
               </button>
             </div>
             <div class="task-body">
@@ -259,10 +259,10 @@ onMounted(() => {
 
         <!-- 鼓励语 -->
         <div v-if="plan.completion_rate === 100" class="encourage-msg">
-          🎉 太棒了！今日任务全部完成，继续保持！
+           太棒了！今日任务全部完成，继续保持！
         </div>
         <div v-else-if="plan.completion_rate >= 50" class="encourage-msg half">
-          💪 已经完成一半以上了，加油！
+           已经完成一半以上了，加油！
         </div>
       </div>
     </div>

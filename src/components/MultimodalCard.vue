@@ -2,7 +2,7 @@
   <div class="multimodal-card">
     <!-- 教学插图 -->
     <div v-if="imageUrl || imageSvg" class="mm-image-section">
-      <div class="mm-label">🎨 AI 教学插图</div>
+      <div class="mm-label"> AI 教学插图</div>
       <div class="mm-image-wrapper">
         <img v-if="imageUrl" :src="imageUrl" alt="教学插图" class="mm-image" />
         <div v-else-if="imageSvg" v-html="imageSvg" class="mm-svg-container"></div>
@@ -14,7 +14,7 @@
 
     <!-- 语音旁白 -->
     <div v-if="audioUrl || audioFallbackText" class="mm-audio-section">
-      <div class="mm-label">🔊 语音旁白</div>
+      <div class="mm-label"> 语音旁白</div>
       <audio v-if="audioUrl" :src="audioUrl" controls class="mm-audio-player"></audio>
       <div v-else class="mm-tts-fallback">
         <button @click="speak" :disabled="isSpeaking" class="mm-speak-btn">
@@ -162,11 +162,11 @@ onUnmounted(() => stopSpeak())
   border-radius:var(--radius-sm);
   font-size:0.875rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition);
 }
 
 .mm-speak-btn {
-  background: var(--accent-primary);
+  background: var(--color-accent-solid);
   color: var(--text-user);
 }
 

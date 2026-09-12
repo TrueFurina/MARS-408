@@ -80,10 +80,10 @@ async function previewFile() {
       }))
       previewResult.value = data
     } else {
-      alert(`❌ ${data.detail || '解析失败'}`)
+      alert(` ${data.detail || '解析失败'}`)
     }
   } catch {
-    alert('❌ 解析失败，请检查后端是否运行')
+    alert(' 解析失败，请检查后端是否运行')
   } finally {
     uploading.value = false
   }
@@ -113,16 +113,16 @@ async function commitSelected() {
     })
     const data = await r.json()
     if (r.ok) {
-      alert(`✅ 成功提交 ${data.committed} 条分块`)
+      alert(` 成功提交 ${data.committed} 条分块`)
       previewResult.value = null
       uploadFile.value = null
       showUploadForm.value = false
       await Promise.all([fetchStats(), fetchDocuments()])
     } else {
-      alert(`❌ ${data.detail || '提交失败'}`)
+      alert(` ${data.detail || '提交失败'}`)
     }
   } catch {
-    alert('❌ 提交失败，请检查后端')
+    alert(' 提交失败，请检查后端')
   }
 }
 
@@ -247,12 +247,12 @@ async function reindex() {
 
 async function clearAll() {
   if (!confirm('确定清空向量库所有文档？此操作不可撤销！')) return
-  if (!confirm('⚠️ 再次确认：所有知识数据将被永久删除')) return
+  if (!confirm(' 再次确认：所有知识数据将被永久删除')) return
   try {
     const r = await fetch(`${API_BASE}/api/knowledge/clear`, { method: 'POST', headers: getAuthHeaders() })
     const data = await r.json()
     if (r.ok) {
-      alert(`✅ 已清空 ${data.deleted} 条文档`)
+      alert(` 已清空 ${data.deleted} 条文档`)
       await Promise.all([fetchStatus(), fetchStats(), fetchDocuments()])
     }
   } catch { /* offline */ }

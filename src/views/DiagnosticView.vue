@@ -62,13 +62,13 @@ function goHome() {
 <template>
   <div class="diagnostic-page">
     <div class="diag-header">
-      <div class="diag-title">📋 入学测评</div>
+      <div class="diag-title"> 入学测评</div>
       <div class="diag-desc">完成 20 道诊断题，系统将自动生成你的学习画像和推荐路径</div>
     </div>
 
     <!-- L1/L2/L3 三层学情记忆健康度（低侵入联动） -->
     <div v-if="memoryOverview" class="memory-mini-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-size:12px;">
-      <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);">🧠 {{ memoryOverview.memory_level || 'L3' }}</span>
+      <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);"> {{ memoryOverview.memory_level || 'L3' }}</span>
       <span style="padding:3px 10px;border-radius:12px;background:var(--bg-tertiary);color:var(--text-secondary);">画像 {{ memoryOverview.profile_dimensions ?? 0 }}/8 维</span>
       <span style="padding:3px 10px;border-radius:12px;background:var(--bg-tertiary);color:var(--text-secondary);">薄弱点: {{ memoryOverview.weak_points?.length ?? 0 }} 个</span>
     </div>
@@ -98,7 +98,7 @@ function goHome() {
     </div>
 
     <div v-else-if="step === 'result' && result" class="diag-result">
-      <div class="result-title">🎉 测评完成！</div>
+      <div class="result-title"> 测评完成！</div>
       <div class="result-accuracy">整体正确率: <strong>{{ (result.overall_accuracy * 100).toFixed(0) }}%</strong></div>
       <div class="result-subjects">
         <div v-for="r in result.results" :key="r.subject" class="result-subject-card">
@@ -113,25 +113,25 @@ function goHome() {
 
       <!-- 新手引导：诊断后的下一步行动 -->
       <div class="onboard-guide">
-        <div class="og-title">🎯 接下来建议这样做</div>
+        <div class="og-title"> 接下来建议这样做</div>
         <div class="og-grid">
           <div class="og-card" @click="router.push('/chat')">
-            <div class="og-icon">💬</div>
+            <div class="og-icon"></div>
             <div class="og-name">智能对话学习</div>
             <div class="og-desc">向 AI 助教提问，针对薄弱点查漏补缺</div>
           </div>
           <div class="og-card" @click="router.push('/practice')">
-            <div class="og-icon">📝</div>
+            <div class="og-icon"></div>
             <div class="og-name">刷题巩固</div>
             <div class="og-desc">针对薄弱知识点生成专项练习</div>
           </div>
           <div class="og-card" @click="router.push('/learning-path')">
-            <div class="og-icon">🗺️</div>
+            <div class="og-icon"></div>
             <div class="og-name">查看学习路径</div>
             <div class="og-desc">了解四科学习顺序和推荐进度</div>
           </div>
           <div class="og-card" @click="router.push('/knowledge')">
-            <div class="og-icon">🕸️</div>
+            <div class="og-icon"></div>
             <div class="og-name">浏览知识图谱</div>
             <div class="og-desc">可视化四科知识点关联关系</div>
           </div>

@@ -28,10 +28,10 @@ function notifyNewAchievements() {
       // 使用全局 Toast（window.__toast 由 ToastNotification 组件挂载）
       const t = (window as any).__toast
       if (t?.success) {
-        t.success(`🏆 成就解锁: ${newly.join('、')}`)
+        t.success(` 成就解锁: ${newly.join('、')}`)
       } else {
         window.dispatchEvent(new CustomEvent('netlearn-toast', {
-          detail: { type: 'success', message: `🏆 成就解锁: ${newly.join('、')}` },
+          detail: { type: 'success', message: ` 成就解锁: ${newly.join('、')}` },
         }))
       }
     }
@@ -41,7 +41,7 @@ function notifyNewAchievements() {
 
 // 分享成就
 function shareAchievement(ach: any) {
-  const text = `🏆 我在 NetLearn 解锁了成就「${ach.name}」！${ach.description}`
+  const text = ` 我在 NetLearn 解锁了成就「${ach.name}」！${ach.description}`
   try {
     if (navigator.share) {
       navigator.share({ title: 'NetLearn 成就', text }).catch(() => {})
@@ -76,12 +76,12 @@ async function loadMemoryOverview() {
 
 <template>
   <div class="page-section">
-    <div class="section-title">🏆 成就系统</div>
+    <div class="section-title"> 成就系统</div>
     <div class="section-desc">完成学习任务，解锁成就徽章</div>
 
     <!-- L1/L2/L3 三层学情记忆薄弱点提示（低侵入联动） -->
     <div v-if="memoryOverview?.weak_points?.length" class="memory-mini-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-size:12px;">
-      <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);">🧠 记忆薄弱点:</span>
+      <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);"> 记忆薄弱点:</span>
       <span v-for="w in memoryOverview.weak_points.slice(0, 6)" :key="w" style="padding:3px 10px;border-radius:12px;background:rgba(239,68,68,0.12);color:var(--accent-danger);">{{ w }}</span>
     </div>
 
@@ -92,19 +92,19 @@ async function loadMemoryOverview() {
       </div>
       <div class="achievement-grid">
         <div v-for="ach in achStore.achievements" :key="ach.id" class="achievement-card" :class="{ unlocked: ach.unlocked }">
-          <div class="ach-icon">{{ ach.unlocked ? ach.icon : '🔒' }}</div>
+          <div class="ach-icon">{{ ach.unlocked ? ach.icon : '' }}</div>
           <div class="ach-info">
             <div class="ach-title">{{ ach.name }}</div>
             <div class="ach-desc">{{ ach.description }}</div>
           </div>
-          <div class="ach-badge" v-if="ach.unlocked">✅</div>
-          <button v-if="ach.unlocked" class="ach-share" title="分享成就" @click="shareAchievement(ach)">📤</button>
+          <div class="ach-badge" v-if="ach.unlocked"></div>
+          <button v-if="ach.unlocked" class="ach-share" title="分享成就" @click="shareAchievement(ach)"></button>
         </div>
       </div>
 
       <!-- 新解锁成就提示条 -->
       <div v-if="newlyUnlocked.length" class="newly-unlocked-strip">
-        🎉 恭喜解锁新成就：{{ newlyUnlocked.join('、') }}
+         恭喜解锁新成就：{{ newlyUnlocked.join('、') }}
       </div>
     </div>
   </div>

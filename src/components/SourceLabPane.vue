@@ -131,10 +131,10 @@ async function runExperiment() {
     if (evaluateSourceLabPass(ex, result.stage, result.code, result.stdout)) {
       if (!completedIds.value.has(ex.id)) {
         progress.value.completed.push(ex.id)
-        terminalOutput.value += '\n\n✅ 实验通过：输出符合预期！'
+        terminalOutput.value += '\n\n 实验通过：输出符合预期！'
       }
     } else if (result.stage === 'run') {
-      terminalOutput.value += '\n\n❌ 未通过：请对照「实验目标」检查输出。'
+      terminalOutput.value += '\n\n 未通过：请对照「实验目标」检查输出。'
     }
     saveProgress()
   } catch (e) {
@@ -174,7 +174,7 @@ onBeforeUnmount(() => {
         >
           <span class="source-path">{{ ex.path }}</span>
           <span class="source-title">{{ ex.title }}</span>
-          <span v-if="completedIds.has(ex.id)" class="completed-mark">✓</span>
+          <span v-if="completedIds.has(ex.id)" class="completed-mark"></span>
         </button>
       </div>
       <a class="archive-link" :href="activeExercise?.source_url" target="_blank" rel="noopener noreferrer">
@@ -234,7 +234,7 @@ onBeforeUnmount(() => {
 
       <div class="terminal-panel">
         <div class="sandbox-toolbar" style="border-top:1px solid var(--border-light);border-bottom:none;">
-          <span class="sandbox-title">📤 运行终端</span>
+          <span class="sandbox-title"> 运行终端</span>
           <span class="sandbox-title" v-if="lastResult">
             exit {{ lastResult.code }} · {{ formatDuration(lastResult.durationMs) }}
           </span>
@@ -258,12 +258,12 @@ onBeforeUnmount(() => {
       <p class="topic-summary">{{ activeExercise?.summary }}</p>
 
       <section class="learning-block">
-        <h3>🎯 实验目标</h3>
+        <h3> 实验目标</h3>
         <p>{{ activeExercise?.experiment.objective }}</p>
       </section>
 
       <section class="learning-block">
-        <h3>📋 实践任务</h3>
+        <h3> 实践任务</h3>
         <ol>
           <li v-for="(instruction, i) in activeExercise?.experiment.instructions || []" :key="i">
             {{ instruction }}
@@ -272,14 +272,14 @@ onBeforeUnmount(() => {
       </section>
 
       <section class="learning-block">
-        <h3>🔗 关联概念</h3>
+        <h3> 关联概念</h3>
         <div class="concept-list">
           <span v-for="concept in activeExercise?.concepts || []" :key="concept">{{ concept }}</span>
         </div>
       </section>
 
       <div class="record-status" :class="{ passed: activePassed }">
-        <strong>{{ activePassed ? '✅ 实验已通过' : '⏳ 尚未通过' }}</strong>
+        <strong>{{ activePassed ? ' 实验已通过' : '⏳ 尚未通过' }}</strong>
         <small>{{ activeAttemptCount }} 次运行记录</small>
       </div>
       <p class="source-note">{{ activeExercise?.attribution }}</p>

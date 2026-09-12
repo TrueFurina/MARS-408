@@ -167,7 +167,7 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
     <!-- ============ 步骤1：情景选择 ============ -->
     <template v-if="step === 'select'">
       <div class="c-header">
-        <div class="c-title">🥊 职业素养对抗实训</div>
+        <div class="c-title"> 职业素养对抗实训</div>
         <div class="c-desc">多智能体扮演高压职场对手，多轮追问并全程留证，结束后按证据中心设计（ECD）生成六维能力报告</div>
       </div>
 
@@ -222,7 +222,7 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
     <!-- ============ 步骤3：多轮对抗 ============ -->
     <template v-else-if="step === 'battle'">
       <div class="battle-top">
-        <div class="battle-title">⚔️ {{ session?.title }}</div>
+        <div class="battle-title"> {{ session?.title }}</div>
         <div class="battle-progress">第 {{ progressText }} 轮</div>
       </div>
       <div ref="battleScroll" class="battle-stream">
@@ -267,7 +267,7 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
     <!-- ============ 步骤4：六维报告 ============ -->
     <template v-else>
       <div class="report-head">
-        <div class="c-title">📊 六维素养评估报告</div>
+        <div class="c-title"> 六维素养评估报告</div>
         <div class="overall">
           综合得分
           <span class="overall-score">{{ assessment?.overall ?? '—' }}</span>
@@ -305,14 +305,14 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
       </div>
 
       <div class="sw-block">
-        <div class="sw-strength">✅ 最突出优点：{{ assessment?.strength || '—' }}</div>
-        <div class="sw-weak">⚠️ 待改进：
+        <div class="sw-strength"> 最突出优点：{{ assessment?.strength || '—' }}</div>
+        <div class="sw-weak"> 待改进：
           <ul><li v-for="(w, i) in assessment?.weaknesses" :key="i">{{ w }}</li></ul>
         </div>
       </div>
 
       <div v-if="improvement" class="plan-block">
-        <h3>🎯 针对性提升路径</h3>
+        <h3> 针对性提升路径</h3>
         <div v-for="(a, i) in improvement.actions" :key="i" class="plan-item">
           <span class="plan-dim">{{ DIM_LABEL[a.dimension] || a.dimension }}</span>
           <span class="plan-do">{{ a.do }}</span>

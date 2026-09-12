@@ -164,7 +164,7 @@ function agentName(a: string) {
 <template>
   <!-- 现场演示区（幻觉防控答辩演示：构造矛盾输入 → 检测 → 展示） -->
   <div class="ev-demo-bar">
-    <span class="ev-demo-title">🧪 现场演示（构造矛盾输入）</span>
+    <span class="ev-demo-title"> 现场演示（构造矛盾输入）</span>
     <button v-for="(d, i) in DEMO_CASES" :key="i" class="ev-demo-btn" :disabled="demoLoading" @click="runDemo(i)">
       {{ demoLoading ? '检测中...' : d.name }}
     </button>
@@ -326,7 +326,7 @@ function agentName(a: string) {
               {{ TYPE_LABEL[activeConflict.type] || activeConflict.type }}
             </span>
             <span class="ev-drawer-title">{{ agentName(activeConflict.agent_a) }} vs {{ agentName(activeConflict.agent_b) }}</span>
-            <button class="ev-close" @click="closeDrawer">✕</button>
+            <button class="ev-close" @click="closeDrawer"></button>
           </div>
 
           <div class="ev-drawer-desc">{{ activeConflict.description }}</div>

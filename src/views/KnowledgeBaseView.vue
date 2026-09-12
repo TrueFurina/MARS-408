@@ -135,7 +135,7 @@ async function askAboutText(text: string) {
     <div class="section-header" style="max-width:75rem;margin:0 auto 1rem;">
       <div class="section-title-group">
         <div>
-          <div class="section-title">📖 课程知识库</div>
+          <div class="section-title"> 课程知识库</div>
           <div class="section-desc">读原文 · 问选中 · 回答有出处</div>
         </div>
       </div>
@@ -148,7 +148,7 @@ async function askAboutText(text: string) {
 
     <!-- L1/L2/L3 三层学情记忆薄弱点提示（低侵入联动） -->
     <div v-if="memoryOverview?.weak_points?.length" class="memory-mini-strip" style="display:flex;gap:8px;flex-wrap:wrap;max-width:75rem;margin:0 auto 12px;font-size:12px;">
-      <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);">🧠 记忆薄弱点:</span>
+      <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);"> 记忆薄弱点:</span>
       <span v-for="w in memoryOverview.weak_points.slice(0, 6)" :key="w" style="padding:3px 10px;border-radius:12px;background:rgba(239,68,68,0.12);color:var(--accent-danger);">{{ w }}</span>
     </div>
 
@@ -156,7 +156,7 @@ async function askAboutText(text: string) {
     <div v-if="!selectedTextbook" class="textbook-grid" style="max-width:75rem;margin:0 auto;">
       <!-- RAG 知识库统计卡片 -->
       <div class="rag-stats-card" style="grid-column:1/-1;display:flex;align-items:center;gap:1rem;padding:1rem;background:var(--color-surface);border:1px solid var(--color-border);border-radius:12px;margin-bottom:8px;">
-        <div style="font-size:2rem;">🧠</div>
+        <div style="font-size:2rem;"></div>
         <div style="flex:1;">
           <div style="font-size:1rem;font-weight:600;color:var(--color-text);">知识库文档</div>
           <div style="font-size:0.875rem;color:var(--color-text-2);">共 <strong style="color:var(--accent-primary);">{{ ragStats.total_docs }}</strong> 条知识文档，覆盖 408 四科核心知识点</div>
@@ -176,12 +176,12 @@ async function askAboutText(text: string) {
         </div>
       </div>
       <div v-for="tb in textbooks" :key="tb.id" class="textbook-card" role="button" tabindex="0" :aria-label="'教材: ' + (tb.name || tb.id)" @click="loadTextbook(tb.id)" @keydown.enter="loadTextbook(tb.id)" @keydown.space.prevent="loadTextbook(tb.id)">
-        <div class="textbook-icon">📕</div>
+        <div class="textbook-icon"></div>
         <div class="textbook-name">{{ tb.name }}</div>
         <div class="textbook-meta">{{ tb.chapter_count }} 章 · {{ (tb.total_chars / 1000).toFixed(0) }}K 字</div>
       </div>
       <div v-if="textbooks.length === 0" class="empty-state" style="grid-column:1/-1;text-align:center;padding:60px;">
-        <div class="empty-icon">📚</div>
+        <div class="empty-icon"></div>
         <div class="empty-title">暂无教材</div>
         <div class="empty-desc">请先上传 PDF 教材文件</div>
       </div>
@@ -190,7 +190,7 @@ async function askAboutText(text: string) {
     <!-- 搜索面板 -->
     <div v-if="showSearch" class="search-panel" style="max-width:75rem;margin:0 auto 1rem;">
       <div class="search-header">
-        <span class="search-title">🔍 搜索结果 ({{ searchResults.length }})</span>
+        <span class="search-title"> 搜索结果 ({{ searchResults.length }})</span>
         <button class="btn btn-sm btn-ghost" @click="showSearch = false; searchResults = []">关闭</button>
       </div>
       <div v-for="r in searchResults" :key="r.source" class="search-item">
@@ -202,7 +202,7 @@ async function askAboutText(text: string) {
 
     <!-- 问答面板 -->
     <div v-if="askAnswer || askLoading" class="ask-panel" style="max-width:75rem;margin:0 auto 1rem;">
-      <div class="ask-header">💬 对选中文本提问</div>
+      <div class="ask-header"> 对选中文本提问</div>
       <div class="ask-selected">「{{ askText.slice(0, 100) }}...」</div>
       <div v-if="askLoading" class="ask-loading">思考中...</div>
       <div v-else class="ask-answer" style="white-space:pre-wrap;">{{ askAnswer }}</div>

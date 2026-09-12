@@ -189,7 +189,7 @@ const bonusPortals = [
 
 // 评审入口 — 引导评委看技术亮点
 const judgePortals = [
-  { key: 'engine', icon: icons.engine, title: '算法引擎可视化', desc: 'FrugalRAG节俭检索 + GoMARL共识引擎 + Agent辩论协议 — 核心技术对比表', route: '/engine', color: 'rgba(124, 106, 242, 0.12)', accent: 'var(--accent)', tag: '⭐ 评审推荐' },
+  { key: 'engine', icon: icons.engine, title: '算法引擎可视化', desc: 'FrugalRAG节俭检索 + GoMARL共识引擎 + Agent辩论协议 — 核心技术对比表', route: '/engine', color: 'rgba(124, 106, 242, 0.12)', accent: 'var(--accent)', tag: ' 评审推荐' },
   { key: 'resource', icon: icons.agent, title: '多智能体资源生成', desc: '10节点LangGraph StateGraph + SSE实时流 + 7种个性化资源', route: '/resource', color: 'rgba(59, 130, 246, 0.12)', accent: 'var(--accent-blue)', tag: '核心功能' },
   { key: 'knowledge', icon: icons.knowledge, title: '408四科知识图谱', desc: '487知识点节点 + Canvas力导向图 + 四科分组聚合', route: '/knowledge', color: 'rgba(6, 182, 212, 0.12)', accent: 'var(--accent-cyan)', tag: '核心功能' },
 ]
@@ -312,7 +312,7 @@ onMounted(async () => {
 
     <!-- 画像驱动推荐 -->
     <section v-if="recommendations.length" class="rec-section">
-      <div class="section-label">🎯 画像驱动推荐</div>
+      <div class="section-label"> 画像驱动推荐</div>
       <div class="rec-grid">
         <div v-for="(rec, i) in recommendations" :key="i" class="rec-card" :class="rec.priority" role="button" tabindex="0" @click="go(rec.route)" @keydown.enter="go(rec.route)" @keydown.space.prevent="go(rec.route)">
           <span class="rec-icon">{{ rec.icon }}</span>
@@ -325,9 +325,9 @@ onMounted(async () => {
       </div>
     </section>
 
-    <!-- ⭐ 评审推荐：引导评委看技术亮点 -->
+    <!--  评审推荐：引导评委看技术亮点 -->
     <section class="judge-section">
-      <div class="section-label">⭐ 评审推荐 — 核心技术亮点</div>
+      <div class="section-label"> 评审推荐 — 核心技术亮点</div>
       <div class="judge-grid">
         <div v-for="p in judgePortals" :key="p.key" class="judge-card" role="button" tabindex="0" @click="go(p.route)" @keydown.enter="go(p.route)" @keydown.space.prevent="go(p.route)">
           <div class="judge-tag">{{ p.tag }}</div>
@@ -697,7 +697,7 @@ onMounted(async () => {
 .badge-co { background: rgba(6, 182, 212, 0.12); color: var(--subject-co); border: 1px solid rgba(6, 182, 212, 0.20); }
 .badge-os { background: rgba(244, 114, 182, 0.12); color: var(--subject-os); border: 1px solid rgba(244, 114, 182, 0.20); }
 
-/* ⭐ 评审推荐卡片 */
+/*  评审推荐卡片 */
 .rec-section { padding:0 2rem 1.5rem; max-width:75rem; margin:0 auto; }
 .rec-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:8px; }
 .rec-card { display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:10px; background:var(--color-surface); border:1px solid var(--color-border); cursor:pointer; transition:all 0.15s; }
@@ -765,7 +765,7 @@ onMounted(async () => {
 .judge-title { font-size:1rem; font-weight: 700; color: var(--text-primary); }
 .judge-desc { font-size:0.75rem; color: var(--text-secondary); line-height:1.5; }
 
-/* ⭐ 评审推荐卡片 */
+/*  评审推荐卡片 */
 .bonus-section {
   padding:1rem 2rem;
   max-width:75rem;

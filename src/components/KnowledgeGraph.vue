@@ -264,7 +264,7 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
     <!-- 搜索栏 -->
     <div v-if="showSearch" class="kg-search-bar">
       <input v-model="searchQuery" class="kg-search-input" placeholder="搜索知识点..." @input="draw" />
-      <button class="kg-search-clear" v-if="searchQuery" @click="searchQuery = ''; nextTick(() => draw())">✕</button>
+      <button class="kg-search-clear" v-if="searchQuery" @click="searchQuery = ''; nextTick(() => draw())"></button>
     </div>
 
     <!-- 图谱模式（力导向图） -->
@@ -286,7 +286,7 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
           @mousemove="onMouseMove" @mousedown="onMouseDown" @mouseup="onMouseUp"
           @mouseleave="onMouseLeave" @click="onClick" @wheel.prevent="onWheel"></canvas>
         <div v-if="nodes.length === 0" class="kg-empty">
-          <div class="empty-icon">🕸️</div><div class="empty-text">暂无知识图谱数据</div>
+          <div class="empty-icon"></div><div class="empty-text">暂无知识图谱数据</div>
           <div class="empty-hint">请先通过「提取知识图谱」生成数据</div>
         </div>
       </div>
@@ -299,10 +299,10 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
           <span class="outline-dot" :style="{ background: node.color || '#7c6af2' }"></span>
           <span class="outline-label">{{ node.label || node.id }}</span>
           <span v-if="node.mastery" class="outline-mastery" :style="{ color: masteryColor(node.mastery) }">[{{ masteryLabel(node.mastery) }}]</span>
-          <span v-if="node.importance" class="outline-importance" :class="node.importance">{{ node.importance === 'high' ? '★' : '☆' }}</span>
+          <span v-if="node.importance" class="outline-importance" :class="node.importance">{{ node.importance === 'high' ? '' : '' }}</span>
         </div>
         <div v-if="nodes.length === 0" class="kg-empty">
-          <div class="empty-icon">📋</div><div class="empty-text">暂无大纲数据</div>
+          <div class="empty-icon"></div><div class="empty-text">暂无大纲数据</div>
         </div>
       </div>
     </template>
@@ -321,7 +321,7 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
           </div>
         </div>
         <div v-if="nodes.length === 0" class="kg-empty">
-          <div class="empty-icon">🧠</div><div class="empty-text">暂无思维导图数据</div>
+          <div class="empty-icon"></div><div class="empty-text">暂无思维导图数据</div>
         </div>
       </div>
     </template>
@@ -340,7 +340,7 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
           </div>
         </div>
         <div v-if="nodes.length === 0" class="kg-empty">
-          <div class="empty-icon">🗺️</div><div class="empty-text">暂无学习地图数据</div>
+          <div class="empty-icon"></div><div class="empty-text">暂无学习地图数据</div>
         </div>
       </div>
     </template>
@@ -357,14 +357,14 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
                 {{ masteryLabel(selectedNode.mastery) }}
               </span>
             </div>
-            <button class="kg-detail-close" @click="closeDetail">✕</button>
+            <button class="kg-detail-close" @click="closeDetail"></button>
           </div>
 
           <div class="kg-detail-tabs">
-            <button class="kg-tab" :class="{ active: detailTab === 'info' }" @click="detailTab = 'info'">📄 信息</button>
-            <button class="kg-tab" :class="{ active: detailTab === 'relations' }" @click="detailTab = 'relations'">🔗 关联 ({{ relatedNodes.size - 1 }})</button>
-            <button class="kg-tab" :class="{ active: detailTab === 'mastery' }" @click="detailTab = 'mastery'">📊 掌握</button>
-            <button class="kg-tab" :class="{ active: detailTab === 'resources' }" @click="detailTab = 'resources'">📚 资源</button>
+            <button class="kg-tab" :class="{ active: detailTab === 'info' }" @click="detailTab = 'info'"> 信息</button>
+            <button class="kg-tab" :class="{ active: detailTab === 'relations' }" @click="detailTab = 'relations'"> 关联 ({{ relatedNodes.size - 1 }})</button>
+            <button class="kg-tab" :class="{ active: detailTab === 'mastery' }" @click="detailTab = 'mastery'"> 掌握</button>
+            <button class="kg-tab" :class="{ active: detailTab === 'resources' }" @click="detailTab = 'resources'"> 资源</button>
           </div>
 
           <div class="kg-detail-body">
@@ -405,10 +405,10 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
 
             <!-- 资源 Tab -->
             <div v-if="detailTab === 'resources'">
-              <div class="kg-resource-item" role="button" tabindex="0" aria-label="查看讲解文档" @click="emit('nodeClick', selectedNode)" @keydown.enter="emit('nodeClick', selectedNode)" @keydown.space.prevent="emit('nodeClick', selectedNode)">📖 查看讲解文档</div>
-              <div class="kg-resource-item" role="button" tabindex="0" aria-label="生成练习题" @click="emit('nodeClick', selectedNode)" @keydown.enter="emit('nodeClick', selectedNode)" @keydown.space.prevent="emit('nodeClick', selectedNode)">📝 生成练习题</div>
-              <div class="kg-resource-item" role="button" tabindex="0" aria-label="生成思维导图" @click="emit('nodeClick', selectedNode)" @keydown.enter="emit('nodeClick', selectedNode)" @keydown.space.prevent="emit('nodeClick', selectedNode)">🧩 生成思维导图</div>
-              <div class="kg-resource-item" role="button" tabindex="0" aria-label="生成教学视频" @click="emit('nodeClick', selectedNode)" @keydown.enter="emit('nodeClick', selectedNode)" @keydown.space.prevent="emit('nodeClick', selectedNode)">🎬 生成教学视频</div>
+              <div class="kg-resource-item" role="button" tabindex="0" aria-label="查看讲解文档" @click="emit('nodeClick', selectedNode)" @keydown.enter="emit('nodeClick', selectedNode)" @keydown.space.prevent="emit('nodeClick', selectedNode)"> 查看讲解文档</div>
+              <div class="kg-resource-item" role="button" tabindex="0" aria-label="生成练习题" @click="emit('nodeClick', selectedNode)" @keydown.enter="emit('nodeClick', selectedNode)" @keydown.space.prevent="emit('nodeClick', selectedNode)"> 生成练习题</div>
+              <div class="kg-resource-item" role="button" tabindex="0" aria-label="生成思维导图" @click="emit('nodeClick', selectedNode)" @keydown.enter="emit('nodeClick', selectedNode)" @keydown.space.prevent="emit('nodeClick', selectedNode)"> 生成思维导图</div>
+              <div class="kg-resource-item" role="button" tabindex="0" aria-label="生成教学视频" @click="emit('nodeClick', selectedNode)" @keydown.enter="emit('nodeClick', selectedNode)" @keydown.space.prevent="emit('nodeClick', selectedNode)"> 生成教学视频</div>
             </div>
 
             <!-- 掌握详情 Tab -->
@@ -421,7 +421,7 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
               </div>
               <div class="kg-detail-row">
                 <span class="kg-detail-label">重要程度</span>
-                <span class="kg-detail-val">{{ selectedNode.importance === 'high' ? '🔴 高' : selectedNode.importance === 'medium' ? '🟡 中' : '🟢 低' }}</span>
+                <span class="kg-detail-val">{{ selectedNode.importance === 'high' ? ' 高' : selectedNode.importance === 'medium' ? ' 中' : ' 低' }}</span>
               </div>
               <div class="kg-detail-row">
                 <span class="kg-detail-label">认知维度</span>

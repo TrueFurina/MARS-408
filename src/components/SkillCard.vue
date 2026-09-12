@@ -13,7 +13,7 @@ const emit = defineEmits<{
 
 function stars(count: number): string {
   const full = Math.round(count)
-  return '★'.repeat(full) + '☆'.repeat(5 - full)
+  return ''.repeat(full) + ''.repeat(5 - full)
 }
 
 function statusLabel(s: string): string {

@@ -89,11 +89,11 @@ function onKeydown(e: KeyboardEvent) {
   <div class="profile-builder">
     <!-- 顶部 -->
     <div class="profile-builder-header">
-      <div class="profile-builder-title">👋 初次见面，先认识一下你</div>
+      <div class="profile-builder-title"> 初次见面，先认识一下你</div>
       <div class="profile-builder-desc">
         跟我聊几句，让我了解你的408基础，为你定制专属学习计划
         <span v-if="completed" style="color:var(--accent-success);font-weight:600;">
-          ✅ 已了解！正在跳转...
+           已了解！正在跳转...
         </span>
       </div>
     </div>

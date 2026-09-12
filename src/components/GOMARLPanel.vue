@@ -385,10 +385,8 @@ async function runConsensus() {
 .gomarl-group-tag { font-size:0.6875rem; padding:0.1875rem 0.625rem; border-radius:var(--radius-full); background: var(--bg-tertiary); color: var(--text-secondary); }
 .gomarl-sd-loss { font-size:0.6875rem; color: var(--text-muted); margin-top:0.25rem; }
 
-@keyframes pulse-glow {
-  0%, 100% { opacity: 1; box-shadow: 0 0 4px var(--accent-primary); }
-  50% { opacity: 0.6; box-shadow: 0 0 8px var(--accent-primary); }
-}
+/* 已删除本地 @keyframes pulse-glow：动画 box-shadow 模糊半径（违反"只动 GPU 属性"），
+   且全组件无引用，属死代码。需要呼吸效果请用全局 mars-pulse-soft。 */
 
 @media (max-width: 768px) {
   .gomarl-agents-preview { grid-template-columns: 1fr; }

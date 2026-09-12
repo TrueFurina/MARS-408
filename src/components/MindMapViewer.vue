@@ -119,8 +119,8 @@ const flatNodes = computed(() => {
         :style="{ paddingLeft: (node.depth * 24) + 'px' }"
       >
         <span class="mindmap-bullet" :class="{ root: node.depth === 0 }">
-          <template v-if="node.depth === 0">🌳</template>
-          <template v-else-if="node.hasChildren">📁</template>
+          <template v-if="node.depth === 0"></template>
+          <template v-else-if="node.hasChildren"></template>
           <template v-else>•</template>
         </span>
         <span class="mindmap-text">{{ node.text }}</span>

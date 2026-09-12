@@ -15,7 +15,7 @@ const skillId = computed(() => route.params.id as string || '')
 // ── 表单数据 ──
 const name = ref('')
 const description = ref('')
-const icon = ref('🤖')
+const icon = ref('')
 const systemPrompt = ref('')
 const llmChannel = ref('auto')
 const temperature = ref(0.7)
@@ -29,10 +29,10 @@ const selectedTemplate = ref('')
 const useMemory = ref(true)
 const memoryAccess = ref('read_write')
 const memoryAccessOptions = [
-  { value: 'none', label: '❌ 无权限', desc: '技能不访问学情记忆' },
-  { value: 'read', label: '📖 只读', desc: '可读取薄弱点/画像，不可写入' },
-  { value: 'write', label: '✍️ 只写', desc: '可回写行为事件，不可读取' },
-  { value: 'read_write', label: '🔁 读写', desc: '读薄弱学情 + 回写行为记忆' },
+  { value: 'none', label: ' 无权限', desc: '技能不访问学情记忆' },
+  { value: 'read', label: ' 只读', desc: '可读取薄弱点/画像，不可写入' },
+  { value: 'write', label: ' 只写', desc: '可回写行为事件，不可读取' },
+  { value: 'read_write', label: ' 读写', desc: '读薄弱学情 + 回写行为记忆' },
 ]
 
 // 循环13-P0：结构化工具元数据（tools 驱动 LLM 选工具）
@@ -88,7 +88,7 @@ const channelOptions = [
   { value: 'qwen', label: 'Qwen' },
 ]
 
-const iconOptions = ['🤖', '📝', '🎓', '🔍', '📊', '🧩', '📋', '📖', '🗣️', '💻', '🎯', '💡', '📚', '✏️', '🔬']
+const iconOptions = ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '']
 
 function applyTemplate(tmpl: SkillTemplate) {
   name.value = `我的${tmpl.name}`
@@ -241,7 +241,7 @@ async function loadMemoryOverview() {
 
         <!-- L1/L2/L3 三层学情记忆薄弱点提示（低侵入联动） -->
         <div v-if="memoryOverview?.weak_points?.length" class="memory-mini-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-size:12px;">
-          <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);">🧠 记忆薄弱点:</span>
+          <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);"> 记忆薄弱点:</span>
           <span v-for="w in memoryOverview.weak_points.slice(0, 6)" :key="w" style="padding:3px 10px;border-radius:12px;background:rgba(239,68,68,0.12);color:var(--accent-danger);">{{ w }}</span>
         </div>
 
@@ -298,7 +298,7 @@ async function loadMemoryOverview() {
           <input v-model="tags" class="form-input" placeholder="如: 数据结构, 出题, 冲刺" />
         </div>
 
-        <div class="form-section-divider">⚙️ AI 配置</div>
+        <div class="form-section-divider"> AI 配置</div>
 
         <div class="form-row">
           <div class="form-group">
@@ -325,7 +325,7 @@ async function loadMemoryOverview() {
         </div>
 
         <!-- P2②：记忆权限配置面板（L1/L2/L3 读写管控） -->
-        <div class="form-section-divider">🧠 学情记忆权限</div>
+        <div class="form-section-divider"> 学情记忆权限</div>
         <div class="form-group">
           <label class="checkbox-label">
             <input v-model="useMemory" type="checkbox" class="form-checkbox" />
@@ -346,7 +346,7 @@ async function loadMemoryOverview() {
         </div>
 
         <!-- 循环13-P0：结构化工具元数据（tools 驱动 LLM 选工具） -->
-        <div class="form-section-divider">🔧 工具元数据（可选）</div>
+        <div class="form-section-divider"> 工具元数据（可选）</div>
         <div class="form-group">
           <label class="checkbox-label">
             <input v-model="useTools" type="checkbox" class="form-checkbox" />
@@ -358,7 +358,7 @@ async function loadMemoryOverview() {
             <div class="tool-editor-header">
               <span class="tool-index">#{{ ti + 1 }}</span>
               <input v-model="t.name" class="form-input tool-name-input" placeholder="工具名（如 calculate_subnet）" />
-              <button class="tool-del-btn" title="删除工具" @click="toolsMeta.splice(ti, 1)">🗑️</button>
+              <button class="tool-del-btn" title="删除工具" @click="toolsMeta.splice(ti, 1)"></button>
             </div>
             <input v-model="t.description" class="form-input" placeholder="工具描述（LLM 选择依据，如「用户要求计算子网时应调用」）" />
             <textarea
@@ -368,11 +368,11 @@ async function loadMemoryOverview() {
               rows="3"
             ></textarea>
           </div>
-          <button class="tool-add-btn" @click="addToolMeta">➕ 添加工具</button>
+          <button class="tool-add-btn" @click="addToolMeta"> 添加工具</button>
           <div class="tool-hint">tools 为 OpenAI function schema 列表；配置后 LLM 会按 name/description/parameters 元数据准确选工具并生成合规参数</div>
         </div>
 
-        <div class="form-section-divider">💬 System Prompt</div>
+        <div class="form-section-divider"> System Prompt</div>
 
         <div class="form-group">
           <label class="form-label">System Prompt — 定义 AI 的行为和角色</label>
@@ -386,15 +386,15 @@ async function loadMemoryOverview() {
 
         <!-- 错误/成功提示 -->
         <div v-if="errorMsg" class="form-error">{{ errorMsg }}</div>
-        <div v-if="saved" class="form-success">✅ 已保存</div>
+        <div v-if="saved" class="form-success"> 已保存</div>
 
         <!-- 操作按钮 -->
         <div class="form-actions">
           <button class="btn btn-primary" :disabled="saving" @click="doSave">
-            {{ saving ? '保存中...' : '💾 保存草稿' }}
+            {{ saving ? '保存中...' : ' 保存草稿' }}
           </button>
           <button class="btn btn-success" :disabled="saving" @click="doPublish">
-            {{ saving ? '保存中...' : '🚀 保存并发布' }}
+            {{ saving ? '保存中...' : ' 保存并发布' }}
           </button>
           <button class="btn btn-ghost" @click="router.push('/skills')">取消</button>
         </div>

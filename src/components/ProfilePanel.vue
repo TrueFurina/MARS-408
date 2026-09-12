@@ -203,7 +203,7 @@ const learningPhase = computed(() => {
 
       <!-- 学习阶段提示 -->
       <div class="phase-banner" :style="{ borderColor: learningPhase.color, background: learningPhase.color + '10' }">
-        <div class="phase-banner-icon" :style="{ color: learningPhase.color }">{{ learningPhase.label === '冲刺阶段' ? '🏆' : learningPhase.label === '强化阶段' ? '🔥' : learningPhase.label === '基础阶段' ? '📚' : '🌱' }}</div>
+        <div class="phase-banner-icon" :style="{ color: learningPhase.color }">{{ learningPhase.label === '冲刺阶段' ? '' : learningPhase.label === '强化阶段' ? '' : learningPhase.label === '基础阶段' ? '' : '' }}</div>
         <div class="phase-banner-text">
           <div class="phase-banner-title" :style="{ color: learningPhase.color }">{{ learningPhase.label }}</div>
           <div class="phase-banner-desc">{{ learningPhase.desc }}</div>

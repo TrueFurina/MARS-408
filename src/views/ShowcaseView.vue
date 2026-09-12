@@ -5,7 +5,7 @@ import { icons } from '@/components/icons'
 // ── 技术亮点展示 ──
 const techHighlights = [
   {
-    category: '🤖 多智能体协同架构',
+    category: ' 多智能体协同架构',
     items: [
       { title: '10 节点 LangGraph StateGraph', desc: 'Coordinator → Diagnostician → Planner → Retriever → Generator(7并行) → Assessor → Critic → EvidenceCheck → QualityGate → PathPlanner 全链路编排', tag: '45% 评分权重' },
       { title: '改进 GoMARL 共识机制', desc: '加权投票 + Kappa 一致性置信度，7 Agent 交叉验证，Kappa ≥ 0.85', tag: '创新价值' },
@@ -13,7 +13,7 @@ const techHighlights = [
     ],
   },
   {
-    category: '🔍 轻量化检索增强（FrugalRAG）',
+    category: ' 轻量化检索增强（FrugalRAG）',
     items: [
       { title: 'E5 稠密检索 + BM25 稀疏检索', desc: '双路召回 + 余弦阈值过滤 + 个性化重排，检索成本降低 45%', tag: '核心指标' },
       { title: 'SFT 检索策略 + GRPO 停止决策', desc: '监督微调学习最优查询生成，强化学习决定何时停止检索，仅需 500 条标注样本', tag: '技术创新' },
@@ -21,7 +21,7 @@ const techHighlights = [
     ],
   },
   {
-    category: '🧠 8 维动态学生画像',
+    category: ' 8 维动态学生画像',
     items: [
       { title: '对话式构建', desc: '自然语言对话自动抽取 8 维特征（知识基础/认知风格/薄弱点/进度/准确率/活跃度/时间/目标）', tag: '赛题功能①' },
       { title: '随学随新', desc: '每次答题后自动更新画像，评估结果回写薄弱点，驱动路径动态调整', tag: '实时更新' },
@@ -29,7 +29,7 @@ const techHighlights = [
     ],
   },
   {
-    category: '🕸️ AI 知识图谱生成器',
+    category: ' AI 知识图谱生成器',
     items: [
       { title: 'LLM 实体关系抽取', desc: '6 种实体类型 + 5 种关系类型，二次 LLM 优化增强，自动合并重复实体', tag: '创新功能' },
       { title: '力导向图可视化', desc: 'Canvas 自绘力导向图，零外部依赖，支持 hover/click/drag 交互', tag: '纯自研' },
@@ -37,7 +37,7 @@ const techHighlights = [
     ],
   },
   {
-    category: '🎬 程序化教学视频生成',
+    category: ' 程序化教学视频生成',
     items: [
       { title: '零 API 成本合成方案', desc: 'LLM 分镜脚本 → 解析结构化场景 → SVG 教学图 → HTML 幻灯片，无需昂贵 AI 视频 API', tag: '技术突破' },
       { title: '5 种场景模板', desc: '流程图/对比表/结构图/时间线/层级图，随机分配，每场景自动适配最佳模板', tag: '多模态' },
@@ -45,7 +45,7 @@ const techHighlights = [
     ],
   },
   {
-    category: '📊 学习效果评估闭环',
+    category: ' 学习效果评估闭环',
     items: [
       { title: '多维度评估', desc: '知识点掌握度/薄弱环节/学习效率/趋势分析，结构化评估报告', tag: '赛题加分⑤' },
       { title: '路径自动调整', desc: '评估结果 → 薄弱点识别 → 路径插入补救节点 → 资源推送策略更新', tag: '闭环' },
@@ -53,7 +53,7 @@ const techHighlights = [
     ],
   },
   {
-    category: '💡 AI Skills 创新创作平台',
+    category: ' AI Skills 创新创作平台',
     items: [
       { title: '用户自定义教学技能', desc: '自定义 System Prompt/LLM 通道/温度/知识库，8 个预设模板快速开始', tag: '独创功能' },
       { title: '技能市场 + 收藏', desc: '搜索/分类/排序/Tab 切换，收藏/评价/使用量统计，完整的技能生态', tag: '平台化' },
@@ -61,7 +61,7 @@ const techHighlights = [
     ],
   },
   {
-    category: '🔒 安全与性能保障',
+    category: ' 安全与性能保障',
     items: [
       { title: '防幻觉三重保障', desc: 'FrugalRAG 事实约束 → System Prompt 强制 → Critic Agent 审阅校验', tag: '安全' },
       { title: 'SSE 流式输出', desc: '所有资源生成/对话/视频生成均支持 SSE 流式，首字延迟 < 200ms', tag: '性能' },
@@ -114,7 +114,7 @@ function openNew() { window.open(iframeSrc.value, '_blank', 'noopener') }
       </div>
       <div class="rail-footer">
         <button class="rail-tech-btn" :class="{ active: showTech }" @click="showTech = !showTech">
-          {{ showTech ? '📄 查看原型' : '⚡ 硬核技术' }}
+          {{ showTech ? ' 查看原型' : ' 硬核技术' }}
         </button>
       </div>
     </aside>
@@ -123,7 +123,7 @@ function openNew() { window.open(iframeSrc.value, '_blank', 'noopener') }
       <!-- 技术陈列模式 -->
       <div v-if="showTech" class="tech-showcase">
         <div class="tech-header">
-          <div class="tech-title">⚡ MARS-408 硬核技术全景</div>
+          <div class="tech-title"> MARS-408 硬核技术全景</div>
           <div class="tech-sub">对标第十五届中国软件杯 A3 赛题 · 国家级特等奖目标</div>
         </div>
 

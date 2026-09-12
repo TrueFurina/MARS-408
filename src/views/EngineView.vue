@@ -106,7 +106,7 @@ function formatModuleName(name: string): string {
 
     <!-- L1/L2/L3 三层学情记忆健康度（低侵入联动：引擎页展示记忆驱动证据） -->
     <div v-if="memoryOverview" class="memory-mini-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-size:12px;">
-      <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);">🧠 {{ memoryOverview.memory_level || 'L3' }}</span>
+      <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);"> {{ memoryOverview.memory_level || 'L3' }}</span>
       <span style="padding:3px 10px;border-radius:12px;background:var(--bg-tertiary);color:var(--text-secondary);">画像 {{ memoryOverview.profile_dimensions ?? 0 }}/8 维</span>
       <span style="padding:3px 10px;border-radius:12px;background:var(--bg-tertiary);color:var(--text-secondary);">掌握度 {{ memoryOverview.mastery_points ?? 0 }} 点</span>
       <span style="padding:3px 10px;border-radius:12px;background:var(--bg-tertiary);color:var(--text-secondary);">情景事件 {{ memoryOverview.episodic_count ?? 0 }}</span>
@@ -145,7 +145,7 @@ function formatModuleName(name: string): string {
       <Skeleton v-for="n in 6" :key="n" variant="title" width="7rem" height="1.75rem" radius="var(--radius-full)" />
     </div>
     <div v-else-if="engineStatus?.status === 'error'" class="engine-error">
-      ⚠️ 引擎状态获取失败：{{ engineStatus.message }}
+       引擎状态获取失败：{{ engineStatus.message }}
     </div>
     <div v-else-if="engineStatus?.status === 'ok'" class="engine-status-grid engine-enter" style="animation-delay:0.05s">
       <div class="engine-status-card glass-card" v-for="(enabled, name) in engineStatus.modules" :key="name">
@@ -164,7 +164,7 @@ function formatModuleName(name: string): string {
       <div class="engine-desc">多级兜底降级：限流快速失败 + 熔断隔离，故障自动切换通道</div>
 
       <!-- 熔断器 -->
-      <div class="reli-sub-title">🛡️ 熔断器（LLM 通道 / Skill 插件）</div>
+      <div class="reli-sub-title"> 熔断器（LLM 通道 / Skill 插件）</div>
       <div v-if="Object.keys(engineStatus.reliability.breakers || {}).length" class="reli-grid">
         <div v-for="(b, name) in engineStatus.reliability.breakers" :key="name" class="reli-card">
           <div class="reli-name">{{ name }}</div>
@@ -175,7 +175,7 @@ function formatModuleName(name: string): string {
       <div v-else class="reli-empty">暂无熔断器实例（服务运行后自动注册）</div>
 
       <!-- 令牌桶 -->
-      <div class="reli-sub-title" style="margin-top:0.75rem;">🪙 令牌桶（LLM 通道突发限流）</div>
+      <div class="reli-sub-title" style="margin-top:0.75rem;"> 令牌桶（LLM 通道突发限流）</div>
       <div v-if="Object.keys(engineStatus.reliability.token_buckets || {}).length" class="reli-grid">
         <div v-for="(tb, name) in engineStatus.reliability.token_buckets" :key="name" class="reli-card">
           <div class="reli-name">{{ name }}</div>

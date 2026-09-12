@@ -672,7 +672,7 @@ function parseWeakPoints(wpStr: string): string[] {
 
     <!-- L1/L2/L3 三层学情记忆薄弱点提示（低侵入联动） -->
     <div v-if="memoryOverview?.weak_points?.length" class="memory-mini-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-size:12px;">
-      <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);">🧠 记忆薄弱点:</span>
+      <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);"> 记忆薄弱点:</span>
       <span v-for="w in memoryOverview.weak_points.slice(0, 6)" :key="w" style="padding:3px 10px;border-radius:12px;background:rgba(239,68,68,0.12);color:var(--accent-danger);">{{ w }}</span>
     </div>
 
@@ -1078,7 +1078,7 @@ function parseWeakPoints(wpStr: string): string[] {
 .agent-node.active {
   border-color: var(--accent-primary);
   box-shadow: 0 0 0 2px var(--accent-primary-10), var(--glow-primary);
-  animation: pulse-glow 2s ease-in-out infinite;
+  animation: mars-pulse-soft 2s var(--ease-standard) infinite;
 }
 .agent-node.done {
   border-color: var(--accent-success);

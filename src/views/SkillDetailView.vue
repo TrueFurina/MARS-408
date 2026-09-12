@@ -113,7 +113,7 @@ async function sendChat() {
 // ── 通用 ──
 function stars(count: number): string {
   const full = Math.round(count)
-  return `<span style="color:var(--accent-warm)">${'★'.repeat(full)}</span>${'☆'.repeat(5 - full)}`
+  return `<span style="color:var(--accent-warm)">${''.repeat(full)}</span>${''.repeat(5 - full)}`
 }
 function statusLabel(s: string): string {
   return { draft: '草稿', published: '已发布', archived: '已归档' }[s] || s
@@ -206,7 +206,7 @@ watch(chatMessages, () => {
             <h1 class="detail-title">{{ skill.name }}</h1>
             <span class="detail-status" :class="`badge-${skill.status}`">{{ statusLabel(skill.status) }}</span>
             <span v-if="skill.is_official" class="badge-official"><span class="badge-ic" v-html="icons.checkCircle"></span>官方</span>
-            <span v-if="skill.memory_access" class="badge-memory" :class="`mem-${skill.memory_access}`" :title="memoryAccessTitle(skill.memory_access)">🧠 {{ memoryAccessLabel(skill.memory_access) }}</span>
+            <span v-if="skill.memory_access" class="badge-memory" :class="`mem-${skill.memory_access}`" :title="memoryAccessTitle(skill.memory_access)"> {{ memoryAccessLabel(skill.memory_access) }}</span>
           </div>
           <div class="detail-meta">
             <span>创作者: {{ skill.creator_name }}</span>
@@ -233,7 +233,7 @@ watch(chatMessages, () => {
       <!-- 评价表单 -->
       <div v-if="showRateForm" class="rate-form">
         <div class="star-picker">
-          <span v-for="i in 5" :key="i" class="star-option" :class="{ filled: i <= myRating }" role="button" tabindex="0" :aria-label="'评分 ' + i + ' 星'" @click="myRating = i" @keydown.enter="myRating = i" @keydown.space.prevent="myRating = i">★</span>
+          <span v-for="i in 5" :key="i" class="star-option" :class="{ filled: i <= myRating }" role="button" tabindex="0" :aria-label="'评分 ' + i + ' 星'" @click="myRating = i" @keydown.enter="myRating = i" @keydown.space.prevent="myRating = i"></span>
         </div>
         <input v-model="myComment" class="rate-input" placeholder="写点评价（可选）" maxlength="200" />
         <div class="rate-actions">
@@ -346,7 +346,7 @@ watch(chatMessages, () => {
           <div class="chat-dialog-memory">
             <label class="memory-toggle">
               <input type="checkbox" v-model="useMemory" :disabled="chatLoading" />
-              <span>🧠 使用学情记忆（注入 L1/L2/L3）</span>
+              <span> 使用学情记忆（注入 L1/L2/L3）</span>
             </label>
           </div>
         </div>

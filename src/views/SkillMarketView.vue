@@ -147,16 +147,16 @@ async function loadMemoryOverview() {
 
     <!-- L1/L2/L3 三层学情记忆薄弱点提示（低侵入联动） -->
     <div v-if="memoryOverview?.weak_points?.length" class="memory-mini-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-size:12px;">
-      <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);">🧠 记忆薄弱点:</span>
+      <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);"> 记忆薄弱点:</span>
       <span v-for="w in memoryOverview.weak_points.slice(0, 6)" :key="w" style="padding:3px 10px;border-radius:12px;background:rgba(239,68,68,0.12);color:var(--accent-danger);">{{ w }}</span>
     </div>
 
     <!-- 切换 Tab -->
     <div class="tab-bar">
-      <button class="tab-btn" :class="{ active: !showMySkills && !showFavorites }" @click="switchToMarket">🎪 市场</button>
-      <button class="tab-btn" :class="{ active: showMySkills && !showMyDrafts }" @click="switchToMySkills">📦 我的技能</button>
-      <button class="tab-btn" :class="{ active: showMyDrafts }" @click="goToDrafts">📝 草稿箱</button>
-      <button class="tab-btn" :class="{ active: showFavorites }" @click="switchToFavorites">⭐ 收藏</button>
+      <button class="tab-btn" :class="{ active: !showMySkills && !showFavorites }" @click="switchToMarket"> 市场</button>
+      <button class="tab-btn" :class="{ active: showMySkills && !showMyDrafts }" @click="switchToMySkills"> 我的技能</button>
+      <button class="tab-btn" :class="{ active: showMyDrafts }" @click="goToDrafts"> 草稿箱</button>
+      <button class="tab-btn" :class="{ active: showFavorites }" @click="switchToFavorites"> 收藏</button>
     </div>
 
     <!-- 搜索 & 过滤栏 -->
@@ -180,7 +180,7 @@ async function loadMemoryOverview() {
 
     <!-- 官方技能横幅 -->
     <div v-if="!showMySkills && store.officialSkills.length" class="official-banner">
-      <div class="official-title">⭐ 官方推荐</div>
+      <div class="official-title"> 官方推荐</div>
       <div class="official-list">
         <SkillCard
           v-for="s in store.officialSkills.slice(0, 4)"

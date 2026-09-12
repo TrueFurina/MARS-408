@@ -70,7 +70,7 @@ onMounted(loadMemory)
 
 <template>
   <div class="page-section">
-    <div class="section-title">🧠 学情记忆中心</div>
+    <div class="section-title"> 学情记忆中心</div>
     <div class="section-desc">L1/L2/L3 三层分级学情记忆 — 对标 HKU-DeepTutor 记忆解耦，全程垂直适配 408 考研</div>
 
     <!-- 加载 -->
@@ -80,7 +80,7 @@ onMounted(loadMemory)
 
     <!-- 错误 -->
     <div v-else-if="error" class="empty-state">
-      <div class="empty-title">⚠️ 加载失败</div>
+      <div class="empty-title"> 加载失败</div>
       <div class="empty-desc">{{ error }}</div>
       <button class="engine-btn" style="margin-top:12px;" @click="loadMemory">重新加载</button>
     </div>
@@ -132,10 +132,10 @@ onMounted(loadMemory)
 
         <!-- 行动转化：针对薄弱点的学习建议 -->
         <div v-if="overview.weak_points?.length" class="mem-actions">
-          <div class="mem-actions-title">🎯 基于薄弱点的学习建议</div>
-          <button class="mem-action-btn" @click="goPractice">📝 刷题巩固薄弱点</button>
-          <button class="mem-action-btn" @click="goChat">💬 向 AI 助教提问</button>
-          <button class="mem-action-btn" @click="goPath">🗺️ 调整学习路径</button>
+          <div class="mem-actions-title"> 基于薄弱点的学习建议</div>
+          <button class="mem-action-btn" @click="goPractice"> 刷题巩固薄弱点</button>
+          <button class="mem-action-btn" @click="goChat"> 向 AI 助教提问</button>
+          <button class="mem-action-btn" @click="goPath"> 调整学习路径</button>
         </div>
       </div>
 

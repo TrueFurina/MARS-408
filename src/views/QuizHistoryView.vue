@@ -55,12 +55,12 @@ const filteredHistory = computed(() => {
 <template>
   <ErrorBoundary title="答题历史加载异常">
   <div class="page-section">
-    <div class="section-title">📊 答题历史与错题本</div>
+    <div class="section-title"> 答题历史与错题本</div>
     <div class="section-desc">查看答题记录，复习错题，追踪薄弱点</div>
 
     <!-- L1/L2/L3 三层学情记忆薄弱点提示（低侵入联动） -->
     <div v-if="memoryOverview?.weak_points?.length" class="memory-mini-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-size:12px;">
-      <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);">🧠 记忆薄弱点:</span>
+      <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);"> 记忆薄弱点:</span>
       <span v-for="w in memoryOverview.weak_points.slice(0, 6)" :key="w" style="padding:3px 10px;border-radius:12px;background:rgba(239,68,68,0.12);color:var(--accent-danger);">{{ w }}</span>
     </div>
 
@@ -83,15 +83,15 @@ const filteredHistory = computed(() => {
 
       <div class="filter-bar">
         <button class="filter-btn" :class="{ active: filter === 'all' }" @click="filter = 'all'">全部</button>
-        <button class="filter-btn" :class="{ active: filter === 'wrong' }" @click="filter = 'wrong'">❌ 错题</button>
-        <button class="filter-btn" :class="{ active: filter === 'correct' }" @click="filter = 'correct'">✅ 正确</button>
+        <button class="filter-btn" :class="{ active: filter === 'wrong' }" @click="filter = 'wrong'"> 错题</button>
+        <button class="filter-btn" :class="{ active: filter === 'correct' }" @click="filter = 'correct'"> 正确</button>
       </div>
 
       <EmptyState v-if="history.length === 0" :icon="icons.history" title="暂无答题记录" description="去「智能出题」页面开始练习吧" />
 
       <div v-else class="history-list">
         <div v-for="(r, i) in filteredHistory" :key="i" class="history-item glass-card" :class="{ wrong: !r.correct, correct: r.correct }">
-          <div class="h-icon">{{ r.correct ? '✅' : '❌' }}</div>
+          <div class="h-icon">{{ r.correct ? '' : '' }}</div>
           <div class="h-body">
             <div class="h-subject">{{ subjectName(r.subject) || '未知科目' }}</div>
             <div class="h-difficulty">{{ r.difficulty || '未知难度' }}</div>
@@ -111,7 +111,7 @@ const filteredHistory = computed(() => {
 .h-label { font-size:0.75rem; color: var(--text-muted); margin-top:0.25rem; display: block; }
 .filter-bar { display: flex; gap: 8px; margin-bottom: 16px; }
 .filter-btn { padding: 6px 16px; border-radius: var(--radius-full); border: 1px solid var(--glass-border); background: transparent; color: var(--text-secondary); font-size: 13px; cursor: pointer; transition: var(--transition); }
-.filter-btn.active { background: var(--accent-primary); color: var(--text-user); border-color: var(--accent-primary); }
+.filter-btn.active { background: var(--color-accent-solid); color: var(--text-user); border-color: var(--color-accent-solid); }
 .history-list { display: flex; flex-direction: column; gap:0.5rem; }
 .history-item { display: flex; align-items: center; gap:0.75rem; padding:0.75rem 1rem; }
 .history-item.wrong { border-left: 3px solid var(--accent-danger); }

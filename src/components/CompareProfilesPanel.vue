@@ -67,7 +67,7 @@ async function runCompare() {
 <template>
   <div class="engine-section glass-card">
     <div class="engine-section-title">
-      <span class="engine-icon">🎯</span>
+      <span class="engine-icon"></span>
       个性化对比演示
       <span class="engine-tag">不同画像 → 不同检索结果</span>
     </div>

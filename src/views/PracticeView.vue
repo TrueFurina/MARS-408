@@ -177,7 +177,7 @@ async function refreshQuestions() { await generateQuestions() }
 
     <!-- L1/L2/L3 三层学情记忆薄弱点提示（低侵入联动） -->
     <div v-if="memoryOverview?.weak_points?.length" class="memory-mini-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-size:12px;">
-      <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);">🧠 记忆薄弱点:</span>
+      <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);"> 记忆薄弱点:</span>
       <span v-for="w in memoryOverview.weak_points.slice(0, 6)" :key="w" style="padding:3px 10px;border-radius:12px;background:rgba(239,68,68,0.12);color:var(--accent-danger);">{{ w }}</span>
     </div>
 
@@ -256,8 +256,8 @@ async function refreshQuestions() { await generateQuestions() }
             @click="selectAnswer(idx, oi as number)">
             <span class="option-letter">{{ 'ABCDEFGH'[oi as number] }}</span>
             <span class="option-text">{{ opt }}</span>
-            <span v-if="answers[idx]?.revealed && q.answer === oi" class="option-correct">✓</span>
-            <span v-if="answers[idx]?.revealed && answers[idx]?.selected === oi && q.answer !== oi" class="option-wrong">✗</span>
+            <span v-if="answers[idx]?.revealed && q.answer === oi" class="option-correct"></span>
+            <span v-if="answers[idx]?.revealed && answers[idx]?.selected === oi && q.answer !== oi" class="option-wrong"></span>
           </div>
         </div>
         <div v-if="answers[idx]?.revealed && q.explanation" class="quiz-explanation">

@@ -67,7 +67,7 @@ function selectChapter(i: number) {
         {{ chapter?.content || '暂无内容' }}
       </div>
       <div v-if="!chapter" class="pdf-empty">
-        <div class="empty-icon">📖</div>
+        <div class="empty-icon"></div>
         <div class="empty-text">选择章节开始阅读</div>
       </div>
     </div>
@@ -75,8 +75,8 @@ function selectChapter(i: number) {
     <!-- 选中文本操作菜单 -->
     <Teleport to="body">
       <div v-if="showSelectionMenu" class="selection-menu" :style="{ left: menuPos.x + 'px', top: menuPos.y + 'px' }">
-        <button class="selection-btn" @click="askAboutSelection">🔍 问选中</button>
-        <button class="selection-btn" @click="showSelectionMenu = false">✕</button>
+        <button class="selection-btn" @click="askAboutSelection"> 问选中</button>
+        <button class="selection-btn" @click="showSelectionMenu = false"></button>
       </div>
     </Teleport>
   </div>

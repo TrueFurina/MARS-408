@@ -39,9 +39,9 @@ onUnmounted(() => { delete (window as any).__toast })
     <div class="toast-container">
       <TransitionGroup name="toast">
         <div v-for="toast in toasts" :key="toast.id" :class="['toast-item', `toast-${toast.type}`]">
-          <span class="toast-icon">{{ { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' }[toast.type] }}</span>
+          <span class="toast-icon">{{ { success: '', error: '', info: 'ℹ', warning: '' }[toast.type] }}</span>
           <span class="toast-msg">{{ toast.message }}</span>
-          <button class="toast-close" @click="removeToast(toast.id)" aria-label="关闭通知">✕</button>
+          <button class="toast-close" @click="removeToast(toast.id)" aria-label="关闭通知"></button>
         </div>
       </TransitionGroup>
     </div>

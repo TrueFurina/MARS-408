@@ -44,7 +44,7 @@ const topicOptions = [
 <template>
   <div class="engine-section glass-card">
     <div class="engine-section-title">
-      <span class="engine-icon">📚</span>
+      <span class="engine-icon"></span>
       408教学规则引擎
       <span class="engine-tag">知识点依赖+考查权重</span>
     </div>

@@ -45,8 +45,8 @@ function toggleMode() { mode.value = isRegister.value ? 'login' : 'register'; er
 
       <!-- 登录/注册切换 -->
       <div class="mode-row">
-        <button class="mode-btn" :class="{ on: !isRegister }" @click="mode = 'login'">🔑 登录</button>
-        <button class="mode-btn" :class="{ on: isRegister }" @click="mode = 'register'">✨ 注册</button>
+        <button class="mode-btn" :class="{ on: !isRegister }" @click="mode = 'login'"> 登录</button>
+        <button class="mode-btn" :class="{ on: isRegister }" @click="mode = 'register'"> 注册</button>
       </div>
 
       <!-- 表单 -->
@@ -54,29 +54,29 @@ function toggleMode() { mode.value = isRegister.value ? 'login' : 'register'; er
         <div class="fld">
           <label class="fld-lbl">用户名</label>
           <div class="fld-wrap">
-            <span class="fld-ico">👤</span>
+            <span class="fld-ico"></span>
             <input v-model="username" class="fld-inp" :placeholder="isRegister ? '设置用户名' : '请输入用户名'" autocomplete="username" />
           </div>
         </div>
         <div v-if="isRegister" class="fld">
           <label class="fld-lbl">昵称</label>
           <div class="fld-wrap">
-            <span class="fld-ico">📝</span>
+            <span class="fld-ico"></span>
             <input v-model="displayName" class="fld-inp" placeholder="展示名称" autocomplete="nickname" />
           </div>
         </div>
         <div class="fld">
           <label class="fld-lbl">密码</label>
           <div class="fld-wrap">
-            <span class="fld-ico">🔒</span>
+            <span class="fld-ico"></span>
             <input v-model="password" :type="showPassword ? 'text' : 'password'" class="fld-inp" :placeholder="isRegister ? '至少 8 位' : '请输入密码'" autocomplete="current-password" />
-            <button type="button" class="pw-eye" @click="showPassword = !showPassword">{{ showPassword ? '🙈' : '👁️' }}</button>
+            <button type="button" class="pw-eye" @click="showPassword = !showPassword">{{ showPassword ? '' : '' }}</button>
           </div>
         </div>
-        <div v-if="error" class="err">⚠️ {{ error }}</div>
+        <div v-if="error" class="err"> {{ error }}</div>
         <button class="sbtn" :disabled="loading" type="submit">
           <span v-if="loading" class="spin"></span>
-          <span v-else>{{ isRegister ? '✨ 注册并进入' : '🔑 登录' }}</span>
+          <span v-else>{{ isRegister ? ' 注册并进入' : ' 登录' }}</span>
         </button>
       </form>
 
@@ -85,7 +85,7 @@ function toggleMode() { mode.value = isRegister.value ? 'login' : 'register'; er
         <span>{{ isRegister ? '已有账号？' : '还没有账号？' }}</span>
         <button class="bot-link" @click="toggleMode">{{ isRegister ? '去登录' : '立即注册' }}</button>
       </div>
-      <div class="demo">💡 演示账号：<code>demo</code> / <code>demo123456</code></div>
+      <div class="demo"> 演示账号：<code>demo</code> / <code>demo123456</code></div>
     </div>
   </div>
 </template>

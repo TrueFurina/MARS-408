@@ -117,12 +117,12 @@ function clearAll() {
 <template>
   <div class="page-section active">
     <div class="section-header" style="text-align:center;">
-      <div class="section-title">💻 网络编程沙箱</div>
+      <div class="section-title"> 网络编程沙箱</div>
       <div class="section-desc">在线运行网络编程代码，学习 Socket 编程、子网计算等</div>
 
       <!-- L1/L2/L3 三层学情记忆薄弱点提示（低侵入联动） -->
       <div v-if="memoryOverview?.weak_points?.length" class="memory-mini-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-size:12px;">
-        <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);">🧠 记忆薄弱点:</span>
+        <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);"> 记忆薄弱点:</span>
         <span v-for="w in memoryOverview.weak_points.slice(0, 6)" :key="w" style="padding:3px 10px;border-radius:12px;background:rgba(239,68,68,0.12);color:var(--accent-danger);">{{ w }}</span>
       </div>
     </div>
@@ -131,10 +131,10 @@ function clearAll() {
       <!-- 代码编辑器 -->
       <div class="sandbox-editor-panel">
         <div class="sandbox-toolbar">
-          <span class="sandbox-title">📝 Python 代码</span>
+          <span class="sandbox-title"> Python 代码</span>
           <div class="sandbox-actions">
-            <button class="sandbox-btn" @click="showExamples = !showExamples">📚 示例</button>
-            <button class="sandbox-btn" @click="clearAll">🗑️ 清空</button>
+            <button class="sandbox-btn" @click="showExamples = !showExamples"> 示例</button>
+            <button class="sandbox-btn" @click="clearAll"> 清空</button>
             <button class="sandbox-run-btn" :disabled="running || !code.trim()" @click="runCode">
               {{ running ? '⏳ 运行中...' : '▶ 运行' }}
             </button>
@@ -161,7 +161,7 @@ function clearAll() {
       <!-- 输出面板 -->
       <div class="sandbox-output-panel">
         <div class="sandbox-toolbar">
-          <span class="sandbox-title">📤 输出</span>
+          <span class="sandbox-title"> 输出</span>
           <span v-if="running" class="sandbox-status running">运行中...</span>
         </div>
         <div class="sandbox-output" :class="{ 'has-error': error }">

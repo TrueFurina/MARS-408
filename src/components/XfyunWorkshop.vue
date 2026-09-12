@@ -147,29 +147,29 @@ async function genXfResume() {
 <template>
   <div class="card xfyun-workshop">
     <div class="card-header xfyun-card-header">
-      <span class="card-title">🔥 讯飞AI工坊</span>
+      <span class="card-title"> 讯飞AI工坊</span>
       <span class="xfyun-subtitle">深度集成科大讯飞：TTI/PPT/数字人视频/聚合搜索/图片理解/纠错/校对/合规/角色模拟/智能简历</span>
     </div>
 
     <div v-if="xfError" class="xfyun-error" role="alert" tabindex="0" aria-label="错误信息，点击或按回车关闭" @click="xfError = null" @keydown.enter="xfError = null">
-      ⚠️ {{ xfError }} <span class="xfyun-error-close" aria-hidden="true">✕</span>
+       {{ xfError }} <span class="xfyun-error-close" aria-hidden="true"></span>
     </div>
     <div class="xfyun-grid">
       <!-- 1. 智能PPT -->
       <div class="xfyun-card">
-        <div class="xfyun-card-title">📊 智能PPT生成</div>
+        <div class="xfyun-card-title"> 智能PPT生成</div>
         <div class="xfyun-card-desc">基于知识点一键生成带AI配图的演示PPT（讯飞智能PPT）</div>
         <button class="rag-btn" :disabled="!topic.trim() || !!xfLoading" @click="genXfPpt">
           {{ xfLoading==='ppt' ? '生成中...' : '生成PPT课件' }}
         </button>
         <div v-if="xfPpt" class="xfyun-result">
-          <a :href="xfPpt.url" target="_blank" rel="noopener" class="xfyun-link">⬇️ 下载PPT：{{ xfPpt.title || '课件' }}</a>
+          <a :href="xfPpt.url" target="_blank" rel="noopener" class="xfyun-link"> 下载PPT：{{ xfPpt.title || '课件' }}</a>
         </div>
       </div>
 
       <!-- 2. 数字人视频 -->
       <div class="xfyun-card">
-        <div class="xfyun-card-title">🎬 数字人视频</div>
+        <div class="xfyun-card-title"> 数字人视频</div>
         <div class="xfyun-card-desc">将讲解内容渲染为数字人播报视频（讯飞数字人视频大模型）</div>
         <button class="rag-btn" :disabled="!topic.trim() || !!xfLoading" @click="genXfVideo">
           {{ xfLoading==='video' ? '生成中...' : '生成讲解视频' }}
@@ -182,7 +182,7 @@ async function genXfResume() {
 
       <!-- 3. 聚合搜索 -->
       <div class="xfyun-card">
-        <div class="xfyun-card-title">🔍 联网检索（万搜）</div>
+        <div class="xfyun-card-title"> 联网检索（万搜）</div>
         <div class="xfyun-card-desc">联网补充检索，增强RAG知识库（讯飞聚合搜索）</div>
         <button class="rag-btn" :disabled="!topic.trim() || !!xfLoading" @click="doXfSearch">
           {{ xfLoading==='search' ? '检索中...' : '联网检索' }}
@@ -198,13 +198,13 @@ async function genXfResume() {
 
       <!-- 4. 文本纠错 -->
       <div class="xfyun-card">
-        <div class="xfyun-card-title">✅ 文本纠错</div>
+        <div class="xfyun-card-title"> 文本纠错</div>
         <div class="xfyun-card-desc">对讲解内容做拼写/语法/搭配纠错（讯飞文本纠错）</div>
         <button class="rag-btn" :disabled="!topic.trim() || !!xfLoading" @click="doXfProofread">
           {{ xfLoading==='proof' ? '纠错中...' : '纠错讲解内容' }}
         </button>
         <div v-if="xfProof" class="xfyun-result">
-          <div v-if="xfProof.count===0" class="xfyun-ok">✅ 未发现错误</div>
+          <div v-if="xfProof.count===0" class="xfyun-ok"> 未发现错误</div>
           <div v-for="(c,i) in xfProof.corrections" :key="i" class="xfyun-correction">
             「{{ c[1] }}」→ <b>{{ c[2] }}</b> <span class="xfyun-muted">({{ c[3] }})</span>
           </div>
@@ -213,13 +213,13 @@ async function genXfResume() {
 
       <!-- 5. 公文校对 -->
       <div class="xfyun-card">
-        <div class="xfyun-card-title">📝 公文校对</div>
+        <div class="xfyun-card-title"> 公文校对</div>
         <div class="xfyun-card-desc">政务/公文风格校对（讯飞公文校对引擎）</div>
         <button class="rag-btn" :disabled="!topic.trim() || !!xfLoading" @click="doXfGovProof">
           {{ xfLoading==='gov' ? '校对中...' : '公文校对' }}
         </button>
         <div v-if="xfGov" class="xfyun-result">
-          <div v-if="xfGov.count===0" class="xfyun-ok">✅ 未发现错误</div>
+          <div v-if="xfGov.count===0" class="xfyun-ok"> 未发现错误</div>
           <div v-for="(c,i) in xfGov.corrections" :key="i" class="xfyun-correction">
             「{{ c[1] }}」→ <b>{{ c[2] }}</b> <span class="xfyun-muted">({{ c[3] }})</span>
           </div>
@@ -228,20 +228,20 @@ async function genXfResume() {
 
       <!-- 6. 内容合规 -->
       <div class="xfyun-card">
-        <div class="xfyun-card-title">🛡️ 内容合规审核</div>
+        <div class="xfyun-card-title"> 内容合规审核</div>
         <div class="xfyun-card-desc">内容安全审核，防违规/防幻觉输出（讯飞文本合规）</div>
         <button class="rag-btn" :disabled="!topic.trim() || !!xfLoading" @click="doXfCompliance">
           {{ xfLoading==='compliance' ? '审核中...' : '合规审核' }}
         </button>
         <div v-if="xfCompliance" class="xfyun-result">
-          <div v-if="xfCompliance.passed" class="xfyun-ok">✅ 内容合规，通过审核</div>
-          <div v-else class="xfyun-warn">⚠️ 命中风险：{{ xfCompliance.hits.map(h=>h.word).join('、') }}</div>
+          <div v-if="xfCompliance.passed" class="xfyun-ok"> 内容合规，通过审核</div>
+          <div v-else class="xfyun-warn"> 命中风险：{{ xfCompliance.hits.map(h=>h.word).join('、') }}</div>
         </div>
       </div>
 
       <!-- 7. 角色模拟 -->
       <div class="xfyun-card xfyun-card-wide">
-        <div class="xfyun-card-title">🎭 角色模拟·模拟面试官</div>
+        <div class="xfyun-card-title"> 角色模拟·模拟面试官</div>
         <div class="xfyun-card-desc">星火角色模拟：模拟考研面试官/导师与你多轮对话</div>
         <div class="xfyun-rp-controls">
           <select class="rag-select" v-model="rpPersona">
@@ -270,13 +270,13 @@ async function genXfResume() {
 
       <!-- 8. 智能简历 -->
       <div class="xfyun-card">
-        <div class="xfyun-card-title">📄 智能简历</div>
+        <div class="xfyun-card-title"> 智能简历</div>
         <div class="xfyun-card-desc">生成可下载的考研复试简历（讯飞智能简历）</div>
         <button class="rag-btn" :disabled="!!xfLoading" @click="genXfResume">
           {{ xfLoading==='resume' ? '生成中...' : '生成我的简历' }}
         </button>
         <div v-if="xfResume" class="xfyun-result">
-          <a v-if="xfResume.url" :href="xfResume.url" target="_blank" rel="noopener" class="xfyun-link">⬇️ 下载简历(word)</a>
+          <a v-if="xfResume.url" :href="xfResume.url" target="_blank" rel="noopener" class="xfyun-link"> 下载简历(word)</a>
           <div v-else class="xfyun-muted">简历已生成，但未返回下载链接</div>
         </div>
       </div>

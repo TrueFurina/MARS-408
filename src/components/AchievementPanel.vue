@@ -13,11 +13,11 @@ const CATEGORY_LABELS: Record<string, string> = {
 }
 
 const CATEGORY_ICONS: Record<string, string> = {
-  milestone: '🏁',
-  practice: '📝',
-  knowledge: '📚',
-  streak: '🔥',
-  master: '👑',
+  milestone: '',
+  practice: '',
+  knowledge: '',
+  streak: '',
+  master: '',
 }
 
 const activeCategory = ref('all')
@@ -44,7 +44,7 @@ const sortedAchievements = computed(() => {
     <!-- 头部 -->
     <div class="ach-header">
       <div class="ach-header-left">
-        <div class="ach-title">🏆 成就系统</div>
+        <div class="ach-title"> 成就系统</div>
         <div class="ach-subtitle">解锁成就，记录你的学习旅程</div>
       </div>
       <div class="ach-overall">
