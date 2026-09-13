@@ -179,8 +179,8 @@ async def collect_evidence(scenario_label: str, question: str, answer: str) -> d
 # ────────────────────────────────────────────────────────────
 # 对抗模式决策（鲶鱼机制，规则驱动，稳定可控）
 # ────────────────────────────────────────────────────────────
-def decide_adversary_mode(turns: list[dict], current_mode: str, catfish_continuous: int) -> tuple[str, bool, int]:
-    """返回 (mode, 本轮是否新触发鲶鱼, 更新后的catfish_continuous)"""
+def _decide_adversary_mode_rule(turns: list[dict], current_mode: str, catfish_continuous: int) -> tuple[str, bool, int]:
+    """规则版决策（P3③ MAPPO 化后的兜底路径，逻辑与原版完全一致）"""
     n = len(turns)
     if n == 0:
         return "normal", False, 0
@@ -205,6 +205,22 @@ def decide_adversary_mode(turns: list[dict], current_mode: str, catfish_continuo
         if avg_density < 0.35:
             return "escalating", True, 1
     return "normal", False, 0
+
+
+def decide_adversary_mode(turns: list[dict], current_mode: str, catfish_continuous: int) -> tuple[str, bool, int]:
+    """决策层入口（P3③）：灰度开启 MAPPO 时走学习策略，否则/失败走规则版。
+
+    对外签名与返回契约（三模式 + 触发标记 + 连压计数）不变，下游零改动。
+    """
+    try:
+        from engines.career_policy import maybe_mappo_decide
+        result = maybe_mappo_decide(turns, current_mode, catfish_continuous,
+                                    rule_fn=_decide_adversary_mode_rule)
+        if result is not None:
+            return result
+    except Exception:
+        pass  # 任何异常（含导入失败）→ 规则版兜底
+    return _decide_adversary_mode_rule(turns, current_mode, catfish_continuous)
 
 
 # ────────────────────────────────────────────────────────────

@@ -296,6 +296,11 @@ def get_gomarl_config() -> dict:
     return load_config().get("gomarl", {})
 
 
+def get_career_config() -> dict:
+    """career 对抗实训段配置（缺失返回空 dict，不报错）。"""
+    return load_config().get("career", {})
+
+
 # ── 大创真版算法增量：feature flag 读取接口（T1）──
 # 向后兼容：algorithm 段缺失（旧 config.json）时一律回退 "lite"，不抛异常。
 
