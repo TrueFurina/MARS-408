@@ -134,6 +134,12 @@ const router = createRouter({
       component: () => import('@/views/CareerTrainingView.vue'),
     },
     {
+      // P4 教师端：对抗实训建班/发任务/班级看板
+      path: '/career/teacher',
+      name: 'career-teacher',
+      component: () => import('@/views/TeacherCareerView.vue'),
+    },
+    {
       // P3 归并：错题复盘并入「错题本」页内 Tab（?tab=review），老 URL 经 redirect 保持可用
       path: '/review',
       name: 'review',

@@ -281,6 +281,14 @@ export const NAV_GROUPS: NavGroup[] = [
         roles: ['teacher', 'admin'],
       },
       {
+        // P4：对抗实训教师端（建班/花名册/任务码/班级看板）
+        key: 'career-teacher',
+        name: '实训任务',
+        icon: icons.target,
+        route: '/career/teacher',
+        roles: ['teacher', 'admin'],
+      },
+      {
         key: 'admin',
         name: '平台数据',
         icon: icons.dashboard,
