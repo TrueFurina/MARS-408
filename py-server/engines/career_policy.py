@@ -25,6 +25,12 @@ REWARD_W = {"gain": 0.5, "evidence": 0.3, "cost": 0.15, "discipline": 0.05}
 
 CATFISH_MAX_CONTINUE = 2  # 与 career_state 保持一致（纪律项）
 
+# 无证据轮的证据密度默认值。
+# 旧值 0.5 的缺陷（CTO 派单一根因 A）：规则判据 `density < 0.35` / `< 0.45` 恒不满足
+# → 规则死锁在 normal、escalating/catfish 永不触发。改为与合成环境"卡住型学生"开局
+# 0.34 同量级 ⇒ "无证据/低信息"轮触发加压。以"对齐默认值"方式修复，**不改规则判据语义**。
+EVIDENCE_DENSITY_DEFAULT = 0.3
+
 # ── 对抗环境动力学调参（决定 P3③ 鲶鱼机制是否"可达"且"值得用"）──
 # 旧环境三个缺陷（均已实测复现）：
 #   ① 密度只单调上升 → 规则永远选 normal → 鲶鱼从未被选中（阈值不可达，机制形同虚设）；
@@ -72,9 +78,10 @@ def career_state_features(turns: list[dict], six_scores: Optional[dict] = None,
     n = len(turns)
     turn_ratio = min(1.0, n / max(1, max_turns))
 
-    # 最近 3 轮证据密度均值
-    dens = [float((t.get("evidence") or {}).get("density", 0.5)) for t in turns[-3:]]
-    evidence_density = sum(dens) / len(dens) if dens else 0.5
+    # 最近 3 轮证据密度均值（无证据轮用 EVIDENCE_DENSITY_DEFAULT，见常量注释）
+    dens = [float((t.get("evidence") or {}).get("density", EVIDENCE_DENSITY_DEFAULT))
+            for t in turns[-3:]]
+    evidence_density = sum(dens) / len(dens) if dens else EVIDENCE_DENSITY_DEFAULT
 
     # 最近 3 轮规则作答质量（按密度映射 0-5 分，无证据轮计中性 2.5）
     qualities = [min(5.0, 1.0 + d * 4.0) for d in dens] if dens else [2.5]
@@ -85,14 +92,18 @@ def career_state_features(turns: list[dict], six_scores: Optional[dict] = None,
 
     level_code = {"beginner": 0.25, "intermediate": 0.5, "advanced": 0.75}.get(profile_level, 0.5)
 
-    # 六维分数方差（越高越需要加压探测）
+    # 六维分数方差（越高越需要加压探测）；无六维评估时改用最近轮密度方差，避免常数维
     scores = [float(v) for v in (six_scores or {}).values() if v is not None]
     if len(scores) >= 2:
         mean = sum(scores) / len(scores)
         variance = sum((x - mean) ** 2 for x in scores) / len(scores)
         dimension_variance = min(1.0, variance / 4.0)  # 5 分制方差上限 ~4
+    elif len(dens) >= 2:
+        m = sum(dens) / len(dens)
+        dv = sum((d - m) ** 2 for d in dens) / len(dens)
+        dimension_variance = min(1.0, dv / 0.25)  # 密度 0/1 二分时方差上限 0.25
     else:
-        dimension_variance = 0.5  # 无评估数据时中性
+        dimension_variance = 0.0  # 无任何信号
 
     cost_ratio = turn_ratio  # 已消耗轮次预算比例（成本感知）
 

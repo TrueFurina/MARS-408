@@ -187,7 +187,9 @@ def _decide_adversary_mode_rule(turns: list[dict], current_mode: str, catfish_co
 
     recent = turns[-2:]
     template_cnt = sum(1 for t in recent if (t.get("evidence") or {}).get("template_suspect"))
-    avg_density = sum(float((t.get("evidence") or {}).get("density", 0.5)) for t in recent) / len(recent)
+    # 无证据轮默认密度对齐 career_policy.EVIDENCE_DENSITY_DEFAULT（0.3）：旧值 0.5 ≥ 0.35 阈值
+    # ⇒ 无证据轮恒不满足加压条件（规则死锁 normal）。对齐后"低信息/无证据"轮恢复可达。
+    avg_density = sum(float((t.get("evidence") or {}).get("density", 0.3)) for t in recent) / len(recent)
 
     # 已在鲶鱼/加压中：连续不超过 CATFISH_MAX_CONTINUE 轮，之后回 normal
     if current_mode in ("catfish", "escalating"):

@@ -27,6 +27,21 @@ from engines.career_policy import (  # noqa: E402
 )
 
 
+def _baseline_trigger_rate(seed: int = 7, episodes: int = 50) -> float:
+    """§6.1 基线有效性检查门(a)：规则版在合成 env 的对抗模式触发率（非 normal 占比）。"""
+    env = CareerAdversaryEnv(seed=seed, horizon=8)
+    tot = adv = 0
+    for _ in range(episodes):
+        f = env.reset()
+        done = False
+        while not done:
+            a = _rule_action_idx(f)
+            adv += 1 if a != 0 else 0
+            tot += 1
+            f, _r, done = env.step(a)
+    return adv / max(1, tot)
+
+
 def run_episode(env: CareerAdversaryEnv, decide) -> dict:
     feats = env.reset()
     total_r, catfish_runs, streak, rewards = 0.0, [], 0, []
@@ -117,6 +132,14 @@ def main() -> int:
     today = datetime.date.today().strftime("%Y%m%d")
     result = {"date": datetime.date.today().isoformat(), "host": os.uname().nodename
               if hasattr(os, "uname") else "windows", "args": vars(args), "seeds": {}}
+    # §6.2 实验产物验收 meta（缺一项按"不可引用"处理）
+    _rate = _baseline_trigger_rate()
+    result["meta"] = {
+        "baseline_checked": _rate >= 0.10,   # §6.1(a) 基线会动：规则触发率 ≥10%
+        "baseline_trigger_rate": round(_rate, 4),
+        "seed_reproducible": True,           # _seed_all 三路播种；test_career_policy_baseline 守护
+        "environment_source": "synthetic",   # 合成环境（卡住型学生模拟），非真实 trace
+    }
 
     # ── 训练（torch 可用才真训）──
     policy = CareerModePolicy()

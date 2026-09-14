@@ -1,6 +1,6 @@
 {
   "date": "2026-09-14",
-  "host": "ubantu",
+  "host": "windows",
   "args": {
     "steps": 3000,
     "seeds": "1,42,2024",
@@ -57,13 +57,19 @@
       }
     }
   },
+  "meta": {
+    "baseline_checked": true,
+    "baseline_trigger_rate": 0.81,
+    "seed_reproducible": true,
+    "environment_source": "synthetic"
+  },
   "train": {
     "trained": true,
     "episodes": 3000,
-    "mean_ep_reward": -0.162,
-    "mean_loss": -0.01278
+    "mean_ep_reward": -0.163,
+    "mean_loss": -0.01269
   },
-  "checkpoint": "/home/user/models/career_mode_policy.pt",
+  "checkpoint": "E:\\Program\\MARL\\study-help-pro\\py-server\\models\\career_mode_policy.pt",
   "discipline_violations": 0,
   "mappo_reward_ge_rule": true,
   "passed": true
