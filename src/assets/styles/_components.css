@@ -297,3 +297,11 @@
 
 /* ── 错误条 ── */
 .error-bar{background:var(--accent-danger-10);border:1px solid var(--accent-danger-20);color:var(--text-danger);border-radius:var(--radius-md);padding:12px 16px;font-size:0.875rem}
+
+/* ── 流式打字光标（从 _variables.css 迁出：令牌文件只留变量）── */
+.stream-caret{display:inline-block;width:0.5ch;height:1em;background:var(--cursor-color);vertical-align:text-bottom;animation:mars-caret-blink var(--cursor-blink) steps(1,end) infinite}
+
+/* 降级：减弱动效时停止闪烁并常亮（与文件内全局 !important 兜底并行）*/
+@media (prefers-reduced-motion:reduce){
+  .stream-caret{animation:none;opacity:1}
+}

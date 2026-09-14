@@ -778,20 +778,10 @@
 
 
 /* ============================================================================
- * 6. 状态样式基类（loading / empty / error）
- *    骨架屏 .skeleton 定义在 main.css（此处原有同选择器副本恒被覆盖，已去重）。
- *    .stream-caret 为流式打字光标；空态与错误态只提供令牌，结构由组件实现。
+ * 6. 状态样式基类
+ *    .skeleton 定义在 main.css；.stream-caret（流式光标）已迁至 _components.css。
+ *    令牌文件只保留变量，不再定义任何组件类（保持 SSOT 纯粹）。
  * ========================================================================== */
-
-/* 流式光标（打字机效果）*/
-.stream-caret {
-  display: inline-block;
-  width: 0.5ch;
-  height: 1em;
-  background: var(--cursor-color);
-  vertical-align: text-bottom;
-  animation: mars-caret-blink var(--cursor-blink) steps(1, end) infinite;
-}
 
 
 /* ============================================================================
@@ -809,8 +799,6 @@
     --scale-hover: 1;
     --scale-press: 1;
   }
-  .skeleton { animation: none; background-image: none; }
-  .stream-caret { animation: none; opacity: 1; }
 }
 
 /* 7.2 触屏降级（pointer: coarse）：动画幅度与模糊降级，避免移动端掉帧 */
