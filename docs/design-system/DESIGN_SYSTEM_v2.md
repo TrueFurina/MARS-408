@@ -1,3 +1,6 @@
+> ⛔ **已冻结（2026-09-14）**：本文档描述的是 **v7/v8 紫主色系统**（主色 `#7c6af2`、彩色发光），已于 2026-09-12 被 **v10「砚 · Ink & Clay」**（主色陶土 `#CE8256`、零发光）取代。
+> **唯一真相源**：`src/assets/styles/_variables.css`；现行规范见 `docs/reports/DESIGN.md`（v10）。本文仅作历史存档，**勿再据此生成 UI**。
+
 # MARS-408 设计系统规范 v2（单一真相源）
 
 > 整合自 `DESIGN.md` + `DESIGN_TOKENS.md` + `src/assets/styles/_variables.css` + 2026-07-15 审计报告修正。

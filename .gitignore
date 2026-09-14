@@ -228,3 +228,6 @@ py-server/experiments/results/sweep_shadow_budget_20260914_162837.json
 
 # 真实 trace 管线自测冒烟产物（verdict_valid=False，非结论；保留磁盘不入库）
 py-server/experiments/results/review_mappo_real_eval_20260914_214450.json
+
+# ── 2026-09-15 设计系统卫生：陈旧 CSS 备份（保留磁盘，不入库）──
+*.css.bak

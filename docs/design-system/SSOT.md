@@ -76,3 +76,24 @@ python design-system/check_tokens.py
 - `design-system/check_tokens.py` — 漂移门禁
 - `design-system/audit-report.md` — Vue 应用侧一致性自检（10/10，零卫生债）
 - `design-system/cleanup_tokens*.py` — 历史清零脚本（品牌漂移/手写 tint/死 fallback）
+
+---
+
+## 6. 更新（2026-09-14）：v10 迁移 + 文档漂移事故
+
+**事故**：`_variables.css` 于 **2026-09-12**（commit `b4ea778`「四支柱大改」）升级为 **v10「砚 · Ink & Clay」**（主色由 AI 紫 `#7c6af2` → 陶土 `#CE8256`，画布 `#080812` → `#0E1217`，**删除全部彩色发光**）。但**只改了代码、未同步任何文档**，导致：
+
+- `docs/reports/DESIGN.md`、`docs/design-system/DESIGN_SYSTEM_v2.md`、`docs/reports/DESIGN_TOKENS{,_DASH,_KG,_VIZ}.md` 共 6 份规范文档仍描述旧紫系统；
+- `check_tokens.py` 门禁**只覆盖 showcase HTML**，文档 / `.vue` / `_components.css` 全在盲区 → **漂移对 CI 完全隐形**（门禁一路绿）。
+
+**根因**：§1 把文档声明为"派生物"却**从未纳入门禁**——"谁不被校验，谁就必然漂移"。
+
+**处置（本日）**：
+1. `docs/reports/DESIGN.md` **重写为 v10**（9 章节，以 `_variables.css` 为唯一输入），成为唯一现行 prose 规范；
+2. 5 份旧文档加 **⛔ 冻结横幅**（保留内容作历史存档）；
+3. 新增 `design-system/check_raw_values.py` 裸值门禁（扫 `.vue` 的 `<style>` + `src/assets/styles/*.css`，排除 `_variables.css`），接入 CI；
+4. 修复 `_components.css` 中残留的旧 RGB 硬编码（学科 tint / 语义色 tint）。
+
+**新增铁律（v10 起）**：
+5. **改 v10 令牌值后，必须在同一变更内同步更新 `docs/reports/DESIGN.md`**；文档中的色值不得与 `_variables.css` 不一致。
+6. **prose 文档纳入门禁视野**：`check_raw_values.py` + 未来的文档漂移检查共同守护；文档不再是"免检的派生物"。

@@ -1,264 +1,317 @@
-# MARS-408 DESIGN.md
+# MARS-408 DESIGN.md — 设计系统规范 (v10)
 
-> 基于 `src/assets/styles/main.css` (v8) 沉淀的设计系统规范 · 语义化双主题（dark 默认 / light 可选）
-> AI 可读：供 Cursor / Claude Code / Google Stitch 直接消费 · 参考 Linear / Stripe 仪表盘美学
+> **版本：v10「砚 · Ink & Clay」** ｜ 权威真相源：`src/assets/styles/_variables.css`（唯一可改处）
+> 生成基线：以 `_variables.css` 的 `:root` / `[data-theme="light"]` 为唯一输入机械对齐 ｜ 更新：2026-09-14
+> AI 可读：供 Cursor / Claude Code / Google Stitch 直接消费。**本文档为派生消费者，若与 `_variables.css` 不一致，以 `_variables.css` 为准。**
+> ⚠️ 旧文档 `DESIGN_SYSTEM_v2.md` / `DESIGN_TOKENS*.md` 描述的是 **v7/v8 紫主色系统**，已于 2026-09-12 被本版取代，勿再引用。
 
 ---
 
 ## 1. Visual Theme & Atmosphere
 
-- **设计哲学**：克制深色 · 玻璃态 · 学科分色 · 微交互。去"AI 感"，追求专业教育 SaaS 的冷静与精密。
-- **视觉基调**：科技感、极简、纵深克制。暗色为底，彩色仅作信号（主色紫 + 408 四科分色）。
-- **核心视觉特征**：`glassmorphism`（毛玻璃模糊）、`subject-colored`（学科语义着色）、`restrained-glow`（克制发光）、`micro-interaction`（位移/缩放微动效）。
-- **光影与质感**：多层 box-shadow（深色抬升 + 彩色微光）为主；玻璃态用 `backdrop-filter: blur(12px)`；无渐变填充滥用，仅 hero / 进度条 / 激活态用渐变。
+- **设计哲学**：**阅读优先 · 信息密度优先 · 克制用色 · 零霓虹**。这是单次 1–3 小时的高强度学习工具，一切以降低长时间阅读的眩光与疲劳为先。
+- **视觉基调**：专业、克制、陪伴。冷蓝灰画布 + 暖陶土强调色——「深夜台灯下的一支红笔」。
+- **核心视觉特征**：`flat-surfaces`（明度分层）、`clay-accent`（唯一强调色）、`subject-colored`（四科数据色）、`neutral-depth`（中性投影，无彩色发光）、`micro-interaction`（仅 GPU 属性微动效）。
+- **光影与质感**：**零霓虹**——已删除全部彩色 glow，改用中性多层投影 + 1px 描边表达高度；玻璃态仅顶栏/抽屉/悬浮按钮使用（`backdrop-filter: blur(10–18px)`）。
+- **用色纪律**：全站只有 **1 个强调色（陶土 Clay `#CE8256`）**；四科分色是"数据色"非"装饰色"（只出现在学科标签、图表、掌握度）；语义色只表达状态。
 
 ---
 
 ## 2. Color Palette & Roles
 
-### 语义层（组件只引用此层；`[data-theme="light"]` 覆盖即可双主题）
+### 2.1 画布与表面（明度递进，不靠彩色）
 
-| Token | Dark (默认) | Light | 角色 |
+| Token | Dark（默认） | Light | 角色 |
 |-------|--------------|-------|------|
-| `--color-canvas` | `#080812` | `#f5f6fb` | 页面底色 |
-| `--color-surface` | `rgba(255,255,255,0.03)` | `#ffffff` | 卡片/玻璃表面 |
-| `--color-surface-2` | `#0f0f1a` | `#eef0f6` | 侧栏/输入框底 |
-| `--color-surface-hover` | `rgba(255,255,255,0.06)` | `#e7eaf3` | 悬停表面 |
-| `--color-elevated` | `#1c1c2b` | `#ffffff` | 抬升层（Select/弹层） |
-| `--color-overlay` | `rgba(0,0,0,0.55)` | `rgba(15,18,40,0.32)` | 遮罩 |
-| `--color-glass` | `rgba(15,15,26,0.65)` | `rgba(255,255,255,0.72)` | 玻璃态底 |
-| `--color-glass-border` | `rgba(255,255,255,0.08)` | `rgba(15,18,40,0.10)` | 玻璃态边框 |
-| `--color-border` | `rgba(255,255,255,0.06)` | `rgba(15,18,40,0.10)` | 默认边框 |
-| `--color-border-focus` | `rgba(124,106,242,0.45)` | `rgba(124,106,242,0.50)` | 聚焦/强调边框 |
-| `--color-text` | `#f8fafc` | `#1a1d2e` | 主文本 |
-| `--color-text-2` | `#94a3b8` | `#525a72` | 次文本 |
-| `--color-text-3` | `#7c8aa0` | `#8a92a8` | 弱文本（标签/说明） |
+| `--color-canvas` | `#0E1217` | `#F5F6F7` | 页面底色（蓝灰，非纯黑） |
+| `--color-surface` | `#151A20` | `#FFFFFF` | surface-1：卡片 |
+| `--color-surface-2` | `#1B2129` | `#EFF1F3` | surface-2：嵌套块 / 输入区 |
+| `--color-surface-3` | `#232A34` | `#E5E8EB` | surface-3：最高层（选中、代码区） |
+| `--color-surface-hover` | `#1D242C` | `#EDF0F2` | 卡片悬浮态 |
+| `--color-elevated` | `#1B2129` | `#FFFFFF` | 浮层：弹窗 / 菜单 / 下拉 |
+| `--color-overlay` | `rgba(6,9,13,.62)` | `rgba(20,24,30,.34)` | 遮罩 |
 
-### 品牌色（双主题恒定）
+### 2.2 玻璃态（克制：仅顶栏 / 侧边抽屉 / 悬浮按钮）
 
-| Token | HEX | CSS 变量 | 使用场景 |
-|-------|-----|----------|----------|
-| 主色 · 紫 | `#7c6af2` | `--accent` / `--accent-primary` | 主按钮 / 活跃态 / 激活边栏 |
-| 辅助 · 蓝 | `#5b8bd8` | `--accent-blue` / `--accent-secondary` | 渐变收尾 / 次级信号 |
-| 青 | `#06b6d4` | `--accent-cyan` / `--accent-tertiary` | 渐变中点 / 信息 |
-| 琥珀 | `#f59e0b` | `--accent-warm` | 警告 / 高亮 |
-| 成功 | `#22c55e` | `--accent-success` | 通过 / 正向指标 |
-| 危险 | `#ef4444` | `--accent-danger` | 错误 / 删除 / 校验失败 |
-| 粉 | `#f472b6` | `--accent-pink` | 强调点缀 |
+| Token | Dark | Light |
+|-------|------|-------|
+| `--color-glass` | `rgba(21,26,32,.72)` | `rgba(255,255,255,.78)` |
+| `--color-glass-hover` | `rgba(29,36,44,.86)` | `rgba(255,255,255,.92)` |
+| `--color-glass-border` | `rgba(255,255,255,.09)` | `rgba(16,20,26,.10)` |
+| `--glass-blur` / `--glass-blur-heavy` | `10px` / `18px` | 同左 |
 
-### 408 四科色（恒定，语义着色用 `color-mix`）
+### 2.3 边框
 
-| 科目 | HEX | 变量 | 激活态用法 |
-|------|-----|------|--------------|
-| 数据结构 | `#8b5cf6` | `--subject-ds` | `color-mix(in srgb, var(--subject-ds) 14%, transparent)` |
-| 计网 | `#3b82f6` | `--subject-cn` | 同上 14% tint |
-| 计组 | `#06b6d4` | `--subject-co` | 同上 14% tint |
-| 操作系统 | `#f472b6` | `--subject-os` | 同上 14% tint |
+| Token | Dark | Light |
+|-------|------|-------|
+| `--color-border` | `rgba(255,255,255,.09)` | `rgba(16,20,26,.11)` |
+| `--color-border-light` | `rgba(255,255,255,.05)` | `rgba(16,20,26,.06)` |
+| `--color-border-strong` | `rgba(255,255,255,.16)` | `rgba(16,20,26,.20)` |
+| `--color-border-focus` | `rgba(206,130,86,.55)` | `rgba(158,90,48,.55)` |
+| `--color-border-glow` | `rgba(206,130,86,.22)` | `rgba(158,90,48,.24)` |
 
-### 阴影与发光（Dark）
+### 2.4 文本层级（对比度为对画布实测值）
 
-```css
---shadow-sm:   0 1px 2px rgba(0,0,0,0.30);
---shadow-md:   0 4px 12px rgba(0,0,0,0.35);
---shadow-lg:   0 8px 24px rgba(0,0,0,0.40);
---shadow-xl:   0 16px 40px rgba(0,0,0,0.45);
---shadow-card:         0 2px 8px rgba(0,0,0,0.25), 0 0 1px rgba(255,255,255,0.06);
---shadow-card-hover:   0 8px 24px rgba(0,0,0,0.35), 0 0 20px rgba(124,106,242,0.08);
---glow-primary: 0 0 20px rgba(124,106,242,0.15), 0 0 40px rgba(124,106,242,0.08);
-```
+| Token | Dark | Light | 对比度 |
+|-------|------|-------|--------|
+| `--color-text` | `#E6E9ED` | `#16191D` | 15.4:1 / 17.6:1 |
+| `--color-text-2` | `#9AA4B0` | `#545B66` | 7.4:1 / 6.9:1 |
+| `--color-text-3` | `#79838F` | `#6E7783` | 4.9:1 / 4.5:1 |
+| `--color-text-disabled` | `#565F6B` | `#A3ABB5` | 2.9:1 / 2.3:1 |
+| `--color-text-invert` | `#0E1217` | `#FFFFFF` | 反色 |
+| `--color-text-on-accent` | `#FFFFFF` | `#FFFFFF` | 强调实底上的白字 |
+
+### 2.5 强调色（全站唯一色相 · 双色调 ink/solid）
+
+> **为什么拆两调**：深色下，作为**文字**需亮度 L≥0.205（对画布 4.5:1）；作为**承载白字的实底**需 L≤0.183——两者无交集，故拆 `ink`（文字/图标/描边）与 `solid`（按钮/头像实底，其上永远白字）。浅色主题无此冲突，`solid` 直接指向 `ink`。
+
+| Token | Dark | Light | 用途 |
+|-------|------|-------|------|
+| `--color-accent` (ink) | `#CE8256` | `#9E5A30` | 文字 / 链接 / 图标 / 描边 / 焦点环 |
+| `--color-accent-hover` | `#D99168` | `#8A4C26` | 墨色悬浮 |
+| `--color-accent-active` | `#B26E43` | `#7A4322` | 墨色按下 |
+| `--color-accent-text` | `#E0A07A` | `#9E5A30` | 深底上的强调文字（更亮，长文更舒适） |
+| `--color-accent-solid` | `#9C5F35` | `#9E5A30` | 实底（白字 5.12:1） |
+| `--color-accent-solid-hover` | `#A5663C` | `#8A4C26` | 实底悬浮 |
+| `--color-accent-solid-active` | `#8A5230` | `#7A4322` | 实底按下 |
+| `--color-accent-subtle` | `rgba(206,130,86,.14)` | `rgba(158,90,48,.10)` | 选中态淡底 |
+| `--accent-rgb` | `206,130,86` | `158,90,48` | 供 `rgba(var(--accent-rgb),α)` |
+
+> 主色选择理由：**反 AI 紫**（旧 `#7c6af2` 已废弃）；陶土 H≈22°，饱和度 55%（<80% 硬约束）；色轮上四科（258°/215°/189°/334°）与语义色（139°/38°/5°/209°）之外唯一宽敞空隙在 0°–38°，取中点 ≈22°，与最近邻各留 17°–19°。
+
+### 2.6 语义色
+
+| Token | Dark | Light | 用途 |
+|-------|------|-------|------|
+| `--color-success` | `#4FA96B` | `#2F7D4F` | 成功 / 通过 |
+| `--color-warning` | `#DCA03C` | `#8A6210` | 警告 / 高亮（**不可作错误色**） |
+| `--color-danger` | `#E0685E` | `#B8392F` | 错误 / 删除 / 校验失败 |
+| `--color-info` | `#5E93C4` | `#2F6DA8` | 信息 |
+
+> 每个语义色均派生 `-bg`（`.14`/`.10` α）与 `-border`（`.32`/`.26` α），以及 `--{success,warning,danger,info}-rgb` 供透明叠加。
+
+### 2.7 408 四科分色（数据色）
+
+| 科目 | Token | Dark | Light |
+|------|-------|------|-------|
+| 数据结构 | `--subject-ds` | `#A98CDD` | `#6B52B8` |
+| 计算机网络 | `--subject-cn` | `#6E9BD9` | `#2F6BB8` |
+| 计算机组成原理 | `--subject-co` | `#4FA9B8` | `#1F7E8C` |
+| 操作系统 | `--subject-os` | `#DE85AC` | `#B2477F` |
+
+> 着色用 `color-mix(in srgb, var(--subject-x) 14%, transparent)`；每科另有 `--subject-{ds,cn,co,os}-rgb`。
+
+### 2.8 多智能体 / 流程 / 图表色（Dark；Light 有对应覆盖）
+
+`--agent-coord #CE8256` · `--agent-plan #C9A45E` · `--agent-diag #A98CDD` · `--agent-gen #6E9BD9` · `--agent-retrieve #4FA9B8` · `--agent-eval #DE85AC` · `--agent-quality #7FA98C` · `--agent-path #9A93B8` · `--agent-evidence #5AA396` · `--agent-gate #DCA03C`
+`--flow-data/-control/-consensus` · `--nm-mix-from/-to` · `--mastery-low/mid/high/none` · `--edge-prereq/-related` · `--series-1..6` · `--seq-1..6`（连续色阶，基于 `--accent-rgb`）。
 
 ---
 
 ## 3. Typography Rules
 
-- **Font Family**：`-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif`；等宽 `'SF Mono', 'Fira Code', 'Consolas', monospace`（代码/数值）。
-- **设计哲学**：中文用系统字体栈零加载；层级靠**字号 + 字重（500/600/700）+ 负字距**建立，不依赖颜色。数字/指标用 700 + `-0.5px` 收紧。
+- **Font Family**：`--font-sans: 'Geist','Outfit','Satoshi','Space Grotesk', -apple-system, BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans SC', sans-serif`（**禁用 Inter**）；`--font-display = --font-sans`；`--font-mono: 'Geist Mono','SF Mono','JetBrains Mono','Fira Code',Consolas`。
+- **设计哲学**：中文用系统字体栈零加载；层级靠**字号 + 字重 + 负字距**建立，不依赖颜色。数字用 `--font-numeric: tabular-nums` 等宽对齐。
+- **单位**：优先 `rem`（`1rem = 16px`），支持浏览器 200% 文本缩放。
 
-| 层级 | Size | Weight | Line Height | Letter Spacing | 用途 |
-|------|------|--------|-------------|----------------|------|
-| Display Hero | 32px | 700 | 1.1 | -0.8px | 首页 hero 标题 |
-| H1 | 24px | 700 | 1.2 | -0.5px | 页面主标题 |
-| H2 / Section | 20px | 700 | 1.3 | -0.3px | `.section-title` |
-| H3 / Card | 16px | 600 | 1.4 | 0 | `.card-title` |
-| Body | 14px | 400 | 1.6 | 0 | 正文 |
-| Body Strong | 14px | 500 | 1.6 | 0 | 标签/强调 |
-| Caption | 13px | 400 | 1.5 | 0 | 次文本 |
-| Nano / Label | 12px | 500 | 1.4 | 0.2px | 徽章/说明 |
+| 层级 | Token | Size |
+|------|-------|------|
+| Hero | `--text-6xl` / `--text-5xl` | 44px / 36px |
+| Display | `--text-4xl` | 30px |
+| H1 / 页面标题 | `--text-3xl` | 24px |
+| H2 / 区块标题 | `--text-2xl` | 20px |
+| H3 / 卡片标题 | `--text-xl` | 18px |
+| 小标题 | `--text-lg` | 16px |
+| 强调正文 | `--text-md` | 15px |
+| **正文基准** | `--text-base` | 14px |
+| 次要正文 | `--text-sm` | 13px |
+| 辅助说明 | `--text-xs` | 12px |
+| 角标 / 徽章 | `--text-2xs` | 11px |
+
+**行高**：`--leading-none 1` / `tight 1.2`（大标题）/ `snug 1.35`（小标题）/ `normal 1.55`（正文）/ `relaxed 1.7`（讲解长段）。
+**字重**：`--weight-regular 400` / `medium 500` / `semibold 600` / `bold 700`。
+**字距**：`--tracking-tighter -0.022em`（大标题）/ `tight -0.011em` / `normal 0` / `wide 0.03em` / `caps 0.08em`（全大写 overline）。
 
 ---
 
 ## 4. Component Stylings
 
-### Buttons（标准系统 `.btn` + 变体；历史 `.engine-btn` / `.rag-btn` 已对齐）
+### Buttons（标准 `.btn` 体系 —— 唯一合法按钮类）
 
 ```css
-.btn { display:inline-flex; align-items:center; justify-content:center; gap:8px;
-  font-size:14px; font-weight:600; line-height:1; padding:10px 20px;
-  border-radius:var(--radius-md); border:1px solid transparent; cursor:pointer;
-  transition:var(--transition); }
-.btn-primary { background:var(--gradient-primary); color:#fff; }
-.btn-primary:hover { opacity:0.92; transform:translateY(-1px);
-  box-shadow:0 8px 20px rgba(124,106,242,0.25); }
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:.5rem;
+  font-size:.875rem; font-weight:600; line-height:1; padding:.625rem 1.25rem;
+  border-radius:var(--radius-md); border:1px solid transparent; cursor:pointer; transition:var(--transition); }
+.btn-primary   { background:var(--gradient-primary); color:#fff; }          /* 实底 → 白字 */
+.btn-primary:hover { opacity:.92; transform:translateY(-1px); box-shadow:var(--shadow-3); }
 .btn-secondary { background:var(--color-surface-hover); color:var(--color-text); border-color:var(--color-border); }
-.btn-secondary:hover { background:var(--color-surface-2); border-color:var(--color-border-focus); }
-.btn-ghost { background:transparent; color:var(--color-text-2); }
-.btn-ghost:hover { background:var(--color-surface-hover); color:var(--color-text); }
-.btn-soft { background:var(--accent-primary-10); color:var(--accent-primary); }
-.btn-danger { background:rgba(239,68,68,0.10); color:var(--accent-danger); }
-.btn-sm { padding:7px 14px; font-size:13px; border-radius:var(--radius-sm); }
-.btn-lg { padding:13px 28px; font-size:15px; }
-.btn-block { width:100%; }
-.btn:disabled { opacity:0.5; cursor:not-allowed; transform:none !important; }
+.btn-ghost     { background:transparent; color:var(--color-text-2); }
+.btn-soft      { background:var(--accent-primary-10); color:var(--accent-primary); }
+.btn-danger    { background:var(--accent-danger-10); color:var(--accent-danger); }
+.btn-sm / .btn-lg / .btn-block  /* 尺寸变体 */
+.btn:disabled  { opacity:.5; cursor:not-allowed; transform:none !important; }
 ```
 
-### Cards
+### Cards（玻璃态）
 
 ```css
-.card, .stat-card, .glass-card {
-  padding:20px; border-radius:var(--radius-lg);
-  background:var(--color-surface); border:1px solid var(--color-border);
-  box-shadow:var(--shadow-card);
-}
-.card:hover, .stat-card:hover {
-  border-color:transparent; transform:scale(1.02);
-  box-shadow:var(--shadow-card-hover), 0 0 0 1px rgba(124,106,242,0.15);
-}
+.card,.stat-card,.feature-card { padding:1.25rem; border-radius:var(--radius-md);
+  background:var(--glass-bg); border:1px solid var(--glass-border); box-shadow:var(--shadow-card);
+  backdrop-filter:blur(var(--glass-blur)); transition:var(--transition); }
+.card:hover { border-color:transparent; transform:scale(1.02);
+  box-shadow:var(--shadow-card-hover), 0 0 0 1px var(--color-border-glow); }
 ```
 
 ### Inputs
 
 ```css
-.rag-select, .answer-input, .conv-search-input {
-  background:var(--bg-input); border:1px solid var(--color-border);
-  border-radius:var(--radius-md); padding:10px 14px; color:var(--color-text);
-  font-size:14px; transition:var(--transition);
-}
-.rag-select:focus, .answer-input:focus {
-  border-color:var(--border-focus);
-  box-shadow:0 0 0 3px var(--accent-primary-10);
-}
-::placeholder { color:var(--color-text-3); }
+.rag-select,.answer-input,.conv-search-input { padding:.625rem .875rem;
+  border-radius:var(--radius-sm); border:1px solid var(--color-border);
+  background:var(--bg-input); color:var(--color-text); font-size:.875rem; transition:var(--transition); }
+.rag-select:focus { border-color:var(--color-border-focus); box-shadow:0 0 0 3px var(--accent-primary-10); }
 ```
 
 ### Navigation（侧栏 `.nav-item`）
 
 ```css
-.nav-item { display:flex; align-items:center; gap:12px; padding:11px 12px;
-  border-radius:var(--radius-sm); color:var(--color-text-2); font-size:14px; font-weight:500; }
-.nav-item:hover { background:var(--color-surface-hover); color:var(--color-text); }
+.nav-item { display:flex; align-items:center; gap:.75rem; padding:.6875rem .75rem;
+  border-radius:var(--radius-sm); color:var(--text-secondary); font-size:.875rem; font-weight:500; }
+.nav-item:hover { background:var(--bg-card-hover); color:var(--text-primary); }
 .nav-item.active { background:var(--accent-primary-10); color:var(--accent-primary); }
-.nav-item.active::before { content:''; position:absolute; left:0; top:50%; transform:translateY(-50%);
-  width:3px; height:18px; border-radius:0 3px 3px 0;
-  background:var(--gradient-primary); box-shadow:0 0 8px rgba(124,106,242,0.40); }
-/* 学科色激活：.nav-item.active.nav-subject-0/1/2/3 → 对应 --subject-* */
+.nav-item.active::before { content:''; position:absolute; left:0; width:.1875rem; height:1.125rem;
+  border-radius:0 .1875rem .1875rem 0; background:var(--gradient-primary); }
+/* 学科色激活：.nav-item.active.nav-subject-0..3 → 对应 --subject-* */
 ```
 
 ### Badges / Tags（双主题自适应，勿硬编码 rgba）
 
 ```css
-.tag-purple { background:color-mix(in srgb, var(--subject-ds) 14%, transparent); color:var(--subject-ds); }
-.tag-green  { background:color-mix(in srgb, var(--accent-success) 14%, transparent); color:var(--accent-success); }
-.tag-primary{ background:var(--accent-primary-10); color:var(--accent-primary); }
-/* 同构：.tag-blue/.tag-cyan/.tag-pink/.tag-warm → --subject-cn/co/os + --accent-warm */
+.tag-purple { background:color-mix(in srgb,var(--subject-ds) 14%,transparent); color:var(--subject-ds); }
+.tag-blue   { background:color-mix(in srgb,var(--subject-cn) 14%,transparent); color:var(--subject-cn); }
+.tag-cyan   { background:color-mix(in srgb,var(--subject-co) 14%,transparent); color:var(--subject-co); }
+.tag-pink   { background:color-mix(in srgb,var(--subject-os) 14%,transparent); color:var(--subject-os); }
+.tag-warm / .tag-green / .tag-primary   /* → --accent-warm / --accent-success / --accent-primary-10 */
 ```
 
 ### Modals / Drawers（`.panel-overlay` + 滑出面板）
 
 ```css
-.panel-overlay { position:fixed; inset:0; background:var(--bg-overlay);
-  z-index:900; opacity:0; pointer-events:none; transition:var(--transition-slow);
-  backdrop-filter:blur(4px); }
+.panel-overlay { position:fixed; inset:0; background:var(--bg-overlay); z-index:300;
+  opacity:0; pointer-events:none; transition:var(--transition-slow); backdrop-filter:blur(4px); }
 .panel-overlay.open { opacity:1; pointer-events:auto; }
-.profile-panel { position:fixed; top:0; right:0; bottom:0; width:400px; max-width:90vw;
-  z-index:950; transform:translateX(100%); transition:transform var(--duration-slow) cubic-bezier(0.4,0,0.2,1);
+.profile-panel { position:fixed; top:0; right:0; bottom:0; width:25rem; max-width:90vw; z-index:400;
+  transform:translateX(100%); transition:transform var(--duration-slow) var(--ease-emphasized);
   background:var(--glass-bg); backdrop-filter:blur(var(--glass-blur-heavy));
-  border-left:1px solid var(--glass-border); box-shadow:var(--shadow-xl); }
+  border-left:1px solid var(--glass-border); box-shadow:var(--shadow-4); }
 .profile-panel.open { transform:translateX(0); }
 ```
+
+### Streaming / 状态基类（v9 流式三件套）
+
+`.typing-indicator`（三点思考）/ `.stream-caret`（打字光标，`--cursor-color` + `mars-caret-blink`）/ `.skeleton*`（shimmer）/ `.empty-state` / `.error-bar` / `.engine-error`。
 
 ---
 
 ## 5. Layout Principles
 
-- **Spacing System**：基数 **4px**（实际组件多用 8/12/16/20/24 的 4 倍数）。建议新增 `--space-1`(4) ~ `--space-8`(32) 变量。
-- **Grid System**：`.grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }`；平板(≤1024) → 2 列；小屏(≤480) → 1 列。
-- **Container**：`.page-section { padding:24px 32px; max-width:1200px; margin:0 auto; }`。
-- **App Shell**：左侧栏 `--sidebar-width:220px`（折叠 72px）+ 主区；移动端隐藏侧栏，顶栏(64px) + 底栏(64px) 接管。
-- **留白哲学**：卡片内距 20px，区块间距 16-24px，列表项间距 4-12px。纵深靠阴影而非粗边框——边框保持 0.06-0.10 低存在感。
+- **Spacing System**：基准 **4px**，`--space-0(0)` … `--space-32(128)`（`--space-N == N×4px`）。**组件只允许使用本刻度，禁止 5px/13px/18px 等随意间距。**
+- **圆角刻度**：`--radius-2xs 4` / `xs 6` / `sm 10` / `md 14` / `lg 18` / `xl 24` / `2xl 32` / `full 9999`。卡片 md，按钮 md，小元素 sm，胶囊 full。
+- **App Shell**：侧栏 `--sidebar-width 220px`（折叠 `--sidebar-collapsed 72px`）+ 主区；顶栏 `--topbar-height 64px`；底栏 `--bottom-nav-height 64px`；内容 `--content-max-width 1280px`；对话 `--chat-max-width 900px`。
+- **留白哲学**：卡片内距 20px（`1.25rem`），区块间距 16–24px，列表项 4–12px。**纵深靠阴影而非粗边框**——边框保持 0.09–0.11 低存在感。
 
 ---
 
 ## 6. Depth & Elevation
 
-- **Shadow System**（Dark → Light，见 §2 表格；Light 用 `rgba(15,18,40,x)` 柔和阴影替代深色投影）。
-- **Surface Layers**：`--color-canvas`（底）→ `--color-surface-2`（侧栏/输入）→ `--color-elevated`（弹层）→ `--color-overlay`（遮罩）。
-- **Z-index Scale**：sidebar `100` · conv-panel `300` · panel-overlay `900` · profile-panel `950` · tooltip `1000`。
-- **Backdrop Effects**：玻璃态 `backdrop-filter: blur(var(--glass-blur))`（12px 标准 / 20px 重）；遮罩 `blur(4px)`。
+- **Shadow System**（纯中性，无彩色泛光）：
+
+```css
+--shadow-1: 0 1px 2px rgba(0,0,0,.40);
+--shadow-2: 0 2px 4px rgba(0,0,0,.32), 0 1px 2px rgba(0,0,0,.24);
+--shadow-3: 0 4px 12px rgba(0,0,0,.36), 0 1px 3px rgba(0,0,0,.28);
+--shadow-4: 0 12px 28px rgba(0,0,0,.44), 0 2px 6px rgba(0,0,0,.30);
+--shadow-5: 0 24px 56px rgba(0,0,0,.52);
+--shadow-card:       0 1px 2px rgba(0,0,0,.34), 0 0 0 1px rgba(255,255,255,.04);
+--shadow-card-hover: 0 8px 24px rgba(0,0,0,.42), 0 0 0 1px rgba(255,255,255,.07);
+```
+（Light 主题全部换为 `rgba(16,20,26,x)` 更淡、更扩散的柔和投影。）
+
+- **Surface Layers**：`--color-canvas` → `--color-surface(-2/-3)` → `--color-elevated` → `--color-overlay`。
+- **Z-index Scale**：`base 0` · `raised 10` · `sticky 100` · `dropdown 200` · `overlay 300` · `modal 400` · `popover 500` · `toast 600` · `tooltip 700` · `top 1000`。
+- **Backdrop Effects**：玻璃 `backdrop-filter: blur(var(--glass-blur))`（10px）/**heavy**（18px）；遮罩 `blur(4px)`；`--glass-saturate 115%`。
+- **兼容别名**：`--glow-primary/-strong/-secondary/-success` 保留令牌名（33 处引用），值已退化为中性投影（**非霓虹**）。
 
 ---
 
 ## 7. Do's and Don'ts
 
 **Do's**
-1. 组件只引用语义层 `--color-*` / `--accent-*` / `--subject-*` 变量，禁止硬编码 `rgba`/`hex`（双主题会崩）。
-2. 新按钮统一用 `.btn` + 变体（`.btn-primary` / `.btn-secondary` / `.btn-ghost` / `.btn-soft` / `.btn-danger`），勿新增散落按钮类。
-3. 学科/状态着色用 `color-mix(in srgb, VAR 14%, transparent)`，自动适配明暗。
-4. 圆角统一走 `--radius-*` 刻度（xs6 / sm10 / md14 / lg18 / xl24 / full）。
-5. 层级用 `--shadow-*` 刻度，勿手写 box-shadow 散落值。
-6. 间距优先 4 倍数（8/12/16/20/24）；卡片内距固定 20px。
-7. 图标用 `currentColor` + `lucide-vue-next`，尺寸 18-22px，随文本色变化。
+1. 组件只引用语义层 `--color-*` / `--subject-*` / `--accent-*` 变量，零裸 `hex`/`rgba`（唯一例外见 Don'ts 1）。
+2. 新按钮一律 `.btn` + 变体；勿新增散落按钮类。
+3. 学科/状态着色用 `color-mix(in srgb, var(--subject-x) 14%, transparent)`，自动适配明暗。
+4. 圆角走 `--radius-*` 刻度；阴影走 `--shadow-*` 刻度；间距走 `--space-*`（4 倍数）。
+5. 动效只动 GPU 属性：`transform / opacity / filter / clip-path` 与色彩类属性；时长用 `--duration-*`（受 `--motion-scale` 总闸控制）。
+6. 图标 `currentColor` + 18–22px，随文本色变化。
+7. 非原生可点击元素补 `role="button" tabindex="0"` + 键盘 handler；图标按钮补 `aria-label`。
+8. 写组件先脑内渲染一遍 Light 主题，确认对比度与边框可见。
 
 **Don'ts**
-1. 勿直接写 `rgba(255,255,255,0.06)` 这类值到组件——改用 `--color-border` 等语义变量。
-2. 勿新增 `.xxx-btn` 散落按钮类（历史 `.engine-btn`/`.rag-btn` 已对齐 `.btn`，新代码禁用）。
-3. 勿用 `transform:scale()` 做卡片 hover 跳动感过强——当前 1.02 已是上限。
-4. 勿在浅色主题下使用强发光 `box-shadow` 彩色投影——Light 已降级为柔和 `rgba(15,18,40,x)`。
-5. 勿把主色 `#7c6af2` 用于大面填充（仅按钮/激活态/细线），大面积用 surface 层级。
-6. 勿在中文字体栈里写非系统字体（零加载依赖是核心约束）。
-7. 勿用 `!important` 覆盖（除 `.btn:disabled` 必要场景）；冲突请调整 specificity。
+1. 勿直接写 `rgba(255,255,255,.06)` 这类裸值——改用 `--color-border` 等语义变量。**合规例外**：SVG `fill="currentColor"`；Canvas/内联 `:style` 的数据可视化运行时调色板；mask 用的 `#fff`；有色底上的 `color:#fff`。
+2. 勿新增 `.xxx-btn` 散落按钮类（历史 `.engine-btn`/`.rag-btn` 已对齐 `.btn`）。
+3. 勿用 `transform:scale()` 超 **1.02**。
+4. Light 主题勿用强彩色发光（已降级为柔和中性投影）。
+5. **勿把主色陶土 `#CE8256` 用于大面积填充**（仅按钮/激活态/细线），大面积用 surface 层级。
+6. 勿在中文字体栈写非系统字体（零加载是核心约束）。
+7. 勿用 `!important` 覆盖（除 `.btn:disabled` 必要场景）。
+8. **勿用 `--color-warning`（琥珀）作错误/危险文字色**——错误必须 danger 系。
+9. 勿用 `--color-accent`（ink 调）承载白字实底——实底必须用 `--color-accent-solid`。
+10. 勿过渡 `width/height/top/left/margin/padding/font-size`（只动 GPU 属性）。
 
 ---
 
 ## 8. Responsive Behavior
 
-| Breakpoint | 范围 | 行为 |
-|-----------|------|------|
-| Desktop | > 1024px | 侧栏(220px)常驻 + 顶栏隐藏 + 底栏隐藏 |
-| Tablet | ≤ 1024px | 网格 4→2 列 |
-| Mobile | ≤ 768px | 侧栏隐藏；顶栏(64px) + 底栏(64px) 接管；`.page-section` padding 收窄至 20/16 |
-| Small | ≤ 480px | 网格 4→1 列；hero 标题 32→22px；输入区内距收窄 |
+| Breakpoint | Token | 范围 | 行为 |
+|-----------|-------|------|------|
+| Wide | `--bp-xl` | ≥1280px | 侧栏(220px)常驻 + 内容居中 |
+| Desktop | `--bp-lg` | >1024px | 侧栏 220px 常驻；顶/底栏隐藏 |
+| Tablet | `--bp-lg` | 769–1024px | 侧栏收为 72px 图标栏；`.grid-4` 4→2 列 |
+| Mobile | `--bp-md` | ≤768px | 侧栏隐藏；顶栏(64px) + 底栏(64px) 接管；`.page-section` padding 收窄 |
+| Small | `--bp-sm` | ≤480px | `.grid-4` → 1 列；hero 字号下调；输入区内距收窄 |
 
-- **Touch Targets**：导航项 / 按钮最小高度 ≥ 44px（`.nav-item` 11+11+文本 ≈ 44；`.topbar-btn` 40px 略小，移动可放宽）。
-- **折叠策略**：桌面侧栏 → 移动转顶栏汉堡 + 底栏 5 项 tab；对话历史桌面内联 → 移动全屏滑出(`width:100vw`)。
-- **Font Scaling**：移动端 stat-value 30→24px、greeting 32→22px；其余层级保持，靠容器 padding 收窄适配。
-- **主题跟随**：`[data-theme="light"]` 覆盖语义层；初始化 `localStorage > matchMedia(prefers-color-scheme) > dark`。
+- **Touch Targets**：可点击元素最小 **44×44px**（移动端不低于 40px）。
+- **折叠策略**：桌面侧栏 → 平板图标栏 → 移动顶栏汉堡 + 底栏 5 项 tab；对话历史桌面内联 → 移动全屏滑出(`100vw`)。
+- **Font Scaling**：字号用 `rem`，支持浏览器 200% 缩放不破版；移动端 `--text-4xl` 等大字号逐级下调。
+- **主题跟随**：`[data-theme="light"]` 仅覆盖语义层；初始化 `localStorage['mars408-theme'] > matchMedia(prefers-color-scheme) > dark`（由 `App.vue` 的 `applyTheme()` 写入 `document.documentElement.dataset.theme`）。
+- **降级**：`prefers-reduced-motion` → `--motion-scale: 0`；`pointer: coarse` → `0.7`；`prefers-reduced-transparency` → 玻璃退化为实色 + `blur(0)`。
 
 ---
 
 ## 9. Agent Prompt Guide
 
 ### Quick Reference
-MARS-408 设计系统 = 克制深色玻璃态 + 紫色主色(#7c6af2) + 408 四科分色(#8b5cf6/#3b82f6/#06b6d4/#f472b6)。**唯一真相源**：`src/assets/styles/main.css` 的 `--color-*` 语义变量。组件只引用变量，双主题(`:root` dark / `[data-theme="light"]`)自动适配。标准按钮 `.btn`，卡片 `.card`/`.glass-card`，标签 `.tag-*`，模态 `.panel-overlay`。
+MARS-408 设计系统 = **v10「砚 · Ink & Clay」**：克制深色 + **陶土强调色 `#CE8256`** + 408 四科分色（数据结构 `#A98CDD` / 计网 `#6E9BD9` / 计组 `#4FA9B8` / 操作系统 `#DE85AC`）+ 零霓虹中性投影。**唯一真相源**：`src/assets/styles/_variables.css` 的 `:root` 语义变量。组件只引用变量，双主题（`:root` dark / `[data-theme="light"]`）自动适配。标准按钮 `.btn`，卡片 `.card`/`.glass-card`，标签 `.tag-*`，模态 `.panel-overlay` + `.profile-panel`。
 
 ### Component Prompts（可直接复制给 AI 代理）
 ```
-1. 生成一个主操作按钮：class="btn btn-primary"，文字"开始学习"，左侧加 lucide 'play' 图标，圆角用 --radius-md。
-2. 生成一个资源卡片：外层 .card（padding 20px，radius-lg），内含 .card-header（标题+链接）、正文、底部 .tag-cyan 学科标签。
+1. 生成一个主操作按钮：class="btn btn-primary"，文字"开始学习"，左侧加 lucide 'play' 图标，圆角 --radius-md。
+2. 生成一个资源卡片：外层 .card（padding 1.25rem，radius-md），内含 .card-header（标题 + 链接）、正文、底部 .tag-cyan 学科标签。
 3. 生成一个学科筛选标签组：用 .tag-purple/.tag-blue/.tag-cyan/.tag-pink 表示数据结构/计网/计组/操作系统，背景用 color-mix 14% tint。
-4. 生成一个错误提示条：class="engine-error"（红底 rgba(239,68,68,0.08) + 红边 + #fca5a5 文字），含关闭按钮。
-5. 生成一个右侧滑出抽屉：结构 .panel-overlay(遮罩 blur4px) + .profile-panel(玻璃态 blur20px, 宽 400px, slide-in transform)，激活加 .open。
-6. 生成一个统计卡片网格：父 .grid-4（4列 gap16），子 .stat-card（顶部 3px 渐变条 + 图标 + 数值 30px/700 + 变化标签）。
+4. 生成一个错误提示条：class="error-bar"（danger-10 底 + danger-20 边 + --text-danger 文字），含关闭按钮。
+5. 生成一个右侧滑出抽屉：结构 .panel-overlay(遮罩 blur4px) + .profile-panel(玻璃 blur18px, 宽 25rem, slide-in transform)，激活加 .open。
+6. 生成一个统计卡片网格：父 .grid-4（4列 gap 1rem），子 .stat-card（顶部 3px 渐变条 opacity 过渡 + 图标 + 数值 1.875rem/700 + 变化标签）。
 ```
 
 ### Iteration Guide
-1. **先读变量**：生成任何组件前，先读 `main.css` 的 `:root` 与 `[data-theme="light"]`，只引用已定义的 `--color-*`/`--accent-*`/`--radius-*`/`--shadow-*`。
-2. **禁止裸值**：若提示里写 `background:#7c6af2`，改为 `background:var(--accent-primary)`——否则浅色主题下断裂。
+1. **先读变量**：生成任何组件前，先读 `_variables.css` 的 `:root` 与 `[data-theme="light"]`，只引用已定义的 `--color-*`/`--subject-*`/`--radius-*`/`--shadow-*`/`--space-*`。
+2. **禁止裸值**：若提示里写 `background:#CE8256`，改为 `background:var(--color-accent)`；实底按钮用 `var(--gradient-primary)`。
 3. **双主题自检**：每生成一个组件，脑内渲染一次 light 主题（白底），确认对比度与边框可见。
 4. **按钮走标准**：新按钮一律 `.btn` 变体；除非改历史视图，否则不写 `.new-btn` 类。
 5. **标签走 color-mix**：学科/状态标签用 `color-mix(in srgb, var(--subject-x) 14%, transparent)`，勿写死 `rgba`。
-6. **圆角刻度**：卡片 lg(18) / 按钮 md(14) / 小元素 sm(10) / 胶囊 full——勿用 12px 等非刻度值。
-7. **阴影刻度**：优先 `--shadow-card` / `--shadow-md`，手写投影仅限特殊 hover（如 `--shadow-card-hover`）。
-8. **间距 4 倍数**：padding/margin 用 8/12/16/20/24；避免 10/14/18 等奇数（除必要对齐）。
-9. **图标 currentColor**：SVG 用 `stroke="currentColor"`，尺寸 18-22px，颜色随父文本变量。
-10. **响应式收口**：新网格默认 4 列，补 `@media (max-width:1024px){...2列}` 与 `480px{...1列}` 规则，对齐现有断点。
-```
+6. **圆角刻度**：卡片 md(14) / 按钮 md(14) / 小元素 sm(10) / 胶囊 full——勿用 12px 等非刻度值。
+7. **阴影刻度**：优先 `--shadow-card` / `--shadow-3`，手写投影仅限特殊 hover（如 `--shadow-card-hover`）。
+8. **间距 4 倍数**：padding/margin 用 4/8/12/16/20/24（`--space-*`）；避免 10/14/18 等非刻度值。
+9. **图标 currentColor**：SVG 用 `stroke="currentColor"`，尺寸 18–22px，颜色随父文本变量。
+10. **响应式收口**：新网格默认 4 列，补 `@media (max-width:1024px){2列}` 与 `480px{1列}`，对齐 `--bp-*` 断点。
+11. **动效只动 GPU**：过渡用 `var(--transition)` 或 `--motion-*`，勿过渡 width/height。
+12. **可达性**：可点击元素补 `:focus-visible` + 非原生元素补 `role/tabindex` + 图标按钮补 `aria-label`。

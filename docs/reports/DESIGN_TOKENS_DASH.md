@@ -1,3 +1,6 @@
+> ⛔ **已冻结（2026-09-14）**：本文档描述的是 **v7/v8 紫主色系统**（主色 `#7c6af2`、彩色发光），已于 2026-09-12 被 **v10「砚 · Ink & Clay」**（主色陶土 `#CE8256`、零发光）取代。
+> **唯一真相源**：`src/assets/styles/_variables.css`；现行规范见 `docs/reports/DESIGN.md`（v10）。本文仅作历史存档，**勿再据此生成 UI**。
+
 # MARS-408 仪表盘 · 设计令牌文档（Design Tokens / Dashboard Extension）
 
 > 继承来源：`DESIGN_TOKENS.md` 紫系玻璃态系统（已上线前端 CSS v7/v8 · 主色 `#7c6af2` · 四科分色 · 深色默认 + 浅色覆盖）。
