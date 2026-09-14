@@ -528,10 +528,48 @@ class ReviewWeightPolicy:
         # （argmax 从 trust_honest 漂到 skip_review，均值回报 2.01 → 1.75，
         #  3/3 seed improved=False）。改为攒 batch_episodes 条轨迹再统一 GAE + 更新。
         buffer: list[dict] = []
+        n_updates = 0
+
+        def _det_return(n_ep: int = 40) -> float:
+            """确定性策略在**独立环境实例**上的平均回报（部署口径，无采样噪声）。
+
+            为什么必须单独算（实测证据，experiments/diag_train_return_vs_eval.py）：
+            returns_curve 用**随机采样**动作累计。一旦策略给"被纪律门恒拒绝的 skip(4)"
+            分配概率，每一步都吃 −1.0 惩罚 —— 63 次更新后 P(步=skip)≈19%，
+            训练回报从 24.5 掉到 10.4 且 `improved=False`，而**同一策略**的确定性回报
+            是 44.4（5 次更新时仅 29.9），真实质量分同样上升（69.896 vs 规则 68.948）。
+            ⇒ 只看随机回报会把"策略变好"读成"PPO 无效"。部署走的是 argmax，
+              故决策质量应以确定性回报为准。
+            环境实例用 seed+7777 的独立副本，避免与训练轨迹重叠。
+            """
+            try:
+                ev = type(env)(seed=seed + 7777, horizon=horizon)
+            except Exception:
+                ev = env
+            tot = 0.0
+            for _ in range(n_ep):
+                s_d = ev.reset()
+                ep_r = 0.0
+                for _t in range(horizon):
+                    x = torch.tensor([s_d], dtype=torch.float32)
+                    self._actor.eval()
+                    with torch.no_grad():
+                        a = int(self._actor(x)[0].argmax().item())
+                    s_d, r, done = ev.step(a)
+                    ep_r += float(r)
+                    if done:
+                        break
+                tot += ep_r
+            self._actor.train()
+            return tot / max(1, n_ep)
+
+        det_before = _det_return()
 
         def _flush(buf: list[dict]) -> None:
             if not buf:
                 return
+            nonlocal n_updates
+            n_updates += 1
             s_t = torch.tensor([s for ep in buf for s in ep["states"]], dtype=torch.float32)
             a_t = torch.tensor([a for ep in buf for a in ep["actions"]], dtype=torch.long)
             old_logp_t = torch.stack([lp for ep in buf for lp in ep["logps"]]).detach()
@@ -598,15 +636,27 @@ class ReviewWeightPolicy:
                 buffer = []
 
         self._trained = True
+        det_after = _det_return()
         head = returns_curve[:max(1, len(returns_curve) // 3)]
         tail = returns_curve[-max(1, len(returns_curve) // 3):]
         return {
             "trained": True, "episodes": episodes, "horizon": horizon, "seed": seed,
+            # 有效预算显式落盘：batch_episodes 一旦改变语义（旧版每 episode 更新一次），
+            # 未显式传参的调用方会被静默饿死（实测影子探针 200 episode 从 200 次更新
+            # 降到 4 次）。把真实更新次数返回，任何调用方都能审计"是否真训了"。
+            "batch_episodes": int(batch_episodes), "n_updates": n_updates,
             "returns": returns_curve,
             "mean_return": sum(returns_curve) / max(1, len(returns_curve)),
             "mean_return_first_third": sum(head) / max(1, len(head)),
             "mean_return_last_third": sum(tail) / max(1, len(tail)),
+            # ⚠️ `improved` 基于**随机采样**回报，会被"无效 skip 惩罚 + 采样噪声"主导，
+            #    与真实策略质量可脱钩（实测出现 improved=False 而质量上升）。审计决策
+            #    质量请用 `improved_deterministic`（部署走 argmax），`improved` 仅保留
+            #    向后兼容，不得单独作为"PPO 是否有效"的证据。
             "improved": (sum(tail) / max(1, len(tail))) > (sum(head) / max(1, len(head))),
+            "det_return_before": round(det_before, 4),
+            "det_return_after": round(det_after, 4),
+            "improved_deterministic": det_after > det_before,
         }
 
     # ── 动作选择：mappo → 失败降级规则 ──

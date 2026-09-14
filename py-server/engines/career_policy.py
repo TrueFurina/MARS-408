@@ -325,14 +325,49 @@ class CareerModePolicy:
         # batch 化更新：与 review_policy 同因同修 —— 单 episode（8 步）即更新会导致
         # 优势标准化在个位数样本上做，梯度方差过大、策略退化。
         buffer: list[dict] = []
+        n_updates = 0
 
         def _probs_of(x):
             out = self._actor(x)
             return out["difficulty"] if isinstance(out, dict) else out
 
+        def _det_return(n_ep: int = 40) -> float:
+            """确定性策略在独立环境实例上的平均回报（部署口径，无采样噪声）。
+
+            与 review_policy.train_ppo 同因同修：returns_curve 用随机采样动作累计，
+            会被探索噪声主导，可能与真实策略质量脱钩（review 侧实测 63 次更新后
+            `improved=False` 而确定性回报 29.2→43.1）。career 侧此前报告"PPO 无增益"
+            用的也是随机回报 ⇒ 必须以确定性回报复核，否则可能把"策略变好"读成"无效"。
+            环境实例用 seed+7777 的独立副本，避免与训练轨迹重叠。
+            """
+            try:
+                ev = type(env)(seed=seed + 7777, horizon=horizon)
+            except Exception:
+                ev = env
+            tot = 0.0
+            for _ in range(n_ep):
+                s_d = ev.reset()
+                ep_r = 0.0
+                for _t in range(horizon):
+                    x = torch.tensor([s_d], dtype=torch.float32)
+                    self._actor.eval()
+                    with torch.no_grad():
+                        a = int(_probs_of(x)[0].argmax().item())
+                    s_d, r, done = ev.step(a)
+                    ep_r += float(r)
+                    if done:
+                        break
+                tot += ep_r
+            self._actor.train()
+            return tot / max(1, n_ep)
+
+        det_before = _det_return()
+
         def _flush(buf: list[dict]) -> None:
             if not buf:
                 return
+            nonlocal n_updates
+            n_updates += 1
             s_t = torch.tensor([s for ep in buf for s in ep["states"]], dtype=torch.float32)
             a_t = torch.tensor([a for ep in buf for a in ep["actions"]], dtype=torch.long)
             old_logp_t = torch.stack([lp for ep in buf for lp in ep["logps"]]).detach()
@@ -396,15 +431,23 @@ class CareerModePolicy:
                 buffer = []
 
         self._trained = True
+        det_after = _det_return()
         head = returns_curve[:max(1, len(returns_curve) // 3)]
         tail = returns_curve[-max(1, len(returns_curve) // 3):]
         return {
             "trained": True, "episodes": episodes, "horizon": horizon, "seed": seed,
+            # 有效预算显式落盘（batch 语义变更会静默改变实际更新次数，见 review 侧同类事故）
+            "batch_episodes": int(batch_episodes), "n_updates": n_updates,
             "returns": returns_curve,
             "mean_return": sum(returns_curve) / max(1, len(returns_curve)),
             "mean_return_first_third": sum(head) / max(1, len(head)),
             "mean_return_last_third": sum(tail) / max(1, len(tail)),
+            # ⚠️ `improved` 基于随机采样回报，会被探索噪声主导，不得单独作为
+            #    "PPO 是否有效"的证据；审计请用 `improved_deterministic`（部署走 argmax）。
             "improved": (sum(tail) / max(1, len(tail))) > (sum(head) / max(1, len(head))),
+            "det_return_before": round(det_before, 4),
+            "det_return_after": round(det_after, 4),
+            "improved_deterministic": det_after > det_before,
         }
 
     # ── 动作选择：mappo → 失败降级规则 ──
