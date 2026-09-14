@@ -116,6 +116,8 @@ py-server/tests/*.log
 dist-qa/
 dist-qa-prove/
 .pytest-tmp/
+# 测试临时根目录实际名为下划线 .pytest_tmp（上面的 .pytest-tmp 连字符规则不匹配，2026-09-14 补正）
+py-server/.pytest_tmp*/
 dist-verify/
 
 # 构建产物缓存
