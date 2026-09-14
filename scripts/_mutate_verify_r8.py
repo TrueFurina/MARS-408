@@ -46,6 +46,20 @@ MUTANTS = [
         '"improved_deterministic_FOO": det_after > det_before,',
         "tests/test_mappo_budget_audit.py::test_train_ppo_reports_deterministic_improvement",
     ),
+    (
+        "M5 环境量纲回退 0-100（下游硬编码阈值静默失效、精准率清零）",
+        "engines/review_policy.py",
+        "self.consistency = self.rng.uniform(0.15, 0.90)",
+        "self.consistency = self.rng.uniform(15.0, 90.0)",
+        "tests/test_mappo_budget_audit.py::test_review_env_consistency_scale_contract",
+    ),
+    (
+        "M6 precision 改为「档位错配即 False」（历史缺陷：精准率失去意义）",
+        "engines/review_policy.py",
+        "precision = True if self.consistency >= 0.5 else (action != 4)",
+        "precision = (self.consistency >= 0.5) and (action == 3)",
+        "tests/test_mappo_budget_audit.py::test_review_env_native_precision_is_not_degenerate",
+    ),
 ]
 
 

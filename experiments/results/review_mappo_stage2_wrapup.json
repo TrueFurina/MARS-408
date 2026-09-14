@@ -1,0 +1,318 @@
+{
+  "experiment": "review_mappo_stage2_wrapup_budget_guard",
+  "created_at": "2026-09-14T17:14:01",
+  "why": "C 的 eval_review_mappo.py 默认预算在当前树上=1次更新，且 rule 臂绕过纪律护栏；本脚本以生产语义复算",
+  "config": {
+    "seeds": [
+      7,
+      42,
+      2026
+    ],
+    "eval_episodes": 30,
+    "horizon": 6,
+    "warmup_steps": 300,
+    "guard": "统一施加（生产同源）"
+  },
+  "results": [
+    {
+      "label": "默认60ep(batch48)",
+      "ppo_episodes": 60,
+      "batch_episodes": 48,
+      "n_updates_per_seed": [
+        2,
+        2,
+        2
+      ],
+      "schemes": {
+        "uniform": {
+          "mean_return": 10.836944444444446,
+          "mean_return_std": 0.34995590551163563,
+          "mean_quality_gain": 0.17373340795099737,
+          "mean_tokens": 5700.0,
+          "skip_rate": 0.0,
+          "precision_rate": 1.0,
+          "max_skip_streak": 0,
+          "discipline_violation_rate": 0.0
+        },
+        "rule": {
+          "mean_return": 7.760930555555556,
+          "mean_return_std": 0.5763940009813462,
+          "mean_quality_gain": 0.17373340795099737,
+          "mean_tokens": 5172.777777777777,
+          "skip_rate": 0.07222222222222223,
+          "precision_rate": 1.0,
+          "max_skip_streak": 1,
+          "discipline_violation_rate": 0.0
+        },
+        "supervised": {
+          "mean_return": 6.634916666666666,
+          "mean_return_std": 0.19794510322028386,
+          "mean_quality_gain": 0.17373340795099737,
+          "mean_tokens": 5667.777777777777,
+          "skip_rate": 0.0,
+          "precision_rate": 1.0,
+          "max_skip_streak": 0,
+          "discipline_violation_rate": 0.0
+        },
+        "rl": {
+          "mean_return": 6.931305555555556,
+          "mean_return_std": 0.2855268062700333,
+          "mean_quality_gain": 0.17373340795099737,
+          "mean_tokens": 5745.555555555556,
+          "skip_rate": 0.0,
+          "precision_rate": 1.0,
+          "max_skip_streak": 0,
+          "discipline_violation_rate": 0.0
+        }
+      },
+      "rl_ge_uniform": false,
+      "rl_ge_rule": false,
+      "rule_ge_supervised": true,
+      "discipline_ok": true,
+      "train_stats": [
+        {
+          "degraded": false,
+          "kind": "supervised",
+          "seed": 7
+        },
+        {
+          "degraded": false,
+          "kind": "supervised",
+          "seed": 42
+        },
+        {
+          "degraded": false,
+          "kind": "supervised",
+          "seed": 2026
+        },
+        {
+          "degraded": false,
+          "kind": "rl",
+          "seed": 7,
+          "n_updates": 2,
+          "episodes": 60,
+          "improved": false,
+          "improved_deterministic": true
+        },
+        {
+          "degraded": false,
+          "kind": "rl",
+          "seed": 42,
+          "n_updates": 2,
+          "episodes": 60,
+          "improved": false,
+          "improved_deterministic": true
+        },
+        {
+          "degraded": false,
+          "kind": "rl",
+          "seed": 2026,
+          "n_updates": 2,
+          "episodes": 60,
+          "improved": false,
+          "improved_deterministic": true
+        }
+      ]
+    },
+    {
+      "label": "中档1200ep(batch48)",
+      "ppo_episodes": 1200,
+      "batch_episodes": 48,
+      "n_updates_per_seed": [
+        25,
+        25,
+        25
+      ],
+      "schemes": {
+        "uniform": {
+          "mean_return": 10.836944444444446,
+          "mean_return_std": 0.34995590551163563,
+          "mean_quality_gain": 0.17373340795099737,
+          "mean_tokens": 5700.0,
+          "skip_rate": 0.0,
+          "precision_rate": 1.0,
+          "max_skip_streak": 0,
+          "discipline_violation_rate": 0.0
+        },
+        "rule": {
+          "mean_return": 7.760930555555556,
+          "mean_return_std": 0.5763940009813462,
+          "mean_quality_gain": 0.17373340795099737,
+          "mean_tokens": 5172.777777777777,
+          "skip_rate": 0.07222222222222223,
+          "precision_rate": 1.0,
+          "max_skip_streak": 1,
+          "discipline_violation_rate": 0.0
+        },
+        "supervised": {
+          "mean_return": 6.634916666666666,
+          "mean_return_std": 0.19794510322028386,
+          "mean_quality_gain": 0.17373340795099737,
+          "mean_tokens": 5667.777777777777,
+          "skip_rate": 0.0,
+          "precision_rate": 1.0,
+          "max_skip_streak": 0,
+          "discipline_violation_rate": 0.0
+        },
+        "rl": {
+          "mean_return": 8.157958333333333,
+          "mean_return_std": 0.40688478753090984,
+          "mean_quality_gain": 0.17373340795099737,
+          "mean_tokens": 5805.0,
+          "skip_rate": 0.001851851851851852,
+          "precision_rate": 1.0,
+          "max_skip_streak": 1,
+          "discipline_violation_rate": 0.0
+        }
+      },
+      "rl_ge_uniform": false,
+      "rl_ge_rule": true,
+      "rule_ge_supervised": true,
+      "discipline_ok": true,
+      "train_stats": [
+        {
+          "degraded": false,
+          "kind": "supervised",
+          "seed": 7
+        },
+        {
+          "degraded": false,
+          "kind": "supervised",
+          "seed": 42
+        },
+        {
+          "degraded": false,
+          "kind": "supervised",
+          "seed": 2026
+        },
+        {
+          "degraded": false,
+          "kind": "rl",
+          "seed": 7,
+          "n_updates": 25,
+          "episodes": 1200,
+          "improved": false,
+          "improved_deterministic": true
+        },
+        {
+          "degraded": false,
+          "kind": "rl",
+          "seed": 42,
+          "n_updates": 25,
+          "episodes": 1200,
+          "improved": false,
+          "improved_deterministic": true
+        },
+        {
+          "degraded": false,
+          "kind": "rl",
+          "seed": 2026,
+          "n_updates": 25,
+          "episodes": 1200,
+          "improved": false,
+          "improved_deterministic": true
+        }
+      ]
+    },
+    {
+      "label": "标准3000ep(batch48)",
+      "ppo_episodes": 3000,
+      "batch_episodes": 48,
+      "n_updates_per_seed": [
+        63,
+        63,
+        63
+      ],
+      "schemes": {
+        "uniform": {
+          "mean_return": 10.836944444444446,
+          "mean_return_std": 0.34995590551163563,
+          "mean_quality_gain": 0.17373340795099737,
+          "mean_tokens": 5700.0,
+          "skip_rate": 0.0,
+          "precision_rate": 1.0,
+          "max_skip_streak": 0,
+          "discipline_violation_rate": 0.0
+        },
+        "rule": {
+          "mean_return": 7.760930555555556,
+          "mean_return_std": 0.5763940009813462,
+          "mean_quality_gain": 0.17373340795099737,
+          "mean_tokens": 5172.777777777777,
+          "skip_rate": 0.07222222222222223,
+          "precision_rate": 1.0,
+          "max_skip_streak": 1,
+          "discipline_violation_rate": 0.0
+        },
+        "supervised": {
+          "mean_return": 6.634916666666666,
+          "mean_return_std": 0.19794510322028386,
+          "mean_quality_gain": 0.17373340795099737,
+          "mean_tokens": 5667.777777777777,
+          "skip_rate": 0.0,
+          "precision_rate": 1.0,
+          "max_skip_streak": 0,
+          "discipline_violation_rate": 0.0
+        },
+        "rl": {
+          "mean_return": 11.38351388888889,
+          "mean_return_std": 0.5928484132782538,
+          "mean_quality_gain": 0.17373340795099737,
+          "mean_tokens": 5760.555555555555,
+          "skip_rate": 0.0,
+          "precision_rate": 1.0,
+          "max_skip_streak": 0,
+          "discipline_violation_rate": 0.0
+        }
+      },
+      "rl_ge_uniform": true,
+      "rl_ge_rule": true,
+      "rule_ge_supervised": true,
+      "discipline_ok": true,
+      "train_stats": [
+        {
+          "degraded": false,
+          "kind": "supervised",
+          "seed": 7
+        },
+        {
+          "degraded": false,
+          "kind": "supervised",
+          "seed": 42
+        },
+        {
+          "degraded": false,
+          "kind": "supervised",
+          "seed": 2026
+        },
+        {
+          "degraded": false,
+          "kind": "rl",
+          "seed": 7,
+          "n_updates": 63,
+          "episodes": 3000,
+          "improved": true,
+          "improved_deterministic": true
+        },
+        {
+          "degraded": false,
+          "kind": "rl",
+          "seed": 42,
+          "n_updates": 63,
+          "episodes": 3000,
+          "improved": true,
+          "improved_deterministic": true
+        },
+        {
+          "degraded": false,
+          "kind": "rl",
+          "seed": 2026,
+          "n_updates": 63,
+          "episodes": 3000,
+          "improved": true,
+          "improved_deterministic": true
+        }
+      ]
+    }
+  ]
+}

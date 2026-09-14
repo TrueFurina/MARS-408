@@ -146,3 +146,64 @@ def test_composite_reward_ranking_matches_gate_ranking():
         assert eff[3] == pytest.approx(
             weighted_consistency_score(ev, cs, dict(rp.UNIFORM_WEIGHTS))[0], abs=1e-9), \
             "balanced(1/3,1/3,1/3) 必须与 uniform 完全等价（这是零侵入不变式）"
+
+
+# ── 事故③ 护栏：环境量纲变更会让下游硬编码阈值静默失效 ──
+
+def test_review_env_consistency_scale_contract():
+    """契约：`ReviewEnv.consistency` ∈ [0,1]（评测口径必须与训练环境同源）。
+
+    真实事故（2026-09-14）：`d55387e` 把量纲由固定 50.0（0-100）改为
+    `uniform(0.15,0.90)`（0-1，语义更正确），但下游 `eval_review_mappo.py` 里
+    硬编码的 `thr = 75.0 if idx == 4 else 60.0` 由此**永不满足** ——
+    "精准率"读数从 0.513 **静默退化为 0.000（四臂全 0）**，而全部单测仍绿。
+
+    本用例把量纲升级为**显式契约**：任何缩放改动都会让本断言失败，
+    从而强制改动者同步复核所有阈值消费方（而不是静默产出 0）。
+    """
+    for seed in (7, 42, 2026):
+        env = rp.ReviewEnv(seed=seed, horizon=6)
+        env.reset()
+        assert 0.0 <= env.consistency <= 1.0, (
+            f"seed={seed} 初始 consistency={env.consistency} 不在 [0,1]；"
+            "量纲已变更 → 必须同步复核硬编码阈值消费方（如 eval_review_mappo.py）")
+        for idx in (0, 1, 2, 3, 4):
+            e = rp.ReviewEnv(seed=seed, horizon=6)
+            e.reset()
+            for _ in range(6):
+                e.step(idx)
+                assert 0.0 <= e.consistency <= 1.0, (
+                    f"动作 {idx} 后 consistency={e.consistency} 越界 [0,1]")
+
+
+def test_review_env_native_precision_is_not_degenerate():
+    """环境原生 precision 口径必须非退化：非 skip 动作恒判为精准（precision=True）。
+
+    原生语义（`ReviewEnv.step`）：`precision = (consistency >= 0.5) or (action != 4)`
+    —— 只有"质量不达标**且**跳过评审"才算漏检（precision=False）。
+    历史缺陷把"档位错配"也判成 False，使错配奖励被 −0.35 抵消到 ≈0，奖励地形出现人为悬崖。
+
+    实现要点：`precision` 是 step 内部的局部变量、不对外暴露，故本用例**用奖励数值反推**该位
+    —— `reward = 0.4·gain + 0.35·(±1) − 0.15·cost`。precision 一旦被改成任何别的判据
+    （如"必须选 balanced"），奖励即偏离期望，本用例 FAIL。
+    *注：本用例初版曾写成 `assert env.consistency >= 0.5 or idx != 4` —— 对 idx∈{0,1,2,3}
+     该式恒真，属**空断言**（杀不死任何变异体），已按"测试全绿≠测试有效"的硬教训重写。*
+    """
+    checked_low = 0
+    for seed in range(40):
+        env = rp.ReviewEnv(seed=seed, horizon=6)
+        env.reset()
+        idx = 3
+        low = env.consistency < 0.5                 # step 前的质量是否未达标
+        gain = env._gain(idx)
+        cost = min(1.0, rp.ACTION_TOKENS[idx] / 2000.0)
+        reward = env.step(idx)[1]
+        expected = 0.4 * gain + 0.35 * 1.0 - 0.15 * cost    # precision=True（非 skip）
+        assert reward == pytest.approx(expected, abs=1e-9), (
+            f"seed={seed}: 非 skip 动作 reward={reward} != 期望 {expected}；"
+            "precision 口径已偏离 ReviewEnv.step 原生语义")
+        if low:
+            checked_low += 1
+    assert checked_low >= 5, (
+        f"样本仅 {checked_low}/40 落在低质量区间（consistency<0.5），"
+        "边界未被真正压到，需扩大 seed 范围")
