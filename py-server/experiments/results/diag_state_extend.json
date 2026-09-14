@@ -1,0 +1,131 @@
+{
+  "meta": {
+    "n": 240,
+    "train_seed": 20260914,
+    "test_seed": 313131,
+    "noise": 0.03,
+    "uniform": 64.397,
+    "oracle": 70.472,
+    "headroom": 6.075
+  },
+  "ref": {
+    "rule_old": {
+      "mean_eff": 66.406,
+      "capture_pct": 33.1
+    },
+    "rule_new": {
+      "mean_eff": 67.438,
+      "capture_pct": 50.1
+    }
+  },
+  "analytic": {
+    "无噪": {
+      "mean_eff": 70.472,
+      "capture_pct": 100.0,
+      "argmax_agreement_with_oracle": 1.0,
+      "simplified_formula_agreement": 1.0,
+      "delta_vs_rule_new": 3.034
+    },
+    "加噪±0.03": {
+      "mean_eff": 70.456,
+      "capture_pct": 99.7,
+      "argmax_agreement_with_oracle": 0.963,
+      "simplified_formula_agreement": 0.963,
+      "delta_vs_rule_new": 3.018
+    }
+  },
+  "classifier": [
+    {
+      "feat": "F12",
+      "depth": 1,
+      "mean_eff": 66.918,
+      "capture_pct": 41.5,
+      "action_agreement": 0.529,
+      "delta_vs_rule_new": -0.52
+    },
+    {
+      "feat": "F12",
+      "depth": 2,
+      "mean_eff": 67.389,
+      "capture_pct": 49.3,
+      "action_agreement": 0.571,
+      "delta_vs_rule_new": -0.049
+    },
+    {
+      "feat": "F12",
+      "depth": 3,
+      "mean_eff": 66.782,
+      "capture_pct": 39.3,
+      "action_agreement": 0.571,
+      "delta_vs_rule_new": -0.656
+    },
+    {
+      "feat": "F2",
+      "depth": 1,
+      "mean_eff": 66.918,
+      "capture_pct": 41.5,
+      "action_agreement": 0.529,
+      "delta_vs_rule_new": -0.52
+    },
+    {
+      "feat": "F2",
+      "depth": 2,
+      "mean_eff": 67.389,
+      "capture_pct": 49.3,
+      "action_agreement": 0.571,
+      "delta_vs_rule_new": -0.049
+    },
+    {
+      "feat": "F2",
+      "depth": 3,
+      "mean_eff": 66.676,
+      "capture_pct": 37.5,
+      "action_agreement": 0.512,
+      "delta_vs_rule_new": -0.762
+    },
+    {
+      "feat": "F2CK",
+      "depth": 1,
+      "mean_eff": 66.918,
+      "capture_pct": 41.5,
+      "action_agreement": 0.529,
+      "delta_vs_rule_new": -0.52
+    },
+    {
+      "feat": "F2CK",
+      "depth": 2,
+      "mean_eff": 69.039,
+      "capture_pct": 76.4,
+      "action_agreement": 0.704,
+      "delta_vs_rule_new": 1.601
+    },
+    {
+      "feat": "F2CK",
+      "depth": 3,
+      "mean_eff": 69.082,
+      "capture_pct": 77.1,
+      "action_agreement": 0.75,
+      "delta_vs_rule_new": 1.644
+    }
+  ],
+  "regressor_counterexample": [
+    {
+      "feat": "F12",
+      "depth": 3,
+      "mean_eff": 67.132,
+      "capture_pct": 45.0
+    },
+    {
+      "feat": "F2",
+      "depth": 3,
+      "mean_eff": 67.132,
+      "capture_pct": 45.0
+    },
+    {
+      "feat": "F2CK",
+      "depth": 3,
+      "mean_eff": 67.132,
+      "capture_pct": 45.0
+    }
+  ]
+}

@@ -153,7 +153,11 @@ def _resolve_review_weights(state: dict, evidence: dict, consensus: dict):
             return None
         feats = review_state_features(
             evidence=evidence, consensus=consensus, state=state)
-        return decide_review_weight(feats, use_mappo=True).get("weights")
+        # 传 evidence/consensus：解析最优档位（review_policy.analytic_review_action）
+        # 需要与打分同源的 (s_h, s_c, s_k) —— 这两者不在 12 维状态里。
+        decision = decide_review_weight(
+            feats, use_mappo=True, evidence=evidence, consensus=consensus)
+        return decision.get("weights")
     except Exception as e:  # noqa: BLE001
         logger.warning("三元评审权重在线决策失败，回退均匀权重: %s", e)
         return None

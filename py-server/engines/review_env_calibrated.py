@@ -23,7 +23,7 @@
 #      但独立抽样、互不复用样本 → 训练集与评测集不重叠）。
 #   3. 12 维特征由真实 review_state_features 从合成 evidence/consensus/critic/state 生成，
 #      保证特征语义、维度、取值范围与线上完全一致。
-#   4. 纪律：skip 因 effective ≡ 100 属口径陷阱，按生产纪律门 _block_skip（reviews_done=0
+#   4. 纪律：skip 因 effective ≡ 100 属口径陷阱，按生产纪律门 discipline_gate（reviews_done=0
 #      口径）禁用本环境中的 skip 捷径，避免学到"跳过评审拿满分"的退化解。
 #
 # 不变式：不修改 engines/review_policy.py（A 的交付物原样保留）；本模块仅新增。
@@ -40,28 +40,23 @@ from engines.review_policy import (
     STATE_DIM,
     UNIFORM_WEIGHTS,
     _weights_of,
+    # 纪律门：直接复用生产**唯一实现**，不再在本模块内逐字复刻。
+    # 背景：本模块原先自己复刻了一份，与 review_policy 内的两份闭包共构成**三处**
+    # 互不引用的复制 —— 生产侧修差一时，其余两处不会跟着改，只能靠测试对拍去"追"。
+    # 现生产侧已提升为模块级 `review_policy.discipline_gate`，此处仅转发同一对象，
+    # 从**结构上**消灭"复刻体漂移"（`is` 同一性由测试断言守护）。
+    # 向后兼容：`from engines.review_env_calibrated import discipline_gate` 仍可用。
+    discipline_gate,
     review_reward,
     review_state_features,
     review_weight_schema,
 )
 
 
-def discipline_gate(action: int, features: list, skip_streak: int = 0,
-                    reviews_done: int = 0) -> int:
-    """与 review_policy.select_action 内 _block_skip **逐字**一致的纪律门（本模块内复刻）。
-
-    - reviews_done < REVIEW_MIN_REVIEW 或 skip_streak ≥ SKIP_STREAK_LIMIT − 1 时禁止 skip：
-      证据强（f2 ≥ 0.6）压回 trust_honest，否则压回 balanced。
-
-    ⚠️ 必须与生产同步：生产版已修掉差一（原 `≥ SKIP_STREAK_LIMIT` 会放过第 1 次连发，
-    与验收"连发 ≥2 发生率为 0"冲突），本处随之改为 `≥ SKIP_STREAK_LIMIT − 1`。
-    同步性由 `tests/test_review_env_calibrated.py::test_discipline_gate_matches_production`
-    与真实 `ReviewWeightPolicy.select_action` 对拍守护 —— 生产再改此处必须一起改。
-    """
-    if action == 4 and (reviews_done < REVIEW_MIN_REVIEW
-                        or skip_streak >= SKIP_STREAK_LIMIT - 1):
-        return 0 if (features and len(features) > 1 and features[1] >= 0.6) else 3
-    return action
+# ────────────────────────────────────────────────────────────
+# 纪律门（discipline_gate）已上移到 engines/review_policy.py 作为单一真值源，
+# 经上方 import 转发到本模块命名空间。此处保留占位说明，避免读者再去找"本模块版本"。
+# ────────────────────────────────────────────────────────────
 
 
 class CalibratedReviewEnv:
@@ -157,7 +152,7 @@ class CalibratedReviewEnv:
                                      self._reviews_done_fixed)
 
         # ── 无效 skip 拦截（防"白嫖安全网"退化解）──
-        # 本口径下纪律门恒禁止 skip（reviews_done=0）。若只做"重定向"，由于生产 _block_skip
+        # 本口径下纪律门恒禁止 skip（reviews_done=0）。若只做"重定向"，由于生产 discipline_gate
         # 的兜底规则（f2 ≥ 0.6 → trust_honest，否则 balanced）本身恰是一个不错的启发式，
         # 策略会学会"恒输出 4"去免费获得该兜底 —— 那不是学到的策略，是白嫖安全网。
         # 故把"被纪律门拒绝的 skip"记为无效动作并给负奖励，迫使策略在 {0,1,2,3} 上真学映射。

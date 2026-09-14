@@ -53,13 +53,15 @@ ACTION_TOKENS = {0: 900.0, 1: 1000.0, 2: 800.0, 3: 950.0, 4: 0.0}
 # 设计意图（攻坚令 3.1 / 阶段 3 验收"RL ≥ 规则 ≥ 监督"）：
 #   1) 档位增益阶梯 matched > balanced > mismatched > skip：选对上下文档位收益最高；
 #      恒定 balanced（= 均匀基线）只是中等 → 存在可学增益空间。
-#   2) 真最优档位由 (consistency, critic_quality, disagreement) 的**联合判据**决定，
-#      而生产规则 `_rule_action_idx` 是**级联判据**（consistency 一票定档，忽略其余）。
-#      两者刻意不同源：规则的瀑布结构在"强证据 + 高分歧"这类联合区必然误判
-#      （它只看 consistency 就定 trust_honest），故规则在该区域系统性次优，
-#      RL（函数逼近可表达特征交互）能学得更好 —— 这是可学增益的真实来源。
-#      ⚠️ 诚实标注：该"联合结构"是本合成环境的建模假设，非实测结论。它使
-#      RL ≥ 规则 在仿真中可复现，**不等于**真实教学场景存在同等增益。
+#      而不当训练标签，攻坚令第 6 节）
+#   2) 真最优档位由 (consistency, critic_quality, disagreement) 的**联合判据**决定。
+#      ⚠️ 历史说明已失效（2026-09-14）：本段原写"生产规则是级联、与环境**刻意不同源**，
+#      故规则在联合区必然误判，这是 RL 的可学增益来源"。该设定**依赖规则保持级联** ——
+#      而生产规则已按实测（`experiments/diag_rule_upgrade.py`）**折进解析阈值**
+#      （f2 > 0.675 → trust_honest，否则 trust_consensus），capture 由 39.1% → 54.8%。
+#      ⇒ "不同源"论证不再成立，**不得再据本段宣称 RL ≥ 规则**。
+#      真实效果一律以 `engines/review_env_calibrated.py`（奖励复用生产
+#      `weighted_consistency_score`，balanced 恒 0 增益）+ 报告口径为准。
 REV_GAIN_MATCHED = 5.0      # 选对上下文档位
 REV_GAIN_BALANCED = 3.0     # 均衡（安全默认，恒定中等）
 REV_GAIN_MISMATCH = 1.0     # 选错上下文档位（次优信号）
@@ -196,6 +198,7 @@ def review_reward(
     precision: bool,
     tokens: float = 0.0,
     skip_streak: int = 0,
+    return_components: bool = False,
 ) -> float:
     """r = w1·Δgate_quality + w2·precision_bonus - w3·cost_penalty - w4·skip_abuse
 
@@ -203,15 +206,29 @@ def review_reward(
     - precision_bonus：正确放行优质产物 +；错误放行 −（精准评审）
     - cost_penalty：本轮 token 归一化（−）
     - skip_abuse：skip 连发 ≥ SKIP_STREAK_LIMIT 重罚（防"全 skip 省钱"捷径）
+
+    return_components=True → 返回 {"gate","precision","cost","discipline","total"} 明细。
+    供**判别力审计**使用：可测出某个分项在动作维度上是否恒为常数（即"名义有权重、
+    实际不参与决策"）。该判断只能通过本函数的分项透视得到，禁止外部复刻公式 ——
+    复刻会导致审计结论与被审计对象不同源（本项目已多次因此得出过错误结论）。
     """
     delta_gate = float(gate_after) - float(gate_before)
     precision_bonus = 1.0 if precision else -1.0
     cost = min(1.0, max(0.0, float(tokens) / 2000.0))
     abuse = max(0, int(skip_streak) - SKIP_STREAK_LIMIT + 1) if skip_streak >= SKIP_STREAK_LIMIT else 0
-    return (REWARD_W["gate"] * delta_gate
-            + REWARD_W["precision"] * precision_bonus
-            - REWARD_W["cost"] * cost
-            - REWARD_W["discipline"] * abuse * 5.0)
+    total = (REWARD_W["gate"] * delta_gate
+             + REWARD_W["precision"] * precision_bonus
+             - REWARD_W["cost"] * cost
+             - REWARD_W["discipline"] * abuse * 5.0)
+    if return_components:
+        return {
+            "gate": REWARD_W["gate"] * delta_gate,
+            "precision": REWARD_W["precision"] * precision_bonus,
+            "cost": -REWARD_W["cost"] * cost,
+            "discipline": -REWARD_W["discipline"] * abuse * 5.0,
+            "total": total,
+        }
+    return total
 
 
 # ────────────────────────────────────────────────────────────
@@ -243,6 +260,11 @@ class ReviewEnv:
         self.skip_streak = 0
         self.reviews_done = 0
         self._last_action = 3
+        # 最近一次 step 的原生 precision 判定（None = 尚未 step）。
+        # 暴露给评测脚本读取，使"精准率"指标**同源**于环境定义，而非在脚本里
+        # 复刻阈值 —— 复刻曾致量纲漂移（0-100 改 0-1 后脚本硬编码 60/75 ⇒ 精准率
+        # 恒为 0，而全部单测仍绿）。
+        self.last_precision: Optional[bool] = None
         self._sample_context()
 
     def _sample_context(self) -> None:
@@ -264,16 +286,21 @@ class ReviewEnv:
         self.skip_streak = 0
         self.reviews_done = 0
         self._last_action = 3
+        self.last_precision = None
         self._sample_context()
         return self._features()
 
     def _true_best(self) -> int:
-        """环境真最优档位（**联合判据**，与规则的级联判据刻意不同源）。
+        """环境真最优档位（**联合判据**）。
 
         顺序即优先级：高分歧一票否决 → 强证据且批评弱 → 批评信噪比高 → 共识已 pass。
-        规则 `_rule_action_idx` 是瀑布式（consistency ≥0.6 一票定 trust_honest，
-        完全不看 disagreement），故在"强证据 + 高分歧"联合区必然误判 ——
-        RL 只需学到"高分歧时不要盲信诚实 Agent"即可稳定超过规则。
+
+        ⚠️ 历史说明已失效（2026-09-14）：本段原称"与规则的级联判据刻意不同源，
+        规则在强证据+高分歧区必然误判，故 RL 只需学到别盲信即可超过规则"。
+        生产规则已折进解析阈值（`RULE_EVIDENCE_HONEST`），**不再是级联** ——
+        该论证随之失效，不得再据此宣称 RL ≥ 规则。
+        本环境（合成奖励阶梯）保留仅作历史对照；**真实效果以
+        `engines/review_env_calibrated.py` 为准**（奖励复用生产函数）。
         """
         if self.disagreement >= ENV_DISAGREE_HIGH:
             return 3  # 高分歧：任何单一信任都危险 → 均衡
@@ -317,6 +344,13 @@ class ReviewEnv:
             return REV_GAIN_BALANCED
         return REV_GAIN_MISMATCH
 
+    def gain_of(self, action: int) -> float:
+        """当前上下文下给定动作的质量增益（公开入口，**不**推进环境状态）。
+
+        供评测 / 审计脚本复用同一判据，避免外部复刻增益阶梯 —— 复刻即漂移。
+        """
+        return self._gain(action)
+
     def step(self, action: int) -> tuple[list[float], float, bool]:
         """action ∈ [0,4] → (features, reward, done)"""
         self.step_count += 1
@@ -330,14 +364,10 @@ class ReviewEnv:
             self.skip_streak = 0
             self.reviews_done += 1
 
-        # 精准评审（严格对齐攻坚令 3.1 语义：precision = "正确放行优质产物"）：
-        #   产物质量达标（consistency ≥ 0.5）→ 放行即正确；
-        #   质量不达标 → 只有真实评审过（非 skip）才算拦住了，skip 属漏检重罚。
-        # ⚠️ 注意：precision 衡量"放行判定是否正确"，**不是**"是否选中最优档位"。
-        # 早期实现把"档位错配"也判成 precision=False，使错配奖励被 -0.35 抵消到 ≈0
-        # （0.4×1 − 0.35 = 0.05），低于 skip 的 0.35、远低于 balanced 次优的 1.48 ——
-        # 奖励地形出现人为悬崖，RL 无法学到"次优也比不评审好"的常识。
-        precision = True if self.consistency >= 0.5 else (action != 4)
+        # 精准评审：判定逻辑已抽为模块级 `review_precision`（唯一真值实现），此处只调用，
+        # 避免"环境一套、评测脚本另一套"的量纲漂移。语义与历史教训见该函数 docstring。
+        precision = review_precision(self.consistency, action)
+        self.last_precision = precision  # 供评测脚本同源读取（勿在外部复刻阈值）
 
         reward = review_reward(
             gate_before=0.0, gate_after=float(gain), precision=precision,
@@ -357,21 +387,58 @@ class ReviewEnv:
 # 规则版策略（warmup 监督标签来源，安全起点）
 # ────────────────────────────────────────────────────────────
 
-def _rule_action_idx(features: list[float]) -> int:
-    """规则版评审权重选择（对齐攻坚令 1.2 现有规则精神：按上下文挑信任对象）。
+# ── 规则证据门槛（解析推导，非拟合）──
+# 生产有效分展开式 effective = s_h + (c − 1/3)·(s_c − s_h) + (k − 1/3)·(s_k − s_h)，
+# 令 trust_honest(=s_h) 与 trust_consensus 的**期望**相等，解出证据强度交点 s_h ≈ 67.5 分
+# ⇒ f2 ≈ 0.675。该值来自三信号独立假设下的解析期望，**不在任何评估集上拟合**，故无泄漏。
+RULE_EVIDENCE_HONEST = 0.675
 
-    - 证据强（consistency ≥ 0.6）→ trust_honest
-    - 批评者信噪比高（valid 明显多于 invalid）→ trust_critic
-    - 共识已 pass 且分歧低 → trust_consensus
-    - 否则 → balanced
-    - skip 仅在成本已高且质量已达标时允许（且受纪律硬约束，不由此函数放行连发）
+# 规则折法（2026-09-14 实测选定；见 experiments/diag_rule_upgrade.py +
+# results/diag_rule_upgrade.json）：
+#   实测否证了"问题在阈值位置"的假设 —— 仅把级联门槛 0.6 → 0.675（其余不变）：
+#     主集 −0.033 (t=−0.27) / 独立泛化集 −0.133 (t=−1.02)，**无改善甚至略负**。
+#   真因是低证据区**回落到 balanced**（其真实增益恒 0，且 240 样本中 0 次最优）。
+#   故折法 = 阈值二分支（f2 > 0.675 → trust_honest，否则 trust_consensus）：
+#     主集 +0.859 (t=+3.27) / 泛化 +1.032 (t=+2.87)，capture 54.8% / 50.1%
+#     （对比现行级联 39.1% / 33.1%）。
+#   保留 critic 支路的变体反而更差（主集 −0.132）⇒ critic 判据（valid−invalid ≥ 0.25）
+#   经实测不可靠，**确定性规则不再主动选 critic**；critic 档位仍在动作集内，RL 路径可选。
+RULE_F2_BINARY = True   # 回退开关：置 False → 走 `_rule_action_idx_legacy`（原级联）
+
+
+def _rule_action_idx(features: list[float]) -> int:
+    """规则版评审权重选择（**已折进解析阈值**，2026-09-14 实测选定）。
+
+    - 成本高压且质量已达标 → skip（真实评审次数/连发仍由 `discipline_gate` 硬约束）
+    - 证据强（f2 > RULE_EVIDENCE_HONEST）→ trust_honest
+    - 否则 → trust_consensus
+
+    为什么不再 balanced 兜底：实测 balanced 在 240 条真实形态样本中 **0 次最优**、
+    相对增益恒 0 —— 兜底到它等于主动放弃头寸（capture 39.1% → 54.8%）。
+
+    回退：`RULE_F2_BINARY = False` → `_rule_action_idx_legacy`（原级联，保留供对照）。
+    """
+    if not RULE_F2_BINARY:
+        return _rule_action_idx_legacy(features)
+    if not features or len(features) < STATE_DIM:
+        return 3
+    consistency, cost_ratio = features[1], features[9]
+    if consistency >= 0.75 and cost_ratio >= 0.6:
+        return 4
+    return 0 if consistency > RULE_EVIDENCE_HONEST else 2
+
+
+def _rule_action_idx_legacy(features: list[float]) -> int:
+    """原级联版规则（2026-09-14 之前的默认）。**保留供回退与历史数字对照**，不在默认路径上。
+
+    实测 capture 主集 39.1% / 泛化 33.1%，低于折进阈值版 15.6 / 17.0 个百分点；
+    保留原因：① 一键回退；② 历史报告的数字需可复现到当时的实现。
     """
     if not features or len(features) < STATE_DIM:
         return 3
-    confidence, consistency, _cov, status, _retry, disagree, valid_c, invalid_c = features[:8]
-    cost_ratio, _mode, round_ratio = features[9], features[10], features[11]
-
-    # 成本高压 + 质量已达标 → 允许 skip（真实评审已由调用方按 review_min_review 保证）
+    consistency, status, disagree = features[1], features[3], features[5]
+    valid_c, invalid_c = features[6], features[7]
+    cost_ratio = features[9]
     if consistency >= 0.75 and cost_ratio >= 0.6:
         return 4
     if consistency >= 0.6:
@@ -381,6 +448,93 @@ def _rule_action_idx(features: list[float]) -> int:
     if status <= 0.1 and disagree <= 0.35:
         return 2
     return 3
+
+
+# ────────────────────────────────────────────────────────────
+# 解析最优档位（恒等式；零训练、零搜索）
+# ────────────────────────────────────────────────────────────
+# 生产打分为 effective = s_h + (h·s_h + c·s_c + k·s_k) − mean
+# （见 agents/quality_gate.weighted_consistency_score）。四档有效分因此**可直接算出**，
+# 最优档位是**解析解**：
+#
+#     eff(trust_honest)    = s_h + (0.6·s_h + 0.2·s_c + 0.2·s_k) − mean
+#     eff(trust_critic)    = s_h + (0.2·s_h + 0.6·s_c + 0.2·s_k) − mean
+#     eff(trust_consensus) = s_h + (0.2·s_h + 0.2·s_c + 0.6·s_k) − mean
+#     eff(balanced)        = s_h
+#
+# 实测（`experiments/diag_state_extend.py`，独立泛化集 seed=313131）：
+#   · 无噪：capture **100.0%**，与 oracle 动作一致率 **100.0%**；
+#   · 加噪 ±0.03（模拟上游估计误差）：capture **99.7%**，一致率 96.2% ⇒ 对误差稳健；
+#   · 对比：折进阈值的二分支规则 50.1%；RL 最优配置 56.1%。
+#
+# **关键前提**：决策读到的 (s_h, s_c, s_k) 与打分**同源**。生产链路两者都经
+# `review_signals(evidence, consensus)` 取同一份 evidence/consensus ⇒ 前提成立。
+# ⚠️ 诚实边界：这证明"**在 effective 这一目标函数下**最优动作可解析求出"，
+#    不等于"effective 提升 = 真实教学质量提升"（effective 仍是代理指标）。
+RULE_MODE = "analytic"   # "analytic"（默认：解析最优）| "f2_binary" | "legacy"
+
+
+def analytic_review_action(evidence: Optional[dict] = None,
+                           consensus: Optional[dict] = None) -> int:
+    """解析最优评审档位（0..3）：按生产打分定义复算四档有效分并取最大。
+
+    与打分函数**同源**（同一 `review_signals`），故结果与 `weighted_consistency_score`
+    的实际 argmax 逐位一致（由 `tests/test_review_analytic.py` 以恒等式守护）。
+
+    只在 0..3 中选（skip=4 由 `discipline_gate` 依纪律决定，不在此处放行）。
+    """
+    from agents.quality_gate import review_signals  # 延迟导入，避免与 agents 循环
+    s_h, s_c, s_k = review_signals(evidence or {}, consensus or {})
+    mean3 = (s_h + s_c + s_k) / 3.0
+    best_a, best_v = 3, float("-inf")
+    for a in (0, 1, 2, 3):
+        h, c, k = REVIEW_WEIGHTS[a]
+        v = s_h + (h * s_h + c * s_c + k * s_k) - mean3
+        if v > best_v:
+            best_a, best_v = a, v
+    return best_a
+
+
+def review_precision(consistency: float, action: int) -> bool:
+    """评审精准判定的**唯一真值实现**（环境 / 评测脚本 / 指纹 / 测试共用）。
+
+    语义（攻坚令 3.1：precision = "正确放行优质产物"）：
+      - 产物质量达标（consistency ≥ 0.5）→ 放行即正确 → True；
+      - 质量不达标 → 只有**真实评审过**（非 skip）才算拦住了 → True；skip 属漏检重罚 → False。
+
+    ⚠️ 衡量的是"放行判定是否正确"，**不是**"是否选中最优档位"。早期实现把"档位错配"
+    也判成 False，使错配奖励被 -0.35 抵消到 ≈0，低于 skip 的 0.35、远低于 balanced 的
+    1.48 —— 奖励地形出现人为悬崖，RL 学不到"次优也比不评审好"。
+
+    为什么必须是函数：本判定曾被评测脚本按旧量纲**复刻**成 `thr = 75.0 if idx==4 else 60.0`
+    （0-100 时代产物）。量纲改为 0-1 后该复刻体恒判 False ⇒ 精准率四臂全 0，而全部单测
+    仍绿。抽成函数后，外部只能调用、无法"改一个数字"式地悄悄漂移。
+    """
+    return True if consistency >= 0.5 else (action != 4)
+
+
+def discipline_gate(idx: int, features: list, skip_streak: int = 0,
+                    reviews_done: int = 0) -> int:
+    """评审纪律硬约束的**唯一真值实现**（生产 / 评测 / 校准环境共用）。
+
+    规则（攻坚令阶段 3）：skip 连发 ≥2 发生率为 0 ⇒ 必须在**第 2 次连发发生前**拦截。
+    若等 `skip_streak >= SKIP_STREAK_LIMIT(2)` 才拦，第 2 次连发已经发生，与验收指标
+    直接冲突（原实现此处差一，已修）。
+
+    触发拦截时压回：证据强（features[1] ≥ 0.6）→ trust_honest(0)，否则 balanced(3)。
+
+    为什么必须是单一实现（血泪）：本规则此前在代码库里存在 **3 份**互不引用的复制 ——
+      (a) `ReviewWeightPolicy.select_action` 内闭包 `_block_skip`
+      (b) `evaluate_policy` 内闭包 `_apply_discipline`
+      (c) `engines/review_env_calibrated.py` 的模块级 `discipline_gate`（逐字复刻）
+    修 (a) 的差一时，(b)(c) 不会跟着改 → 静默漂移。已实际付代价：角色 C 的评测脚本
+    因绕开护栏而报出 `discipline_ok=False / max_skip_streak=2` 的**假警报**，把
+    "脚本口径错误"误诊为"策略违规"。现统一为本函数，其余位置只做委托。
+    """
+    if idx == 4 and (reviews_done < REVIEW_MIN_REVIEW
+                     or skip_streak >= SKIP_STREAK_LIMIT - 1):
+        return 0 if (features and len(features) > 1 and features[1] >= 0.6) else 3
+    return idx
 
 
 # ────────────────────────────────────────────────────────────
@@ -664,25 +818,16 @@ class ReviewWeightPolicy:
                       skip_streak: int = 0, reviews_done: int = 0) -> tuple[int, str]:
         """返回 (action_idx, source)；source ∈ {"mappo", "rule", "rule_fallback"}。
 
-        纪律硬约束（不依赖网络自觉）：
-          - 真实评审次数 < REVIEW_MIN_REVIEW → 禁止 skip；
-          - skip 连发 ≥ SKIP_STREAK_LIMIT → 禁止 skip，压回 balanced。
+        纪律硬约束（不依赖网络自觉）：统一走模块级 `discipline_gate`（单一真值源），
+        见该函数 docstring 对"三份复制曾静默漂移"的说明。
         """
-        def _block_skip(idx: int) -> int:
-            # 护栏必须在"第 2 次连发"发生前拦截：若等 skip_streak >= SKIP_STREAK_LIMIT(2)
-            # 才拦，则连发 2 次已经发生，与验收指标"skip 连发 ≥2 发生率为 0"
-            # （攻坚令阶段 3）直接冲突 —— 原实现此处差一。
-            if idx == 4 and (reviews_done < REVIEW_MIN_REVIEW
-                             or skip_streak >= SKIP_STREAK_LIMIT - 1):
-                return 0 if (features and len(features) > 1 and features[1] >= 0.6) else 3
-            return idx
-
         if not _features_valid(features):
             logger.warning("评审状态特征非法（NaN/Inf/维度不符），规则层直接均衡兜底")
             return 3, "rule_fallback"
 
         if not self.torch_available or not self._trained:
-            return _block_skip(_rule_action_idx(features)), "rule"
+            return discipline_gate(_rule_action_idx(features), features,
+                                   skip_streak, reviews_done), "rule"
         try:
             torch = self._torch
             x = torch.tensor([features], dtype=torch.float32)
@@ -691,10 +836,11 @@ class ReviewWeightPolicy:
                 probs = self._actor(x)[0]
             idx = int(probs.argmax().item()) if deterministic else \
                 int(torch.multinomial(probs, 1).item())
-            return _block_skip(idx), "mappo"
+            return discipline_gate(idx, features, skip_streak, reviews_done), "mappo"
         except Exception as e:
             logger.warning(f"评审权重 MAPPO 推理失败，规则降级: {e}")
-            return _block_skip(_rule_action_idx(features)), "rule_fallback"
+            return discipline_gate(_rule_action_idx(features), features,
+                                   skip_streak, reviews_done), "rule_fallback"
 
     def save(self, path: str):
         if not self.torch_available:
@@ -730,15 +876,29 @@ def decide_review_weight(
     use_mappo: bool = False,
     skip_streak: int = 0,
     reviews_done: int = 0,
+    evidence: Optional[dict] = None,
+    consensus: Optional[dict] = None,
 ) -> dict:
     """三元评审权重决策（攻坚令 3.3 接口签名）。
 
     use_mappo=False → 均匀权重（= 现状，灰度安全，行为零变化）；
-    use_mappo=True  → 策略推理；任何异常 → 均匀权重（fail-open）。
-    返回 {"weights": {...}, "source": "mappo"/"rules"/"uniform", "action": int}
+    use_mappo=True  → 按 `RULE_MODE`：
+        "analytic"（默认）→ 解析最优档位（需 evidence/consensus；缺任一则退策略路径）
+        "f2_binary" / "legacy" → 走策略（未训练时即规则档）
+    任何异常 → 均匀权重（fail-open）。
+    返回 {"weights": {...}, "source": "analytic"/"mappo"/"rule"/"uniform", "action": int}
     """
     if not use_mappo:
         return {"weights": dict(UNIFORM_WEIGHTS), "source": "uniform", "action": 3}
+    if RULE_MODE == "analytic" and evidence is not None and consensus is not None \
+            and _features_valid(features):
+        try:
+            idx = discipline_gate(analytic_review_action(evidence, consensus), features,
+                                  skip_streak, reviews_done)
+            return {"weights": review_weight_schema(_weights_of(idx)),
+                    "source": "analytic", "action": idx}
+        except Exception as e:  # noqa: BLE001 - 解析失败即退策略路径
+            logger.warning(f"解析档位决策失败，退回策略路径: {e}")
     if not _features_valid(features):
         logger.warning("评审权重决策输入特征非法，均匀权重兜底")
         return {"weights": dict(UNIFORM_WEIGHTS), "source": "uniform", "action": 3}
@@ -797,11 +957,11 @@ def evaluate_policy(policy_or_mode, env: ReviewEnv, horizon: int = 6) -> dict:
 
         理由：① 验收指标"skip 连发 ≥2 发生率为 0"是全方案共同要求（攻坚令阶段 3）；
         ② 若只给 RL 加护栏，规则版会因 skip 省成本而虚高，对比不公平。
+
+        委托模块级 `discipline_gate`（单一真值源），此处不再自行复刻规则 ——
+        复刻是此前三份实现静默漂移的成因。
         """
-        if idx == 4 and (reviews_done < REVIEW_MIN_REVIEW
-                         or skip_streak >= SKIP_STREAK_LIMIT - 1):
-            return 0 if (f and len(f) > 1 and f[1] >= 0.6) else 3
-        return idx
+        return discipline_gate(idx, f, skip_streak, reviews_done)
 
     for _ in range(horizon):
         if policy_or_mode == "rule":
