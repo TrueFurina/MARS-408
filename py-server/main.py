@@ -221,15 +221,18 @@ async def lifespan(app: FastAPI):
         logger.warning("数据库迁移执行失败（非阻塞）: %s", e)
 
     # ── 首次启动时写入演示种子数据（仅非生产环境，避免生产自动创建弱口令演示账户）──
+    # 演示账号/口令以 seed_demo_data 的 DEMO_USERNAME / DEMO_PASSWORD 为唯一真值源。
+    # 此处不得再写字面量：一是防止漂移（改了口令却漏改幂等探测 → 每次启动重复播种），
+    # 二是避免把凭据明文回显进日志（原生产分支日志含明文口令）。
     try:
         env = os.environ.get("NETLEARN_ENV", "development").lower()
         if env not in ("production", "prod"):
             from db.user_store import authenticate
-            if authenticate("demo", "demo123456") is None:
-                from seed_demo_data import seed_demo_data
+            from seed_demo_data import DEMO_PASSWORD, DEMO_USERNAME, seed_demo_data
+            if authenticate(DEMO_USERNAME, DEMO_PASSWORD) is None:
                 seed_demo_data()
         else:
-            logger.info("生产环境跳过演示种子账户写入（demo/demo123456）。")
+            logger.info("生产环境跳过演示种子账户写入。")
     except Exception as e:
         logger.warning(f"演示种子数据写入失败（非阻塞）: {e}")
 
