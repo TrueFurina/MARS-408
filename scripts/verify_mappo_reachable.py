@@ -30,12 +30,10 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 # ────────────────────────────────────────────────────────────
 # 通用：多 episode 评估（返回回报 / 动作分布 / 纪律指标）
 # ────────────────────────────────────────────────────────────
-def _guard(idx, feats, skip_streak, reviews_done):
-    """复刻 review_policy._block_skip 的纪律护栏（三方案一视同仁）"""
-    if idx == 4 and (reviews_done < rp.REVIEW_MIN_REVIEW
-                     or skip_streak >= rp.SKIP_STREAK_LIMIT - 1):
-        return 0 if (feats and len(feats) > 1 and feats[1] >= 0.6) else 3
-    return idx
+# 纪律护栏（三方案一视同仁）：直接复用生产**唯一实现**。
+# 本脚本原先自行复刻了一份 —— 复刻体不会随生产修差一而同步，属同类缺陷，已清除。
+# 保留 `_guard` 别名，使下方调用处无需改动。
+_guard = rp.discipline_gate
 
 
 def run_review_episodes(select_fn, seed, horizon=6, episodes=EPISODES):

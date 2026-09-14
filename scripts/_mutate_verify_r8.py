@@ -54,11 +54,41 @@ MUTANTS = [
         "tests/test_mappo_budget_audit.py::test_review_env_consistency_scale_contract",
     ),
     (
-        "M6 precision 改为「档位错配即 False」（历史缺陷：精准率失去意义）",
+        "M6 precision 语义退化（低质但真实评审过也判 False → 精准率失去意义）",
         "engines/review_policy.py",
-        "precision = True if self.consistency >= 0.5 else (action != 4)",
-        "precision = (self.consistency >= 0.5) and (action == 3)",
-        "tests/test_mappo_budget_audit.py::test_review_env_native_precision_is_not_degenerate",
+        "    return True if consistency >= 0.5 else (action != 4)",
+        "    return (consistency >= 0.5) and (action == 3)",
+        "tests/test_review_single_source.py::test_review_precision_semantics",
+    ),
+    (
+        "M7 纪律门差一（等连发 2 次才拦 → 违反验收「连发 ≥2 发生率为 0」）",
+        "engines/review_policy.py",
+        "    if idx == 4 and (reviews_done < REVIEW_MIN_REVIEW\n"
+        "                     or skip_streak >= SKIP_STREAK_LIMIT - 1):",
+        "    if idx == 4 and (reviews_done < REVIEW_MIN_REVIEW\n"
+        "                     or skip_streak >= SKIP_STREAK_LIMIT):",
+        "tests/test_review_single_source.py"
+        "::test_discipline_gate_blocks_before_second_consecutive_skip",
+    ),
+    (
+        "M8 校准环境又复刻一份纪律门（同一性失效 → 漂移重新可能）",
+        "engines/review_env_calibrated.py",
+        "# ────────────────────────────────────────────────────────────\n"
+        "# 纪律门（discipline_gate）已上移到 engines/review_policy.py 作为单一真值源，",
+        "def discipline_gate(action, features, skip_streak=0, reviews_done=0):\n"
+        "    if action == 4 and (reviews_done < 2 or skip_streak >= 1):\n"
+        "        return 0 if (features and len(features) > 1 and features[1] >= 0.6) else 3\n"
+        "    return action\n\n\n"
+        "# ────────────────────────────────────────────────────────────\n"
+        "# 纪律门（discipline_gate）已上移到 engines/review_policy.py 作为单一真值源，",
+        "tests/test_review_single_source.py::test_discipline_gate_is_single_source_object",
+    ),
+    (
+        "M9 奖励分项之和与总数不一致（审计口径与决策口径脱钩）",
+        "engines/review_policy.py",
+        '            "total": total,',
+        '            "total": total + 0.01,',
+        "tests/test_review_single_source.py::test_review_reward_components_sum_to_total",
     ),
 ]
 
@@ -104,8 +134,11 @@ def main():
             shutil.copy2(backup, f)          # 恢复
             backup.unlink()
 
-    # 恢复后必须全绿
-    ok, summary = run_test("tests/test_mappo_budget_audit.py")
+    # 恢复后必须全绿（两个护栏文件都要跑）
+    ok1, s1 = run_test("tests/test_mappo_budget_audit.py")
+    ok2, s2 = run_test("tests/test_review_single_source.py")
+    ok = ok1 and ok2
+    summary = f"{s1} | {s2}"
     print(f"\n[恢复后自检] {'PASS ✅' if ok else 'FAIL ❌'}  ({summary})")
     print("\n================= 变异验证汇总 =================")
     killed = sum(1 for _, s, _ in results if s.startswith("KILLED"))

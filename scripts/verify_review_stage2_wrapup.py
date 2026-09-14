@@ -6,7 +6,7 @@
      自 d55387e 起 `batch_episodes` 默认 48 ⇒ 60//48 = **1 次梯度更新**。
      用它得到的 "RL 低于 uniform" 不能作为结论。
   ② 口径不公平：该脚本对 baseline `rule` 直接调用 `_rule_action_idx(feats)`，
-     **绕过了生产 `decide_review_weight` 内的 `_block_skip` 纪律护栏**，
+     **绕过了生产 `decide_review_weight` 内的纪律护栏 `discipline_gate`**，
      于是 rule 臂可以白拿 skip 省 token（实测 skip 率 0.135、连发 2），
      与攻坚令阶段 3 验收项「skip 连发 >=2 发生率为 0」冲突。
 
@@ -45,6 +45,8 @@ from engines.review_policy import (  # noqa: E402
     ReviewEnv,
     ReviewWeightPolicy,
     _rule_action_idx,
+    # 纪律护栏：生产唯一实现（本脚本原先自行复刻，已清除）
+    discipline_gate,
 )
 
 SEEDS = [7, 42, 2026]
@@ -80,15 +82,9 @@ def _check_scale(v):
             "环境量纲已变更，本脚本的 precision 口径需同步复核（不得静默继续）")
 
 
-def guard(idx, feats, skip_streak, reviews_done):
-    """生产同源纪律护栏（`decide_review_weight._block_skip` 的等价复刻）。
-
-    必须在「第 2 次连发发生前」拦截（>= LIMIT-1），否则连发 2 次已发生。
-    """
-    if idx == 4 and (reviews_done < REVIEW_MIN_REVIEW
-                     or skip_streak >= SKIP_STREAK_LIMIT - 1):
-        return 0 if (feats and len(feats) > 1 and feats[1] >= 0.6) else 3
-    return idx
+# 纪律护栏：直接复用生产**唯一实现**（本脚本原先自行复刻 —— 已清除）。
+# 语义：必须在「第 2 次连发发生前」拦截（>= LIMIT-1），否则连发 2 次已发生。
+guard = discipline_gate
 
 
 def run_episode(mode, policy, eseed):

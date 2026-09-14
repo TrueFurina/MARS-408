@@ -30,10 +30,11 @@ from run_shadow_probe import generate_samples  # noqa: E402
 from agents.quality_gate import review_signals, weighted_consistency_score  # noqa: E402
 from engines.review_policy import (  # noqa: E402
     REVIEW_ACTIONS,
-    REVIEW_MIN_REVIEW,
-    SKIP_STREAK_LIMIT,
     _rule_action_idx,
     _weights_of,
+    # 纪律门：复用生产唯一实现。本脚本原先自行复刻了一份（全局第 4 处同类缺陷），
+    # 已清除 —— 复刻体不会随生产修差一而同步。
+    discipline_gate,
     review_state_features,
     review_weight_schema,
 )
@@ -50,16 +51,9 @@ def _eff(evidence, consensus, action_idx):
     return e
 
 
-def _block_skip(idx, feats, skip_streak, reviews_done):
-    """与 review_policy.select_action 内 _block_skip 逐字一致的纪律门。
-
-    生产版已修掉差一：判据是 `skip_streak >= SKIP_STREAK_LIMIT - 1`
-    （原 `>= SKIP_STREAK_LIMIT` 会放过第 1 次连发）。此处必须同步。
-    """
-    if idx == 4 and (reviews_done < REVIEW_MIN_REVIEW
-                     or skip_streak >= SKIP_STREAK_LIMIT - 1):
-        return 0 if (feats and len(feats) > 1 and feats[1] >= 0.6) else 3
-    return idx
+# 纪律门（原本地 `_block_skip`）已统一到 engines.review_policy.discipline_gate，
+# 经上方 import 复用。本脚本不再自行复刻 —— 复刻体不会随生产修差一而同步，
+# 是"全局第 4 处同类缺陷"，已清除。
 
 
 def _pearson(xs, ys):
@@ -100,7 +94,7 @@ def main():
         uni.append(row[3])
 
         r_idx = _rule_action_idx(feats)
-        rule_gated.append(row[_block_skip(r_idx, feats, 0, 0)])
+        rule_gated.append(row[discipline_gate(r_idx, feats, 0, 0)])
 
         best_a = max(range(4), key=lambda a: row[a])   # 纪律门下 skip 不可用
         oracle_act.append(best_a)
