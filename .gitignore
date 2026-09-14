@@ -217,3 +217,11 @@ py-server/.env.bak*
 
 # 一次性调试/联调脚本
 py-server/_scratch/
+
+# ── 2026-09-14 收口：临时脚本 / 草稿 / 失效旧跑（保留磁盘，不入库）──
+/_c_*
+/_midterm_text.txt
+scripts/*_tmp.py
+# 失效旧跑（带 bug：免费 skip 虚高 / 未播种口径），见 results/INVALID-ARTIFACTS.md
+py-server/experiments/results/diag_current.json
+py-server/experiments/results/sweep_shadow_budget_20260914_162837.json
