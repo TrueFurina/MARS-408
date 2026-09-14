@@ -13,10 +13,14 @@ import numpy as np
 
 # 跨进程写锁（防止多个 Python 进程并发写同一 JSON 互相截断）
 try:
-    from filelock import FileLock
+    import filelock as _filelock_mod
+    from filelock import FileLock, Timeout
+    filelock = _filelock_mod  # 便于 except filelock.Timeout 书写
     _HAS_FILELOCK = True
 except ImportError:
     FileLock = None
+    Timeout = None
+    filelock = None
     _HAS_FILELOCK = False
 
 from config import get_milvus_config, get_embedding_config
@@ -70,6 +74,10 @@ def _load_pymilvus():
         DataType = _DataType
         utility = _utility
 
+
+# INC-2026-09-14: 空库覆盖守门阈值。持久化 JSON 超过该体积即视为"实质数据"，
+# 拒绝以空集合覆盖，防止加载失败导致的连锁清零。
+_EMPTY_OVERWRITE_GUARD_BYTES = 1024 * 1024  # 1 MB
 
 class InMemoryVectorStore:
     """轻量级内存向量库，基于 numpy 余弦相似度。
@@ -342,6 +350,21 @@ class InMemoryVectorStore:
         os.makedirs(self._persist_path, exist_ok=True)
         coll = self._collections[name]
         filepath = os.path.join(self._persist_path, f"{name}.json")
+        # INC-2026-09-14 空库覆盖守门：内存集合为空而磁盘已存在实质数据时拒绝写入。
+        # 这挡住「加载失败 → 空库启动 → _save 覆盖」这条把真库清零的链路。
+        if len(coll["ids"]) == 0 and os.path.exists(filepath):
+            try:
+                _disk_size = os.path.getsize(filepath)
+            except OSError:
+                _disk_size = 0
+            if _disk_size > _EMPTY_OVERWRITE_GUARD_BYTES:
+                logger.error(
+                    "InMemoryVectorStore 拒绝以空集合覆盖非空持久化文件: %s (%d bytes)\n"
+                    "  通常意味着上游加载失败导致空库启动，已阻止数据清零。",
+                    filepath,
+                    _disk_size,
+                )
+                return
         tmppath = filepath + f".tmp.{os.getpid()}"
         data = {
             "ids": coll["ids"],
@@ -372,16 +395,39 @@ class InMemoryVectorStore:
                 emb_path = filepath + ".emb.npy"
                 # 原子写入：先写临时文件再 rename，防止崩溃残留半写文件
                 emb_tmp = emb_path + f".tmp.{os.getpid()}"
-                np.save(emb_tmp, np.asarray(coll["embeddings"], dtype=np.float32))
+                # INC-2026-09-14: np.save(str) 会自动追加 ".npy" 后缀，导致随后
+                # os.replace(emb_tmp, ...) 找不到文件，二进制缓存从未真正更新，
+                # 且每次保存遗留一个 6.5MB 垃圾文件。改用显式句柄写，路径可控。
+                with open(emb_tmp, "wb") as _emb_f:
+                    np.save(_emb_f, np.asarray(coll["embeddings"], dtype=np.float32))
                 os.replace(emb_tmp, emb_path)
         except Exception as e:  # noqa: BLE001
             logger.warning("embeddings 二进制缓存写入失败（非阻塞）: %s", e)
 
     def _load(self, name: str) -> bool:
-        """从 JSON 加载（损坏时自动备份原文件并降级为空库，防止静默数据覆盖）"""
+        """从 JSON 加载（任何异常都不移动/删除原文件）
+
+        INC-2026-09-14: 旧实现一旦遇到任何加载异常（内存不足 / 并发读写竞争 /
+        文件被占用）就用 os.rename 把主文件搬走并改名 .corrupted.<ts>，系统随之
+        以空库启动 —— 主库"被损坏"其实是容错逻辑自己造成的（磁盘实证：
+        vectordb_data/ 下累积多个 .corrupted 备份，主文件一度消失）。
+        现改为：仅结构性错误才 copy2 备份，原文件永存；其余故障只告警。
+
+        读路径刻意不持锁：_save 走「写 tmp + os.replace」原子替换，读到的要么
+        是旧版本要么是新版本，不存在半截文件；而 filelock 每次释放都会 unlink
+        锁文件，加读锁会让锁文件删除次数翻倍。
+        """
         filepath = os.path.join(self._persist_path, f"{name}.json")
         if not os.path.exists(filepath):
             return False
+        # 读路径不持锁（刻意设计）：_save 走「写 tmp + os.replace」原子替换，
+        # 读到的要么是旧版本要么是新版本，不存在半截文件；而 filelock 每次释放
+        # 都会 unlink 锁文件，读锁会把锁文件删除次数翻倍并触发外部批量删除守卫。
+        # 数据安全改由「异常不移动原文件 + 空库覆盖守门」保证。
+        return self._load_unlocked(name, filepath)
+
+    def _load_unlocked(self, name: str, filepath: str) -> bool:
+        """实际加载逻辑（与 _load 分离，便于日后单独加读锁或做落盘复算）"""
         try:
             with open(filepath, "r", encoding="utf-8") as f:
                 data = json.load(f)
@@ -426,21 +472,38 @@ class InMemoryVectorStore:
             logger.info(f"InMemoryVectorStore 加载 {len(coll['ids'])} 条文档 from {name}")
             return True
         except Exception as e:
-            # P0 修复：JSON 损坏时备份原文件 + ERROR 日志，防止空库 _save 覆盖数据
-            import time as _time
-            backup_path = filepath + f".corrupted.{int(_time.time())}"
-            try:
-                os.rename(filepath, backup_path)
+            # INC-2026-09-14: 旧实现用 os.rename 把主文件搬走。一旦遇到非结构性
+            # 故障（内存不足 / 并发读写竞争 / 文件被占用），完好的主库会被误判
+            # "损坏"并移走，系统随之以空库启动，运行态与对外口径脱节。
+            # 现在：① 仅真正的结构/解析错误才备份；② 备份用 copy2，主文件永存；
+            #       ③ 其余故障只告警，绝不移动或删除原文件。
+            _structural = isinstance(e, (json.JSONDecodeError, ValueError, KeyError))
+            if _structural:
+                import shutil as _shutil
+                import time as _time
+                backup_path = filepath + f".corrupted.{int(_time.time())}"
+                try:
+                    _shutil.copy2(filepath, backup_path)
+                    logger.error(
+                        "InMemoryVectorStore 加载失败（结构损坏）: %s\n"
+                        "  已备份副本到: %s（原文件保留未动）\n"
+                        "  系统将以空库启动，请检查备份文件。",
+                        e,
+                        backup_path,
+                    )
+                except OSError as _oe:
+                    logger.error(
+                        "InMemoryVectorStore 加载失败且备份失败: %s / %s（原文件保留）",
+                        e,
+                        _oe,
+                    )
+            else:
                 logger.error(
-                    f"InMemoryVectorStore 加载失败（JSON 损坏）: {e}\n"
-                    f"  原文件已备份到: {backup_path}\n"
-                    f"  系统将以空库启动，请检查备份文件并手动恢复数据！"
-                )
-            except OSError:
-                logger.error(
-                    f"InMemoryVectorStore 加载失败（JSON 损坏）: {e}\n"
-                    f"  原文件备份失败，路径: {filepath}\n"
-                    f"  系统将以空库启动，请立即检查数据文件！"
+                    "InMemoryVectorStore 加载失败（非结构性故障，未备份、未移动原文件）: "
+                    "%s: %s\n  常见原因：内存不足或并发读写竞争。原文件保持原样: %s",
+                    type(e).__name__,
+                    e,
+                    filepath,
                 )
             return False
 
