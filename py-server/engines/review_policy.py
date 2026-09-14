@@ -545,9 +545,16 @@ class ReviewWeightPolicy:
 # ────────────────────────────────────────────────────────────
 
 def _mappo_enabled() -> bool:
-    """灰度开关：config gomarl.use_review_mappo，默认 False（均匀权重=现状）。"""
+    """灰度开关：优先复用 config.use_review_mappo()（单点真值），默认 False（=现状均匀权重）。
+
+    优先调用 config 的专用访问器，避免本模块与 config 各读一次 gomarl 段导致口径漂移；
+    访问器不存在（旧版 config）时回退直读 gomarl 段，仍默认关闭。
+    """
     try:
         import config
+        accessor = getattr(config, "use_review_mappo", None)
+        if callable(accessor):
+            return bool(accessor())
         return bool((config.get_gomarl_config() or {}).get("use_review_mappo", False))
     except Exception:
         return False

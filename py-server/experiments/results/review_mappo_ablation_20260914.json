@@ -1,0 +1,232 @@
+{
+  "experiment": "review_mappo_3seed_comparison",
+  "created_at": "2026-09-14T08:44:30",
+  "source_order": "docs/CTO-芒得很职三元评审权重MAPPO化攻坚令-2026-09-14.md 阶段 3",
+  "config": {
+    "seeds": [
+      42
+    ],
+    "eval_episodes_per_cell": 30,
+    "horizon": 6,
+    "warmup_steps": 300,
+    "ppo_episodes": 60,
+    "schemes": {
+      "uniform": "均匀权重（绝对基线 = 灰度关闭现状）",
+      "rule": "固定规则 _rule_action_idx（现有规则因子）",
+      "supervised": "监督学习 warmup_with_rules（回归规则标签，无 RL）",
+      "rl": "warmup 预热 + PPO 微调"
+    },
+    "discipline": {
+      "skip_streak_limit": 2,
+      "review_min_review": 2,
+      "acceptance": "skip 连发 >= 2 发生率必须为 0"
+    }
+  },
+  "per_cell": {
+    "uniform/seed=42": {
+      "scheme": "uniform",
+      "seed": 42,
+      "episodes": 30,
+      "mean_return": 6.3784294705618505,
+      "mean_quality_gain": 16.89815700973796,
+      "mean_final_quality": 66.89815700973796,
+      "mean_tokens": 5700.0,
+      "skip_rate": 0.0,
+      "mean_skip_per_episode": 0.0,
+      "precision_rate": 0.5111111111111111,
+      "max_skip_streak": 0,
+      "discipline_violation_rate": 0.0,
+      "reviews_done_mean": 6.0
+    },
+    "rule/seed=42": {
+      "scheme": "rule",
+      "seed": 42,
+      "episodes": 30,
+      "mean_return": 5.385871680871835,
+      "mean_quality_gain": 14.397387535512923,
+      "mean_final_quality": 64.39738753551292,
+      "mean_tokens": 5596.666666666667,
+      "skip_rate": 0.0,
+      "mean_skip_per_episode": 0.0,
+      "precision_rate": 0.5111111111111111,
+      "max_skip_streak": 0,
+      "discipline_violation_rate": 0.0,
+      "reviews_done_mean": 6.0
+    },
+    "supervised/seed=42": {
+      "scheme": "supervised",
+      "seed": 42,
+      "episodes": 30,
+      "mean_return": 5.424038193623875,
+      "mean_quality_gain": 14.493428817393019,
+      "mean_final_quality": 64.49342881739302,
+      "mean_tokens": 5600.0,
+      "skip_rate": 0.0,
+      "mean_skip_per_episode": 0.0,
+      "precision_rate": 0.5111111111111111,
+      "max_skip_streak": 0,
+      "discipline_violation_rate": 0.0,
+      "reviews_done_mean": 6.0
+    },
+    "rl/seed=42": {
+      "scheme": "rl",
+      "seed": 42,
+      "episodes": 30,
+      "mean_return": 6.3784294705618505,
+      "mean_quality_gain": 16.89815700973796,
+      "mean_final_quality": 66.89815700973796,
+      "mean_tokens": 5700.0,
+      "skip_rate": 0.0,
+      "mean_skip_per_episode": 0.0,
+      "precision_rate": 0.5111111111111111,
+      "max_skip_streak": 0,
+      "discipline_violation_rate": 0.0,
+      "reviews_done_mean": 6.0
+    }
+  },
+  "train_stats": [
+    {
+      "degraded": false,
+      "kind": "supervised",
+      "seed": 42,
+      "warmup": {
+        "steps": 300,
+        "mean_loss": 1.091361920369996,
+        "final_loss": 0.9240565896034241
+      }
+    },
+    {
+      "degraded": false,
+      "kind": "rl",
+      "seed": 42,
+      "warmup": {
+        "steps": 300,
+        "mean_loss": 1.087921347816785,
+        "final_loss": 0.9130034446716309
+      },
+      "ppo": {
+        "trained": true,
+        "episodes": 60,
+        "final_mean_return": null,
+        "first_mean_return": null,
+        "reason": null
+      }
+    }
+  ],
+  "aggregate_by_scheme": {
+    "uniform": {
+      "seeds": [
+        42
+      ],
+      "mean_return": 6.3784294705618505,
+      "mean_return_std": 0.0,
+      "mean_quality_gain": 16.89815700973796,
+      "mean_final_quality": 66.89815700973796,
+      "mean_tokens": 5700.0,
+      "skip_rate": 0.0,
+      "precision_rate": 0.5111111111111111,
+      "max_skip_streak": 0,
+      "discipline_violation_rate": 0.0
+    },
+    "rule": {
+      "seeds": [
+        42
+      ],
+      "mean_return": 5.385871680871835,
+      "mean_return_std": 0.0,
+      "mean_quality_gain": 14.397387535512923,
+      "mean_final_quality": 64.39738753551292,
+      "mean_tokens": 5596.666666666667,
+      "skip_rate": 0.0,
+      "precision_rate": 0.5111111111111111,
+      "max_skip_streak": 0,
+      "discipline_violation_rate": 0.0
+    },
+    "supervised": {
+      "seeds": [
+        42
+      ],
+      "mean_return": 5.424038193623875,
+      "mean_return_std": 0.0,
+      "mean_quality_gain": 14.493428817393019,
+      "mean_final_quality": 64.49342881739302,
+      "mean_tokens": 5600.0,
+      "skip_rate": 0.0,
+      "precision_rate": 0.5111111111111111,
+      "max_skip_streak": 0,
+      "discipline_violation_rate": 0.0
+    },
+    "rl": {
+      "seeds": [
+        42
+      ],
+      "mean_return": 6.3784294705618505,
+      "mean_return_std": 0.0,
+      "mean_quality_gain": 16.89815700973796,
+      "mean_final_quality": 66.89815700973796,
+      "mean_tokens": 5700.0,
+      "skip_rate": 0.0,
+      "precision_rate": 0.5111111111111111,
+      "max_skip_streak": 0,
+      "discipline_violation_rate": 0.0
+    }
+  },
+  "degraded": false,
+  "notes": [
+    "诊断：最优恒定动作 = 3:balanced（回报 6.3784）；该值即「恒定策略」上界，RL 若未超过它说明未学到上下文自适应增益"
+  ],
+  "constant_action_ablation": {
+    "0:trust_honest": {
+      "mean_return": -0.04325775789909649,
+      "mean_quality_gain": 6.154355605252259,
+      "mean_tokens": 5400.0,
+      "precision_rate": 0.0,
+      "skip_rate": 0.0
+    },
+    "1:trust_critic": {
+      "mean_return": 0.8850621996331313,
+      "mean_quality_gain": 8.412655499082828,
+      "mean_tokens": 6000.0,
+      "precision_rate": 0.016666666666666666,
+      "skip_rate": 0.0
+    },
+    "2:trust_consensus": {
+      "mean_return": 4.911303655656419,
+      "mean_quality_gain": 14.228259139141047,
+      "mean_tokens": 4800.0,
+      "precision_rate": 0.4,
+      "skip_rate": 0.0
+    },
+    "3:balanced": {
+      "mean_return": 6.3784294705618505,
+      "mean_quality_gain": 16.89815700973796,
+      "mean_tokens": 5700.0,
+      "precision_rate": 0.5111111111111111,
+      "skip_rate": 0.0
+    },
+    "4:skip_review": {
+      "mean_return": -9.600948986551632,
+      "mean_quality_gain": -0.002372466379080625,
+      "mean_tokens": 0.0,
+      "precision_rate": 0.0,
+      "skip_rate": 1.0
+    }
+  },
+  "verdict": {
+    "available_schemes": [
+      "uniform",
+      "rule",
+      "supervised",
+      "rl"
+    ],
+    "rl_beats_best_constant": true,
+    "best_constant": "3:balanced",
+    "best_constant_return": 6.3784294705618505,
+    "rl_return": 6.3784294705618505,
+    "rl_ge_rule": true,
+    "rl_vs_rule_gain_pct": 18.428916403915245,
+    "rule_ge_supervised": false,
+    "discipline_ok": true,
+    "max_skip_streak_overall": 0
+  }
+}
