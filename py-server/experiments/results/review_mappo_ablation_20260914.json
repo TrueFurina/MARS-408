@@ -1,6 +1,6 @@
 {
   "experiment": "review_mappo_3seed_comparison",
-  "created_at": "2026-09-14T08:44:30",
+  "created_at": "2026-09-14T08:53:34",
   "source_order": "docs/CTO-芒得很职三元评审权重MAPPO化攻坚令-2026-09-14.md 阶段 3",
   "config": {
     "seeds": [
@@ -72,10 +72,10 @@
       "scheme": "rl",
       "seed": 42,
       "episodes": 30,
-      "mean_return": 6.3784294705618505,
-      "mean_quality_gain": 16.89815700973796,
-      "mean_final_quality": 66.89815700973796,
-      "mean_tokens": 5700.0,
+      "mean_return": 5.424038193623875,
+      "mean_quality_gain": 14.493428817393019,
+      "mean_final_quality": 64.49342881739302,
+      "mean_tokens": 5600.0,
       "skip_rate": 0.0,
       "mean_skip_per_episode": 0.0,
       "precision_rate": 0.5111111111111111,
@@ -91,8 +91,8 @@
       "seed": 42,
       "warmup": {
         "steps": 300,
-        "mean_loss": 1.091361920369996,
-        "final_loss": 0.9240565896034241
+        "mean_loss": 1.0785984659194947,
+        "final_loss": 0.9168825745582581
       }
     },
     {
@@ -101,8 +101,8 @@
       "seed": 42,
       "warmup": {
         "steps": 300,
-        "mean_loss": 1.087921347816785,
-        "final_loss": 0.9130034446716309
+        "mean_loss": 1.0785984659194947,
+        "final_loss": 0.9168825745582581
       },
       "ppo": {
         "trained": true,
@@ -160,11 +160,11 @@
       "seeds": [
         42
       ],
-      "mean_return": 6.3784294705618505,
+      "mean_return": 5.424038193623875,
       "mean_return_std": 0.0,
-      "mean_quality_gain": 16.89815700973796,
-      "mean_final_quality": 66.89815700973796,
-      "mean_tokens": 5700.0,
+      "mean_quality_gain": 14.493428817393019,
+      "mean_final_quality": 64.49342881739302,
+      "mean_tokens": 5600.0,
       "skip_rate": 0.0,
       "precision_rate": 0.5111111111111111,
       "max_skip_streak": 0,
@@ -219,12 +219,12 @@
       "supervised",
       "rl"
     ],
-    "rl_beats_best_constant": true,
+    "rl_beats_best_constant": false,
     "best_constant": "3:balanced",
     "best_constant_return": 6.3784294705618505,
-    "rl_return": 6.3784294705618505,
+    "rl_return": 5.424038193623875,
     "rl_ge_rule": true,
-    "rl_vs_rule_gain_pct": 18.428916403915245,
+    "rl_vs_rule_gain_pct": 0.7086413307541191,
     "rule_ge_supervised": false,
     "discipline_ok": true,
     "max_skip_streak_overall": 0

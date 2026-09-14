@@ -224,3 +224,49 @@ def test_reset_shared_policy_is_idempotent():
     rp.reset_shared_policy()
     pol2 = rp._get_shared_policy()
     assert pol1 is not pol2
+
+
+# ── 9. 可复现性（防回归：网络初始化必须受 seed 控制）──
+
+def test_same_seed_training_is_reproducible():
+    """同一 seed 两次训练必须产出完全相同的策略。
+
+    回归背景：早期版本 ReviewWeightPolicy 未播种，网络权重初始化走 torch 全局 RNG，
+    导致同 seed 两次跑动作分布不同（实测 balanced 1.000 vs trust_honest 0.339），
+    3-seed 实验事实上不可复算。
+    """
+    if not rp.ReviewWeightPolicy().torch_available:
+        pytest.skip("torch 不可用，无法验证训练可复现性")
+
+    def _train_once(seed: int) -> list[int]:
+        pol = rp.ReviewWeightPolicy(seed=seed)
+        pol.warmup_with_rules(rp.ReviewEnv(seed=seed), steps=30, seed=seed)
+        pol.train_ppo(rp.ReviewEnv(seed=seed), episodes=5, seed=seed)
+        env = rp.ReviewEnv(seed=999, horizon=6)
+        acts = []
+        s = env.reset()
+        for _ in range(6):
+            a, _src = pol.select_action(s, deterministic=True)
+            acts.append(a)
+            s, _r, done = env.step(a)
+            if done:
+                break
+        return acts
+
+    assert _train_once(11) == _train_once(11), (
+        "同 seed 两次训练动作序列不一致：网络初始化未受 seed 控制，"
+        "3-seed 实验结果将不可复算"
+    )
+
+
+def test_seed_all_covers_torch_rng():
+    """_seed_all 必须同时播种 python/numpy/torch，否则 dist.sample() 仍不可控。"""
+    rp._seed_all(7)
+    try:
+        import torch
+    except Exception:
+        pytest.skip("torch 不可用")
+    a = float(torch.rand(1).item())
+    rp._seed_all(7)
+    b = float(torch.rand(1).item())
+    assert a == b, "_seed_all 未真正固定 torch 全局 RNG"

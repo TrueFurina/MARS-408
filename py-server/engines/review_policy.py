@@ -321,11 +321,31 @@ def _rule_action_idx(features: list[float]) -> int:
 # 策略网络（独立 12→5 头，不污染 mappo_policy 现有 3 动作头）
 # ────────────────────────────────────────────────────────────
 
+def _seed_all(seed: int) -> None:
+    """全链路播种：让同一 seed 的实验结果可逐位复算。
+
+    必须在**网络初始化之前**调用（权重初始化走 torch 全局 RNG）；
+    PPO 的动作采样 dist.sample() 同样依赖该 RNG，故一次播种覆盖全流程。
+    """
+    random.seed(seed)
+    try:
+        import numpy as _np
+        _np.random.seed(seed % (2 ** 32))
+    except Exception:
+        pass
+    try:
+        import torch as _torch
+        _torch.manual_seed(seed)
+    except Exception:
+        pass
+
+
 class ReviewWeightPolicy:
     """三元评审权重策略：规则预热 → PPO 微调；推理失败自动降级规则/均匀权重。"""
 
     def __init__(self, hidden: int = 64, lr: float = 3e-4, gamma: float = 0.99,
-                 clip_epsilon: float = 0.2, gae_lambda: float = 0.95):
+                 clip_epsilon: float = 0.2, gae_lambda: float = 0.95,
+                 seed: Optional[int] = 42):
         self.state_dim = STATE_DIM
         self.n_actions = len(REVIEW_ACTIONS)
         self.gamma = gamma
@@ -336,6 +356,10 @@ class ReviewWeightPolicy:
         self._actor = None
         self._critic = None
         self._trained = False
+        # 网络权重初始化走 torch 全局 RNG：不播种则每次进程结果都不同，
+        # 3-seed 实验将不可复算（实测同 seed 两次跑动作分布不同）。
+        if seed is not None:
+            _seed_all(seed)
         try:
             import torch  # 延迟导入（torch 缺失环境走规则降级）
             self._torch = torch
@@ -392,7 +416,6 @@ class ReviewWeightPolicy:
             return {"warmed": False, "reason": "torch 不可用", "steps": 0}
         torch = self._torch
         env = env or ReviewEnv(seed=seed)
-        rng = random.Random(seed)
         opt = torch.optim.Adam(self._actor.parameters(), lr=self.lr)
         losses = []
         for _ in range(steps):
@@ -409,7 +432,6 @@ class ReviewWeightPolicy:
                 feats, _r, done = env.step(_rule_action_idx(feats))
                 if done:
                     break
-            _ = rng  # 保留 seed 语义（环境已按 seed 构造）
         self._trained = True
         return {"warmed": True, "steps": steps,
                 "mean_loss": sum(losses) / max(1, len(losses)),
