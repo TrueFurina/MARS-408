@@ -5,6 +5,7 @@ import ProfilePanel from './components/ProfilePanel.vue'
 import HistoryPanel from './components/HistoryDropdown.vue'
 import MoreMenu from './components/MoreMenu.vue'
 import ToastNotification from './components/ToastNotification.vue'
+import ErrorBoundary from './components/ErrorBoundary.vue'
 import { icons } from './components/icons'
 import DOMPurify from 'dompurify'
 import { useStudyStore } from '@/stores/studyStore'
@@ -270,9 +271,13 @@ function goTo(routePath: string) {
       </header>
 
       <main class="main-content" @click="showHistory = false">
-        <router-view v-slot="{ Component, route }">
+        <!-- 路由级错误边界：任一页面渲染抛错时降级为错误卡片，而非整站白屏。
+             :key="route.fullPath" 让每次路由切换都重建边界，避免上一页的错误态残留到下一页。 -->
+        <ErrorBoundary :key="route.fullPath">
+          <router-view v-slot="{ Component }">
             <component :is="Component" :key="route.fullPath" />
-        </router-view>
+          </router-view>
+        </ErrorBoundary>
       </main>
 
       <!-- 底部导航（仅移动端） -->
@@ -350,7 +355,7 @@ function goTo(routePath: string) {
 
 .logo-text {
   font-size:1.0625rem;
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   color: var(--text-primary);
   letter-spacing:-0.0187rem;
 }
@@ -385,13 +390,13 @@ function goTo(routePath: string) {
 
 .logout-btn {
   flex-shrink: 0;
-  margin-left:0.5rem;
+  margin-left:var(--space-2);
   padding:0.375rem 0.625rem;
   border-radius:var(--radius-sm);
   border: 1px solid var(--border-color);
   background: transparent;
   color: var(--text-secondary);
-  font-size:0.75rem;
+  font-size:var(--text-xs);
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -405,8 +410,8 @@ function goTo(routePath: string) {
   display: flex;
   align-items: center;
   gap:0.375rem;
-  padding:0.5rem 1rem 0.75rem;
-  font-size:0.6875rem;
+  padding:var(--space-2) var(--space-4) var(--space-3);
+  font-size:var(--text-2xs);
   color: var(--text-muted);
 }
 .status-dot {
@@ -423,7 +428,7 @@ function goTo(routePath: string) {
   background: var(--accent-danger);
   box-shadow: 0 0 6px var(--accent-danger);
 }
-.status-text { font-weight: 500; }
+.status-text { font-weight: var(--weight-medium); }
 
 .theme-toggle {
   margin-left:auto;
@@ -453,11 +458,11 @@ function goTo(routePath: string) {
   display: flex;
   align-items: center;
   gap:0.375rem;
-  padding-left:0.5rem;
+  padding-left:var(--space-2);
   border-left: 1px solid var(--border-color);
 }
 .tu-name {
-  font-size:0.75rem;
+  font-size:var(--text-xs);
   color: var(--text-secondary);
   max-width:5.625rem;
   overflow: hidden;
@@ -470,7 +475,7 @@ function goTo(routePath: string) {
   border: 1px solid var(--border-color);
   background: transparent;
   color: var(--text-secondary);
-  font-size:0.6875rem;
+  font-size:var(--text-2xs);
   cursor: pointer;
 }
 .tu-logout:hover { color: var(--text-danger); border-color: var(--accent-danger-20); }

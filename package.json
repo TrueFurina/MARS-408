@@ -13,7 +13,8 @@
     "lint": "eslint . --ext .vue,.js,.ts,.tsx",
     "lint:fix": "eslint . --ext .vue,.js,.ts,.tsx --fix",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "gate:evidence": "python tests/benchmark_evidence_gate.py"
   },
   "dependencies": {
     "@obsidize/tar-browserify": "^6.3.2",

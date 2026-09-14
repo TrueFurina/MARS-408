@@ -1,11 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { api } from '@/utils/api'
-import { getAuthHeaders } from '@/utils/api'
 import Skeleton from '@/components/Skeleton.vue'
 import EmptyState from '@/components/EmptyState.vue'
-
-const API_BASE = ''
 
 const teachingRulesData = ref<any>(null)
 const selectedTopicId = ref('transport')
@@ -13,18 +10,22 @@ const topicPrerequisites = ref<any>(null)
 
 async function loadTeachingRules() {
   try {
-    const resp = await fetch(`${API_BASE}/api/engine/teaching-rules`, { headers: getAuthHeaders() })
-    teachingRulesData.value = await resp.json()
-  } catch { /* ignore */ }
+    teachingRulesData.value = await api.get<any>('/engine/teaching-rules')
+  } catch {
+    // 取不到就保持 null，由模板渲染空态；不填充任何占位数据
+    teachingRulesData.value = null
+  }
 }
 onMounted(loadTeachingRules)
 
 async function loadTopicPrerequisites() {
   if (!selectedTopicId.value) return
   try {
-    const resp = await fetch(`${API_BASE}/api/engine/teaching-rules/prerequisites/${selectedTopicId.value}`, { headers: getAuthHeaders() })
-    topicPrerequisites.value = await resp.json()
-  } catch { /* ignore */ }
+    topicPrerequisites.value = await api.get<any>(`/engine/teaching-rules/prerequisites/${selectedTopicId.value}`)
+  } catch {
+    // 同上：失败即空态，绝不静默编造前置知识关系
+    topicPrerequisites.value = null
+  }
 }
 onMounted(loadTopicPrerequisites)
 
@@ -99,8 +100,8 @@ const topicOptions = [
 
 <style scoped>
 .engine-section {
-  margin-bottom:2rem;
-  padding:1.5rem;
+  margin-bottom:var(--space-8);
+  padding:var(--space-6);
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius:var(--radius-lg);
@@ -117,29 +118,29 @@ const topicOptions = [
 .engine-section-title {
   display: flex;
   align-items: center;
-  gap:0.5rem;
-  font-size:1.125rem;
-  font-weight: 700;
+  gap:var(--space-2);
+  font-size:var(--text-xl);
+  font-weight: var(--weight-bold);
   color: var(--text-primary);
-  margin-bottom:0.25rem;
+  margin-bottom:var(--space-1);
 }
 
 .engine-icon { font-size:1.375rem; }
 
 .engine-tag {
   margin-left:auto;
-  font-size:0.6875rem;
-  padding:0.1875rem 0.75rem;
+  font-size:var(--text-2xs);
+  padding:0.1875rem var(--space-3);
   border-radius:var(--radius-full);
   background: var(--accent-primary-10);
   color: var(--accent-primary);
-  font-weight: 500;
+  font-weight: var(--weight-medium);
 }
 
 .engine-desc {
-  font-size:0.8125rem;
+  font-size:var(--text-sm);
   color: var(--text-secondary);
-  margin-bottom:1rem;
+  margin-bottom:var(--space-4);
 }
 
 .engine-select {
@@ -148,34 +149,34 @@ const topicOptions = [
   background: var(--bg-input);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
-  font-size:0.875rem;
+  font-size:var(--text-base);
   outline: none;
 }
 
 .teaching-rules-stats {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap:0.5rem;
-  margin-bottom:1rem;
+  gap:var(--space-2);
+  margin-bottom:var(--space-4);
 }
 
 .stat-row {
   display: flex;
   justify-content: space-between;
-  padding:0.5rem 0.75rem;
+  padding:var(--space-2) var(--space-3);
   background: var(--bg-secondary);
   border-radius:var(--radius-sm);
 }
 
-.stat-label { font-size:0.75rem; color: var(--text-secondary); }
-.stat-value { font-size:0.75rem; color: var(--text-primary); font-weight: 600; }
+.stat-label { font-size:var(--text-xs); color: var(--text-secondary); }
+.stat-value { font-size:var(--text-xs); color: var(--text-primary); font-weight: var(--weight-semibold); }
 .stat-value.highlight { color: var(--accent-primary); }
 
-.topic-prereq-viewer { margin-top:0.75rem; }
-.prereq-input-row { margin-bottom:0.75rem; }
+.topic-prereq-viewer { margin-top:var(--space-3); }
+.prereq-input-row { margin-bottom:var(--space-3); }
 
 .topic-prereq-display {
-  padding:1rem;
+  padding:var(--space-4);
   background: var(--bg-secondary);
   border-radius:var(--radius-md);
   border: 1px solid var(--border-color);
@@ -184,38 +185,38 @@ const topicOptions = [
 .prereq-main {
   display: flex;
   align-items: center;
-  gap:0.75rem;
-  margin-bottom:0.75rem;
+  gap:var(--space-3);
+  margin-bottom:var(--space-3);
 }
 
-.prereq-topic-name { font-size:1rem; font-weight: 700; color: var(--accent-primary); }
-.prereq-course { font-size:0.75rem; color: var(--text-muted); }
+.prereq-topic-name { font-size:var(--text-lg); font-weight: var(--weight-bold); color: var(--accent-primary); }
+.prereq-course { font-size:var(--text-xs); color: var(--text-muted); }
 
 .prereq-weight {
-  font-size:0.75rem;
+  font-size:var(--text-xs);
   padding:0.125rem 0.625rem;
   border-radius:var(--radius-full);
   background: var(--accent-danger-20);
   color: var(--accent-danger);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 
 .prereq-diff {
-  font-size:0.75rem;
+  font-size:var(--text-xs);
   padding:0.125rem 0.625rem;
   border-radius:var(--radius-full);
   background: var(--accent-primary-10);
   color: var(--accent-primary);
 }
 
-.prereq-list { margin-bottom:0.5rem; }
-.prereq-label { font-size:0.75rem; color: var(--text-secondary); font-weight: 600; margin-bottom:0.25rem; }
+.prereq-list { margin-bottom:var(--space-2); }
+.prereq-label { font-size:var(--text-xs); color: var(--text-secondary); font-weight: var(--weight-semibold); margin-bottom:var(--space-1); }
 
 .prereq-tag {
-  font-size:0.6875rem;
-  padding:0.125rem 0.5rem;
+  font-size:var(--text-2xs);
+  padding:0.125rem var(--space-2);
   border-radius:var(--radius-xs);
-  margin-right:0.25rem;
+  margin-right:var(--space-1);
   display: inline-block;
 }
 

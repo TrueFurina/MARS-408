@@ -126,6 +126,22 @@ coordinator → diagnostician → planner → retriever
 
 `db/migrations/runner.py` — 幂等迁移框架，已应用版本记录在 `db/migrations/versions/applied.json`。迁移在 lifespan 阶段执行，失败不阻塞启动。
 
+### 前端三条硬约束（2026-09-15 前端证据链 P0 确立）
+
+1. **数据必须可溯源，禁止合成兜底。** 视图/组件展示的每个量化数字都必须来自后端真产物或真实接口。
+   接口失败时**一律渲染空态**（`—` / 空态卡片），**不得回退到示例值、合成值、或"上次已知值"**。
+   展示聚合数的页面必须同时展示 provenance（来源文件 / 产出时间 / 样本量 / 随机种子）。
+   > 反面案例（已修复）：`BenchmarkView.vue` 曾把四组聚合数硬编码，注释却写"来自
+   > `scripts/benchmark.py --demo` 的真实输出"——`--demo` 恰恰是**合成数据**模式。
+
+2. **view 禁止裸 `fetch`。** 所有 HTTP 调用一律走 `src/utils/api.ts`（统一 baseURL、鉴权头、
+   退避重试、友好错误）。组件层应进一步只通过 composable 取数，不在组件内直接 `api.*`。
+   > 仍在整改中的裸 fetch 点：`CompareProfilesPanel` / `TeachingRulesPanel` 已于本次收敛为试点。
+
+3. **缺失指标不许改口径硬凑，只能删或换。** 若后端真产物里不存在某个指标（例：原"矛盾检出数"），
+   **不得用别的字段近似替代或沿用旧值**，必须移除该展示项，或换成真产物中确实存在的指标
+   （例：改为准确率 + Cohen's κ），并在页面显式说明口径变更原因。
+
 ### 测试分层
 
 - `unit` — 纯逻辑无网络

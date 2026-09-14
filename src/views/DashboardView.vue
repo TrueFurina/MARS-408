@@ -18,50 +18,46 @@ const memoryOverview = ref<any>(null)
 const loading = ref(true)
 const recommendations = ref<any[]>([])
 
-// ── 仪表盘扩展：系统运行时可视化（融合自 mars408-dashboard-final.html）──
-// 8 Agent 架构状态（系统固有结构，非编造数据；运行时状态由后端 SSE 驱动）
+// ── 仪表盘扩展：8-Agent 协作架构（静态结构声明）──
+// 【证据纪律 2026-09-15】此前此处硬编码 status: 'online'/'busy'/'idle' 并注释称"由后端 SSE 驱动"，
+// 但 py-server/api/agents.py 只有 generate-* 路由，不存在任何 agent 运行时状态接口 —— 注释与实现不符，
+// 属于发生型证据造假。现改为纯静态架构：只声明结构固定、可验证的"角色 + 职责"，
+// 不渲染任何运行时状态。待后端提供 /api/agents/runtime 后再接入真实状态。
 const agents = [
-  { name: '协调', role: 'Coordinator', status: 'online', color: 'var(--agent-coord)' },
-  { name: '诊断', role: 'Diagnostician', status: 'online', color: 'var(--agent-diag)' },
-  { name: '规划', role: 'Planner', status: 'busy', color: 'var(--agent-plan)' },
-  { name: '检索', role: 'Retriever', status: 'online', color: 'var(--agent-retrieve)' },
-  { name: '生成', role: 'Generator', status: 'busy', color: 'var(--agent-gen)' },
-  { name: '评估', role: 'Assessor', status: 'idle', color: 'var(--agent-eval)' },
-  { name: '审核', role: 'Critic', status: 'online', color: 'var(--agent-quality)' },
-  { name: '路径', role: 'PathPlanner', status: 'online', color: 'var(--agent-path)' },
+  { name: '协调', role: 'Coordinator', duty: '意图识别与任务分派', color: 'var(--agent-coord)' },
+  { name: '诊断', role: 'Diagnostician', duty: '学情画像与薄弱点定位', color: 'var(--agent-diag)' },
+  { name: '规划', role: 'Planner', duty: '学习路径与阶段目标', color: 'var(--agent-plan)' },
+  { name: '检索', role: 'Retriever', duty: 'FrugalRAG 资料召回', color: 'var(--agent-retrieve)' },
+  { name: '生成', role: 'Generator', duty: '讲解与题目生成', color: 'var(--agent-gen)' },
+  { name: '评估', role: 'Assessor', duty: '作答评分与掌握度更新', color: 'var(--agent-eval)' },
+  { name: '审核', role: 'Critic', duty: '三元评审与证据校验', color: 'var(--agent-quality)' },
+  { name: '路径', role: 'PathPlanner', duty: 'MAPPO 策略选档', color: 'var(--agent-path)' },
 ]
-const agentStatusColor: Record<string, string> = {
-  online: 'var(--agent-online)',
-  busy: 'var(--agent-busy)',
-  idle: 'var(--agent-idle)',
-  offline: 'var(--agent-offline)',
-  error: 'var(--agent-error)',
-}
-const agentStatusLabel: Record<string, string> = {
-  online: '在线', busy: '忙碌', idle: '空闲', offline: '离线', error: '异常',
-}
 
-// 知识点热力图（4科 × 8知识点 = 32 格；掌握度 0-5 映射 --seq-1…6）
-const heatmapSubjects = [
-  { name: '数据结构', color: 'var(--subject-ds)' },
-  { name: '计算机网络', color: 'var(--subject-cn)' },
-  { name: '计组原理', color: 'var(--subject-co)' },
-  { name: '操作系统', color: 'var(--subject-os)' },
-]
-// 热力图数据：从 subjectMastery 推导；无数据时全为 0（灰底，非编造）
-const heatmapData = computed(() => {
-  const mastery = subjectMastery.value
-  const cells: { level: number; label: string }[] = []
-  const topics = ['基础概念', '核心原理', '应用实践', '综合分析', '易错重点', '拓展延伸', '真题演练', '查漏补缺'] as const
-  mastery.forEach((m) => {
-    const baseLevel = m.value === null ? 0 : Math.min(5, Math.floor(m.value / 20))
-    for (let i = 0; i < 8; i++) {
-      const variance = m.value === null ? 0 : ((i * 37) % 3) - 1
-      const level = Math.max(0, Math.min(5, baseLevel + variance))
-      cells.push({ level, label: topics[i]! })
-    }
+// ── 科目练习热力图（行 = 科目，列 = 该科目最近 8 次真实练习记录）──
+// 【证据纪律 2026-09-15】原实现用 ((i * 37) % 3) - 1 的确定性公式，把 1 个学科掌握度
+// 扩散成 8 个"知识点"格（基础概念 / 核心原理 / …），其中 7/8 的数值无任何数据源，
+// 属于编造细分数据（原注释称"非编造"不成立）。
+// 现改为：每个有色格子 = 一条真实 Session 记录的 score，可追溯到具体那次练习；
+// 无记录的格子留空（灰底 + "—"），绝不填充推算值。
+const HEATMAP_COLS = 8
+const heatmapRows = computed(() => {
+  return subjectMastery.value.map((m) => {
+    const records = sessions.value
+      .filter((s) => s.subject === m.key && typeof s.score === 'number')
+      .slice(0, HEATMAP_COLS)
+    const cells = Array.from({ length: HEATMAP_COLS }, (_, i) => {
+      const rec = records[i]
+      if (!rec) return { level: 0, seq: i + 1, label: '暂无练习记录' }
+      const score = Math.round(rec.score)
+      return {
+        level: Math.min(5, Math.max(1, Math.floor(score / 20) + 1)),
+        seq: i + 1,
+        label: `第 ${i + 1} 次练习 · 得分 ${score}`,
+      }
+    })
+    return { key: m.key, name: m.name, color: m.color, cells, count: records.length }
   })
-  return cells
 })
 
 // 预警干预（从 recommendations 中提取高危项；无数据时显示空态）
@@ -394,17 +390,16 @@ onMounted(async () => {
     <!-- 多智能体协同状态（融合自仪表盘 HTML · 8 Agent 架构可视化） -->
     <section class="agent-status-section">
       <div class="data-label">
-        多智能体协同状态
-        <span class="tag-demo">架构示意</span>
+        多智能体协作架构
+        <span class="tag-demo">静态结构 · 无运行时数据</span>
       </div>
       <div class="agent-grid">
         <div v-for="ag in agents" :key="ag.role" class="agent-card">
-          <div class="agent-dot" :style="{ background: agentStatusColor[ag.status], boxShadow: '0 0 8px ' + agentStatusColor[ag.status] }"></div>
           <div class="agent-info">
             <div class="agent-name" :style="{ color: ag.color }">{{ ag.name }} Agent</div>
             <div class="agent-role">{{ ag.role }}</div>
+            <div class="agent-duty">{{ ag.duty }}</div>
           </div>
-          <span class="agent-status-tag" :style="{ color: agentStatusColor[ag.status] }">{{ agentStatusLabel[ag.status] }}</span>
         </div>
       </div>
     </section>
@@ -412,28 +407,29 @@ onMounted(async () => {
     <!-- 知识点掌握度热力图（融合自仪表盘 HTML · 紫系连续色阶） -->
     <section v-if="stats" class="heatmap-section">
       <div class="data-label">
-        知识点掌握度热力图
-        <span class="tag-demo">示意</span>
+        科目练习记录热力图
+        <span class="tag-demo">真实练习记录</span>
       </div>
       <div class="heatmap-container">
-        <div class="heatmap-row" v-for="(subj, si) in heatmapSubjects" :key="subj.name">
-          <div class="heatmap-subj-label" :style="{ color: subj.color }">{{ subj.name }}</div>
+        <div class="heatmap-row" v-for="row in heatmapRows" :key="row.key">
+          <div class="heatmap-subj-label" :style="{ color: row.color }">{{ row.name }}</div>
           <div class="heatmap-cells">
             <div
-              v-for="(cell, ci) in heatmapData.slice(si * 8, si * 8 + 8)"
+              v-for="(cell, ci) in row.cells"
               :key="ci"
               class="heatmap-cell"
-              :style="{ background: cell.level === 0 ? 'var(--chart-grid)' : `var(--seq-${cell.level + 1})` }"
-              :title="cell.label + '：' + (cell.level === 0 ? '数据累积中' : ['薄弱', '初识', '了解', '熟悉', '掌握', '精通'][cell.level])"
+              :style="{ background: cell.level === 0 ? 'var(--chart-grid)' : `var(--seq-${cell.level})` }"
+              :title="cell.label"
             >
-              <span class="heatmap-cell-text" :style="{ color: cell.level >= 4 ? 'var(--color-text-invert)' : 'var(--color-text-2)' }">{{ cell.level === 0 ? '—' : cell.label[0] }}</span>
+              <span class="heatmap-cell-text" :style="{ color: cell.level >= 4 ? 'var(--color-text-invert)' : 'var(--color-text-2)' }">{{ cell.level === 0 ? '—' : cell.seq }}</span>
             </div>
           </div>
         </div>
       </div>
       <div class="heatmap-legend">
-        <span class="legend-label">掌握度：</span>
-        <span class="legend-item" v-for="i in 6" :key="i" :style="{ background: `var(--seq-${i})` }">{{ ['薄弱','初识','了解','熟悉','掌握','精通'][i-1] }}</span>
+        <span class="legend-label">得分：</span>
+        <span class="legend-item" v-for="(lab, li) in ['0-19', '20-39', '40-59', '60-79', '80-100']" :key="li" :style="{ background: `var(--seq-${li + 1})` }">{{ lab }}</span>
+        <span class="legend-item legend-empty">无记录</span>
       </div>
     </section>
 
@@ -501,7 +497,7 @@ onMounted(async () => {
 /* ── Hero ── */
 .hero-section {
   position: relative;
-  padding:3.75rem 2rem 3rem;
+  padding:3.75rem var(--space-8) var(--space-12);
   overflow: hidden;
 }
 
@@ -523,14 +519,14 @@ onMounted(async () => {
 
 .hero-badge {
   display: inline-block;
-  padding:0.375rem 1rem;
+  padding:0.375rem var(--space-4);
   border-radius:var(--radius-full);
   background: var(--accent-primary-10);
   color: var(--accent-primary);
-  font-size:0.75rem;
-  font-weight: 600;
+  font-size:var(--text-xs);
+  font-weight: var(--weight-semibold);
   letter-spacing:0.0187rem;
-  margin-bottom:1rem;
+  margin-bottom:var(--space-4);
 }
 
 .hero-top-row {
@@ -538,8 +534,8 @@ onMounted(async () => {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap:0.75rem;
-  margin-bottom:1rem;
+  gap:var(--space-3);
+  margin-bottom:var(--space-4);
 }
 
 /* 考研倒计时 */
@@ -547,36 +543,36 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap:0.375rem;
-  padding:0.375rem 1rem 0.375rem 0.875rem;
+  padding:0.375rem var(--space-4) 0.375rem 0.875rem;
   border-radius:var(--radius-full);
   background: rgba(var(--warning-rgb), 0.10);
   border: 1px solid rgba(var(--warning-rgb), 0.20);
 }
 .countdown-number {
-  font-size:1.125rem;
+  font-size:var(--text-xl);
   font-weight: 800;
   color: var(--accent-warm);
-  line-height:1;
+  line-height:var(--leading-none);
   font-variant-numeric: tabular-nums;
 }
 .countdown-label {
-  font-size:0.75rem;
+  font-size:var(--text-xs);
   color: var(--accent-warm);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 
 /* 学科快捷入口 */
 .subject-quick-grid {
   display: flex;
-  gap:0.5rem;
-  margin-bottom:1.25rem;
+  gap:var(--space-2);
+  margin-bottom:var(--space-5);
   flex-wrap: wrap;
 }
 .subject-quick-card {
   display: flex;
   align-items: center;
-  gap:0.5rem;
-  padding:0.5rem 1rem;
+  gap:var(--space-2);
+  padding:var(--space-2) var(--space-4);
   border-radius:var(--radius-sm);
   border: 1px solid var(--border-color);
   cursor: pointer;
@@ -587,7 +583,7 @@ onMounted(async () => {
   transform: translateY(-2px);
   box-shadow: var(--shadow-card-hover);
 }
-.sq-name { font-size:0.8125rem; font-weight: 600; }
+.sq-name { font-size:var(--text-sm); font-weight: var(--weight-semibold); }
 .sq-arrow { opacity: 0; transition: var(--transition); display: flex; }
 .subject-quick-card:hover .sq-arrow { opacity: 1; }
 
@@ -601,11 +597,11 @@ onMounted(async () => {
 .sq-operating_system:hover { border-color: rgba(var(--subject-os-rgb), 0.30); }
 
 .hero-title {
-  font-size:2.25rem;
+  font-size:var(--text-5xl);
   font-weight: 800;
   color: var(--text-primary);
   letter-spacing:-0.0625rem;
-  line-height:1.2;
+  line-height:var(--leading-tight);
   margin-bottom:0.625rem;
 }
 
@@ -617,17 +613,17 @@ onMounted(async () => {
 }
 
 .hero-tagline {
-  font-size:1rem;
+  font-size:var(--text-lg);
   color: var(--text-secondary);
   letter-spacing:0.0625rem;
-  margin-bottom:1.75rem;
+  margin-bottom:var(--space-7);
 }
 
 .hero-stats-row {
   display: flex;
   align-items: center;
-  gap:1.5rem;
-  margin-bottom:1.5rem;
+  gap:var(--space-6);
+  margin-bottom:var(--space-6);
 }
 
 .hero-stat {
@@ -644,7 +640,7 @@ onMounted(async () => {
 }
 
 .hero-stat-label {
-  font-size:0.75rem;
+  font-size:var(--text-xs);
   color: var(--text-muted);
   margin-top:0.125rem;
 }
@@ -658,13 +654,13 @@ onMounted(async () => {
 .hero-cta {
   display: inline-flex;
   align-items: center;
-  gap:0.5rem;
-  padding:0.875rem 1.75rem;
+  gap:var(--space-2);
+  padding:0.875rem var(--space-7);
   border-radius:var(--radius-full);
   background: var(--gradient-primary);
   color: #fff;
-  font-size:0.9375rem;
-  font-weight: 600;
+  font-size:var(--text-md);
+  font-weight: var(--weight-semibold);
   cursor: pointer;
   transition: var(--transition);
   border: none;
@@ -681,13 +677,13 @@ onMounted(async () => {
 /* 408 四科标识 */
 .subject-badges {
   display: flex;
-  gap:0.5rem;
-  margin-bottom:1.5rem;
+  gap:var(--space-2);
+  margin-bottom:var(--space-6);
   flex-wrap: wrap;
 }
 .subject-badge {
-  font-size:0.75rem;
-  font-weight: 600;
+  font-size:var(--text-xs);
+  font-weight: var(--weight-semibold);
   padding:0.3125rem 0.875rem;
   border-radius:var(--radius-full);
   letter-spacing:0.0187rem;
@@ -698,31 +694,31 @@ onMounted(async () => {
 .badge-os { background: rgba(var(--subject-os-rgb), 0.12); color: var(--subject-os); border: 1px solid rgba(var(--subject-os-rgb), 0.20); }
 
 /*  评审推荐卡片 */
-.rec-section { padding:0 2rem 1.5rem; max-width:75rem; margin:0 auto; }
-.rec-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:8px; }
-.rec-card { display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:10px; background:var(--color-surface); border:1px solid var(--color-border); cursor:pointer; transition:all 0.15s; }
+.rec-section { padding:0 var(--space-8) var(--space-6); max-width:75rem; margin:0 auto; }
+.rec-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:var(--space-2); }
+.rec-card { display:flex; align-items:center; gap:10px; padding:var(--space-3) 14px; border-radius:10px; background:var(--color-surface); border:1px solid var(--color-border); cursor:pointer; transition:all 0.15s; }
 .rec-card:hover { border-color:var(--color-border-focus); background:var(--color-surface-hover); transform:translateY(-1px); }
 .rec-card.high { border-left:3px solid var(--accent-danger); }
 .rec-card.medium { border-left:3px solid var(--accent-warm); }
 .rec-card.low { border-left:3px solid var(--accent-cyan); }
-.rec-icon { font-size:22px; line-height:1; }
+.rec-icon { font-size:22px; line-height:var(--leading-none); }
 .rec-body { flex:1; min-width:0; }
-.rec-title { font-size:13px; font-weight:600; color:var(--color-text); margin-bottom:2px; }
-.rec-text { font-size:12px; color:var(--color-text-2); line-height:1.4; }
-.rec-action { font-size:12px; color:var(--accent); font-weight:500; white-space:nowrap; }
+.rec-title { font-size:var(--text-sm); font-weight:var(--weight-semibold); color:var(--color-text); margin-bottom:2px; }
+.rec-text { font-size:var(--text-xs); color:var(--color-text-2); line-height:1.4; }
+.rec-action { font-size:var(--text-xs); color:var(--accent); font-weight:var(--weight-medium); white-space:nowrap; }
 
 .judge-section {
-  padding:0 2rem 1.5rem;
+  padding:0 var(--space-8) var(--space-6);
   max-width:75rem;
   margin:0 auto;
 }
 .judge-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap:0.75rem;
+  gap:var(--space-3);
 }
 .judge-card {
-  padding:1.25rem;
+  padding:var(--space-5);
   border-radius:var(--radius-md);
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
@@ -746,7 +742,7 @@ onMounted(async () => {
   top:0.625rem;
   right:0.625rem;
   font-size:0.625rem;
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   padding:0.1875rem 0.625rem;
   border-radius:var(--radius-full);
   background: linear-gradient(135deg, var(--accent), var(--accent-warm));
@@ -762,34 +758,34 @@ onMounted(async () => {
   justify-content: center;
 }
 .judge-icon svg { width:1.5rem; height:1.5rem; }
-.judge-title { font-size:1rem; font-weight: 700; color: var(--text-primary); }
-.judge-desc { font-size:0.75rem; color: var(--text-secondary); line-height:1.5; }
+.judge-title { font-size:var(--text-lg); font-weight: var(--weight-bold); color: var(--text-primary); }
+.judge-desc { font-size:var(--text-xs); color: var(--text-secondary); line-height:1.5; }
 
 /*  评审推荐卡片 */
 .bonus-section {
-  padding:1rem 2rem;
+  padding:var(--space-4) var(--space-8);
   max-width:75rem;
   margin:0 auto;
 }
 
 .bonus-label {
-  font-size:0.75rem;
+  font-size:var(--text-xs);
   color: var(--text-muted);
-  font-weight: 600;
-  margin-bottom:0.75rem;
+  font-weight: var(--weight-semibold);
+  margin-bottom:var(--space-3);
   letter-spacing:0.0312rem;
 }
 
 .bonus-row {
   display: flex;
-  gap:0.75rem;
+  gap:var(--space-3);
 }
 
 .bonus-card {
   display: flex;
   align-items: center;
   gap:0.625rem;
-  padding:0.75rem 1rem;
+  padding:var(--space-3) var(--space-4);
   border-radius:var(--radius-md);
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
@@ -815,8 +811,8 @@ onMounted(async () => {
 .bonus-icon svg { width:1rem; height:1rem; }
 
 .bonus-title {
-  font-size:0.875rem;
-  font-weight: 600;
+  font-size:var(--text-base);
+  font-weight: var(--weight-semibold);
   color: var(--text-primary);
   flex: 1;
 }
@@ -826,30 +822,30 @@ onMounted(async () => {
 
 /* ── Data ── */
 .data-section {
-  padding:1.5rem 2rem;
+  padding:var(--space-6) var(--space-8);
   max-width:75rem;
   margin:0 auto;
 }
 
 .data-label {
-  font-size:0.75rem;
+  font-size:var(--text-xs);
   color: var(--text-muted);
-  font-weight: 600;
-  margin-bottom:0.75rem;
+  font-weight: var(--weight-semibold);
+  margin-bottom:var(--space-3);
   letter-spacing:0.0312rem;
 }
 
 .data-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap:0.75rem;
+  gap:var(--space-3);
 }
 
 .data-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius:var(--radius-md);
-  padding:1rem;
+  padding:var(--space-4);
   text-align: center;
   transition: var(--transition);
 }
@@ -862,23 +858,23 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom:0.5rem;
+  margin-bottom:var(--space-2);
   color: var(--accent-primary);
 }
 
 .data-icon svg { width:1.25rem; height:1.25rem; }
 
 .data-value {
-  font-size:1.5rem;
+  font-size:var(--text-3xl);
   font-weight: 800;
   color: var(--text-primary);
   letter-spacing:-0.0312rem;
 }
 
 .data-label-text {
-  font-size:0.75rem;
+  font-size:var(--text-xs);
   color: var(--text-muted);
-  margin-top:0.25rem;
+  margin-top:var(--space-1);
 }
 
 /* ── Mastery rings ── */
@@ -887,32 +883,32 @@ onMounted(async () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap:0.5rem;
+  gap:var(--space-2);
 }
 .data-caption {
-  font-size:0.75rem;
+  font-size:var(--text-xs);
   color: var(--text-muted);
-  font-weight: 500;
+  font-weight: var(--weight-medium);
 }
 .mastery-section {
-  padding:0 2rem 1.5rem;
+  padding:0 var(--space-8) var(--space-6);
   max-width:75rem;
   margin:0 auto;
 }
 .mastery-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap:0.75rem;
+  gap:var(--space-3);
 }
 .mastery-tile {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius:var(--radius-md);
-  padding:1.25rem 1rem;
+  padding:var(--space-5) var(--space-4);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap:0.5rem;
+  gap:var(--space-2);
   transition: var(--transition);
 }
 .mastery-tile:hover {
@@ -920,8 +916,8 @@ onMounted(async () => {
   transform: translateY(-2px);
   box-shadow: var(--shadow-card-hover);
 }
-.mastery-name { font-size:0.8125rem; font-weight: 600; color: var(--text-primary); }
-.mastery-sub { font-size:0.75rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.mastery-name { font-size:var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.mastery-sub { font-size:var(--text-xs); color: var(--text-muted); font-variant-numeric: tabular-nums; }
 .sm-data_structures .mastery-name { color: var(--subject-ds); }
 .sm-computer_network .mastery-name { color: var(--subject-cn); }
 .sm-computer_organization .mastery-name { color: var(--subject-co); }
@@ -929,7 +925,7 @@ onMounted(async () => {
 
 /* ── Recent ── */
 .recent-section {
-  padding:1rem 2rem 2rem;
+  padding:var(--space-4) var(--space-8) var(--space-8);
   max-width:75rem;
   margin:0 auto;
 }
@@ -937,31 +933,31 @@ onMounted(async () => {
 .recent-grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
-  gap:1rem;
+  gap:var(--space-4);
 }
 
 .recent-col {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius:var(--radius-md);
-  padding:1rem;
+  padding:var(--space-4);
 }
 
 .recent-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom:0.75rem;
-  font-size:0.9375rem;
-  font-weight: 700;
+  margin-bottom:var(--space-3);
+  font-size:var(--text-md);
+  font-weight: var(--weight-bold);
   color: var(--text-primary);
 }
 
 .recent-link {
-  font-size:0.75rem;
+  font-size:var(--text-xs);
   color: var(--text-muted);
   cursor: pointer;
-  font-weight: 500;
+  font-weight: var(--weight-medium);
 }
 
 .recent-link:hover { color: var(--accent-primary); }
@@ -969,7 +965,7 @@ onMounted(async () => {
 .recent-session, .recommend-card {
   display: flex;
   align-items: center;
-  gap:0.75rem;
+  gap:var(--space-3);
   padding:0.625rem;
   border-radius:var(--radius-sm);
   cursor: pointer;
@@ -979,10 +975,10 @@ onMounted(async () => {
 .recent-session:hover, .recommend-card:hover { background: var(--bg-card-hover); }
 
 .session-subject-tag {
-  font-size:0.6875rem;
+  font-size:var(--text-2xs);
   padding:0.1875rem 0.5625rem;
   border-radius:var(--radius-full);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   flex-shrink: 0;
 }
 
@@ -992,19 +988,19 @@ onMounted(async () => {
 .session-subject-tag.subject-3 { background: rgba(var(--subject-os-rgb), 0.12); color: var(--subject-os); }
 
 .session-info { flex: 1; min-width:0; }
-.session-title { font-size:0.875rem; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.session-meta { font-size:0.75rem; color: var(--text-muted); margin-top:0.125rem; }
-.session-score { font-size:0.9375rem; font-weight: 700; flex-shrink: 0; }
+.session-title { font-size:var(--text-base); font-weight: var(--weight-medium); color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.session-meta { font-size:var(--text-xs); color: var(--text-muted); margin-top:0.125rem; }
+.session-score { font-size:var(--text-md); font-weight: var(--weight-bold); flex-shrink: 0; }
 
-.recommend-icon { width:2.25rem; height:2.25rem; border-radius:var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size:1rem; flex-shrink: 0; }
+.recommend-icon { width:2.25rem; height:2.25rem; border-radius:var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size:var(--text-lg); flex-shrink: 0; }
 .recommend-info { flex: 1; min-width:0; }
-.recommend-title { font-size:0.875rem; font-weight: 500; color: var(--text-primary); }
-.recommend-desc { font-size:0.75rem; color: var(--text-muted); margin-top:0.125rem; }
-.recommend-time { font-size:0.75rem; color: var(--text-muted); flex-shrink: 0; }
+.recommend-title { font-size:var(--text-base); font-weight: var(--weight-medium); color: var(--text-primary); }
+.recommend-desc { font-size:var(--text-xs); color: var(--text-muted); margin-top:0.125rem; }
+.recommend-time { font-size:var(--text-xs); color: var(--text-muted); flex-shrink: 0; }
 
 /* ── Agent 状态网格（融合自仪表盘 HTML）── */
 .agent-status-section {
-  padding:0 2rem 1.5rem;
+  padding:0 var(--space-8) var(--space-6);
   max-width:75rem;
   margin:0 auto;
 }
@@ -1017,7 +1013,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap:0.625rem;
-  padding:0.75rem 0.875rem;
+  padding:var(--space-3) 0.875rem;
   border-radius: var(--radius-md);
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
@@ -1042,13 +1038,14 @@ onMounted(async () => {
   50% { opacity: 0.6; }
 }
 .agent-info { flex: 1; min-width: 0; }
-.agent-name { font-size: 0.8125rem; font-weight: 700; }
-.agent-role { font-size: 0.6875rem; color: var(--text-muted); margin-top: 0.0625rem; }
-.agent-status-tag { font-size: 0.6875rem; font-weight: 600; flex-shrink: 0; }
+.agent-name { font-size: var(--text-sm); font-weight: var(--weight-bold); }
+.agent-role { font-size: var(--text-2xs); color: var(--text-muted); margin-top: 0.0625rem; }
+.agent-status-tag { font-size: var(--text-2xs); font-weight: var(--weight-semibold); flex-shrink: 0; }
+.agent-duty { font-size: var(--text-2xs); color: var(--color-text-2); margin-top: 0.1875rem; line-height: 1.4; }
 
 /* ── 知识点热力图（融合自仪表盘 HTML · 紫系色阶）── */
 .heatmap-section {
-  padding:0 2rem 1.5rem;
+  padding:0 var(--space-8) var(--space-6);
   max-width:75rem;
   margin:0 auto;
 }
@@ -1058,10 +1055,10 @@ onMounted(async () => {
   -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
-  padding:1rem;
+  padding:var(--space-4);
   display: flex;
   flex-direction: column;
-  gap:0.5rem;
+  gap:var(--space-2);
 }
 .heatmap-row {
   display: flex;
@@ -1069,8 +1066,8 @@ onMounted(async () => {
   gap:0.625rem;
 }
 .heatmap-subj-label {
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
   width: 5rem;
   flex-shrink: 0;
   text-align: right;
@@ -1078,7 +1075,7 @@ onMounted(async () => {
 .heatmap-cells {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
-  gap: 0.25rem;
+  gap: var(--space-1);
   flex: 1;
 }
 .heatmap-cell {
@@ -1097,7 +1094,7 @@ onMounted(async () => {
 }
 .heatmap-cell-text {
   font-size: 0.625rem;
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .heatmap-legend {
   display: flex;
@@ -1106,31 +1103,36 @@ onMounted(async () => {
   margin-top:0.625rem;
   flex-wrap: wrap;
 }
-.legend-label { font-size: 0.6875rem; color: var(--text-muted); margin-right: 0.25rem; }
+.legend-label { font-size: var(--text-2xs); color: var(--text-muted); margin-right: var(--space-1); }
 .legend-item {
   font-size: 0.625rem;
-  font-weight: 600;
-  padding: 0.125rem 0.5rem;
+  font-weight: var(--weight-semibold);
+  padding: 0.125rem var(--space-2);
   border-radius: 0.25rem;
   color: var(--color-text-invert);
+}
+.legend-empty {
+  background: var(--chart-grid);
+  color: var(--color-text-2);
+  border: 1px solid var(--color-border);
 }
 
 /* ── 预警干预面板（融合自仪表盘 HTML）── */
 .alert-section {
-  padding:0 2rem 1.5rem;
+  padding:0 var(--space-8) var(--space-6);
   max-width:75rem;
   margin:0 auto;
 }
 .alert-list {
   display: flex;
   flex-direction: column;
-  gap:0.5rem;
+  gap:var(--space-2);
 }
 .alert-item {
   display: flex;
   align-items: center;
-  gap:0.75rem;
-  padding:0.75rem 1rem;
+  gap:var(--space-3);
+  padding:var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
@@ -1153,8 +1155,8 @@ onMounted(async () => {
 .dot-danger { background: var(--state-danger); box-shadow: 0 0 6px var(--state-danger); }
 .dot-weak { background: var(--state-weak); box-shadow: 0 0 6px var(--state-weak); }
 .alert-body { flex: 1; min-width: 0; }
-.alert-topic { font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); }
-.alert-action { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.125rem; }
+.alert-topic { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.alert-action { font-size: var(--text-xs); color: var(--text-secondary); margin-top: 0.125rem; }
 .alert-arrow { color: var(--text-muted); flex-shrink: 0; }
 .alert-item:hover .alert-arrow { color: var(--accent-primary); }
 
@@ -1162,12 +1164,12 @@ onMounted(async () => {
 .tag-demo {
   display: inline-block;
   font-size: 0.625rem;
-  font-weight: 600;
-  padding: 0.125rem 0.5rem;
+  font-weight: var(--weight-semibold);
+  padding: 0.125rem var(--space-2);
   border-radius: var(--radius-full);
   background: var(--tag-demo-bg);
   color: var(--tag-demo-color);
-  margin-left: 0.5rem;
+  margin-left: var(--space-2);
   vertical-align: middle;
 }
 
@@ -1180,29 +1182,29 @@ onMounted(async () => {
 }
 
 @media (max-width: 768px) {
-  .hero-section { padding:2.5rem 1.25rem 2rem; }
+  .hero-section { padding:var(--space-10) var(--space-5) var(--space-8); }
   .hero-title { font-size:1.75rem; }
-  .hero-tagline { font-size:0.875rem; }
-  .hero-stats-row { gap:1rem; }
+  .hero-tagline { font-size:var(--text-base); }
+  .hero-stats-row { gap:var(--space-4); }
   .hero-stat-value { font-size:1.375rem; }
-  .portals-section { padding:0 1.25rem 1.25rem; }
+  .portals-section { padding:0 var(--space-5) var(--space-5); }
   .portals-grid { grid-template-columns: 1fr; }
-  .portal-card { padding:1.25rem 1rem; }
-  .bonus-section { padding:0.75rem 1.25rem; }
+  .portal-card { padding:var(--space-5) var(--space-4); }
+  .bonus-section { padding:var(--space-3) var(--space-5); }
   .bonus-row { flex-direction: column; }
-  .data-section { padding:1rem 1.25rem; }
+  .data-section { padding:var(--space-4) var(--space-5); }
   .data-grid { grid-template-columns: repeat(2, 1fr); }
-  .recent-section { padding:0.75rem 1.25rem 1.25rem; }
+  .recent-section { padding:var(--space-3) var(--space-5) var(--space-5); }
 }
 
 @media (max-width: 480px) {
-  .hero-section { padding:2rem 1rem 1.5rem; }
-  .hero-title { font-size:1.5rem; }
-  .hero-stats-row { flex-wrap: wrap; gap:0.75rem; }
+  .hero-section { padding:var(--space-8) var(--space-4) var(--space-6); }
+  .hero-title { font-size:var(--text-3xl); }
+  .hero-stats-row { flex-wrap: wrap; gap:var(--space-3); }
   .hero-stat-divider { display: none; }
   .data-grid { grid-template-columns: 1fr 1fr; }
   .agent-grid { grid-template-columns: 1fr; }
   .heatmap-cells { grid-template-columns: repeat(4, 1fr); }
-  .heatmap-subj-label { width: 3.5rem; font-size: 0.6875rem; }
+  .heatmap-subj-label { width: 3.5rem; font-size: var(--text-2xs); }
 }
 </style>

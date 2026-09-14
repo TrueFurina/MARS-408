@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useStudyStore } from '@/stores/studyStore'
-import { getAuthHeaders } from '@/utils/api'
+import { api, friendlyError } from '@/utils/api'
 import { icons } from '@/components/icons'
 import Skeleton from '@/components/Skeleton.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import ErrorBoundary from '@/components/ErrorBoundary.vue'
 
 const store = useStudyStore()
-const API_BASE = ''
 
 // ── 状态 ──
 const statusInfo = ref({ status: '', vector_db: '', collection_size: 0, llm_available: false })
@@ -70,20 +69,16 @@ async function previewFile() {
     form.append('file', uploadFile.value)
     form.append('subject', uploadSubject.value)
     form.append('chapter', uploadChapter.value)
-    const r = await fetch(`${API_BASE}/api/knowledge/preview`, { method: 'POST', headers: getAuthHeaders(), body: form })
-    const data = await r.json()
-    if (r.ok) {
-      data.items = data.items.map((item: PreviewItem) => ({
-        ...item,
-        _selected: true,
-        _type: item.detected_type,
-      }))
-      previewResult.value = data
-    } else {
-      alert(` ${data.detail || '解析失败'}`)
-    }
-  } catch {
-    alert(' 解析失败，请检查后端是否运行')
+    // FormData 走 api.upload（不设 Content-Type，由浏览器补 boundary）
+    const data = await api.upload<any>('/knowledge/preview', form)
+    data.items = data.items.map((item: PreviewItem) => ({
+      ...item,
+      _selected: true,
+      _type: item.detected_type,
+    }))
+    previewResult.value = data
+  } catch (e) {
+    alert(' 解析失败：' + friendlyError(e, '请检查后端是否运行'))
   } finally {
     uploading.value = false
   }
@@ -106,23 +101,14 @@ async function commitSelected() {
   }
   if (!confirm(`确定提交 ${selected.length} 条分块到知识库？`)) return
   try {
-    const r = await fetch(`${API_BASE}/api/knowledge/batch-commit`, {
-      method: 'POST',
-      headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
-      body: JSON.stringify(selected),
-    })
-    const data = await r.json()
-    if (r.ok) {
-      alert(` 成功提交 ${data.committed} 条分块`)
-      previewResult.value = null
-      uploadFile.value = null
-      showUploadForm.value = false
-      await Promise.all([fetchStats(), fetchDocuments()])
-    } else {
-      alert(` ${data.detail || '提交失败'}`)
-    }
-  } catch {
-    alert(' 提交失败，请检查后端')
+    const data = await api.post<any>('/knowledge/batch-commit', selected)
+    alert(` 成功提交 ${data.committed} 条分块`)
+    previewResult.value = null
+    uploadFile.value = null
+    showUploadForm.value = false
+    await Promise.all([fetchStats(), fetchDocuments()])
+  } catch (e) {
+    alert(' 提交失败：' + friendlyError(e, '请检查后端'))
   }
 }
 
@@ -169,15 +155,13 @@ function toggleSelect(id: string) {
 
 async function fetchStatus() {
   try {
-    const r = await fetch(`${API_BASE}/api/status`, { headers: getAuthHeaders() })
-    statusInfo.value = await r.json()
+    statusInfo.value = await api.get<typeof statusInfo.value>('/status')
   } catch { /* offline */ }
 }
 
 async function fetchStats() {
   try {
-    const r = await fetch(`${API_BASE}/api/knowledge/stats`, { headers: getAuthHeaders() })
-    stats.value = await r.json()
+    stats.value = await api.get<typeof stats.value>('/knowledge/stats')
   } catch { /* offline */ }
 }
 
@@ -187,8 +171,7 @@ async function fetchDocuments() {
     const params = new URLSearchParams({ skip: String((page.value - 1) * pageSize), limit: String(pageSize) })
     if (searchQuery.value) params.set('query', searchQuery.value)
     if (filterSubject.value) params.set('subject', filterSubject.value)
-    const r = await fetch(`${API_BASE}/api/knowledge/list?${params}`, { headers: getAuthHeaders() })
-    const data = await r.json()
+    const data = await api.get<{ items: any[]; total: number }>(`/knowledge/list?${params}`)
     documents.value = data.items
     totalDocs.value = data.total
     selectedIds.value = new Set()
@@ -209,11 +192,7 @@ async function addDocuments() {
   meta.type = newType.value
 
   try {
-    await fetch(`${API_BASE}/api/knowledge/upsert`, {
-      method: 'POST',
-      headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ documents: [{ content: newContent.value, metadata: meta }] }),
-    })
+    await api.post('/knowledge/upsert', { documents: [{ content: newContent.value, metadata: meta }] })
     newContent.value = ''
     showAddForm.value = false
     await fetchStats()
@@ -225,11 +204,7 @@ async function deleteSelected() {
   if (selectedIds.value.size === 0) return
   if (!confirm(`确定删除 ${selectedIds.value.size} 条文档？`)) return
   try {
-    await fetch(`${API_BASE}/api/knowledge/delete`, {
-      method: 'POST',
-      headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ids: Array.from(selectedIds.value) }),
-    })
+    await api.post('/knowledge/delete', { ids: Array.from(selectedIds.value) })
     await fetchStats()
     await fetchDocuments()
   } catch { /* offline */ }
@@ -239,7 +214,7 @@ async function reindex() {
   if (!confirm('重置为种子数据将清空所有自定义数据，确定？')) return
   reindexing.value = true
   try {
-    await fetch(`${API_BASE}/api/knowledge/reindex`, { method: 'POST', headers: getAuthHeaders() })
+    await api.post('/knowledge/reindex')
     await Promise.all([fetchStatus(), fetchStats(), fetchDocuments()])
   } catch { /* offline */ }
   finally { reindexing.value = false }
@@ -249,12 +224,9 @@ async function clearAll() {
   if (!confirm('确定清空向量库所有文档？此操作不可撤销！')) return
   if (!confirm(' 再次确认：所有知识数据将被永久删除')) return
   try {
-    const r = await fetch(`${API_BASE}/api/knowledge/clear`, { method: 'POST', headers: getAuthHeaders() })
-    const data = await r.json()
-    if (r.ok) {
-      alert(` 已清空 ${data.deleted} 条文档`)
-      await Promise.all([fetchStatus(), fetchStats(), fetchDocuments()])
-    }
+    const data = await api.post<{ deleted: number }>('/knowledge/clear')
+    alert(` 已清空 ${data.deleted} 条文档`)
+    await Promise.all([fetchStatus(), fetchStats(), fetchDocuments()])
   } catch { /* offline */ }
 }
 
@@ -506,11 +478,11 @@ input[type="checkbox"] {
   height: 1rem;
   accent-color: var(--accent-primary);
 }
-.doc-skeleton { display: flex; flex-direction: column; gap: 0.75rem; }
+.doc-skeleton { display: flex; flex-direction: column; gap: var(--space-3); }
 
 /* ── 区块间距 ── */
-.ka-block { margin-bottom: 1rem; }
-.ka-block-lg { margin-bottom: 1.5rem; }
+.ka-block { margin-bottom: var(--space-4); }
+.ka-block-lg { margin-bottom: var(--space-6); }
 
 /* ── 状态卡片图标 ── */
 .stat-ic {
@@ -528,57 +500,57 @@ input[type="checkbox"] {
 .stat-ic--doc { background: color-mix(in srgb, var(--accent-primary) 12%, transparent); color: var(--accent-primary); }
 .stat-ic--book { background: color-mix(in srgb, var(--accent-tertiary) 12%, transparent); color: var(--accent-tertiary); }
 .stat-ic--tag { background: color-mix(in srgb, var(--subject-ds) 12%, transparent); color: var(--subject-ds); }
-.ka-stat-lg { font-size: 1.125rem; }
-.stat-lines { font-size: 0.8125rem; line-height: 1.8; }
+.ka-stat-lg { font-size: var(--text-xl); }
+.stat-lines { font-size: var(--text-sm); line-height: 1.8; }
 .stat-empty { color: var(--text-muted); }
 
 /* ── 操作栏 ── */
-.op-bar { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.op-bar { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
 .op-search { flex: 1; min-width: 200px; }
 .op-add { background: var(--accent-success); }
 .op-upload { background: var(--accent-secondary); }
 .op-delete { background: var(--accent-danger); }
 .op-reindex { background: var(--accent-pink); }
 .op-clear { background: var(--accent-danger); border-color: var(--accent-danger); }
-.op-commit { background: var(--accent-success); padding: 0.5rem 1.25rem; }
+.op-commit { background: var(--accent-success); padding: var(--space-2) var(--space-5); }
 .op-cancel { background: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); }
-.op-page { padding: 0.375rem 0.875rem; font-size: 0.75rem; }
+.op-page { padding: 0.375rem 0.875rem; font-size: var(--text-xs); }
 .ka-btn-ic { display: inline-flex; align-items: center; width: 1rem; height: 1rem; margin-right: 0.4rem; }
 .ka-btn-ic svg { width: 1rem; height: 1rem; }
 
 /* ── 添加 / 上传面板 ── */
 .ka-panel {
-  margin-top: 1rem;
-  padding: 1rem;
+  margin-top: var(--space-4);
+  padding: var(--space-4);
   border: 1px solid var(--border-glow);
   border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--accent-primary) 3%, transparent);
 }
 .ka-panel--cyan { background: color-mix(in srgb, var(--accent-cyan) 3%, transparent); }
-.ka-form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem; }
+.ka-form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-3); margin-bottom: var(--space-3); }
 .ka-textarea { min-height: 80px; resize: vertical; font-family: inherit; }
-.ka-form-actions { margin-top: 0.5rem; display: flex; gap: 0.5rem; }
+.ka-form-actions { margin-top: var(--space-2); display: flex; gap: var(--space-2); }
 
-.ka-file-row { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; margin-bottom: 0.75rem; }
-.ka-file { flex: 1; min-width: 200px; color: var(--text-primary); font-size: 0.875rem; }
+.ka-file-row { display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: center; margin-bottom: var(--space-3); }
+.ka-file { flex: 1; min-width: 200px; color: var(--text-primary); font-size: var(--text-base); }
 .ka-sel-sm { width: 140px; }
 .ka-input-sm { width: 140px; }
-.ka-parse-row { display: flex; align-items: center; gap: 0.75rem; }
-.ka-filename-meta { font-size: 0.75rem; color: var(--text-muted); }
+.ka-parse-row { display: flex; align-items: center; gap: var(--space-3); }
+.ka-filename-meta { font-size: var(--text-xs); color: var(--text-muted); }
 
 /* ── 预览审查 ── */
-.ka-prev-head { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
-.ka-filename { font-size: 0.875rem; font-weight: 600; display: inline-flex; align-items: center; }
+.ka-prev-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-3); flex-wrap: wrap; }
+.ka-filename { font-size: var(--text-base); font-weight: var(--weight-semibold); display: inline-flex; align-items: center; }
 .ka-filename-ic { display: inline-flex; width: 1rem; height: 1rem; margin-right: 0.4rem; }
 .ka-filename-ic svg { width: 1rem; height: 1rem; }
-.ka-prev-actions { display: flex; gap: 0.5rem; }
+.ka-prev-actions { display: flex; gap: var(--space-2); }
 .ka-prev-list { max-height: 55vh; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius-sm); }
-.ka-prev-item { padding: 0.75rem; border-bottom: 1px solid var(--color-glass-border); background: var(--color-surface); }
-.ka-prev-item-head { display: flex; gap: 0.5rem; margin-bottom: 0.375rem; align-items: flex-start; }
+.ka-prev-item { padding: var(--space-3); border-bottom: 1px solid var(--color-glass-border); background: var(--color-surface); }
+.ka-prev-item-head { display: flex; gap: var(--space-2); margin-bottom: 0.375rem; align-items: flex-start; }
 .ka-prev-check { margin-top: 0.1875rem; width: 1rem; height: 1rem; flex-shrink: 0; }
-.ka-idx { font-size: 0.6875rem; color: var(--text-muted); white-space: nowrap; }
+.ka-idx { font-size: var(--text-2xs); color: var(--text-muted); white-space: nowrap; }
 .ka-mini-select, .ka-mini-input {
-  font-size: 0.6875rem;
+  font-size: var(--text-2xs);
   padding: 0.125rem 0.375rem;
   border-radius: 4px;
   border: 1px solid var(--border-color);
@@ -590,60 +562,60 @@ input[type="checkbox"] {
 .ka-modified { font-size: 0.625rem; color: var(--accent-pink); white-space: nowrap; display: inline-flex; align-items: center; }
 .ka-modified-ic { display: inline-flex; width: 0.75rem; height: 0.75rem; margin-right: 0.2rem; }
 .ka-modified-ic svg { width: 0.75rem; height: 0.75rem; }
-.ka-detect-note { font-size: 0.625rem; color: var(--text-muted); margin: 0.125rem 0 0.25rem 1.5rem; }
+.ka-detect-note { font-size: 0.625rem; color: var(--text-muted); margin: 0.125rem 0 var(--space-1) var(--space-6); }
 .ka-prev-textarea {
   width: 100%;
   min-height: 80px;
-  padding: 0.625rem 0.75rem;
+  padding: 0.625rem var(--space-3);
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-color);
   background: var(--bg-secondary);
   color: var(--text-primary);
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
   resize: vertical;
   font-family: inherit;
   line-height: 1.6;
 }
 
 /* ── 文档列表 ── */
-.ka-count { font-size: 0.8125rem; color: var(--text-muted); }
-.ka-error { margin-bottom: 1rem; }
+.ka-count { font-size: var(--text-sm); color: var(--text-muted); }
+.ka-error { margin-bottom: var(--space-4); }
 .ka-retry { margin-left: auto; }
 .ka-list-head {
   display: flex;
   align-items: center;
-  padding: 0.5rem 0;
+  padding: var(--space-2) 0;
   border-bottom: 1px solid var(--border-color);
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   color: var(--text-muted);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .ka-list-row {
   display: flex;
   align-items: flex-start;
   padding: 0.625rem 0;
   border-bottom: 1px solid var(--border-color);
-  font-size: 0.8125rem;
-  gap: 0.5rem;
+  font-size: var(--text-sm);
+  gap: var(--space-2);
 }
 .ka-col-check { width: 36px; }
 .ka-col-check--row { padding-top: 0.125rem; }
 .ka-col-content { flex: 1; min-width: 0; }
 .ka-col-subject { width: 60px; }
-.ka-col-type { width: 70px; font-size: 0.6875rem; color: var(--text-secondary); }
+.ka-col-type { width: 70px; font-size: var(--text-2xs); color: var(--text-secondary); }
 .ka-col-id { width: 60px; font-size: 0.625rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ka-clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.ka-chapter { font-size: 0.6875rem; color: var(--text-muted); margin-top: 0.125rem; display: inline-flex; align-items: center; }
-.ka-chapter-ic { display: inline-flex; width: 0.75rem; height: 0.75rem; margin-right: 0.25rem; }
+.ka-chapter { font-size: var(--text-2xs); color: var(--text-muted); margin-top: 0.125rem; display: inline-flex; align-items: center; }
+.ka-chapter-ic { display: inline-flex; width: 0.75rem; height: 0.75rem; margin-right: var(--space-1); }
 .ka-chapter-ic svg { width: 0.75rem; height: 0.75rem; }
 
 /* ── 分页 ── */
-.ka-pager { display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 1rem; }
-.ka-page-ind { display: flex; align-items: center; font-size: 0.8125rem; color: var(--text-muted); }
+.ka-pager { display: flex; justify-content: center; align-items: center; gap: var(--space-2); margin-top: var(--space-4); }
+.ka-page-ind { display: flex; align-items: center; font-size: var(--text-sm); color: var(--text-muted); }
 
 @media (max-width: 640px) {
   .ka-form-grid { grid-template-columns: 1fr; }
-  .op-bar { gap: 0.5rem; }
+  .op-bar { gap: var(--space-2); }
   .ka-file-row { flex-direction: column; align-items: stretch; }
   .ka-sel-sm, .ka-input-sm { width: 100%; }
 }
