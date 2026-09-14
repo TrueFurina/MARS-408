@@ -1,7 +1,8 @@
 # ADR-008 — 并发与水平扩展模型（Concurrency & Horizontal Scaling Model）
 
-- **状态**：Proposed
+- **状态**：Accepted（单写者约束已落地；水平扩展机制见 ADR-012，待立）
 - **日期**：2026-07-15
+- **更新**：2026-09-14 由 Proposed 提升为 Accepted（见下方"验收证据"）
 - **决策人**：架构师（architect）
 - **相关**：ADR-007（导入队列单写者）；ADR-012（异步任务外置，待立）；debt #1（5/5/4）、debt #2（4/4/3）
 
@@ -16,6 +17,11 @@ ADR-007 强制 `--workers 1`（单写者导入队列）以避免 `import_store` 
 1. **要水平扩展，必须把进程内共享状态外置**：包括 task/session 缓存（`api/xfyun.py:28-29`）与 import 单写锁。
 2. **扩展机制细节不在此 ADR 展开**，交给 **ADR-012（异步任务外置）** 定义落地方案。
 3. **原则落点**：API 层允许跑 **N workers**；import 单写锁（ADR-007）收敛到**专属 import worker**，而非整个进程。即「单写者」约束只覆盖导入队列，不再绑架 API 并发。
+
+## 验收证据（2026-09-14）
+
+- **单写者约束确为生产现实且被加强**：`main.py:262-278` env/CLI `UVICORN_WORKERS > 1` fail-fast + `main.py:720` `uvicorn.run(..., workers=1)` + `services/import_worker.py:127` 跨进程 filelock 真阻塞（`acquire(blocking=True, timeout=2)`）三重兜底；CI gate `pytest -m import_queue` → **13 passed / 1 xfailed**。
+- **水平扩展机制（本 ADR 的前瞻原则）仍待 ADR-012 落地**：当前"API 允许 N workers、import 单写者收敛到专属 worker"**尚未实现**；现状仍是全进程 `--workers 1`。故本 ADR 的 Accepted **只覆盖"单写者约束"这一已生效现实**，其扩展机制部分随 ADR-012 待立而顺延。
 
 ## 影响
 

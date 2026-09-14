@@ -1,3 +1,14 @@
+# ============================================================================
+# 【已弃用 · DISABLED】2026-09-14 归档（原 scripts/wire_review_weight_gate.py）
+# 本脚本为三元评审权重 MAPPO 化的早期"接线/探路"残留，已停止使用。
+# 弃用理由：① 权重决策已收敛为 engines/review_policy.py 的解析式唯一真值
+#          （RULE_MODE="analytic"，见 ADR-011 / ADR-017）；
+#          ② 本脚本以字符串锚点直接改源文件，调用签名已与落地代码 drift
+#          （decide_review_weight(feats, use_mappo=True) 未带 evidence/consensus）；
+#          重跑 --apply 会二次插入、损坏源文件。
+# 处置：仅归档保留（项目红线：绝不删除）；文件加 .disabled 后缀，不会被导入/执行。
+# 禁止重跑。权重由 engines/review_policy.py 解析式唯一决定。
+# ============================================================================
 # -*- coding: utf-8 -*-
 """接线脚本：三元评审权重 MAPPO 化 —— 插入点 B（quality gate）+ 配置槽（A·阶段1）
 
