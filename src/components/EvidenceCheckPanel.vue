@@ -701,12 +701,12 @@ function agentName(a: string) {
   line-height: 1.5;
 }
 .ev-diff-before {
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  background: rgba(var(--danger-rgb), 0.08);
+  border: 1px solid rgba(var(--danger-rgb), 0.2);
 }
 .ev-diff-after {
-  background: rgba(34, 197, 94, 0.08);
-  border: 1px solid rgba(34, 197, 94, 0.2);
+  background: rgba(var(--success-rgb), 0.08);
+  border: 1px solid rgba(var(--success-rgb), 0.2);
 }
 .ev-diff-label {
   font-size: 0.625rem;

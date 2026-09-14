@@ -1148,8 +1148,8 @@ function parseWeakPoints(wpStr: string): string[] {
 .speak-btn:hover { background: var(--bg-card-hover); color: var(--accent-primary); box-shadow: var(--shadow-md); }
 .speak-btn.speaking { color: var(--accent-primary); background: var(--accent-primary-10); animation: speak-pulse 1.5s ease-in-out infinite; }
 @keyframes speak-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(124, 106, 242, 0.3); }
-  50% { box-shadow: 0 0 0 8px rgba(124, 106, 242, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0.3); }
+  50% { box-shadow: 0 0 0 8px rgba(var(--accent-rgb), 0); }
 }
 .btn-ic {
   width: 1rem;
@@ -1223,7 +1223,7 @@ function parseWeakPoints(wpStr: string): string[] {
 
 /* 视频生成按钮（绿色语义：配音教学视频） */
 .btn-video { background: var(--accent-success); color: #fff; }
-.btn-video:hover { background: color-mix(in srgb, var(--accent-success) 85%, #000); }
+.btn-video:hover { background: color-mix(in srgb, var(--accent-success) 85%, var(--color-text-invert)); }
 
 /* ── 产物验收闸门 ── */
 .gate-reject-banner {

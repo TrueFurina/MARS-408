@@ -316,9 +316,9 @@ async function refreshQuestions() { await generateQuestions() }
   font-size:0.6875rem; padding:0.1875rem 0.625rem; border-radius:var(--radius-full);
   font-weight: 600;
 }
-.quiz-tag.type { background: rgba(139,92,246,0.12); color: var(--subject-ds); }
+.quiz-tag.type { background: rgba(var(--subject-ds-rgb),0.12); color: var(--subject-ds); }
 .quiz-tag.easy { background: var(--accent-success-10); color: var(--accent-success); }
-.quiz-tag.medium { background: rgba(245,158,11,0.12); color: var(--accent-warm); }
+.quiz-tag.medium { background: rgba(var(--warning-rgb),0.12); color: var(--accent-warm); }
 .quiz-tag.hard { background: var(--accent-danger-10); color: var(--accent-danger); }
 .quiz-source { font-size:0.6875rem; color: var(--text-muted); margin-left:auto; }
 .quiz-stem { font-size:0.9375rem; line-height:1.7; color: var(--text-primary); margin-bottom:0.875rem; }
@@ -391,7 +391,7 @@ async function refreshQuestions() { await generateQuestions() }
 .auto-match-hint {
   display: flex; align-items: center; gap: 0.5rem;
   padding: 0.625rem 1rem; margin-bottom: 1rem;
-  background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2);
+  background: rgba(var(--warning-rgb),0.08); border: 1px solid rgba(var(--warning-rgb),0.2);
   border-radius: var(--radius-sm); font-size: 0.8125rem; color: var(--accent-warm);
 }
 

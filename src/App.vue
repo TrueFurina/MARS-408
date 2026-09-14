@@ -380,7 +380,7 @@ function goTo(routePath: string) {
 
 .login-screen {
   min-height:100vh;
-  background: var(--color-canvas, #080812);
+  background: var(--color-canvas);
 }
 
 .logout-btn {

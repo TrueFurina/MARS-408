@@ -755,17 +755,17 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap:0.625rem;
-  max-width:var(--chat-max-width, 900px);
+  max-width:var(--chat-max-width);
   margin:0 auto 0.5rem;
 }
 .chat-send-error {
-  max-width:var(--chat-max-width, 900px);
+  max-width:var(--chat-max-width);
   margin:0 auto 0.5rem;
   padding:0.5rem 0.875rem;
   border-radius:var(--radius-sm);
-  background:color-mix(in srgb, var(--accent-danger, #ef4444) 12%, transparent);
-  border:1px solid color-mix(in srgb, var(--accent-danger, #ef4444) 40%, transparent);
-  color:var(--accent-danger, #ef4444);
+  background:color-mix(in srgb, var(--accent-danger) 12%, transparent);
+  border:1px solid color-mix(in srgb, var(--accent-danger) 40%, transparent);
+  color:var(--accent-danger);
   font-size:0.8125rem;
   font-weight:600;
   cursor:pointer;

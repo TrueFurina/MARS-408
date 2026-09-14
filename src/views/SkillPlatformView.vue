@@ -483,12 +483,12 @@ const platformStats = [
   font-weight: 700;
   cursor: pointer;
   transition: var(--transition-bounce);
-  box-shadow: 0 8px 24px rgba(124,106,242,0.30);
+  box-shadow: 0 8px 24px rgba(var(--accent-rgb),0.30);
 }
 .sp-cta-primary svg { width: 18px; height: 18px; }
 .sp-cta-primary:hover {
   transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 12px 32px rgba(124,106,242,0.40);
+  box-shadow: 0 12px 32px rgba(var(--accent-rgb),0.40);
 }
 .sp-cta-secondary {
   padding: 12px 24px;
@@ -686,7 +686,7 @@ const platformStats = [
   font-weight: 800;
   padding: 2px 8px;
   border-radius: var(--radius-full);
-  background: rgba(6,182,212,0.12);
+  background: rgba(var(--subject-co-rgb),0.12);
   color: var(--accent-cyan);
   letter-spacing: 0.05em;
 }
@@ -730,7 +730,7 @@ const platformStats = [
   font-weight: 700;
   padding: 3px 8px;
   border-radius: var(--radius-full);
-  background: rgba(34,197,94,0.12);
+  background: rgba(var(--success-rgb),0.12);
   color: var(--accent-success);
   letter-spacing: 0.05em;
 }
@@ -810,7 +810,7 @@ const platformStats = [
 .sp-editor-btn:hover {
   opacity: 0.92;
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(124,106,242,0.25);
+  box-shadow: 0 8px 20px rgba(var(--accent-rgb),0.25);
 }
 
 /* ── 竞品对比 ── */
@@ -863,11 +863,11 @@ const platformStats = [
   font-weight: 800;
 }
 .sp-check-yes {
-  background: rgba(34,197,94,0.15);
+  background: rgba(var(--success-rgb),0.15);
   color: var(--accent-success);
 }
 .sp-check-no {
-  background: rgba(239,68,68,0.10);
+  background: rgba(var(--danger-rgb),0.10);
   color: var(--accent-danger);
 }
 .sp-check-text {

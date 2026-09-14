@@ -486,9 +486,9 @@ onUnmounted(() => {
 .profile-hero-top { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
 .profile-name { font-size:22px; font-weight:700; color:var(--color-text); }
 .profile-strength { font-size:12px; padding:2px 10px; border-radius:20px; font-weight:600; }
-.profile-strength.strong { background:rgba(34,197,94,0.12); color:var(--accent-success); }
-.profile-strength.stable { background:rgba(6,182,212,0.12); color:var(--accent-cyan); }
-.profile-strength.weak { background:rgba(245,158,11,0.12); color:var(--accent-warm); }
+.profile-strength.strong { background:rgba(var(--success-rgb),0.12); color:var(--accent-success); }
+.profile-strength.stable { background:rgba(var(--subject-co-rgb),0.12); color:var(--accent-cyan); }
+.profile-strength.weak { background:rgba(var(--warning-rgb),0.12); color:var(--accent-warm); }
 .profile-meta-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
 .profile-meta-tag { font-size:12px; padding:3px 10px; border-radius:6px; background:var(--color-surface-2); color:var(--color-text-2); }
 .profile-hero-actions { display:flex; gap:8px; }
@@ -525,7 +525,7 @@ onUnmounted(() => {
 .weakness-item:hover { background:var(--color-surface-hover); }
 .weakness-bullet { width:6px; height:6px; border-radius:50%; background:var(--accent-warm); flex-shrink:0; }
 .weakness-name { flex:1; font-size:14px; color:var(--color-text); }
-.weakness-tag { font-size:11px; padding:2px 8px; border-radius:4px; background:rgba(245,158,11,0.12); color:var(--accent-warm); }
+.weakness-tag { font-size:11px; padding:2px 8px; border-radius:4px; background:rgba(var(--warning-rgb),0.12); color:var(--accent-warm); }
 .assessment-stats { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .assessment-stat { text-align:center; padding:14px; background:var(--color-surface-2); border-radius:8px; }
 .assessment-stat .stat-value { display:block; font-size:24px; font-weight:700; }

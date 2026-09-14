@@ -483,8 +483,8 @@ onBeforeUnmount(() => {
   padding: 0.75rem 1rem;
   margin-bottom: 1rem;
   border-radius: var(--radius-md);
-  background: var(--accent-warning-light, rgba(255, 193, 7, 0.12));
-  border: 1px solid rgba(255, 193, 7, 0.35);
+  background: var(--accent-warning-light);
+  border: 1px solid rgba(var(--warning-rgb), 0.35);
   color: var(--text-primary);
   font-size: 0.8125rem;
 }

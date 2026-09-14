@@ -202,9 +202,9 @@ async function loadMemoryOverview() {
 .skill-row-icon { font-size:1.25rem; }
 .skill-row-name { flex: 1; font-size:0.875rem; font-weight: 500; color: var(--color-text); }
 .skill-row-status { font-size:0.6875rem; padding:0.125rem 0.5rem; border-radius:1.25rem; font-weight: 500; }
-.badge-draft { background: rgba(245,158,11,0.12); color: var(--accent-warm); }
-.badge-published { background: rgba(34,197,94,0.12); color: var(--accent-success); }
-.badge-archived { background: rgba(148,163,184,0.12); color: var(--color-text-2); }
+.badge-draft { background: rgba(var(--warning-rgb),0.12); color: var(--accent-warm); }
+.badge-published { background: rgba(var(--success-rgb),0.12); color: var(--accent-success); }
+.badge-archived { background: color-mix(in srgb, var(--color-text-2) 12%, transparent); color: var(--color-text-2); }
 .skill-row-usage { font-size:0.75rem; color: var(--color-text-3); }
 .skill-row-rating { font-size:0.75rem; color: var(--accent-warm); font-weight: 600; }
 

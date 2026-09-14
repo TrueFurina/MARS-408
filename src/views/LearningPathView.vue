@@ -380,10 +380,10 @@ const nextStepNode = computed<PathNode | null>(() => {
   padding: 1.5rem;
   text-align: center;
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--accent-danger, #ef4444) 10%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent-danger, #ef4444) 35%, transparent);
+  background: color-mix(in srgb, var(--accent-danger) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-danger) 35%, transparent);
 }
-.path-error-title { font-size: 1rem; font-weight: 700; color: var(--accent-danger, #ef4444); }
+.path-error-title { font-size: 1rem; font-weight: 700; color: var(--accent-danger); }
 .path-error-msg { font-size: 0.8125rem; color: var(--text-secondary); margin: 0.5rem 0 1rem; word-break: break-all; }
 .path-error-retry {
   padding: 0.5rem 1.5rem;

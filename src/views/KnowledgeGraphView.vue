@@ -234,7 +234,7 @@ onMounted(() => {
 .form-select:focus, .form-textarea:focus { outline: none; border-color: var(--color-border-focus); }
 .form-textarea { resize: vertical; min-height: 200px; }
 .code-textarea { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; font-size: 13px; line-height: 1.5; }
-.form-error { padding: 10px 12px; background: rgba(239,68,68,0.1); color: var(--accent-danger); border-radius: 8px; font-size: 13px; }
+.form-error { padding: 10px 12px; background: rgba(var(--danger-rgb),0.1); color: var(--accent-danger); border-radius: 8px; font-size: 13px; }
 .panel-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--color-text); }
 .panel-title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
 .panel-title-row .panel-title { margin-bottom: 0; }

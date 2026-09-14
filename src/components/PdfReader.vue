@@ -89,7 +89,7 @@ function selectChapter(i: number) {
 .pdf-chapter-list { flex: 1; overflow-y: auto; padding: 8px; }
 .pdf-chapter-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border: none; border-radius: 8px; background: transparent; color: var(--color-text-2); cursor: pointer; text-align: left; transition: all 0.15s; font-size: 13px; }
 .pdf-chapter-item:hover { background: var(--color-surface-hover); color: var(--color-text); }
-.pdf-chapter-item.active { background: rgba(124,106,242,0.1); color: var(--accent); }
+.pdf-chapter-item.active { background: rgba(var(--accent-rgb),0.1); color: var(--accent); }
 .pdf-chapter-num { width: 22px; height: 22px; border-radius: 50%; background: var(--color-surface-2); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; }
 .pdf-chapter-item.active .pdf-chapter-num { background: var(--accent); color: #fff; }
 .pdf-chapter-title { flex: 1; line-height: 1.4; }

@@ -436,7 +436,7 @@ async function loadMemoryOverview() {
 .template-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 6px; margin-top: 6px; }
 .template-btn { display: flex; flex-direction: column; align-items: center; gap:0.25rem; padding:0.625rem 0.5rem; border: 1px solid var(--color-border); border-radius:0.625rem; background: var(--color-surface); cursor: pointer; transition: all 0.15s; }
 .template-btn:hover { border-color: var(--color-border-focus); background: var(--color-surface-hover); }
-.template-btn.active { border-color: var(--accent); background: rgba(124,106,242,0.08); }
+.template-btn.active { border-color: var(--accent); background: rgba(var(--accent-rgb),0.08); }
 .tpl-icon { font-size:1.5rem; }
 .tpl-name { font-size:0.6875rem; color: var(--color-text-2); text-align: center; }
 
@@ -477,10 +477,10 @@ async function loadMemoryOverview() {
 .icon-picker { display: flex; flex-wrap: wrap; gap:0.25rem; }
 .icon-opt { width:2.25rem; height:2.25rem; display: flex; align-items: center; justify-content: center; border: 1px solid var(--color-border); border-radius:0.5rem; background: var(--color-surface); font-size:1.125rem; cursor: pointer; transition: all 0.15s; }
 .icon-opt:hover { border-color: var(--color-border-focus); }
-.icon-opt.active { border-color: var(--accent); background: rgba(124,106,242,0.12); }
+.icon-opt.active { border-color: var(--accent); background: rgba(var(--accent-rgb),0.12); }
 
-.form-error { padding:0.625rem 0.75rem; background: rgba(239,68,68,0.1); color: var(--accent-danger); border-radius:0.5rem; font-size:0.8125rem; margin:0.5rem 0; }
-.form-success { padding:0.625rem 0.75rem; background: rgba(34,197,94,0.1); color: var(--accent-success); border-radius:0.5rem; font-size:0.8125rem; margin:0.5rem 0; }
+.form-error { padding:0.625rem 0.75rem; background: rgba(var(--danger-rgb),0.1); color: var(--accent-danger); border-radius:0.5rem; font-size:0.8125rem; margin:0.5rem 0; }
+.form-success { padding:0.625rem 0.75rem; background: rgba(var(--success-rgb),0.1); color: var(--accent-success); border-radius:0.5rem; font-size:0.8125rem; margin:0.5rem 0; }
 .form-actions { display: flex; gap:0.5rem; flex-wrap: wrap; margin-top:1rem; }
 
 /* 预览卡片 */

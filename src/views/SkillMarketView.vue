@@ -227,7 +227,7 @@ async function loadMemoryOverview() {
 .search-input:focus { outline: none; border-color: var(--color-border-focus); }
 .filter-select { padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface-2); color: var(--color-text); font-size: 14px; cursor: pointer; }
 
-.official-banner { margin-bottom:1rem; padding:1rem; border-radius:0.75rem; background: linear-gradient(135deg, rgba(124,106,242,0.08), rgba(6,182,212,0.08)); border: 1px solid var(--color-border-focus); }
+.official-banner { margin-bottom:1rem; padding:1rem; border-radius:0.75rem; background: linear-gradient(135deg, rgba(var(--accent-rgb),0.08), rgba(var(--subject-co-rgb),0.08)); border: 1px solid var(--color-border-focus); }
 .official-title { font-size:0.875rem; font-weight: 600; color: var(--accent); margin-bottom:0.75rem; }
 .official-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
 

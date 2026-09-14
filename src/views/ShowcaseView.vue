@@ -198,7 +198,7 @@ function openNew() { window.open(iframeSrc.value, '_blank', 'noopener') }
 .rail-list { flex: 1; overflow-y: auto; padding: 8px; }
 .rail-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border: none; border-radius: 8px; background: transparent; color: var(--color-text-2); cursor: pointer; transition: all 0.15s; text-align: left; }
 .rail-item:hover { background: var(--color-surface-hover); color: var(--color-text); }
-.rail-item.active { background: rgba(124,106,242,0.1); color: var(--accent); }
+.rail-item.active { background: rgba(var(--accent-rgb),0.1); color: var(--accent); }
 .rail-icon :deep(svg) { width: 20px; height: 20px; }
 .rail-title-sm { font-size: 13px; font-weight: 600; }
 .rail-scene { font-size: 11px; color: var(--color-text-3); margin-top: 1px; }
@@ -221,7 +221,7 @@ function openNew() { window.open(iframeSrc.value, '_blank', 'noopener') }
 .tech-card:hover { border-color: var(--color-border-focus); transform: translateY(-1px); }
 .tech-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
 .tech-card-title { font-size: 14px; font-weight: 600; color: var(--color-text); }
-.tech-card-tag { font-size: 10px; padding: 2px 8px; border-radius: 10px; background: rgba(124,106,242,0.12); color: var(--accent); font-weight: 600; white-space: nowrap; }
+.tech-card-tag { font-size: 10px; padding: 2px 8px; border-radius: 10px; background: rgba(var(--accent-rgb),0.12); color: var(--accent); font-weight: 600; white-space: nowrap; }
 .tech-card-desc { font-size: 13px; color: var(--color-text-2); line-height: 1.5; }
 
 .tech-stats-bar { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-top: 32px; padding: 20px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; }

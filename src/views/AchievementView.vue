@@ -123,6 +123,6 @@ async function loadMemoryOverview() {
 .ach-share { width: 32px; height: 32px; border-radius: var(--radius-sm); border: 1px solid var(--glass-border); background: transparent; cursor: pointer; font-size: 15px; flex-shrink: 0; transition: var(--transition); opacity: 0; }
 .achievement-card:hover .ach-share { opacity: 1; }
 .ach-share:hover { background: var(--accent-primary-10); border-color: var(--accent-primary); }
-.newly-unlocked-strip { margin-top: 16px; padding: 12px 16px; border-radius: var(--radius-md); background: linear-gradient(135deg, rgba(250,204,21,0.15), rgba(245,158,11,0.1)); border: 1px solid rgba(250,204,21,0.3); color: var(--text-primary); font-size: 14px; font-weight: 500; animation: ach-pop 0.4s ease; }
+.newly-unlocked-strip { margin-top: 16px; padding: 12px 16px; border-radius: var(--radius-md); background: linear-gradient(135deg, rgba(var(--warning-rgb),0.15), rgba(var(--warning-rgb),0.1)); border: 1px solid rgba(var(--warning-rgb),0.3); color: var(--text-primary); font-size: 14px; font-weight: 500; animation: ach-pop 0.4s ease; }
 @keyframes ach-pop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 </style>

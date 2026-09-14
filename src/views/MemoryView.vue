@@ -214,10 +214,10 @@ onMounted(loadMemory)
   padding: 3px 10px;
   border-radius: var(--radius-xs);
 }
-.mem-tag.weak { background: rgba(239,68,68,0.12); color: var(--accent-danger); }
-.mem-tag.mastered { background: rgba(34,197,94,0.12); color: var(--accent-success); }
+.mem-tag.weak { background: rgba(var(--danger-rgb),0.12); color: var(--accent-danger); }
+.mem-tag.mastered { background: rgba(var(--success-rgb),0.12); color: var(--accent-success); }
 .mem-tag.clickable { cursor: pointer; transition: var(--transition); }
-.mem-tag.clickable:hover { background: rgba(239,68,68,0.25); transform: scale(1.05); }
+.mem-tag.clickable:hover { background: rgba(var(--danger-rgb),0.25); transform: scale(1.05); }
 .mem-tag-label {
   font-size: 11px;
   color: var(--text-muted);

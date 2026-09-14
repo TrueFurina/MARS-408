@@ -481,12 +481,12 @@ onBeforeUnmount(() => {
   gap: 0.125rem;
   padding: 0.625rem 0.75rem;
   border-radius: var(--radius-sm);
-  background: var(--accent-warning-light, rgba(255, 193, 7, 0.12));
-  border: 1px solid rgba(255, 193, 7, 0.35);
+  background: var(--accent-warning-light);
+  border: 1px solid rgba(var(--warning-rgb), 0.35);
 }
 .record-status.passed {
-  background: rgba(82, 196, 26, 0.1);
-  border-color: rgba(82, 196, 26, 0.4);
+  background: rgba(var(--success-rgb), 0.1);
+  border-color: rgba(var(--success-rgb), 0.4);
 }
 .record-status strong { font-size: 0.75rem; color: var(--text-primary); }
 .record-status small { font-size: 0.6875rem; color: var(--text-muted); }

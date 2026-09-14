@@ -150,6 +150,6 @@ function goPractice(courseKey: string) {
 .subject-count { font-size: 12px; color: var(--text-muted); min-width: 60px; text-align: right; }
 .tag-list { display: flex; gap: 6px; flex-wrap: wrap; }
 .tag { padding: 4px 10px; border-radius: 12px; font-size: 12px; }
-.tag-warning { background: rgba(245, 158, 11, 0.15); color: var(--accent-warm); }
+.tag-warning { background: rgba(var(--warning-rgb), 0.15); color: var(--accent-warm); }
 .recommendation-text { font-size: 14px; line-height: 1.6; color: var(--text-secondary); padding: 8px 0; }
 </style>

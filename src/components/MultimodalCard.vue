@@ -138,7 +138,7 @@ onUnmounted(() => stopSpeak())
 }
 
 .mm-source-tag.real {
-  /* 用主题感知的 --text-success：深色=#22c55e，浅色=#15803d；
+  /* 用主题感知的 --text-success：深色=var(--color-success)，浅色=var(--color-success)；
      原 --accent-success 在浅色白底上对比度≈1.9:1(AA 不及格)且显色偏，
      浅色主题下读成"褪色/串色"。 */
   color: var(--text-success);

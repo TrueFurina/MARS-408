@@ -193,13 +193,13 @@ onMounted(load)
 </template>
 
 <style scoped>
-.course-explorer { --course-color: #7c6af2; }
+.course-explorer { --course-color: var(--color-accent); }
 
 /* 课程切换器 */
 .ce-course-switch { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
 @media (max-width: 900px) { .ce-course-switch { grid-template-columns: repeat(2, 1fr); } }
 .ce-course-pill {
-  --pill-color: #7c6af2;
+  --pill-color: var(--color-accent);
   display: flex; align-items: center; gap: 12px;
   padding: 14px 16px; border-radius: 14px; cursor: pointer; text-align: left;
   background: var(--color-surface); border: 1px solid var(--color-border);

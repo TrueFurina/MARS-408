@@ -133,7 +133,7 @@ const flatNodes = computed(() => {
 .mindmap-wrapper {
   width:100%;
   min-height:18.75rem;
-  background: rgba(124, 106, 242, 0.04);
+  background: rgba(var(--accent-rgb), 0.04);
   border: 1px solid var(--border-light);
   border-radius:var(--radius-md);
   overflow: auto;

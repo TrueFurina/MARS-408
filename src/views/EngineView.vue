@@ -388,9 +388,9 @@ function formatModuleName(name: string): string {
 .reli-card { padding:0.625rem 0.75rem; border-radius:var(--radius-sm); border:1px solid var(--border-color); background: var(--bg-tertiary); }
 .reli-name { font-size:0.75rem; font-weight:600; color: var(--text-primary); margin-bottom:0.25rem; word-break: break-all; }
 .reli-badge { display:inline-block; padding:0.125rem 0.5rem; border-radius:var(--radius-full); font-size:0.6875rem; font-weight:700; text-transform:uppercase; }
-.reli-badge.st-closed { background: rgba(34,197,94,0.15); color: var(--accent-success); }
-.reli-badge.st-open { background: rgba(239,68,68,0.15); color: var(--accent-danger); }
-.reli-badge.st-half_open { background: rgba(245,158,11,0.15); color: var(--accent-warm); }
+.reli-badge.st-closed { background: rgba(var(--success-rgb),0.15); color: var(--accent-success); }
+.reli-badge.st-open { background: rgba(var(--danger-rgb),0.15); color: var(--accent-danger); }
+.reli-badge.st-half_open { background: rgba(var(--warning-rgb),0.15); color: var(--accent-warm); }
 .reli-meta { font-size:0.6875rem; color: var(--text-muted); margin-top:0.25rem; }
 .reli-tokens { height:0.375rem; border-radius:var(--radius-full); background: var(--bg-card); overflow:hidden; margin-top:0.25rem; }
 .reli-token-fill { display:block; height:100%; border-radius:var(--radius-full); background: var(--accent-primary); transition: width 0.3s ease; }

@@ -350,7 +350,7 @@ onMounted(() => {
   color: white; font-size: 13px; font-weight: 700; transition: var(--transition);
   margin-top: 2px;
 }
-.check-btn.checked { background: #22c55e; border-color: #22c55e; }
+.check-btn.checked { background: var(--color-success); border-color: var(--color-success); }
 .check-btn:hover { border-color: var(--accent-primary); }
 
 .task-body { flex: 1; min-width: 0; }
@@ -377,12 +377,12 @@ onMounted(() => {
 
 .encourage-msg {
   margin-top: 16px; padding: 14px 20px; border-radius: var(--radius-md); text-align: center;
-  background: linear-gradient(135deg, rgba(34,197,94,0.12), rgba(16,185,129,0.08));
-  border: 1px solid rgba(34,197,94,0.3); font-size: 14px; font-weight: 500;
+  background: linear-gradient(135deg, rgba(var(--success-rgb),0.12), rgba(var(--success-rgb),0.08));
+  border: 1px solid rgba(var(--success-rgb),0.3); font-size: 14px; font-weight: 500;
 }
 .encourage-msg.half {
-  background: linear-gradient(135deg, rgba(245,158,11,0.12), rgba(234,88,12,0.08));
-  border-color: rgba(245,158,11,0.3);
+  background: linear-gradient(135deg, rgba(var(--warning-rgb),0.12), rgba(var(--warning-rgb),0.08));
+  border-color: rgba(var(--warning-rgb),0.3);
 }
 
 .history-view { display: flex; flex-direction: column; gap: 10px; }
@@ -391,7 +391,7 @@ onMounted(() => {
 .h-date small { font-weight: 400; color: var(--text-muted); margin-left: 8px; font-size: 12px; }
 .h-bar-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
 .h-bar { flex: 1; height: 10px; background: rgba(255,255,255,0.06); border-radius: 5px; overflow: hidden; }
-.h-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent-primary), #8b5cf6); border-radius: 5px; transition: width 0.5s; }
+.h-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent-primary), var(--subject-ds)); border-radius: 5px; transition: width 0.5s; }
 .h-rate { font-size: 13px; font-weight: 600; color: var(--accent-primary); min-width: 48px; text-align: right; }
 .h-meta { font-size: 12px; color: var(--text-muted); }
 </style>
