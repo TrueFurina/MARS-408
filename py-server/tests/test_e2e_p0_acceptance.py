@@ -277,10 +277,10 @@ class TestT4_LangGraphSSEStreaming:
             assert node in node_names, (
                 f"Missing expected node '{node}' in graph. Nodes: {node_names}"
             )
-        # INC-05 / T02：重编排后业务节点应为 10 个（evidence_check 在 critic 之后，quality_gate 验收）
+        # INC-05 / T02：业务节点 10 个 + triage 分级路由（三评审集成·增量一）共 11 个
         business_nodes = {n for n in node_names if not n.startswith("__")}
-        assert len(business_nodes) == 10, (
-            f"Graph should have exactly 10 business nodes (INC-05), "
+        assert len(business_nodes) == 11, (
+            f"Graph should have exactly 11 business nodes (INC-05 + triage), "
             f"got {len(business_nodes)}: {business_nodes}"
         )
 
