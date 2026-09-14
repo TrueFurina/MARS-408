@@ -117,8 +117,8 @@ def build_pptx(topic: str, outline_markdown: str, profile: Optional[dict] = None
             try:
                 sub.text_frame.paragraphs[0].font.size = Pt(16)
                 sub.text_frame.paragraphs[0].font.color.rgb = RGBColor.from_string(_BRAND_SUB_HEX)
-            except Exception:
-                pass
+            except (AttributeError, KeyError):
+                logger.debug("封面副标题字体样式设置失败（非致命，已忽略）", exc_info=True)
             # L1/L2/L3 三层学情记忆（低侵入：封面标注重点复习薄弱点）
             if memory_context and memory_context != "【学生记忆】暂无历史学习数据":
                 import re as _re
@@ -129,8 +129,8 @@ def build_pptx(topic: str, outline_markdown: str, profile: Optional[dict] = None
                         p2 = sub.text_frame.add_paragraph()
                         p2.text = f"重点复习：{weak_terms}"
                         p2.font.size = Pt(12)
-                    except Exception:
-                        pass
+                    except (AttributeError, KeyError):
+                        logger.debug("薄弱点复习提示段落添加失败（非致命，已忽略）", exc_info=True)
 
         # ── 内容幻灯片 ──
         content_layout = prs.slide_layouts[1]

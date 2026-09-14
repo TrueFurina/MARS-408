@@ -4,6 +4,7 @@
 # ============================================================
 
 import logging
+import asyncio
 import json as json_mod
 from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel
@@ -105,8 +106,11 @@ async def _generate_ppt(req: GenerationRequest) -> dict:
     slides = _parse_ppt_slides(content)
 
     # 生成真实 .pptx 文件（赛题多模态硬性要求：原仅返回大纲结构）
+    # build_pptx 为同步 CPU 密集调用（python-pptx），在 async 端点内必须以线程池执行，
+    # 避免阻塞事件循环（与 agents/generator_cluster.py:132 保持一致的 run_in_executor 模式）。
     from agents.ppt_builder import build_pptx
-    ppt_file = build_pptx(req.topic, content, profile)
+    loop = asyncio.get_running_loop()
+    ppt_file = await loop.run_in_executor(None, build_pptx, req.topic, content, profile)
     file_url = ppt_file.get("url") if ppt_file.get("ok") else None
     file_path = ppt_file.get("path") if ppt_file.get("ok") else None
 

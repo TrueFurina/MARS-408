@@ -235,13 +235,13 @@ async def synthesize(
         return None
 
     if engine == "melo":
-        return melo_synthesize(text, language)
+        return await asyncio.to_thread(melo_synthesize, text, language)
 
     if engine == "xfyun":
         return await xfyun_synthesize(text, language)
 
     # auto: 优先 MeloTTS（离线可用），失败回退讯飞
-    result = melo_synthesize(text, language)
+    result = await asyncio.to_thread(melo_synthesize, text, language)
     if result is not None:
         return result
 

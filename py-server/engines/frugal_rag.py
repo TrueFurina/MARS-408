@@ -637,9 +637,12 @@ class FrugalRAG:
         self._local_cache.clear()
         if redis_client.is_enabled:
             try:
-                keys = redis_client._client.keys(f"{self._cache_prefix}*")
-                if keys:
-                    redis_client._client.delete(*keys)
+                # 用 scan_iter 替代阻塞的 keys()：KEYS 在大数据量下会阻塞 Redis 主线程，
+                # 且易在同步调用点拖慢事件循环/主线程；scan_iter 游标流式扫描避免全量阻塞。
+                # 逐键走公共 delete 接口（避免再触碰私有 _client.delete）。
+                pattern = f"{self._cache_prefix}*"
+                for key in redis_client._client.scan_iter(match=pattern):
+                    redis_client.delete(key)
             except Exception as e:  # noqa: BLE001
                 logger.warning("清空 Redis 检索缓存失败（非阻塞）: %s", e)
         logger.info("FrugalRAG 检索缓存已清空")
