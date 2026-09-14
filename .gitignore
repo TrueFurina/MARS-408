@@ -225,3 +225,6 @@ scripts/*_tmp.py
 # 失效旧跑（带 bug：免费 skip 虚高 / 未播种口径），见 results/INVALID-ARTIFACTS.md
 py-server/experiments/results/diag_current.json
 py-server/experiments/results/sweep_shadow_budget_20260914_162837.json
+
+# 真实 trace 管线自测冒烟产物（verdict_valid=False，非结论；保留磁盘不入库）
+py-server/experiments/results/review_mappo_real_eval_20260914_214450.json
