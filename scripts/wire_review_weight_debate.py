@@ -1,0 +1,350 @@
+# -*- coding: utf-8 -*-
+"""插入点 A：把三元评审权重接进 agent_debate 的最终共识精炼。
+
+CRLF 安全的字节级补丁（锚点替换，不改行尾、不动 BOM）。
+用法：
+    python scripts/wire_review_weight_debate.py          # dry-run，校验锚点
+    python scripts/wire_review_weight_debate.py --apply  # 真正落盘
+"""
+
+import io
+import os
+import sys
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+TARGET = os.path.join(ROOT, "py-server", "engines", "agent_debate.py")
+
+APPLY = "--apply" in sys.argv
+
+
+def _load():
+    raw = io.open(TARGET, "r", encoding="utf-8", newline="").read()
+    return raw, "\r\n" in raw
+
+
+# ── 1) DebateResult 新增追溯字段（默认空串，向后兼容） ──────────────
+OLD_RESULT = (
+    "    issues_unresolved: int = 0\n"
+    "    final_verdict: str = \"\"\n"
+)
+NEW_RESULT = (
+    "    issues_unresolved: int = 0\n"
+    "    final_verdict: str = \"\"\n"
+    "    review_weight_source: str = \"\"  # 三元权重来源：\"\" / \"mappo\" / \"rules\"\n"
+)
+
+# ── 2) debate() 新增可选入参 ──────────────────────────────────────
+OLD_SIG = (
+    "        student_profile: Optional[dict] = None,\n"
+    "        conflict_issues: Optional[list[str]] = None,\n"
+    "    ) -> DebateResult:\n"
+    "        \"\"\"\n"
+    "        启动多轮辩论\n"
+    "\n"
+    "        Args:\n"
+    "            agent_contents: {agent_name: content} 各Agent的原始输出\n"
+    "            topic: 学习主题\n"
+    "            student_profile: 学生画像（可选）\n"
+    "            conflict_issues: 已知的冲突点\n"
+    "\n"
+    "        Returns:\n"
+    "            DebateResult: 辩论结果\n"
+    "        \"\"\"\n"
+)
+NEW_SIG = (
+    "        student_profile: Optional[dict] = None,\n"
+    "        conflict_issues: Optional[list[str]] = None,\n"
+    "        review_weights: Optional[dict] = None,\n"
+    "        review_weight_source: Optional[str] = None,\n"
+    "        state: Optional[dict] = None,\n"
+    "    ) -> DebateResult:\n"
+    "        \"\"\"\n"
+    "        启动多轮辩论\n"
+    "\n"
+    "        Args:\n"
+    "            agent_contents: {agent_name: content} 各Agent的原始输出\n"
+    "            topic: 学习主题\n"
+    "            student_profile: 学生画像（可选）\n"
+    "            conflict_issues: 已知的冲突点\n"
+    "            review_weights: 三元评审权重 {honest,critic,consensus}（可选，\n"
+    "                为 None/空时精炼逻辑与历史完全一致）\n"
+    "            review_weight_source: 权重来源标记，如 \"mappo\" / \"rules\"\n"
+    "            state: 图状态（可选）；传入时会写回 review_weight_source 供追溯\n"
+    "\n"
+    "        Returns:\n"
+    "            DebateResult: 辩论结果\n"
+    "        \"\"\"\n"
+)
+
+# ── 3) 调用点透传 ────────────────────────────────────────────────
+OLD_CALL = (
+    "        final_content = await self._final_consensus_refinement(\n"
+    "            current_contents, topic, student_profile\n"
+    "        )\n"
+)
+NEW_CALL = (
+    "        final_content, applied_source = await self._final_consensus_refinement(\n"
+    "            current_contents, topic, student_profile,\n"
+    "            review_weights=review_weights,\n"
+    "            review_weight_source=review_weight_source,\n"
+    "        )\n"
+    "        if isinstance(state, dict):\n"
+    "            state[\"review_weight_source\"] = applied_source\n"
+)
+
+# ── 4) DebateResult 构造回填 source ──────────────────────────────
+OLD_RETURN = (
+    "            issues_unresolved=len(unresolved_flat),\n"
+    "            final_verdict=rounds[-1].summary if rounds else \"无辩论\",\n"
+    "        )\n"
+)
+NEW_RETURN = (
+    "            issues_unresolved=len(unresolved_flat),\n"
+    "            final_verdict=rounds[-1].summary if rounds else \"无辩论\",\n"
+    "            review_weight_source=applied_source,\n"
+    "        )\n"
+)
+
+# ── 5) 早退分支补 source（避免 UnboundLocalError） ────────────────
+OLD_EARLY = (
+    "            return DebateResult(\n"
+    "                consensus_content=next(iter(agent_contents.values()), \"\"),\n"
+    "                refined_content=agent_contents,\n"
+    "                rounds_used=0,\n"
+    "            )\n"
+)
+NEW_EARLY = (
+    "            if isinstance(state, dict):\n"
+    "                state[\"review_weight_source\"] = review_weight_source or \"\"\n"
+    "            return DebateResult(\n"
+    "                consensus_content=next(iter(agent_contents.values()), \"\"),\n"
+    "                refined_content=agent_contents,\n"
+    "                rounds_used=0,\n"
+    "                review_weight_source=review_weight_source or \"\",\n"
+    "            )\n"
+)
+
+# ── 6) 权重工具函数（模块级，fail-open） ──────────────────────────
+ANCHOR_HELPER = (
+    "# ── 辩论代理模板 ──\n"
+)
+HELPER = '''# ── 三元评审权重（插入点 A：加权共识合成） ────────────────────────
+#
+# 权重语义：{honest: 证据一致性, critic: 批判性质疑, consensus: 共识收敛}。
+# 本模块只做「按权重分配精炼注意力」，判定逻辑一律不动。
+#
+# 两条硬性不变式（防回归）：
+#   I1 权重缺失 / 非法 / 均匀 → 与历史行为逐字一致（prompt 与内容预算都不变）。
+#   I2 任何异常 → 退回原逻辑，绝不抛给调用方。
+#
+# agent→维度映射默认关闭（空表）：未映射的 Agent 一律取三维度均值，
+# 因此默认状态下所有 Agent 权重相等 ⇒ 加权退化为不加权。
+# 需要真正的 per-agent 加权时，在 config.json 的 gomarl.review_agent_map
+# 显式声明，例如 {"quizmaster": "critic", "teacher": "honest"}。
+# 刻意不做「按名字猜维度」——那是没有根据的发挥。
+
+_REVIEW_DIMS = ("honest", "critic", "consensus")
+_REVIEW_BASE_BUDGET = 1500      # 与历史实现一致的单 Agent 内容预算
+_REVIEW_BUDGET_MIN = 600
+_REVIEW_BUDGET_MAX = 3000
+
+
+def _normalize_review_weights(w):
+    """归一化三元权重（非法返回 None，由调用方保持原值）。"""
+    if not isinstance(w, dict):
+        return None
+    try:
+        vals = {d: max(0.0, float(w.get(d, 0.0))) for d in _REVIEW_DIMS}
+    except (TypeError, ValueError, AttributeError):
+        return None
+    total = sum(vals.values())
+    if total <= 1e-9:
+        return None
+    return {d: v / total for d, v in vals.items()}
+
+
+def _is_uniform_review_weights(w) -> bool:
+    """是否均匀权重（含 None）——均匀即等价于「不加权」。"""
+    if not w:
+        return True
+    return all(abs(w[d] - 1.0 / 3.0) < 1e-9 for d in _REVIEW_DIMS)
+
+
+def _review_agent_map() -> dict:
+    """读取 agent→维度映射；读不到/异常一律返回空表（不加权）。"""
+    try:
+        from config import get_gomarl_config
+        cfg = get_gomarl_config() or {}
+        m = cfg.get("review_agent_map")
+        return m if isinstance(m, dict) else {}
+    except Exception:
+        return {}
+
+
+def review_content_budgets(agent_names, weights, agent_map=None) -> dict:
+    """按三元权重为各 Agent 分配精炼内容预算（字符数）。
+
+    未映射的 Agent 取三维度均值 —— 全部未映射时所有人权重相等，
+    预算恒等于 _REVIEW_BASE_BUDGET，与历史逐字一致（不变式 I1）。
+    """
+    names = list(agent_names)
+    w = _normalize_review_weights(weights)
+    if w is None or _is_uniform_review_weights(w):
+        return {n: _REVIEW_BASE_BUDGET for n in names}
+
+    amap = agent_map if isinstance(agent_map, dict) else _review_agent_map()
+    mean_w = sum(w.values()) / len(w)
+    raw = {}
+    for n in names:
+        dim = amap.get(n)
+        raw[n] = w.get(dim, mean_w) if dim in _REVIEW_DIMS else mean_w
+
+    total = sum(raw.values())
+    if total <= 1e-9:
+        return {n: _REVIEW_BASE_BUDGET for n in names}
+
+    n_agents = max(1, len(names))
+    budgets = {}
+    for n in names:
+        scaled = _REVIEW_BASE_BUDGET * n_agents * (raw[n] / total)
+        budgets[n] = int(max(_REVIEW_BUDGET_MIN,
+                             min(_REVIEW_BUDGET_MAX, scaled)))
+    return budgets
+
+
+def review_emphasis_line(weights) -> str:
+    """生成权重提示行；均匀/非法/缺失一律返回空串（不变式 I1）。"""
+    w = _normalize_review_weights(weights)
+    if w is None or _is_uniform_review_weights(w):
+        return ""
+    return (
+        "\\n【三元评审权重（越高的维度，其相关分歧越应被采纳）】\\n"
+        f"- 证据一致性 honest   : {w['honest']:.2f}\\n"
+        f"- 批判性质疑 critic   : {w['critic']:.2f}\\n"
+        f"- 共识收敛 consensus  : {w['consensus']:.2f}\\n"
+    )
+
+
+# ── 辩论代理模板 ──
+'''
+
+# ── 7) _final_consensus_refinement 加权合成 ──────────────────────
+OLD_REFIN = (
+    "    async def _final_consensus_refinement(\n"
+    "        self,\n"
+    "        refined_contents: dict[str, str],\n"
+    "        topic: str,\n"
+    "        student_profile: Optional[dict],\n"
+    "    ) -> str:\n"
+    "        \"\"\"最终共识精炼——将所有Agent的精炼内容合并为统一输出\"\"\"\n"
+)
+NEW_REFIN = (
+    "    async def _final_consensus_refinement(\n"
+    "        self,\n"
+    "        refined_contents: dict[str, str],\n"
+    "        topic: str,\n"
+    "        student_profile: Optional[dict],\n"
+    "        review_weights: Optional[dict] = None,\n"
+    "        review_weight_source: Optional[str] = None,\n"
+    "    ) -> tuple[str, str]:\n"
+    "        \"\"\"最终共识精炼——将所有Agent的精炼内容合并为统一输出\n"
+    "\n"
+    "        返回 (final_content, applied_source)。applied_source 为实际生效的\n"
+    "        权重来源（\"\"/\"mappo\"/\"rules\"），供上游写入 state 追溯。\n"
+    "\n"
+    "        不变式：权重缺失/非法/均匀 ⇒ prompt 与内容预算与历史逐字一致。\n"
+    "        \"\"\"\n"
+)
+
+OLD_BODY = (
+    "        contents_text = \"\\n\\n\".join(\n"
+    "            f\"【{name}的精炼输出】\\n{content[:1500]}\"\n"
+    "            for name, content in refined_contents.items()\n"
+    "        )\n"
+)
+NEW_BODY = (
+    "        budgets = review_content_budgets(refined_contents.keys(), review_weights)\n"
+    "        emphasis = review_emphasis_line(review_weights)\n"
+    "        applied_source = (\n"
+    "            (review_weight_source or \"\") if emphasis or not _is_uniform_review_weights(\n"
+    "                _normalize_review_weights(review_weights)\n"
+    "            ) else \"\"\n"
+    "        )\n"
+    "        # 非均匀权重时按权重降序呈现，让高权重 Agent 占据 prompt 前部\n"
+    "        ordered = sorted(\n"
+    "            refined_contents.items(), key=lambda kv: -budgets.get(kv[0], 0)\n"
+    "        )\n"
+    "        contents_text = \"\\n\\n\".join(\n"
+    "            f\"【{name}的精炼输出】\\n{content[:budgets.get(name, _REVIEW_BASE_BUDGET)]}\"\n"
+    "            for name, content in ordered\n"
+    "        )\n"
+)
+
+OLD_PROMPT = (
+    "            f\"各Agent精炼后的输出：\\n{contents_text}\\n\\n\"\n"
+)
+NEW_PROMPT = (
+    "            f\"各Agent精炼后的输出：\\n{contents_text}\\n\\n\"\n"
+    "            f\"{emphasis}\"\n"
+)
+
+OLD_FALLBACK = (
+    "            logger.warning(\"debate final consensus refinement failed: %s\", e)\n"
+    "            return \"\\n\\n---\\n\\n\".join(refined_contents.values())\n"
+)
+NEW_FALLBACK = (
+    "            logger.warning(\"debate final consensus refinement failed: %s\", e)\n"
+    "            # 降级路径同样按权重降序拼接（权重均匀时顺序与 dict 原序一致）\n"
+    "            return (\n"
+    "                \"\\n\\n---\\n\\n\".join(c for _, c in ordered), applied_source\n"
+    "            )\n"
+)
+
+OLD_OK = (
+    "            return final.strip()\n"
+)
+NEW_OK = (
+    "            return final.strip(), applied_source\n"
+)
+
+PATCHES = [
+    ("DebateResult 追溯字段", OLD_RESULT, NEW_RESULT),
+    ("debate() 入参", OLD_SIG, NEW_SIG),
+    ("早退分支 source", OLD_EARLY, NEW_EARLY),
+    ("精炼调用透传", OLD_CALL, NEW_CALL),
+    ("DebateResult 回填", OLD_RETURN, NEW_RETURN),
+    ("权重工具函数", ANCHOR_HELPER, HELPER),
+    ("精炼签名", OLD_REFIN, NEW_REFIN),
+    ("精炼 body 加权", OLD_BODY, NEW_BODY),
+    ("prompt 权重行", OLD_PROMPT, NEW_PROMPT),
+    ("降级路径", OLD_FALLBACK, NEW_FALLBACK),
+    ("正常返回", OLD_OK, NEW_OK),
+]
+
+
+def main():
+    raw, crlf = _load()
+    t = raw.replace("\r\n", "\n")
+    ok = True
+    for label, old, new in PATCHES:
+        c = t.count(old)
+        flag = "OK " if c == 1 else "!! "
+        if c != 1:
+            ok = False
+        print(f"{flag}{label}: 命中 {c}")
+    if not ok or not APPLY:
+        print("\n[DRY-RUN] 未落盘" if not ok else "\n[DRY-RUN] 锚点全中，加 --apply 落盘")
+        return 1 if not ok else 0
+
+    for label, old, new in PATCHES:
+        t = t.replace(old, new, 1)
+    if crlf:
+        t = t.replace("\n", "\r\n")
+    io.open(TARGET, "w", encoding="utf-8", newline="").write(t)
+    b = open(TARGET, "rb").read()
+    print(f"\n[APPLIED] CRLF={b.count(b'\r\n')} LF={b.count(b'\n')}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

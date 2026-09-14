@@ -1,0 +1,114 @@
+# -*- coding: utf-8 -*-
+"""插入点 A 收尾：让 api/agents.py 的辩论调用真正拿到三元评审权重。
+
+在此之前 debate() 有权重入参但无人传值 —— 插入点 A 是「接口存在、链路不通」。
+本补丁补上解析函数（放在 agent_debate 内，fail-open）+ 调用方透传。
+
+CRLF 安全的字节级补丁。用法：
+    python scripts/wire_review_weight_caller.py          # dry-run
+    python scripts/wire_review_weight_caller.py --apply
+"""
+
+import io
+import os
+import sys
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DEBATE = os.path.join(ROOT, "py-server", "engines", "agent_debate.py")
+API = os.path.join(ROOT, "py-server", "api", "agents.py")
+
+APPLY = "--apply" in sys.argv
+
+
+def patch(path, patches):
+    raw = io.open(path, "r", encoding="utf-8", newline="").read()
+    crlf = "\r\n" in raw
+    t = raw.replace("\r\n", "\n")
+    ok = True
+    for label, old, new in patches:
+        c = t.count(old)
+        print(f"{'OK ' if c == 1 else '!! '}{label}: 命中 {c}")
+        if c != 1:
+            ok = False
+    if not ok:
+        return False
+    if APPLY:
+        for _, old, new in patches:
+            t = t.replace(old, new, 1)
+        if crlf:
+            t = t.replace("\n", "\r\n")
+        io.open(path, "w", encoding="utf-8", newline="").write(t)
+    return True
+
+
+RESOLVER_ANCHOR = (
+    "def review_emphasis_line(weights) -> str:\n"
+)
+
+RESOLVER = '''def resolve_debate_review_weights(
+    consensus=None, state=None,
+) -> tuple[Optional[dict], str]:
+    """解析辩论用的三元评审权重，返回 (weights, source)。
+
+    灰度关闭 / 模块缺失 / 任何异常 → (None, "")，调用方行为与历史完全一致（不变式 I1）。
+    """
+    try:
+        from engines.review_policy import (
+            decide_review_weight,
+            review_state_features,
+            _mappo_enabled,
+        )
+        if not _mappo_enabled():
+            return None, ""
+        c = consensus if isinstance(consensus, dict) else {
+            "status": getattr(consensus, "status", "none"),
+        }
+        feats = review_state_features(consensus=c, state=state or {})
+        d = decide_review_weight(feats, use_mappo=True)
+        w = d.get("weights")
+        if not isinstance(w, dict) or not w:
+            return None, ""
+        return w, str(d.get("source", "mappo"))
+    except Exception as e:  # noqa: BLE001 - 接线失败必须退化，绝不冒泡
+        logger.warning("辩论评审权重解析失败，回退均匀权重: %s", e)
+        return None, ""
+
+
+def review_emphasis_line(weights) -> str:
+'''
+
+print("=== engines/agent_debate.py ===")
+ok1 = patch(DEBATE, [("权重解析函数", RESOLVER_ANCHOR, RESOLVER)])
+
+print("\n=== api/agents.py ===")
+OLD_IMP = "            from engines.agent_debate import agent_debate\n"
+NEW_IMP = (
+    "            from engines.agent_debate import (\n"
+    "                agent_debate, resolve_debate_review_weights,\n"
+    "            )\n"
+)
+OLD_CALL = (
+    "            debate_result = await agent_debate.debate(\n"
+    "                agent_contents=debate_contents,\n"
+    "                topic=safe_topic,\n"
+    "                student_profile=req.profile or {},\n"
+    "                conflict_issues=consensus.flagged_issues,\n"
+    "            )\n"
+)
+NEW_CALL = (
+    "            _rw, _rw_src = resolve_debate_review_weights(consensus)\n"
+    "            debate_result = await agent_debate.debate(\n"
+    "                agent_contents=debate_contents,\n"
+    "                topic=safe_topic,\n"
+    "                student_profile=req.profile or {},\n"
+    "                conflict_issues=consensus.flagged_issues,\n"
+    "                review_weights=_rw,\n"
+    "                review_weight_source=_rw_src,\n"
+    "            )\n"
+)
+ok2 = patch(API, [("导入透传", OLD_IMP, NEW_IMP), ("调用透传", OLD_CALL, NEW_CALL)])
+
+if not (ok1 and ok2):
+    print("\n[DRY-RUN] 锚点未全中，未落盘")
+    sys.exit(1)
+print("\n[DRY-RUN] 锚点全中，加 --apply 落盘" if not APPLY else "\n[APPLIED]")

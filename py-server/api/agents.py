@@ -144,16 +144,21 @@ async def generate_resource(req: AgentResourceRequest, user: dict = Depends(get_
                 _hallu_warnings.append(f"[GOMARL] {issue}")
         elif consensus.status == "regenerate" and len(consensus.regenerate_agents) == 2:
             # 两个 Agent 冲突 → 启动辩论协议
-            from engines.agent_debate import agent_debate
+            from engines.agent_debate import (
+                agent_debate, resolve_debate_review_weights,
+            )
             debate_contents = {}
             for r in agent_results:
                 if r.agent_name in consensus.regenerate_agents:
                     debate_contents[r.agent_name] = r.content
+            _rw, _rw_src = resolve_debate_review_weights(consensus)
             debate_result = await agent_debate.debate(
                 agent_contents=debate_contents,
                 topic=safe_topic,
                 student_profile=req.profile or {},
                 conflict_issues=consensus.flagged_issues,
+                review_weights=_rw,
+                review_weight_source=_rw_src,
             )
             if debate_result.issues_resolved > 0:
                 # 用辩论精炼后的内容替换原结果

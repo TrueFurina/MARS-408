@@ -46,6 +46,7 @@ class DebateResult:
     issues_resolved: int = 0
     issues_unresolved: int = 0
     final_verdict: str = ""
+    review_weight_source: str = ""  # 三元权重来源："" / "mappo" / "rules"
 
 
 @dataclass
@@ -55,6 +56,132 @@ class ReflectionResult:
     refined_content: str
     changes_made: list[str] = field(default_factory=list)
     confidence_delta: float = 0.0  # 反思后的置信度变化
+
+
+# ── 三元评审权重（插入点 A：加权共识合成） ────────────────────────
+#
+# 权重语义：{honest: 证据一致性, critic: 批判性质疑, consensus: 共识收敛}。
+# 本模块只做「按权重分配精炼注意力」，判定逻辑一律不动。
+#
+# 两条硬性不变式（防回归）：
+#   I1 权重缺失 / 非法 / 均匀 → 与历史行为逐字一致（prompt 与内容预算都不变）。
+#   I2 任何异常 → 退回原逻辑，绝不抛给调用方。
+#
+# agent→维度映射默认关闭（空表）：未映射的 Agent 一律取三维度均值，
+# 因此默认状态下所有 Agent 权重相等 ⇒ 加权退化为不加权。
+# 需要真正的 per-agent 加权时，在 config.json 的 gomarl.review_agent_map
+# 显式声明，例如 {"quizmaster": "critic", "teacher": "honest"}。
+# 刻意不做「按名字猜维度」——那是没有根据的发挥。
+
+_REVIEW_DIMS = ("honest", "critic", "consensus")
+_REVIEW_BASE_BUDGET = 1500      # 与历史实现一致的单 Agent 内容预算
+_REVIEW_BUDGET_MIN = 600
+_REVIEW_BUDGET_MAX = 3000
+
+
+def _normalize_review_weights(w):
+    """归一化三元权重（非法返回 None，由调用方保持原值）。"""
+    if not isinstance(w, dict):
+        return None
+    try:
+        vals = {d: max(0.0, float(w.get(d, 0.0))) for d in _REVIEW_DIMS}
+    except (TypeError, ValueError, AttributeError):
+        return None
+    total = sum(vals.values())
+    if total <= 1e-9:
+        return None
+    return {d: v / total for d, v in vals.items()}
+
+
+def _is_uniform_review_weights(w) -> bool:
+    """是否均匀权重（含 None）——均匀即等价于「不加权」。"""
+    if not w:
+        return True
+    return all(abs(w[d] - 1.0 / 3.0) < 1e-9 for d in _REVIEW_DIMS)
+
+
+def _review_agent_map() -> dict:
+    """读取 agent→维度映射；读不到/异常一律返回空表（不加权）。"""
+    try:
+        from config import get_gomarl_config
+        cfg = get_gomarl_config() or {}
+        m = cfg.get("review_agent_map")
+        return m if isinstance(m, dict) else {}
+    except Exception:
+        return {}
+
+
+def review_content_budgets(agent_names, weights, agent_map=None) -> dict:
+    """按三元权重为各 Agent 分配精炼内容预算（字符数）。
+
+    未映射的 Agent 取三维度均值 —— 全部未映射时所有人权重相等，
+    预算恒等于 _REVIEW_BASE_BUDGET，与历史逐字一致（不变式 I1）。
+    """
+    names = list(agent_names)
+    w = _normalize_review_weights(weights)
+    if w is None or _is_uniform_review_weights(w):
+        return {n: _REVIEW_BASE_BUDGET for n in names}
+
+    amap = agent_map if isinstance(agent_map, dict) else _review_agent_map()
+    mean_w = sum(w.values()) / len(w)
+    raw = {}
+    for n in names:
+        dim = amap.get(n)
+        raw[n] = w.get(dim, mean_w) if dim in _REVIEW_DIMS else mean_w
+
+    total = sum(raw.values())
+    if total <= 1e-9:
+        return {n: _REVIEW_BASE_BUDGET for n in names}
+
+    n_agents = max(1, len(names))
+    budgets = {}
+    for n in names:
+        scaled = _REVIEW_BASE_BUDGET * n_agents * (raw[n] / total)
+        budgets[n] = int(max(_REVIEW_BUDGET_MIN,
+                             min(_REVIEW_BUDGET_MAX, scaled)))
+    return budgets
+
+
+def resolve_debate_review_weights(
+    consensus=None, state=None,
+) -> tuple[Optional[dict], str]:
+    """解析辩论用的三元评审权重，返回 (weights, source)。
+
+    灰度关闭 / 模块缺失 / 任何异常 → (None, "")，调用方行为与历史完全一致（不变式 I1）。
+    """
+    try:
+        from engines.review_policy import (
+            decide_review_weight,
+            review_state_features,
+            _mappo_enabled,
+        )
+        if not _mappo_enabled():
+            return None, ""
+        c = consensus if isinstance(consensus, dict) else {
+            "status": getattr(consensus, "status", "none"),
+        }
+        feats = review_state_features(consensus=c, state=state or {})
+        d = decide_review_weight(feats, use_mappo=True)
+        w = d.get("weights")
+        if not isinstance(w, dict) or not w:
+            return None, ""
+        return w, str(d.get("source", "mappo"))
+    except Exception as e:  # noqa: BLE001 - 接线失败必须退化，绝不冒泡
+        logger.warning("辩论评审权重解析失败，回退均匀权重: %s", e)
+        return None, ""
+
+
+def review_emphasis_line(weights) -> str:
+    """生成权重提示行；均匀/非法/缺失一律返回空串（不变式 I1）。"""
+    w = _normalize_review_weights(weights)
+    if w is None or _is_uniform_review_weights(w):
+        return ""
+    return (
+        "\n【三元评审权重（越高的维度，其相关分歧越应被采纳）】\n"
+        f"- 证据一致性 honest   : {w['honest']:.2f}\n"
+        f"- 批判性质疑 critic   : {w['critic']:.2f}\n"
+        f"- 共识收敛 consensus  : {w['consensus']:.2f}\n"
+    )
 
 
 # ── 辩论代理模板 ──
@@ -166,6 +293,9 @@ class AgentDebate:
         topic: str,
         student_profile: Optional[dict] = None,
         conflict_issues: Optional[list[str]] = None,
+        review_weights: Optional[dict] = None,
+        review_weight_source: Optional[str] = None,
+        state: Optional[dict] = None,
     ) -> DebateResult:
         """
         启动多轮辩论
@@ -175,6 +305,10 @@ class AgentDebate:
             topic: 学习主题
             student_profile: 学生画像（可选）
             conflict_issues: 已知的冲突点
+            review_weights: 三元评审权重 {honest,critic,consensus}（可选，
+                为 None/空时精炼逻辑与历史完全一致）
+            review_weight_source: 权重来源标记，如 "mappo" / "rules"
+            state: 图状态（可选）；传入时会写回 review_weight_source 供追溯
 
         Returns:
             DebateResult: 辩论结果
@@ -182,10 +316,13 @@ class AgentDebate:
         agent_names = list(agent_contents.keys())
         if len(agent_names) < self.min_agents_for_debate:
             logger.info(f"Agent 数量不足 ({len(agent_names)} < {self.min_agents_for_debate})，跳过辩论")
+            if isinstance(state, dict):
+                state["review_weight_source"] = review_weight_source or ""
             return DebateResult(
                 consensus_content=next(iter(agent_contents.values()), ""),
                 refined_content=agent_contents,
                 rounds_used=0,
+                review_weight_source=review_weight_source or "",
             )
 
         rounds = []
@@ -254,9 +391,13 @@ class AgentDebate:
             rounds.append(round_result)
 
         # 最终共识精炼
-        final_content = await self._final_consensus_refinement(
-            current_contents, topic, student_profile
+        final_content, applied_source = await self._final_consensus_refinement(
+            current_contents, topic, student_profile,
+            review_weights=review_weights,
+            review_weight_source=review_weight_source,
         )
+        if isinstance(state, dict):
+            state["review_weight_source"] = applied_source
 
         # 统计
         resolved_count = sum(1 for r in rounds if r.resolved)
@@ -276,6 +417,7 @@ class AgentDebate:
             issues_resolved=resolved_count,
             issues_unresolved=len(unresolved_flat),
             final_verdict=rounds[-1].summary if rounds else "无辩论",
+            review_weight_source=applied_source,
         )
 
     async def agent_reflection(
@@ -426,8 +568,16 @@ class AgentDebate:
         refined_contents: dict[str, str],
         topic: str,
         student_profile: Optional[dict],
-    ) -> str:
-        """最终共识精炼——将所有Agent的精炼内容合并为统一输出"""
+        review_weights: Optional[dict] = None,
+        review_weight_source: Optional[str] = None,
+    ) -> tuple[str, str]:
+        """最终共识精炼——将所有Agent的精炼内容合并为统一输出
+
+        返回 (final_content, applied_source)。applied_source 为实际生效的
+        权重来源（""/"mappo"/"rules"），供上游写入 state 追溯。
+
+        不变式：权重缺失/非法/均匀 ⇒ prompt 与内容预算与历史逐字一致。
+        """
         profile_info = ""
         if student_profile:
             profile_info = (
@@ -436,9 +586,17 @@ class AgentDebate:
                 f"- 掌握度: {student_profile.get('level', 'intermediate')}\n"
             )
 
+        budgets = review_content_budgets(refined_contents.keys(), review_weights)
+        emphasis = review_emphasis_line(review_weights)
+        # emphasis 非空 ⟺ 权重非均匀且合法 —— 两者等价，故只以 emphasis 为准
+        applied_source = (review_weight_source or "") if emphasis else ""
+        # 非均匀权重时按权重降序呈现，让高权重 Agent 占据 prompt 前部
+        ordered = sorted(
+            refined_contents.items(), key=lambda kv: -budgets.get(kv[0], 0)
+        )
         contents_text = "\n\n".join(
-            f"【{name}的精炼输出】\n{content[:1500]}"
-            for name, content in refined_contents.items()
+            f"【{name}的精炼输出】\n{content[:budgets.get(name, _REVIEW_BASE_BUDGET)]}"
+            for name, content in ordered
         )
 
         refiner = LLMProvider()
@@ -447,6 +605,7 @@ class AgentDebate:
             f"主题：{topic}\n"
             f"{profile_info}\n"
             f"各Agent精炼后的输出：\n{contents_text}\n\n"
+            f"{emphasis}"
             f"请整合为一个连贯、完整的学习内容。要求：\n"
             f"1. 消除所有矛盾和不一致\n"
             f"2. 按照教学逻辑重新组织（概念→原理→应用→例题）\n"
@@ -462,11 +621,14 @@ class AgentDebate:
                 temperature=0.4,
                 max_tokens=2000,
             )
-            return final.strip()
+            return final.strip(), applied_source
         except Exception as e:
             # 降级：简单拼接
             logger.warning("debate final consensus refinement failed: %s", e)
-            return "\n\n---\n\n".join(refined_contents.values())
+            # 降级路径同样按权重降序拼接（权重均匀时顺序与 dict 原序一致）
+            return (
+                "\n\n---\n\n".join(c for _, c in ordered), applied_source
+            )
 
     def _parse_debate_response(self, text: str) -> dict:
         """解析辩论响应JSON"""

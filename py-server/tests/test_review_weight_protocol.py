@@ -198,3 +198,255 @@ def test_review_mappo_disabled_by_default():
 
     assert config.use_review_mappo() is False
     assert config.review_min_review() == 2
+
+
+# ── 6. 插入点 A：加权共识合成（agent_debate） ───────────────────────────────
+from engines.agent_debate import (  # noqa: E402
+    _REVIEW_BASE_BUDGET,
+    AgentDebate,
+    review_content_budgets,
+    review_emphasis_line,
+)
+
+AGENTS = {"teacher": "讲稿内容", "quizmaster": "题目内容", "media_designer": "素材内容"}
+NONUNIFORM = {"honest": 0.2, "critic": 0.6, "consensus": 0.2}
+UNIFORM_W = {"honest": 1 / 3, "critic": 1 / 3, "consensus": 1 / 3}
+
+
+def test_budgets_no_weights_all_base():
+    """无权重 → 所有 Agent 预算等于历史常量 1500（零变化）。"""
+    for w in (None, {}, [], "bad", {"honest": float("nan")}):
+        b = review_content_budgets(AGENTS.keys(), w)
+        assert set(b.values()) == {_REVIEW_BASE_BUDGET}, f"weights={w}"
+
+
+def test_budgets_uniform_all_base():
+    """均匀权重 → 与无权重完全一致。"""
+    assert review_content_budgets(AGENTS.keys(), UNIFORM_W) == \
+        review_content_budgets(AGENTS.keys(), None)
+
+
+def test_budgets_unmapped_agents_get_mean():
+    """默认无 agent_map：所有 Agent 取三维度均值 ⇒ 权重相等 ⇒ 预算全 1500。
+
+    这条是「不按名字猜维度」设计的直接体现：不做无根据的映射发挥。
+    """
+    b = review_content_budgets(AGENTS.keys(), NONUNIFORM, agent_map={})
+    assert set(b.values()) == {_REVIEW_BASE_BUDGET}
+
+
+def test_budgets_mapped_agent_gets_more():
+    """显式映射后，高权重维度对应的 Agent 拿到更多内容预算。"""
+    b = review_content_budgets(
+        AGENTS.keys(), NONUNIFORM, agent_map={"quizmaster": "critic"})
+    assert b["quizmaster"] > b["teacher"]
+    assert all(_REVIEW_BASE_BUDGET >= v >= 600 for v in b.values()) or \
+        all(600 <= v <= 3000 for v in b.values())
+
+
+def test_budgets_respect_clamp_bounds():
+    """极端权重下预算仍被 clamp 在 [600, 3000]，不会截断到 0 或爆炸。"""
+    b = review_content_budgets(
+        AGENTS.keys(), {"honest": 1.0, "critic": 0.0, "consensus": 0.0},
+        agent_map={"teacher": "honest", "quizmaster": "critic"})
+    assert all(600 <= v <= 3000 for v in b.values())
+
+
+def test_emphasis_line_empty_when_uniform_or_absent():
+    """均匀/缺失/非法权重 → 权重提示行为空（prompt 零变化）。"""
+    for w in (None, {}, UNIFORM_W, "bad"):
+        assert review_emphasis_line(w) == "", f"weights={w}"
+
+
+def test_emphasis_line_nonuniform_lists_three_dims():
+    w = review_emphasis_line(NONUNIFORM)
+    assert "honest" in w and "critic" in w and "consensus" in w
+    assert "0.60" in w  # critic 0.6 归一后仍为 0.6
+
+
+class _FakeLLM:
+    """捕获 prompt 的假 LLM，用于锁死「prompt 零变化」不变式。"""
+
+    def __init__(self, fail=False):
+        self.prompts = []
+        self.fail = fail
+
+    async def text_completion(self, system, prompt, **kw):
+        self.prompts.append(prompt)
+        if self.fail:
+            raise RuntimeError("LLM down")
+        return "整合结果"
+
+
+@pytest.mark.parametrize("weights", [None, {}, UNIFORM_W])
+def test_refinement_prompt_identical_without_effective_weights(weights, monkeypatch):
+    """无权重 / 空 / 均匀 → 精炼 prompt 与历史实现逐字一致。"""
+    fake = _FakeLLM()
+    monkeypatch.setattr("db.llm_provider.LLMProvider", lambda *a, **k: fake)
+    import engines.agent_debate as ad
+    monkeypatch.setattr(ad, "LLMProvider", lambda *a, **k: fake)
+
+    deb = AgentDebate()
+    _, src = asyncio.run(deb._final_consensus_refinement(
+        AGENTS, "计算机网络·拥塞控制", {"weak_topics": ["TCP"]},
+        review_weights=weights, review_weight_source="mappo"))
+    assert src == ""          # 未真正生效
+    assert "三元评审权重" not in fake.prompts[0]
+    assert "【teacher的精炼输出】" in fake.prompts[0]
+
+
+def test_refinement_applies_weight_and_reports_source(monkeypatch):
+    """非均匀权重 + 显式映射 → prompt 注入权重行，且 source 被上报。"""
+    fake = _FakeLLM()
+    import engines.agent_debate as ad
+    monkeypatch.setattr(ad, "LLMProvider", lambda *a, **k: fake)
+    monkeypatch.setattr(ad, "_review_agent_map", lambda: {"quizmaster": "critic"})
+
+    deb = AgentDebate()
+    out, src = asyncio.run(deb._final_consensus_refinement(
+        AGENTS, "OS·死锁", None,
+        review_weights=NONUNIFORM, review_weight_source="mappo"))
+    assert src == "mappo"
+    assert "三元评审权重" in fake.prompts[0]
+    assert out == "整合结果"
+
+
+def test_refinement_fallback_preserves_weight_order(monkeypatch):
+    """LLM 失败降级路径：按权重降序拼接，高权重 Agent 在前。"""
+    fake = _FakeLLM(fail=True)
+    import engines.agent_debate as ad
+    monkeypatch.setattr(ad, "LLMProvider", lambda *a, **k: fake)
+    monkeypatch.setattr(ad, "_review_agent_map", lambda: {"quizmaster": "critic"})
+
+    deb = AgentDebate()
+    out, src = asyncio.run(deb._final_consensus_refinement(
+        AGENTS, "DS·图", None,
+        review_weights=NONUNIFORM, review_weight_source="rules"))
+    assert src == "rules"
+    assert out.index("题目内容") < out.index("讲稿内容")
+
+
+def test_debate_writes_source_back_to_state(monkeypatch):
+    """debate() 传入 state 时写回 review_weight_source 供追溯。"""
+    fake = _FakeLLM()
+    import engines.agent_debate as ad
+    monkeypatch.setattr(ad, "LLMProvider", lambda *a, **k: fake)
+    monkeypatch.setattr(ad, "_review_agent_map", lambda: {"quizmaster": "critic"})
+
+    st = {}
+    deb = AgentDebate()
+    res = asyncio.run(deb.debate(
+        agent_contents=AGENTS, topic="CN·路由", student_profile=None,
+        review_weights=NONUNIFORM, review_weight_source="mappo", state=st))
+    assert st["review_weight_source"] == "mappo"
+    assert res.review_weight_source == "mappo"
+
+
+def test_debate_no_source_when_weights_absent(monkeypatch):
+    """无权重时 source 为空串，不污染 state（行为=现状）。"""
+    fake = _FakeLLM()
+    import engines.agent_debate as ad
+    monkeypatch.setattr(ad, "LLMProvider", lambda *a, **k: fake)
+
+    st = {}
+    deb = AgentDebate()
+    res = asyncio.run(deb.debate(
+        agent_contents=AGENTS, topic="CO·流水线", student_profile=None, state=st))
+    assert st["review_weight_source"] == ""
+    assert res.review_weight_source == ""
+
+
+# ── 7. 插入点 A 上游解析（灰度三态） ────────────────────────────────────────
+from engines.agent_debate import resolve_debate_review_weights  # noqa: E402
+
+
+def test_resolve_returns_none_when_grayscale_off():
+    """灰度默认关闭 → (None, "")：辩论行为与历史完全一致。"""
+    w, src = resolve_debate_review_weights({"status": "conflict"})
+    assert w is None and src == ""
+
+
+def test_resolve_fails_open_on_policy_error(monkeypatch):
+    """review_policy 抛异常 → 回退不加权，绝不冒泡到业务链路。"""
+    import engines.review_policy as rp
+    monkeypatch.setattr(rp, "_mappo_enabled", lambda: True)
+    monkeypatch.setattr(rp, "review_state_features", lambda **k: (_ for _ in ()).throw(
+        RuntimeError("boom")))
+    w, src = resolve_debate_review_weights({"status": "conflict"})
+    assert w is None and src == ""
+
+
+def test_resolve_returns_weights_when_grayscale_on(monkeypatch):
+    """灰度开启 → 拿到权重与来源标记。"""
+    import engines.review_policy as rp
+    monkeypatch.setattr(rp, "_mappo_enabled", lambda: True)
+    monkeypatch.setattr(rp, "review_state_features", lambda **k: [0.5] * 12)
+    monkeypatch.setattr(rp, "decide_review_weight",
+                        lambda f, use_mappo=False, **k: {
+                            "weights": NONUNIFORM, "source": "mappo", "action": 1})
+    w, src = resolve_debate_review_weights({"status": "conflict"})
+    assert w == NONUNIFORM and src == "mappo"
+
+
+def test_resolve_accepts_object_consensus(monkeypatch):
+    """consensus 传对象（非 dict）也能取到 status，不抛异常。"""
+    import engines.review_policy as rp
+    monkeypatch.setattr(rp, "_mappo_enabled", lambda: True)
+    monkeypatch.setattr(rp, "review_state_features", lambda **k: [0.5] * 12)
+    monkeypatch.setattr(rp, "decide_review_weight",
+                        lambda f, use_mappo=False, **k: {
+                            "weights": UNIFORM_W, "source": "uniform", "action": 3})
+
+    class _C:
+        status = "regenerate"
+
+    w, src = resolve_debate_review_weights(_C())
+    assert w == UNIFORM_W and src == "uniform"
+
+
+# ── 7. 插入点 A 上游解析（灰度三态） ────────────────────────────────────────
+from engines.agent_debate import resolve_debate_review_weights  # noqa: E402
+
+
+def test_resolve_returns_none_when_grayscale_off():
+    """灰度默认关闭 → (None, "")：辩论行为与历史完全一致。"""
+    w, src = resolve_debate_review_weights({"status": "conflict"})
+    assert w is None and src == ""
+
+
+def test_resolve_fails_open_on_policy_error(monkeypatch):
+    """review_policy 抛异常 → 回退不加权，绝不冒泡到业务链路。"""
+    import engines.review_policy as rp
+    monkeypatch.setattr(rp, "_mappo_enabled", lambda: True)
+    monkeypatch.setattr(rp, "review_state_features", lambda **k: (_ for _ in ()).throw(
+        RuntimeError("boom")))
+    w, src = resolve_debate_review_weights({"status": "conflict"})
+    assert w is None and src == ""
+
+
+def test_resolve_returns_weights_when_grayscale_on(monkeypatch):
+    """灰度开启 → 拿到权重与来源标记。"""
+    import engines.review_policy as rp
+    monkeypatch.setattr(rp, "_mappo_enabled", lambda: True)
+    monkeypatch.setattr(rp, "review_state_features", lambda **k: [0.5] * 12)
+    monkeypatch.setattr(rp, "decide_review_weight",
+                        lambda f, use_mappo=False, **k: {
+                            "weights": NONUNIFORM, "source": "mappo", "action": 1})
+    w, src = resolve_debate_review_weights({"status": "conflict"})
+    assert w == NONUNIFORM and src == "mappo"
+
+
+def test_resolve_accepts_object_consensus(monkeypatch):
+    """consensus 传对象（非 dict）也能取到 status，不抛异常。"""
+    import engines.review_policy as rp
+    monkeypatch.setattr(rp, "_mappo_enabled", lambda: True)
+    monkeypatch.setattr(rp, "review_state_features", lambda **k: [0.5] * 12)
+    monkeypatch.setattr(rp, "decide_review_weight",
+                        lambda f, use_mappo=False, **k: {
+                            "weights": UNIFORM_W, "source": "uniform", "action": 3})
+
+    class _C:
+        status = "regenerate"
+
+    w, src = resolve_debate_review_weights(_C())
+    assert w == UNIFORM_W and src == "uniform"
