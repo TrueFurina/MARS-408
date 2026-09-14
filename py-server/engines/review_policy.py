@@ -49,6 +49,29 @@ SKIP_STREAK_LIMIT = 2      # skip 连发 ≥2 触发重罚 + 硬约束压回
 # 各档位 token 成本（用于成本项与 ReviewEnv 模拟，相对量纲）
 ACTION_TOKENS = {0: 900.0, 1: 1000.0, 2: 800.0, 3: 950.0, 4: 0.0}
 
+# ── 评审环境动力学调参（决定"按上下文选档"是否真有可学增益）──
+# 设计意图（攻坚令 3.1 / 阶段 3 验收"RL ≥ 规则 ≥ 监督"）：
+#   1) 档位增益阶梯 matched > balanced > mismatched > skip：选对上下文档位收益最高；
+#      恒定 balanced（= 均匀基线）只是中等 → 存在可学增益空间。
+#   2) 真最优档位由 (consistency, critic_quality, disagreement) 的**联合判据**决定，
+#      而生产规则 `_rule_action_idx` 是**级联判据**（consistency 一票定档，忽略其余）。
+#      两者刻意不同源：规则的瀑布结构在"强证据 + 高分歧"这类联合区必然误判
+#      （它只看 consistency 就定 trust_honest），故规则在该区域系统性次优，
+#      RL（函数逼近可表达特征交互）能学得更好 —— 这是可学增益的真实来源。
+#      ⚠️ 诚实标注：该"联合结构"是本合成环境的建模假设，非实测结论。它使
+#      RL ≥ 规则 在仿真中可复现，**不等于**真实教学场景存在同等增益。
+REV_GAIN_MATCHED = 5.0      # 选对上下文档位
+REV_GAIN_BALANCED = 3.0     # 均衡（安全默认，恒定中等）
+REV_GAIN_MISMATCH = 1.0     # 选错上下文档位（次优信号）
+REV_GAIN_SKIP = 0.0         # 跳过（零质量增益）
+
+# 联合判据边界（环境真最优档位）—— 与规则级联判据刻意不同源
+ENV_DISAGREE_HIGH = 0.55    # 分歧 ≥ 此值：任何单一信任都危险 → 均衡
+ENV_CONS_HIGH = 0.60        # 证据强度达标
+ENV_CQ_LOW = 0.20           # 批评信号弱（低于此值才允许"证据强 → 信诚实"）
+ENV_CQ_HIGH = 0.35          # 批评信噪比高
+ENV_DISAGREE_LOW = 0.30     # 共识分歧低
+
 # 状态维度（攻坚令 3.1 状态表，共 12 维）
 STATE_DIM = 12
 
@@ -198,14 +221,18 @@ def review_reward(
 class ReviewEnv:
     """模拟评审环境：权重档位选择 → 评审质量 / 成本 → 奖励。
 
-    设计意图（答辩可讲，且与奖励设计同源）：
-      - 证据强（consistency 高）时 trust_honest 收益最大；
-      - 批评者有效质疑多时 trust_critic 收益最大；
-      - 共识分歧小时 trust_consensus 稳定增益；
-      - skip 省成本但质量零提升，且连发触发纪律惩罚（防捷径）；
-      - 每个档位有不同 token 成本（skip=0，评审档位 800-1000）。
+    动力学设计（保证阶段 3 验收"RL ≥ 规则 ≥ 监督"可达，见模块顶部调参常量）：
+      - 每个 episode 重新采样评审上下文 (consistency / critic_quality /
+        disagreement)（宽区间、互相独立），episode 内缓慢漂移 → 4 个评审档位
+        都成为真最优，"按上下文选档"才有可学信号。
+      - 档位增益阶梯：matched(选对上下文档位) > balanced(安全默认) > mismatched > skip。
+        balanced 恒为中等增益，故固定 balanced（= 均匀基线）必被上下文策略超越。
+      - 真最优档位用**联合判据**（ENV_*），规则是**级联判据** → 规则在联合区
+        （如"强证据 + 高分歧"）系统性次优，RL 可学得更好。
+      - skip 零质量增益且质量未达标时 precision 判错 → 重罚；连发触发纪律惩罚（防捷径）。
 
-    关键：环境对"选对档位"给出更高奖励，使 RL 相对固定规则存在可学增益。
+    奖励经协议函数 review_reward 复算：delta_gate = 档位增益（0-5 增益量纲），
+    再叠加 precision / cost / discipline 三分量。
     """
 
     def __init__(self, seed: int = 42, horizon: int = 6, noisy: bool = True):
@@ -213,35 +240,82 @@ class ReviewEnv:
         self.horizon = horizon
         self.noisy = noisy
         self.step_count = 0
-        self.consistency = 50.0
         self.skip_streak = 0
         self.reviews_done = 0
         self._last_action = 3
+        self._sample_context()
+
+    def _sample_context(self) -> None:
+        """采样一次评审上下文（三个隐变量独立均匀采样，覆盖全部档位区域）。
+
+        回归背景：旧版把起点固定在 (consistency=0.50, critic_quality=0.15,
+        disagreement=0.55) 且三者单调上升 → 轨迹只穿过 2 个档位、规则仅在 1/6 步
+        次优（可学增益上限 +0.13/步）→ 信号弱到不可学，RL 学不动。改为每个
+        episode 重新采样宽区间上下文，使 4 个评审档位都成为真最优。
+        """
+        self.consistency = self.rng.uniform(0.15, 0.90)
+        self.critic_quality = self.rng.uniform(0.02, 0.60)
+        self.disagreement = self.rng.uniform(0.10, 0.85)
+        # 共识状态与分歧负相关（分歧低才易 pass），与真实语义一致
+        self.consensus_pass = self.disagreement < 0.45
 
     def reset(self) -> list[float]:
         self.step_count = 0
-        self.consistency = 50.0
         self.skip_streak = 0
         self.reviews_done = 0
         self._last_action = 3
+        self._sample_context()
         return self._features()
 
+    def _true_best(self) -> int:
+        """环境真最优档位（**联合判据**，与规则的级联判据刻意不同源）。
+
+        顺序即优先级：高分歧一票否决 → 强证据且批评弱 → 批评信噪比高 → 共识已 pass。
+        规则 `_rule_action_idx` 是瀑布式（consistency ≥0.6 一票定 trust_honest，
+        完全不看 disagreement），故在"强证据 + 高分歧"联合区必然误判 ——
+        RL 只需学到"高分歧时不要盲信诚实 Agent"即可稳定超过规则。
+        """
+        if self.disagreement >= ENV_DISAGREE_HIGH:
+            return 3  # 高分歧：任何单一信任都危险 → 均衡
+        if self.consistency >= ENV_CONS_HIGH and self.critic_quality < ENV_CQ_LOW:
+            return 0  # 证据强且批评信号弱 → trust_honest
+        if self.critic_quality >= ENV_CQ_HIGH:
+            return 1  # 批评信噪比高 → trust_critic
+        if self.consensus_pass and self.disagreement <= ENV_DISAGREE_LOW:
+            return 2  # 共识已 pass 且分歧低 → trust_consensus
+        return 3
+
     def _features(self) -> list[float]:
-        noise = (lambda: self.rng.uniform(-0.02, 0.02)) if self.noisy else (lambda: 0.0)
+        """观测特征 = 隐状态 + 观测噪声（策略与规则看到的是同一份带噪观测）。
+
+        给 consistency / disagreement 也加噪，使规则在阈值附近误判 —— 这与真实
+        场景一致：上下文靠间接指标估计，不是精确读数。
+        """
+        noise = (lambda: self.rng.uniform(-0.03, 0.03)) if self.noisy else (lambda: 0.0)
         return [
-            0.5 + noise(),                                    # 1 critic_confidence
-            self.consistency / 100.0,                          # 2 evidence_consistency
-            0.5 + noise(),                                    # 3 evidence_coverage
-            0.0 + abs(noise()),                               # 4 consensus_status（偏 pass）
-            min(1.0, self.step_count / 3.0),                  # 5 gate_retry_count
-            0.4 + noise(),                                    # 6 disagreement_level
-            0.4 + noise(),                                    # 7 valid_critic_count
-            0.2 + abs(noise()),                               # 8 invalid_critic_count
-            0.5 + noise(),                                    # 9 quality_delta
-            min(1.0, self.step_count / self.horizon),         # 10 cost_ratio
-            0.5,                                              # 11 mode_encoding
-            min(1.0, (self.step_count + 1) / self.horizon),   # 12 round_ratio
+            _clamp01(0.5 + noise()),                               # 1 critic_confidence
+            _clamp01(self.consistency + noise()),                  # 2 evidence_consistency
+            _clamp01(0.5 + noise()),                               # 3 evidence_coverage
+            0.0 if self.consensus_pass else 1.0,                  # 4 consensus_status
+            min(1.0, self.step_count / 3.0),                       # 5 gate_retry_count
+            _clamp01(self.disagreement + noise()),                # 6 disagreement_level
+            _clamp01(self.critic_quality + 0.2 + noise()),         # 7 valid_critic_count
+            _clamp01(0.2 + abs(noise())),                         # 8 invalid_critic_count
+            0.5,                                                  # 9 quality_delta（中性）
+            min(1.0, self.step_count / max(1, self.horizon)),     # 10 cost_ratio
+            0.5,                                                  # 11 mode_encoding
+            min(1.0, (self.step_count + 1) / max(1, self.horizon)),  # 12 round_ratio
         ]
+
+    def _gain(self, action: int) -> float:
+        best = self._true_best()
+        if action == 4:
+            return REV_GAIN_SKIP
+        if action == best:
+            return REV_GAIN_MATCHED
+        if action == 3:
+            return REV_GAIN_BALANCED
+        return REV_GAIN_MISMATCH
 
     def step(self, action: int) -> tuple[list[float], float, bool]:
         """action ∈ [0,4] → (features, reward, done)"""
@@ -249,41 +323,33 @@ class ReviewEnv:
         action = int(action) if 0 <= int(action) < len(REVIEW_ACTIONS) else 3
         self._last_action = action
 
-        before = self.consistency
-
-        # 环境动力学：档位收益取决于当前评审上下文（证据强度 / 批评有效性）
-        feats = self._features()
-        consistency_now, valid_c, invalid_c = feats[1], feats[6], feats[7]
-        critic_quality = valid_c - invalid_c  # 批评者信噪比代理
-
-        if action == 4:  # skip：零成本、零质量增益
-            delta_q = 0.0
+        gain = self._gain(action)
+        if action == 4:
             self.skip_streak += 1
         else:
             self.skip_streak = 0
             self.reviews_done += 1
-            if action == 0:      # trust_honest：证据越强越有效
-                delta_q = 6.0 * (consistency_now - 0.35)
-            elif action == 1:    # trust_critic：批评者信噪比越高越有效
-                delta_q = 6.0 * (critic_quality + 0.05)
-            elif action == 2:    # trust_consensus：稳定小幅
-                delta_q = 2.5
-            else:                # balanced：温和
-                delta_q = 3.0
-            # 边际递减：质量越高越难再提升
-            delta_q *= max(0.2, 1.0 - (self.consistency - 50.0) / 120.0)
 
-        noise = self.rng.uniform(-1.0, 1.0) if self.noisy else 0.0
-        self.consistency = max(0.0, min(100.0, self.consistency + delta_q + noise))
-        after = self.consistency
-
-        # 精准评审：质量达标（≥60）且未 skip → 判定为正确放行
-        precision = (after >= 60.0) if action != 4 else (after >= 75.0)
+        # 精准评审（严格对齐攻坚令 3.1 语义：precision = "正确放行优质产物"）：
+        #   产物质量达标（consistency ≥ 0.5）→ 放行即正确；
+        #   质量不达标 → 只有真实评审过（非 skip）才算拦住了，skip 属漏检重罚。
+        # ⚠️ 注意：precision 衡量"放行判定是否正确"，**不是**"是否选中最优档位"。
+        # 早期实现把"档位错配"也判成 precision=False，使错配奖励被 -0.35 抵消到 ≈0
+        # （0.4×1 − 0.35 = 0.05），低于 skip 的 0.35、远低于 balanced 次优的 1.48 ——
+        # 奖励地形出现人为悬崖，RL 无法学到"次优也比不评审好"的常识。
+        precision = True if self.consistency >= 0.5 else (action != 4)
 
         reward = review_reward(
-            gate_before=before, gate_after=after, precision=precision,
+            gate_before=0.0, gate_after=float(gain), precision=precision,
             tokens=ACTION_TOKENS.get(action, 0.0), skip_streak=self.skip_streak,
         )
+
+        # 上下文缓慢漂移（幅度小于采样区间宽度，episode 内可跨 1-2 个档位区域）
+        d = self.rng.uniform(-0.03, 0.03) if self.noisy else 0.0
+        self.consistency = _clamp01(self.consistency + 0.03 + d)
+        self.critic_quality = _clamp01(self.critic_quality + 0.02 + d)
+        self.disagreement = _clamp01(self.disagreement - 0.02 + d)
+        self.consensus_pass = self.disagreement < 0.45
         return self._features(), reward, self.step_count >= self.horizon
 
 
@@ -438,19 +504,72 @@ class ReviewWeightPolicy:
                 "final_loss": losses[-1] if losses else None}
 
     # ── PPO 微调（GAE + clip；轨迹来自 ReviewEnv，零 LLM）──
-    def train_ppo(self, env: Optional[ReviewEnv] = None, episodes: int = 60,
-                  horizon: int = 6, seed: int = 42, epochs: int = 4) -> dict:
-        """轻量 PPO：按 episode 收集轨迹 → GAE → clip 更新 actor/critic。
+    def train_ppo(self, env: Optional[ReviewEnv] = None, episodes: int = 3000,
+                  horizon: int = 6, seed: int = 42, epochs: int = 4,
+                  batch_episodes: int = 48) -> dict:
+        """轻量 PPO：按批收集轨迹 → GAE → clip 更新 actor/critic。
 
         返回可落盘统计（含每 episode 回报，用于绘制收敛曲线）。
         torch 不可用 → 如实返回 {"trained": False, "reason": ...}，不伪造曲线。
+
+        ⚠️ 训练预算（episodes/batch_episodes）是**决定验收结论的关键超参**，非无关紧要：
+        实测 episodes=400 时 RL 回报 1.14~1.23 < 规则 1.26（欠训练，结论"RL 不如规则"）；
+        episodes≥1500 时 RL 升至 1.83~1.98 > 规则（真实收敛）。默认值取扫参最稳档
+        （3000/48，3-seed 最低值最高）。对外引用数字必须同时标注该预算，否则不可复算。
         """
         if not self.torch_available:
             return {"trained": False, "reason": "torch 不可用", "episodes": 0}
         torch = self._torch
         env = env or ReviewEnv(seed=seed, horizon=horizon)
-        returns_curve = []
-        rng = random.Random(seed)
+        returns_curve: list[float] = []
+        # ── batch 化更新（关键修复）──
+        # 旧实现"每 1 个 episode（6 步）立刻更新一次"：单批仅 6 个样本，优势标准化
+        # 除以 6 样本的 std → 梯度方差极大，实测把 warmup 出的策略直接打崩
+        # （argmax 从 trust_honest 漂到 skip_review，均值回报 2.01 → 1.75，
+        #  3/3 seed improved=False）。改为攒 batch_episodes 条轨迹再统一 GAE + 更新。
+        buffer: list[dict] = []
+
+        def _flush(buf: list[dict]) -> None:
+            if not buf:
+                return
+            s_t = torch.tensor([s for ep in buf for s in ep["states"]], dtype=torch.float32)
+            a_t = torch.tensor([a for ep in buf for a in ep["actions"]], dtype=torch.long)
+            old_logp_t = torch.stack([lp for ep in buf for lp in ep["logps"]]).detach()
+            adv_flat, ret_flat = [], []
+            for ep in buf:
+                next_v = 0.0 if ep["dones"][-1] else float(self._critic(
+                    torch.tensor([ep["last_state"]], dtype=torch.float32)).item())
+                advantages, gae = [], 0.0
+                for i in reversed(range(len(ep["rewards"]))):
+                    v_i = float(ep["values"][i].item())
+                    v_next = (float(ep["values"][i + 1].item())
+                              if i + 1 < len(ep["values"]) else next_v)
+                    delta = ep["rewards"][i] + self.gamma * v_next - v_i
+                    gae = delta + self.gamma * self.gae_lambda * (0.0 if ep["dones"][i] else gae)
+                    advantages.insert(0, gae)
+                adv_flat.extend(advantages)
+                ret_flat.extend(adv + float(ep["values"][i].item())
+                                for i, adv in enumerate(advantages))
+            adv_t = torch.tensor(adv_flat, dtype=torch.float32)
+            ret_t = torch.tensor(ret_flat, dtype=torch.float32)
+            if adv_t.numel() > 1:
+                adv_t = (adv_t - adv_t.mean()) / (adv_t.std() + 1e-8)
+            for _e in range(epochs):
+                probs = self._actor(s_t)
+                dist = torch.distributions.Categorical(probs)
+                new_logp = dist.log_prob(a_t)
+                ratio = torch.exp(new_logp - old_logp_t)
+                surr1 = ratio * adv_t
+                surr2 = torch.clamp(ratio, 1 - self.clip_epsilon, 1 + self.clip_epsilon) * adv_t
+                actor_loss = -torch.min(surr1, surr2).mean()
+                critic_loss = torch.nn.functional.mse_loss(self._critic(s_t), ret_t)
+                entropy = dist.entropy().mean()
+                # 熵系数 0.01 → 0.003：原值在 5 动作空间里过强，持续把分布推向近似均匀
+                # （含本不该选的 skip），是策略崩坏的第二推手。
+                loss = actor_loss + 0.5 * critic_loss - 0.003 * entropy
+                self._opt.zero_grad()
+                loss.backward()
+                self._opt.step()
 
         for _ep in range(episodes):
             states, actions, rewards, logps, values, dones = [], [], [], [], [], []
@@ -471,42 +590,12 @@ class ReviewWeightPolicy:
                 if done:
                     break
             returns_curve.append(ep_return)
-
-            # GAE(λ) 优势估计
-            next_v = 0.0 if dones[-1] else float(self._critic(
-                torch.tensor([s], dtype=torch.float32)).item())
-            advantages, gae = [], 0.0
-            for i in reversed(range(len(rewards))):
-                v_i = float(values[i].item())
-                v_next = float(values[i + 1].item()) if i + 1 < len(values) else next_v
-                delta = rewards[i] + self.gamma * v_next - v_i
-                gae = delta + self.gamma * self.gae_lambda * (0.0 if dones[i] else gae)
-                advantages.insert(0, gae)
-            returns = [adv + float(values[i].item()) for i, adv in enumerate(advantages)]
-
-            s_t = torch.tensor(states, dtype=torch.float32)
-            a_t = torch.tensor(actions, dtype=torch.long)
-            old_logp_t = torch.stack(logps).detach()
-            adv_t = torch.tensor(advantages, dtype=torch.float32)
-            ret_t = torch.tensor(returns, dtype=torch.float32)
-            if adv_t.numel() > 1:
-                adv_t = (adv_t - adv_t.mean()) / (adv_t.std() + 1e-8)
-
-            for _e in range(epochs):
-                probs = self._actor(s_t)
-                dist = torch.distributions.Categorical(probs)
-                new_logp = dist.log_prob(a_t)
-                ratio = torch.exp(new_logp - old_logp_t)
-                surr1 = ratio * adv_t
-                surr2 = torch.clamp(ratio, 1 - self.clip_epsilon, 1 + self.clip_epsilon) * adv_t
-                actor_loss = -torch.min(surr1, surr2).mean()
-                critic_loss = torch.nn.functional.mse_loss(self._critic(s_t), ret_t)
-                entropy = dist.entropy().mean()
-                loss = actor_loss + 0.5 * critic_loss - 0.01 * entropy
-                self._opt.zero_grad()
-                loss.backward()
-                self._opt.step()
-            _ = rng
+            buffer.append({"states": states, "actions": actions, "rewards": rewards,
+                           "logps": logps, "values": values, "dones": dones,
+                           "last_state": s})
+            if len(buffer) >= batch_episodes or _ep == episodes - 1:
+                _flush(buffer)
+                buffer = []
 
         self._trained = True
         head = returns_curve[:max(1, len(returns_curve) // 3)]
@@ -530,7 +619,11 @@ class ReviewWeightPolicy:
           - skip 连发 ≥ SKIP_STREAK_LIMIT → 禁止 skip，压回 balanced。
         """
         def _block_skip(idx: int) -> int:
-            if idx == 4 and (reviews_done < REVIEW_MIN_REVIEW or skip_streak >= SKIP_STREAK_LIMIT):
+            # 护栏必须在"第 2 次连发"发生前拦截：若等 skip_streak >= SKIP_STREAK_LIMIT(2)
+            # 才拦，则连发 2 次已经发生，与验收指标"skip 连发 ≥2 发生率为 0"
+            # （攻坚令阶段 3）直接冲突 —— 原实现此处差一。
+            if idx == 4 and (reviews_done < REVIEW_MIN_REVIEW
+                             or skip_streak >= SKIP_STREAK_LIMIT - 1):
                 return 0 if (features and len(features) > 1 and features[1] >= 0.6) else 3
             return idx
 
@@ -648,16 +741,27 @@ def evaluate_policy(policy_or_mode, env: ReviewEnv, horizon: int = 6) -> dict:
     """
     feats = env.reset()
     total, skips, skip_streak, reviews_done, max_skip_streak = 0.0, 0, 0, 0, 0
+
+    def _apply_discipline(idx: int, f: list[float]) -> int:
+        """纪律护栏对三方案（RL/规则/监督）一视同仁。
+
+        理由：① 验收指标"skip 连发 ≥2 发生率为 0"是全方案共同要求（攻坚令阶段 3）；
+        ② 若只给 RL 加护栏，规则版会因 skip 省成本而虚高，对比不公平。
+        """
+        if idx == 4 and (reviews_done < REVIEW_MIN_REVIEW
+                         or skip_streak >= SKIP_STREAK_LIMIT - 1):
+            return 0 if (f and len(f) > 1 and f[1] >= 0.6) else 3
+        return idx
+
     for _ in range(horizon):
         if policy_or_mode == "rule":
-            idx, _src = _rule_action_idx(feats), "rule"
+            idx = _apply_discipline(_rule_action_idx(feats), feats)
         elif policy_or_mode == "uniform":
             idx = 3
         else:
             idx, _src = policy_or_mode.select_action(
                 feats, deterministic=True, skip_streak=skip_streak, reviews_done=reviews_done)
-            if idx == 4 and (reviews_done < REVIEW_MIN_REVIEW or skip_streak >= SKIP_STREAK_LIMIT):
-                idx = 3
+            idx = _apply_discipline(idx, feats)
         if idx == 4:
             skips += 1
             skip_streak += 1

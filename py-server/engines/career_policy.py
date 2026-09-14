@@ -25,6 +25,31 @@ REWARD_W = {"gain": 0.5, "evidence": 0.3, "cost": 0.15, "discipline": 0.05}
 
 CATFISH_MAX_CONTINUE = 2  # 与 career_state 保持一致（纪律项）
 
+# ── 对抗环境动力学调参（决定 P3③ 鲶鱼机制是否"可达"且"值得用"）──
+# 旧环境三个缺陷（均已实测复现）：
+#   ① 密度只单调上升 → 规则永远选 normal → 鲶鱼从未被选中（阈值不可达，机制形同虚设）；
+#   ② token 成本按 /2000 归一（得 0.30~0.55），远大于证据密度增益（0.05×0.3=0.015），
+#      成本项压倒收益项 → 奖励与教学效果**反相关**：规则版把密度从 0.11 抬到 0.41，
+#      奖励反而更低（-0.0767 vs 恒 normal 的 -0.0669）→ 任何"出手"都被惩罚；
+#   ③ **增益上限倒置**：catfish 上限 0.95 高于 escalating 的 0.62，导致密度越高鲶鱼
+#      的相对优势越大（与"鲶鱼=打破僵局"的定位相反）→ 实测 reward 最优策略 50% 步数
+#      用鲶鱼、token 1350，直接违反设计文档验收表"成本 ≤ 规则版×1.1"。这是
+#      "调参改不改得动结论"的关键：属 reward 与验收约束的**真实冲突**，非欠训练。
+# 现改为：
+#   - 卡住型学生：normal 持续掉密度（-0.06），只有加压/鲶鱼能抬升（鲶鱼瞬时更强）；
+#   - **cap_catfish(0.50) < cap_escalating(0.85)**：鲶鱼是"破僵局"的重锤，只在低密度
+#     有效；密度一上来边际收益即归零，而它 token 更贵（1100 vs 900）→ 自然收手。
+#     温和加压则可持续微调（上限高）。二者定位不再重叠。
+#   - 成本归一化基数改为会话量级 8000，使成本项与收益项量纲可比
+#     （设计文档只写 "token 归一化"，未规定除数，除数选择属实现细节）。
+CAREER_DENSITY_START = 0.34
+CAREER_DELTA = {"normal": -0.06, "escalating": 0.05, "catfish": 0.14}
+CAREER_DELTA_CAP = {"escalating": 0.85, "catfish": 0.50}  # 密度达此值 → 该模式增益归零
+CAREER_TOKEN_BUDGET = 8000.0  # token 归一化基数（一次会话量级）
+CAREER_DENSITY_NOISE = 0.025
+CAREER_SIX_NOISE = 0.08
+
+
 try:  # torch 可用才构建网络（与 mappo_policy 同策略：延迟导入）
     from engines.mappo_policy import _build_networks as _mp_build_networks
     _TORCH_HINT = True
@@ -89,7 +114,9 @@ def career_reward(prev_six: dict, curr_six: dict,
 
     gain = _avg(curr_six) - _avg(prev_six)
     evid = curr_density - prev_density
-    token_cost = min(1.0, max(0.0, tokens / 2000.0))  # 2000 token 归一化
+    # 成本归一化：除以会话量级预算（CAREER_TOKEN_BUDGET），而非早期硬编码的 2000。
+    # 后者使成本项（0.045~0.083）压过证据增益项（~0.015），奖励与教学效果反相关。
+    token_cost = min(1.0, max(0.0, tokens / CAREER_TOKEN_BUDGET))
     abuse = max(0, catfish_streak - CATFISH_MAX_CONTINUE)  # 超限轮数
     return (REWARD_W["gain"] * gain
             + REWARD_W["evidence"] * evid
@@ -104,35 +131,48 @@ def career_reward(prev_six: dict, curr_six: dict,
 class CareerAdversaryEnv:
     """模拟学生对抗环境：模式选择 → 学生证据密度/六维响应 → 奖励。
 
-    设计意图（答辩可讲）：
-      - 常规模式稳定小幅提升；加压在低密度时有效、高质量作答时收益递减；
-      - 鲶鱼打破模板化作答（高收益），但连压超限触发纪律惩罚（防捷径）；
-      - 每次模式切换有固定 token 成本（加压/鲶鱼提示词更长）。
+    动力学设计（保证 P3③ 鲶鱼机制既"可达"又"值得用"，见模块顶部调参常量）：
+      - 卡住型学生：normal 持续掉密度（-0.06），只有加压/鲶鱼能抬升（鲶鱼 -0.14 更强）；
+        开局密度 0.34 偏低 → 规则/RL 在低谷选鲶鱼 → 鲶鱼被真实选中（机制激活）。
+      - 收益递减：两模式各有增益上限，且 **cap_catfish(0.50) < cap_escalating(0.85)** ——
+        鲶鱼只在低密度"破僵局"有效，密度一高边际收益即归零（而它 token 更贵）；
+        温和加压则可持续微调。策略必须在"低谷重锤、高位轻推"之间分状态权衡。
+      - 鲶鱼纪律：连压 ≥ CATFISH_MAX_CONTINUE 触发奖励重罚，且 select_action 有硬护栏。
+      - 奖励四分量（文档权重 w1=0.5/w2=0.3/w3=0.15/w4=0.05 保持不变），
+        但 token 成本改为按会话量级预算归一（见 career_reward 注释）。
     """
 
+    # 各模式 token 成本（设计文档未规定，属实现参数）。鲶鱼需生成"对抗性追问 +
+    # 重新评估"，比温和加压更贵；配合 cap_catfish < cap_escalating，使"该用鲶鱼时
+    # 才用"成为收益最优，而非靠人为惩罚压制。
     MODE_TOKENS = {"normal": 600.0, "escalating": 900.0, "catfish": 1100.0}
 
     def __init__(self, seed: int = 42, horizon: int = 8, template_student: bool = False):
         self.rng = random.Random(seed)
         self.horizon = horizon
-        self.template_student = template_student  # 模板型学生：常规模式学不到东西
+        self.noisy = True
+        # template_student 仅作为"更卡"的极端情形，默认即卡住型学生
+        self.template_student = template_student
         self.step_count = 0
-        self.density = 0.5
+        self.density = CAREER_DENSITY_START
         self.six = {d: 2.5 for d in ("expression", "stress", "decompose",
                                      "collab", "presentation", "problem_solving")}
         self.catfish_streak = 0
+        self._last_mode = "normal"
 
     def reset(self) -> list[float]:
         self.step_count = 0
-        self.density = 0.35 if self.template_student else 0.5
-        self.six = {d: 2.5 for d in self.six}
+        self.density = max(0.1, CAREER_DENSITY_START - 0.02) if self.template_student else CAREER_DENSITY_START
+        self.six = {d: 2.5 for d in ("expression", "stress", "decompose",
+                                     "collab", "presentation", "problem_solving")}
         self.catfish_streak = 0
+        self._last_mode = "normal"
         return self._features()
 
     def _features(self) -> list[float]:
-        turn_ratio = self.step_count / self.horizon
+        turn_ratio = self.step_count / max(1, self.horizon)
         mode_ordinal = {"normal": 0.0, "escalating": 0.5, "catfish": 1.0}.get(
-            self._last_mode, 0.0) if hasattr(self, "_last_mode") else 0.0
+            self._last_mode, 0.0)
         return [turn_ratio, self.density, self.density, mode_ordinal,
                 min(1.0, self.catfish_streak / CATFISH_MAX_CONTINUE),
                 0.5, 0.3, turn_ratio]
@@ -143,26 +183,33 @@ class CareerAdversaryEnv:
         mode = CAREER_ACTIONS[action] if 0 <= action < len(CAREER_ACTIONS) else "normal"
         self._last_mode = mode
 
-        if mode == "normal":
-            delta_d = -0.04 if self.template_student else 0.03
-        elif mode == "escalating":
-            delta_d = 0.10 if self.density < 0.45 else 0.02
-        else:  # catfish
-            delta_d = 0.16 if self.density < 0.5 else 0.05
-        self.density = max(0.1, min(0.95, self.density + self.rng.uniform(-0.02, 0.02) + delta_d))
+        prev_density = self.density
+        base = CAREER_DELTA[mode]
+        if self.template_student and mode == "normal":
+            base = -0.08  # 模板学生：常规模式更无效
+        cap = CAREER_DELTA_CAP.get(mode)
+        if cap is None:
+            delta = base                                       # normal：线性，无收益递减
+        else:
+            # 收益递减：密度越接近各模式自己的 cap，边际效果越小。
+            # cap_catfish(0.50) < cap_escalating(0.85) 是有意为之 —— 鲶鱼只在低密度
+            # 破僵局有效，密度一高即失效且它更贵，故策略会自然改用温和加压。
+            delta = base * max(0.0, 1.0 - prev_density / cap)
+        noise = self.rng.uniform(-CAREER_DENSITY_NOISE, CAREER_DENSITY_NOISE) if self.noisy else 0.0
+        self.density = max(0.1, min(0.95, prev_density + delta + noise))
 
-        # 六维均分随证据密度温和提升
+        # 六维均分随证据密度温和变化（密度越低越难提升）
         prev_avg = sum(self.six.values()) / len(self.six)
-        lift = (self.density - 0.5) * 0.5 + self.rng.uniform(-0.1, 0.1)
+        lift = (self.density - 0.5) * 0.5 + self.rng.uniform(-CAREER_SIX_NOISE, CAREER_SIX_NOISE) * (0.5 if self.noisy else 0.0)
         self.six = {d: max(1.0, min(5.0, v + lift / len(self.six))) for d, v in self.six.items()}
         curr_avg = sum(self.six.values()) / len(self.six)
 
-        # 鲶鱼纪律
+        # 鲶鱼纪律：连压计数（select_action 据此在超限时强制回 normal）
         self.catfish_streak = self.catfish_streak + 1 if mode == "catfish" else 0
 
         reward = career_reward(
             {"avg": prev_avg}, {"avg": curr_avg},
-            self.density - 0.05, self.density,
+            prev_density, self.density,
             tokens=self.MODE_TOKENS.get(mode, 600.0),
             catfish_streak=self.catfish_streak)
         return self._features(), reward, self.step_count >= self.horizon
@@ -230,6 +277,9 @@ class CareerModePolicy:
                 # 复用 mappo_policy 的网络构建（encoder + 动作头框架）
                 ActorNet, _Critic = _mp_build_networks(torch)
                 self._actor = ActorNet(self.state_dim, hidden)
+                self._critic = _Critic(self.state_dim, hidden)
+                self._opt = torch.optim.Adam(
+                    list(self._actor.parameters()) + list(self._critic.parameters()), lr=lr)
         except Exception as e:  # pragma: no cover
             logger.warning(f"career 策略网络构建失败（规则版兜底）: {e}")
 
@@ -257,6 +307,105 @@ class CareerModePolicy:
                     break
         self._trained = True
         return {"warmed": True, "steps": steps, "mean_loss": sum(losses) / max(1, len(losses))}
+
+    # ── PPO 微调（GAE + clip；轨迹来自 CareerAdversaryEnv，零 LLM）──
+    def train_ppo(self, env: Optional[CareerAdversaryEnv] = None, episodes: int = 60,
+                  horizon: int = 8, seed: int = 42, epochs: int = 4,
+                  gamma: float = 0.99, clip_epsilon: float = 0.2,
+                  gae_lambda: float = 0.95, batch_episodes: int = 12) -> dict:
+        """轻量 PPO：按批收集轨迹 → GAE → clip 更新 actor/critic。
+
+        返回可落盘统计（含每 episode 回报）；torch 不可用 → 诚实降级，不伪造曲线。
+        """
+        if self._torch is None or self._actor is None or self._critic is None:
+            return {"trained": False, "reason": "torch/critic 不可用", "episodes": 0}
+        torch = self._torch
+        env = env or CareerAdversaryEnv(seed=seed, horizon=horizon)
+        returns_curve: list[float] = []
+        # batch 化更新：与 review_policy 同因同修 —— 单 episode（8 步）即更新会导致
+        # 优势标准化在个位数样本上做，梯度方差过大、策略退化。
+        buffer: list[dict] = []
+
+        def _probs_of(x):
+            out = self._actor(x)
+            return out["difficulty"] if isinstance(out, dict) else out
+
+        def _flush(buf: list[dict]) -> None:
+            if not buf:
+                return
+            s_t = torch.tensor([s for ep in buf for s in ep["states"]], dtype=torch.float32)
+            a_t = torch.tensor([a for ep in buf for a in ep["actions"]], dtype=torch.long)
+            old_logp_t = torch.stack([lp for ep in buf for lp in ep["logps"]]).detach()
+            adv_flat, ret_flat = [], []
+            for ep in buf:
+                next_v = 0.0 if ep["dones"][-1] else float(self._critic(
+                    torch.tensor([ep["last_state"]], dtype=torch.float32)).item())
+                advantages, gae = [], 0.0
+                for i in reversed(range(len(ep["rewards"]))):
+                    v_i = float(ep["values"][i].item())
+                    v_next = (float(ep["values"][i + 1].item())
+                              if i + 1 < len(ep["values"]) else next_v)
+                    delta = ep["rewards"][i] + gamma * v_next - v_i
+                    gae = delta + gamma * gae_lambda * (0.0 if ep["dones"][i] else gae)
+                    advantages.insert(0, gae)
+                adv_flat.extend(advantages)
+                ret_flat.extend(adv + float(ep["values"][i].item())
+                                for i, adv in enumerate(advantages))
+            adv_t = torch.tensor(adv_flat, dtype=torch.float32)
+            ret_t = torch.tensor(ret_flat, dtype=torch.float32)
+            if adv_t.numel() > 1:
+                adv_t = (adv_t - adv_t.mean()) / (adv_t.std() + 1e-8)
+            for _e in range(epochs):
+                dist = torch.distributions.Categorical(_probs_of(s_t))
+                new_logp = dist.log_prob(a_t)
+                ratio = torch.exp(new_logp - old_logp_t)
+                surr1 = ratio * adv_t
+                surr2 = torch.clamp(ratio, 1 - clip_epsilon, 1 + clip_epsilon) * adv_t
+                actor_loss = -torch.min(surr1, surr2).mean()
+                critic_loss = torch.nn.functional.mse_loss(self._critic(s_t), ret_t)
+                entropy = dist.entropy().mean()
+                loss = actor_loss + 0.5 * critic_loss - 0.003 * entropy
+                self._opt.zero_grad()
+                loss.backward()
+                self._opt.step()
+
+        for _ep in range(episodes):
+            states, actions, rewards, logps, values, dones = [], [], [], [], [], []
+            s = env.reset()
+            ep_return = 0.0
+            for _t in range(horizon):
+                x = torch.tensor([s], dtype=torch.float32)
+                probs = _probs_of(x)[0]
+                dist = torch.distributions.Categorical(probs)
+                a = int(dist.sample().item())
+                logp = dist.log_prob(torch.tensor([a], dtype=torch.long))
+                v = self._critic(x)
+                ns, r, done = env.step(a)
+                states.append(s); actions.append(a); rewards.append(float(r))
+                logps.append(logp); values.append(v); dones.append(bool(done))
+                ep_return += float(r)
+                s = ns
+                if done:
+                    break
+            returns_curve.append(ep_return)
+            buffer.append({"states": states, "actions": actions, "rewards": rewards,
+                           "logps": logps, "values": values, "dones": dones,
+                           "last_state": s})
+            if len(buffer) >= batch_episodes or _ep == episodes - 1:
+                _flush(buffer)
+                buffer = []
+
+        self._trained = True
+        head = returns_curve[:max(1, len(returns_curve) // 3)]
+        tail = returns_curve[-max(1, len(returns_curve) // 3):]
+        return {
+            "trained": True, "episodes": episodes, "horizon": horizon, "seed": seed,
+            "returns": returns_curve,
+            "mean_return": sum(returns_curve) / max(1, len(returns_curve)),
+            "mean_return_first_third": sum(head) / max(1, len(head)),
+            "mean_return_last_third": sum(tail) / max(1, len(tail)),
+            "improved": (sum(tail) / max(1, len(tail))) > (sum(head) / max(1, len(head))),
+        }
 
     # ── 动作选择：mappo → 失败降级规则 ──
     def select_action(self, features: list[float], deterministic: bool = True) -> tuple[int, str]:

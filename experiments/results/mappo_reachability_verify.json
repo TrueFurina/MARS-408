@@ -1,0 +1,249 @@
+{
+  "review": {
+    "task": "review",
+    "seeds": [
+      1,
+      42,
+      2024
+    ],
+    "rows": [
+      {
+        "seed": 1,
+        "rl": 1.9348072916666659,
+        "rule": 1.4193281250000023,
+        "supervised": 1.190833333333335,
+        "rl_ge_rule": true,
+        "rule_ge_supervised": true,
+        "reachable": true,
+        "discipline_ok": true,
+        "rl_actions": {
+          "trust_honest": 32,
+          "trust_critic": 71,
+          "trust_consensus": 0,
+          "balanced": 137,
+          "skip_review": 0
+        },
+        "rule_actions": {
+          "trust_honest": 83,
+          "trust_critic": 83,
+          "trust_consensus": 24,
+          "balanced": 35,
+          "skip_review": 15
+        },
+        "max_skip_streak": {
+          "rl": 0,
+          "rule": 1,
+          "supervised": 0
+        },
+        "ppo_improved": true
+      },
+      {
+        "seed": 42,
+        "rl": 1.857937499999999,
+        "rule": 1.2626041666666694,
+        "supervised": 1.044885416666671,
+        "rl_ge_rule": true,
+        "rule_ge_supervised": true,
+        "reachable": true,
+        "discipline_ok": true,
+        "rl_actions": {
+          "trust_honest": 13,
+          "trust_critic": 65,
+          "trust_consensus": 0,
+          "balanced": 162,
+          "skip_review": 0
+        },
+        "rule_actions": {
+          "trust_honest": 102,
+          "trust_critic": 65,
+          "trust_consensus": 27,
+          "balanced": 28,
+          "skip_review": 18
+        },
+        "max_skip_streak": {
+          "rl": 0,
+          "rule": 1,
+          "supervised": 0
+        },
+        "ppo_improved": true
+      },
+      {
+        "seed": 2024,
+        "rl": 1.8879687499999973,
+        "rule": 1.2179010416666682,
+        "supervised": 1.0200000000000022,
+        "rl_ge_rule": true,
+        "rule_ge_supervised": true,
+        "reachable": true,
+        "discipline_ok": true,
+        "rl_actions": {
+          "trust_honest": 15,
+          "trust_critic": 65,
+          "trust_consensus": 0,
+          "balanced": 160,
+          "skip_review": 0
+        },
+        "rule_actions": {
+          "trust_honest": 129,
+          "trust_critic": 61,
+          "trust_consensus": 4,
+          "balanced": 25,
+          "skip_review": 21
+        },
+        "max_skip_streak": {
+          "rl": 0,
+          "rule": 1,
+          "supervised": 0
+        },
+        "ppo_improved": true
+      }
+    ],
+    "reachable": true
+  },
+  "reproducible": {
+    "task": "reproducible",
+    "seed": 42,
+    "identical": true
+  },
+  "career": {
+    "task": "career",
+    "seeds": [
+      1,
+      42,
+      2024
+    ],
+    "rows": [
+      {
+        "seed": 1,
+        "rl": {
+          "mean_return": -0.010913051095657945,
+          "mean_density": 0.4712935480435666,
+          "mean_tokens": 925.0,
+          "counts": {
+            "normal": 0,
+            "escalating": 280,
+            "catfish": 40
+          },
+          "max_catfish_streak": 1
+        },
+        "rule": {
+          "mean_return": -0.015962923153953458,
+          "mean_density": 0.4257439940121248,
+          "mean_tokens": 866.875,
+          "counts": {
+            "normal": 62,
+            "escalating": 218,
+            "catfish": 40
+          },
+          "max_catfish_streak": 1
+        },
+        "supervised": {
+          "mean_return": -0.010913051095657945,
+          "mean_density": 0.4712935480435666,
+          "mean_tokens": 925.0,
+          "counts": {
+            "normal": 0,
+            "escalating": 280,
+            "catfish": 40
+          },
+          "max_catfish_streak": 1
+        },
+        "reward_ok": true,
+        "density_ok": true,
+        "cost_ok": true,
+        "discipline_ok": true,
+        "supervised_reward": -0.010913051095657945,
+        "rl_beats_supervised": false,
+        "reachable": true
+      },
+      {
+        "seed": 42,
+        "rl": {
+          "mean_return": -0.010616994762099997,
+          "mean_density": 0.47206998927580524,
+          "mean_tokens": 925.0,
+          "counts": {
+            "normal": 0,
+            "escalating": 280,
+            "catfish": 40
+          },
+          "max_catfish_streak": 1
+        },
+        "rule": {
+          "mean_return": -0.015964401745764488,
+          "mean_density": 0.4250780332746332,
+          "mean_tokens": 863.125,
+          "counts": {
+            "normal": 66,
+            "escalating": 214,
+            "catfish": 40
+          },
+          "max_catfish_streak": 1
+        },
+        "supervised": {
+          "mean_return": -0.010616994762099997,
+          "mean_density": 0.47206998927580524,
+          "mean_tokens": 925.0,
+          "counts": {
+            "normal": 0,
+            "escalating": 280,
+            "catfish": 40
+          },
+          "max_catfish_streak": 1
+        },
+        "reward_ok": true,
+        "density_ok": true,
+        "cost_ok": true,
+        "discipline_ok": true,
+        "supervised_reward": -0.010616994762099997,
+        "rl_beats_supervised": false,
+        "reachable": true
+      },
+      {
+        "seed": 2024,
+        "rl": {
+          "mean_return": -0.0114289309931879,
+          "mean_density": 0.47158824155217827,
+          "mean_tokens": 950.0,
+          "counts": {
+            "normal": 0,
+            "escalating": 240,
+            "catfish": 80
+          },
+          "max_catfish_streak": 1
+        },
+        "rule": {
+          "mean_return": -0.015884769384213536,
+          "mean_density": 0.4260915056763984,
+          "mean_tokens": 867.8125,
+          "counts": {
+            "normal": 61,
+            "escalating": 219,
+            "catfish": 40
+          },
+          "max_catfish_streak": 1
+        },
+        "supervised": {
+          "mean_return": -0.010876277116701962,
+          "mean_density": 0.47258229869313,
+          "mean_tokens": 925.0,
+          "counts": {
+            "normal": 0,
+            "escalating": 280,
+            "catfish": 40
+          },
+          "max_catfish_streak": 1
+        },
+        "reward_ok": true,
+        "density_ok": true,
+        "cost_ok": true,
+        "discipline_ok": true,
+        "supervised_reward": -0.010876277116701962,
+        "rl_beats_supervised": false,
+        "reachable": true
+      }
+    ],
+    "reachable": true
+  },
+  "overall_reachable": true
+}
