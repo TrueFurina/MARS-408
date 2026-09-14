@@ -81,5 +81,10 @@ regexes = [
   #   的 32+ 位字母数字段），故此处直接以哨兵明文豁免；真实 XFyun 密钥不会是这种顺序
   #   哨兵，不会被遗漏。当前文件已改为分段写法（test-secret-0123-4567-…）使连续段不足
   #   32 位、工作树不再触发；本豁免仅消除 git 历史中旧提交的误报。
+  # 已知合法假阳性（非密钥）：科大讯飞 App ID `3f28bda0` 曾在 2026-09-01 后端恢复报告
+  #   (deliverables/engineering-assurance/health-check-recovery-2026-09-01.md) 中作为鉴权
+  #   测试证据被明文引用。该值为 8 位公开 App 标识符（非 APIKey/Secret/密码），无泄露风险，
+  #   且已计划在文档中脱敏；此处按“合法假阳性”口径显式豁免，保留对其它真实密钥的检出。
+  '''(?i)3f28bda0''',
   '''(?i)0123456789abcdefghijklmnopqrstuvwxyz''',
 ]
