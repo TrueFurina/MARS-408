@@ -16,6 +16,7 @@ torch = pytest.importorskip("torch")  # 真训 PPO 路径需要 torch；缺失�
 
 from engines.review_policy import ReviewWeightPolicy  # noqa: E402
 from engines.review_shadow_probe import (  # noqa: E402
+    HEURISTIC_F2_THRESHOLD,
     build_shadow_policy,
     observe,
     summarize,
@@ -85,3 +86,37 @@ def test_summarize_runs_on_records(shadow_policies):
     assert s["n"] == 5
     assert "delta_vs_uniform" in s
     assert "shadow_action_dist" in s
+
+
+def test_heuristic_arm_present_and_thresholded(shadow_policies):
+    """第 4 对照臂：单特征理论阈值启发式（解析推导，非拟合 → 无泄漏）。"""
+    rec = observe(_EVIDENCE, _CONSENSUS, _STATE, shadow_policies, critic=_CRITIC)
+    h = rec["baseline"]["heuristic_f2"]
+    assert h["action"] in (0, 2)
+    assert h["action"] == (0 if rec["features"][1] > HEURISTIC_F2_THRESHOLD else 2)
+    s = summarize([rec])
+    assert "arm_means" in s and "heuristic_f2" in s["arm_means"]
+    assert "heuristic_action_dist" in s
+    assert "delta_vs_heuristic" in s
+
+
+def test_rule_arm_is_discipline_gated(shadow_policies):
+    """回归：rule 臂必须与 mappo/shadow 走**同一纪律门**。
+
+    旧版探针对 rule 未加纪律门 → rule 可自由 skip（skip ⇒ effective ≡ 100）
+    → rule 被虚高约 +1.0 分，是"rule 优于影子"的伪结论来源。
+    """
+    ev = {"consistency_score": 95.0, "coverage": 5, "expected_coverage": 5}
+    co = {"status": "pass", "confidence_score": 0.9, "overall_score": 92.0, "disagreement": 0.2}
+    st = {"gate_retry_count": 0, "token_budget": 4000, "tokens_used": 3800,
+          "last_consistency": 90.0, "disagreement": 0.2}
+    from engines.review_policy import _rule_action_idx, review_state_features
+
+    feats = review_state_features(evidence=ev, critic=_CRITIC, consensus=co, state=st)
+    assert _rule_action_idx(feats) == 4, "前置条件：未加纪律门时规则会选择 skip"
+
+    rec = observe(ev, co, st, shadow_policies, critic=_CRITIC,
+                  skip_streak=0, reviews_done=0)
+    assert rec["baseline"]["rule"]["action"] == 0, "纪律门应把 skip 压回 trust_honest"
+    assert rec["baseline"]["rule"]["action"] != 4
+

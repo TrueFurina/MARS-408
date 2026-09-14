@@ -76,9 +76,17 @@ def main():
     ap.add_argument("--samples", type=int, default=240)
     ap.add_argument("--seeds", type=str, default="7,42,2026")
     ap.add_argument("--warmup-steps", type=int, default=300)
-    ap.add_argument("--ppo-episodes", type=int, default=50)
-    ap.add_argument("--horizon", type=int, default=6)
+    ap.add_argument("--ppo-episodes", type=int, default=3000,
+                    help="PPO 训练 episode 数。默认 3000（batch 48 → 约 62 次梯度更新）："
+                         "实测更新次数是结论决定性超参——5 次更新时影子 68.445 输给规则 68.948，"
+                         "63 次更新时影子 69.896 胜规则；旧默认 50 会把影子静默饿死")
+    ap.add_argument("--ppo-batch", type=int, default=0,
+                    help="PPO 每次更新的轨迹条数；0=按 episodes 自动推导（min(48, episodes//10)）")
+    ap.add_argument("--horizon", type=int, default=32)
     ap.add_argument("--data-seed", type=int, default=20260914)
+    ap.add_argument("--env", type=str, default="calibrated", choices=["legacy", "calibrated"],
+                    help="影子策略的训练环境：legacy=原 ReviewEnv（合成阶梯）；"
+                         "calibrated=校准环境（奖励=生产同款真实增益，balanced 恒 0）")
     ap.add_argument("--out", type=str, default="experiments/results")
     ap.add_argument("--no-train", action="store_true",
                     help="跳过 PPO 训练，影子退化为规则等价（快速自检用）")
@@ -89,9 +97,16 @@ def main():
     out_dir.mkdir(parents=True, exist_ok=True)
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-    print(f"[shadow] 预训影子策略 seeds={seed_list} "
-          f"(warmup={args.warmup_steps}, ppo={args.ppo_episodes}, horizon={args.horizon}) ...")
+    env_factory = None
+    if args.env == "calibrated":
+        from engines.review_env_calibrated import CalibratedReviewEnv
+        env_factory = lambda sd, hz: CalibratedReviewEnv(seed=sd, horizon=hz)  # noqa: E731
+
+    print(f"[shadow] 预训影子策略 seeds={seed_list} env={args.env} "
+          f"(warmup={args.warmup_steps}, ppo={args.ppo_episodes}, "
+          f"batch={args.ppo_batch or 'auto'}, horizon={args.horizon}) ...")
     shadow_policies = []
+    n_updates = []
     for sd in seed_list:
         if args.no_train:
             from engines.review_policy import ReviewWeightPolicy
@@ -102,10 +117,18 @@ def main():
                 pass
             p = ReviewWeightPolicy(seed=sd)
         else:
-            p = build_shadow_policy(sd, args.warmup_steps, args.ppo_episodes, args.horizon)
+            p = (build_shadow_policy(sd, args.warmup_steps, args.ppo_episodes,
+                                     args.horizon, env_factory=env_factory)
+                 if args.ppo_batch <= 0 else
+                 build_shadow_policy(sd, args.warmup_steps, args.ppo_episodes,
+                                     args.horizon, env_factory=env_factory,
+                                     batch_episodes=args.ppo_batch))
+        _st = getattr(p, "_last_train_stats", {}) or {}
+        n_updates.append(_st.get("n_updates"))
         trained = getattr(p, "_trained", False)
         torch_ok = getattr(p, "torch_available", False)
-        print(f"  seed={sd}: torch_available={torch_ok} trained={trained}")
+        print(f"  seed={sd}: torch_available={torch_ok} trained={trained} "
+              f"n_updates={_st.get('n_updates')} batch={_st.get('batch_episodes')}")
         shadow_policies.append(p)
 
     rng = random.Random(args.data_seed)
@@ -132,6 +155,11 @@ def main():
         "ppo_episodes": args.ppo_episodes,
         "horizon": args.horizon,
         "data_seed": args.data_seed,
+        "train_env": args.env,
+        # 有效训练预算必须落盘：否则"RL 输给规则"的结论无法区分
+        # "方法不行"与"根本没训够"。
+        "ppo_batch_episodes": args.ppo_batch or "auto",
+        "n_updates_per_seed": n_updates,
         "note": "delta = 影子有效分 − 基线有效分；正=相对基线质量提升（真实 weighted_consistency_score 复算）",
     }
 

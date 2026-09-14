@@ -28,12 +28,39 @@ from engines.review_policy import (
     review_weight_schema,
 )
 from agents.quality_gate import weighted_consistency_score, review_signals
+from engines.review_env_calibrated import discipline_gate
+
+# ── 单特征理论阈值启发式（第 4 对照臂，解析推导、非拟合，故无泄漏）──
+# 真实增益：Δ(a) = (c − 1/3)(s_c − s_h) + (k − 1/3)(s_k − s_h)
+#   Δ(trust_honest, a0)   = −0.1333·(d_c + d_k)
+#   Δ(trust_consensus,a2) = −0.1333·d_c + 0.2667·d_k
+# 在 s_c、s_k 与 s_h 统计独立的假设下取期望（E[s_c]=62.5, E[s_k]=67.5）：
+#   交点 s_h = 67.5 ⇒ f2 = s_h/100 = 0.675
+# 即：证据自评分高 → 信诚实 Agent；自评分低 → 信共识。阈值来自解析式，未用评测样本拟合。
+HEURISTIC_F2_THRESHOLD = 0.675
+
+
+def heuristic_action_idx(features: list) -> int:
+    """单特征理论阈值启发式（对照臂）。"""
+    if not features or len(features) < 2:
+        return 3
+    return 0 if features[1] > HEURISTIC_F2_THRESHOLD else 2
 
 
 def build_shadow_policy(seed: int, warmup_steps: int = 300, ppo_episodes: int = 60,
-                        horizon: int = 6):
+                        horizon: int = 6, env_factory=None, lr: float = 3e-4,
+                        epochs: int = 4, batch_episodes: Optional[int] = None):
     """构造一个真训过 PPO 的影子策略（与 3-seed 实验同构，确定性播种）。
 
+    env_factory: 可选 `(seed, horizon) -> env` 工厂。
+      - None（默认）→ 使用 engines.review_policy.ReviewEnv（合成奖励阶梯）
+      - 传入 engines.review_env_calibrated.CalibratedReviewEnv → 校准环境
+        （奖励 = 生产同款 weighted_consistency_score 的真实增益，balanced 恒 0）
+    batch_episodes: PPO 每次更新的轨迹条数。None → 自动按 episodes 推导
+      （`max(1, min(48, episodes // 10))`），保证"更新次数"不随 batch 语义变更而崩塌：
+      旧版 train_ppo 每 episode 更新一次，改 batch 化后若沿用 48 默认，
+      episodes=200 会从 200 次更新跌到 4 次（影子策略被静默饿死）。
+      训练统计落在返回对象的 `_last_train_stats`（含真实 n_updates）供审计。
     返回 ReviewWeightPolicy 实例；torch 不可用则返回未训练实例（observe 时退化为规则等价）。
     仅在构造期做确定性设置，避免污染主流程 RNG 状态。
     """
@@ -47,12 +74,18 @@ def build_shadow_policy(seed: int, warmup_steps: int = 300, ppo_episodes: int = 
             pass
     except Exception:
         pass
-    p = ReviewWeightPolicy(seed=seed)
+    p = ReviewWeightPolicy(seed=seed, lr=lr)
     if not p.torch_available:
         return p
-    p.warmup_with_rules(ReviewEnv(seed=seed), steps=warmup_steps, seed=seed)
-    p.train_ppo(ReviewEnv(seed=seed, horizon=horizon), episodes=ppo_episodes,
-                horizon=horizon, seed=seed)
+    if batch_episodes is None:
+        batch_episodes = max(1, min(48, int(ppo_episodes) // 10))
+    warm_env = ReviewEnv(seed=seed) if env_factory is None else env_factory(seed, 6)
+    p.warmup_with_rules(warm_env, steps=warmup_steps, seed=seed)
+    train_env = (ReviewEnv(seed=seed, horizon=horizon) if env_factory is None
+                 else env_factory(seed, horizon))
+    p._last_train_stats = p.train_ppo(train_env, episodes=ppo_episodes, horizon=horizon,
+                                      seed=seed, epochs=epochs,
+                                      batch_episodes=batch_episodes)
     return p
 
 
@@ -79,13 +112,20 @@ def observe(evidence, consensus, state, shadow_policies, critic=None,
     uni_w = dict(UNIFORM_WEIGHTS)
     uni_eff, uni_applied = weighted_consistency_score(evidence, consensus, uni_w)
 
-    rule_idx = _rule_action_idx(feats)
+    # 公平口径：rule 与 mappo/shadow 走**同一纪律门**。此前 rule 未加门，靠 12.1% 免费
+    # skip（skip ⇒ effective≡100）虚高约 +1.0 分，属对比口径缺陷，已修正。
+    rule_idx = discipline_gate(_rule_action_idx(feats), feats, skip_streak, reviews_done)
     rule_w = review_weight_schema(_weights_of(rule_idx))
     rule_eff, rule_applied = weighted_consistency_score(evidence, consensus, rule_w)
 
     mappo_out = _bl_mappo(feats, skip_streak=skip_streak, reviews_done=reviews_done)
     mappo_w = mappo_out.get("weights") or dict(UNIFORM_WEIGHTS)
     mappo_eff, mappo_applied = weighted_consistency_score(evidence, consensus, mappo_w)
+
+    # 理论阈值启发式（单特征对照臂）
+    h_idx = heuristic_action_idx(feats)
+    h_w = review_weight_schema(_weights_of(h_idx))
+    h_eff, h_applied = weighted_consistency_score(evidence, consensus, h_w)
 
     # ── 影子 RL：多 seed 取有效分均值 + 动作众数 ──
     shadow_effs, shadow_actions = [], []
@@ -117,6 +157,9 @@ def observe(evidence, consensus, state, shadow_policies, critic=None,
                      "action": rule_idx, "action_name": REVIEW_ACTIONS[rule_idx]},
             "mappo_current": {"weights": mappo_w, "effective": mappo_eff,
                               "applied": mappo_applied, "source": mappo_out.get("source")},
+            "heuristic_f2": {"weights": h_w, "effective": h_eff, "applied": h_applied,
+                             "action": h_idx, "action_name": REVIEW_ACTIONS[h_idx],
+                             "threshold": HEURISTIC_F2_THRESHOLD},
         },
         "shadow": {
             "weights": shadow_w, "effective": round(shadow_eff, 3),
@@ -129,6 +172,9 @@ def observe(evidence, consensus, state, shadow_policies, critic=None,
             "shadow_vs_uniform_effective": round(shadow_eff - uni_eff, 3),
             "shadow_vs_rule_effective": round(shadow_eff - rule_eff, 3),
             "shadow_vs_mappo_effective": round(shadow_eff - mappo_eff, 3),
+            "shadow_vs_heuristic_effective": round(shadow_eff - h_eff, 3),
+            "heuristic_vs_uniform_effective": round(h_eff - uni_eff, 3),
+            "heuristic_vs_rule_effective": round(h_eff - rule_eff, 3),
             "action_differs_from_uniform": shadow_action != 3,
             "action_differs_from_rule": shadow_action != rule_idx,
             "action_differs_from_mappo": shadow_action != mappo_out.get("action", 3),
@@ -154,6 +200,23 @@ def summarize(records: Sequence[dict]) -> dict:
     du = [r["delta"]["shadow_vs_uniform_effective"] for r in records]
     dr = [r["delta"]["shadow_vs_rule_effective"] for r in records]
     dm = [r["delta"]["shadow_vs_mappo_effective"] for r in records]
+    dh = [r["delta"]["shadow_vs_heuristic_effective"] for r in records]
+
+    # 各臂真实平均有效分（同一 240 样本、同一纪律门下的可直接对比表）
+    def _arm_mean(key, sub=None):
+        vals = []
+        for r in records:
+            v = r["baseline"][key]
+            vals.append(v[sub] if sub else v["effective"])
+        return round(_mean(vals), 3)
+
+    arm_means = {
+        "uniform": _arm_mean("uniform"),
+        "rule": _arm_mean("rule"),
+        "mappo_current": _arm_mean("mappo_current"),
+        "heuristic_f2": _arm_mean("heuristic_f2"),
+        "shadow": round(_mean([r["shadow"]["effective"] for r in records]), 3),
+    }
 
     shadow_actions = [r["shadow"]["action"] for r in records]
     rule_actions = [r["baseline"]["rule"]["action"] for r in records]
@@ -169,15 +232,20 @@ def summarize(records: Sequence[dict]) -> dict:
 
     return {
         "n": n,
+        "arm_means": arm_means,
         "shadow_action_dist": dict(Counter(shadow_actions)),
         "rule_action_dist": dict(Counter(rule_actions)),
         "mappo_action_dist": dict(Counter(mappo_actions)),
+        "heuristic_action_dist": dict(Counter(
+            r["baseline"]["heuristic_f2"]["action"] for r in records)),
         "delta_vs_uniform": {"mean": round(_mean(du), 3), "std": round(_std(du), 3),
                               "pct_improve": round(100.0 * sum(1 for x in du if x > 0) / n, 1)},
         "delta_vs_rule": {"mean": round(_mean(dr), 3), "std": round(_std(dr), 3),
                            "pct_improve": round(100.0 * sum(1 for x in dr if x > 0) / n, 1)},
         "delta_vs_mappo": {"mean": round(_mean(dm), 3), "std": round(_std(dm), 3),
                             "pct_improve": round(100.0 * sum(1 for x in dm if x > 0) / n, 1)},
+        "delta_vs_heuristic": {"mean": round(_mean(dh), 3), "std": round(_std(dh), 3),
+                                "pct_improve": round(100.0 * sum(1 for x in dh if x > 0) / n, 1)},
         "shadow_skip_rate": round(100.0 * sum(1 for a in shadow_actions if a == 4) / n, 1),
         "shadow_differs_from_uniform_rate": round(
             100.0 * sum(1 for r in records if r["delta"]["action_differs_from_uniform"]) / n, 1),
