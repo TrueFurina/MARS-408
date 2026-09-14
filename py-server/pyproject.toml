@@ -39,7 +39,10 @@ testpaths = ["tests"]
 # Windows 默认 pytest 即以此过滤，避免触碰原生 torch/numpy（segv_env 已在 win32 自动 skip）。
 # T4：在 wave-1 默认排除（system/requires_milvus/slow）基础上追加全局超时；
 # --timeout-method=thread 对 asyncio 用例安全；Linux CI 默认档仍会跑 segv_env（不在此排除）。
-addopts = ["-m", "not system and not requires_milvus and not slow"]
+# INC-pytest: tests/crypto_platform 是 vendored 的第三方项目副本，其内嵌套
+# py-server/tests/conftest.py 与根 tests/conftest.py 撞名（tests.conftest），
+# 导致收集阶段 ImportPathMismatchError 全盘中止。显式忽略该副本。
+addopts = ["-m", "not system and not requires_milvus and not slow", "--ignore=tests/crypto_platform"]
 markers = [
     "import_queue: 导入队列单写者保证与任务生命周期测试 (ADR-007)",
     "unit: 单元测试（最快，纯逻辑，无进程/无网络）",

@@ -8,7 +8,7 @@
 #   4. 上下文确实重要：oracle 平均增益显著高于最优恒定动作；
 #   5. 口径纪律：skip(动作4) 在本口径不可用 → 恒定负奖励，不会被策略白嫖；
 #   6. 同 seed 逐位可复现；
-#   7. discipline_gate 与生产 select_action 的 _block_skip 语义一致。
+#   7. discipline_gate 与生产是**同一实现**（同一性断言，非语义对拍）。
 
 import pytest
 
@@ -152,7 +152,7 @@ def test_reproducible_per_seed():
 
 
 def test_discipline_gate_matches_production_semantics():
-    """与 review_policy.select_action 内 _block_skip 语义一致（含已修的差一）。"""
+    """纪律门语义（含已修的差一）。本模块的 `discipline_gate` 即生产实现本身。"""
     strong = [0.5, 0.9] + [0.0] * 10      # f2 = 0.9（证据强）
     weak = [0.5, 0.3] + [0.0] * 10        # f2 = 0.3
     # reviews_done < REVIEW_MIN_REVIEW → 禁 skip
@@ -173,14 +173,17 @@ def test_discipline_gate_matches_production_semantics():
 
 
 def test_discipline_gate_equivalent_to_production_select_action():
-    """对拍守护：本模块 discipline_gate 必须与真实生产 select_action 的门一致。
+    """守护：`discipline_gate` 必须是生产同一对象，且 `select_action` 确实经过它。
 
-    _block_skip 是 select_action 内的闭包，无法直接 import，只能复刻；本测试用
-    「未训练策略 → 走 rule 分支」的路径，构造 _rule_action_idx 必返 4 的特征，
-    从而让生产端输出恰好等于 _block_skip(4)，与本模块 discipline_gate(4, ...) 对拍。
-    生产若再改判据而此处未同步，本测试会失败。
+    原写法是"闭包无法 import ⇒ 只能复刻 ⇒ 靠对拍事后追漂移"。现将生产实现提升为
+    模块级函数，故本用例直接断言**同一性** —— 漂移在结构上不可能发生，而非事后发现。
+    后半段"走 rule 分支"的路径保留，用来验证 `select_action` 真的调用了该门。
     """
     from engines.review_policy import ReviewWeightPolicy, _rule_action_idx
+    from engines.review_policy import discipline_gate as prod_discipline_gate
+
+    assert discipline_gate is prod_discipline_gate, (
+        "本模块的纪律门不是生产实现 —— 又出现复刻体（应改为 import 转发）")
 
     # f2=0.9（consistency≥0.75）且 f10=0.9（cost_ratio≥0.6）→ _rule_action_idx 必返 4
     feats = [0.5, 0.9, 0.5, 0.0, 0.0, 0.3, 0.6, 0.2, 0.5, 0.9, 0.5, 0.5]

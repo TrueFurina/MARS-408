@@ -183,7 +183,8 @@ def test_review_env_native_precision_is_not_degenerate():
     —— 只有"质量不达标**且**跳过评审"才算漏检（precision=False）。
     历史缺陷把"档位错配"也判成 False，使错配奖励被 −0.35 抵消到 ≈0，奖励地形出现人为悬崖。
 
-    实现要点：`precision` 是 step 内部的局部变量、不对外暴露，故本用例**用奖励数值反推**该位
+    实现要点：现已可直接读 `env.last_precision`（与环境同源）；本用例**另用奖励数值反推**
+    该位做交叉验证 —— 两条独立路径都验，避免「字段被改而判定没改」这类假绿
     —— `reward = 0.4·gain + 0.35·(±1) − 0.15·cost`。precision 一旦被改成任何别的判据
     （如"必须选 balanced"），奖励即偏离期望，本用例 FAIL。
     *注：本用例初版曾写成 `assert env.consistency >= 0.5 or idx != 4` —— 对 idx∈{0,1,2,3}
