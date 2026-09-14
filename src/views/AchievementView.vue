@@ -41,10 +41,10 @@ function notifyNewAchievements() {
 
 // 分享成就
 function shareAchievement(ach: any) {
-  const text = ` 我在 NetLearn 解锁了成就「${ach.name}」！${ach.description}`
+  const text = ` 我在 MARS-408 解锁了成就「${ach.name}」！${ach.description}`
   try {
     if (navigator.share) {
-      navigator.share({ title: 'NetLearn 成就', text }).catch(() => {})
+      navigator.share({ title: 'MARS-408 成就', text }).catch(() => {})
     } else if (navigator.clipboard) {
       navigator.clipboard.writeText(text).then(() => {
         const t = (window as any).__toast
