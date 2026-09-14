@@ -51,8 +51,13 @@ def _eff(evidence, consensus, action_idx):
 
 
 def _block_skip(idx, feats, skip_streak, reviews_done):
-    """与 review_policy.select_action 内 _block_skip 完全一致的纪律门。"""
-    if idx == 4 and (reviews_done < REVIEW_MIN_REVIEW or skip_streak >= SKIP_STREAK_LIMIT):
+    """与 review_policy.select_action 内 _block_skip 逐字一致的纪律门。
+
+    生产版已修掉差一：判据是 `skip_streak >= SKIP_STREAK_LIMIT - 1`
+    （原 `>= SKIP_STREAK_LIMIT` 会放过第 1 次连发）。此处必须同步。
+    """
+    if idx == 4 and (reviews_done < REVIEW_MIN_REVIEW
+                     or skip_streak >= SKIP_STREAK_LIMIT - 1):
         return 0 if (feats and len(feats) > 1 and feats[1] >= 0.6) else 3
     return idx
 

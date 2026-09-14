@@ -1,0 +1,215 @@
+{
+  "meta": {
+    "source": "diag_calib_alignment.py (read-only)",
+    "n_samples": 240,
+    "data_seed": 20260914,
+    "note": "R1=训练/评测同分布核验；R2=逐样本配对显著性；R3=策略可解释性。全部数字为生产质量函数口径，所有臂过 discipline_gate(reviews_done=0)。"
+  },
+  "R1_distribution_alignment": {
+    "worst_dim": 3,
+    "worst_std_mean_diff": 0.1747,
+    "all_dims_below_0_2": true,
+    "f2_ks_statistic": 0.05,
+    "f2_ge_0_675_pct": {
+      "env": 50.8,
+      "real": 50.0
+    },
+    "per_dim": [
+      {
+        "dim": 1,
+        "mean_env": 0.5616,
+        "mean_real": 0.5672,
+        "std_env": 0.2211,
+        "std_real": 0.2161,
+        "std_mean_diff": 0.0257
+      },
+      {
+        "dim": 2,
+        "mean_env": 0.6644,
+        "mean_real": 0.6681,
+        "std_env": 0.1981,
+        "std_real": 0.1955,
+        "std_mean_diff": 0.0189
+      },
+      {
+        "dim": 3,
+        "mean_env": 0.6671,
+        "mean_real": 0.7071,
+        "std_env": 0.3462,
+        "std_real": 0.3504,
+        "std_mean_diff": 0.115
+      },
+      {
+        "dim": 4,
+        "mean_env": 0.4313,
+        "mean_real": 0.5042,
+        "std_env": 0.4139,
+        "std_real": 0.4208,
+        "std_mean_diff": 0.1747
+      },
+      {
+        "dim": 5,
+        "mean_env": 0.4917,
+        "mean_real": 0.4736,
+        "std_env": 0.3726,
+        "std_real": 0.373,
+        "std_mean_diff": 0.0484
+      },
+      {
+        "dim": 6,
+        "mean_env": 0.4916,
+        "mean_real": 0.5,
+        "std_env": 0.2871,
+        "std_real": 0.2764,
+        "std_mean_diff": 0.0299
+      },
+      {
+        "dim": 7,
+        "mean_env": 0.4908,
+        "mean_real": 0.5233,
+        "std_env": 0.338,
+        "std_real": 0.3393,
+        "std_mean_diff": 0.096
+      },
+      {
+        "dim": 8,
+        "mean_env": 0.5033,
+        "mean_real": 0.5075,
+        "std_env": 0.3582,
+        "std_real": 0.3316,
+        "std_mean_diff": 0.0121
+      },
+      {
+        "dim": 9,
+        "mean_env": 0.51,
+        "mean_real": 0.5237,
+        "std_env": 0.1424,
+        "std_real": 0.125,
+        "std_mean_diff": 0.1022
+      },
+      {
+        "dim": 10,
+        "mean_env": 0.4895,
+        "mean_real": 0.4921,
+        "std_env": 0.2765,
+        "std_real": 0.2911,
+        "std_mean_diff": 0.009
+      },
+      {
+        "dim": 11,
+        "mean_env": 0.5039,
+        "mean_real": 0.4952,
+        "std_env": 0.2867,
+        "std_real": 0.2803,
+        "std_mean_diff": 0.0308
+      },
+      {
+        "dim": 12,
+        "mean_env": 0.506,
+        "mean_real": 0.4928,
+        "std_env": 0.2772,
+        "std_real": 0.288,
+        "std_mean_diff": 0.0466
+      }
+    ]
+  },
+  "R1b_arm_levels": {
+    "arms_real": {
+      "uniform": 66.809,
+      "rule": 68.948,
+      "heuristic_f2": 69.807,
+      "oracle": 72.275
+    },
+    "arms_env": {
+      "uniform": 66.438,
+      "rule": 68.71,
+      "heuristic_f2": 70.079,
+      "oracle": 72.1
+    },
+    "ordering_identical": true,
+    "ordering": [
+      "oracle",
+      "heuristic_f2",
+      "rule",
+      "uniform"
+    ],
+    "max_abs_gap": 0.371
+  },
+  "R2_significance": {
+    "summary_file": "review_shadow_summary_20260914_165038.json",
+    "jsonl_file": "review_shadow_20260914_165038.jsonl",
+    "n": 240,
+    "arm_means": {
+      "uniform": 66.809,
+      "rule": 68.948,
+      "mappo_current": 66.997,
+      "heuristic_f2": 69.807,
+      "shadow": 69.527
+    },
+    "shadow_action_dist": {
+      "2": 75,
+      "0": 102,
+      "3": 28,
+      "1": 35
+    },
+    "per_seed": [
+      {
+        "seed_index": 0,
+        "d_uniform": 2.121,
+        "d_rule": -0.018,
+        "d_heuristic": -0.877
+      },
+      {
+        "seed_index": 1,
+        "d_uniform": 3.023,
+        "d_rule": 0.885,
+        "d_heuristic": 0.026
+      },
+      {
+        "seed_index": 2,
+        "d_uniform": 3.01,
+        "d_rule": 0.871,
+        "d_heuristic": 0.012
+      }
+    ],
+    "aggregate": {
+      "uniform": {
+        "mean": 2.718,
+        "std": 3.759,
+        "t": 11.2,
+        "pct_positive": 77.9
+      },
+      "rule": {
+        "mean": 0.579,
+        "std": 4.251,
+        "t": 2.11,
+        "pct_positive": 44.6
+      },
+      "heuristic_f2": {
+        "mean": -0.28,
+        "std": 3.656,
+        "t": -1.19,
+        "pct_positive": 33.8
+      }
+    }
+  },
+  "R3_interpretability": {
+    "agreement_pct": 55.8,
+    "rl_better": 45,
+    "rl_better_mean_gain": 3.949,
+    "rl_worse": 61,
+    "rl_worse_mean_loss": 6.364,
+    "actions_low_f2": {
+      "trust_honest": 5,
+      "trust_critic": 16,
+      "trust_consensus": 51,
+      "balanced": 49
+    },
+    "actions_high_f2": {
+      "trust_honest": 83,
+      "trust_critic": 5,
+      "trust_consensus": 29,
+      "balanced": 2
+    }
+  }
+}

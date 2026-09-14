@@ -48,12 +48,18 @@ from engines.review_policy import (
 
 def discipline_gate(action: int, features: list, skip_streak: int = 0,
                     reviews_done: int = 0) -> int:
-    """与 review_policy.select_action 内 _block_skip 逐字一致的纪律门（本模块内复刻）。
+    """与 review_policy.select_action 内 _block_skip **逐字**一致的纪律门（本模块内复刻）。
 
-    - reviews_done < REVIEW_MIN_REVIEW 或 skip_streak ≥ SKIP_STREAK_LIMIT 时禁止 skip：
+    - reviews_done < REVIEW_MIN_REVIEW 或 skip_streak ≥ SKIP_STREAK_LIMIT − 1 时禁止 skip：
       证据强（f2 ≥ 0.6）压回 trust_honest，否则压回 balanced。
+
+    ⚠️ 必须与生产同步：生产版已修掉差一（原 `≥ SKIP_STREAK_LIMIT` 会放过第 1 次连发，
+    与验收"连发 ≥2 发生率为 0"冲突），本处随之改为 `≥ SKIP_STREAK_LIMIT − 1`。
+    同步性由 `tests/test_review_env_calibrated.py::test_discipline_gate_matches_production`
+    与真实 `ReviewWeightPolicy.select_action` 对拍守护 —— 生产再改此处必须一起改。
     """
-    if action == 4 and (reviews_done < REVIEW_MIN_REVIEW or skip_streak >= SKIP_STREAK_LIMIT):
+    if action == 4 and (reviews_done < REVIEW_MIN_REVIEW
+                        or skip_streak >= SKIP_STREAK_LIMIT - 1):
         return 0 if (features and len(features) > 1 and features[1] >= 0.6) else 3
     return action
 
@@ -109,6 +115,11 @@ class CalibratedReviewEnv:
             "disagreement": round(r.uniform(0.0, 1.0), 3),
         }
         self._mode_encoding = round(r.uniform(0.0, 1.0), 3)
+        # round_ratio 亦按线上分布随机采样（generator 用 uniform(0,1)）。
+        # 早期版本由 step_count/horizon 推导 ⇒ horizon=1 时恒 1.0（std=0），
+        # 与真实上下文（0.49±0.29）错位，使策略在评测时遇到分布外 f12；
+        # 对齐诊断 experiments/diag_calib_alignment.py 已量化该错位并要求修正。
+        self._round_ratio = round(r.uniform(0.0, 1.0), 3)
         # 三信号真值（供本环境记账；与生产 review_signals 完全同源）
         self.s_h, self.s_c, self.s_k = review_signals(self._evidence, self._consensus)
 
@@ -116,7 +127,7 @@ class CalibratedReviewEnv:
         return review_state_features(
             evidence=self._evidence, critic=self._critic, consensus=self._consensus,
             state=self._state, mode_encoding=self._mode_encoding,
-            round_ratio=(self.step_count + 1) / self.horizon,
+            round_ratio=self._round_ratio,
         )
 
     def reset(self) -> list:
