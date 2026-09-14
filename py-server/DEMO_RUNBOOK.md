@@ -20,6 +20,29 @@ guardian.bat
 - 后端自挂载 SPA：dev 下读 `../dist/index.html`（`STATIC_DIR`/Docker 下读 `/app/static`）。**确认 `dist` 已构建**，否则只跑 API 模式、裁判看不到界面。
 - 启动后等待首次 `lifespan` 完成：InMemory 空则写种子、`<500` 条再导入教材 PDF，约 30–90s 后 `collection_size≈2083`。
 
+## 1.5 启动冒烟验证（含 career 功能）
+
+每次演示前，后端 `lifespan` 完成、端口 `:8002` LISTENING 后，**逐项勾选；全绿才可继续**，任一 ❌ 即按本 Runbook 回滚/排查。
+
+### 通用后端冒烟
+- [ ] ✅/❌ **状态绿**：`GET /api/status` 返回 `status=ok`、`collection_size>0`、`llm_available=true`
+- [ ] ✅/❌ **功能就绪**：`GET /api/status/competition` 五项功能 + 加分项就绪
+
+### career 功能冒烟（三创赛演示线，`/api/career/*`）
+- [ ] ✅/❌ **① 启动 career 服务**：`import career_training_router` 无异常；`GET /api/career/scenarios` 返回场景列表（HTTP 200，非空）
+- [ ] ✅/❌ **② 调一次 career 训练/评审端点返回 200**：用 demo 学生账号
+  `POST /api/career/session/start` 建会话 → 200；
+  `POST /api/career/session/{sid}/answer` 推一轮 → 200；
+  `POST /api/career/session/{sid}/end` 出六维报告 → 200
+- [ ] ✅/❌ **③ career 政策默认值 `EVIDENCE_DENSITY_DEFAULT=0.3` 生效**（鲶鱼机制对齐基线、避免规则死锁）：
+  ```bat
+  ".\.venv\Scripts\python.exe" -c "from engines.career_policy import EVIDENCE_DENSITY_DEFAULT; assert EVIDENCE_DENSITY_DEFAULT==0.3, EVIDENCE_DENSITY_DEFAULT; print('OK', EVIDENCE_DENSITY_DEFAULT)"
+  ```
+  预期打印 `OK 0.3`；若非 0.3 说明政策模块被改坏，回退该提交。
+- [ ] ✅/❌ **④ 教师端角色校验**：`POST /api/career/classes`（student 角色）→ 403；teacher/admin → 200（确认 `_require_teacher` 门禁在位）
+
+> 说明：career 端点与 408 路由前缀隔离，互不影响；以上冒烟不触动既有 408 功能。career 决策默认规则版（`use_career_mappo=False`），若标榜"AI 对抗"须按 GoNoGo G1–G4 标注"v1 规则原型"。
+
 ## 2. `--workers 1` 显式固化（ADR-007 硬约束）
 
 `main.py` 已对 `WEB_CONCURRENCY/UVICORN_WORKERS>1` 做启动期 `raise`（fail-fast），但**编排可能注入环境变量**。两处写死 CLI，让 `--workers 1` 优先级高于任何 env：

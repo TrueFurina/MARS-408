@@ -21,6 +21,15 @@
 - [ ] **诚实标注就位**：所有规则型能力界面/说明含「v1 规则原型」；全链路无任何伪造 Trace；训练相关表述统一为「模拟/规则，非真训」。
 - [ ] **备用机就绪**：备用机预热过、切换脚本在手、LAN 可达。
 - [ ] **盯盘已知**：运维同学掌握每 5min 刷新 `/api/status` 与 `/metrics` 的节奏与阈值（见 Runbook）。
+- [ ] **career 功能门禁（ADR-015 零侵入）**：career 改动未破坏 408 既有能力；本地基线回归 `pytest` 须达 **843 passed / 0 error**（硬门槛，任一 fail → No-Go）；Runbook §1.5 career 冒烟全绿。career 端点与 408 路由前缀隔离（`/api/career/*`），互不影响。
+
+career 可发布判据（关联 ADR-015 零侵入约束）：
+
+| 判据 | 门槛 | 不达标处置 |
+|---|---|---|
+| 基线回归 | 843 passed / 0 error | No-Go，回退 career 提交 |
+| career 冒烟 | Runbook §1.5 全绿 | 定位 career_* 模块 |
+| 零侵入 | 408 既有测试不受影响 | 拆分 career 改动 |
 
 ## 三、No-Go 触发条件
 
