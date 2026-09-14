@@ -1,0 +1,152 @@
+{
+  "meta": {
+    "source": "diag_budget_curve.py (read-only, 单种子趋势性诊断)",
+    "seed": 7,
+    "budgets": [
+      10000,
+      20000,
+      40000
+    ],
+    "horizons": [
+      8,
+      32
+    ],
+    "note": "单种子 ⇒ 结论仅趋势性；写入验收数字须补 3 种子。"
+  },
+  "baselines": {
+    "main": {
+      "uniform": 66.80916666666667,
+      "oracle": 72.27525,
+      "headroom": 5.46608333333333,
+      "rule": 68.94797222222222,
+      "heuristic_f2": 69.80675,
+      "rule_capture_pct": 39.1,
+      "heuristic_capture_pct": 54.8
+    },
+    "gen": {
+      "uniform": 64.39666666666666,
+      "oracle": 70.47202777777778,
+      "headroom": 6.075361111111121,
+      "rule": 66.40625,
+      "heuristic_f2": 67.43802777777778,
+      "rule_capture_pct": 33.1,
+      "heuristic_capture_pct": 50.1
+    }
+  },
+  "rows": [
+    {
+      "horizon": 8,
+      "episodes": 10000,
+      "seed": 7,
+      "n_updates": 209,
+      "main": {
+        "mean_eff": 69.997,
+        "delta_vs_uniform": 3.187,
+        "capture_pct": 58.3,
+        "balanced_retreat_low_f2_pct": 9.1
+      },
+      "gen": {
+        "mean_eff": 67.674,
+        "delta_vs_uniform": 3.277,
+        "capture_pct": 53.9,
+        "balanced_retreat_low_f2_pct": 9.4
+      },
+      "seconds": 30.2
+    },
+    {
+      "horizon": 8,
+      "episodes": 20000,
+      "seed": 7,
+      "n_updates": 417,
+      "main": {
+        "mean_eff": 69.92,
+        "delta_vs_uniform": 3.111,
+        "capture_pct": 56.9,
+        "balanced_retreat_low_f2_pct": 11.6
+      },
+      "gen": {
+        "mean_eff": 67.57,
+        "delta_vs_uniform": 3.173,
+        "capture_pct": 52.2,
+        "balanced_retreat_low_f2_pct": 10.8
+      },
+      "seconds": 53.7
+    },
+    {
+      "horizon": 8,
+      "episodes": 40000,
+      "seed": 7,
+      "n_updates": 834,
+      "main": {
+        "mean_eff": 69.954,
+        "delta_vs_uniform": 3.145,
+        "capture_pct": 57.5,
+        "balanced_retreat_low_f2_pct": 0.0
+      },
+      "gen": {
+        "mean_eff": 67.718,
+        "delta_vs_uniform": 3.322,
+        "capture_pct": 54.7,
+        "balanced_retreat_low_f2_pct": 0.0
+      },
+      "seconds": 106.5
+    },
+    {
+      "horizon": 32,
+      "episodes": 10000,
+      "seed": 7,
+      "n_updates": 209,
+      "main": {
+        "mean_eff": 70.032,
+        "delta_vs_uniform": 3.223,
+        "capture_pct": 59.0,
+        "balanced_retreat_low_f2_pct": 0.8
+      },
+      "gen": {
+        "mean_eff": 67.806,
+        "delta_vs_uniform": 3.41,
+        "capture_pct": 56.1,
+        "balanced_retreat_low_f2_pct": 0.7
+      },
+      "seconds": 160.1
+    },
+    {
+      "horizon": 32,
+      "episodes": 20000,
+      "seed": 7,
+      "n_updates": 417,
+      "main": {
+        "mean_eff": 70.155,
+        "delta_vs_uniform": 3.346,
+        "capture_pct": 61.2,
+        "balanced_retreat_low_f2_pct": 0.0
+      },
+      "gen": {
+        "mean_eff": 67.585,
+        "delta_vs_uniform": 3.188,
+        "capture_pct": 52.5,
+        "balanced_retreat_low_f2_pct": 0.0
+      },
+      "seconds": 300.7
+    },
+    {
+      "horizon": 32,
+      "episodes": 40000,
+      "seed": 7,
+      "n_updates": 834,
+      "main": {
+        "mean_eff": 69.761,
+        "delta_vs_uniform": 2.952,
+        "capture_pct": 54.0,
+        "balanced_retreat_low_f2_pct": 18.2
+      },
+      "gen": {
+        "mean_eff": 67.6,
+        "delta_vs_uniform": 3.203,
+        "capture_pct": 52.7,
+        "balanced_retreat_low_f2_pct": 12.2
+      },
+      "seconds": 828.0
+    }
+  ]
+}

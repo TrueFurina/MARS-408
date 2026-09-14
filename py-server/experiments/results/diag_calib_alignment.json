@@ -136,80 +136,98 @@
     "max_abs_gap": 0.371
   },
   "R2_significance": {
-    "summary_file": "review_shadow_summary_20260914_165038.json",
-    "jsonl_file": "review_shadow_20260914_165038.jsonl",
+    "summary_file": "review_shadow_summary_20260914_172149.json",
+    "jsonl_file": "review_shadow_20260914_172149.jsonl",
     "n": 240,
     "arm_means": {
       "uniform": 66.809,
       "rule": 68.948,
       "mappo_current": 66.997,
       "heuristic_f2": 69.807,
-      "shadow": 69.527
+      "shadow": 69.999
     },
     "shadow_action_dist": {
-      "2": 75,
-      "0": 102,
-      "3": 28,
-      "1": 35
+      "3": 16,
+      "0": 119,
+      "2": 59,
+      "1": 46
     },
     "per_seed": [
       {
         "seed_index": 0,
-        "d_uniform": 2.121,
-        "d_rule": -0.018,
-        "d_heuristic": -0.877
+        "d_uniform": 3.223,
+        "d_rule": 1.084,
+        "d_heuristic": 0.225
       },
       {
         "seed_index": 1,
-        "d_uniform": 3.023,
-        "d_rule": 0.885,
-        "d_heuristic": 0.026
+        "d_uniform": 2.946,
+        "d_rule": 0.808,
+        "d_heuristic": -0.051
       },
       {
         "seed_index": 2,
-        "d_uniform": 3.01,
-        "d_rule": 0.871,
-        "d_heuristic": 0.012
+        "d_uniform": 3.4,
+        "d_rule": 1.261,
+        "d_heuristic": 0.402
       }
     ],
     "aggregate": {
       "uniform": {
-        "mean": 2.718,
-        "std": 3.759,
-        "t": 11.2,
-        "pct_positive": 77.9
+        "mean": 3.19,
+        "std": 4.042,
+        "t": 12.23,
+        "pct_positive": 78.3
       },
       "rule": {
-        "mean": 0.579,
-        "std": 4.251,
-        "t": 2.11,
-        "pct_positive": 44.6
+        "mean": 1.051,
+        "std": 3.904,
+        "t": 4.17,
+        "pct_positive": 46.2
       },
       "heuristic_f2": {
-        "mean": -0.28,
-        "std": 3.656,
-        "t": -1.19,
-        "pct_positive": 33.8
+        "mean": 0.192,
+        "std": 3.564,
+        "t": 0.84,
+        "pct_positive": 39.2
       }
     }
   },
   "R3_interpretability": {
-    "agreement_pct": 55.8,
-    "rl_better": 45,
-    "rl_better_mean_gain": 3.949,
-    "rl_worse": 61,
-    "rl_worse_mean_loss": 6.364,
+    "r3_seed": 7,
+    "r3_episodes": 10000,
+    "r3_horizon": 32,
+    "agreement_pct": 75.0,
+    "rl_better": 30,
+    "rl_better_mean_gain": 7.138,
+    "rl_worse": 30,
+    "rl_worse_mean_loss": 5.335,
     "actions_low_f2": {
-      "trust_honest": 5,
-      "trust_critic": 16,
-      "trust_consensus": 51,
-      "balanced": 49
+      "trust_honest": 8,
+      "trust_critic": 47,
+      "trust_consensus": 65,
+      "balanced": 1
     },
     "actions_high_f2": {
-      "trust_honest": 83,
-      "trust_critic": 5,
-      "trust_consensus": 29,
-      "balanced": 2
+      "trust_honest": 115,
+      "trust_consensus": 4
     }
+  },
+  "R4_reward_alignment": {
+    "exact_agree_pct": 98.5,
+    "n": 400,
+    "quality_argmax_dist": {
+      "trust_honest": 140,
+      "trust_critic": 137,
+      "trust_consensus": 123
+    },
+    "reward_argmax_dist": {
+      "trust_honest": 134,
+      "trust_critic": 137,
+      "trust_consensus": 129
+    },
+    "mismatch_n": 6,
+    "mismatch_mean_quality_loss": 0.0,
+    "verdict": "reward 与验收口径对齐（不一致处为并列，损失≈0）⇒ 排除奖励设计错位"
   }
 }

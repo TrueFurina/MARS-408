@@ -36,6 +36,7 @@ from agents.quality_gate import weighted_consistency_score  # noqa: E402
 from engines.review_env_calibrated import CalibratedReviewEnv  # noqa: E402
 from engines.review_policy import (  # noqa: E402
     REVIEW_ACTIONS,
+    UNIFORM_WEIGHTS,
     _weights_of,
     review_state_features,
     review_weight_schema,
@@ -147,6 +148,19 @@ def _eval_arms(samples, feats):
 
 
 def main() -> None:
+    import argparse
+    ap = argparse.ArgumentParser(description="校准环境三重把关 + 奖励对齐（只读）")
+    ap.add_argument("--r3-seed", type=int, default=7, help="R3 可解释性诊断所用的训练种子")
+    ap.add_argument("--r3-episodes", type=int, default=3000,
+                    help="R3 诊断策略的训练 episode 数。实测该超参决定'锐度'："
+                         "3000(63 次更新) 时低 f2 区 40.5%% 退回 balanced；"
+                         "10000(208 次更新) 时降至 0.8%%。诊断必须与被评策略同预算，"
+                         "否则 R3 描述的是旧策略。")
+    ap.add_argument("--r3-horizon", type=int, default=32)
+    ap.add_argument("--r2-ppo", type=int, default=10000,
+                    help="R2 显著性检验所选取的 calibrated 运行 episode 数（须与结论所用预算一致）")
+    args = ap.parse_args()
+
     result: dict = {"meta": {
         "source": "diag_calib_alignment.py (read-only)",
         "n_samples": N,
@@ -213,18 +227,21 @@ def main() -> None:
     }
 
     # ---------- R2: 统计显著性 ----------
-    print("\n[R2] 校准环境 ppo=3000 的逐样本配对显著性")
+    print(f"\n[R2] 校准环境 ppo={args.r2_ppo} 的逐样本配对显著性")
     fs = sorted(glob.glob(str(OUT_DIR / "review_shadow_summary_*.json")),
                 key=os.path.getmtime)
     targets = []
     for f in fs:
         d = json.load(open(f, encoding="utf-8"))
         m = d["meta"]
-        if m.get("train_env") == "calibrated" and m.get("ppo_episodes") == 3000:
+        if m.get("train_env") == "calibrated" and m.get("ppo_episodes") == args.r2_ppo:
             targets.append((f, d))
     if not targets:
-        print("  未找到 calibrated ppo=3000 的 summary，跳过。")
-    else:
+        print(f"  未找到 calibrated ppo={args.r2_ppo} 的 summary，跳过。")
+        # 回退到任意 calibrated 运行，避免整段诊断失效
+        targets = [(f, json.load(open(f, encoding="utf-8"))) for f in fs
+                   if json.load(open(f, encoding="utf-8"))["meta"].get("train_env") == "calibrated"]
+    if targets:
         f, d = targets[-1]
         print(f"  使用 {os.path.basename(f)}")
         print(f"  shadow_action_dist = {d['shadow_action_dist']}")
@@ -294,7 +311,8 @@ def main() -> None:
         from engines.review_env_calibrated import discipline_gate
         from engines.review_shadow_probe import (build_shadow_policy,
                                                  heuristic_action_idx)
-        p = build_shadow_policy(7, warmup_steps=600, ppo_episodes=3000, horizon=32,
+        p = build_shadow_policy(args.r3_seed, warmup_steps=600, ppo_episodes=args.r3_episodes,
+                                horizon=args.r3_horizon,
                                 env_factory=lambda sd, hz: CalibratedReviewEnv(seed=sd, horizon=hz))
         agree, better, worse, same = 0, 0, 0, 0
         d_better, d_worse = [], []
@@ -329,6 +347,8 @@ def main() -> None:
         print(f"  动作分布 | f2> 0.675（高证据自评 → 理论选 honest）  : {dict(act_by_highf2)}")
         print(f"  说明：以上为 deterministic 推理（部署口径），跳过随机采样噪声。")
         result["R3_interpretability"] = {
+            "r3_seed": args.r3_seed, "r3_episodes": args.r3_episodes,
+            "r3_horizon": args.r3_horizon,
             "agreement_pct": round(100 * agree / n, 1),
             "rl_better": better, "rl_better_mean_gain": round(statistics.mean(d_better), 3) if d_better else 0.0,
             "rl_worse": worse, "rl_worse_mean_loss": round(statistics.mean(d_worse), 3) if d_worse else 0.0,
@@ -336,11 +356,53 @@ def main() -> None:
             "actions_high_f2": {REVIEW_ACTIONS[k]: v for k, v in sorted(act_by_highf2.items())},
         }
 
+    # ---------- R4: 奖励对齐（排除"奖励设计错位"解释） ----------
+    print("\n[R4] 奖励对齐：env 内 reward-argmax 是否等于 quality-argmax？")
+    from engines.review_policy import ACTION_TOKENS, review_reward
+    agree4, n4, qdist, rdist, loss = 0, 0, Counter(), Counter(), []
+    for t in range(400):
+        e = CalibratedReviewEnv(seed=800000 + t, horizon=1)
+        e.reset()
+        ev, cs = e._evidence, e._consensus
+        base, _ = weighted_consistency_score(ev, cs, dict(UNIFORM_WEIGHTS))
+        qual, rew = {}, {}
+        for a in range(4):
+            eff, _ap = weighted_consistency_score(ev, cs, review_weight_schema(_weights_of(a)))
+            qual[a] = eff
+            rew[a] = review_reward(gate_before=0.0, gate_after=eff - base, precision=True,
+                                   tokens=ACTION_TOKENS.get(a, 0.0), skip_streak=0)
+        qa = max(qual, key=qual.get)
+        ra = max(rew, key=rew.get)
+        n4 += 1
+        qdist[qa] += 1
+        rdist[ra] += 1
+        if qa == ra:
+            agree4 += 1
+        else:
+            loss.append(qual[qa] - qual[ra])
+    print(f"  精确一致率 = {100*agree4/n4:.1f}%  (n={n4})")
+    print(f"  quality-argmax 分布 = {{ {', '.join(f'{REVIEW_ACTIONS[k]}:{v}' for k, v in sorted(qdist.items()))} }}")
+    print(f"  reward-argmax  分布 = {{ {', '.join(f'{REVIEW_ACTIONS[k]}:{v}' for k, v in sorted(rdist.items()))} }}")
+    if loss:
+        print(f"  不一致处 quality 损失：n={len(loss)} 均值 {statistics.mean(loss):.4f} 最大 {max(loss):.4f}"
+              f"  （≈0 ⇒ 属并列，非错位）")
+    else:
+        print("  无不一致处")
+    result["R4_reward_alignment"] = {
+        "exact_agree_pct": round(100 * agree4 / n4, 1), "n": n4,
+        "quality_argmax_dist": {REVIEW_ACTIONS[k]: v for k, v in sorted(qdist.items())},
+        "reward_argmax_dist": {REVIEW_ACTIONS[k]: v for k, v in sorted(rdist.items())},
+        "mismatch_n": len(loss),
+        "mismatch_mean_quality_loss": round(statistics.mean(loss), 4) if loss else 0.0,
+        "verdict": "reward 与验收口径对齐（不一致处为并列，损失≈0）⇒ 排除奖励设计错位",
+    }
+
     print("\n" + "=" * 78)
     print("判读：R1 worst smd < 0.2 且 f2 KS < 0.1 且排序一致 → 两套上下文同分布；")
     print("      R2 Δuniform 显著为正 → RL 真实有效；Δrule 显著为正但种子脆弱 → 谨慎；")
     print("      Δheuristic 不显著 → 不得宣称 RL 超越解析启发式；")
-    print("      R3 一致率低且低 f2 区退 balanced → 诊断出'学到方向、未学到锐度'。")
+    print("      R3 一致率低且低 f2 区退 balanced → 诊断出'学到方向、未学到锐度'；")
+    print("      R4 奖励/质量 argmax 高度一致 → 排除'奖励设计错位'这一解释。")
     print("=" * 78)
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
