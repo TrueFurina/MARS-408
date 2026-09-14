@@ -295,6 +295,18 @@ def get_frugal_config() -> dict:
 def get_gomarl_config() -> dict:
     return load_config().get("gomarl", {})
 
+def use_review_mappo() -> bool:
+    """三元评审权重 MAPPO 灰度开关（默认 False = 均匀权重，行为等同现状）。"""
+    return bool(get_gomarl_config().get("use_review_mappo", False))
+
+
+def review_min_review() -> int:
+    """每会话至少真实评审次数（防 skip 捷径），默认 2。"""
+    try:
+        return int(get_gomarl_config().get("review_min_review", 2))
+    except (TypeError, ValueError):
+        return 2
+
 
 def get_career_config() -> dict:
     """career 对抗实训段配置（缺失返回空 dict，不报错）。"""

@@ -78,5 +78,10 @@
       "operating_system",
       "computer_organization"
     ]
+  },
+  "gomarl": {
+    "_comment": "GOMARL 共识与三元评审权重配置；整段缺失时全部走默认值（灰度关闭）",
+    "use_review_mappo": false,
+    "review_min_review": 2
   }
 }

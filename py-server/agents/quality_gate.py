@@ -30,6 +30,134 @@ CONSISTENCY_FIXABLE = 40     # 一致性分数可修复下限
 GROUNDING_PASS = 40          # 知识支撑度通过线
 MAX_GATE_RETRIES = 1         # 最大闸门重试次数（提速：硬/软失败最多回退生成 1 次）
 
+# ── 三元评审权重接线（攻坚令 3.4 插入点 B）──
+# 灰度契约：均匀权重 (1/3,1/3,1/3) 时 effective == 原 consistency_score，行为零变化；
+# 权重缺失/非法/异常 → 保持原值（fail-open）。只换判定输入，不换判定逻辑。
+UNIFORM_REVIEW_W = {"honest": 1 / 3, "critic": 1 / 3, "consensus": 1 / 3}
+_SKIP_EPS = 1e-9
+
+# consensus.status → 共识信号兜底映射（overall_score 缺失时使用）
+_STATUS_SIGNAL = {
+    "passed": 90.0, "pass": 90.0, "conflict": 50.0,
+    "flagged": 45.0, "regenerate": 40.0,
+}
+
+
+def review_signals(evidence: dict, consensus: dict) -> tuple[float, float, float]:
+    """抽取三元评审信号，各归一到 0-100：返回 (honest, critic, consensus)。
+
+    - honest    : evidence_report.consistency_score（证据/诚实 Agent）
+    - critic    : consensus.confidence_score × 100（批评者置信度，critic 节点写入）
+    - consensus : consensus.overall_score（GOMARL 共识总分），缺失时按 status 映射
+    """
+    evidence = evidence or {}
+    consensus = consensus or {}
+    try:
+        s_h = float(evidence.get("consistency_score", 100) or 0)
+    except (TypeError, ValueError):
+        s_h = 100.0
+
+    conf = consensus.get("confidence_score")
+    try:
+        s_c = float(conf) * 100.0 if conf is not None else 60.0
+    except (TypeError, ValueError):
+        s_c = 60.0
+
+    overall = consensus.get("overall_score")
+    if overall is not None:
+        try:
+            s_k = float(overall)
+        except (TypeError, ValueError):
+            s_k = None
+    else:
+        s_k = None
+    if s_k is None:
+        s_k = _STATUS_SIGNAL.get(
+            str(consensus.get("status", "")).lower(), 60.0)
+
+    return (
+        max(0.0, min(100.0, s_h)),
+        max(0.0, min(100.0, s_c)),
+        max(0.0, min(100.0, s_k)),
+    )
+
+
+def _normalize_review_weights(w) -> dict | None:
+    """归一化三元权重（非法 → None，交由调用方保持原值）。"""
+    if not isinstance(w, dict):
+        return None
+    try:
+        h = max(0.0, float(w.get("honest", 0.0)))
+        c = max(0.0, float(w.get("critic", 0.0)))
+        k = max(0.0, float(w.get("consensus", 0.0)))
+    except (TypeError, ValueError, AttributeError):
+        return None
+    total = h + c + k
+    if total <= _SKIP_EPS:
+        return {"honest": 0.0, "critic": 0.0, "consensus": 0.0}
+    return {"honest": h / total, "critic": c / total, "consensus": k / total}
+
+
+def weighted_consistency_score(
+    evidence: dict, consensus: dict, weights=None,
+) -> tuple[float, bool]:
+    """按三元评审权重合成有效一致性分。返回 (effective, applied)。
+
+    合成公式（保证均匀权重零偏移）：
+        weighted = w_h·S_h + w_c·S_c + w_k·S_k
+        uniform  = (S_h + S_c + S_k) / 3
+        effective = S_h + (weighted − uniform)
+
+    - 均匀权重：weighted == uniform ⇒ effective == S_h，applied=False（行为=现状）
+    - skip（权重全 0）：直接放行语义，effective=100，applied=True
+    - 其余：按信任对象拉高/拉低有效分，applied=True
+    """
+    s_h, s_c, s_k = review_signals(evidence, consensus)
+    # 空权重（None/{}/[]）一律视为「无权重」；空 dict 不得被当作 skip 全 0 放行，
+    # 否则会把「未加权」静默变成「直接放行」，是危险的语义混淆。
+    if not weights:
+        return s_h, False
+    w = _normalize_review_weights(weights)
+    if w is None:
+        return s_h, False
+
+    h, c, k = w["honest"], w["critic"], w["consensus"]
+    if h + c + k <= _SKIP_EPS:
+        return 100.0, True  # skip_review：不评审直接放行
+    if (abs(h - 1 / 3) < 1e-9 and abs(c - 1 / 3) < 1e-9 and abs(k - 1 / 3) < 1e-9):
+        return s_h, False   # 均匀权重 = 现状，不施加任何偏移
+
+    weighted = h * s_h + c * s_c + k * s_k
+    uniform = (s_h + s_c + s_k) / 3.0
+    effective = s_h + (weighted - uniform)
+    return max(0.0, min(100.0, effective)), True
+
+
+def _resolve_review_weights(state: dict, evidence: dict, consensus: dict):
+    """解析本轮三元评审权重；无可用来源 → None（调用方保持原值）。
+
+    优先级：state["review_weights"]（上游显式注入）> MAPPO 在线决策（灰度开启时）
+    > None（灰度关闭 = 现状）。
+    """
+    w = state.get("review_weights")
+    if isinstance(w, dict) and w:
+        return w
+    try:
+        from engines.review_policy import (
+            _mappo_enabled, decide_review_weight, review_state_features,
+        )
+    except Exception:  # noqa: BLE001 - review_policy 缺失即视为未接线
+        return None
+    try:
+        if not _mappo_enabled():
+            return None
+        feats = review_state_features(
+            evidence=evidence, consensus=consensus, state=state)
+        return decide_review_weight(feats, use_mappo=True).get("weights")
+    except Exception as e:  # noqa: BLE001
+        logger.warning("三元评审权重在线决策失败，回退均匀权重: %s", e)
+        return None
+
 
 async def quality_gate_node(state: AgentState) -> AgentState:
     """产物验收闸门节点：基于 evidence_report 和 consensus 做硬性质量判定。
@@ -66,6 +194,25 @@ async def quality_gate_node(state: AgentState) -> AgentState:
         # ── 硬性指标检查 ──
 
         consistency_score = evidence.get("consistency_score", 100)
+
+        # ── 插入点 B：三元评审权重加权（攻坚令 3.4）──
+        # 灰度默认关闭 → 均匀权重 → effective == 原值，行为零变化；
+        # 异常/无来源 → 原值（fail-open）。只换判定输入，不换判定逻辑。
+        _raw_consistency = consistency_score
+        _weights_applied = False
+        try:
+            _w = _resolve_review_weights(state, evidence, consensus)
+            if _w:
+                consistency_score, _weights_applied = weighted_consistency_score(
+                    evidence, consensus, _w)
+                if _weights_applied:
+                    state["review_weights"] = _w
+                    state.setdefault("review_weight_source", "state")
+        except Exception as _we:  # noqa: BLE001
+            logger.warning("三元评审权重加权失败，回退原始一致性分: %s", _we)
+            consistency_score = _raw_consistency
+            _weights_applied = False
+
         if consistency_score < CONSISTENCY_PASS:
             if consistency_score < CONSISTENCY_FIXABLE:
                 hard_failures.append(
@@ -132,6 +279,8 @@ async def quality_gate_node(state: AgentState) -> AgentState:
             "hard_failures": hard_failures,
             "soft_failures": soft_failures,
             "consistency_score": consistency_score,
+            "consistency_score_raw": _raw_consistency,
+            "review_weights_applied": _weights_applied,
             "gate_retry_count": gate_retry,
         }
         state["gate_verdict"] = verdict
@@ -158,6 +307,8 @@ async def quality_gate_node(state: AgentState) -> AgentState:
             "hard_failures": [],
             "soft_failures": [],
             "consistency_score": None,
+            "consistency_score_raw": None,
+            "review_weights_applied": False,
             "gate_retry_count": state.get("gate_retry_count", 0),
             "error": str(e),
         }

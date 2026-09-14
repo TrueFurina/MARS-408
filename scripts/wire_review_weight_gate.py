@@ -1,0 +1,328 @@
+# -*- coding: utf-8 -*-
+"""接线脚本：三元评审权重 MAPPO 化 —— 插入点 B（quality gate）+ 配置槽（A·阶段1）
+
+依据 docs/CTO-芒得很职三元评审权重MAPPO化攻坚令-2026-09-14.md 3.4：
+  - 插入点 B：quality_gate 判定前按三元权重合成"有效一致性分"
+  - 判定逻辑（PASS/FIX/REJECT 门）完全不动，只换输入
+  - 灰度默认关闭 → 均匀权重 → effective == 原 consistency_score，行为零变化
+  - 任何异常 → 回退原值（fail-open）
+
+合成公式（关键：保证均匀权重零偏移）
+    weighted = w_h·S_h + w_c·S_c + w_k·S_k
+    uniform  = (S_h + S_c + S_k) / 3
+    effective = S_h + (weighted − uniform)
+  均匀权重 (1/3,1/3,1/3) 时 weighted == uniform ⇒ effective == S_h（= 现状）。
+  这样"权重存在但未学"阶段（阶段 1）全链路行为不变，648+ 用例只增不减。
+
+三元信号
+    S_honest    = evidence_report.consistency_score（证据/诚实 Agent）
+    S_critic    = consensus.confidence_score × 100（批评者置信度，critic 写入）
+    S_consensus = consensus.overall_score（GOMARL 共识总分；缺失按 status 映射）
+    skip（权重全 0）→ 直接放行语义，effective = 100
+
+用法：python scripts/wire_review_weight_gate.py [--apply]
+"""
+from __future__ import annotations
+
+import io
+import os
+import sys
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+QGATE = os.path.join(ROOT, "py-server", "agents", "quality_gate.py")
+CONFIG = os.path.join(ROOT, "py-server", "config.py")
+EXAMPLE = os.path.join(ROOT, "py-server", "config.example.json")
+
+# ── 补丁 1：quality_gate 顶部新增三元权重合成 ────────────────────────────────
+OLD_QG_HEAD = (
+    "import logging\n"
+    "from typing import Literal\n"
+    "\n"
+    "from agents.state import AgentState\n"
+    "\n"
+    "logger = logging.getLogger(\"netlearn.quality_gate\")\n"
+    "\n"
+    "# 阈值常量\n"
+    "CONSISTENCY_PASS = 60        # 一致性分数通过线\n"
+    "CONSISTENCY_FIXABLE = 40     # 一致性分数可修复下限\n"
+    "GROUNDING_PASS = 40          # 知识支撑度通过线\n"
+    "MAX_GATE_RETRIES = 1         # 最大闸门重试次数（提速：硬/软失败最多回退生成 1 次）\n"
+)
+
+NEW_QG_HEAD = OLD_QG_HEAD + (
+    "\n"
+    "# ── 三元评审权重接线（攻坚令 3.4 插入点 B）──\n"
+    "# 灰度契约：均匀权重 (1/3,1/3,1/3) 时 effective == 原 consistency_score，行为零变化；\n"
+    "# 权重缺失/非法/异常 → 保持原值（fail-open）。只换判定输入，不换判定逻辑。\n"
+    "UNIFORM_REVIEW_W = {\"honest\": 1 / 3, \"critic\": 1 / 3, \"consensus\": 1 / 3}\n"
+    "_SKIP_EPS = 1e-9\n"
+    "\n"
+    "# consensus.status → 共识信号兜底映射（overall_score 缺失时使用）\n"
+    "_STATUS_SIGNAL = {\n"
+    "    \"passed\": 90.0, \"pass\": 90.0, \"conflict\": 50.0,\n"
+    "    \"flagged\": 45.0, \"regenerate\": 40.0,\n"
+    "}\n"
+    "\n"
+    "\n"
+    "def review_signals(evidence: dict, consensus: dict) -> tuple[float, float, float]:\n"
+    "    \"\"\"抽取三元评审信号，各归一到 0-100：返回 (honest, critic, consensus)。\n"
+    "\n"
+    "    - honest    : evidence_report.consistency_score（证据/诚实 Agent）\n"
+    "    - critic    : consensus.confidence_score × 100（批评者置信度，critic 节点写入）\n"
+    "    - consensus : consensus.overall_score（GOMARL 共识总分），缺失时按 status 映射\n"
+    "    \"\"\"\n"
+    "    evidence = evidence or {}\n"
+    "    consensus = consensus or {}\n"
+    "    try:\n"
+    "        s_h = float(evidence.get(\"consistency_score\", 100) or 0)\n"
+    "    except (TypeError, ValueError):\n"
+    "        s_h = 100.0\n"
+    "\n"
+    "    conf = consensus.get(\"confidence_score\")\n"
+    "    try:\n"
+    "        s_c = float(conf) * 100.0 if conf is not None else 60.0\n"
+    "    except (TypeError, ValueError):\n"
+    "        s_c = 60.0\n"
+    "\n"
+    "    overall = consensus.get(\"overall_score\")\n"
+    "    if overall is not None:\n"
+    "        try:\n"
+    "            s_k = float(overall)\n"
+    "        except (TypeError, ValueError):\n"
+    "            s_k = None\n"
+    "    else:\n"
+    "        s_k = None\n"
+    "    if s_k is None:\n"
+    "        s_k = _STATUS_SIGNAL.get(\n"
+    "            str(consensus.get(\"status\", \"\")).lower(), 60.0)\n"
+    "\n"
+    "    return (\n"
+    "        max(0.0, min(100.0, s_h)),\n"
+    "        max(0.0, min(100.0, s_c)),\n"
+    "        max(0.0, min(100.0, s_k)),\n"
+    "    )\n"
+    "\n"
+    "\n"
+    "def _normalize_review_weights(w) -> dict | None:\n"
+    "    \"\"\"归一化三元权重（非法 → None，交由调用方保持原值）。\"\"\"\n"
+    "    if not isinstance(w, dict):\n"
+    "        return None\n"
+    "    try:\n"
+    "        h = max(0.0, float(w.get(\"honest\", 0.0)))\n"
+    "        c = max(0.0, float(w.get(\"critic\", 0.0)))\n"
+    "        k = max(0.0, float(w.get(\"consensus\", 0.0)))\n"
+    "    except (TypeError, ValueError, AttributeError):\n"
+    "        return None\n"
+    "    total = h + c + k\n"
+    "    if total <= _SKIP_EPS:\n"
+    "        return {\"honest\": 0.0, \"critic\": 0.0, \"consensus\": 0.0}\n"
+    "    return {\"honest\": h / total, \"critic\": c / total, \"consensus\": k / total}\n"
+    "\n"
+    "\n"
+    "def weighted_consistency_score(\n"
+    "    evidence: dict, consensus: dict, weights=None,\n"
+    ") -> tuple[float, bool]:\n"
+    "    \"\"\"按三元评审权重合成有效一致性分。返回 (effective, applied)。\n"
+    "\n"
+    "    合成公式（保证均匀权重零偏移）：\n"
+    "        weighted = w_h·S_h + w_c·S_c + w_k·S_k\n"
+    "        uniform  = (S_h + S_c + S_k) / 3\n"
+    "        effective = S_h + (weighted − uniform)\n"
+    "\n"
+    "    - 均匀权重：weighted == uniform ⇒ effective == S_h，applied=False（行为=现状）\n"
+    "    - skip（权重全 0）：直接放行语义，effective=100，applied=True\n"
+    "    - 其余：按信任对象拉高/拉低有效分，applied=True\n"
+    "    \"\"\"\n"
+    "    w = _normalize_review_weights(weights)\n"
+    "    s_h, s_c, s_k = review_signals(evidence, consensus)\n"
+    "    if w is None:\n"
+    "        return s_h, False\n"
+    "\n"
+    "    h, c, k = w[\"honest\"], w[\"critic\"], w[\"consensus\"]\n"
+    "    if h + c + k <= _SKIP_EPS:\n"
+    "        return 100.0, True  # skip_review：不评审直接放行\n"
+    "    if (abs(h - 1 / 3) < 1e-9 and abs(c - 1 / 3) < 1e-9 and abs(k - 1 / 3) < 1e-9):\n"
+    "        return s_h, False   # 均匀权重 = 现状，不施加任何偏移\n"
+    "\n"
+    "    weighted = h * s_h + c * s_c + k * s_k\n"
+    "    uniform = (s_h + s_c + s_k) / 3.0\n"
+    "    effective = s_h + (weighted - uniform)\n"
+    "    return max(0.0, min(100.0, effective)), True\n"
+    "\n"
+    "\n"
+    "def _resolve_review_weights(state: dict, evidence: dict, consensus: dict):\n"
+    "    \"\"\"解析本轮三元评审权重；无可用来源 → None（调用方保持原值）。\n"
+    "\n"
+    "    优先级：state[\"review_weights\"]（上游显式注入）> MAPPO 在线决策（灰度开启时）\n"
+    "    > None（灰度关闭 = 现状）。\n"
+    "    \"\"\"\n"
+    "    w = state.get(\"review_weights\")\n"
+    "    if isinstance(w, dict) and w:\n"
+    "        return w\n"
+    "    try:\n"
+    "        from engines.review_policy import (\n"
+    "            _mappo_enabled, decide_review_weight, review_state_features,\n"
+    "        )\n"
+    "    except Exception:  # noqa: BLE001 - review_policy 缺失即视为未接线\n"
+    "        return None\n"
+    "    try:\n"
+    "        if not _mappo_enabled():\n"
+    "            return None\n"
+    "        feats = review_state_features(\n"
+    "            evidence=evidence, consensus=consensus, state=state)\n"
+    "        return decide_review_weight(feats, use_mappo=True).get(\"weights\")\n"
+    "    except Exception as e:  # noqa: BLE001\n"
+    "        logger.warning(\"三元评审权重在线决策失败，回退均匀权重: %s\", e)\n"
+    "        return None\n"
+)
+
+# ── 补丁 2：节点内接线（只换输入，不换门）────────────────────────────────────
+OLD_QG_BODY = (
+    "        consistency_score = evidence.get(\"consistency_score\", 100)\n"
+    "        if consistency_score < CONSISTENCY_PASS:\n"
+)
+
+NEW_QG_BODY = (
+    "        consistency_score = evidence.get(\"consistency_score\", 100)\n"
+    "\n"
+    "        # ── 插入点 B：三元评审权重加权（攻坚令 3.4）──\n"
+    "        # 灰度默认关闭 → 均匀权重 → effective == 原值，行为零变化；\n"
+    "        # 异常/无来源 → 原值（fail-open）。只换判定输入，不换判定逻辑。\n"
+    "        _raw_consistency = consistency_score\n"
+    "        _weights_applied = False\n"
+    "        try:\n"
+    "            _w = _resolve_review_weights(state, evidence, consensus)\n"
+    "            if _w:\n"
+    "                consistency_score, _weights_applied = weighted_consistency_score(\n"
+    "                    evidence, consensus, _w)\n"
+    "                if _weights_applied:\n"
+    "                    state[\"review_weights\"] = _w\n"
+    "                    state.setdefault(\"review_weight_source\", \"state\")\n"
+    "        except Exception as _we:  # noqa: BLE001\n"
+    "            logger.warning(\"三元评审权重加权失败，回退原始一致性分: %s\", _we)\n"
+    "            consistency_score = _raw_consistency\n"
+    "            _weights_applied = False\n"
+    "\n"
+    "        if consistency_score < CONSISTENCY_PASS:\n"
+)
+
+# ── 补丁 3：gate_result 增加可追溯字段 ───────────────────────────────────────
+OLD_QG_RESULT = (
+    "            \"consistency_score\": consistency_score,\n"
+    "            \"gate_retry_count\": gate_retry,\n"
+    "        }\n"
+)
+
+NEW_QG_RESULT = (
+    "            \"consistency_score\": consistency_score,\n"
+    "            \"consistency_score_raw\": _raw_consistency,\n"
+    "            \"review_weights_applied\": _weights_applied,\n"
+    "            \"gate_retry_count\": gate_retry,\n"
+    "        }\n"
+)
+
+# ── 补丁 4：异常分支的 gate_result 补齐字段（避免 KeyError 语义不一致）────────
+OLD_QG_ERR = (
+    "            \"consistency_score\": None,\n"
+    "            \"gate_retry_count\": state.get(\"gate_retry_count\", 0),\n"
+)
+
+NEW_QG_ERR = (
+    "            \"consistency_score\": None,\n"
+    "            \"consistency_score_raw\": None,\n"
+    "            \"review_weights_applied\": False,\n"
+    "            \"gate_retry_count\": state.get(\"gate_retry_count\", 0),\n"
+)
+
+# ── 补丁 5：config.py 配置槽 ────────────────────────────────────────────────
+OLD_CFG = (
+    "def get_gomarl_config() -> dict:\n"
+    "    return load_config().get(\"gomarl\", {})\n"
+)
+
+NEW_CFG = OLD_CFG + (
+    "\n"
+    "def use_review_mappo() -> bool:\n"
+    "    \"\"\"三元评审权重 MAPPO 灰度开关（默认 False = 均匀权重，行为等同现状）。\"\"\"\n"
+    "    return bool(get_gomarl_config().get(\"use_review_mappo\", False))\n"
+    "\n"
+    "\n"
+    "def review_min_review() -> int:\n"
+    "    \"\"\"每会话至少真实评审次数（防 skip 捷径），默认 2。\"\"\"\n"
+    "    try:\n"
+    "        return int(get_gomarl_config().get(\"review_min_review\", 2))\n"
+    "    except (TypeError, ValueError):\n"
+    "        return 2\n"
+)
+
+# ── 补丁 6：config.example.json 增加 gomarl 段 ──────────────────────────────
+OLD_EXAMPLE = (
+    "      \"computer_organization\"\n"
+    "    ]\n"
+    "  }\n"
+    "}"
+)
+
+NEW_EXAMPLE = (
+    "      \"computer_organization\"\n"
+    "    ]\n"
+    "  },\n"
+    "  \"gomarl\": {\n"
+    "    \"_comment\": \"GOMARL 共识与三元评审权重配置；整段缺失时全部走默认值（灰度关闭）\",\n"
+    "    \"use_review_mappo\": false,\n"
+    "    \"review_min_review\": 2\n"
+    "  }\n"
+    "}"
+)
+
+
+def _norm(t: str) -> str:
+    return t.replace("\r\n", "\n")
+
+
+def _patch(path: str, patches: list[tuple[str, str, str]], apply: bool) -> bool:
+    with io.open(path, "r", encoding="utf-8", newline="") as f:
+        raw = f.read()
+    crlf = "\r\n" in raw
+    text = _norm(raw)
+    ok = True
+    for label, old, new in patches:
+        o, n = _norm(old), _norm(new)
+        cnt = text.count(o)
+        if cnt != 1:
+            ok = False
+            print(f"[FAIL] {os.path.basename(path)} :: {label} — 锚点命中 {cnt} 次（期望 1）")
+            continue
+        text = text.replace(o, n, 1)
+        print(f"[OK  ] {os.path.basename(path)} :: {label}")
+    if not ok:
+        return False
+    if crlf:
+        text = text.replace("\n", "\r\n")
+    if apply:
+        with io.open(path, "w", encoding="utf-8", newline="") as f:
+            f.write(text)
+    return True
+
+
+def main() -> int:
+    apply = "--apply" in sys.argv
+    all_ok = True
+    all_ok &= _patch(QGATE, [
+        ("顶部三元权重合成", OLD_QG_HEAD, NEW_QG_HEAD),
+        ("节点内接线", OLD_QG_BODY, NEW_QG_BODY),
+        ("gate_result 追溯字段", OLD_QG_RESULT, NEW_QG_RESULT),
+        ("异常分支字段补齐", OLD_QG_ERR, NEW_QG_ERR),
+    ], apply)
+    all_ok &= _patch(CONFIG, [("gomarl 配置槽", OLD_CFG, NEW_CFG)], apply)
+    all_ok &= _patch(EXAMPLE, [("example gomarl 段", OLD_EXAMPLE, NEW_EXAMPLE)], apply)
+
+    if not all_ok:
+        print("\n存在未命中补丁，未写盘。")
+        return 1
+    print("\n已写盘。" if apply else "\n[DRY-RUN] 未写盘，加 --apply 生效。")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
