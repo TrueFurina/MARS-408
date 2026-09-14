@@ -201,7 +201,7 @@ def classify_request(user_request: str, topic: str = "", course: str = "",
 
 ### 7.1 验证方式
 
-- **单测**：`pytest py-server/tests/` 全量回归（既有 616 项测试定义不破坏）；
+- **单测**：`pytest py-server/tests/` 全量回归（既有 843 项测试定义不破坏）；
 - **冒烟**：`py-server/_debug_smoke/smoke_langgraph.py` 直调 `agent_graph.astream` 验证流水线完整跑通；
 - **实测口径**：low 请求响应时间、high 请求评审链路是否完整、无证据批评是否被过滤，均以真实运行日志为准。
 

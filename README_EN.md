@@ -39,14 +39,14 @@ not merely by prompt wording.
 ### 3. FrugalRAG Adaptive Retrieval Pipeline
 
 E5 768-dimension vector retrieval + BM25 full-text retrieval + personalized re-ranking + adaptive
-early stopping. Ships with **1,883 real knowledge chunks + 200 practice questions (2,083 vector entries
-in total)**, organized into **26 subject groups** across the four subjects. If any stage of the retrieval
+early stopping. Ships with **1,883 real knowledge chunks + 200 practice questions**, loaded as
+**2,122 vector entries**, organized into **26 subject groups** across the four subjects. If any stage of the retrieval
 chain fails, the system **degrades to BM25-only** so demos and usage never break.
 
 ### 4. Production-Grade Engineering and Graceful Degradation
 
 - Frontend: Vue 3 + TypeScript, **68 pages**, multi-role (student / teacher dashboard)
-- Backend: FastAPI + LangGraph, **196+ API endpoints**, **616 defined tests** (198 passing on Windows CI; the rest blocked by environment-level SIGSEGV, authority on Linux CI)
+- Backend: FastAPI + LangGraph, **230+ API endpoints**, **843 tests passing** (full regression, 0 failures)
 - **Dual-channel LLM failover**: iFlytek Spark X2 (primary) + DeepSeek (fallback)
 - Milvus / PostgreSQL / Redis each degrade independently — a single machine runs the system end to end
 
@@ -120,7 +120,7 @@ readings, slide outlines, hands-on code, and video scripts.
 |------|-------|-------|
 | Knowledge chunks | 1,883 | 739 `knowledge_point` + 1,144 `knowledge_variant` |
 | Practice questions | 200 | Multiple-choice / fill-in / short-answer, all four subjects |
-| Vector entries | 2,083 | All real E5 embeddings (768-dim), **zero all-zero vectors** |
+| Vector entries | 2,122 | All real E5 embeddings (768-dim), **zero all-zero vectors** |
 | Knowledge groups | 26 | Chapter-level groups enabling cross-group conflict detection |
 
 Retrieval chain: user query → E5 vector search → BM25 full-text search → fusion ranking →
@@ -171,10 +171,10 @@ core features still run.
 | Dimension | Metric |
 |-----------|--------|
 | Frontend | Vue 3 + TypeScript · 68 pages · Vite build |
-| Backend | FastAPI + LangGraph · 196+ API endpoints · 10 agent nodes |
-| Tests | 616 defined tests · 198 passing on Windows CI (rest blocked by env-level SIGSEGV, authority on Linux CI) |
+| Backend | FastAPI + LangGraph · 230+ API endpoints · 10 agent nodes |
+| Tests | 843 tests passing (full regression, 0 failures) |
 | LLM | iFlytek Spark X2 (primary) + DeepSeek (fallback), dual-channel failover |
-| Retrieval | Real E5 768-dim embeddings · 2,083 vectors · BM25 degradation guard |
+| Retrieval | Real E5 768-dim embeddings · 2,122 vectors · BM25 degradation guard |
 | Resilience | Milvus / PG / Redis degrade independently · runs fully on one machine |
 | Data | 1,883 knowledge chunks + 200 questions · 26 knowledge groups |
 

@@ -137,12 +137,13 @@ coordinator → diagnostician → planner → retriever
 
 ## 已知问题与环境陷阱
 
-### FastAPI 版本兼容（测试全部报错）
+### FastAPI 版本兼容（历史环境陷阱）
 
-pyproject.toml 声明 `fastapi>=0.136.3`，但实际安装的 FastAPI 0.115.0 已弃用 `Router.__init__(on_startup=...)`。
-全量 pytest 全部报 `TypeError: Router.__init__() got an unexpected keyword argument 'on_startup'`。
+pyproject.toml 声明 `fastapi>=0.136.3`；**当前 venv 实测安装 FastAPI 0.141.1**（2026-09-14 验证）。
+早期环境曾安装 FastAPI 0.115.0，其 `Router.__init__` 不接受 `on_startup=...`，曾导致全量 pytest 报 `TypeError: Router.__init__() got an unexpected keyword argument 'on_startup'`。
 **这不是我们的代码问题**——项目代码中无 `on_startup` 用法，是某个测试 fixture 的依赖链触发。
-**绕过方式**：用功能级直接验证替代 pytest，或单独运行不涉及 Router 的测试文件。
+**现状**：实测 0.141.1 的 `APIRouter.__init__` 已支持 `on_startup` 参数（`APIRouter(on_startup=[])` 可正常构造），该兼容问题预计已消除（尚未做全量回归确认）。
+**绕过方式（如仍遇 Router 相关报错）**：用功能级直接验证替代 pytest，或单独运行不涉及 Router 的测试文件。
 
 ### 异步事件循环阻塞（6 处已知）
 
@@ -156,9 +157,13 @@ uvicorn `--workers 1` 下 sync 阻塞会串行化所有请求：
 
 修复模式：在 async 端点中调用同步重操作时包裹 `await asyncio.to_thread(...)` 或 `run_in_threadpool(...)`。
 
-### Git Remote
+### Git Remote 与分支矩阵
 
-项目在 branch `master`，**无 upstream remote 配置**。所有提交仅存在于本地。需要 `git remote add origin <url>` 后方可 push。
+本仓库已配置两个 remote：`origin`（GitHub `TrueFurina/MARS-408`）与 `mars408`（本地 `E:/Code/MARS-408` 副本）。分支矩阵：
+- `main` — **MARS-408** 考研系统，已冻结（末次提交 `8065295`，2026-09-04），用于大创结题；
+- `career-literacy` — **芒得很职** 三创赛作品，当前活跃开发分支（HEAD `90fd377`，2026-09-14），已跟踪 upstream `origin/career-literacy`。
+
+两条分支共享底座，`main → career-literacy` 单向同步；`career-literacy` 的提交可 `git push origin career-literacy`。
 
 ## 最近安全加固的约定（修改代码时务必遵守）
 
