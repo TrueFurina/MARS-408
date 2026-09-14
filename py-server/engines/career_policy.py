@@ -184,11 +184,34 @@ def _rule_action_idx(env_feats: list[float]) -> int:
     return 0
 
 
+def _seed_all(seed: int) -> None:
+    """全链路播种：让同一 seed 的实验结果可逐位复算。
+
+    必须在**网络初始化之前**调用（权重初始化走 torch 全局 RNG）；
+    PPO 的动作采样 torch.multinomial 同样依赖该 RNG，故一次播种覆盖全流程。
+
+    修复背景：本模块原先未播种（且 warmup 内 `rng = random.Random(seed)` 建而不用，
+    属伪播种），实测同 seed 两次 warmup 权重 L2 差异达 110.70，
+    即 career_mappo_train_*.json 的 3-seed 结果不可复算。
+    """
+    random.seed(seed)
+    try:
+        import numpy as _np
+        _np.random.seed(seed % (2 ** 32))
+    except Exception:
+        pass
+    try:
+        import torch as _torch
+        _torch.manual_seed(seed)
+    except Exception:
+        pass
+
+
 class CareerModePolicy:
     """三模式决策策略：规则预热 → PPO 微调；推理失败自动降级规则版。"""
 
     def __init__(self, hidden: int = 64, lr: float = 3e-4, gamma: float = 0.99,
-                 clip_epsilon: float = 0.2):
+                 clip_epsilon: float = 0.2, seed: Optional[int] = 42):
         self.state_dim = 8
         self.n_actions = len(CAREER_ACTIONS)
         self.gamma = gamma
@@ -196,6 +219,10 @@ class CareerModePolicy:
         self._torch = None
         self._actor = None
         self._trained = False
+        # 网络权重初始化走 torch 全局 RNG：不播种则每次进程结果都不同，
+        # 3-seed 实验将不可复算（见 _seed_all 修复背景）。
+        if seed is not None:
+            _seed_all(seed)
         try:
             import torch  # noqa: 延迟导入
             self._torch = torch
@@ -212,7 +239,6 @@ class CareerModePolicy:
         if self._torch is None or self._actor is None:
             return {"warmed": False, "reason": "torch 不可用"}
         torch = self._torch
-        rng = random.Random(seed)
         opt = torch.optim.Adam(self._actor.parameters(), lr=3e-4)
         losses = []
         for _ in range(steps):

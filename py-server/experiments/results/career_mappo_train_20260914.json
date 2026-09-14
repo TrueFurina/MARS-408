@@ -1,0 +1,70 @@
+{
+  "date": "2026-09-14",
+  "host": "windows",
+  "args": {
+    "steps": 30,
+    "seeds": "1,42,2024",
+    "horizon": 8,
+    "template_student": false
+  },
+  "seeds": {
+    "1": {
+      "rule": {
+        "reward": -0.204,
+        "mean_step_reward": -0.0255,
+        "density": 0.747,
+        "six_avg": 2.573,
+        "max_catfish_run": 0
+      },
+      "mappo": {
+        "reward": -0.204,
+        "mean_step_reward": -0.0255,
+        "density": 0.747,
+        "six_avg": 2.573,
+        "max_catfish_run": 0
+      }
+    },
+    "42": {
+      "rule": {
+        "reward": -0.222,
+        "mean_step_reward": -0.0277,
+        "density": 0.734,
+        "six_avg": 2.536,
+        "max_catfish_run": 0
+      },
+      "mappo": {
+        "reward": -0.222,
+        "mean_step_reward": -0.0277,
+        "density": 0.734,
+        "six_avg": 2.536,
+        "max_catfish_run": 0
+      }
+    },
+    "2024": {
+      "rule": {
+        "reward": -0.186,
+        "mean_step_reward": -0.0233,
+        "density": 0.754,
+        "six_avg": 2.607,
+        "max_catfish_run": 0
+      },
+      "mappo": {
+        "reward": -0.186,
+        "mean_step_reward": -0.0233,
+        "density": 0.754,
+        "six_avg": 2.607,
+        "max_catfish_run": 0
+      }
+    }
+  },
+  "train": {
+    "trained": true,
+    "episodes": 30,
+    "mean_ep_reward": -0.314,
+    "mean_loss": -0.01288
+  },
+  "checkpoint": "E:\\Program\\MARL\\study-help-pro\\py-server\\models\\career_mode_policy.pt",
+  "discipline_violations": 0,
+  "mappo_reward_ge_rule": false,
+  "passed": false
+}

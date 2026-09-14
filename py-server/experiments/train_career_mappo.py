@@ -14,7 +14,6 @@ import argparse
 import datetime
 import json
 import os
-import random
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -60,8 +59,9 @@ def ppo_finetune(policy: CareerModePolicy, env: CareerAdversaryEnv,
     torch = policy._torch
     if torch is None or policy._actor is None:
         return {"trained": False, "reason": "torch unavailable"}
+    # 注：随机性由 CareerModePolicy(seed=) 统一播种（含 torch 全局 RNG），
+    # 采样 torch.multinomial 走的是 torch RNG；此处不再建而不用地 new 一个 rng。
     opt = torch.optim.Adam(policy._actor.parameters(), lr=1e-3)
-    rng = random.Random(seed)
     gamma = 0.95
     ep_rewards, losses = [], []
     for _ep in range(steps):
