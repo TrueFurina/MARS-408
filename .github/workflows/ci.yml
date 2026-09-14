@@ -191,6 +191,15 @@ jobs:
         run: pytest -m "not system and not requires_milvus" --cov=. --cov-report=xml:coverage.xml --cov-fail-under=50 -q
       - name: ADR-007 single-writer gate (import_queue)
         run: pytest -m import_queue -q
+      - name: P0 regression gate (p0_regression — wave-1 核心基线，必绿)
+        # wave-1 核心回归基线：单一真值源护栏 / CTO §6.1 三门 / career LLM 失败安全兜底。
+        # 只跑非 system 的 p0（test_p0_f6 属 system 分档，由 backend-system job 覆盖），
+        # 显式排除 system/requires_milvus，避免在此 job 拉起真实 uvicorn / Milvus。
+        run: pytest -m "p0_regression and not system and not requires_milvus" -q
+      - name: Criteria-A review capture gate (review_capture — 泛化集 capture ≥0.99)
+        # 判据A：analytic 解析最优档在独立泛化集上的 capture 必须 ≥99%（实测 100.0%）。
+        # 固化 experiments/accept_review.py 判据A 为可自动守护的 CI 门禁。
+        run: pytest -m review_capture -q
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:

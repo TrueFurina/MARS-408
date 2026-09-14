@@ -15,7 +15,7 @@
 | ADR-004 | （见 §5） | `documents/系统架构设计文档.md` §5 |
 | ADR-005 | （见 §5） | `documents/系统架构设计文档.md` §5 |
 | ADR-006 | （见 §5） | `documents/系统架构设计文档.md` §5 |
-| ADR-007 | 导入队列服务化（进程内单写者）—— Accepted | `archive/deliverables_历史/deliverables/engineering-assurance/ADR-007-import-queue-servitization.md` |
+| ADR-007 | 导入队列服务化（进程内单写者）—— Accepted | `docs/adr/ADR-007-import-queue-servitization.md`（archive/ 下另有历史副本，保留不动） |
 
 ## 新增 ADR（docs/adr/，由本索引管理）
 

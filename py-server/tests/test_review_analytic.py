@@ -19,6 +19,8 @@ import random
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "experiments"))
 
@@ -82,7 +84,14 @@ def test_analytic_is_identity_with_scoring_argmax():
 
 # ── 2. capture ≈ 100%（独立泛化集）──
 
+@pytest.mark.review_capture
 def test_analytic_capture_near_full_on_holdout():
+    """判据A CI 门禁：独立泛化集（holdout seed）capture 必须 ≥99%。
+
+    对应 experiments/accept_review.py 判据A（analytic 解析最优档 capture ≥95%，
+    实测泛化集 100.0%）。本用例把"泛化集 capture ≥0.99"固化为 CI 可跑的自动守护，
+    由 `.github/workflows/ci.yml` 的 `pytest -m review_capture` 步骤强制。
+    """
     samples = _samples(TEST_SEED)
     effs = [_effs(s) for s in samples]
     uni = sum(e[3] for e in effs) / N
@@ -95,7 +104,7 @@ def test_analytic_capture_near_full_on_holdout():
         got += e[a]
     got /= N
     capture = (got - uni) / headroom
-    assert capture > 0.98, f"解析式 capture 应 ≈100%，实际 {100*capture:.1f}%"
+    assert capture >= 0.99, f"判据A：泛化集 capture 应 ≥99%，实际 {100*capture:.1f}%"
 
 
 def test_analytic_beats_rule_substantially():

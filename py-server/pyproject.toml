@@ -53,6 +53,7 @@ markers = [
     "segv_env: 在 Windows 原生 torch/numpy 下触发 SIGSEGV 的测试（仅 CI/干净环境运行，本地自动跳过）",
     "slow: 慢速测试（nightly 运行，CI 默认 addopts 跳过）",
     "p0_regression: P0 回归门禁用例（wave-1 最先跑，必须全绿）",
+    "review_capture: 判据A 泛化集 capture 门禁（analytic 最优档，必须 ≥99%，CI 独立分档）",
 ]
 
 [tool.coverage.run]
