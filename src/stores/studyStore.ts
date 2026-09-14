@@ -638,37 +638,30 @@ const userMsg: ChatMessage = {
     }
   }
 
-  /** 从后端获取最近学习记录 */
+  /**
+   * 从后端获取最近学习记录
+   * 【证据纪律 2026-09-15】原实现为 `if (data && data.length >= 3) return data` ——
+   * 真实数据不足 3 条时被整体丢弃、改返回空数组，等于"抑制真数据"。
+   * 现已移除条数门槛：后端给几条就展示几条，由视图侧自行渲染空态。
+   */
   async function fetchRecentSessions(): Promise<Session[]> {
     try {
       const data = await api.get<Session[]>('/user/recent-sessions')
-      if (data && data.length >= 3) return data
-      // 后端数据不足时，用种子数据填充
-      return getFallbackSessions()
+      return Array.isArray(data) ? data : []
     } catch {
-      return getFallbackSessions()
+      // 后端不可用时返回空，由视图展示空态；绝不填充占位/示例数据
+      return []
     }
   }
 
-  /** 从后端获取推荐任务 */
+  /** 从后端获取推荐任务（同上：移除条数门槛，不抑制真数据） */
   async function fetchRecommendedTasks(): Promise<Task[]> {
     try {
       const data = await api.get<Task[]>('/user/recommended-tasks')
-      if (data && data.length >= 3) return data
-      return getFallbackTasks()
+      return Array.isArray(data) ? data : []
     } catch {
-      return getFallbackTasks()
+      return []
     }
-  }
-
-  /** 最近学习数据（API失败时返回空） */
-  function getFallbackSessions(): Session[] {
-    return []
-  }
-
-  /** 推荐任务数据（API失败时返回空） */
-  function getFallbackTasks(): Task[] {
-    return []
   }
 
   /** 后端科目列表（同时写入 subjects ref 供全局使用） */

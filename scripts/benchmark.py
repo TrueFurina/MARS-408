@@ -470,6 +470,19 @@ def main():
         json.dump(output_data, f, ensure_ascii=False, indent=2)
     print(f"\n结果已保存至: {args.output}")
 
+    # ── 醒目警告：demo 模式产物是合成数据，禁止当作实验证据 ──
+    # 背景（2026-09-15）：scripts/benchmark_results.json 的 mode == "demo" 曾一度被
+    # 误当作真实评测结果写进前端页面与规划文档。真产物在
+    # py-server/experiments/results/benchmark_YYYY-MM-DD.json。
+    if results["mode"] != "real":
+        print("\n" + "=" * 68)
+        print("  警告：本次产物为【合成/演示数据】，不可作为实验证据使用！")
+        print(f"  mode = {results['mode']!r}    文件 = {args.output}")
+        print("  真实评测请用：python scripts/benchmark.py  （不加 --demo）")
+        print("  真产物目录：py-server/experiments/results/")
+        print("  前端接口 GET /api/benchmark/results 已显式排除 demo 产物。")
+        print("=" * 68)
+
 
 if __name__ == "__main__":
     main()

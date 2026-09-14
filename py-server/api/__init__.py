@@ -28,6 +28,7 @@ from api.skills import router as skills_router
 from api.cn_distinction import router as cn_distinction_router
 from api.tts import router as tts_router
 from api.diagnostic import router as diagnostic_router
+from api.benchmark import router as benchmark_router
 from api.review import router as review_router
 from api.audit import router as audit_router
 from api.knowledge_graph import router as knowledge_graph_router
@@ -64,4 +65,5 @@ __all__ = [
     "wrong_questions_router",
     "daily_plan_router",
     "career_training_router",
+    "benchmark_router",
 ]

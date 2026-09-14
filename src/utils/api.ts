@@ -135,8 +135,38 @@ export const api = {
     return request<T>(path, { method: 'DELETE' })
   },
 
-  /** 流式 POST — 返回 Response 对象用于 SSE 读取 */
-  async postStream(path: string, body: unknown): Promise<Response> {
+  /** 流式 POST — 返回 Response 对象用于 SSE 读取；signal 用于中断（AbortController） */
+  async postStream(path: string, body: unknown, signal?: AbortSignal): Promise<Response> {
+    const token = getToken()
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    if (token) headers['Authorization'] = `Bearer ${token}`
+
+    const resp = await fetch(`${API_BASE}/api${path}`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+      ...(signal ? { signal } : {}),
+    })
+    if (!resp.ok) {
+      throw new ApiError(resp.status, '流式请求失败')
+    }
+    return resp
+  },
+
+  /**
+   * multipart/form-data 上传。
+   * 注意：不设置 Content-Type，由浏览器自动补全 boundary，
+   * 否则后端无法正确解析分块。
+   */
+  async upload<T>(path: string, formData: FormData): Promise<T> {
+    const token = getToken()
+    const headers: Record<string, string> = {}
+    if (token) headers['Authorization'] = `Bearer ${token}`
+    return requestForm<T>(path, formData, headers)
+  },
+
+  /** 返回二进制 Blob（视频 / 音频 / 文件下载） */
+  async postBlob(path: string, body: unknown): Promise<{ blob: Blob; ok: boolean; status: number }> {
     const token = getToken()
     const headers: Record<string, string> = { 'Content-Type': 'application/json' }
     if (token) headers['Authorization'] = `Bearer ${token}`
@@ -146,11 +176,31 @@ export const api = {
       headers,
       body: JSON.stringify(body),
     })
-    if (!resp.ok) {
-      throw new ApiError(resp.status, '流式请求失败')
-    }
-    return resp
+    return { blob: await resp.blob(), ok: resp.ok, status: resp.status }
   },
+}
+
+/** FormData 请求（不经过 JSON 序列化，且不设置 Content-Type） */
+async function requestForm<T>(
+  path: string,
+  formData: FormData,
+  authHeaders: Record<string, string>,
+): Promise<T> {
+  const resp = await fetch(`${API_BASE}/api${path}`, {
+    method: 'POST',
+    headers: authHeaders,
+    body: formData,
+  })
+  let data: any
+  try {
+    data = await resp.json()
+  } catch {
+    data = null
+  }
+  if (!resp.ok) {
+    throw new ApiError(resp.status, data?.detail || `上传失败 (${resp.status})`)
+  }
+  return data as T
 }
 
 /** TTS 语音合成 — 返回音频 Blob */
