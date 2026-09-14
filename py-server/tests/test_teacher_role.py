@@ -20,7 +20,16 @@ import importlib.util
 import pytest
 from fastapi import HTTPException
 
-logging.disable(logging.CRITICAL)  # 保持测试输出干净
+@pytest.fixture(autouse=True)
+def _quiet_module_logging():
+    """仅在本模块用例期间抑制日志。
+
+    注意：绝不能把 logging.disable() 放在模块顶层——它是**进程级全局开关**，
+    导入即生效且直到会话结束都不还原，会静默掉其它模块的日志断言。
+    """
+    logging.disable(logging.CRITICAL)
+    yield
+    logging.disable(logging.NOTSET)
 
 # ---- 绝对路径（不依赖 sys.path 包含 py-server） ----
 _HERE = os.path.abspath(__file__)

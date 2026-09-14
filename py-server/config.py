@@ -11,6 +11,8 @@ import copy
 from pathlib import Path
 from typing import Optional
 
+logger = logging.getLogger("netlearn.config")
+
 # 配置文件路径
 CONFIG_DIR = Path(__file__).parent
 CONFIG_PATH = CONFIG_DIR / "config.json"
@@ -34,8 +36,8 @@ def _load_dotenv():
                 val = val.strip().strip('"').strip("'")
                 if key and key not in os.environ:
                     os.environ[key] = val
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning(".env 解析失败，已忽略（凭据可能缺失）: %s", e)
 
 # 默认配置
 DEFAULTS = {
@@ -241,8 +243,10 @@ def load_config() -> dict:
                 _deep_merge(config, _map_old_config(file_config))
                 # 再合并文件中的新格式深度结构（直接覆盖 DEFAULTS）
                 _deep_merge(config, file_config)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(
+                    "config.json 解析失败，已回退内置 DEFAULTS（凭据/模型配置可能为空）: %s", e
+                )
 
         # 环境变量覆盖
         _apply_env_overrides(config)

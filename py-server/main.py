@@ -639,8 +639,8 @@ async def competition_status():
         conn = get_db_conn()
         row = conn.execute("SELECT COUNT(*) FROM users").fetchone()
         user_count = row[0] if row else 0
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("competition_status 读取用户总数失败，返回 0: %s", e)
 
     return {
         "competition": "第十五届中国软件杯 A3 赛题",
