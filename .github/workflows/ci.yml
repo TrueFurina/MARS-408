@@ -366,6 +366,10 @@ jobs:
           python-version: "3.12"
       - name: Run SSOT drift checker (fail on any drift)
         run: python design-system/check_tokens.py
+      - name: Run component raw-value gate (fail on hardcoded hex/rgb)
+        run: python design-system/check_raw_values.py
+      - name: Run prose-doc token drift gate (fail if doc cites non-token color)
+        run: python design-system/check_doc_tokens.py
 
   # ───────────────────────────────────────────────────────────────
   # 镜像可构建性（验证 Dockerfile 的 /static 挂载与单进程 CMD）

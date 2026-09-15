@@ -461,7 +461,7 @@ watch(chartWidth, () => { /* trigger re-render via computed */ })
 }
 .prov-badge {
   padding: 2px 8px; border-radius: 999px;
-  background: rgba(52, 211, 153, 0.15); color: var(--color-success);
+  background: rgba(var(--success-rgb), 0.15); color: var(--color-success);
   font-weight: 700; font-size: var(--text-2xs);
 }
 .prov-item b { color: var(--text-secondary); font-weight: 600; margin-right: 4px; }
@@ -471,7 +471,7 @@ watch(chartWidth, () => { /* trigger re-render via computed */ })
 /* ── 无真数据空态 ── */
 .no-data {
   padding: var(--space-8) var(--space-5); text-align: center;
-  border: 1px dashed var(--border-subtle, rgba(148,163,184,0.25));
+  border: 1px dashed var(--color-border-strong);
 }
 .no-data-title { font-size: var(--text-base); font-weight: 700; color: var(--text-primary, var(--text-secondary)); margin-bottom: var(--space-2); }
 .no-data-desc { font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-2); }
@@ -486,7 +486,7 @@ watch(chartWidth, () => { /* trigger re-render via computed */ })
 .honest-note, .method-change-note {
   margin-top: var(--space-3); padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md); font-size: var(--text-xs); line-height: 1.7;
-  background: rgba(251, 191, 36, 0.08);
+  background: rgba(var(--warning-rgb), 0.08);
   border-left: 3px solid var(--color-warning);
   color: var(--text-secondary);
 }
