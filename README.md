@@ -285,7 +285,7 @@ npm install && npm run dev                   # :5173，代理 /api → 8002
 - **W6-7（P2）**：ECD评估深化，评分对齐Claim-Evidence结构，证据链可追溯到轮次原文
 - **W8（P3）**：鲶鱼机制完善+提升路径优化（当前鲶鱼为规则触发版）
 - **W9-10（P4）**：教师端——建班/发任务/班级学情看板（career_classes/career_tasks表已建好）
-- **W11-12（P5）**：LangGraph interrupt人机协同 + 闽江学院信息安全1班46人真实试点
+- **W11-12（P5）**：LangGraph interrupt人机协同 + 闽江大学信息安全1班46人真实试点
 
 ### 11.6 与 MARS-408 的关系
 
