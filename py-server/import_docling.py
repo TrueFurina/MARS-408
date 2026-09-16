@@ -106,7 +106,7 @@ def import_all(rebuild=False):
         embs = embed_batch(texts)
         vc = []
         for i, c in enumerate(chunks):
-            cid = hashlib.md5(f"docling_{Path(rel_path).stem}_{i}".encode()).hexdigest()[:12]
+            cid = hashlib.sha256(f"docling_{Path(rel_path).stem}_{i}".encode()).hexdigest()[:12]
             vc.append({
                 "id": f"docling_{cid}",
                 "text": c,

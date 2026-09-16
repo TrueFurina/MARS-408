@@ -160,7 +160,7 @@ def import_subject(dir_name: str, subject_id: str, subject_name: str, max_chars:
             if len(chunk) < 30:
                 continue
             chapter_id, chapter_name = detect_chapter(chunk, subject_map)
-            cid = f"textbook_{subject_id}_{hashlib.md5(chunk.encode()).hexdigest()[:12]}"
+            cid = f"textbook_{subject_id}_{hashlib.sha256(chunk.encode()).hexdigest()[:12]}"
             if cid in seen_ids:
                 continue
             seen_ids.add(cid)

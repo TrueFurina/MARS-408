@@ -300,7 +300,7 @@ def process_file(filepath: str, rebuild: bool = False, use_ocr: bool = False) ->
     # 构建带 metadata 的 chunk 数据
     result = []
     for i, chunk_text in enumerate(chunks):
-        chunk_id = hashlib.md5(f"{filepath}_{i}".encode()).hexdigest()[:12]
+        chunk_id = hashlib.sha256(f"{filepath}_{i}".encode()).hexdigest()[:12]
         chapter = extract_chapter(chunk_text, subject)
         result.append({
             "id": f"import_{chunk_id}",

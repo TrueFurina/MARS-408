@@ -6,6 +6,7 @@
 import os
 import logging
 import time
+import threading
 
 # 本机无外网：强制 HuggingFace / Transformers 离线，避免检索重排模型
 # (BAAI/bge-reranker-base) 在每次请求时尝试下载并因连接超时反复重试约 90s，
@@ -25,6 +26,7 @@ _log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
 setup_structured_logging(getattr(logging, _log_level, logging.INFO))
 
 from contextlib import asynccontextmanager
+from collections import defaultdict, deque
 
 from fastapi import FastAPI, APIRouter, Request, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -537,6 +539,77 @@ async def request_size_limit_middleware(request: Request, call_next) -> Response
                     }
                 },
             )
+    return await call_next(request)
+
+
+# ── API 速率限制中间件 (#11: 防高成本 LLM/生成端点滥用 · 成本失控 · DoS) ──
+# 进程内滑动窗口计数器（单进程部署，无需 Redis）。按 (客户端 IP, 路由组) 限流。
+# 仅对高成本生成/LLM 端点（chat/agents/langgraph/xfyun/sandbox/multimodal/skills）
+# 生效；只读、静态资源、健康检查路径一律放行。多进程/多实例部署应改用 Redis 共享计数。
+_RATE_LIMIT_WINDOW = float(os.environ.get("RATE_LIMIT_WINDOW", "60"))  # 滑动窗口秒数
+_RATE_LIMIT_DEFAULT = int(os.environ.get("RATE_LIMIT_PER_MIN", "30"))  # 默认每窗口令牌数
+
+# 路径前缀 → 限流组（命中即限流）
+_RATE_GROUPS = {
+    "/api/chat": "chat",
+    "/api/agents": "agents",
+    "/api/langgraph": "langgraph",
+    "/api/xfyun": "xfyun",
+    "/api/sandbox": "sandbox",
+    "/api/multimodal": "multimodal",
+    "/api/skills": "skills",
+}
+
+
+def _rate_group_limit(group: str) -> int:
+    return int(os.environ.get(f"RATE_{group.upper()}", str(_RATE_LIMIT_DEFAULT)))
+
+
+def _client_ip(request: Request) -> str:
+    # 前置反代可能通过 X-Forwarded-For / X-Real-IP 传递真实客户端 IP
+    fwd = request.headers.get("x-forwarded-for")
+    if fwd:
+        return fwd.split(",")[0].strip()
+    real = request.headers.get("x-real-ip")
+    if real:
+        return real.strip()
+    return request.client.host if request.client else "unknown"
+
+
+_rate_buckets: "defaultdict[tuple, deque[float]]" = defaultdict(deque)
+_rate_lock = threading.Lock()
+
+
+@app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next) -> Response:
+    path = request.url.path
+    group = next((g for p, g in _RATE_GROUPS.items() if path.startswith(p)), None)
+    if group is None:
+        return await call_next(request)
+
+    now = time.monotonic()
+    ip = _client_ip(request)
+    limit = _rate_group_limit(group)
+    key = (ip, group)
+    with _rate_lock:
+        dq = _rate_buckets[key]
+        # 丢弃窗口外的旧时间戳
+        while dq and now - dq[0] >= _RATE_LIMIT_WINDOW:
+            dq.popleft()
+        if len(dq) >= limit:
+            retry_after = max(int(_RATE_LIMIT_WINDOW - (now - dq[0])) + 1, 1)
+            logger.warning("速率限制触发 group=%s ip=%s path=%s", group, ip, path)
+            return JSONResponse(
+                status_code=429,
+                headers={"Retry-After": str(retry_after)},
+                content={
+                    "error": {
+                        "code": "RATE_LIMITED",
+                        "message": f"请求过于频繁，请 {retry_after} 秒后重试",
+                    }
+                },
+            )
+        dq.append(now)
     return await call_next(request)
 
 
