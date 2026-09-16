@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MARS-408 · 考研多智能体个性化学习系统 | 2026 火山杯参赛作品</title>
+<meta name="description" content="MARS-408：基于 10-Agent LangGraph 流水线 + FrugalRAG 省油检索 + GoMARL 共识反幻觉的 408 考研多智能体个性化学习系统。2026 福建高校火山杯 Agent 创新大赛参赛作品。">
+<style>
+:root{
+  --bg:#0d1117;--bg2:#161b22;--border:#30363d;--fg:#e6edf3;--dim:#8b949e;
+  --accent:#f97316;--accent2:#3b82f6;--green:#3fb950;--code:#1c2128;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;line-height:1.7}
+a{color:var(--accent2);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+header{background:linear-gradient(135deg,#0d1117 60%,#1a1040);border-bottom:1px solid var(--border);padding:64px 0 56px}
+.badge{display:inline-block;border:1px solid var(--accent);color:var(--accent);border-radius:999px;padding:2px 14px;font-size:.85rem;margin-bottom:18px}
+h1{font-size:2.3rem;line-height:1.25;margin-bottom:14px}
+h1 .en{color:var(--dim);font-size:1.05rem;font-weight:400;display:block;margin-top:8px}
+.sub{color:var(--dim);font-size:1.08rem;max-width:760px}
+.sub b{color:var(--fg)}
+.cta{margin-top:28px;display:flex;gap:14px;flex-wrap:wrap}
+.btn{display:inline-block;padding:10px 22px;border-radius:10px;font-weight:600;font-size:.95rem}
+.btn.primary{background:var(--accent);color:#fff}
+.btn.ghost{border:1px solid var(--border);color:var(--fg)}
+section{padding:56px 0;border-bottom:1px solid var(--border)}
+h2{font-size:1.5rem;margin-bottom:22px}
+h2 small{color:var(--dim);font-size:.85rem;font-weight:400;margin-left:10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:22px}
+.card h3{font-size:1.05rem;margin-bottom:8px}
+.card p{color:var(--dim);font-size:.92rem}
+.card .num{font-size:1.7rem;font-weight:700;color:var(--accent);display:block;margin-bottom:4px}
+.pipeline{background:var(--code);border:1px solid var(--border);border-radius:12px;padding:18px 22px;font-family:Consolas,monospace;font-size:.9rem;overflow-x:auto;white-space:nowrap;color:var(--dim)}
+.pipeline b{color:var(--green)}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}
+.metric{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center}
+.metric .v{font-size:1.9rem;font-weight:800;color:var(--accent)}
+.metric .k{color:var(--dim);font-size:.88rem;margin-top:4px}
+.src{color:var(--dim);font-size:.8rem;margin-top:10px}
+ul.feat{list-style:none}
+ul.feat li{padding:7px 0;border-bottom:1px dashed var(--border);color:var(--dim)}
+ul.feat li b{color:var(--fg)}
+ul.feat li:last-child{border-bottom:none}
+footer{padding:36px 0;color:var(--dim);font-size:.88rem;text-align:center}
+@media(max-width:640px){h1{font-size:1.6rem}header{padding:44px 0 40px}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <span class="badge">2026 福建高校「火山杯」Agent 创新大赛 · 参赛作品</span>
+    <h1>MARS-408：考研多智能体个性化学习系统
+      <span class="en">Multi-Agent Personalized Learning System for China's 408 CS Postgraduate Exam</span>
+    </h1>
+    <p class="sub">覆盖 <b>数据结构 / 计算机组成原理 / 操作系统 / 计算机网络</b> 四科。
+      一条 <b>10 个 Agent</b> 组成的教学流水线：多候选生成 → 共识仲裁 → 证据核查 → 质量闸门，
+      配 <b>FrugalRAG 省油检索</b>与 <b>GoMARL 神经混音器</b>——答案更可信，检索成本只有全量 RAG 的约 1/50。</p>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/TrueFurina/MARS-408">GitHub 仓库</a>
+      <a class="btn ghost" href="https://github.com/TrueFurina/MARS-408/blob/main/README.md">参赛 README</a>
+      <a class="btn ghost" href="#data">实测数据</a>
+    </div>
+  </div>
+</header>
+
+<section id="pain">
+  <div class="wrap">
+    <h2>业务痛点 <small>为什么需要这条流水线</small></h2>
+    <div class="grid">
+      <div class="card"><h3>大模型答疑幻觉</h3><p>通用大模型答 408 常一本正经地编造：混淆协议、记错算法复杂度。考生无法辨别，被带偏的代价是一年备考方向。</p></div>
+      <div class="card"><h3>学习路径千人一方</h3><p>四科交叉考点多（Cache×操作系统、TCP×安全…），市面产品给所有人推同一套计划，错题本沦为摘抄本。</p></div>
+      <div class="card"><h3>检索成本被忽视</h3><p>常规 RAG 把全库 chunk 塞进上下文，单轮动辄上万 tokens——按 token 计费的产品把成本转嫁给用户的会员费。</p></div>
+      <div class="card"><h3>AI 答疑无闸门</h3><p>单模型直出没有第二双眼睛把关；多数多智能体方案缺少共识仲裁与证据核查，错误率随对话轮数累积。</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="solution">
+  <div class="wrap">
+    <h2>解决方案 <small>Agent 如何解决</small></h2>
+    <div class="pipeline">coordinator → diagnostician → <b>generator_cluster</b>(多候选并行) → assessor → critic → <b>consensus</b>(共识仲裁) → <b>evidence_check</b>(反幻觉) → <b>quality_gate</b>(打回重生成) → planner → path_planner</div>
+    <div class="grid" style="margin-top:20px">
+      <div class="card"><h3>① 十节点流水线，三道闸门</h3><p>每条答案必须过证据核查、质量闸门、共识仲裁三关才出口，从机制上压幻觉——而不是靠提示词求它别编。</p></div>
+      <div class="card"><h3>② FrugalRAG 省油检索</h3><p>先主题过滤再精排。28 题基准实测：单查询检索上下文仅 <b>173.46 tokens</b>（全量 RAG 的约 1/50–1/80），Recall@5=0.786。</p></div>
+      <div class="card"><h3>③ GoMARL 神经混音器</h3><p>多候选答案谁说了算？按学情画像动态加权。90 次观测实测判题准确率 <b>83.33%</b>（加权投票基线 76.67%），判决时延 8.84ms。</p></div>
+      <div class="card"><h3>④ 三级降级容灾</h3><p>全链路 70 个降级点：LLM 断供时规则兜底、显式标注答案来源（llm/rule_fallback），服务不中断且不伪装成模型判断。</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="data">
+  <div class="wrap">
+    <h2>实测数据 <small>全部有落盘证据 · 2026-08-17 基准（28 题 / 2,083 chunks / 种子 20260719）</small></h2>
+    <div class="metrics">
+      <div class="metric"><span class="v">173.46</span><div class="k">检索上下文 tokens/查询<br>（中位 171.5）</div></div>
+      <div class="metric"><span class="v">0.786</span><div class="k">Recall@5<br>MRR = 0.698</div></div>
+      <div class="metric"><span class="v">83.33%</span><div class="k">神经混音器判题准确率<br>基线 76.67%</div></div>
+      <div class="metric"><span class="v">108.2ms</span><div class="k">检索平均时延<br>混音器判决 8.84ms</div></div>
+      <div class="metric"><span class="v">796</span><div class="k">后端测试通过数<br>pytest 全量</div></div>
+      <div class="metric"><span class="v">70</span><div class="k">降级点<br>三级容灾</div></div>
+    </div>
+    <p class="src">证据出处：py-server/experiments/results/benchmark_2026-08-17.json（experiment1：28 题检索评测；experiment2：90 观测混音器对照实验）。tokens 口径：检索上下文为落盘实测；月度总耗为配置推算估算——遵守「无落盘不出数字」。</p>
+  </div>
+</section>
+
+<section id="tokens">
+  <div class="wrap">
+    <h2>Token 成本 <small>月度消耗量（估算口径）</small></h2>
+    <ul class="feat">
+      <li><b>单轮答疑（检索+生成+审核全链路）</b>：约 4,000–6,000 tokens —— 其中 FrugalRAG 检索上下文实测仅 173 tokens</li>
+      <li><b>单学生重度使用</b>（日均 20 轮）：约 240–360 万 tokens/月</li>
+      <li><b>试点规模</b>（100 名学生 × 日均 15 轮 × 30 天）：约 <b>1.8亿–2.7亿 tokens/月</b>（中位约 2.2 亿）</li>
+      <li><b>成本对比</b>：常规全量 RAG 单轮检索上下文约 8,000–15,000 tokens，为 FrugalRAG 的 50–80 倍——同等服务质量下月度成本翻数倍</li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    MARS-408 · 2026 闽都×火山杯 Agent 创新大赛参赛作品 ·
+    <a href="https://github.com/TrueFurina/MARS-408">github.com/TrueFurina/MARS-408</a><br>
+    10-Agent LangGraph Pipeline · FrugalRAG (E5/BM25) · GoMARL Consensus · Vue 3 + TypeScript + FastAPI
+  </div>
+</footer>
+
+</body>
+</html>
