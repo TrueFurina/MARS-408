@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { icons } from '@/components/icons'
 import Skeleton from '@/components/Skeleton.vue'
 import { useSkillStore } from '@/stores/skillStore'
-import { api, getAuthHeaders } from '@/utils/api'
+import { api } from '@/utils/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -71,14 +71,8 @@ async function sendChat() {
   chatAbort = new AbortController()
 
   try {
-    const headers: Record<string, string> = { 'Content-Type': 'application/json', ...getAuthHeaders() }
-    const endpoint = useMemory.value ? `/api/skills/run-with-memory/${skillId.value}` : `/api/skills/run-stream/${skillId.value}`
-    const resp = await fetch(endpoint, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ message: msg, session_id: '' }),
-      signal: chatAbort.signal,
-    })
+    const path = useMemory.value ? `/skills/run-with-memory/${skillId.value}` : `/skills/run-stream/${skillId.value}`
+    const resp = await api.postStream(path, { message: msg, session_id: '' }, chatAbort.signal)
     if (!resp.ok) throw new Error('请求失败')
     const reader = resp.body?.getReader()
     const decoder = new TextDecoder()

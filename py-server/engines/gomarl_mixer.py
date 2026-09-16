@@ -366,9 +366,10 @@ class NeuralGroupMixer:
         # 神经网络混合器（延迟初始化）
         self._mixer_net: Optional['GroupMixerNet'] = None
         self._onnx_session = None  # ONNX Runtime 会话
-        # embed_dim 默认值，_init_mixer 时会从训练权重探测真实维度并覆盖
-        # （训练权重 hyper_w1.0.0.weight.shape[1] 即 embed_dim，当前为 768=e5-base-v2）
-        self._embed_dim = 384
+        # embed_dim 与 AgentOutputEncoder 同源派生（config.dimension，e5-base-v2=768），
+        # 避免写死与检索维度不符的死默认值（旧值 384 会被误当作"应改回"的目标）。
+        # _init_mixer 仍会优先从训练权重 probe 真实维度并覆盖此默认。
+        self._embed_dim = self.encoder.dim
         self._hidden_dim = 64
 
         # 基础权重
@@ -653,6 +654,9 @@ class NeuralGroupMixer:
             "sd_loss": float(sd_loss),
             "neural_used": neural_used,
             "agent_count": n,
+            # 各 Agent 的 E5 向量（(n, 768) np.ndarray，与 agent_results 同序）：
+            # 供 C3 语义级冲突检测消费；不含于 HTTP 响应，禁止 JSON 直出。
+            "agent_embeddings": embeddings,
         }
 
     def _compute_dynamic_weights(self, agent_names: list[str], student_profile: dict) -> dict:

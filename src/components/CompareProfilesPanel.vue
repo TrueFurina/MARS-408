@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { getAuthHeaders } from '@/utils/api'
+import { api } from '@/utils/api'
 import Skeleton from '@/components/Skeleton.vue'
 import EmptyState from '@/components/EmptyState.vue'
-
-const API_BASE = ''
 
 const loading = ref(false)
 const ran = ref(false)
@@ -41,20 +39,12 @@ async function runCompare() {
   resultA.value = null
   resultB.value = null
   try {
-    const [respA, respB] = await Promise.all([
-      fetch(`${API_BASE}/api/engine/frugal-rag-full`, {
-        method: 'POST',
-        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: question.value, course: course.value, top_k: 5, student_profile: profileA.value }),
-      }),
-      fetch(`${API_BASE}/api/engine/frugal-rag-full`, {
-        method: 'POST',
-        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: question.value, course: course.value, top_k: 5, student_profile: profileB.value }),
-      }),
+    const [resA, resB] = await Promise.all([
+      api.post<any>('/engine/frugal-rag-full', { question: question.value, course: course.value, top_k: 5, student_profile: profileA.value }),
+      api.post<any>('/engine/frugal-rag-full', { question: question.value, course: course.value, top_k: 5, student_profile: profileB.value }),
     ])
-    resultA.value = await respA.json()
-    resultB.value = await respB.json()
+    resultA.value = resA
+    resultB.value = resB
   } catch (e) {
     resultA.value = { status: 'error', message: String(e) }
     resultB.value = { status: 'error', message: String(e) }

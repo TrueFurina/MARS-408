@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useStudyStore } from '@/stores/studyStore'
-import { getAuthHeaders } from '@/utils/api'
+import { api } from '@/utils/api'
 import { icons } from '@/components/icons'
 import Skeleton from '@/components/Skeleton.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import ErrorBoundary from '@/components/ErrorBoundary.vue'
 
 const store = useStudyStore()
-const API_BASE = ''
 
 // ── 状态 ──
 const statusInfo = ref({ status: '', vector_db: '', collection_size: 0, llm_available: false })
@@ -70,18 +69,13 @@ async function previewFile() {
     form.append('file', uploadFile.value)
     form.append('subject', uploadSubject.value)
     form.append('chapter', uploadChapter.value)
-    const r = await fetch(`${API_BASE}/api/knowledge/preview`, { method: 'POST', headers: getAuthHeaders(), body: form })
-    const data = await r.json()
-    if (r.ok) {
-      data.items = data.items.map((item: PreviewItem) => ({
-        ...item,
-        _selected: true,
-        _type: item.detected_type,
-      }))
-      previewResult.value = data
-    } else {
-      alert(` ${data.detail || '解析失败'}`)
-    }
+    const data: any = await api.upload<any>('/knowledge/preview', form)
+    data.items = data.items.map((item: PreviewItem) => ({
+      ...item,
+      _selected: true,
+      _type: item.detected_type,
+    }))
+    previewResult.value = data
   } catch {
     alert(' 解析失败，请检查后端是否运行')
   } finally {
@@ -106,21 +100,12 @@ async function commitSelected() {
   }
   if (!confirm(`确定提交 ${selected.length} 条分块到知识库？`)) return
   try {
-    const r = await fetch(`${API_BASE}/api/knowledge/batch-commit`, {
-      method: 'POST',
-      headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
-      body: JSON.stringify(selected),
-    })
-    const data = await r.json()
-    if (r.ok) {
-      alert(` 成功提交 ${data.committed} 条分块`)
-      previewResult.value = null
-      uploadFile.value = null
-      showUploadForm.value = false
-      await Promise.all([fetchStats(), fetchDocuments()])
-    } else {
-      alert(` ${data.detail || '提交失败'}`)
-    }
+    const data: any = await api.post<any>('/knowledge/batch-commit', selected)
+    alert(` 成功提交 ${data.committed} 条分块`)
+    previewResult.value = null
+    uploadFile.value = null
+    showUploadForm.value = false
+    await Promise.all([fetchStats(), fetchDocuments()])
   } catch {
     alert(' 提交失败，请检查后端')
   }
@@ -169,15 +154,13 @@ function toggleSelect(id: string) {
 
 async function fetchStatus() {
   try {
-    const r = await fetch(`${API_BASE}/api/status`, { headers: getAuthHeaders() })
-    statusInfo.value = await r.json()
+    statusInfo.value = await api.get<any>('/status')
   } catch { /* offline */ }
 }
 
 async function fetchStats() {
   try {
-    const r = await fetch(`${API_BASE}/api/knowledge/stats`, { headers: getAuthHeaders() })
-    stats.value = await r.json()
+    stats.value = await api.get<any>('/knowledge/stats')
   } catch { /* offline */ }
 }
 
@@ -187,8 +170,7 @@ async function fetchDocuments() {
     const params = new URLSearchParams({ skip: String((page.value - 1) * pageSize), limit: String(pageSize) })
     if (searchQuery.value) params.set('query', searchQuery.value)
     if (filterSubject.value) params.set('subject', filterSubject.value)
-    const r = await fetch(`${API_BASE}/api/knowledge/list?${params}`, { headers: getAuthHeaders() })
-    const data = await r.json()
+    const data: any = await api.get<any>(`/knowledge/list?${params}`)
     documents.value = data.items
     totalDocs.value = data.total
     selectedIds.value = new Set()
@@ -209,11 +191,7 @@ async function addDocuments() {
   meta.type = newType.value
 
   try {
-    await fetch(`${API_BASE}/api/knowledge/upsert`, {
-      method: 'POST',
-      headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ documents: [{ content: newContent.value, metadata: meta }] }),
-    })
+    await api.post<any>('/knowledge/upsert', { documents: [{ content: newContent.value, metadata: meta }] })
     newContent.value = ''
     showAddForm.value = false
     await fetchStats()
@@ -225,11 +203,7 @@ async function deleteSelected() {
   if (selectedIds.value.size === 0) return
   if (!confirm(`确定删除 ${selectedIds.value.size} 条文档？`)) return
   try {
-    await fetch(`${API_BASE}/api/knowledge/delete`, {
-      method: 'POST',
-      headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ids: Array.from(selectedIds.value) }),
-    })
+    await api.post<any>('/knowledge/delete', { ids: Array.from(selectedIds.value) })
     await fetchStats()
     await fetchDocuments()
   } catch { /* offline */ }
@@ -239,7 +213,7 @@ async function reindex() {
   if (!confirm('重置为种子数据将清空所有自定义数据，确定？')) return
   reindexing.value = true
   try {
-    await fetch(`${API_BASE}/api/knowledge/reindex`, { method: 'POST', headers: getAuthHeaders() })
+    await api.post<any>('/knowledge/reindex')
     await Promise.all([fetchStatus(), fetchStats(), fetchDocuments()])
   } catch { /* offline */ }
   finally { reindexing.value = false }
@@ -249,12 +223,9 @@ async function clearAll() {
   if (!confirm('确定清空向量库所有文档？此操作不可撤销！')) return
   if (!confirm(' 再次确认：所有知识数据将被永久删除')) return
   try {
-    const r = await fetch(`${API_BASE}/api/knowledge/clear`, { method: 'POST', headers: getAuthHeaders() })
-    const data = await r.json()
-    if (r.ok) {
-      alert(` 已清空 ${data.deleted} 条文档`)
-      await Promise.all([fetchStatus(), fetchStats(), fetchDocuments()])
-    }
+    const data: any = await api.post<any>('/knowledge/clear')
+    alert(` 已清空 ${data.deleted} 条文档`)
+    await Promise.all([fetchStatus(), fetchStats(), fetchDocuments()])
   } catch { /* offline */ }
 }
 

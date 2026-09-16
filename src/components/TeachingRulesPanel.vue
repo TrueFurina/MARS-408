@@ -1,11 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { api } from '@/utils/api'
-import { getAuthHeaders } from '@/utils/api'
 import Skeleton from '@/components/Skeleton.vue'
 import EmptyState from '@/components/EmptyState.vue'
-
-const API_BASE = ''
 
 const teachingRulesData = ref<any>(null)
 const selectedTopicId = ref('transport')
@@ -13,8 +10,7 @@ const topicPrerequisites = ref<any>(null)
 
 async function loadTeachingRules() {
   try {
-    const resp = await fetch(`${API_BASE}/api/engine/teaching-rules`, { headers: getAuthHeaders() })
-    teachingRulesData.value = await resp.json()
+    teachingRulesData.value = await api.get<any>('/engine/teaching-rules')
   } catch { /* ignore */ }
 }
 onMounted(loadTeachingRules)
@@ -22,8 +18,7 @@ onMounted(loadTeachingRules)
 async function loadTopicPrerequisites() {
   if (!selectedTopicId.value) return
   try {
-    const resp = await fetch(`${API_BASE}/api/engine/teaching-rules/prerequisites/${selectedTopicId.value}`, { headers: getAuthHeaders() })
-    topicPrerequisites.value = await resp.json()
+    topicPrerequisites.value = await api.get<any>(`/engine/teaching-rules/prerequisites/${selectedTopicId.value}`)
   } catch { /* ignore */ }
 }
 onMounted(loadTopicPrerequisites)

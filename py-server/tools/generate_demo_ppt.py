@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""MARS-408 软件杯演示 PPT 自动生成脚本
+"""MARS-408 火山杯演示 PPT 自动生成脚本
 
 用法:
     cd py-server
@@ -93,7 +93,7 @@ _add_text(slide, Inches(1), Inches(2.5), Inches(11), Inches(0.6),
           "基于 GOMARL 与 FrugalRAG 的 408 考研个性化学习多智能体系统",
           font_size=24, color=C_WHITE, alignment=PP_ALIGN.CENTER)
 _add_text(slide, Inches(1), Inches(3.6), Inches(11), Inches(0.5),
-          "2026 软件杯 · 作品演示", font_size=20, color=C_ACCENT, alignment=PP_ALIGN.CENTER)
+          "2026 火山杯 · 作品演示", font_size=20, color=C_ACCENT, alignment=PP_ALIGN.CENTER)
 _add_text(slide, Inches(1), Inches(5.2), Inches(11), Inches(0.5),
           "10 节点多智能体流水线  |  GOMARL 共识引擎  |  FrugalRAG 检索  |  7 种资源并行生成",
           font_size=14, color=C_GRAY, alignment=PP_ALIGN.CENTER)
@@ -416,7 +416,7 @@ _add_text(slide, Inches(0.8), Inches(5.2), Inches(11), Inches(0.5),
           font_size=16, color=C_GRAY, alignment=PP_ALIGN.CENTER)
 
 # ── 保存 ──
-output_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "MARS-408_软件杯演示.pptx")
+output_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "MARS-408_火山杯演示.pptx")
 prs.save(output_path)
 print(f"✅ PPT 已保存: {output_path}")
 print(f"   共 {len(prs.slides)} 页幻灯片")

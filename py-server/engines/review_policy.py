@@ -15,6 +15,15 @@
 # 诚信约束：所有对外数字必须来自落盘 JSON；torch 不可用时如实标注降级，不伪造训练结果。
 # ============================================================
 
+# ⚠️⚠️⚠️ 合成环境禁用声明（诚信红线，2026-09-15 审查补强）
+# 本文件的 `ReviewEnv` / `ReviewWeightPolicy.train_ppo` / `warmup_with_rules` /
+# `evaluate_policy` 是**合成/训练环境**，奖励阶梯仅作历史对照，**不复刻生产打分函数**。
+# 任何 RL / 训练效果的对外宣称必须以 `engines/review_env_calibrated.py`
+# （奖励复用生产 `weighted_consistency_score`）为准，且**先证同分布**。
+# 历史上曾因"在合成环境里宣称 RL ≥ 规则"得出被否证的虚高结论 —— 禁止重蹈。
+# 生产真值源仅：`discipline_gate` / `review_precision` / `analytic_review_action` /
+# `decide_review_weight`（均轻量、无 torch 依赖）。
+
 import json
 import logging
 import math

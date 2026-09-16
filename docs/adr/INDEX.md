@@ -27,6 +27,7 @@
 | ADR-011 | 三元评审权重 MAPPO 化（解析式默认 + RL 兜底） | Accepted | `docs/adr/ADR-011-review-weight-mappo.md` |
 | ADR-015 | career-literacy 分支治理（双分支双身份 / 零侵入 / `career_*` 公约） | Accepted | `docs/adr/ADR-015-career-branch-governance.md` |
 | ADR-017 | 评审单一真值源（`discipline_gate` / `review_precision` 收敛） | Accepted | `docs/adr/ADR-017-review-single-source.md` |
+| ADR-018 | 代码审查机制（标准/流程/PR模板/红线grep守护） | Accepted | `docs/adr/ADR-018-code-review-mechanism.md` |
 
 > 注：ADR-007（导入队列单写者）与 ADR-008（并发模型）记**已生效现实**——`--workers 1` + import_worker filelock 真阻塞 + `pytest -m import_queue` 13 passed/1 xfailed；两者于 2026-09-14 由 Proposed 提升为 Accepted。ADR-008 的"水平扩展机制"部分仍待 ADR-012。
 > ADR-009 记录**现有已实现**两通道（Accepted）；ADR-010 的 prod fail-fast 尚未在代码中实现（`config.py:91`、`milvus_client.py:403` 仍为静默回退），属**待实现目标**（Proposed，纠正架构债 #8）。

@@ -177,22 +177,16 @@ async function generateNarratedVideo() {
   if (!text) return
   videoLoading.value = true
   try {
-    const token = localStorage.getItem('mars408_token')
-    const resp = await fetch('/api/multimodal/generate-narrated-video', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify({ text: text.substring(0, 2000), language: 'zh', speed: 1.0 }),
+    const { blob, ok } = await api.postBlob('/multimodal/generate-narrated-video', {
+      text: text.substring(0, 2000),
+      language: 'zh',
+      speed: 1.0,
     })
-    if (!resp.ok) {
-      const err = await resp.json().catch(() => ({}))
-      alert('视频生成失败: ' + (err.detail || resp.statusText))
+    if (!ok) {
+      alert('视频生成失败: 请检查后端服务是否运行')
       return
     }
     // 下载视频
-    const blob = await resp.blob()
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
