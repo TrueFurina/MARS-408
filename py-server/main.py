@@ -70,6 +70,7 @@ from api import (
     daily_plan_router,
     career_training_router,
     benchmark_router,
+    experiments_router,
 )
 
 # 注：结构化日志已在模块导入期由 setup_structured_logging() 启用（D11），
@@ -607,6 +608,7 @@ _all_routers = [
     daily_plan_router,
     career_training_router,
     benchmark_router,
+    experiments_router,
 ]
 
 api_router = APIRouter(prefix="/api")

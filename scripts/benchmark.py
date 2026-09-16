@@ -427,8 +427,8 @@ def print_report(results, summary, mode):
 def main():
     parser = argparse.ArgumentParser(description="MARS-408 量化 Benchmark")
     parser.add_argument("--demo", action="store_true", help="演示模式（合成数据，无需依赖）")
-    parser.add_argument("--output", default=str(Path(__file__).parent / "benchmark_results.json"),
-                        help="输出 JSON 文件路径")
+    parser.add_argument("--output", default=str(Path(__file__).parent / "_demo" / "benchmark_results.demo.json"),
+                        help="输出 JSON 文件路径（默认落到 _demo/ 并带 .demo.json 后缀，明确标记合成数据）")
     args = parser.parse_args()
 
     mode = "demo" if args.demo else "real"

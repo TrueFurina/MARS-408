@@ -1,0 +1,206 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>真实证据索引 · MARS-408 / 芒得很职</title>
+<style>
+:root{
+  --canvas:#F5F6F7; --surface:#FFFFFF; --surface-2:#EFF1F3;
+  --text:#16191D; --text-2:#545B66; --text-3:#6E7783;
+  --border:rgba(16,20,26,.11); --accent:#9E5A30; --accent-bg:rgba(158,90,48,.10);
+  --live:#2F7D4F; --live-bg:rgba(47,125,79,.12);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--canvas);color:var(--text);
+  font:14px/1.6 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:40px 24px 64px}
+h1{font-size:28px;margin:0 0 8px;letter-spacing:-.01em}
+h2{font-size:20px;margin:36px 0 14px}
+.lede{color:var(--text-2);margin:0 0 4px}
+.meta{color:var(--text-3);font-size:12px;font-family:ui-monospace,Consolas,monospace;word-break:break-all}
+.note{margin:16px 0 0;padding:10px 14px;border-left:2px solid var(--accent);
+  background:var(--accent-bg);color:var(--text-2);font-size:12.5px;border-radius:0 6px 6px 0}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:20px 22px;margin:16px 0;box-shadow:0 1px 3px rgba(16,20,26,.06)}
+.card h3{margin:0 0 6px;font-size:17px}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;
+  letter-spacing:.04em;background:var(--accent-bg);color:var(--accent)}
+.badge.live{background:var(--live-bg);color:var(--live)}
+.claim{margin:10px 0 16px;line-height:1.7}
+.metrics{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin:0 0 16px}
+.metric{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px 12px}
+.metric .k{font-size:11px;color:var(--text-3)}
+.metric .v{margin-top:4px;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
+.prov{font-size:12px;color:var(--text-2)}
+.prov code{font-family:ui-monospace,Consolas,monospace;background:var(--surface-2);
+  padding:1px 6px;border-radius:4px;margin-right:6px}
+table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surface);
+  border:1px solid var(--border);border-radius:10px;overflow:hidden}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border)}
+th{background:var(--surface-2);font-weight:600;color:var(--text-2);position:sticky;top:0}
+td.mono,th.mono{font-family:ui-monospace,Consolas,monospace}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+footer{margin-top:32px;color:var(--text-3);font-size:12px;border-top:1px solid var(--border);padding-top:14px}
+</style></head><body><div class="wrap">
+<h1>真实证据索引</h1>
+<p class="lede">平台<strong>所有结论的可溯源实证</strong>——本索引由真实实验产物程序化生成，每条指标均可回溯到源文件与 sha256 校验值。</p>
+<p class="meta">生成时间：2026-09-16 09:37:31　|　产物数：51　|　数据源：E:\Program\MARL\study-help-pro\py-server\experiments\results</p>
+<div class="note">诚实性声明：结论与产物的映射为<strong>人工策展的 v1 规则原型</strong>（非自动发现）；所有数值均从真实产物字段读取，缺失显示 “—”，不手写、不估计。</div>
+<h2>一、结论（6 条）</h2>
+<article class="card">
+<span class="badge">多智能体算法</span>
+<h3>MAPPO / QMIX 在奖励上并列最优，VDN 明显落后</h3>
+<p class="claim">在 beginner 关卡，MAPPO（1.71）与 QMIX（1.72）奖励并列最优，显著优于 VDN（1.15）；准确率均≈0.95+（规则基线 0.9626）。</p>
+<div class="metrics">
+<div class="metric"><div class="k">MAPPO 奖励(beginner)</div><div class="v">1.71</div></div>
+<div class="metric"><div class="k">MAPPO ±std</div><div class="v">0.03</div></div>
+<div class="metric"><div class="k">QMIX 奖励</div><div class="v">1.72</div></div>
+<div class="metric"><div class="k">VDN 奖励</div><div class="v">1.15</div></div>
+<div class="metric"><div class="k">规则基线奖励</div><div class="v">1.68</div></div>
+<div class="metric"><div class="k">MAPPO 准确率(advanced)</div><div class="v">0.9641</div></div>
+</div>
+<div class="prov">依据产物：
+<code>marl_algorithms_eval_20260912.json</code> sha256 2137ea7d29ee2634… 
+</div></article>
+<article class="card">
+<span class="badge">三元评审权重</span>
+<h3>解析式评审策略达到 oracle 上界，且对噪声稳健</h3>
+<p class="claim">解析式策略在生产打分口径下 capture=100.0%（= oracle 上界），远超新规则（54.8%）；对 ±3% 噪声仍达 99.8%。门禁判定 PASS=True。</p>
+<div class="metrics">
+<div class="metric"><div class="k">解析式 capture (main)</div><div class="v">100.0%</div></div>
+<div class="metric"><div class="k">oracle 上界 (main)</div><div class="v">72.28</div></div>
+<div class="metric"><div class="k">uniform 基线 (main)</div><div class="v">66.81</div></div>
+<div class="metric"><div class="k">新规则 capture</div><div class="v">54.8%</div></div>
+<div class="metric"><div class="k">解析式 capture (泛化集)</div><div class="v">100.0%</div></div>
+<div class="metric"><div class="k">解析式 capture (±3% 噪声)</div><div class="v">99.8%</div></div>
+<div class="metric"><div class="k">headroom (main)</div><div class="v">5.466</div></div>
+</div>
+<div class="prov">依据产物：
+<code>accept_review.json</code> sha256 ef9759ad39f25fb1… 
+</div></article>
+<article class="card">
+<span class="badge">RL 预算敏感</span>
+<h3>RL 影子策略受预算强烈约束，且被解析式上界封闭</h3>
+<p class="claim">最优配置「hz=32 ep=10000 wu=600 lr=3e-4 e4」捕获率 59.0%(main)/56.1%(gen)，但仍低于解析式的 100%（RL 上界被解析式封闭）；hz=8 快 5.7×、捕获率小幅下降。</p>
+<div class="metrics">
+<div class="metric"><div class="k">最优配置</div><div class="v">hz=32 ep=10000 wu=600 lr=3e-4 e4</div></div>
+<div class="metric"><div class="k">最优 capture (main)</div><div class="v">59.0%</div></div>
+<div class="metric"><div class="k">最优 capture (gen)</div><div class="v">56.1%</div></div>
+<div class="metric"><div class="k">最优耗时</div><div class="v">164.6s</div></div>
+<div class="metric"><div class="k">hz=8 capture (main)</div><div class="v">58.3%</div></div>
+<div class="metric"><div class="k">hz=8 耗时</div><div class="v">28.7s</div></div>
+<div class="metric"><div class="k">扫参配置数</div><div class="v">8</div></div>
+</div>
+<div class="prov">依据产物：
+<code>tune_shadow_budget.json</code> sha256 b1d606feba64803a… 
+</div></article>
+<article class="card">
+<span class="badge">仿真—真实对齐</span>
+<h3>训练/评测同分布已核验，奖励与验收口径对齐</h3>
+<p class="claim">R1 同分布：最差维度 smd=0.175（&lt;0.2），臂排序一致=True；R2 显著性：影子策略对 uniform 的 t=12.23；R4 奖励对齐 98.5%。⇒ 仿真结论可外推，且排除奖励设计错位。</p>
+<div class="metrics">
+<div class="metric"><div class="k">R1 最差 smd</div><div class="v">0.175</div></div>
+<div class="metric"><div class="k">R1 臂排序一致</div><div class="v">True</div></div>
+<div class="metric"><div class="k">R2 shadow 对 uniform t</div><div class="v">12.23</div></div>
+<div class="metric"><div class="k">R2 shadow 均值(vs uniform)</div><div class="v">3.19</div></div>
+<div class="metric"><div class="k">R3 策略一致率</div><div class="v">75.0%</div></div>
+<div class="metric"><div class="k">R4 奖励对齐</div><div class="v">98.5%</div></div>
+</div>
+<div class="prov">依据产物：
+<code>diag_calib_alignment.json</code> sha256 0955794e4db6a52d… 
+</div></article>
+<article class="card">
+<span class="badge">检索基准</span>
+<h3>FrugalRAG 召回 +10.7pp，但延迟约 20×、token 未降（如实呈现）</h3>
+<p class="claim">28 条真实查询：FrugalRAG 召回@5 78.6%（全量 67.9%，+10.7pp），精度 66.4%（全量 50.0%）；代价是延迟 108.2ms vs 5.4ms（≈20×）、token -0.14%（未降）。另一组 30 题×3：NeuralMixer 准确率 83.3% vs 加权投票 76.7%。</p>
+<div class="metrics">
+<div class="metric"><div class="k">FrugalRAG 召回@5</div><div class="v">78.6%</div></div>
+<div class="metric"><div class="k">全量检索召回@5</div><div class="v">67.9%</div></div>
+<div class="metric"><div class="k">召回提升</div><div class="v">+10.7pp</div></div>
+<div class="metric"><div class="k">FrugalRAG 精度@5</div><div class="v">66.4%</div></div>
+<div class="metric"><div class="k">全量精度@5</div><div class="v">50.0%</div></div>
+<div class="metric"><div class="k">FrugalRAG 延迟</div><div class="v">108.2ms</div></div>
+<div class="metric"><div class="k">全量延迟</div><div class="v">5.4ms</div></div>
+<div class="metric"><div class="k">延迟倍数</div><div class="v">≈20×</div></div>
+<div class="metric"><div class="k">token 变化</div><div class="v">-0.14%</div></div>
+<div class="metric"><div class="k">NeuralMixer 准确率</div><div class="v">83.3%</div></div>
+<div class="metric"><div class="k">加权投票准确率</div><div class="v">76.7%</div></div>
+<div class="metric"><div class="k">NeuralMixer κ(对真值)</div><div class="v">0.776</div></div>
+</div>
+<div class="prov">依据产物：
+<code>benchmark_2026-08-17.json</code> sha256 88983a78476ec6e1… 
+</div></article>
+<article class="card">
+<span class="badge">职业素养 MAPPO</span>
+<h3>训练通过纪律门禁与奖励验收（合成环境，如实标注）</h3>
+<p class="claim">3 个种子（1,42,2024）× 3000 episodes：baseline 触发率 0.81，mappo_reward_ge_rule=True、passed=True、纪律违规 0；种子可复现=True。⚠️ environment_source=synthetic（非真实用户轨迹），结论限于该环境。</p>
+<div class="metrics">
+<div class="metric"><div class="k">训练轮数</div><div class="v">3000</div></div>
+<div class="metric"><div class="k">种子数</div><div class="v">3</div></div>
+<div class="metric"><div class="k">mean_ep_reward</div><div class="v">-0.163</div></div>
+<div class="metric"><div class="k">mean_loss</div><div class="v">-0.01269</div></div>
+<div class="metric"><div class="k">baseline 触发率</div><div class="v">0.81</div></div>
+<div class="metric"><div class="k">mappo≥rule</div><div class="v">True</div></div>
+<div class="metric"><div class="k">纪律违规</div><div class="v">0</div></div>
+<div class="metric"><div class="k">passed</div><div class="v">True</div></div>
+<div class="metric"><div class="k">环境来源</div><div class="v">synthetic</div></div>
+</div>
+<div class="prov">依据产物：
+<code>career_mappo_train_20260914.json</code> sha256 be4b1525e8994411… 
+</div></article>
+<h2>二、真实产物清单（51 份）</h2>
+<table><thead><tr><th>分类</th><th>文件</th><th class="num">大小</th><th>修改时间</th><th class="mono">sha256</th></tr></thead><tbody>
+<tr><td>评审接受</td><td class="mono">accept_review.json</td><td class="num">3.1 KB</td><td>2026-09-14 22:58</td><td class="mono">ef9759ad39f25fb1…</td></tr>
+<tr><td>职业素养 MAPPO</td><td class="mono">career_mappo_train_20260914.json</td><td class="num">1.7 KB</td><td>2026-09-14 22:40</td><td class="mono">be4b1525e8994411…</td></tr>
+<tr><td>三元评审·MAPPO</td><td class="mono">review_mappo_real_eval_20260914_214450.json</td><td class="num">2.0 KB</td><td>2026-09-14 21:44</td><td class="mono">8681f360b1c8e7b3…</td></tr>
+<tr><td>三元评审·MAPPO</td><td class="mono">review_mappo_eval_20260914_v2guarded.json</td><td class="num">14.8 KB</td><td>2026-09-14 18:13</td><td class="mono">af387b295b518479…</td></tr>
+<tr><td>诊断 / 校准对齐</td><td class="mono">diag_state_extend.json</td><td class="num">2.7 KB</td><td>2026-09-14 18:12</td><td class="mono">d31cb92edcfe74c1…</td></tr>
+<tr><td>诊断 / 校准对齐</td><td class="mono">diag_rule_upgrade.json</td><td class="num">5.6 KB</td><td>2026-09-14 18:08</td><td class="mono">4164d0157baafa39…</td></tr>
+<tr><td>诊断 / 校准对齐</td><td class="mono">diag_budget_curve.json</td><td class="num">3.6 KB</td><td>2026-09-14 17:57</td><td class="mono">c0afecd4a59a64bb…</td></tr>
+<tr><td>诊断 / 校准对齐</td><td class="mono">diag_calib_alignment.json</td><td class="num">5.4 KB</td><td>2026-09-14 17:32</td><td class="mono">0955794e4db6a52d…</td></tr>
+<tr><td>三元评审·影子探针</td><td class="mono">review_shadow_summary_20260914_172149.json</td><td class="num">1.5 KB</td><td>2026-09-14 17:29</td><td class="mono">162fe33eb426d6bf…</td></tr>
+<tr><td>三元评审·影子探针</td><td class="mono">review_shadow_summary_20260914_171403.json</td><td class="num">1.5 KB</td><td>2026-09-14 17:21</td><td class="mono">0136e4956c2cf1d0…</td></tr>
+<tr><td>预算敏感·调参</td><td class="mono">tune_shadow_budget.json</td><td class="num">5.3 KB</td><td>2026-09-14 17:13</td><td class="mono">b1d606feba64803a…</td></tr>
+<tr><td>预算敏感·收尾</td><td class="mono">_b_wrapup_budget3000.json</td><td class="num">10.5 KB</td><td>2026-09-14 17:10</td><td class="mono">878936f6da2bea88…</td></tr>
+<tr><td>预算敏感·收尾</td><td class="mono">_b_wrapup_budget60.json</td><td class="num">10.5 KB</td><td>2026-09-14 17:09</td><td class="mono">7725c72e7af02fb5…</td></tr>
+<tr><td>职业素养 MAPPO</td><td class="mono">career_catfish_mappo_eval_20260914.json</td><td class="num">1.5 KB</td><td>2026-09-14 16:59</td><td class="mono">5bdce15a8719b052…</td></tr>
+<tr><td>三元评审·影子探针</td><td class="mono">review_shadow_summary_20260914_165312.json</td><td class="num">1.5 KB</td><td>2026-09-14 16:57</td><td class="mono">92ff0cb5b2c3cc7a…</td></tr>
+<tr><td>三元评审·影子探针</td><td class="mono">review_shadow_summary_20260914_165038.json</td><td class="num">1.5 KB</td><td>2026-09-14 16:53</td><td class="mono">a8355f51eb10aa94…</td></tr>
+<tr><td>三元评审·影子探针</td><td class="mono">review_shadow_summary_20260914_164759.json</td><td class="num">1.5 KB</td><td>2026-09-14 16:50</td><td class="mono">6ac6fa02ef7de0bb…</td></tr>
+<tr><td>三元评审·影子探针</td><td class="mono">review_shadow_summary_20260914_164556.json</td><td class="num">1.5 KB</td><td>2026-09-14 16:48</td><td class="mono">2bafee9c6875bc85…</td></tr>
+<tr><td>三元评审·影子探针</td><td class="mono">review_shadow_summary_20260914_164229.json</td><td class="num">1.5 KB</td><td>2026-09-14 16:45</td><td class="mono">884eeaf8b6e2bd39…</td></tr>
+<tr><td>诊断 / 校准对齐</td><td class="mono">diag_train_return_vs_eval.json</td><td class="num">3.7 KB</td><td>2026-09-14 16:42</td><td class="mono">fc62f29f1d1f14ce…</td></tr>
+<tr><td>三元评审·影子探针</td><td class="mono">review_shadow_summary_20260914_163933.json</td><td class="num">1.5 KB</td><td>2026-09-14 16:42</td><td class="mono">5848fd167a4aebe8…</td></tr>
+<tr><td>三元评审·影子探针</td><td class="mono">review_shadow_summary_20260914_163552.json</td><td class="num">1.5 KB</td><td>2026-09-14 16:38</td><td class="mono">5963b119ba6e9a4c…</td></tr>
+<tr><td>预算敏感·扫描</td><td class="mono">sweep_shadow_budget_20260914_163817.json</td><td class="num">3.4 KB</td><td>2026-09-14 16:38</td><td class="mono">ea4ac17161b514cf…</td></tr>
+<tr><td>三元评审·影子探针</td><td class="mono">review_shadow_summary_20260914_163519.json</td><td class="num">1.5 KB</td><td>2026-09-14 16:35</td><td class="mono">a20de55d75434656…</td></tr>
+<tr><td>预算敏感·扫描</td><td class="mono">sweep_shadow_budget_20260914_163451.json</td><td class="num">6.7 KB</td><td>2026-09-14 16:34</td><td class="mono">672fea443cb2c1c7…</td></tr>
+<tr><td>预算敏感·扫描</td><td class="mono">sweep_shadow_budget_20260914_162837.json</td><td class="num">6.5 KB</td><td>2026-09-14 16:28</td><td class="mono">921a835a6ee68b90…</td></tr>
+<tr><td>诊断 / 校准对齐</td><td class="mono">diag_shadow_sim2real.json</td><td class="num">1.5 KB</td><td>2026-09-14 16:23</td><td class="mono">6df8ebd6fca4b715…</td></tr>
+<tr><td>三元评审·影子探针</td><td class="mono">review_shadow_summary_20260914_161821.json</td><td class="num">1.4 KB</td><td>2026-09-14 16:18</td><td class="mono">523def1e1a81fdaa…</td></tr>
+<tr><td>三元评审·影子探针</td><td class="mono">review_shadow_summary_20260914_161635.json</td><td class="num">1.4 KB</td><td>2026-09-14 16:17</td><td class="mono">853e042b5f816b7f…</td></tr>
+<tr><td>三元评审·影子探针</td><td class="mono">review_shadow_summary_20260914_161556.json</td><td class="num">1.4 KB</td><td>2026-09-14 16:16</td><td class="mono">3a53f214b1af61f7…</td></tr>
+<tr><td>三元评审·影子探针</td><td class="mono">review_shadow_summary_20260914_161534.json</td><td class="num">1.4 KB</td><td>2026-09-14 16:15</td><td class="mono">9eae4868d5227349…</td></tr>
+<tr><td>三元评审·影子探针</td><td class="mono">review_shadow_summary_20260914_161259.json</td><td class="num">1.1 KB</td><td>2026-09-14 16:13</td><td class="mono">b054079b80a3bb2f…</td></tr>
+<tr><td>三元评审·影子探针</td><td class="mono">review_shadow_summary_20260914_161319.json</td><td class="num">1.1 KB</td><td>2026-09-14 16:13</td><td class="mono">aa32e425e53b71a3…</td></tr>
+<tr><td>诊断 / 校准对齐</td><td class="mono">diag_current.json</td><td class="num">2.3 KB</td><td>2026-09-14 14:46</td><td class="mono">44fb1891c4e98c41…</td></tr>
+<tr><td>三元评审·影子探针</td><td class="mono">review_shadow_summary_20260914_144351.json</td><td class="num">1.1 KB</td><td>2026-09-14 14:44</td><td class="mono">e626f735004ea69d…</td></tr>
+<tr><td>三元评审·MAPPO</td><td class="mono">review_mappo_eval_20260914.json</td><td class="num">11.8 KB</td><td>2026-09-14 14:10</td><td class="mono">e13e19bed6dc3521…</td></tr>
+<tr><td>三元评审·MAPPO</td><td class="mono">review_mappo_ablation_20260914.json</td><td class="num">6.6 KB</td><td>2026-09-14 08:54</td><td class="mono">aa1bfbcc12b2659d…</td></tr>
+<tr><td>三元评审·动作分布</td><td class="mono">review_action_dist_20260914.json</td><td class="num">0.8 KB</td><td>2026-09-14 08:52</td><td class="mono">4538e994ed20f469…</td></tr>
+<tr><td>职业素养 MAPPO</td><td class="mono">career_mappo_train_20260913.json</td><td class="num">1.2 KB</td><td>2026-09-13 12:10</td><td class="mono">6b1ffe22c6a3cfa0…</td></tr>
+<tr><td>职业素养 MAPPO</td><td class="mono">career_catfish_mappo_eval_20260913.json</td><td class="num">1.1 KB</td><td>2026-09-13 10:47</td><td class="mono">a98c1da1b72906ab…</td></tr>
+<tr><td>职业素养 MAPPO</td><td class="mono">career_llm_smoke_20260913.json</td><td class="num">1.3 KB</td><td>2026-09-13 04:08</td><td class="mono">0c90ce8ab44dc749…</td></tr>
+<tr><td>MARL 算法</td><td class="mono">marl_algorithms_eval_20260912.json</td><td class="num">7.6 KB</td><td>2026-09-12 13:53</td><td class="mono">2137ea7d29ee2634…</td></tr>
+<tr><td>MARL 算法</td><td class="mono">mappo_policy_eval_20260912.json</td><td class="num">2.3 KB</td><td>2026-09-12 01:31</td><td class="mono">a993709b7ec8b9de…</td></tr>
+<tr><td>检索评测</td><td class="mono">retrieval_eval_external_2026-09-03.json</td><td class="num">1.0 KB</td><td>2026-09-03 22:29</td><td class="mono">6d4fdd596eb1a3b0…</td></tr>
+<tr><td>神经混合器</td><td class="mono">mixer_before_after_2026-09-03.json</td><td class="num">2.4 KB</td><td>2026-09-03 15:17</td><td class="mono">95feaf0873ebe704…</td></tr>
+<tr><td>检索评测</td><td class="mono">retrieval_eval_gold_2026-09-03.json</td><td class="num">0.9 KB</td><td>2026-09-03 14:45</td><td class="mono">57203e0405c44630…</td></tr>
+<tr><td>检索评测</td><td class="mono">retrieval_eval_real_with-prefix.json</td><td class="num">0.5 KB</td><td>2026-09-02 19:28</td><td class="mono">3ae503eb13a54a06…</td></tr>
+<tr><td>检索评测</td><td class="mono">retrieval_eval_real_no-prefix.json</td><td class="num">0.5 KB</td><td>2026-09-02 18:00</td><td class="mono">ca86c240bc31b012…</td></tr>
+<tr><td>检索基准</td><td class="mono">benchmark_2026-07-19.json</td><td class="num">255.8 KB</td><td>2026-08-29 01:13</td><td class="mono">b28e74d93671ed6c…</td></tr>
+<tr><td>检索基准</td><td class="mono">benchmark_2026-08-17.json</td><td class="num">255.5 KB</td><td>2026-08-29 01:13</td><td class="mono">88983a78476ec6e1…</td></tr>
+<tr><td>检索基准</td><td class="mono">benchmark_exp2_reproduce_2026-08-17.json</td><td class="num">219.4 KB</td><td>2026-08-29 01:13</td><td class="mono">44b85667b0d7bac2…</td></tr>
+</tbody></table>
+<h2>三、生成方式与校验</h2>
+<div class="card"><p class="prov">生成命令：<code>python scripts/gen_evidence_index.py</code><br>数据源：<code>py-server/experiments/results/*.json</code>（真实实验产物，非 demo）<br>校验方法：对任一产物执行 <code>sha256sum &lt;文件&gt;</code>，与本表 sha256 前 16 位比对即可确认未被篡改。<br>在线核对：启动后端后访问 <code>GET /api/experiments</code> 与 <code>GET /api/experiments/&lt;name&gt;</code>。</p></div>
+<footer>本文件由 scripts/gen_evidence_index.py 于 2026-09-16 09:37:31 程序化生成；结论映射为 v1 规则原型，如需变更请改生成器而非手工编辑本文件。</footer>
+</div></body></html>

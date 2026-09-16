@@ -1,0 +1,90 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>芒得很职 · 六条真实证据（一页图）</title>
+<style>
+:root{--canvas:#F5F6F7;--surface:#FFFFFF;--surface2:#EFF1F3;--text:#16191D;--text2:#545B66;
+--text3:#6E7783;--border:rgba(16,20,26,.11);--accent:#9E5A30;--accent-bg:rgba(158,90,48,.10)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--canvas);color:var(--text);
+font:14px/1.6 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+.poster{max-width:1180px;margin:0 auto;padding:34px 28px 40px}
+.ph h1{margin:0;font-size:30px;letter-spacing:-.01em}
+.pt{margin:6px 0 4px;color:var(--text2)}
+.pm{margin:0;color:var(--text3);font-size:12px;font-family:ui-monospace,Consolas,monospace;word-break:break-all}
+.pm code{background:var(--surface2);padding:1px 5px;border-radius:4px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:22px}
+.tile{background:var(--surface);border:1px solid var(--border);border-radius:16px;
+padding:20px 20px 16px;box-shadow:0 1px 3px rgba(16,20,26,.06);
+display:flex;flex-direction:column;gap:8px}
+.badge{align-self:flex-start;background:var(--accent-bg);color:var(--accent);
+font-size:11px;font-weight:700;letter-spacing:.05em;padding:2px 8px;border-radius:4px}
+.big{font-size:46px;line-height:1;font-weight:800;color:var(--accent);
+font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.hlabel{font-size:12.5px;color:var(--text2);font-weight:600}
+.ttitle{margin:2px 0 0;font-size:14.5px;line-height:1.45}
+.tsub{margin:0;font-size:12px;color:var(--text2);line-height:1.65}
+.prov{margin-top:auto;padding-top:10px;border-top:1px dashed var(--border);
+font-size:10.5px;color:var(--text3);font-family:ui-monospace,Consolas,monospace;word-break:break-all}
+.prov .sha{margin-left:4px}
+.pf{margin-top:22px;padding-top:12px;border-top:1px solid var(--border);
+color:var(--text3);font-size:11.5px}
+.pf code{font-family:ui-monospace,Consolas,monospace}
+@media print{body{background:#fff}.poster{max-width:none;padding:0}
+.tile{box-shadow:none;break-inside:avoid}}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+</style></head><body><div class="poster">
+<header class="ph"><h1>六条真实证据</h1>
+<p class="pt">所有数字取自真实实验产物（附 sha256 溯源）——不是估计，不是 PPT 数字。</p>
+<p class="pm">生成 2026-09-16 09:37 · 产物 51 份 · 数据源 <code>E:\Program\MARL\study-help-pro\py-server\experiments\results</code></p></header>
+<section class="grid">
+<article class="tile">
+<span class="badge">多智能体算法</span>
+<div class="big">1.71</div>
+<div class="hlabel">MAPPO 平均奖励（beginner）</div>
+<h2 class="ttitle">MAPPO / QMIX 在奖励上并列最优，VDN 明显落后</h2>
+<p class="tsub">QMIX 1.72 · VDN 1.15 · 规则基线 1.68 —— 并列最优</p>
+<div class="prov"><code>marl_algorithms_eval_20260912.json</code><span class="sha">2137ea7d29ee…</span></div>
+</article>
+<article class="tile">
+<span class="badge">三元评审权重</span>
+<div class="big">100.0%</div>
+<div class="hlabel">解析式评审捕获率（= oracle 上界）</div>
+<h2 class="ttitle">解析式评审策略达到 oracle 上界，且对噪声稳健</h2>
+<p class="tsub">新规则 54.8% · ±3% 噪声 99.8% · headroom 5.466</p>
+<div class="prov"><code>accept_review.json</code><span class="sha">ef9759ad39f2…</span></div>
+</article>
+<article class="tile">
+<span class="badge">RL 预算敏感</span>
+<div class="big">59.0%</div>
+<div class="hlabel">RL 最优捕获率（hz=32 / ep=10000）</div>
+<h2 class="ttitle">RL 影子策略受预算强烈约束，且被解析式上界封闭</h2>
+<p class="tsub">仍低于解析式的 100% ⇒ RL 上界被解析式封闭</p>
+<div class="prov"><code>tune_shadow_budget.json</code><span class="sha">b1d606feba64…</span></div>
+</article>
+<article class="tile">
+<span class="badge">仿真—真实对齐</span>
+<div class="big">0.175</div>
+<div class="hlabel">训练/评测最差维度 smd（&lt;0.2）</div>
+<h2 class="ttitle">训练/评测同分布已核验，奖励与验收口径对齐</h2>
+<p class="tsub">臂排序一致=True · R2 t=12.23 · R4 奖励对齐 98.5%</p>
+<div class="prov"><code>diag_calib_alignment.json</code><span class="sha">0955794e4db6…</span></div>
+</article>
+<article class="tile">
+<span class="badge">检索基准</span>
+<div class="big">+10.7pp</div>
+<div class="hlabel">FrugalRAG 召回@5 提升</div>
+<h2 class="ttitle">FrugalRAG 召回 +10.7pp，但延迟约 20×、token 未降（如实呈现）</h2>
+<p class="tsub">召回 78.6% vs 67.9% · 延迟 ≈20× · token -0.14%（如实呈现）</p>
+<div class="prov"><code>benchmark_2026-08-17.json</code><span class="sha">88983a78476e…</span></div>
+</article>
+<article class="tile">
+<span class="badge">职业素养 MAPPO</span>
+<div class="big">0</div>
+<div class="hlabel">纪律违规数（passed=True）</div>
+<h2 class="ttitle">训练通过纪律门禁与奖励验收（合成环境，如实标注）</h2>
+<p class="tsub">3 种子 × 3000 ep · baseline 触发率 0.81 · 环境 synthetic（如实标注）</p>
+<div class="prov"><code>career_mappo_train_20260914.json</code><span class="sha">be4b1525e899…</span></div>
+</article>
+</section>
+<footer class="pf">结论与产物的映射为<strong>人工策展的 v1 规则原型</strong>；校验：<code>sha256sum &lt;文件&gt;</code> 对照《证据索引》；在线核对：<code>GET /api/experiments</code>。本页由 scripts/gen_evidence_index.py 程序化生成，请勿手工改数字。</footer>
+</div></body></html>

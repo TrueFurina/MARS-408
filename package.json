@@ -14,7 +14,8 @@
     "lint:fix": "eslint . --ext .vue,.js,.ts,.tsx --fix",
     "test": "vitest run",
     "test:watch": "vitest",
-    "gate:evidence": "python tests/benchmark_evidence_gate.py"
+    "gate:evidence": "python tests/benchmark_evidence_gate.py",
+    "verify": "npm run type-check && npm run test && npm run gate:evidence"
   },
   "dependencies": {
     "@obsidize/tar-browserify": "^6.3.2",

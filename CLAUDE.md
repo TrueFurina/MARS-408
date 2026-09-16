@@ -181,6 +181,16 @@ uvicorn `--workers 1` 下 sync 阻塞会串行化所有请求：
 
 两条分支共享底座，`main → career-literacy` 单向同步；`career-literacy` 的提交可 `git push origin career-literacy`。
 
+## 并发会话提交纪律（多 AI 会话同仓协作必读）
+
+本仓常有多个 AI 会话并发编辑（design-system / a11y / docs / 后端 / 物料线）。**提交前必须守住以下红线**，2026-09-15 已发生一次真实事故：
+
+1. **提交前必 `git status` 筛查预暂存的 `D`/`M` 标记**：并发会话若跑过 `git add -A`，会把**它自己的删除/改动预存进 index**；你即便只 `git add` 自己的文件，这些预暂存项仍会被一并提交（曾把两个受跟踪 PNG 误删进提交）。正确做法：先 `git status --short` 看清暂存区全貌，确认没有别人的 `D` 才提交。
+2. **只 add 自己的文件**：`git add <具体路径>`，禁止 `git add -A` / `git add .` / `git add -u`；提交前若发现 index 里有非自己的改动，先 `git restore --staged <路径>` 退出暂存，交还原 owner。
+3. **`.workbuddy/` 已 gitignore**：协作记忆/技能勿入库。
+4. **改动他人 WIP 文件前先确认归属**：`src/router/*`、`src/views/*` 多数处于并发会话未提交批次，勿裸改；新增独立文件（新 view / 新 composable / 新 api 路由）是零冲突的安全增量。
+5. **每次提交后用 `git log -1 --stat` 复核落库内容**，确认没有混入他人改动、没有意外删除。
+
 ## 最近安全加固的约定（修改代码时务必遵守）
 
 ### Prompt Guard（`shared/prompt_guard.py`）
