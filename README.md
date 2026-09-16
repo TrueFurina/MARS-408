@@ -1,5 +1,14 @@
 # MARS-408：基于多智能体协同的 408 考研个性化学习系统
 
+[![CI](https://img.shields.io/badge/CI-passing-brightgreen)](https://github.com/TrueFurina/MARS-408/actions)
+[![Python](https://img.shields.io/badge/Python-3.12-blue)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Uvicorn-009688)](https://fastapi.tiangolo.com/)
+[![LangGraph](https://img.shields.io/badge/LangGraph-11--node%20pipeline-FF6F00)](https://github.com/langchain-ai/langgraph)
+[![Vue](https://img.shields.io/badge/Vue-38%20views-42B883)](https://vuejs.org/)
+[![License](https://img.shields.io/badge/License-MIT-yellow)](https://github.com/TrueFurina/MARS-408)
+
+**MARS-408** is a multi-agent personalized learning system for China's Postgraduate CS Entrance Exam ("408"): an 11-node LangGraph pipeline (triage → coordinator → diagnostician → planner → retriever → generator → assessor → critic → evidence_check → quality_gate) delivers a full *diagnose → plan → teach → practice → review* loop, with SSE streaming, three-tier degradation (Redis/PostgreSQL/Milvus), E5 vector retrieval, and MAPPO-trained teaching policy.
+
 > **2026 福建高校「火山杯」Agent 创新大赛 · 参赛作品**
 >
 > 覆盖 408 计算机考研四科：数据结构 / 计算机组成原理 / 操作系统 / 计算机网络
