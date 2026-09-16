@@ -34,6 +34,12 @@ const router = createRouter({
       component: () => import('@/views/SettingsView.vue'),
     },
     {
+      // 真实证据台：结论看板 + 真实产物画廊（sha256 溯源）
+      path: '/evidence',
+      name: 'experiments-evidence',
+      component: () => import('@/views/ExperimentEvidenceView.vue'),
+    },
+    {
       path: '/dashboard',
       redirect: '/',
     },
