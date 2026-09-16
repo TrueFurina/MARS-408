@@ -178,7 +178,7 @@ const platformStats = [
         <span class="sp-hero-gradient">AI Skills</span> 教学技能平台
       </h1>
       <p class="sp-hero-desc">
-        国内首创用户自定义 AI 教学技能平台——教师与学习者可零代码创建、配置、发布个性化教学 Agent。
+        支持用户自定义 AI 教学技能平台——教师与学习者可零代码创建、配置、发布个性化教学 Agent。
         定义 System Prompt、挂载 RAG 知识库、切换多模型通道，让 AI 教学能力<span class="sp-highlight">无限扩展</span>。
       </p>
       <div class="sp-hero-stats">
@@ -319,12 +319,12 @@ const platformStats = [
     <section class="sp-section">
       <div class="sp-section-head">
         <span class="sp-section-idx">差异化</span>
-        <h2 class="sp-section-title">MARS-408 vs 传统学习平台</h2>
+        <h2 class="sp-section-title">芒得很职 vs 传统学习平台</h2>
       </div>
       <div class="sp-compare">
         <div class="sp-compare-head">
           <div class="sp-compare-feature">能力维度</div>
-          <div class="sp-compare-mars">MARS-408</div>
+          <div class="sp-compare-mars">芒得很职</div>
           <div class="sp-compare-comp">传统平台</div>
         </div>
         <div
@@ -374,7 +374,7 @@ const platformStats = [
 .sp-hero {
   position: relative;
   text-align: center;
-  padding: 56px 32px 48px;
+  padding: var(--space-14) var(--space-8) var(--space-12);
   max-width: 760px;
   margin: 0 auto;
   overflow: hidden;
@@ -390,15 +390,15 @@ const platformStats = [
 .sp-hero-badge {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 16px;
+  gap: var(--space-2);
+  padding: 6px var(--space-4);
   border-radius: var(--radius-full);
   background: var(--accent-primary-10);
   border: 1px solid var(--color-border-glow);
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
   color: var(--accent-primary);
-  margin-bottom: 24px;
+  margin-bottom: var(--space-6);
   animation: fade-up 0.5s ease both;
 }
 .sp-badge-dot {
@@ -408,7 +408,7 @@ const platformStats = [
   animation: mars-pulse-soft 2s var(--ease-standard) infinite;
 }
 .sp-hero-title {
-  font-size: clamp(28px, 4vw, 44px);
+  font-size: clamp(28px, 4vw, var(--text-6xl));
   font-weight: 800;
   letter-spacing: -0.04em;
   margin: 0;
@@ -421,29 +421,29 @@ const platformStats = [
   background-clip: text;
 }
 .sp-hero-desc {
-  font-size: 0.9375rem;
+  font-size: var(--text-md);
   line-height: 1.8;
   color: var(--color-text-2);
   max-width: 560px;
-  margin: 20px auto 0;
+  margin: var(--space-5) auto 0;
   animation: fade-up 0.5s ease 0.2s both;
 }
 .sp-highlight {
   color: var(--accent-primary);
-  font-weight: 700;
+  font-weight: var(--weight-bold);
 }
 .sp-hero-stats {
   display: flex;
   justify-content: center;
-  gap: 12px;
-  margin-top: 32px;
+  gap: var(--space-3);
+  margin-top: var(--space-8);
   animation: fade-up 0.5s ease 0.3s both;
 }
 .sp-hero-stat {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 12px 20px;
+  padding: var(--space-3) var(--space-5);
   border-radius: var(--radius-md);
   background: var(--color-glass);
   backdrop-filter: blur(var(--glass-blur));
@@ -452,35 +452,35 @@ const platformStats = [
   min-width: 90px;
 }
 .sp-stat-value {
-  font-size: 1.5rem;
+  font-size: var(--text-3xl);
   font-weight: 800;
   font-family: var(--font-mono);
   letter-spacing: -0.03em;
-  line-height: 1;
+  line-height: var(--leading-none);
 }
 .sp-stat-label {
-  font-size: 0.6875rem;
+  font-size: var(--text-2xs);
   color: var(--color-text-3);
-  margin-top: 4px;
+  margin-top: var(--space-1);
 }
 .sp-hero-cta {
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
   justify-content: center;
-  margin-top: 32px;
+  margin-top: var(--space-8);
   animation: fade-up 0.5s ease 0.4s both;
 }
 .sp-cta-primary {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 28px;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-7);
   border-radius: var(--radius-full);
   border: none;
   background: var(--gradient-primary);
   color: #fff;
-  font-size: 0.9375rem;
-  font-weight: 700;
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
   cursor: pointer;
   transition: var(--transition-bounce);
   box-shadow: 0 8px 24px rgba(var(--accent-rgb),0.30);
@@ -491,15 +491,15 @@ const platformStats = [
   box-shadow: 0 12px 32px rgba(var(--accent-rgb),0.40);
 }
 .sp-cta-secondary {
-  padding: 12px 24px;
+  padding: var(--space-3) var(--space-6);
   border-radius: var(--radius-full);
   border: 1px solid var(--color-glass-border);
   background: var(--color-glass);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
   color: var(--color-text);
-  font-size: 0.9375rem;
-  font-weight: 600;
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
   cursor: pointer;
   transition: var(--transition);
 }
@@ -512,24 +512,24 @@ const platformStats = [
 .sp-section {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 40px 32px;
+  padding: var(--space-10) var(--space-8);
 }
 .sp-section-head {
   text-align: center;
-  margin-bottom: 28px;
+  margin-bottom: var(--space-7);
 }
 .sp-section-idx {
   display: block;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--accent-primary);
   margin-bottom: 6px;
 }
 .sp-section-title {
-  font-size: clamp(20px, 2.5vw, 28px);
-  font-weight: 700;
+  font-size: clamp(var(--text-2xl), 2.5vw, 28px);
+  font-weight: var(--weight-bold);
   letter-spacing: -0.03em;
   color: var(--color-text);
   margin: 0;
@@ -539,14 +539,14 @@ const platformStats = [
 .sp-flow {
   display: flex;
   align-items: stretch;
-  gap: 16px;
+  gap: var(--space-4);
   justify-content: center;
 }
 .sp-flow-step {
   position: relative;
   flex: 1;
   max-width: 280px;
-  padding: 24px;
+  padding: var(--space-6);
   border-radius: var(--radius-lg);
   background: var(--color-glass);
   backdrop-filter: blur(var(--glass-blur));
@@ -562,7 +562,7 @@ const platformStats = [
   box-shadow: var(--shadow-card-hover);
 }
 .sp-step-num {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   font-weight: 800;
   font-family: var(--font-mono);
   color: var(--step-accent);
@@ -570,17 +570,17 @@ const platformStats = [
 }
 .sp-step-icon {
   font-size: 2rem;
-  margin: 12px 0 8px;
-  line-height: 1;
+  margin: var(--space-3) 0 var(--space-2);
+  line-height: var(--leading-none);
 }
 .sp-step-title {
   font-size: 1.0625rem;
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   color: var(--color-text);
   margin: 0 0 6px;
 }
 .sp-step-desc {
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
   color: var(--color-text-2);
   line-height: 1.6;
   margin: 0;
@@ -599,7 +599,7 @@ const platformStats = [
 .sp-showcase-layout {
   display: grid;
   grid-template-columns: 1fr 340px;
-  gap: 20px;
+  gap: var(--space-5);
   align-items: start;
 }
 .sp-skill-grid {
@@ -608,7 +608,7 @@ const platformStats = [
   gap: 14px;
 }
 .sp-skill-card {
-  padding: 20px;
+  padding: var(--space-5);
   border-radius: var(--radius-lg);
   background: var(--color-glass);
   backdrop-filter: blur(var(--glass-blur));
@@ -632,40 +632,40 @@ const platformStats = [
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
 }
 .sp-card-emoji {
   font-size: 1.75rem;
-  line-height: 1;
+  line-height: var(--leading-none);
 }
 .sp-card-category {
   font-size: 0.625rem;
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   padding: 3px 10px;
   border-radius: var(--radius-full);
 }
 .sp-card-name {
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
   color: var(--color-text);
   margin: 0 0 6px;
 }
 .sp-card-desc {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   line-height: 1.6;
   color: var(--color-text-2);
-  margin: 0 0 12px;
+  margin: 0 0 var(--space-3);
 }
 .sp-card-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  margin-bottom: 12px;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
 }
 .sp-card-tag {
   font-size: 0.625rem;
-  font-weight: 600;
-  padding: 2px 8px;
+  font-weight: var(--weight-semibold);
+  padding: 2px var(--space-2);
   border-radius: var(--radius-full);
   background: var(--color-surface-hover);
   color: var(--color-text-3);
@@ -678,13 +678,13 @@ const platformStats = [
 .sp-card-meta {
   display: flex;
   gap: 10px;
-  font-size: 0.6875rem;
+  font-size: var(--text-2xs);
   color: var(--color-text-3);
 }
 .sp-rag-badge {
   font-size: 0.5625rem;
   font-weight: 800;
-  padding: 2px 8px;
+  padding: 2px var(--space-2);
   border-radius: var(--radius-full);
   background: rgba(var(--subject-co-rgb),0.12);
   color: var(--accent-cyan);
@@ -695,7 +695,7 @@ const platformStats = [
 .sp-editor-preview {
   position: sticky;
   top: 16px;
-  padding: 20px;
+  padding: var(--space-5);
   border-radius: var(--radius-lg);
   background: var(--color-glass);
   backdrop-filter: blur(var(--glass-blur-heavy));
@@ -707,46 +707,46 @@ const platformStats = [
   display: flex;
   align-items: center;
   gap: 10px;
-  padding-bottom: 16px;
+  padding-bottom: var(--space-4);
   border-bottom: 1px solid var(--color-border);
-  margin-bottom: 16px;
+  margin-bottom: var(--space-4);
 }
 .sp-editor-emoji {
   font-size: 1.75rem;
-  line-height: 1;
+  line-height: var(--leading-none);
 }
 .sp-editor-name {
-  font-size: 0.9375rem;
-  font-weight: 700;
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
   color: var(--color-text);
 }
 .sp-editor-cat {
-  font-size: 0.6875rem;
+  font-size: var(--text-2xs);
   color: var(--color-text-3);
 }
 .sp-editor-live {
   margin-left: auto;
   font-size: 0.5625rem;
-  font-weight: 700;
-  padding: 3px 8px;
+  font-weight: var(--weight-bold);
+  padding: 3px var(--space-2);
   border-radius: var(--radius-full);
   background: rgba(var(--success-rgb),0.12);
   color: var(--accent-success);
   letter-spacing: 0.05em;
 }
 .sp-editor-section {
-  margin-bottom: 16px;
+  margin-bottom: var(--space-4);
 }
 .sp-editor-label {
-  font-size: 0.6875rem;
-  font-weight: 700;
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-bold);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--color-text-3);
   margin-bottom: 6px;
 }
 .sp-editor-prompt {
-  padding: 12px;
+  padding: var(--space-3);
   border-radius: var(--radius-sm);
   background: var(--color-surface-2);
   border: 1px solid var(--color-border);
@@ -755,7 +755,7 @@ const platformStats = [
 }
 .sp-editor-prompt pre {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   line-height: 1.6;
   color: var(--color-text-2);
   white-space: pre-wrap;
@@ -764,14 +764,14 @@ const platformStats = [
 .sp-editor-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
 }
 .sp-editor-field {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 8px 10px;
+  padding: var(--space-2) 10px;
   border-radius: var(--radius-sm);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -779,11 +779,11 @@ const platformStats = [
 .sp-field-label {
   font-size: 0.625rem;
   color: var(--color-text-3);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .sp-field-value {
-  font-size: 0.8125rem;
-  font-weight: 600;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
   color: var(--color-text);
   font-family: var(--font-mono);
 }
@@ -795,16 +795,16 @@ const platformStats = [
   justify-content: center;
   gap: 6px;
   width: 100%;
-  padding: 10px 16px;
+  padding: 10px var(--space-4);
   border-radius: var(--radius-md);
   border: none;
   background: var(--gradient-primary);
   color: #fff;
-  font-size: 0.8125rem;
-  font-weight: 700;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
   cursor: pointer;
   transition: var(--transition);
-  margin-top: 4px;
+  margin-top: var(--space-1);
 }
 .sp-editor-btn svg { width: 16px; height: 16px; }
 .sp-editor-btn:hover {
@@ -827,11 +827,11 @@ const platformStats = [
 .sp-compare-head {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr;
-  padding: 14px 20px;
+  padding: 14px var(--space-5);
   background: var(--color-surface-2);
   border-bottom: 1px solid var(--color-border);
-  font-size: 0.8125rem;
-  font-weight: 700;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
   color: var(--color-text);
 }
 .sp-compare-head .sp-compare-mars { color: var(--accent-primary); text-align: center; }
@@ -839,7 +839,7 @@ const platformStats = [
 .sp-compare-row {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr;
-  padding: 12px 20px;
+  padding: var(--space-3) var(--space-5);
   border-bottom: 1px solid var(--color-border-light);
   align-items: center;
   transition: var(--transition);
@@ -847,7 +847,7 @@ const platformStats = [
 .sp-compare-row:last-child { border-bottom: none; }
 .sp-compare-row:hover { background: var(--color-surface-hover); }
 .sp-compare-feature {
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
   color: var(--color-text-2);
 }
 .sp-compare-mars, .sp-compare-comp {
@@ -859,7 +859,7 @@ const platformStats = [
   justify-content: center;
   width: 24px; height: 24px;
   border-radius: 50%;
-  font-size: 0.875rem;
+  font-size: var(--text-base);
   font-weight: 800;
 }
 .sp-check-yes {
@@ -871,24 +871,24 @@ const platformStats = [
   color: var(--accent-danger);
 }
 .sp-check-text {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
   color: var(--accent-success);
 }
 .sp-check-text-muted {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   color: var(--color-text-3);
 }
 
 /* ── 底部 CTA ── */
 .sp-bottom-cta {
-  padding: 48px 32px;
+  padding: var(--space-12) var(--space-8);
 }
 .sp-bottom-inner {
   max-width: 560px;
   margin: 0 auto;
   text-align: center;
-  padding: 40px;
+  padding: var(--space-10);
   border-radius: var(--radius-xl);
   background: var(--gradient-hero);
   border: 1px solid var(--color-glass-border);
@@ -896,20 +896,20 @@ const platformStats = [
   -webkit-backdrop-filter: blur(var(--glass-blur));
 }
 .sp-bottom-title {
-  font-size: clamp(18px, 2.2vw, 24px);
-  font-weight: 700;
+  font-size: clamp(var(--text-xl), 2.2vw, var(--text-3xl));
+  font-weight: var(--weight-bold);
   letter-spacing: -0.03em;
   color: var(--color-text);
-  margin: 0 0 8px;
+  margin: 0 0 var(--space-2);
 }
 .sp-bottom-desc {
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
   color: var(--color-text-2);
-  margin: 0 0 24px;
+  margin: 0 0 var(--space-6);
 }
 .sp-bottom-actions {
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
   justify-content: center;
   flex-wrap: wrap;
 }
@@ -926,7 +926,7 @@ const platformStats = [
   .sp-skill-grid { grid-template-columns: 1fr; }
   .sp-hero-stats { flex-wrap: wrap; }
   .sp-hero-cta { flex-direction: column; }
-  .sp-section { padding: 28px 20px; }
-  .sp-hero { padding: 36px 20px 32px; }
+  .sp-section { padding: var(--space-7) var(--space-5); }
+  .sp-hero { padding: var(--space-9) var(--space-5) var(--space-8); }
 }
 </style>

@@ -33,7 +33,7 @@ const innovations = [
     badge: '创新 02',
     title: 'AI Skills 教学技能平台',
     subtitle: 'User-Defined Teaching Skills',
-    desc: '业内首创用户自定义 AI 教学技能平台——教师与学习者可零代码创建、配置、发布个性化教学 Agent，定义 System Prompt、RAG 策略与多模型通道。',
+    desc: '支持用户自定义 AI 教学技能平台——教师与学习者可零代码创建、配置、发布个性化教学 Agent，定义 System Prompt、RAG 策略与多模型通道。',
     stat: '∞',
     statLabel: '可扩展技能',
     accent: 'var(--accent-cyan)',
@@ -101,8 +101,8 @@ function goToSkills() {
     <!-- 顶部品牌条 -->
     <header class="landing-nav">
       <div class="nav-brand">
-        <span class="nav-logo" v-html="icons.logo"></span>
-        <span class="nav-text">MARS-408</span>
+        <span class="nav-logo"><img class="brand-img" src="/brand/mangxiaocheng.png" alt="芒得很职" /></span>
+        <span class="nav-text">芒得很职</span>
       </div>
       <div class="nav-links">
         <button class="nav-link" @click="enterSystem">进入系统</button>
@@ -118,7 +118,7 @@ function goToSkills() {
         国家级竞赛参赛作品 · 个性化学习多智能体系统
       </div>
       <h1 class="hero-title">
-        <span class="hero-title-line">MARS-408</span>
+        <span class="hero-title-line">芒得很职</span>
         <span class="hero-title-sub">基于大模型的个性化资源生成与学习多智能体系统</span>
       </h1>
       <p class="hero-desc">
@@ -216,7 +216,7 @@ function goToSkills() {
     </section>
 
     <footer class="landing-footer">
-      <span>MARS-408 · 基于大模型的个性化资源生成与学习多智能体系统</span>
+      <span>芒得很职 · 基于大模型的个性化资源生成与学习多智能体系统</span>
       <span class="footer-tech">Vue 3 + Vite + TypeScript · 玻璃态发光设计系统 v8</span>
     </footer>
   </div>
@@ -277,7 +277,7 @@ function goToSkills() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 32px;
+  padding: 0 var(--space-8);
   height: 64px;
   background: var(--color-glass);
   backdrop-filter: blur(var(--glass-blur-heavy));
@@ -286,20 +286,22 @@ function goToSkills() {
 }
 .nav-brand {
   display: flex; align-items: center; gap: 10px;
-  font-weight: 700; font-size: 1.0625rem;
+  font-weight: var(--weight-bold); font-size: 1.0625rem;
   letter-spacing: -0.02rem;
 }
 .nav-logo {
   width: 32px; height: 32px;
   display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-md);
+  overflow: hidden;
 }
 .nav-logo :deep(svg) { width: 32px; height: 32px; }
-.nav-links { display: flex; gap: 8px; }
+.nav-links { display: flex; gap: var(--space-2); }
 .nav-link {
-  padding: 8px 16px;
+  padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-full);
-  font-size: 0.8125rem;
-  font-weight: 600;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
   color: var(--color-text-2);
   transition: var(--transition);
   cursor: pointer;
@@ -315,21 +317,21 @@ function goToSkills() {
   z-index: 1;
   max-width: 900px;
   margin: 0 auto;
-  padding: 80px 32px 64px;
+  padding: var(--space-20) var(--space-8) var(--space-16);
   text-align: center;
 }
 .hero-badge {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 16px;
+  gap: var(--space-2);
+  padding: 6px var(--space-4);
   border-radius: var(--radius-full);
   background: var(--accent-primary-10);
   border: 1px solid var(--color-border-glow);
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
   color: var(--accent-primary);
-  margin-bottom: 28px;
+  margin-bottom: var(--space-7);
   animation: fade-up 0.5s ease both;
 }
 .hero-badge-dot {
@@ -344,7 +346,7 @@ function goToSkills() {
 }
 .hero-title-line {
   display: block;
-  font-size: clamp(36px, 5vw, 56px);
+  font-size: clamp(var(--text-5xl), 5vw, 56px);
   font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 1.05;
@@ -355,19 +357,19 @@ function goToSkills() {
 }
 .hero-title-sub {
   display: block;
-  font-size: clamp(18px, 2.2vw, 26px);
-  font-weight: 600;
+  font-size: clamp(var(--text-xl), 2.2vw, 26px);
+  font-weight: var(--weight-semibold);
   letter-spacing: -0.02em;
   line-height: 1.3;
-  margin-top: 12px;
+  margin-top: var(--space-3);
   color: var(--color-text);
 }
 .hero-desc {
-  font-size: 0.9375rem;
+  font-size: var(--text-md);
   line-height: 1.8;
   color: var(--color-text-2);
   max-width: 640px;
-  margin: 24px auto 0;
+  margin: var(--space-6) auto 0;
   animation: fade-up 0.6s ease 0.2s both;
 }
 
@@ -376,8 +378,8 @@ function goToSkills() {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 12px;
-  margin-top: 36px;
+  gap: var(--space-3);
+  margin-top: var(--space-9);
   animation: fade-up 0.6s ease 0.3s both;
 }
 .metric-pill {
@@ -385,7 +387,7 @@ function goToSkills() {
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  padding: 14px 24px;
+  padding: 14px var(--space-6);
   border-radius: var(--radius-lg);
   background: var(--color-glass);
   backdrop-filter: blur(var(--glass-blur));
@@ -404,12 +406,12 @@ function goToSkills() {
   font-weight: 800;
   font-family: var(--font-mono);
   letter-spacing: -0.03em;
-  line-height: 1;
+  line-height: var(--leading-none);
 }
 .metric-label {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   color: var(--color-text-3);
-  font-weight: 500;
+  font-weight: var(--weight-medium);
 }
 
 /* ── CTA ── */
@@ -417,20 +419,20 @@ function goToSkills() {
   display: flex;
   gap: 14px;
   justify-content: center;
-  margin-top: 40px;
+  margin-top: var(--space-10);
   animation: fade-up 0.6s ease 0.4s both;
 }
 .cta-primary {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 14px 32px;
+  gap: var(--space-2);
+  padding: 14px var(--space-8);
   border-radius: var(--radius-full);
   border: none;
   background: var(--gradient-primary);
   color: var(--text-user);
-  font-size: 0.9375rem;
-  font-weight: 700;
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
   cursor: pointer;
   transition: var(--transition-bounce);
   box-shadow: var(--shadow-lg);
@@ -443,16 +445,16 @@ function goToSkills() {
 .cta-secondary {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 14px 28px;
+  gap: var(--space-2);
+  padding: 14px var(--space-7);
   border-radius: var(--radius-full);
   border: 1px solid var(--color-glass-border);
   background: var(--color-glass);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
   color: var(--color-text);
-  font-size: 0.9375rem;
-  font-weight: 600;
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
   cursor: pointer;
   transition: var(--transition);
 }
@@ -467,20 +469,20 @@ function goToSkills() {
 /* ── 区块标题 ── */
 .section-label-row {
   text-align: center;
-  margin-bottom: 36px;
+  margin-bottom: var(--space-9);
 }
 .section-idx {
   display: block;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--accent-primary);
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
 }
 .section-heading {
-  font-size: clamp(22px, 3vw, 30px);
-  font-weight: 700;
+  font-size: clamp(22px, 3vw, var(--text-4xl));
+  font-weight: var(--weight-bold);
   letter-spacing: -0.03em;
   color: var(--color-text);
 }
@@ -491,16 +493,16 @@ function goToSkills() {
   z-index: 1;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 48px 32px;
+  padding: var(--space-12) var(--space-8);
 }
 .innovation-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  gap: var(--space-5);
 }
 .innovation-card {
   position: relative;
-  padding: 28px;
+  padding: var(--space-7);
   border-radius: var(--radius-xl);
   background: var(--card-gradient);
   backdrop-filter: blur(var(--glass-blur));
@@ -530,13 +532,13 @@ function goToSkills() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-5);
 }
 .inn-badge {
-  font-size: 0.6875rem;
-  font-weight: 700;
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-bold);
   letter-spacing: 0.1em;
-  padding: 4px 12px;
+  padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-full);
   background: color-mix(in srgb, var(--card-accent) 12%, transparent);
   color: var(--card-accent);
@@ -551,41 +553,41 @@ function goToSkills() {
 .inn-icon :deep(svg) { width: 24px; height: 24px; }
 .inn-title {
   font-size: 1.1875rem;
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   letter-spacing: -0.02em;
   color: var(--color-text);
   margin: 0;
 }
 .inn-subtitle {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   color: var(--color-text-3);
-  font-weight: 500;
-  margin-top: 4px;
+  font-weight: var(--weight-medium);
+  margin-top: var(--space-1);
   margin-bottom: 14px;
 }
 .inn-desc {
-  font-size: 0.8125rem;
-  line-height: 1.7;
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
   color: var(--color-text-2);
-  margin: 0 0 20px;
+  margin: 0 0 var(--space-5);
 }
 .inn-stat {
   display: flex;
   align-items: baseline;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
 }
 .inn-stat-value {
   font-size: 2rem;
   font-weight: 800;
   font-family: var(--font-mono);
   letter-spacing: -0.03em;
-  line-height: 1;
+  line-height: var(--leading-none);
 }
 .inn-stat-label {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   color: var(--color-text-3);
-  font-weight: 500;
+  font-weight: var(--weight-medium);
 }
 .inn-tags {
   display: flex;
@@ -593,8 +595,8 @@ function goToSkills() {
   gap: 6px;
 }
 .inn-tag {
-  font-size: 0.6875rem;
-  font-weight: 600;
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
   padding: 3px 10px;
   border-radius: var(--radius-full);
   background: var(--color-surface-hover);
@@ -608,18 +610,18 @@ function goToSkills() {
   z-index: 1;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 48px 32px;
+  padding: var(--space-12) var(--space-8);
 }
 .subjects-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  gap: var(--space-4);
 }
 .subject-chip {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 20px;
+  padding: var(--space-5);
   border-radius: var(--radius-lg);
   background: var(--color-glass);
   backdrop-filter: blur(var(--glass-blur));
@@ -641,10 +643,10 @@ function goToSkills() {
   flex-shrink: 0;
 }
 .subj-info { flex: 1; display: flex; flex-direction: column; }
-.subj-name { font-size: 0.9375rem; font-weight: 600; color: var(--color-text); }
-.subj-nodes { font-size: 0.6875rem; color: var(--color-text-3); margin-top: 2px; }
+.subj-name { font-size: var(--text-md); font-weight: var(--weight-semibold); color: var(--color-text); }
+.subj-nodes { font-size: var(--text-2xs); color: var(--color-text-3); margin-top: 2px; }
 .subj-code {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   font-weight: 800;
   font-family: var(--font-mono);
   color: var(--subj-color);
@@ -655,13 +657,13 @@ function goToSkills() {
 .bottom-cta {
   position: relative;
   z-index: 1;
-  padding: 64px 32px;
+  padding: var(--space-16) var(--space-8);
 }
 .bottom-cta-inner {
   max-width: 640px;
   margin: 0 auto;
   text-align: center;
-  padding: 48px;
+  padding: var(--space-12);
   border-radius: var(--radius-xl);
   background: var(--gradient-hero);
   border: 1px solid var(--color-glass-border);
@@ -669,21 +671,21 @@ function goToSkills() {
   -webkit-backdrop-filter: blur(var(--glass-blur));
 }
 .bottom-title {
-  font-size: clamp(20px, 2.5vw, 28px);
-  font-weight: 700;
+  font-size: clamp(var(--text-2xl), 2.5vw, 28px);
+  font-weight: var(--weight-bold);
   letter-spacing: -0.03em;
   color: var(--color-text);
-  margin: 0 0 12px;
+  margin: 0 0 var(--space-3);
 }
 .bottom-desc {
-  font-size: 0.875rem;
+  font-size: var(--text-base);
   color: var(--color-text-2);
-  margin: 0 0 28px;
+  margin: 0 0 var(--space-7);
   line-height: 1.6;
 }
 .cta-large {
-  padding: 16px 40px;
-  font-size: 1rem;
+  padding: var(--space-4) var(--space-10);
+  font-size: var(--text-lg);
 }
 
 /* ── 页脚 ── */
@@ -694,10 +696,10 @@ function goToSkills() {
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
-  padding: 24px 32px;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-8);
   border-top: 1px solid var(--color-border);
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   color: var(--color-text-3);
 }
 .footer-tech { font-family: var(--font-mono); }
@@ -706,17 +708,17 @@ function goToSkills() {
 @media (max-width: 900px) {
   .innovation-grid { grid-template-columns: 1fr; }
   .subjects-grid { grid-template-columns: repeat(2, 1fr); }
-  .hero { padding: 48px 20px 40px; }
-  .innovations, .subjects-band { padding: 32px 20px; }
-  .nav-links { gap: 4px; }
-  .nav-link { padding: 6px 12px; font-size: 0.75rem; }
+  .hero { padding: var(--space-12) var(--space-5) var(--space-10); }
+  .innovations, .subjects-band { padding: var(--space-8) var(--space-5); }
+  .nav-links { gap: var(--space-1); }
+  .nav-link { padding: 6px var(--space-3); font-size: var(--text-xs); }
 }
 @media (max-width: 480px) {
   .subjects-grid { grid-template-columns: 1fr; }
-  .metric-pills { gap: 8px; }
-  .metric-pill { padding: 10px 16px; min-width: 90px; }
+  .metric-pills { gap: var(--space-2); }
+  .metric-pill { padding: 10px var(--space-4); min-width: 90px; }
   .metric-value { font-size: 1.375rem; }
   .hero-cta { flex-direction: column; }
-  .bottom-cta-inner { padding: 32px 20px; }
+  .bottom-cta-inner { padding: var(--space-8) var(--space-5); }
 }
 </style>
