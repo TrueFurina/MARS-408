@@ -3,6 +3,7 @@
 # 功能：加权投票 + 一致性校验 + 历史表现追踪 + NeuralMixer
 # ============================================================
 
+import asyncio
 import json
 import logging
 import re
@@ -473,8 +474,23 @@ class GOMARLConsensus:
 
             # 检测 + 消解
             course = student_profile.get("course", "computer_network")
+
+            # C3：接通语义级检测——编码 Agent 输出供 E5 语义冲突判定（C10 已收紧防误报）。
+            # 此前图管线与 API 两条链均不传 embeddings，语义分支全程未执行。
+            # 编码失败置 None，自动回退事实级 + 跨 Agent 检测。
+            agent_embeddings = None
+            try:
+                from engines.gomarl_mixer import neural_mixer
+                texts = [r.content[:2000] for r in results]
+                # 同步重操作（E5 推理）在 async 上下文下放线程池（标准 §1.4）
+                agent_embeddings = await asyncio.to_thread(
+                    neural_mixer.encoder.encode_batch, texts
+                )
+            except Exception as _ee:
+                logger.warning(f"语义冲突向量编码失败，回退事实级检测: {_ee}")
+
             result = await conflict_engine.check_and_resolve(
-                agent_dicts, course=course
+                agent_dicts, course=course, agent_embeddings=agent_embeddings
             )
 
             # 将消解结果转为 issue 描述

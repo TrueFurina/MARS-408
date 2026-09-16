@@ -18,8 +18,11 @@ from shared.ratelimit import require_llm_quota
 from pydantic import BaseModel, field_validator
 from typing import Optional
 
-# F-011：引擎端点统一鉴权 + 每用户 LLM 配额（429，部分端点调用 LLM）
-router = APIRouter(prefix="/engine", tags=["engine"], dependencies=[Depends(require_llm_quota)])
+# F-011：鉴权由各端点分别持有（get_current_user / require_llm_quota）。
+# LLM 配额只挂在真正调用 LLM 的端点（frugal-rag-full / gomarl-consensus / conflict-check），
+# 不挂在 router 级——否则只读观测端点（/status、/neural-mixer 等）每次轮询都会扣减配额，
+# 监控面板会把用户每日 LLM 额度耗尽并 429 掉真实 LLM 调用（配额为共享计数）。
+router = APIRouter(prefix="/engine", tags=["engine"])
 
 
 # ── 请求模型 ──
@@ -74,7 +77,7 @@ class TeachingRulesPrioritizeRequest(BaseModel):
 # ── 端点 ──
 
 @router.post("/frugal-rag-full")
-async def frugal_rag_full(req: FrugalRAGFullRequest, user: dict = Depends(get_current_user)):
+async def frugal_rag_full(req: FrugalRAGFullRequest, user: dict = Depends(require_llm_quota)):
     """完整 FrugalRAG 检索流程
 
     SFT 查询生成 → 向量检索 → RL 停止决策 → 查询重写 → 答案生成
@@ -114,7 +117,7 @@ async def frugal_rag_full(req: FrugalRAGFullRequest, user: dict = Depends(get_cu
 
 
 @router.post("/gomarl-consensus")
-async def gomarl_consensus(req: GOMARLConsensusRequest, user: dict = Depends(get_current_user)):
+async def gomarl_consensus(req: GOMARLConsensusRequest, user: dict = Depends(require_llm_quota)):
     """GoMARL 共识评估（NeuralMixer + 证据冲突消解）
 
     输入多个 Agent 的生成结果，输出：
@@ -132,8 +135,11 @@ async def gomarl_consensus(req: GOMARLConsensusRequest, user: dict = Depends(get
     )
 
     # 2. 冲突检测+消解
+    # C3：接通语义级检测——把 mixer 已编码的 E5 向量传入（与 agent_results 同序）；
+    # 缺失（如无 agent 结果 / 编码失败）时为 None，自动回退事实级检测。
+    agent_embeddings = mixer_result.get("agent_embeddings")
     conflict_result = await conflict_engine.check_and_resolve(
-        req.agent_results, course=req.course
+        req.agent_results, course=req.course, agent_embeddings=agent_embeddings
     )
 
     return {
@@ -149,6 +155,7 @@ async def gomarl_consensus(req: GOMARLConsensusRequest, user: dict = Depends(get
             "resolved": conflict_result["resolved"],
             "unresolved": conflict_result["unresolved"],
             "overall_consistency": conflict_result["overall_consistency"],
+            "semantic_checked": agent_embeddings is not None,  # 语义级检测是否生效
             "details": conflict_result["conflicts"],
         },
     }
@@ -177,7 +184,7 @@ async def neural_mixer_stats(user: dict = Depends(get_current_user)):
 
 
 @router.post("/conflict-check")
-async def conflict_check(req: ConflictCheckRequest, user: dict = Depends(get_current_user)):
+async def conflict_check(req: ConflictCheckRequest, user: dict = Depends(require_llm_quota)):
     """独立冲突检测+消解"""
     from engines.gomarl_conflict import conflict_engine
     result = await conflict_engine.check_and_resolve(

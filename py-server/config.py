@@ -163,8 +163,8 @@ DEFAULTS = {
         "mappo_episodes": 1000,          # 训练回合数（实验脚本默认）
     },
 
-    # ── 大创真版算法增量：feature flag（D1 默认 lite 保护软件杯稳定）──
-# version: "lite"=规则版/原型（默认，软件杯稳定） | "real"=真版（灰度开启）
+    # ── 大创真版算法增量：feature flag（D1 默认 lite 保护火山杯稳定）──
+# version: "lite"=规则版/原型（默认，火山杯稳定） | "real"=真版（灰度开启）
     # features.frugalrag / features.gomarl: 真版子能力开关（默认 False，按 flag 灰度）
     "algorithm": {
         "version": "lite",
@@ -328,7 +328,7 @@ def get_algorithm_config() -> dict:
 def algorithm_version() -> str:
     """当前算法版本：'lite' | 'real'。
 
-    默认 'lite'（保护软件杯稳定）；仅当显式配置为 'real' 时返回真版。
+    默认 'lite'（保护火山杯稳定）；仅当显式配置为 'real' 时返回真版。
     旧代码读不到 algorithm 段 → 默认 'lite'。
     """
     version = get_algorithm_config().get("version")

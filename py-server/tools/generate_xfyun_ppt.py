@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""调用讯飞智能 PPT API 生成软件杯演示 PPT
+"""调用讯飞智能 PPT API 生成火山杯演示 PPT
 
 用法:
     cd py-server
@@ -17,7 +17,7 @@ async def main():
     print("   (每次生成消耗 10 点额度，AI 配图另计)")
     print()
 
-    # 生成软件杯演示 PPT
+    # 生成火山杯演示 PPT
     result = await generate_ppt(
         query="MARS-408 基于GOMARL与FrugalRAG的408考研个性化学习多智能体系统\n\n"
                "系统架构：10节点LangGraph多智能体流水线，包含coordinator/diagnostician/planner/"

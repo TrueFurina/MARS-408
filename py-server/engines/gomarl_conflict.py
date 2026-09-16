@@ -184,9 +184,30 @@ class ConsistencyChecker:
         },
     ]
 
-    # 语义相似度阈值
-    _SEMANTIC_CONFLICT_THRESHOLD = 0.3  # 低于此值可能存在语义不一致
-    _SEMANTIC_SAME_THRESHOLD = 0.85     # 高于此值认为内容相似
+    # 语义相似度阈值（收紧版，C10）
+    # 仅当「同一话题（共享领域实体）且向量相似度低于阈值」才判语义分歧；
+    # 不同主题的正确内容（互补分工）不再被误报为冲突。
+    _SEMANTIC_CONFLICT_THRESHOLD = 0.3  # 低于此值且共享领域实体才判为语义分歧
+    _SEMANTIC_SAME_THRESHOLD = 0.85     # 高于此值认为内容相似（保留，供扩展）
+
+    # 领域实体锚定表：两 Agent 必须就同一 408 实体发言，才可能构成"冲突"。
+    # 词汇与 _FACTUAL_CONTRADICTIONS 的易错点对齐；命中即为"可比较话题"。
+    _SEMANTIC_ANCHORS = frozenset({
+        # ── 计算机网络 ──
+        "tcp", "udp", "http", "https", "ftp", "dns", "arp", "icmp",
+        "握手", "挥手", "三次握手", "四次挥手", "慢启动", "拥塞", "滑动窗口",
+        "交换机", "路由器", "数据链路层", "网络层",
+        # ── 数据结构 ──
+        "冒泡排序", "快速排序", "堆排序", "归并排序", "插入排序", "选择排序",
+        "二叉搜索树", "平衡二叉树", "哈希表", "深度优先", "广度优先", "bfs", "dfs",
+        # ── 操作系统 ──
+        "死锁", "信号量", "互斥锁", "分页", "分段", "页面置换", "虚拟内存", "进程调度",
+        # ── 计算机组成原理 ──
+        "补码", "原码", "反码", "cache", "流水线", "中断", "dma",
+        "统一编址", "独立编址",
+    })
+    _SEMANTIC_MIN_ANCHORS = 1   # 至少共享 N 个领域实体，两者才"可比较"
+    _SEMANTIC_MIN_LEN = 100     # 内容过短不判（信息不足）
 
     # 事实级错误规则（精确、防误报）
     # 每条规则用「正则窗口」匹配错误断言，并排除含否定/对比说明的句子。
@@ -390,23 +411,50 @@ class ConsistencyChecker:
             )
         return None
 
+    def _shared_anchors(self, text_a: str, text_b: str) -> set[str]:
+        """两文本共同提及的 408 领域实体（判断是否"同一话题、可比较"）。
+
+        纯文本/领域词表匹配，无外部依赖；用 frozenset 做 O(|anchors|) 子串扫描。
+        """
+        la, lb = text_a.lower(), text_b.lower()
+        return {a for a in self._SEMANTIC_ANCHORS if a in la and a in lb}
+
     def _check_semantic(self, name_a: str, name_b: str,
                         content_a: str, content_b: str,
                         emb_a: np.ndarray, emb_b: np.ndarray) -> Optional[Conflict]:
-        """语义级冲突检测（E5 向量相似度）"""
-        # 余弦相似度
-        sim = float(np.dot(emb_a, emb_b) / (
-            np.linalg.norm(emb_a) * np.linalg.norm(emb_b) + 1e-8
-        ))
+        """语义级冲突检测（E5 向量相似度）——收紧版（C10）。
 
-        # 如果两个 Agent 都有实质内容但相似度很低，可能存在语义冲突
-        if (len(content_a) > 100 and len(content_b) > 100 and
-                sim < self._SEMANTIC_CONFLICT_THRESHOLD):
+        三重门，逐级短路，专治"不同主题/编码失败被误判为矛盾"：
+          ① 长度门：内容过短信息不足，不判；
+          ② 实体锚定门：两 Agent 未就同一 408 实体发言 ⇒ 属互补分工，非冲突；
+          ③ 向量有效性门：E5 失败产生零向量时 sim≈0，不得据此判冲突。
+        通过三重门后，才以"同话题但相似度过低"认定语义分歧。
+        """
+        # ① 长度门
+        if not (len(content_a) > self._SEMANTIC_MIN_LEN and
+                len(content_b) > self._SEMANTIC_MIN_LEN):
+            return None
+
+        # ② 实体锚定门：不同话题 → 分工，非冲突
+        anchors = self._shared_anchors(content_a, content_b)
+        if len(anchors) < self._SEMANTIC_MIN_ANCHORS:
+            return None
+
+        # ③ 向量有效性门：零向量（E5 编码失败）不参与判定
+        norm_a = float(np.linalg.norm(emb_a))
+        norm_b = float(np.linalg.norm(emb_b))
+        if norm_a < 1e-6 or norm_b < 1e-6:
+            return None
+
+        sim = float(np.dot(emb_a, emb_b) / (norm_a * norm_b))
+        if sim < self._SEMANTIC_CONFLICT_THRESHOLD:
+            shown = "/".join(sorted(anchors)[:3])
             return Conflict(
                 agent_a=name_a,
                 agent_b=name_b,
                 conflict_type="semantic",
-                description=f"语义相似度过低({sim:.2f})，可能存在内容矛盾",
+                description=(f"同为「{shown}」话题但语义相似度过低"
+                             f"({sim:.2f})，可能存在内容矛盾"),
                 claim_a=content_a[:200] + "...",
                 claim_b=content_b[:200] + "...",
                 confidence=0.5,

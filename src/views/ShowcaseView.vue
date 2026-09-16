@@ -72,8 +72,8 @@ const techHighlights = [
 
 // ── 品牌级设计原型 ──
 // 已移除 5 个不可用/与 Vue 系统脱节的独立 HTML 原型：
-//   - 软件杯路演落地页 (MARS-408_softwarecup_landing.html)
-//   - 软件杯答辩 Deck (MARS-408_dachuang_deck.html)
+//   - 火山杯路演落地页 (MARS-408_huoshan_landing.html)
+//   - 火山杯答辩 Deck (MARS-408_dachuang_deck.html)
 //   - 产品官网 / 品牌站 (MARS-408_official_site.html)
 //   - 学习系统 Dashboard (MARS-408_dashboard.html)
 //   - 产品闭环 Product Loop (MARS-408_product_loop.html)
@@ -124,7 +124,7 @@ function openNew() { window.open(iframeSrc.value, '_blank', 'noopener') }
       <div v-if="showTech" class="tech-showcase">
         <div class="tech-header">
           <div class="tech-title"> MARS-408 硬核技术全景</div>
-          <div class="tech-sub">对标第十五届中国软件杯 A3 赛题 · 国家级特等奖目标</div>
+          <div class="tech-sub">对标2026 福建高校「火山杯」Agent 创新大赛 · 国家级特等奖目标</div>
         </div>
 
         <div v-for="section in techHighlights" :key="section.category" class="tech-section">

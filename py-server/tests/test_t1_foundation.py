@@ -36,7 +36,7 @@ from engines.evidence.schema import (
 
 
 def test_default_algorithm_version_is_lite():
-    # 仓库默认保护软件杯稳定：version 缺失或显式 "lite" 均解析为 lite（向后兼容）
+    # 仓库默认保护火山杯稳定：version 缺失或显式 "lite" 均解析为 lite（向后兼容）
     assert config.algorithm_version() == "lite"
     assert config.features_frugalrag() is False
     assert config.features_gomarl() is False

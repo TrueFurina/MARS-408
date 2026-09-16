@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""调用讯飞数字人视频 API 生成软件杯演示讲解视频
+"""调用讯飞数字人视频 API 生成火山杯演示讲解视频
 
 用法:
     cd py-server
