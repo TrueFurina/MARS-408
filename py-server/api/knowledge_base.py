@@ -4,6 +4,7 @@
 # ============================================================
 
 import os
+import re
 import logging
 import json as json_mod
 from typing import Optional
@@ -51,6 +52,9 @@ async def api_get_textbook(
     user: dict = Depends(get_current_user),
 ):
     """获取教材完整内容（含章节列表）"""
+    # 入口校验：教材 ID 仅允许字母数字/下划线/连字符，防路径穿越
+    if not re.fullmatch(r"[A-Za-z0-9_\-]+", textbook_id):
+        raise HTTPException(status_code=400, detail="非法的教材 ID")
     from services.pdf_reader import get_textbook_content
     textbook = get_textbook_content(textbook_id)
     if not textbook:

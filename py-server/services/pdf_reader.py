@@ -4,6 +4,7 @@
 # ============================================================
 
 import os
+import re
 import logging
 import tempfile
 from typing import Optional
@@ -210,9 +211,22 @@ def list_textbooks() -> list[dict]:
 
 
 def get_textbook_content(textbook_id: str) -> Optional[dict]:
-    """获取教材完整内容"""
+    """获取教材完整内容
+
+    安全约束：textbook_id 必须是纯字母数字/下划线/连字符，且解析后的真实路径
+    必须仍位于 _TEXTBOOK_DIR 之内，否则视为越权访问并返回 None（防路径穿越）。
+    """
     import json
-    path = os.path.join(_TEXTBOOK_DIR, f"{textbook_id}.json")
+    if not isinstance(textbook_id, str) or not re.fullmatch(r"[A-Za-z0-9_\-]+", textbook_id):
+        logger.warning("get_textbook_content 拒绝非法 textbook_id: %r", textbook_id)
+        return None
+
+    path = os.path.realpath(os.path.join(_TEXTBOOK_DIR, f"{textbook_id}.json"))
+    base = os.path.realpath(_TEXTBOOK_DIR)
+    if not path.startswith(base + os.sep):
+        logger.warning("get_textbook_content 路径穿越被拦截: %r -> %s", textbook_id, path)
+        return None
+
     if not os.path.exists(path):
         return None
     try:

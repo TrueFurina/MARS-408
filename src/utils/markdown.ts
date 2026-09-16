@@ -151,11 +151,58 @@ export function renderMarkdownSafe(text: string): string {
 
 /**
  * Sanitize SVG markup for safe inline rendering (功能④多模态导师答疑).
- * Allows SVG elements/attributes while stripping executable tags and event handlers
- * (DOMPurify's default profile already drops inline executable markup and on* handlers).
+ *
+ * ⚠️ 两层防御（defense-in-depth），原因各有：
+ *
+ * 1) DOMPurify 的 `USE_PROFILES:{ svg:true }` 会**放行** SVG 上下文中的 `<script>` 与
+ *    `on*` 事件处理器（SVG 规范允许内联脚本，这是 DOMPurify 的已知行为，并非「默认已剥离」）。
+ *    因此必须显式 FORBID 它们，否则净化形同虚设、LLM 生成的 SVG 可直接 XSS。
+ *
+ * 2) 实测发现：在 happy-dom 测试环境下 DOMPurify 行为不可靠——它会剥离 `<svg>` 根元素，
+ *    却保留其内部的 `<script>`/`onload`/`onclick`（详见 tests/ 回归用例）。因此**仅依赖
+ *    DOMPurify 无法在测试环境给出可信的净化保证**。
+ *
+ * 故先以「与运行环境无关」的针对性正则预清洗掉所有已知可执行载体（<script>、on* 事件、
+ * 可承载 HTML 的 <foreignObject>、javascript: 协议 URI），再交给 DOMPurify 做 SVG 结构校验。
+ * 两层叠加：浏览器中由 DOMPurify 兜底，测试环境（happy-dom）中由正则保证安全。
  */
+const SVG_FORBIDDEN_TAGS = ['script', 'foreignObject']
+const SVG_FORBIDDEN_ATTR = [
+  'onload', 'onunload', 'onclick', 'ondblclick', 'onmousedown', 'onmouseup',
+  'onmouseover', 'onmousemove', 'onmouseout', 'onfocus', 'onblur', 'onchange',
+  'onsubmit', 'onreset', 'onkeydown', 'onkeyup', 'onkeypress', 'oninput',
+  'oncontextmenu', 'onwheel', 'onerror', 'onabort', 'onanimationstart',
+  'onanimationend', 'ontransitionend',
+]
+
+/**
+ * 运行环境无关的预清洗：剥离 SVG 中所有已知可执行载体。
+ * 只针对明确的危险模式，不破坏合法 SVG 图形属性（如 opacity、font-size 等均不匹配 on[a-z]+=）。
+ */
+function stripSvgExecutableVectors(input: string): string {
+  let s = input
+  // 1) <script>...</script> 及自闭合/空 <script .../>
+  s = s.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+  s = s.replace(/<script\b[^>]*\/?>/gi, '')
+  // 2) 所有 on* 事件处理器属性（双引号 / 单引号 / 无引号三种写法）
+  s = s.replace(/\s+on[a-z]+\s*=\s*"[^"]*"/gi, '')
+  s = s.replace(/\s+on[a-z]+\s*=\s*'[^']*'/gi, '')
+  s = s.replace(/\s+on[a-z]+\s*=\s*[^\s>]+/gi, '')
+  // 3) 可承载 HTML/脚本的 foreignObject 容器（含全部子节点）
+  s = s.replace(/<foreignObject\b[^>]*>[\s\S]*?<\/foreignObject>/gi, '')
+  s = s.replace(/<foreignObject\b[^>]*\/?>/gi, '')
+  // 4) javascript: 协议 URI（点击执行）
+  s = s.replace(/\s+(?:xlink:href|href)\s*=\s*"javascript:[^"]*"/gi, '')
+  s = s.replace(/\s+(?:xlink:href|href)\s*=\s*'javascript:[^']*'/gi, '')
+  return s
+}
+
 export function sanitizeSvg(svg: string): string {
-  return DOMPurify.sanitize(svg, {
+  if (!svg || typeof svg !== 'string') return ''
+  const preCleaned = stripSvgExecutableVectors(svg)
+  return DOMPurify.sanitize(preCleaned, {
     USE_PROFILES: { svg: true, svgFilters: true },
+    FORBID_TAGS: SVG_FORBIDDEN_TAGS,
+    FORBID_ATTR: SVG_FORBIDDEN_ATTR,
   })
 }

@@ -5,7 +5,7 @@
       <div class="mm-label"> AI 教学插图</div>
       <div class="mm-image-wrapper">
         <img v-if="imageUrl" :src="imageUrl" alt="教学插图" class="mm-image" />
-        <div v-else-if="imageSvg" v-html="imageSvg" class="mm-svg-container"></div>
+        <div v-else-if="imageSvg" v-html="sanitizedSvg" class="mm-svg-container"></div>
       </div>
       <div class="mm-source-tag" :class="{ 'real': isRealImage }">
         {{ isRealImage ? '讯飞星火TTI 生成' : 'AI概念图（SVG）' }}
@@ -36,6 +36,7 @@
 <script setup lang="ts">
 import { ref, computed, onUnmounted } from 'vue'
 import Skeleton from '@/components/Skeleton.vue'
+import { sanitizeSvg } from '@/utils/markdown'
 
 const props = defineProps<{
   imageBase64?: string | null
@@ -55,6 +56,9 @@ const imageUrl = computed(() => {
 })
 
 const isRealImage = computed(() => props.imageSource === 'xfyun')
+
+// LLM 生成的 SVG 必须经 sanitizeSvg 净化后再注入 DOM（防 prompt injection → XSS）
+const sanitizedSvg = computed(() => (props.imageSvg ? sanitizeSvg(props.imageSvg) : ''))
 
 const audioUrl = computed(() => {
   if (props.audioBase64) return `data:audio/mp3;base64,${props.audioBase64}`
