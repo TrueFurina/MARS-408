@@ -1,6 +1,6 @@
 # MARS-408 DESIGN.md — 设计系统规范 (v10)
 
-> **版本：v10「砚 · Ink & Clay」** ｜ 权威真相源：`src/assets/styles/_variables.css`（唯一可改处）
+> **版本：v11「砚 · Ink & Violet」** ｜ 权威真相源：`src/assets/styles/_variables.css`（唯一可改处）
 > 生成基线：以 `_variables.css` 的 `:root` / `[data-theme="light"]` 为唯一输入机械对齐 ｜ 更新：2026-09-14
 > AI 可读：供 Cursor / Claude Code / Google Stitch 直接消费。**本文档为派生消费者，若与 `_variables.css` 不一致，以 `_variables.css` 为准。**
 > ⚠️ 旧文档 `DESIGN_SYSTEM_v2.md` / `DESIGN_TOKENS*.md` 描述的是 **v7/v8 紫主色系统**，已于 2026-09-12 被本版取代，勿再引用。
@@ -10,10 +10,10 @@
 ## 1. Visual Theme & Atmosphere
 
 - **设计哲学**：**阅读优先 · 信息密度优先 · 克制用色 · 零霓虹**。这是单次 1–3 小时的高强度学习工具，一切以降低长时间阅读的眩光与疲劳为先。
-- **视觉基调**：专业、克制、陪伴。冷蓝灰画布 + 暖陶土强调色——「深夜台灯下的一支红笔」。
+- **视觉基调**：专业、克制、陪伴。冷蓝灰画布 + 紫罗兰强调色——「深夜台灯下的一支紫笔」。
 - **核心视觉特征**：`flat-surfaces`（明度分层）、`clay-accent`（唯一强调色）、`subject-colored`（四科数据色）、`neutral-depth`（中性投影，无彩色发光）、`micro-interaction`（仅 GPU 属性微动效）。
 - **光影与质感**：**零霓虹**——已删除全部彩色 glow，改用中性多层投影 + 1px 描边表达高度；玻璃态仅顶栏/抽屉/悬浮按钮使用（`backdrop-filter: blur(10–18px)`）。
-- **用色纪律**：全站只有 **1 个强调色（陶土 Clay `#CE8256`）**；四科分色是"数据色"非"装饰色"（只出现在学科标签、图表、掌握度）；语义色只表达状态。
+- **用色纪律**：全站只有 **1 个强调色（紫罗兰 Violet `#7c6af2` / 深紫 `#6b5cdb`）**；四科分色是"数据色"非"装饰色"（只出现在学科标签、图表、掌握度）；语义色只表达状态。
 
 ---
 
@@ -47,7 +47,7 @@
 | `--color-border` | `rgba(255,255,255,.09)` | `rgba(16,20,26,.11)` |
 | `--color-border-light` | `rgba(255,255,255,.05)` | `rgba(16,20,26,.06)` |
 | `--color-border-strong` | `rgba(255,255,255,.16)` | `rgba(16,20,26,.20)` |
-| `--color-border-focus` | `rgba(206,130,86,.55)` | `rgba(158,90,48,.55)` |
+| `--color-border-focus` | `rgba(124,106,242,.55)` | `rgba(107,92,219,.55)` |
 | `--color-border-glow` | `rgba(206,130,86,.22)` | `rgba(158,90,48,.24)` |
 
 ### 2.4 文本层级（对比度为对画布实测值）
@@ -63,21 +63,22 @@
 
 ### 2.5 强调色（全站唯一色相 · 双色调 ink/solid）
 
-> **为什么拆两调**：深色下，作为**文字**需亮度 L≥0.205（对画布 4.5:1）；作为**承载白字的实底**需 L≤0.183——两者无交集，故拆 `ink`（文字/图标/描边）与 `solid`（按钮/头像实底，其上永远白字）。浅色主题无此冲突，`solid` 直接指向 `ink`。
+> **为什么拆两调**：深色下，作为**文字**与作为**承载白字的实底**对亮度的要求方向相反，故拆 `ink`（文字/图标/描边，较亮）与 `solid`（按钮/头像实底，较深，其上永远白字）。浅色主题下 ink 与 solid 同为深紫 `#6b5cdb`，三态共用同一色调。
 
 | Token | Dark | Light | 用途 |
 |-------|------|-------|------|
-| `--color-accent` (ink) | `#CE8256` | `#9E5A30` | 文字 / 链接 / 图标 / 描边 / 焦点环 |
-| `--color-accent-hover` | `#D99168` | `#8A4C26` | 墨色悬浮 |
-| `--color-accent-active` | `#B26E43` | `#7A4322` | 墨色按下 |
-| `--color-accent-text` | `#E0A07A` | `#9E5A30` | 深底上的强调文字（更亮，长文更舒适） |
-| `--color-accent-solid` | `#9C5F35` | `#9E5A30` | 实底（白字 5.12:1） |
-| `--color-accent-solid-hover` | `#A5663C` | `#8A4C26` | 实底悬浮 |
-| `--color-accent-solid-active` | `#8A5230` | `#7A4322` | 实底按下 |
-| `--color-accent-subtle` | `rgba(206,130,86,.14)` | `rgba(158,90,48,.10)` | 选中态淡底 |
-| `--accent-rgb` | `206,130,86` | `158,90,48` | 供 `rgba(var(--accent-rgb),α)` |
+| `--color-accent` (ink) | `#7c6af2` | `#6b5cdb` | 文字 / 链接 / 图标 / 描边 / 焦点环 |
+| `--color-accent-hover` | `#8b7bf5` | `#7c6af2` | 紫罗兰悬浮 |
+| `--color-accent-active` | `#6b5cdb` | `#5a4cc4` | 紫罗兰按下 |
+| `--color-accent-text` | `#a99ff7` | `#6b5cdb` | 深底上的强调文字（更亮，长文更舒适） |
+| `--color-accent-solid` | `#6b5cdb` | `#6b5cdb` | 实底（其上永远白字） |
+| `--color-accent-solid-hover` | `#7c6af2` | `#7c6af2` | 实底悬浮 |
+| `--color-accent-solid-active` | `#5a4cc4` | `#5a4cc4` | 实底按下 |
+| `--color-accent-subtle` | `rgba(124,106,242,.14)` | `rgba(107,92,219,.10)` | 选中态淡底 |
+| `--accent-rgb` | `124,106,242` | `107,92,219` | 供 `rgba(var(--accent-rgb),α)` |
 
-> 主色选择理由：**反 AI 紫**（旧 `#7c6af2` 已废弃）；陶土 H≈22°，饱和度 55%（<80% 硬约束）；色轮上四科（258°/215°/189°/334°）与语义色（139°/38°/5°/209°）之外唯一宽敞空隙在 0°–38°，取中点 ≈22°，与最近邻各留 17°–19°。
+> 主色选择理由：**克制紫罗兰 Violet `#7c6af2` / 深紫 `#6b5cdb`**——品牌调性为「专业 / 克制 / 陪伴」的低饱和紫罗兰，取偏蓝、中等饱和的紫以避开廉价 AI 渐变感；与四科数据色中的 DS 紫 `#A98CDD`（更浅的薰衣草，专用于学科标签/图表）靠亮度与用法二次区隔。
+> 历史说明：曾一度改用暖陶土棕 `#CE8256` 以规避「AI 紫」，产品负责人判定棕色观感不佳且偏离原始紫罗兰品牌，故于 v11 回退为紫罗兰。
 
 ### 2.6 语义色
 
@@ -103,7 +104,7 @@
 
 ### 2.8 多智能体 / 流程 / 图表色（Dark；Light 有对应覆盖）
 
-`--agent-coord #CE8256` · `--agent-plan #C9A45E` · `--agent-diag #A98CDD` · `--agent-gen #6E9BD9` · `--agent-retrieve #4FA9B8` · `--agent-eval #DE85AC` · `--agent-quality #7FA98C` · `--agent-path #9A93B8` · `--agent-evidence #5AA396` · `--agent-gate #DCA03C`
+`--agent-coord #7c6af2` · `--agent-plan #C9A45E` · `--agent-diag #A98CDD` · `--agent-gen #6E9BD9` · `--agent-retrieve #4FA9B8` · `--agent-eval #DE85AC` · `--agent-quality #7FA98C` · `--agent-path #9A93B8` · `--agent-evidence #5AA396` · `--agent-gate #DCA03C`
 `--flow-data/-control/-consensus` · `--nm-mix-from/-to` · `--mastery-low/mid/high/none` · `--edge-prereq/-related` · `--series-1..6` · `--seq-1..6`（连续色阶，基于 `--accent-rgb`）。
 
 ---
@@ -260,7 +261,7 @@
 2. 勿新增 `.xxx-btn` 散落按钮类（历史 `.engine-btn`/`.rag-btn` 已对齐 `.btn`）。
 3. 勿用 `transform:scale()` 超 **1.02**。
 4. Light 主题勿用强彩色发光（已降级为柔和中性投影）。
-5. **勿把主色陶土 `#CE8256` 用于大面积填充**（仅按钮/激活态/细线），大面积用 surface 层级。
+5. **勿把主色紫罗兰 `#7c6af2` 用于大面积填充**（仅按钮/激活态/细线），大面积用 surface 层级。
 6. 勿在中文字体栈写非系统字体（零加载是核心约束）。
 7. 勿用 `!important` 覆盖（除 `.btn:disabled` 必要场景）。
 8. **勿用 `--color-warning`（琥珀）作错误/危险文字色**——错误必须 danger 系。
@@ -290,7 +291,7 @@
 ## 9. Agent Prompt Guide
 
 ### Quick Reference
-MARS-408 设计系统 = **v10「砚 · Ink & Clay」**：克制深色 + **陶土强调色 `#CE8256`** + 408 四科分色（数据结构 `#A98CDD` / 计网 `#6E9BD9` / 计组 `#4FA9B8` / 操作系统 `#DE85AC`）+ 零霓虹中性投影。**唯一真相源**：`src/assets/styles/_variables.css` 的 `:root` 语义变量。组件只引用变量，双主题（`:root` dark / `[data-theme="light"]`）自动适配。标准按钮 `.btn`，卡片 `.card`/`.glass-card`，标签 `.tag-*`，模态 `.panel-overlay` + `.profile-panel`。
+MARS-408 设计系统 = **v11「砚 · Ink & Violet」**：克制深色 + **紫罗兰强调色 `#7c6af2` / 深紫 `#6b5cdb`** + 408 四科分色（数据结构 `#A98CDD` / 计网 `#6E9BD9` / 计组 `#4FA9B8` / 操作系统 `#DE85AC`）+ 零霓虹中性投影。**唯一真相源**：`src/assets/styles/_variables.css` 的 `:root` 语义变量。组件只引用变量，双主题（`:root` dark / `[data-theme="light"]`）自动适配。标准按钮 `.btn`，卡片 `.card`/`.glass-card`，标签 `.tag-*`，模态 `.panel-overlay` + `.profile-panel`。
 
 ### Component Prompts（可直接复制给 AI 代理）
 ```
@@ -304,7 +305,7 @@ MARS-408 设计系统 = **v10「砚 · Ink & Clay」**：克制深色 + **陶土
 
 ### Iteration Guide
 1. **先读变量**：生成任何组件前，先读 `_variables.css` 的 `:root` 与 `[data-theme="light"]`，只引用已定义的 `--color-*`/`--subject-*`/`--radius-*`/`--shadow-*`/`--space-*`。
-2. **禁止裸值**：若提示里写 `background:#CE8256`，改为 `background:var(--color-accent)`；实底按钮用 `var(--gradient-primary)`。
+2. **禁止裸值**：若提示里写 `background:#7c6af2`，改为 `background:var(--color-accent)`；实底按钮用 `var(--gradient-primary)`。
 3. **双主题自检**：每生成一个组件，脑内渲染一次 light 主题（白底），确认对比度与边框可见。
 4. **按钮走标准**：新按钮一律 `.btn` 变体；除非改历史视图，否则不写 `.new-btn` 类。
 5. **标签走 color-mix**：学科/状态标签用 `color-mix(in srgb, var(--subject-x) 14%, transparent)`，勿写死 `rgba`。

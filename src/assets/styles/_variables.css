@@ -1,5 +1,5 @@
 /* ============================================================================
- * MARS-408 — 设计令牌 · 单一真相源 (SSOT)
+ * 芒得很职 — 设计令牌 · 单一真相源 (SSOT)
  * 版本：v10 「砚 · Ink & Clay」
  * ----------------------------------------------------------------------------
  * 【设计哲学】
@@ -23,20 +23,16 @@
  *   旧别名（--bg-* / --text-* / --glass-* / --border-* / --accent*）全部
  *   用 var() 指向语义层，因此改主题时自动跟随，无需改动 72 个组件。
  *
- * 【主色选择理由】为什么是陶土 Clay #CE8256（HSL 22 / 55% / 57%）
- *   - 反 AI 紫：旧主色 #7c6af2（HSL 249/79%/68%）正是被明令禁止的"AI 紫"。
- *     新主色落在暖橙陶土区（H≈22°），与紫/蓝彻底脱钩。
- *   - 饱和度 55% < 80%：满足"主色饱和度 < 80%"的硬约束，长时间注视不刺眼。
- *   - 色相位置是唯一解：四科已占用 258°(DS 紫) / 215°(计网 蓝) / 189°(计组 青) /
- *     334°(OS 粉)，语义色占用 139°(成功绿) / 38°(警告琥珀) / 5°(危险红) / 209°(信息蓝)。
- *     色轮上唯一宽敞的空隙在 0°~38° 之间，取中点 ≈22°，与最近邻（危险红 5°、
- *     警告琥珀 38°）各留 17°~19° 间隔，再靠饱和度差（55% vs 68%/70%）与用法差异
- *     （强调色用于控件，语义色用于带文案的状态角标）二次区隔。
- *   - 情绪匹配：品牌关键词是"专业 · 克制 · 陪伴"。冷蓝灰画布 + 暖陶土强调色＝
- *     深夜台灯下的一支红笔，是"陪伴"而非"冷冰冰的工具感"，也贴合考研赛道
- *     （研途 / 墨墨等）的暖色约定。
- *   - 可读性已验证：深色下对画布 6.22:1、对卡片 5.79:1；浅色下 #9E5A30 对白 5.30:1，
- *     均过 WCAG AA（≥4.5:1）。
+ * 【主色选择理由】为什么是克制紫罗兰 Violet #7c6af2 / 深紫 #6b5cdb
+ *   - 品牌调性：impeccable.md 将主色定为「专业 / 克制 / 陪伴」的低饱和紫罗兰，
+ *     而非高饱和的「AI 渐变紫」。#7c6af2（HSL 249/79%/68%）取偏蓝、中等饱和的紫，
+ *     避开廉价 AI 感，同时与冷蓝灰画布形成「深夜台灯下一支紫笔」的陪伴感。
+ *   - 与四科/语义色区隔：DS 紫 #A98CDD（更浅的薰衣草）专用于「数据结构」科目；
+ *     本主色 #7c6af2 更偏蓝紫、且仅用于控件/强调，靠用法与亮度差二次区隔。
+ *   - 可读性：深色画布 #0E1217 上 #7c6af2 对比充足（过 WCAG AA 4.5:1）；
+ *     实底按钮用更深的 #6b5cdb 承载白字，对比同样达标。
+ *   - 历史说明：本文件曾一度改用暖陶土棕 #CE8256 以规避「AI 紫」，但产品负责人判定
+ *     棕色观感不佳且偏离原始紫罗兰品牌，故回退为紫罗兰，与 --gradient-primary 统一。
  * ========================================================================== */
 
 
@@ -266,8 +262,8 @@
   --color-border:       rgba(255, 255, 255, 0.09);
   --color-border-light: rgba(255, 255, 255, 0.05);
   --color-border-strong:rgba(255, 255, 255, 0.16);
-  --color-border-focus: rgba(206, 130, 86, 0.55);
-  --color-border-glow:  rgba(206, 130, 86, 0.22);   /* 细描边，非发光 */
+  --color-border-focus: rgba(124, 106, 242, 0.55);
+  --color-border-glow:  rgba(124, 106, 242, 0.22);   /* 细描边，非发光 */
 
   /* ── 2.4 文本层级 ── */
   --color-text:          #E6E9ED;   /* 15.4:1  正文 */
@@ -284,20 +280,20 @@
      两者无交集 —— 单一色值不可能同时满足，故拆成两调：
        ① 墨色 ink（--color-accent）：文字、链接、图标、描边、焦点环
        ② 实底 solid（--color-accent-solid）：按钮/头像/选中态实底，其上永远放白字
-     （浅色主题无此冲突：#9E5A30 同时满足两个条件，故 solid 直接指向 ink。）*/
-  --color-accent:        #CE8256;   /* ① 墨色 HSL 22/55/57 · 对画布 6.22:1 */
-  --color-accent-hover:  #D99168;   /*    墨色悬浮态 */
-  --color-accent-active: #B26E43;   /*    墨色按下态 */
-  --color-accent-text:   #E0A07A;   /*    深色底上的强调文字（比墨色更亮，长文更舒适）*/
+     （浅色主题下实底同样指向深紫 #6b5cdb，白字达标。）*/
+  --color-accent:        #7c6af2;   /* ① 紫罗兰（控件/文字/图标/描边/焦点环）· 对画布对比过 WCAG AA */
+  --color-accent-hover:  #8b7bf5;   /*    紫罗兰悬浮态 */
+  --color-accent-active: #6b5cdb;   /*    紫罗兰按下态 */
+  --color-accent-text:   #a99ff7;   /*    深色底上的强调文字（比主紫更亮，长文更舒适）*/
 
-  --color-accent-solid:        #9C5F35;  /* ② 实底 · 白字 5.12:1 · 对画布 3.67:1 */
-  --color-accent-solid-hover:  #A5663C;  /*    实底悬浮（更亮）· 白字 4.60:1 */
-  --color-accent-solid-active: #8A5230;  /*    实底按下（更暗）· 白字 6.1:1 */
+  --color-accent-solid:        #6b5cdb;  /* ② 实底 · 白字 · 对画布对比过 WCAG AA */
+  --color-accent-solid-hover:  #7c6af2;  /*    实底悬浮（更亮）*/
+  --color-accent-solid-active: #5a4cc4;  /*    实底按下（更暗）*/
 
-  --color-accent-subtle: rgba(206, 130, 86, 0.14);  /* 强调色淡底（选中态）*/
-  --color-accent-border: rgba(206, 130, 86, 0.35);
-  --accent-rgb:          206, 130, 86;              /* 供 rgba(var(--accent-rgb), α) 使用 */
-  --accent-solid-rgb:    156, 95, 53;
+  --color-accent-subtle: rgba(124, 106, 242, 0.14);  /* 强调色淡底（选中态）*/
+  --color-accent-border: rgba(124, 106, 242, 0.35);
+  --accent-rgb:          124, 106, 242;              /* 供 rgba(var(--accent-rgb), α) 使用 */
+  --accent-solid-rgb:    107, 92, 219;
 
   /* ── 2.6 语义色 ── */
   --color-success:        #4FA96B;
@@ -329,7 +325,7 @@
   --subject-os-rgb:  222, 133, 172;
 
   /* ── 2.8 多智能体 / 流程可视化色（8 Agent + 3 流程 + 2 产物）── */
-  --agent-coord:    #CE8256;   /* 协调 = 品牌强调色 */
+  --agent-coord:    #7c6af2;   /* 协调 = 品牌强调色（紫罗兰）*/
   --agent-plan:     #C9A45E;   /* 规划 = 金 */
   --agent-diag:     #A98CDD;   /* 诊断 = 紫 */
   --agent-gen:      #6E9BD9;   /* 生成 = 蓝 */
@@ -423,15 +419,15 @@
 
   /* ── 2.12 渐变（低对比、无彩色光污染）── */
   /* 主渐变 = 实底色（承载白字），由 --color-accent-solid → 其按下态 */
-  --gradient-primary: linear-gradient(135deg, #9C5F35 0%, #8A5230 100%);
+  --gradient-primary: linear-gradient(135deg, #8b7bf5 0%, #6b5cdb 100%);
   --gradient-card:    linear-gradient(180deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0.008) 100%);
-  --gradient-text:    linear-gradient(135deg, #E6E9ED 0%, #CE8256 100%);
-  --gradient-hero:    radial-gradient(ellipse 600px 400px at 30% 30%, rgba(206, 130, 86, 0.09) 0%, transparent 70%),
+  --gradient-text:    linear-gradient(135deg, #E6E9ED 0%, #a99ff7 100%);
+  --gradient-hero:    radial-gradient(ellipse 600px 400px at 30% 30%, rgba(124, 106, 242, 0.10) 0%, transparent 70%),
                       radial-gradient(ellipse 500px 300px at 70% 60%, rgba(94, 147, 196, 0.06) 0%, transparent 70%);
-  --gradient-sidebar: linear-gradient(180deg, rgba(206, 130, 86, 0.03) 0%, transparent 40%);
-  --gradient-border:  linear-gradient(135deg, rgba(206, 130, 86, 0.22), rgba(110, 155, 217, 0.14));
-  --gradient-progress: linear-gradient(90deg, #CE8256, #D99168);
-  --gradient-warm:    linear-gradient(135deg, #DCA03C 0%, #CE8256 100%);
+  --gradient-sidebar: linear-gradient(180deg, rgba(124, 106, 242, 0.04) 0%, transparent 40%);
+  --gradient-border:  linear-gradient(135deg, rgba(124, 106, 242, 0.22), rgba(110, 155, 217, 0.14));
+  --gradient-progress: linear-gradient(90deg, #7c6af2, #6b5cdb);
+  --gradient-warm:    linear-gradient(135deg, #DCA03C 0%, #C2620E 100%);
   --gradient-hero-veil: linear-gradient(180deg, rgba(14, 18, 23, 0) 0%, rgba(14, 18, 23, 0.85) 100%);
 
   /* ── 2.13 视觉杂项 ── */
@@ -471,8 +467,8 @@
   --color-border:        rgba(16, 20, 26, 0.11);
   --color-border-light:  rgba(16, 20, 26, 0.06);
   --color-border-strong: rgba(16, 20, 26, 0.20);
-  --color-border-focus:  rgba(158, 90, 48, 0.55);
-  --color-border-glow:   rgba(158, 90, 48, 0.24);
+  --color-border-focus:  rgba(107, 92, 219, 0.55);
+  --color-border-glow:   rgba(107, 92, 219, 0.24);
 
   /* ── 3.4 文本层级 ── */
   --color-text:          #16191D;   /* 17.6:1 */
@@ -483,19 +479,18 @@
   --color-text-on-accent:#FFFFFF;
 
   /* ── 3.5 强调色 ── */
-  --color-accent:        #9E5A30;   /* HSL 23/53/40 — 对白 5.3:1 */
-  --color-accent-hover:  #8A4C26;
-  --color-accent-active: #7A4322;
-  --color-accent-text:   #9E5A30;
-  /* 浅色主题无"墨色/实底"冲突：#9E5A30 对白底 5.30:1，白字在其上亦 5.30:1，
-     故 solid 三态直接指向 ink 三态，保持单一色调。 */
-  --color-accent-solid:        #9E5A30;
-  --color-accent-solid-hover:  #8A4C26;
-  --color-accent-solid-active: #7A4322;
-  --color-accent-subtle: rgba(158, 90, 48, 0.10);
-  --color-accent-border: rgba(158, 90, 48, 0.35);
-  --accent-rgb:          158, 90, 48;
-  --accent-solid-rgb:    158, 90, 48;
+  --color-accent:        #6b5cdb;   /* 紫罗兰（浅底文字/图标/描边/焦点环）· 对白过 WCAG AA */
+  --color-accent-hover:  #7c6af2;
+  --color-accent-active: #5a4cc4;
+  --color-accent-text:   #6b5cdb;
+  /* 浅色主题下实底同样用深紫 #6b5cdb 承载白字，三态指向同一色调。 */
+  --color-accent-solid:        #6b5cdb;
+  --color-accent-solid-hover:  #7c6af2;
+  --color-accent-solid-active: #5a4cc4;
+  --color-accent-subtle: rgba(107, 92, 219, 0.10);
+  --color-accent-border: rgba(107, 92, 219, 0.35);
+  --accent-rgb:          107, 92, 219;
+  --accent-solid-rgb:    107, 92, 219;
 
   /* ── 3.6 语义色 ── */
   --color-success:        #2F7D4F;
@@ -526,7 +521,7 @@
   --subject-os-rgb:  178, 71, 127;
 
   /* ── 3.8 多智能体 / 流程可视化色 · 浅色覆盖 ── */
-  --agent-coord:    #9E5A30;
+  --agent-coord:    #6b5cdb;   /* 协调 = 品牌强调色（紫罗兰，浅色主题）*/
   --agent-plan:     #8A6A1F;
   --agent-diag:     #6B52B8;
   --agent-gen:      #2F6BB8;
@@ -586,15 +581,15 @@
   --shadow-edge:       14px 0 36px -18px rgba(16, 20, 26, 0.16);
 
   /* ── 3.12 渐变 · 浅色覆盖 ── */
-  --gradient-primary: linear-gradient(135deg, #9E5A30 0%, #7A4322 100%);
+  --gradient-primary: linear-gradient(135deg, #7c6af2 0%, #6b5cdb 100%);
   --gradient-card:    linear-gradient(180deg, rgba(16, 20, 26, 0.015) 0%, rgba(16, 20, 26, 0.005) 100%);
-  --gradient-text:    linear-gradient(135deg, #16191D 0%, #9E5A30 100%);
-  --gradient-hero:    radial-gradient(ellipse 600px 400px at 30% 30%, rgba(158, 90, 48, 0.07) 0%, transparent 70%),
+  --gradient-text:    linear-gradient(135deg, #16191D 0%, #6b5cdb 100%);
+  --gradient-hero:    radial-gradient(ellipse 600px 400px at 30% 30%, rgba(107, 92, 219, 0.08) 0%, transparent 70%),
                       radial-gradient(ellipse 500px 300px at 70% 60%, rgba(47, 109, 168, 0.05) 0%, transparent 70%);
-  --gradient-sidebar: linear-gradient(180deg, rgba(158, 90, 48, 0.025) 0%, transparent 40%);
-  --gradient-border:  linear-gradient(135deg, rgba(158, 90, 48, 0.24), rgba(47, 107, 184, 0.14));
-  --gradient-progress: linear-gradient(90deg, #9E5A30, #8A4C26);
-  --gradient-warm:    linear-gradient(135deg, #8A6210 0%, #9E5A30 100%);
+  --gradient-sidebar: linear-gradient(180deg, rgba(107, 92, 219, 0.03) 0%, transparent 40%);
+  --gradient-border:  linear-gradient(135deg, rgba(107, 92, 219, 0.24), rgba(47, 107, 184, 0.14));
+  --gradient-progress: linear-gradient(90deg, #7c6af2, #6b5cdb);
+  --gradient-warm:    linear-gradient(135deg, #B45309 0%, #C2620E 100%);
   --gradient-hero-veil: linear-gradient(180deg, rgba(245, 246, 247, 0) 0%, rgba(245, 246, 247, 0.90) 100%);
 
   /* ── 3.13 视觉杂项 · 浅色覆盖 ── */
