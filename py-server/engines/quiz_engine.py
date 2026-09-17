@@ -9,8 +9,15 @@
 
 import json
 import logging
+import threading
+import time
 from typing import Optional
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
+
+try:
+    from db.redis_client import redis_client  # 薄弱点共享持久化（可选，不可用则内存回退）
+except Exception:  # pragma: no cover - 仅在依赖缺失时触发
+    redis_client = None
 
 logger = logging.getLogger("netlearn.quiz_engine")
 
@@ -346,36 +353,92 @@ class ErrorAnalyzer:
 # ── 薄弱点追踪器 ──
 
 class WeakPointTracker:
-    """薄弱点追踪：记录错因 → 优先出同类题 → 闭环追踪"""
+    """薄弱点追踪：记录错因 → 优先出同类题 → 闭环追踪
+
+    P1-4 修复（2026-09-17）：原实现是**进程内全局 dict**——无锁、不跨 worker、
+    进程重启即丢失。后果：多 worker 部署下同一用户状态分裂，"错因→优先出同类题"
+    的闭环承诺随进程生命周期断裂；重启后历史错因全部清零。
+
+    现改为：
+      - `threading.RLock` 保护进程内并发读写（修复无锁竞态）；
+      - Redis（若启用）做**跨 worker / 跨重启的共享持久化**：按用户存一份 JSON，
+        TTL 30 天；多 worker 读同一份数据，重启不丢；
+      - Redis 不可用时**回退进程内缓存**，保持开发环境无 Redis 也能正常工作。
+    """
+
+    _REDIS_TTL = 60 * 60 * 24 * 30  # 30 天
 
     def __init__(self):
         self._weak_points: dict[str, WeakPoint] = {}
+        self._lock = threading.RLock()
+
+    # ── 存储辅助 ──
+    @staticmethod
+    def _redis_key(user_id: str) -> str:
+        return f"netlearn:weakpoints:{user_id}"
+
+    def _redis_enabled(self) -> bool:
+        return redis_client is not None and getattr(redis_client, "is_enabled", False)
+
+    def _load_user(self, user_id: str) -> dict[str, WeakPoint]:
+        """载入某用户的全部薄弱点（Redis 优先，否则回退进程内缓存）。"""
+        if self._redis_enabled():
+            data = redis_client.get_json(self._redis_key(user_id)) or {}
+            out: dict[str, WeakPoint] = {}
+            for k, v in data.items():
+                try:
+                    out[k] = WeakPoint(**v)
+                except Exception:
+                    continue  # 跳过脏数据，不因单条损坏拖垮整次读取
+            return out
+        return {k: wp for k, wp in self._weak_points.items() if k.startswith(f"{user_id}:")}
+
+    def _save_user(self, user_id: str, wps: dict[str, WeakPoint]):
+        """写回某用户的全部薄弱点（Redis 优先，否则回退进程内缓存）。"""
+        if self._redis_enabled():
+            redis_client.set_json(
+                self._redis_key(user_id),
+                {k: asdict(wp) for k, wp in wps.items()},
+                self._REDIS_TTL,
+            )
+        else:
+            for k, wp in wps.items():
+                self._weak_points[k] = wp
 
     def record_error(self, question: StepQuestion, step_results: list[StepResult], user_id: str):
         """记录答题错误到薄弱点"""
         key_prefix = f"{user_id}:{question.subject}:{question.chapter}"
+        now = time.strftime("%Y-%m-%dT%H:%M:%S")
 
-        for step in step_results:
-            if not step.correct and step.error_type:
-                concept = question.error_type_map.get(step.error_type, f"{question.chapter}_{step.step_name}")
-                wp_key = f"{key_prefix}:{concept}"
+        with self._lock:
+            wps = self._load_user(user_id)
+            for step in step_results:
+                if not step.correct and step.error_type:
+                    concept = question.error_type_map.get(step.error_type, f"{question.chapter}_{step.step_name}")
+                    wp_key = f"{key_prefix}:{concept}"
 
-                if wp_key in self._weak_points:
-                    self._weak_points[wp_key].count += 1
-                else:
-                    self._weak_points[wp_key] = WeakPoint(
-                        subject=question.subject,
-                        chapter=question.chapter,
-                        concept=concept,
-                        error_type=step.error_type,
-                        count=1,
-                    )
+                    if wp_key in wps:
+                        wps[wp_key].count += 1
+                        wps[wp_key].last_wrong = now
+                    else:
+                        wps[wp_key] = WeakPoint(
+                            subject=question.subject,
+                            chapter=question.chapter,
+                            concept=concept,
+                            error_type=step.error_type,
+                            count=1,
+                            last_wrong=now,
+                        )
+            self._save_user(user_id, wps)
 
     def get_weak_topics(self, user_id: str, subject: str = "", top_n: int = 5) -> list[WeakPoint]:
         """获取用户薄弱知识点排名"""
+        with self._lock:
+            wps = self._load_user(user_id)
+
         results = []
-        for key, wp in self._weak_points.items():
-            if key.startswith(f"{user_id}:{subject}") if subject else key.startswith(user_id):
+        for key, wp in wps.items():
+            if (key.startswith(f"{user_id}:{subject}") if subject else key.startswith(f"{user_id}:")):
                 if not wp.mastered:
                     results.append(wp)
 
@@ -384,10 +447,13 @@ class WeakPointTracker:
 
     def mark_mastered(self, user_id: str, subject: str, chapter: str, concept: str):
         """标记知识点已掌握"""
-        for key, wp in self._weak_points.items():
-            if key.startswith(f"{user_id}:{subject}:{chapter}") and wp.concept == concept:
-                wp.mastered = True
-                break
+        with self._lock:
+            wps = self._load_user(user_id)
+            for key, wp in wps.items():
+                if key.startswith(f"{user_id}:{subject}:{chapter}") and wp.concept == concept:
+                    wp.mastered = True
+                    break
+            self._save_user(user_id, wps)
 
     def get_recommended_questions(self, user_id: str, subject: str = "", top_n: int = 3) -> list[str]:
         """根据薄弱点推荐题目ID"""
