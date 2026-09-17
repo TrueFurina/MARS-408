@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """只跑 benchmark 实验2: NeuralMixer vs 加权投票（不依赖向量库）
 
-验证申报书数字可复现:
-  - NeuralMixer Top-1 vs 加权投票 Top-1 (期望 +6.7pp 绝对 / +8.7% 相对)
-  - Kappa(NM↔真值) (期望 0.776)
+验证申报书数字可复现（以当前发布权重 neural_mixer_trained.pt 为准）:
+  - NeuralMixer Top-1 vs 加权投票 Top-1 (当前发布权重期望 0.8889 / +12.2pp 绝对 / +15.9% 相对)
+  - Kappa(NM↔真值) (期望 0.851)
+  - 注: Aug-15 权重快照 (neural_mixer_trained.pt.bak-2026-08-15) 历史测得 0.8333 / +6.7pp / +8.7% / Kappa 0.776
 
 用法: cd py-server && HUGGINGFACE_OFFLINE=1 python experiments/benchmark_exp2_only.py
 """
@@ -55,11 +56,11 @@ def main():
     print(f"{'='*70}")
     print(f"{'指标':<28}{'申报书':<16}{'本次复现':<16}{'是否吻合'}")
     print(f"{'-'*70}")
-    print(f"{'NeuralMixer Top-1':<28}{'0.8333':<16}{nm_acc:<16.4f}{'✅' if abs(nm_acc-0.8333)<0.05 else '⚠️'}")
+    print(f"{'NeuralMixer Top-1':<28}{'0.8889':<16}{nm_acc:<16.4f}{'✅' if abs(nm_acc-0.8889)<0.05 else '⚠️'}")
     print(f"{'加权投票 Top-1':<28}{'0.7667':<16}{wv_acc:<16.4f}{'✅' if abs(wv_acc-0.7667)<0.05 else '⚠️'}")
-    print(f"{'绝对提升 (pp)':<28}{'+6.7pp':<16}{f'+{delta_abs*100:.1f}pp':<16}{'✅' if abs(delta_abs-0.067)<0.03 else '⚠️'}")
-    print(f"{'相对提升 (%)':<28}{'+8.7%':<16}{f'+{delta_rel:.1f}%':<16}{'✅' if abs(delta_rel-8.7)<3 else '⚠️'}")
-    print(f"{'Kappa(NM↔真值)':<28}{'0.776':<16}{k['neural_vs_truth']:<16.4f}{'✅' if abs(k['neural_vs_truth']-0.776)<0.1 else '⚠️'}")
+    print(f"{'绝对提升 (pp)':<28}{'+12.2pp':<16}{f'+{delta_abs*100:.1f}pp':<16}{'✅' if abs(delta_abs-0.122)<0.03 else '⚠️'}")
+    print(f"{'相对提升 (%)':<28}{'+15.9%':<16}{f'+{delta_rel:.1f}%':<16}{'✅' if abs(delta_rel-15.9)<3 else '⚠️'}")
+    print(f"{'Kappa(NM↔真值)':<28}{'0.851':<16}{k['neural_vs_truth']:<16.4f}{'✅' if abs(k['neural_vs_truth']-0.851)<0.1 else '⚠️'}")
     print(f"{'Kappa(NM↔投票)':<28}{'—':<16}{k['neural_vs_voting']:<16.4f}{'—'}")
     print(f"{'Kappa(投票↔真值)':<28}{'—':<16}{k['voting_vs_truth']:<16.4f}{'—'}")
     print(f"{'权重匹配':<28}{'—':<16}{s['neural_mixer']['weights_matched']:<16}{'—'}")
@@ -83,16 +84,21 @@ def main():
         },
         "summary": s,
         "reproduce_check": {
-            "申报书_NeuralMixer_Top1": 0.8333,
+            "申报书_NeuralMixer_Top1": 0.8889,
             "本次_NeuralMixer_Top1": nm_acc,
             "申报书_加权投票_Top1": 0.7667,
             "本次_加权投票_Top1": wv_acc,
-            "申报书_绝对提升_pp": 6.7,
+            "申报书_绝对提升_pp": 12.2,
             "本次_绝对提升_pp": round(delta_abs * 100, 1),
-            "申报书_相对提升_pct": 8.7,
+            "申报书_相对提升_pct": 15.9,
             "本次_相对提升_pct": round(delta_rel, 1),
-            "申报书_Kappa_NM_真值": 0.776,
+            "申报书_Kappa_NM_真值": 0.851,
             "本次_Kappa_NM_真值": k["neural_vs_truth"],
+            "Aug15快照_NeuralMixer_Top1": 0.8333,
+            "Aug15快照_绝对提升_pp": 6.7,
+            "Aug15快照_相对提升_pct": 8.7,
+            "Aug15快照_Kappa_NM_真值": 0.776,
+            "Aug15快照权重文件": "models/neural_mixer_trained.pt.bak-2026-08-15",
         },
         "per_question": exp2["per_question"],
     }

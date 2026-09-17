@@ -111,12 +111,12 @@ def main():
     print(f"Kappa(NM↔投票)    : {r['k_nm_wv']:.4f}")
     print(f"Kappa(投票↔真值)  : {r['k_wv_tr']:.4f}")
     print(f"{'='*70}")
-    print(f"\n对照锁定基准 (neural_mixer_trained.pt 7-11版):")
-    print(f"  NeuralMixer Top-1 = 0.8333, +6.7pp/+8.7% vs 投票, Kappa=0.776")
-    if r['nm_acc'] > 0.8333 + 1e-9:
-        print(f"  ✅ v2 准确率高于锁定基准 (+{(r['nm_acc']-0.8333)*100:.1f}pp)")
+    print(f"\n对照锁定基准 (当前发布权重 neural_mixer_trained.pt):")
+    print(f"  NeuralMixer Top-1 = 0.8889, +12.2pp/+15.9% vs 投票, Kappa=0.851（Aug-15 快照历史值 0.8333/+8.7%）")
+    if r['nm_acc'] > 0.8889 + 1e-9:
+        print(f"  ✅ v2 准确率高于锁定基准 (+{(r['nm_acc']-0.8889)*100:.1f}pp)")
     else:
-        print(f"  ⚠️ v2 准确率未超过锁定基准 (差 {(r['nm_acc']-0.8333)*100:+.1f}pp) — 符合诚实预期(合成标签天花板)")
+        print(f"  ⚠️ v2 准确率未超过锁定基准 (差 {(r['nm_acc']-0.8889)*100:+.1f}pp) — 符合诚实预期(合成标签天花板)")
 
 
 if __name__ == "__main__":
