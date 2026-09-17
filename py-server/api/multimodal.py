@@ -103,7 +103,7 @@ async def _generate_ppt(req: GenerationRequest) -> dict:
     content, _ = await audit_output(content, "multimodal/generate/ppt")
 
     # 解析PPT大纲为结构化数据
-    slides = _parse_ppt_slides(content)
+    slides = _parse_ppt_slides(content, req.topic)
 
     # 生成真实 .pptx 文件（赛题多模态硬性要求：原仅返回大纲结构）
     # build_pptx 为同步 CPU 密集调用（python-pptx），在 async 端点内必须以线程池执行，
@@ -241,8 +241,12 @@ async def _generate_mindmap(req: GenerationRequest) -> dict:
     }
 
 
-def _parse_ppt_slides(content: str) -> list[dict]:
-    """解析PPT大纲为幻灯片列表"""
+def _parse_ppt_slides(content: str, topic: str = "") -> list[dict]:
+    """解析PPT大纲为幻灯片列表
+
+    topic 用于解析结果为空时填充默认标题。此前此处引用了未定义的 req_topic，
+    一旦 LLM 未返回标题即抛 NameError → 500（已修复）。
+    """
     slides = []
     current_slide = None
 
@@ -261,7 +265,7 @@ def _parse_ppt_slides(content: str) -> list[dict]:
     if current_slide:
         slides.append(current_slide)
 
-    return slides if slides else [{"title": req_topic, "content": ["默认内容"]}]
+    return slides if slides else [{"title": topic or "默认标题", "content": ["默认内容"]}]
 
 
 def _parse_video_scenes(content: str) -> list[dict]:
@@ -438,7 +442,10 @@ async def generate_narrated_video_endpoint(
     if not is_ffmpeg_available():
         raise HTTPException(status_code=503, detail="FFmpeg 不可用，无法生成视频")
 
-    video_path = generate_narrated_video(
+    # 同步阻塞调用（内部 subprocess.run timeout=300），必须丢线程池执行，
+    # 否则单个请求即可阻塞事件循环最长 300s，造成全站假性宕机（P1-1 可用性）。
+    video_path = await asyncio.to_thread(
+        generate_narrated_video,
         text=req.text,
         language=req.language,
         bg_image=req.bg_image,
@@ -482,7 +489,9 @@ async def _generate_narrated_video(req: GenerationRequest) -> dict:
     # P1-7：输出内容安全审核
     lecture_text, _ = await audit_output(lecture_text, "multimodal/generate/narrated_video")
 
-    video_path = generate_narrated_video(
+    # 同上：同步阻塞调用，丢线程池执行（P1-1）。
+    video_path = await asyncio.to_thread(
+        generate_narrated_video,
         text=lecture_text,
         language="zh",
         speed=1.0,

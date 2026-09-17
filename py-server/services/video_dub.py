@@ -12,6 +12,7 @@
 
 import io
 import os
+import re
 import json
 import logging
 import tempfile
@@ -29,6 +30,36 @@ os.makedirs(BG_DIR, exist_ok=True)
 # 输出目录
 OUTPUT_DIR = Path(__file__).parent.parent / "media" / "videos"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+
+def _safe_bg_path(bg_image: Optional[str]) -> Optional[str]:
+    """校验用户提供的背景图路径，防任意文件读（P1-2）。
+
+    背景图最终作为 FFmpeg 的 `-i` 输入，若直接透传用户可控路径，
+    即可让 FFmpeg 去读服务器上的任意文件。规则：
+      - 仅允许 BG_DIR 目录下的文件（按 basename 解析，剥离任何目录成分，
+        使 "../"、绝对路径等穿越写法均失效）；
+      - 文件名需符合白名单字符；
+      - 用 realpath 确认解析结果仍落在 BG_DIR 内；
+      - 不存在或越界一律返回 None（调用方回落默认背景）。
+    """
+    if not bg_image or not isinstance(bg_image, str):
+        return None
+    name = os.path.basename(bg_image.replace("\\", "/").strip())
+    if not name or name in (".", ".."):
+        return None
+    if not re.fullmatch(r"[A-Za-z0-9_\-\.]+", name):
+        logger.warning("背景图文件名含非法字符被拦截: %r", bg_image)
+        return None
+    candidate = os.path.realpath(BG_DIR / name)
+    base = os.path.realpath(BG_DIR)
+    if not candidate.startswith(base + os.sep):
+        logger.warning("背景图路径越界被拦截: %r", bg_image)
+        return None
+    if not os.path.exists(candidate):
+        logger.warning("背景图不存在，回落默认背景: %r", bg_image)
+        return None
+    return candidate
 
 
 def _create_default_bg():
@@ -140,7 +171,7 @@ def generate_narrated_video(
             f.write(srt_content)
 
         # 4. 准备背景图
-        bg = bg_image or str(BG_DIR / "default_bg.png")
+        bg = _safe_bg_path(bg_image) or str(BG_DIR / "default_bg.png")
         if not os.path.exists(bg):
             bg = _create_default_bg()
         if bg is None or not os.path.exists(bg):
