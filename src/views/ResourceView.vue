@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useStudyStore } from '@/stores/studyStore'
 import { api } from '@/utils/api'
-import { ttsSynthesize } from '@/utils/api'
+import { ttsSynthesize, friendlyError } from '@/utils/api'
 import { icons } from '@/components/icons'
 import { renderMarkdownSafe } from '@/utils/markdown'
 import { defineAsyncComponent } from 'vue'
@@ -93,6 +93,10 @@ const videoLoading = ref(false)
 const teachingVideoHtml = ref<string | null>(null)
 const teachingVideoLoading = ref(false)
 const showTeachingVideo = ref(false)
+// ── 视频生成错误（P1-11：替代阻塞式 alert，走项目统一 friendlyError 体系）──
+const videoError = ref('')
+// ── PPT 产物对象（P1-10a：独立 ref 消除 as any 类型谎言）──
+const pptFileObj = ref<{ url: string; filename: string; slide_count: number } | null>(null)
 
 // ── TTS 语音朗读 ──
 const speakingText = ref<string | null>(null)
@@ -184,7 +188,7 @@ async function generateNarratedVideo() {
     if (!ok) {
       let detail = ''
       try { detail = JSON.parse(await blob.text()).detail || '' } catch { /* 非 JSON 响应 */ }
-      alert('视频生成失败: ' + (detail || `HTTP ${status}`))
+      videoError.value = friendlyError(new Error('视频生成失败: ' + (detail || `HTTP ${status}`)), '视频生成失败')
       return
     }
     // 下载视频
@@ -195,7 +199,7 @@ async function generateNarratedVideo() {
     a.click()
     URL.revokeObjectURL(a.href)
   } catch (e) {
-    alert('视频生成失败: ' + (e instanceof Error ? e.message : '未知错误'))
+    videoError.value = friendlyError(e, '视频生成失败')
   } finally {
     videoLoading.value = false
   }
@@ -215,7 +219,7 @@ async function generateTeachingVideo() {
       showTeachingVideo.value = true
     }
   } catch (e: any) {
-    alert('教学视频生成失败: ' + (e?.message || '未知错误'))
+    videoError.value = friendlyError(e, '教学视频生成失败')
   } finally {
     teachingVideoLoading.value = false
   }
@@ -444,7 +448,7 @@ const stageMap: Record<string, number> = {
             const agentName = evt.field as string
             // ppt_file 推送的是 JSON（真实 .pptx 文件信息），单独解析为对象
             if (agentName === 'ppt_file') {
-              try { (agentOutputs.value as any).ppt_file_obj = JSON.parse(evt.content) } catch { /* 忽略解析失败 */ }
+              try { pptFileObj.value = JSON.parse(evt.content) } catch { /* 忽略解析失败 */ }
             } else {
               agentOutputs.value[agentName] = evt.content
               const displayName = contentAgentMap[agentName]
@@ -501,7 +505,7 @@ const stageMap: Record<string, number> = {
         code_practice: agentOutputs.value.code_practice || '',
         ppt_outline: agentOutputs.value.ppt_outline || '',
         video_script: agentOutputs.value.video_script || '',
-        ppt_file: (agentOutputs.value as any).ppt_file_obj || null,
+        ppt_file: pptFileObj.value || null,
         evidence_report: evidenceReport.value,
         status: 'ok',
       }
@@ -1014,6 +1018,7 @@ function parseWeakPoints(wpStr: string): string[] {
             讯飞TTI+TTS多模态生成 | MeloTTS+FFmpeg配音视频 | 零API成本程序化合成
           </span>
         </div>
+        <div v-if="videoError" class="engine-error rv-mm-error">{{ videoError }}</div>
 
         <!-- 程序化教学视频播放器 -->
         <VideoPlayer

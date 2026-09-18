@@ -21,7 +21,9 @@ export interface StudentProfile {
   exam_target?: string            // 目标院校/分数
   study_frequency?: string        // 学习频率（每天/隔天/周末）
   resource_preference?: string    // 资源偏好（视频/图文/代码/交互）
-  [key: string]: unknown
+  // ── 以下为 ProfilePanel 实际消费、此前靠索引签名掩盖的字段（P1-10b 收敛时补回）──
+  target_score?: string           // 目标分数（ProfilePanel「目标分数」）
+  subject_count?: string          // 报考科目数（ProfilePanel「报考科目」）
 }
 
 export interface Segment {
