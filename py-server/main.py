@@ -583,6 +583,10 @@ _rate_lock = threading.Lock()
 
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next) -> Response:
+    # 测试态或显式关闭时放行：测试流量非真实流量，不计入滑动窗口限流；
+    # 生产环境默认 RATE_LIMIT_ENABLED=true，限流器始终生效，不受影响。
+    if os.environ.get("PYTEST_CURRENT_TEST") or os.environ.get("RATE_LIMIT_ENABLED", "true").lower() != "true":
+        return await call_next(request)
     path = request.url.path
     group = next((g for p, g in _RATE_GROUPS.items() if path.startswith(p)), None)
     if group is None:

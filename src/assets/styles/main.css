@@ -48,19 +48,19 @@ select option:hover, select option:checked,
 :root { color-scheme: dark; }
 [data-theme="light"] { color-scheme: light; }
 
-html { scrollbar-width: thin; scrollbar-color: rgba(148, 163, 184, 0.32) transparent; }
-[data-theme="light"] { scrollbar-color: rgba(84, 91, 102, 0.32) transparent; }
+html { scrollbar-width: thin; scrollbar-color: rgba(var(--scrollbar-rgb), 0.32) transparent; }
+[data-theme="light"] { scrollbar-color: rgba(var(--scrollbar-rgb), 0.32) transparent; }
 
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.30);
+  background: rgba(var(--scrollbar-rgb), 0.30);
   border-radius: 999px; border: 2px solid transparent; background-clip: padding-box;
 }
-::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.50); background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: rgba(var(--scrollbar-rgb), 0.50); background-clip: padding-box; }
 ::-webkit-scrollbar-corner { background: transparent; }
-[data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(84, 91, 102, 0.28); background-clip: padding-box; }
-[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(84, 91, 102, 0.46); background-clip: padding-box; }
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(var(--scrollbar-rgb), 0.28); background-clip: padding-box; }
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(var(--scrollbar-rgb), 0.46); background-clip: padding-box; }
 
 /* ── 主滚动容器：自动隐藏滚动条（对标 SecAutoMind：悬停容器才现身）── */
 .main-content,
@@ -70,7 +70,7 @@ html { scrollbar-width: thin; scrollbar-color: rgba(148, 163, 184, 0.32) transpa
   transition: scrollbar-color 0.2s ease;
 }
 .main-content:hover,
-.sidebar-nav:hover { scrollbar-color: rgba(148, 163, 184, 0.42) transparent; }
+.sidebar-nav:hover { scrollbar-color: rgba(var(--scrollbar-rgb), 0.42) transparent; }
 .main-content::-webkit-scrollbar,
 .sidebar-nav::-webkit-scrollbar { width: 8px; height: 8px; }
 .main-content::-webkit-scrollbar-thumb,
@@ -80,11 +80,11 @@ html { scrollbar-width: thin; scrollbar-color: rgba(148, 163, 184, 0.32) transpa
 }
 .main-content:hover::-webkit-scrollbar-thumb,
 .sidebar-nav:hover::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.42); background-clip: padding-box;
+  background: rgba(var(--scrollbar-rgb), 0.42); background-clip: padding-box;
 }
 [data-theme="light"] .main-content:hover::-webkit-scrollbar-thumb,
 [data-theme="light"] .sidebar-nav:hover::-webkit-scrollbar-thumb {
-  background: rgba(84, 91, 102, 0.40); background-clip: padding-box;
+  background: rgba(var(--scrollbar-rgb), 0.40); background-clip: padding-box;
 }
 
 /* ── 文本选中 & 自动填充（修复深色下原生黄底/白底）────────────────── */

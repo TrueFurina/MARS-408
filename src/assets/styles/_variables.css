@@ -293,6 +293,7 @@
   --color-accent-subtle: rgba(124, 106, 242, 0.14);  /* 强调色淡底（选中态）*/
   --color-accent-border: rgba(124, 106, 242, 0.35);
   --accent-rgb:          124, 106, 242;              /* 供 rgba(var(--accent-rgb), α) 使用 */
+  --scrollbar-rgb:       148, 163, 184;              /* 滚动条滑块（深色主题·slate-400 中性铬）*/
   --accent-solid-rgb:    107, 92, 219;
 
   /* ── 2.6 语义色 ── */
@@ -490,6 +491,7 @@
   --color-accent-subtle: rgba(107, 92, 219, 0.10);
   --color-accent-border: rgba(107, 92, 219, 0.35);
   --accent-rgb:          107, 92, 219;
+  --scrollbar-rgb:       84, 91, 102;                /* 滚动条滑块（浅色主题·slate-500 中性铬）*/
   --accent-solid-rgb:    107, 92, 219;
 
   /* ── 3.6 语义色 ── */

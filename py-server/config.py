@@ -460,6 +460,7 @@ def _apply_env_overrides(config: dict) -> None:
         "QWEN_API_KEY": ("qwen", "api_key"),
         "QWEN_BASE_URL": ("qwen", "base_url"),
         "QWEN_MODEL": ("qwen", "model"),
+        "LLM_PROVIDER": ("", "llm_provider"),  # 顶层键：环境变量覆盖主通道（auto|deepseek|xfyun|qwen）
         "TAVILY_API_KEY": ("tavily", "api_key"),
         "MILVUS_HOST": ("milvus", "host"),
         "MILVUS_PORT": ("milvus", "port"),
@@ -478,18 +479,22 @@ def _apply_env_overrides(config: dict) -> None:
 
     for env_key, (section, field) in env_map.items():
         val = os.environ.get(env_key)
-        if val is not None:
-            # 处理布尔类型转换
-            if field in ("enabled",) and val.lower() in ("true", "false", "1", "0"):
-                val = val.lower() in ("true", "1")
-            # 处理数字类型转换
-            if field in ("port",):
-                try:
-                    val = int(val)
-                except ValueError:
-                    continue
-            if section in config:
-                config[section][field] = val
+        if val is None:
+            continue
+        # 处理布尔类型转换
+        if field in ("enabled",) and val.lower() in ("true", "false", "1", "0"):
+            val = val.lower() in ("true", "1")
+        # 处理数字类型转换
+        if field in ("port",):
+            try:
+                val = int(val)
+            except ValueError:
+                continue
+        if section == "":
+            # 顶层键（如 llm_provider）直接写入 config 根
+            config[field] = val
+        elif section in config:
+            config[section][field] = val
 
 
 def _apply_xfyun_preset(config: dict) -> None:
