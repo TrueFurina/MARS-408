@@ -195,11 +195,18 @@ uvicorn `--workers 1` 下 sync 阻塞会串行化所有请求：
 
 ### Prompt Guard（`shared/prompt_guard.py`）
 
-指令注入检测使用**单一 injection-verb-gated 正则**：
+指令注入检测使用 **9 条注入模式**（`shared/prompt_guard.py:_INJECTION_PATTERNS`），并非单一正则：
 ```
-(new|updated)\s+instructions?\s*[:：]\s*(ignore|disregard|forget|override|you are|...)
+# 动词门控类（instructions 后需紧跟越权动词，避免误伤正常提问）
+ignore|disregard|forget|override ... (previous|prior|above) instructions
+(new|updated) instructions: <ignore|disregard|you are|...|忽略|忘记|覆盖>
+# 无动词类（按固定标记/锚点匹配，低误报，有意保留）
+you are/will be now a/an   # 角色伪造
+developer mode             # 越权请求
+jail break                # 越权请求
+(^|\n) system:            # 伪造系统提示（仅行首锚点，不误伤 "operating system:"）
 ```
-只有 `instructions:` 后紧跟越权动词才触发。**不要退化为无动词匹配**——会误伤 "updated instructions: 请解释TCP" 等正常提问。
+动词门控规则避免误伤 "updated instructions: 请解释TCP" 等正常学术提问；无动词规则（developer mode / jail break / "you are now a" / 行首 `system:`）为**有意保留**的低误报标记，`system:` 用行首锚点规避 "operating system:" 等正常表述。
 
 ### GOMARL 冲突检测
 

@@ -161,7 +161,11 @@ def resolve_debate_review_weights(
             "status": getattr(consensus, "status", "none"),
         }
         feats = review_state_features(consensus=c, state=state or {})
-        d = decide_review_weight(feats, use_mappo=True)
+        # 口径对齐点B(quality_gate.py:158-159)：本作用域仅有 consensus、无 evidence。
+        # 解析分支(analytic)需 evidence 与 consensus 同时非空才会命中，故点A 永远只走
+        # MAPPO/规则路径（不做解析式）——属设计预期非缺陷。仅透传 consensus 保持签名一致；
+        # evidence 不在辩论解析作用域内，无法透传。
+        d = decide_review_weight(feats, use_mappo=True, consensus=c)
         w = d.get("weights")
         if not isinstance(w, dict) or not w:
             return None, ""

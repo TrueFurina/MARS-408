@@ -10,6 +10,7 @@ import os
 import sys
 import signal
 import logging
+import subprocess
 
 from fastapi import APIRouter, Depends, Request
 from models import SandboxRequest, SandboxResponse
@@ -37,6 +38,24 @@ def _kill_proc_group(proc) -> None:
         proc.kill()
     except Exception:
         pass
+
+def _run_blocking_proc(argv: list, timeout: int):
+    """同步执行兜底（仅当 asyncio 子进程不可用时），在 asyncio.to_thread 中运行以免阻塞事件循环。
+
+    返回 (out, err, returncode)。超时则击杀进程组后抛出 subprocess.TimeoutExpired。
+    start_new_session 仅 POSIX 生效（Windows 不支持该参数，由 _kill_proc_group 回退 proc.kill）。
+    """
+    popen_kwargs = {"start_new_session": True} if os.name == "posix" else {}
+    proc = subprocess.Popen(
+        argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, **popen_kwargs
+    )
+    try:
+        out, err = proc.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        _kill_proc_group(proc)
+        raise
+    return out, err, proc.returncode
+
 
 # 沙箱安全：拦截危险模块的代码前缀
 SANDBOX_PREFIX = """
@@ -196,6 +215,7 @@ async def sandbox_run(req: SandboxRequest, user: dict = Depends(require_admin), 
                 )
                 out = out_bytes.decode("utf-8", errors="replace") if out_bytes else ""
                 err = err_bytes.decode("utf-8", errors="replace") if err_bytes else ""
+                proc_returncode = proc.returncode
             except asyncio.TimeoutError:
                 _kill_proc_group(proc)
                 try:
@@ -205,30 +225,29 @@ async def sandbox_run(req: SandboxRequest, user: dict = Depends(require_admin), 
                 log_event("sandbox_exec", user_id=user["user_id"], ip=ip, result="timeout", detail=f"timeout={timeout_sec}s")
                 return SandboxResponse(output="", error=f"执行超时（{timeout_sec}秒）", status="timeout")
         except Exception:
+            # asyncio 子进程不可用（如部分 Windows 配置）→ 同步兜底，经 to_thread 不阻塞事件循环
             try:
-                proc = subprocess.Popen(
-                    [sys.executable, tmpfile],
-                    stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                    text=True, start_new_session=True,
+                out, err, rc = await asyncio.to_thread(
+                    _run_blocking_proc, [sys.executable, tmpfile], timeout_sec
                 )
-                out, err = proc.communicate(timeout=timeout_sec)
+                proc_returncode = rc
             except subprocess.TimeoutExpired:
-                _kill_proc_group(proc)
+                # _run_blocking_proc 已在超时分支内击杀进程组
                 try:
                     os.unlink(tmpfile)
                 except Exception:
                     pass
                 log_event("sandbox_exec", user_id=user["user_id"], ip=ip, result="timeout", detail=f"timeout={timeout_sec}s")
                 return SandboxResponse(output="", error=f"执行超时（{timeout_sec}秒）", status="timeout")
-        status = "ok" if proc.returncode == 0 else "error"
-        log_event("sandbox_exec", user_id=user["user_id"], ip=ip, result=status, detail=f"exit_code={proc.returncode}")
+        status = "ok" if proc_returncode == 0 else "error"
+        log_event("sandbox_exec", user_id=user["user_id"], ip=ip, result=status, detail=f"exit_code={proc_returncode}")
 
         # L1/L2/L3 三层学情记忆联动（低侵入：沙箱执行入 L3，供代码实践轨迹追溯）
         try:
             from db import memory_store as _ms
             _ms.append_episode(user["user_id"], "sandbox_exec", {
                 "status": status,
-                "exit_code": proc.returncode,
+                "exit_code": proc_returncode,
                 "code_len": len(req.code),
             })
         except Exception as _me:
