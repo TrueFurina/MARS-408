@@ -173,3 +173,41 @@ def test_admin_endpoint_teacher_ok(admin_mod, monkeypatch):
     # 绝不返回敏感字段
     assert "password_hash" not in result
     assert "salt" not in result
+
+
+# ============================================================
+# 验证点 4（F1）：require_teacher_or_demo_open 的授权行为
+#   - teacher / admin 始终放行
+#   - 未开启演示开关时，student 抛 403（修复核心：学生无法调教师端点）
+#   - 开启 NETLEARN_DEMO_TEACHER_OPEN=1 时，student 被放行但记 [DEMO-RELAX] 警告
+# ============================================================
+
+def test_rtodo_allows_teacher():
+    out = AUTH_MOD.require_teacher_or_demo_open(user={"user_id": "t1", "role": "teacher"})
+    assert out["role"] == "teacher"
+
+
+def test_rtodo_allows_admin():
+    out = AUTH_MOD.require_teacher_or_demo_open(user={"user_id": "a1", "role": "admin"})
+    assert out["role"] == "admin"
+
+
+def test_rtodo_rejects_student_when_demo_closed(monkeypatch):
+    monkeypatch.delenv("NETLEARN_DEMO_TEACHER_OPEN", raising=False)
+    with pytest.raises(HTTPException) as exc:
+        AUTH_MOD.require_teacher_or_demo_open(user={"user_id": "s1", "role": "student"})
+    assert exc.value.status_code == 403
+
+
+def test_rtodo_allows_student_when_demo_open(monkeypatch, caplog):
+    monkeypatch.setenv("NETLEARN_DEMO_TEACHER_OPEN", "1")
+    # 撤销本模块 autouse fixture 的 logging.disable(CRITICAL)，否则 [DEMO-RELAX]
+    # 警告不会被发出、caplog 捕获不到。
+    logging.disable(logging.NOTSET)
+    import logging as _logging
+    with caplog.at_level(_logging.WARNING, logger="netlearn.auth"):
+        out = AUTH_MOD.require_teacher_or_demo_open(
+            user={"user_id": "s1", "role": "student"}, request=None
+        )
+    assert out["role"] == "student"
+    assert any("[DEMO-RELAX]" in r.message for r in caplog.records)

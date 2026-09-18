@@ -12,7 +12,7 @@ import base64
 import logging
 from typing import Optional
 
-from fastapi import Depends, HTTPException, Header
+from fastapi import Depends, HTTPException, Header, Request
 
 logger = logging.getLogger("netlearn.auth")
 
@@ -136,5 +136,44 @@ def require_teacher(user: dict = Depends(get_current_user)) -> dict:
     """
     role = user.get("role", "student")
     if role in ("admin", "teacher"):
+        return user
+    raise HTTPException(status_code=403, detail="需要教师或管理员权限")
+
+
+def _is_demo_teacher_open() -> bool:
+    """NETLEARN_DEMO_TEACHER_OPEN=1 时，教师端点权限放宽（仅演示用）。
+
+    该开关仅用于本地/演示环境让 demo 学生账号也能预览教师仪表板，
+    生产环境（NETLEARN_ENV=production）绝不应设置；放宽时会在审计日志打
+    [DEMO-RELAX] 警告，保证审计链路诚实可见。
+    """
+    return os.environ.get("NETLEARN_DEMO_TEACHER_OPEN", "") in ("1", "true", "True", "yes")
+
+
+def require_teacher_or_demo_open(
+    user: dict = Depends(get_current_user),
+    request: Request = None,
+) -> dict:
+    """FastAPI dependency: 教师端端点权限控制。
+
+    默认行为等同 require_teacher（仅 admin/teacher 放行，其余 403）。
+    若设置了 NETLEARN_DEMO_TEACHER_OPEN=1（演示开关），则允许任意已登录用户通过，
+    但向审计日志写入清晰的 [DEMO-RELAX] 警告（含用户与端点），既保留演示可用性，
+    又保证放宽行为在审计轨迹中显式可见、永不静默。
+
+    说明：演示账号 demo/demo123456 的角色为 student，因此演示环境必须打开该开关，
+    否则教师仪表板对 demo 账号不可见。生产环境严禁设置该开关。
+    """
+    role = user.get("role", "student")
+    if role in ("admin", "teacher"):
+        return user
+    if _is_demo_teacher_open():
+        path = getattr(request, "url", None)
+        path_str = str(path.path) if path is not None else "<unknown>"
+        logger.warning(
+            "[DEMO-RELAX] 教师端点 %s 权限放宽：用户 %s (role=%s) 以演示模式放行，"
+            "未校验教师角色。生产环境请勿设置 NETLEARN_DEMO_TEACHER_OPEN。",
+            path_str, user.get("user_id"), role,
+        )
         return user
     raise HTTPException(status_code=403, detail="需要教师或管理员权限")

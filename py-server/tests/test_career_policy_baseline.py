@@ -29,6 +29,10 @@ from engines.career_policy import (
 from agents.career_nodes import decide_adversary_mode
 
 
+# CTO §6.1 三门的回归基线属 P0（基线会动/有效/可复现），CI 必须每次先跑。
+pytestmark = pytest.mark.p0_regression
+
+
 # ────────────────────────────────────────────────────────────
 # a) 基线会动：规则版在合成 env 的对抗模式触发率 > 0（≥10%）
 # ────────────────────────────────────────────────────────────

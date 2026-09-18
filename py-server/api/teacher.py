@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 
 from db.llm_provider import LLMProvider
 from seed_data import SEED_KNOWLEDGE_CHUNKS, SEED_QUESTIONS, KNOWLEDGE_GRAPH
-from shared.auth import get_current_user
+from shared.auth import get_current_user, require_teacher_or_demo_open
 from services.cache import cached
 
 logger = logging.getLogger("netlearn.teacher")
@@ -19,7 +19,7 @@ router = APIRouter(prefix="/teacher", tags=["teacher"])
 
 @router.get("/students/overview")
 @cached(ttl=120)
-async def get_students_overview(user: dict = Depends(get_current_user)):
+async def get_students_overview(user: dict = Depends(require_teacher_or_demo_open)):
     """获取所有学生概览（教师仪表板）— 基于真实用户与答题历史聚合"""
     from db.user_store import list_all_users, get_quiz_history
     from datetime import datetime, timedelta
@@ -59,7 +59,7 @@ async def get_students_overview(user: dict = Depends(get_current_user)):
 
 
 @router.get("/students/{student_id}/detail")
-async def get_student_detail(student_id: str, user: dict = Depends(get_current_user)):
+async def get_student_detail(student_id: str, user: dict = Depends(require_teacher_or_demo_open)):
     """获取单个学生详细学习数据 — 基于真实画像/答题历史/记忆聚合（循环15-P0）"""
     from db.user_store import get_profile, get_quiz_history
     from services import memory_service as mem_svc
@@ -117,7 +117,7 @@ async def get_student_detail(student_id: str, user: dict = Depends(get_current_u
 
 @router.get("/knowledge-base/stats")
 @cached(ttl=300)
-async def get_knowledge_base_stats(user: dict = Depends(get_current_user)):
+async def get_knowledge_base_stats(user: dict = Depends(require_teacher_or_demo_open)):
     """知识库统计信息"""
     from collections import Counter
     subject_counts = Counter()
@@ -138,7 +138,7 @@ async def get_knowledge_base_stats(user: dict = Depends(get_current_user)):
 
 @router.get("/analytics/class-performance")
 @cached(ttl=120)
-async def get_class_performance(user: dict = Depends(get_current_user)):
+async def get_class_performance(user: dict = Depends(require_teacher_or_demo_open)):
     """班级整体学习表现分析 — 基于真实答题记录聚合"""
     from db.user_store import list_all_users
     from collections import Counter, defaultdict
@@ -241,7 +241,7 @@ class AssignmentCreateRequest(BaseModel):
 
 
 @router.get("/assignments")
-async def list_assignments_api(user: dict = Depends(get_current_user)):
+async def list_assignments_api(user: dict = Depends(require_teacher_or_demo_open)):
     """列出全部作业（含提交率/平均分/通过率统计）"""
     from db.user_store import list_assignments
     assignments = list_assignments()
@@ -249,7 +249,7 @@ async def list_assignments_api(user: dict = Depends(get_current_user)):
 
 
 @router.post("/assignments")
-async def create_assignment_api(req: AssignmentCreateRequest, user: dict = Depends(get_current_user)):
+async def create_assignment_api(req: AssignmentCreateRequest, user: dict = Depends(require_teacher_or_demo_open)):
     """发布作业：保存测验 JSON 快照（不受题库后续编辑影响）"""
     from db.user_store import create_assignment
     assignment = create_assignment(
@@ -265,7 +265,7 @@ async def create_assignment_api(req: AssignmentCreateRequest, user: dict = Depen
 
 
 @router.get("/assignments/{assignment_id}")
-async def get_assignment_api(assignment_id: int, user: dict = Depends(get_current_user)):
+async def get_assignment_api(assignment_id: int, user: dict = Depends(require_teacher_or_demo_open)):
     """获取单个作业详情（教师视角，含快照与统计）"""
     from db.user_store import get_assignment
     assignment = get_assignment(assignment_id)
@@ -315,7 +315,7 @@ class KnowledgeImportRequest(BaseModel):
 
 
 @router.post("/knowledge-base/import")
-async def import_knowledge(req: KnowledgeImportRequest, user: dict = Depends(get_current_user)):
+async def import_knowledge(req: KnowledgeImportRequest, user: dict = Depends(require_teacher_or_demo_open)):
     """教师导入自定义知识点"""
     content = req.content
     subject = req.subject
@@ -336,7 +336,7 @@ async def import_knowledge(req: KnowledgeImportRequest, user: dict = Depends(get
 
 @router.get("/agent-performance")
 @cached(ttl=180)
-async def get_agent_performance(user: dict = Depends(get_current_user)):
+async def get_agent_performance(user: dict = Depends(require_teacher_or_demo_open)):
     """多智能体系统性能统计
 
     注：以下 calls/latency/success_rate 为演示骨架值；生产环境应接入

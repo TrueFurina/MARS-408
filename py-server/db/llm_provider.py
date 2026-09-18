@@ -229,6 +229,7 @@ class LLMProvider:
                 yield chunk
             return
         # auto: 逐通道尝试，失败回退（讯飞星火X2第一优先级，Qwen3.8-Max 第三通道）
+        yielded_any = False
         for name in ["xfyun", "deepseek", "qwen"]:
             provider_cfg = self._config.get(name, {})
             if not _provider_configured(name, provider_cfg):
@@ -244,6 +245,7 @@ class LLMProvider:
                 async for chunk in self._stream_provider(
                     provider, messages, temperature, tools, thinking, timeout
                 ):
+                    yielded_any = True
                     yield chunk
                 logger.info("LLM 流式调用成功: %s", name)
                 record_llm_call(name)
@@ -251,6 +253,15 @@ class LLMProvider:
                 return
             except Exception as e:
                 breaker.record_failure()
+                if yielded_any:
+                    # 已向客户端输出部分分片；若继续回退下一通道，会把不同通道的内容
+                    # 拼接成「混合流」，污染客户端输出（F5）。已产出的分片无法撤回，
+                    # 故直接上抛终止，交上层转为干净错误，而非追加下一通道内容。
+                    logger.error(
+                        "LLM 通道 %s 流式调用在已输出部分分片后失败(%s)，终止以免混合流",
+                        name, _channel_failure_detail(e),
+                    )
+                    raise
                 logger.warning(
                     "LLM 通道 %s 流式调用失败(%s)，自动回退下一通道",
                     name, _channel_failure_detail(e),
@@ -311,7 +322,9 @@ class LLMProvider:
             provider = config.get(target)
             if not provider:
                 raise LLMUnavailable(f"指定的 LLM 通道 '{target}' 未配置")
-            if not provider.get("api_key"):
+            # 凭证判定与自动模式一致：xfyun 通道可用 api_password/api_key/app_id 任一，
+            # 不应仅因顶层 api_key 为空（generalv3.5 仅配置 api_password）就误判缺失。
+            if not _provider_configured(target, provider):
                 raise LLMUnavailable(f"LLM 通道 '{target}' 缺少 API Key")
             return _apply_xfyun_preset(target, provider)
 

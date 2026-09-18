@@ -142,3 +142,87 @@ async def profile_update(req: ProfileUpdateRequest, user: dict = Depends(get_cur
     except Exception as e:
         logger.warning(f"画像更新失败: {e}")
         raise HTTPException(status_code=500, detail=f"保存失败: {e}")
+
+
+@router.get("/ability")
+async def get_ability_profile(user: dict = Depends(get_current_user)):
+    """统一能力画像（双场景集成 · F4 + M1）—— 一个账号、一份画像。
+
+    读路径（M1 聚合表优先，未命中实时聚合后回写）：
+      1. db.ability_store.get_profile —— ability_profiles 聚合表命中即返回
+      2. 未命中 → 实时聚合两源（下述）并回写聚合表，供下次命中
+    两源：professional-场景A 考研408（db.memory_store）/ soft_skills-场景B 职业素养（db.career_store）。
+    任一源失败一律 **fail-open**，绝不 500；前端 useAbilityProfile 另有本地缓存回退。
+    """
+    user_id = user.get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="用户未认证")
+
+    # 1) 优先读 M1 聚合表
+    try:
+        from db import ability_store
+        cached = ability_store.get_profile(user_id)
+        if cached:
+            cached.setdefault("user_id", user_id)
+            cached["source"] = "table"
+            return cached
+    except Exception as e:
+        logger.debug("ability: 聚合表读取失败（转实时聚合）: %s", e)
+
+    # 2) 实时聚合两源
+    professional: dict = {}
+    soft_skills: dict = {}
+    kaoyan_score = None
+    career_score = None
+    updated_at = None
+
+    # 场景A：考研408 语义记忆（画像 + 掌握度）
+    try:
+        from db import memory_store
+        sem = memory_store.get_semantic_memory(user_id) or {}
+        professional = sem.get("profile") or {}
+        mastery = sem.get("mastery") or {}
+        if mastery:
+            kaoyan_score = {"mastery": mastery, "weak_points": sem.get("weak_points") or []}
+        updated_at = sem.get("updated_at")
+    except Exception as e:
+        logger.debug("ability: 场景A 画像读取失败（fail-open 忽略）: %s", e)
+
+    # 场景B：职业素养实训最近一次评估
+    try:
+        from db import career_store
+        sessions = career_store.list_my_sessions(user_id, limit=1) or []
+        if sessions:
+            sid = sessions[0].get("id")
+            if sid:
+                assessment = career_store.get_assessment_by_session(sid)
+                if assessment:
+                    soft_skills = assessment.get("dimensions") or assessment
+                    career_score = assessment
+    except Exception as e:
+        logger.debug("ability: 场景B 评估读取失败（fail-open 忽略）: %s", e)
+
+    result = {
+        "user_id": user_id,
+        "professional": professional,
+        "soft_skills": soft_skills,
+        "kaoyan_score": kaoyan_score,
+        "career_score": career_score,
+        "updated_at": updated_at,
+        "source": "live",
+    }
+
+    # 3) 回写 M1 聚合表（供下次命中；失败不影响返回）
+    try:
+        from db import ability_store
+        ability_store.upsert_profile(
+            user_id,
+            professional=professional,
+            soft_skills=soft_skills,
+            kaoyan_score=kaoyan_score,
+            career_score=career_score,
+        )
+    except Exception as e:
+        logger.debug("ability: 聚合表回写失败（忽略）: %s", e)
+
+    return result

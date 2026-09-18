@@ -6,7 +6,7 @@
 import logging
 
 from fastapi import APIRouter, Depends, Request
-from db.llm_provider import LLMProvider
+from db.llm_provider import LLMProvider, _provider_configured
 from config import load_config, save_config
 from models import ConfigResponse
 from shared.auth import require_admin
@@ -35,9 +35,19 @@ def _mask_key(key: str) -> str:
 async def config_get(user: dict = Depends(require_admin)):
     """获取配置 — 从深度嵌套结构手动提取到扁平 ConfigResponse"""
     cfg = load_config()
-    provider = cfg.get("llm_provider", "deepseek")
-    # 从对应 provider 子结构中提取值
-    provider_cfg = cfg.get(provider, {})
+    provider_mode = cfg.get("llm_provider", "auto")
+    # auto 模式：解析运行级实际生效的通道（xfyun→deepseek→qwen 首个已配置凭证者），
+    # 用其 base_url/model/api_key 填充 llm_* 字段，避免 /config 把 active 通道
+    # 误报为硬编码的 deepseek 默认值（F4：auto 下误导性运维）。llm_provider 仍如实回传 "auto"。
+    if provider_mode == "auto":
+        eff_name = None
+        for name in ["xfyun", "deepseek", "qwen"]:
+            if _provider_configured(name, cfg.get(name, {})):
+                eff_name = name
+                break
+        provider_cfg = cfg.get(eff_name, {}) if eff_name else {}
+    else:
+        provider_cfg = cfg.get(provider_mode, {})
     # 讯飞配置
     xfyun_cfg = cfg.get("xfyun", {})
     return ConfigResponse(
@@ -45,7 +55,7 @@ async def config_get(user: dict = Depends(require_admin)):
         llm_base_url=provider_cfg.get("base_url", "https://api.deepseek.com"),
         llm_model=provider_cfg.get("model", "deepseek-chat"),
         embedding_mode=cfg.get("embedding", {}).get("mode", "local"),
-        llm_provider=provider,
+        llm_provider=provider_mode,
         xfyun_api_key=_mask_key(xfyun_cfg.get("api_key", "")),
         xfyun_app_id=_mask_key(xfyun_cfg.get("app_id", "")),
         xfyun_base_url=xfyun_cfg.get("base_url", "https://spark-api-open.xf-yun.com/x2"),
