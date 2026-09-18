@@ -75,13 +75,13 @@ async function simulate() {
 
 <style scoped>
 .debate-btn {
-  padding:0.5rem 1.125rem;
+  padding:var(--space-2) 1.125rem;
   border-radius:var(--radius-sm);
   border: 1px solid var(--accent-primary);
   background: transparent;
   color: var(--accent-primary);
-  font-size:0.8125rem;
-  font-weight: 500;
+  font-size:var(--text-sm);
+  font-weight: var(--weight-medium);
   cursor: pointer;
   transition: var(--transition);
 }
@@ -93,42 +93,42 @@ async function simulate() {
   cursor: not-allowed;
 }
 .debate-error {
-  margin-top:0.5rem;
-  padding:0.5rem 0.75rem;
+  margin-top:var(--space-2);
+  padding:var(--space-2) var(--space-3);
   background: var(--accent-danger-10);
   border-radius:var(--radius-sm);
   color: var(--accent-danger);
-  font-size:0.75rem;
+  font-size:var(--text-xs);
 }
 .retry-btn {
   background: none;
   border: 1px solid var(--accent-danger);
   color: var(--accent-danger);
   border-radius:0.25rem;
-  padding:0.125rem 0.5rem;
+  padding:0.125rem var(--space-2);
   cursor: pointer;
-  font-size:0.6875rem;
+  font-size:var(--text-2xs);
 }
 .debate-log {
   max-height:20rem;
   overflow-y: auto;
-  padding:0.75rem;
+  padding:var(--space-3);
   background: var(--bg-secondary);
   border-radius:var(--radius-sm);
-  margin-top:0.75rem;
+  margin-top:var(--space-3);
   font-family: var(--font-mono);
-  font-size:0.75rem;
-  line-height:1.7;
+  font-size:var(--text-xs);
+  line-height:var(--leading-relaxed);
 }
 .debate-line {
   white-space: pre-wrap;
   color: var(--text-secondary);
 }
 .debate-empty {
-  margin-top:0.75rem;
-  padding:1.5rem;
+  margin-top:var(--space-3);
+  padding:var(--space-6);
   text-align: center;
   color: var(--text-muted);
-  font-size:0.8125rem;
+  font-size:var(--text-sm);
 }
 </style>

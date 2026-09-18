@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { api } from '@/utils/api'
 import Skeleton from '@/components/Skeleton.vue'
+import Stack from '@/components/Stack.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import { icons } from '@/components/icons'
 import ErrorBoundary from '@/components/ErrorBoundary.vue'
@@ -89,7 +90,7 @@ const filteredHistory = computed(() => {
 
       <EmptyState v-if="history.length === 0" :icon="icons.history" title="暂无答题记录" description="去「智能出题」页面开始练习吧" />
 
-      <div v-else class="history-list">
+      <Stack v-else :gap="2">
         <div v-for="(r, i) in filteredHistory" :key="i" class="history-item glass-card" :class="{ wrong: !r.correct, correct: r.correct }">
           <div class="h-icon">{{ r.correct ? '' : '' }}</div>
           <div class="h-body">
@@ -98,27 +99,26 @@ const filteredHistory = computed(() => {
           </div>
           <div class="h-time">{{ r.timestamp || '' }}</div>
         </div>
-      </div>
+      </Stack>
     </div>
   </div>
   </ErrorBoundary>
 </template>
 
 <style scoped>
-.history-stats { display: flex; gap:1rem; margin-bottom:1.25rem; flex-wrap: wrap; }
-.history-stat { flex: 1; min-width: 80px; text-align: center; padding: 16px; border-radius: var(--radius-md); background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--glass-border); }
+.history-stats { display: flex; gap:var(--space-4); margin-bottom:var(--space-5); flex-wrap: wrap; }
+.history-stat { flex: 1; min-width: 80px; text-align: center; padding: var(--space-4); border-radius: var(--radius-md); background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--glass-border); }
 .h-value { display: block; font-size:1.75rem; font-weight: 800; color: var(--text-primary); }
-.h-label { font-size:0.75rem; color: var(--text-muted); margin-top:0.25rem; display: block; }
-.filter-bar { display: flex; gap: 8px; margin-bottom: 16px; }
-.filter-btn { padding: 6px 16px; border-radius: var(--radius-full); border: 1px solid var(--glass-border); background: transparent; color: var(--text-secondary); font-size: 13px; cursor: pointer; transition: var(--transition); }
+.h-label { font-size:var(--text-xs); color: var(--text-muted); margin-top:var(--space-1); display: block; }
+.filter-bar { display: flex; gap: var(--space-2); margin-bottom: var(--space-4); }
+.filter-btn { padding: 6px var(--space-4); border-radius: var(--radius-full); border: 1px solid var(--glass-border); background: transparent; color: var(--text-secondary); font-size: var(--text-sm); cursor: pointer; transition: var(--transition); }
 .filter-btn.active { background: var(--color-accent-solid); color: var(--text-user); border-color: var(--color-accent-solid); }
-.history-list { display: flex; flex-direction: column; gap:0.5rem; }
-.history-item { display: flex; align-items: center; gap:0.75rem; padding:0.75rem 1rem; }
+.history-item { display: flex; align-items: center; gap:var(--space-3); padding:var(--space-3) var(--space-4); }
 .history-item.wrong { border-left: 3px solid var(--accent-danger); }
 .history-item.correct { border-left: 3px solid var(--accent-success); }
-.h-icon { font-size:1.25rem; flex-shrink: 0; }
+.h-icon { font-size:var(--text-2xl); flex-shrink: 0; }
 .h-body { flex: 1; }
-.h-subject { font-size:0.875rem; font-weight: 600; color: var(--text-primary); }
-.h-difficulty { font-size:0.75rem; color: var(--text-muted); margin-top:0.125rem; }
-.h-time { font-size:0.6875rem; color: var(--text-muted); white-space: nowrap; }
+.h-subject { font-size:var(--text-base); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.h-difficulty { font-size:var(--text-xs); color: var(--text-muted); margin-top:0.125rem; }
+.h-time { font-size:var(--text-2xs); color: var(--text-muted); white-space: nowrap; }
 </style>

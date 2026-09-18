@@ -15,13 +15,13 @@ const router = useRouter()
 
 <style scoped>
 .engine-btn {
-  padding:0.625rem 1.5rem;
+  padding:0.625rem var(--space-6);
   border-radius:var(--radius-full);
   border: none;
   background: var(--gradient-primary);
   color: var(--text-user);
-  font-size:0.875rem;
-  font-weight: 600;
+  font-size:var(--text-base);
+  font-weight: var(--weight-semibold);
   cursor: pointer;
   transition: var(--transition-bounce);
 }

@@ -1,5 +1,5 @@
 /* ============================================
- * MARS-408 — 408 考研智能学习 (v7 · 秒哒级)
+ * 芒得很职 — 408 考研智能学习 (v7 · 秒哒级)
  * 风格：克制深色 · 玻璃态 · 学科分色 · 微交互
  * 参考：Linear/Stripe 仪表盘美学，去 AI 感
  * ============================================ */
@@ -40,6 +40,62 @@ select option:hover, select option:checked,
 .rag-select option:hover, .rag-select option:checked,
 .engine-select option:hover, .engine-select option:checked {
   background: var(--accent-primary-20) !important; color: var(--accent-primary) !important;
+}
+
+/* ── 原生滚动条 & 控件配色（修复深色主题下出现纯白滚动条/控件）───────
+   根因：未声明 color-scheme，浏览器默认套用浅色原生滚动条，在深色 UI 上突兀刺眼。
+   显式声明 color-scheme，并统一为细滚动条（Firefox 走 scrollbar-color，Chromium 走 ::-webkit-*）。 */
+:root { color-scheme: dark; }
+[data-theme="light"] { color-scheme: light; }
+
+html { scrollbar-width: thin; scrollbar-color: rgba(148, 163, 184, 0.32) transparent; }
+[data-theme="light"] { scrollbar-color: rgba(84, 91, 102, 0.32) transparent; }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.30);
+  border-radius: 999px; border: 2px solid transparent; background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.50); background-clip: padding-box; }
+::-webkit-scrollbar-corner { background: transparent; }
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(84, 91, 102, 0.28); background-clip: padding-box; }
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(84, 91, 102, 0.46); background-clip: padding-box; }
+
+/* ── 主滚动容器：自动隐藏滚动条（对标 SecAutoMind：悬停容器才现身）── */
+.main-content,
+.sidebar-nav {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.2s ease;
+}
+.main-content:hover,
+.sidebar-nav:hover { scrollbar-color: rgba(148, 163, 184, 0.42) transparent; }
+.main-content::-webkit-scrollbar,
+.sidebar-nav::-webkit-scrollbar { width: 8px; height: 8px; }
+.main-content::-webkit-scrollbar-thumb,
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 999px; border: 2px solid transparent; background-clip: padding-box;
+}
+.main-content:hover::-webkit-scrollbar-thumb,
+.sidebar-nav:hover::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.42); background-clip: padding-box;
+}
+[data-theme="light"] .main-content:hover::-webkit-scrollbar-thumb,
+[data-theme="light"] .sidebar-nav:hover::-webkit-scrollbar-thumb {
+  background: rgba(84, 91, 102, 0.40); background-clip: padding-box;
+}
+
+/* ── 文本选中 & 自动填充（修复深色下原生黄底/白底）────────────────── */
+::selection { background: rgba(var(--accent-rgb), 0.35); }
+input:-webkit-autofill,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px var(--color-surface-2) inset;
+  -webkit-text-fill-color: var(--color-text);
+  caret-color: var(--color-text);
+  transition: background-color 9999s ease-in-out 0s;
 }
 
 /* ── SVG 基础 ── */

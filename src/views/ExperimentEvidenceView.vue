@@ -228,7 +228,7 @@ onMounted(() => {
 
 <style scoped>
 .evidence-page {
-  max-width: var(--content-max-width, 1280px);
+  max-width: var(--content-max-width);
   margin: 0 auto;
   padding: var(--space-6);
   color: var(--color-text);

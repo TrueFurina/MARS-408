@@ -285,14 +285,14 @@ async function genXfResume() {
 </template>
 
 <style scoped>
-.xfyun-workshop { padding:1.125rem 1.25rem 1.375rem; margin-top:1.25rem; }
-.xfyun-card-header { border-bottom: 1px solid var(--border-light); padding-bottom:0.75rem; flex-wrap: wrap; gap:0.5rem; }
-.xfyun-video { width:100%; border-radius:var(--radius-sm); margin-top:0.5rem; background: var(--color-canvas); display: block; }
-.xfyun-subtitle { font-size:0.75rem; color: var(--text-muted); }
+.xfyun-workshop { padding:1.125rem var(--space-5) 1.375rem; margin-top:var(--space-5); }
+.xfyun-card-header { border-bottom: 1px solid var(--border-light); padding-bottom:var(--space-3); flex-wrap: wrap; gap:var(--space-2); }
+.xfyun-video { width:100%; border-radius:var(--radius-sm); margin-top:var(--space-2); background: var(--color-canvas); display: block; }
+.xfyun-subtitle { font-size:var(--text-xs); color: var(--text-muted); }
 .xfyun-error { margin:0 0 0.875rem; padding:0.625rem 0.875rem; border-radius:var(--radius-sm); cursor: pointer;
   background: var(--accent-danger-10); border: 1px solid var(--accent-danger-20);
-  color: var(--text-danger); font-size:0.8125rem; display: flex; justify-content: space-between; align-items: center; }
-.xfyun-error-close { opacity: 0.6; font-size:0.875rem; }
+  color: var(--text-danger); font-size:var(--text-sm); display: flex; justify-content: space-between; align-items: center; }
+.xfyun-error-close { opacity: 0.6; font-size:var(--text-base); }
 .xfyun-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -301,8 +301,8 @@ async function genXfResume() {
 .xfyun-card {
   display: flex;
   flex-direction: column;
-  gap:0.5rem;
-  padding:1rem;
+  gap:var(--space-2);
+  padding:var(--space-4);
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
@@ -312,41 +312,41 @@ async function genXfResume() {
 }
 .xfyun-card:hover { border-color: var(--accent-primary); box-shadow: var(--glow-primary); }
 .xfyun-card-wide { grid-column: 1 / -1; }
-.xfyun-card-title { font-size:0.9375rem; font-weight: 700; color: var(--text-primary); }
-.xfyun-card-desc { font-size:0.75rem; color: var(--text-muted); line-height:1.5; flex: 1; }
-.xfyun-card .rag-btn { align-self: flex-start; padding:0.4375rem 1rem; font-size:0.8125rem; }
-.xfyun-result { margin-top:0.25rem; font-size:0.8125rem; }
+.xfyun-card-title { font-size:var(--text-md); font-weight: var(--weight-bold); color: var(--text-primary); }
+.xfyun-card-desc { font-size:var(--text-xs); color: var(--text-muted); line-height:1.5; flex: 1; }
+.xfyun-card .rag-btn { align-self: flex-start; padding:0.4375rem var(--space-4); font-size:var(--text-sm); }
+.xfyun-result { margin-top:var(--space-1); font-size:var(--text-sm); }
 .xfyun-link { color: var(--accent-primary); text-decoration: none; word-break: break-all; }
 .xfyun-link:hover { text-decoration: underline; }
-.xfyun-muted { color: var(--text-muted); font-size:0.75rem; line-height:1.5; }
-.xfyun-ok { color: var(--accent-success); font-size:0.8125rem; font-weight: 600; }
-.xfyun-warn { color: var(--accent-danger); font-size:0.8125rem; font-weight: 600; }
-.xfyun-correction { font-size:0.75rem; color: var(--text-secondary); padding:0.125rem 0; }
+.xfyun-muted { color: var(--text-muted); font-size:var(--text-xs); line-height:1.5; }
+.xfyun-ok { color: var(--accent-success); font-size:var(--text-sm); font-weight: var(--weight-semibold); }
+.xfyun-warn { color: var(--accent-danger); font-size:var(--text-sm); font-weight: var(--weight-semibold); }
+.xfyun-correction { font-size:var(--text-xs); color: var(--text-secondary); padding:0.125rem 0; }
 .xfyun-correction b { color: var(--accent-success); }
 .xfyun-search-item { padding:0.375rem 0; border-top: 1px solid var(--glass-border); }
-.xfyun-video-text { margin-top:0.375rem; font-size:0.75rem; color: var(--text-secondary); white-space: pre-wrap; }
-.xfyun-rp-controls { display: flex; gap:0.5rem; flex-wrap: wrap; margin-top:0.25rem; }
+.xfyun-video-text { margin-top:0.375rem; font-size:var(--text-xs); color: var(--text-secondary); white-space: pre-wrap; }
+.xfyun-rp-controls { display: flex; gap:var(--space-2); flex-wrap: wrap; margin-top:var(--space-1); }
 .xfyun-rp-topic {
   flex: 1; min-width:7.5rem; padding:0.375rem 0.625rem; border-radius:var(--radius-sm);
-  border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary); font-size: 13px; outline: none;
+  border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary); font-size: var(--text-sm); outline: none;
 }
 .xfyun-rp-messages {
-  max-height:13.75rem; overflow-y: auto; display: flex; flex-direction: column; gap:0.5rem;
-  padding:0.625rem; background: var(--bg-secondary); border-radius:var(--radius-sm); margin:0.5rem 0;
+  max-height:13.75rem; overflow-y: auto; display: flex; flex-direction: column; gap:var(--space-2);
+  padding:0.625rem; background: var(--bg-secondary); border-radius:var(--radius-sm); margin:var(--space-2) 0;
 }
 .xfyun-rp-msg { display: flex; flex-direction: column; gap:0.125rem; }
 .xfyun-rp-msg.user { align-items: flex-end; }
-.xfyun-rp-role { font-size:0.6875rem; color: var(--text-muted); }
+.xfyun-rp-role { font-size:var(--text-2xs); color: var(--text-muted); }
 .xfyun-rp-content {
-  font-size:0.8125rem; color: var(--text-primary); line-height:1.5;
-  padding:0.5rem 0.75rem; border-radius:var(--radius-sm); max-width:85%;
+  font-size:var(--text-sm); color: var(--text-primary); line-height:1.5;
+  padding:var(--space-2) var(--space-3); border-radius:var(--radius-sm); max-width:85%;
 }
 .xfyun-rp-msg.user .xfyun-rp-content { background: var(--accent-primary-10); color: var(--accent-primary); }
 .xfyun-rp-msg.assistant .xfyun-rp-content { background: var(--glass-bg); border: 1px solid var(--glass-border); }
-.xfyun-rp-input { display: flex; gap:0.5rem; }
+.xfyun-rp-input { display: flex; gap:var(--space-2); }
 .xfyun-rp-input input {
-  flex: 1; padding:0.5rem 0.75rem; border-radius:var(--radius-sm);
-  border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary); font-size: 13px; outline: none;
+  flex: 1; padding:var(--space-2) var(--space-3); border-radius:var(--radius-sm);
+  border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary); font-size: var(--text-sm); outline: none;
 }
 .xfyun-rp-input input:focus { border-color: var(--accent-primary); }
 </style>

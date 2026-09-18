@@ -162,12 +162,12 @@ function arrowClass(index: number): string {
 
 <style scoped>
 .langgraph-flow {
-  padding:1.25rem 1.5rem;
+  padding:var(--space-5) var(--space-6);
   background: var(--glass-bg);
   backdrop-filter: blur(12px);
   border: 1px solid var(--border-color);
   border-radius:1rem;
-  margin-bottom:1.25rem;
+  margin-bottom:var(--space-5);
   transition: all 0.3s ease;
 }
 
@@ -179,14 +179,14 @@ function arrowClass(index: number): string {
 .flow-header {
   display: flex;
   align-items: center;
-  gap:0.75rem;
-  margin-bottom:1.25rem;
+  gap:var(--space-3);
+  margin-bottom:var(--space-5);
 }
 
 .flow-badge {
-  font-size:0.6875rem;
-  font-weight: 700;
-  padding:0.1875rem 0.75rem;
+  font-size:var(--text-2xs);
+  font-weight: var(--weight-bold);
+  padding:0.1875rem var(--space-3);
   border-radius:1.25rem;
   background: var(--accent-primary-10);
   color: var(--accent-primary);
@@ -195,23 +195,23 @@ function arrowClass(index: number): string {
 }
 
 .flow-title {
-  font-size:0.875rem;
-  font-weight: 700;
+  font-size:var(--text-base);
+  font-weight: var(--weight-bold);
   color: var(--text-primary);
 }
 
 .flow-subtitle {
   margin-left:auto;
-  font-size:0.6875rem;
+  font-size:var(--text-2xs);
   color: var(--text-muted);
-  font-weight: 500;
+  font-weight: var(--weight-medium);
 }
 
 .flow-track {
   display: flex;
   align-items: flex-start;
   gap:0;
-  padding:0.5rem 0;
+  padding:var(--space-2) 0;
   justify-content: center;
   flex-wrap: wrap;
 }
@@ -222,7 +222,7 @@ function arrowClass(index: number): string {
   flex-direction: column;
   align-items: center;
   gap:0.375rem;
-  padding:0.5rem 0.375rem;
+  padding:var(--space-2) 0.375rem;
   min-width:5rem;
   transition: all 0.3s ease;
   opacity: 0.55;
@@ -296,7 +296,7 @@ function arrowClass(index: number): string {
 }
 
 .circle-num {
-  font-size:1rem;
+  font-size:var(--text-lg);
   font-weight: 800;
   color: var(--text-muted);
 }
@@ -314,15 +314,15 @@ function arrowClass(index: number): string {
 }
 
 .circle-check {
-  font-size:1.25rem;
+  font-size:var(--text-2xl);
   font-weight: 900;
   color: #fff;
   animation: check-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .node-label {
-  font-size:0.75rem;
-  font-weight: 700;
+  font-size:var(--text-xs);
+  font-weight: var(--weight-bold);
   color: var(--text-primary);
   white-space: nowrap;
 }
@@ -341,7 +341,7 @@ function arrowClass(index: number): string {
 }
 
 .node-icon {
-  font-size:0.875rem;
+  font-size:var(--text-base);
   position: absolute;
   top:-0.375rem;
   right:-0.375rem;
@@ -358,7 +358,7 @@ function arrowClass(index: number): string {
   display: flex;
   align-items: center;
   align-self: flex-start;
-  margin-top:1rem;
+  margin-top:var(--space-4);
   padding:0 0.125rem;
   color: var(--color-text-3);
   transition: all 0.4s ease;
@@ -383,7 +383,7 @@ function arrowClass(index: number): string {
   height:0.25rem;
   background: var(--bg-tertiary);
   border-radius:0.125rem;
-  margin-top:1rem;
+  margin-top:var(--space-4);
   overflow: hidden;
 }
 
@@ -415,7 +415,7 @@ function arrowClass(index: number): string {
   .flow-arrow {
     transform: rotate(90deg);
     margin:0;
-    padding:0.25rem 0;
+    padding:var(--space-1) 0;
   }
   .flow-node {
     min-width:auto;

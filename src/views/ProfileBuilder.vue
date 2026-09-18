@@ -159,7 +159,7 @@ function onKeydown(e: KeyboardEvent) {
 }
 .profile-builder-header {
   text-align: center;
-  padding:2.25rem 1.25rem 1.25rem;
+  padding:var(--space-9) var(--space-5) var(--space-5);
   flex-shrink: 0;
   position: relative;
 }
@@ -172,27 +172,27 @@ function onKeydown(e: KeyboardEvent) {
   border-radius:0;
 }
 .profile-builder-title {
-  font-size:1.5rem;
+  font-size:var(--text-3xl);
   font-weight: 800;
   color: var(--text-primary);
-  margin-bottom:0.5rem;
+  margin-bottom:var(--space-2);
   position: relative;
   letter-spacing:-0.0187rem;
 }
 .profile-builder-desc {
-  font-size:0.9375rem;
+  font-size:var(--text-md);
   color: var(--text-secondary);
   position: relative;
 }
 .profile-chat {
   flex: 1;
   overflow-y: auto;
-  padding:0 1.25rem 1rem;
+  padding:0 var(--space-5) var(--space-4);
 }
 .profile-msg {
   display: flex;
   gap:0.625rem;
-  margin-bottom:1rem;
+  margin-bottom:var(--space-4);
   animation: fade-up 0.3s ease both;
 }
 .profile-msg.user {
@@ -220,8 +220,8 @@ function onKeydown(e: KeyboardEvent) {
   max-width:80%;
   padding:0.875rem 1.125rem;
   border-radius:var(--radius-lg);
-  font-size:0.9375rem;
-  line-height:1.7;
+  font-size:var(--text-md);
+  line-height:var(--leading-relaxed);
 }
 .profile-msg.assistant .profile-msg-bubble {
   background: var(--glass-bg);
@@ -238,17 +238,17 @@ function onKeydown(e: KeyboardEvent) {
 }
 .profile-input-area {
   flex-shrink: 0;
-  padding:0 1.25rem 1.25rem;
+  padding:0 var(--space-5) var(--space-5);
 }
 .profile-input-wrapper {
   display: flex;
-  gap:0.5rem;
+  gap:var(--space-2);
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-border);
   border-radius:var(--radius-lg);
-  padding:0.625rem 0.75rem;
+  padding:0.625rem var(--space-3);
   transition: var(--transition);
 }
 .profile-input-wrapper:focus-within {
@@ -261,7 +261,7 @@ function onKeydown(e: KeyboardEvent) {
   outline: none;
   background: transparent;
   color: var(--text-primary);
-  font-size:0.9375rem;
+  font-size:var(--text-md);
   line-height:1.5;
   resize: none;
   font-family: inherit;

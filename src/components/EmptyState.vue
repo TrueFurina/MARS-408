@@ -33,7 +33,7 @@ const accentColor = computed(() => props.accent)
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 4rem 1.5rem;
+  padding: var(--space-16) var(--space-6);
   text-align: center;
   gap: 0.875rem;
   background: var(--glass-bg);
@@ -41,7 +41,7 @@ const accentColor = computed(() => props.accent)
   -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  margin: 1.5rem auto;
+  margin: var(--space-6) auto;
   max-width: 30rem;
   animation: nl-empty-fade-up 0.4s ease both;
 }
@@ -63,11 +63,11 @@ const accentColor = computed(() => props.accent)
 }
 .nl-empty-title {
   font-size: 1.0625rem;
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   color: var(--text-secondary);
 }
 .nl-empty-desc {
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
   max-width: 22.5rem;
   line-height: 1.6;
   color: var(--text-muted);

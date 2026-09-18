@@ -228,17 +228,17 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.teacher-career { padding: 1.25rem; max-width: 1080px; margin: 0 auto; }
+.teacher-career { padding: var(--space-5); max-width: 1080px; margin: 0 auto; }
 .page-head h1 { margin: 0 0 .25rem; font-size: 1.4rem; }
-.sub { color: var(--text-dim, var(--color-text-3)); margin: 0 0 1rem; }
+.sub { color: var(--text-dim, var(--color-text-3)); margin: 0 0 var(--space-4); }
 .msg { background: var(--accent-soft, var(--color-surface-2)); padding: .5rem .75rem; border-radius: 8px; }
-.grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 1rem; }
-.card { border: 1px solid var(--border, var(--color-border)); border-radius: 12px; padding: 1rem; background: var(--bg-card); }
+.grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: var(--space-4); }
+.card { border: 1px solid var(--border, var(--color-border)); border-radius: 12px; padding: var(--space-4); background: var(--bg-card); }
 .card.wide { grid-column: 1 / -1; }
 .card h2 { margin: 0 0 .75rem; font-size: 1.05rem; }
 .row { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; margin-bottom: .75rem; }
 .row input, .row select { flex: 1; min-width: 6rem; }
-.task-row { margin-top: 1rem; }
+.task-row { margin-top: var(--space-4); }
 textarea { width: 100%; box-sizing: border-box; margin-bottom: .5rem; }
 button { cursor: pointer; }
 button:disabled { opacity: .5; cursor: not-allowed; }
@@ -246,7 +246,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .link.dim, .dim { color: var(--text-dim, var(--color-text-3)); }
 .class-list, .roster { list-style: none; padding: 0; margin: .5rem 0 0; }
 .class-list li, .roster li { display: flex; justify-content: space-between; gap: .5rem; padding: .3rem 0; border-bottom: 1px dashed var(--border, var(--color-border)); }
-.class-list li.active { font-weight: 600; }
+.class-list li.active { font-weight: var(--weight-semibold); }
 .join-code { margin: .75rem 0; padding: .5rem .75rem; border-radius: 8px; background: var(--accent-soft, var(--color-surface-2)); font-size: 1.05rem; }
 table { width: 100%; border-collapse: collapse; }
 th, td { text-align: left; padding: .45rem .5rem; border-bottom: 1px solid var(--border, var(--color-border)); font-size: .92rem; }

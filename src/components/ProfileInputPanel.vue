@@ -58,15 +58,15 @@ defineExpose({ buildProfile })
 </template>
 
 <style scoped>
-.profile-toggle-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
-.profile-toggle-btn { font-size: 0.75rem; color: var(--accent-primary); cursor: pointer; background: none; border: none; padding: 0.25rem 0; }
-.profile-badge { font-size: 0.6875rem; padding: 0.1875rem 0.625rem; border-radius: var(--radius-full); background: var(--bg-tertiary); color: var(--text-muted); }
+.profile-toggle-row { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
+.profile-toggle-btn { font-size: var(--text-xs); color: var(--accent-primary); cursor: pointer; background: none; border: none; padding: var(--space-1) 0; }
+.profile-badge { font-size: var(--text-2xs); padding: 0.1875rem 0.625rem; border-radius: var(--radius-full); background: var(--bg-tertiary); color: var(--text-muted); }
 .profile-badge.active { background: var(--accent-primary-10); color: var(--accent-primary); }
-.profile-input-panel { padding: 1rem; margin-bottom: 1rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
-.profile-field { display: flex; flex-direction: column; gap: 0.25rem; }
-.profile-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
-.engine-select { padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); font-size: 0.8125rem; outline: none; }
-.engine-input { padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); font-size: 0.8125rem; outline: none; transition: var(--transition); }
+.profile-input-panel { padding: var(--space-4); margin-bottom: var(--space-4); background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.profile-field { display: flex; flex-direction: column; gap: var(--space-1); }
+.profile-label { font-size: var(--text-xs); color: var(--text-muted); font-weight: var(--weight-medium); }
+.engine-select { padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); font-size: var(--text-sm); outline: none; }
+.engine-input { padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); font-size: var(--text-sm); outline: none; transition: var(--transition); }
 .engine-input:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px var(--accent-primary-10); }
 .glass-card { background: var(--glass-bg); backdrop-filter: blur(12px); border: 1px solid var(--border-color); border-radius: var(--radius-md); }
 </style>

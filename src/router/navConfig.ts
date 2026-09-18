@@ -1,5 +1,5 @@
 /**
- * MARS-408 导航配置 —— 单一真值源 (Single Source of Truth)
+ * 芒得很职 导航配置 —— 单一真值源 (Single Source of Truth)
  *
  * 背景：此前导航被硬编码在三处且互不一致 ——
  *   · src/App.vue          navItems      (17 项平铺，无分组)
@@ -22,6 +22,15 @@
 import { icons } from '@/components/icons'
 
 export type UserRole = 'student' | 'teacher' | 'admin'
+
+/**
+ * 场景域（双场景集成 · 2026-09-15）：
+ *   · kaoyan  —— 场景A 专业能力训练（考研408）
+ *   · career  —— 场景B 职业素养实训（芒得很职主线）
+ *   · common  —— 通用（两场景都显示）
+ * 缺省（undefined）等价 common，保证旧数据零改动兼容。
+ */
+export type Scene = 'kaoyan' | 'career' | 'common'
 
 export interface NavItem {
   /** 唯一标识，用于 activeKey 高亮 */
@@ -48,6 +57,8 @@ export interface NavItem {
   matchChildren?: boolean
   /** 可见角色；不填 = 所有角色可见 */
   roles?: UserRole[]
+  /** 场景域；不填 = common（两场景都显示） */
+  scene?: Scene
   /** 子项（功能重叠、被归并的页面） */
   children?: NavItem[]
 }
@@ -59,6 +70,8 @@ export interface NavGroup {
   items: NavItem[]
   /** 分组可见角色；不填 = 所有角色可见 */
   roles?: UserRole[]
+  /** 场景域；不填 = common（两场景都显示） */
+  scene?: Scene
   /** 是否可折叠 */
   collapsible?: boolean
   /** 初始是否折叠 */
@@ -82,6 +95,7 @@ export const NAV_GROUPS: NavGroup[] = [
     id: 'learn',
     title: '学习',
     icon: icons.graduation,
+    scene: 'kaoyan',
     roles: ['student'],
     items: [
       {
@@ -95,7 +109,7 @@ export const NAV_GROUPS: NavGroup[] = [
         key: 'dashboard',
         name: '今日总览',
         icon: icons.dashboard,
-        route: '/',
+        route: '/kaoyan',
       },
       {
         key: 'chat',
@@ -133,6 +147,7 @@ export const NAV_GROUPS: NavGroup[] = [
     id: 'practice',
     title: '练习与复盘',
     icon: icons.quiz,
+    scene: 'kaoyan',
     roles: ['student'],
     items: [
       {
@@ -167,6 +182,7 @@ export const NAV_GROUPS: NavGroup[] = [
     id: 'knowledge',
     title: '知识',
     icon: icons.knowledge,
+    scene: 'kaoyan',
     items: [
       {
         // 母页：知识图谱。另两个图谱视图降为子项
@@ -195,6 +211,7 @@ export const NAV_GROUPS: NavGroup[] = [
     id: 'skills',
     title: 'AI 技能工坊',
     icon: icons.skill,
+    scene: 'kaoyan',
     items: [
       {
         key: 'skills',
@@ -225,11 +242,36 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
 
-  // ── 5. 实验室（演示 / 调试页，默认折叠，一个都不删）──────────────────
+  // ── 5. 职业素养实训（场景B · 芒得很职主线）────────────────────────────
+  {
+    id: 'career',
+    title: '职业素养实训',
+    icon: icons.target,
+    scene: 'career',
+    items: [
+      {
+        key: 'career-training',
+        name: '对抗实训',
+        icon: icons.target,
+        route: '/career/training',
+      },
+      {
+        // P4：对抗实训教师端（建班/花名册/任务码/班级看板）
+        key: 'career-teacher',
+        name: '实训任务',
+        icon: icons.graduation,
+        route: '/career/teacher',
+        roles: ['teacher', 'admin'],
+      },
+    ],
+  },
+
+  // ── 6. 实验室（演示 / 调试页，默认折叠，一个都不删）──────────────────
   {
     id: 'lab',
     title: '实验室',
     icon: icons.microscope,
+    scene: 'common',
     collapsible: true,
     defaultCollapsed: true,
     badge: '评审演示',
@@ -240,7 +282,6 @@ export const NAV_GROUPS: NavGroup[] = [
       { key: 'memory', name: '学情记忆', icon: icons.brain, route: '/memory' },
       { key: 'sandbox', name: '代码沙箱', icon: icons.play, route: '/sandbox' },
       { key: 'code-lab', name: 'C/C++ 实验室', icon: icons.fileText, route: '/code-lab' },
-      { key: 'career-training', name: '素养对抗', icon: icons.target, route: '/career/training' },
       { key: 'design-system', name: '设计系统', icon: icons.edit, route: '/design-system' },
     ],
   },
@@ -281,14 +322,6 @@ export const NAV_GROUPS: NavGroup[] = [
         roles: ['teacher', 'admin'],
       },
       {
-        // P4：对抗实训教师端（建班/花名册/任务码/班级看板）
-        key: 'career-teacher',
-        name: '实训任务',
-        icon: icons.target,
-        route: '/career/teacher',
-        roles: ['teacher', 'admin'],
-      },
-      {
         key: 'admin',
         name: '平台数据',
         icon: icons.dashboard,
@@ -317,15 +350,25 @@ export const NAV_GROUPS: NavGroup[] = [
 /** 移动端底部导航的 key（从 NAV_GROUPS 中按 key 选取，避免二次硬编码） */
 export const BOTTOM_NAV_KEYS = ['chat', 'practice', 'learning-path', 'wrong-questions', 'profile']
 
-/** 按角色过滤后的分组 + 分组内条目（含子项）过滤 */
-export function visibleGroups(role: UserRole): NavGroup[] {
+/** 场景匹配：缺省 / common 视为通用（始终显示）；scene 未指定时不过滤（向后兼容） */
+function visibleForScene(entry: { scene?: Scene }, scene?: Scene): boolean {
+  if (!scene) return true
+  const s = entry.scene ?? 'common'
+  return s === 'common' || s === scene
+}
+
+/** 按角色 + 场景过滤后的分组 + 分组内条目（含子项）过滤 */
+export function visibleGroups(role: UserRole, scene?: Scene): NavGroup[] {
   return NAV_GROUPS
-    .filter((g) => visibleForRole(g, role))
+    .filter((g) => visibleForRole(g, role) && visibleForScene(g, scene))
     .map((g) => ({
       ...g,
       items: g.items
-        .filter((i) => visibleForRole(i, role))
-        .map((i) => ({ ...i, children: i.children?.filter((c) => visibleForRole(c, role)) })),
+        .filter((i) => visibleForRole(i, role) && visibleForScene(i, scene))
+        .map((i) => ({
+          ...i,
+          children: i.children?.filter((c) => visibleForRole(c, role) && visibleForScene(c, scene)),
+        })),
     }))
     .filter((g) => g.items.length > 0)
 }

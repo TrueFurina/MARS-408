@@ -5,6 +5,7 @@ import { api } from '@/utils/api'
 import LangGraphFlow from '@/components/LangGraphFlow.vue'
 import ProfileInputPanel from '@/components/ProfileInputPanel.vue'
 import { icons } from '@/components/icons'
+import EngineSection from '@/components/EngineSection.vue'
 
 // ── 配置 ──
 const question = ref('')
@@ -103,15 +104,13 @@ async function runSearch() {
 </script>
 
 <template>
-  <div class="engine-section glass-card">
-    <div class="engine-section-title">
-      <span class="engine-icon" v-html="icons.bookOpen"></span>
-      FrugalRAG 节俭检索引擎
-      <span class="engine-tag">LLM查询优化 + 启发式停止 + 个性化排序</span>
-    </div>
-    <div class="engine-desc">
-      查询预处理 → SFT检索策略 → KG跨科目扩展 → E5向量检索 → 个性化重排 → RL停止决策 → 查询重写 → 融合排序
-    </div>
+  <EngineSection
+    title="FrugalRAG 节俭检索引擎"
+    tag="LLM查询优化 + 启发式停止 + 个性化排序"
+    desc="查询预处理 → SFT检索策略 → KG跨科目扩展 → E5向量检索 → 个性化重排 → RL停止决策 → 查询重写 → 融合排序"
+    icon-accent
+  >
+    <template #icon><span v-html="icons.bookOpen"></span></template>
 
     <div class="engine-input-row">
       <select v-model="course" class="engine-select">
@@ -197,59 +196,21 @@ async function runSearch() {
     <div v-else-if="result?.status === 'error'" class="engine-error">
       {{ result.message }}
     </div>
-  </div>
+  </EngineSection>
 </template>
 
 <style scoped>
-.engine-section {
-  margin-bottom:2rem;
-  padding:1.5rem;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius:var(--radius-lg);
-  backdrop-filter: blur(12px);
-}
-
 .glass-card {
   background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border-color);
-  border-radius:var(--radius-md);
-}
-
-.engine-section-title {
-  display: flex;
-  align-items: center;
-  gap:0.5rem;
-  font-size:1.125rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom:0.25rem;
-}
-
-.engine-icon { font-size:1.375rem; display:inline-flex; align-items:center; color:var(--accent-primary); }
-.engine-icon svg { width:1.375rem; height:1.375rem; }
-
-.engine-tag {
-  margin-left:auto;
-  font-size:0.6875rem;
-  padding:0.1875rem 0.75rem;
-  border-radius:var(--radius-full);
-  background: var(--accent-primary-10);
-  color: var(--accent-primary);
-  font-weight: 500;
-}
-
-.engine-desc {
-  font-size:0.8125rem;
-  color: var(--text-secondary);
-  margin-bottom:1rem;
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
 }
 
 .engine-input-row {
   display: flex;
-  gap:0.5rem;
-  margin-bottom:1rem;
+  gap:var(--space-2);
+  margin-bottom:var(--space-4);
 }
 
 .engine-select {
@@ -258,18 +219,18 @@ async function runSearch() {
   background: var(--bg-input);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
-  font-size:0.875rem;
+  font-size:var(--text-base);
   outline: none;
 }
 
 .engine-input {
   flex: 1;
-  padding:0.625rem 1rem;
+  padding:0.625rem var(--space-4);
   border-radius:var(--radius-sm);
   background: var(--bg-input);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
-  font-size:0.875rem;
+  font-size:var(--text-base);
   outline: none;
   transition: var(--transition);
 }
@@ -280,13 +241,13 @@ async function runSearch() {
 }
 
 .engine-btn {
-  padding:0.625rem 1.5rem;
+  padding:0.625rem var(--space-6);
   border-radius:var(--radius-full);
   border: none;
   background: var(--gradient-primary);
   color: #fff;
-  font-size:0.875rem;
-  font-weight: 600;
+  font-size:var(--text-base);
+  font-weight: var(--weight-semibold);
   cursor: pointer;
   transition: var(--transition-bounce);
   white-space: nowrap;
@@ -308,21 +269,21 @@ async function runSearch() {
 .profile-toggle-row {
   display: flex;
   align-items: center;
-  gap:0.5rem;
-  margin-bottom:0.5rem;
+  gap:var(--space-2);
+  margin-bottom:var(--space-2);
 }
 
 .profile-toggle-btn {
-  font-size:0.75rem;
+  font-size:var(--text-xs);
   color: var(--accent-primary);
   cursor: pointer;
   background: none;
   border: none;
-  padding:0.25rem 0;
+  padding:var(--space-1) 0;
 }
 
 .profile-badge {
-  font-size:0.6875rem;
+  font-size:var(--text-2xs);
   padding:0.125rem 0.625rem;
   border-radius:var(--radius-full);
   background: var(--bg-tertiary);
@@ -335,75 +296,75 @@ async function runSearch() {
 }
 
 .profile-input-panel {
-  padding:1rem;
-  margin-bottom:1rem;
+  padding:var(--space-4);
+  margin-bottom:var(--space-4);
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap:0.75rem;
+  gap:var(--space-3);
 }
 
-.profile-field { display: flex; flex-direction: column; gap:0.25rem; }
-.profile-label { font-size:0.75rem; color: var(--text-secondary); font-weight: 600; }
+.profile-field { display: flex; flex-direction: column; gap:var(--space-1); }
+.profile-label { font-size:var(--text-xs); color: var(--text-secondary); font-weight: var(--weight-semibold); }
 
-.engine-result { margin-top:1rem; }
+.engine-result { margin-top:var(--space-4); }
 
 .engine-result-meta {
   display: flex;
   flex-wrap: wrap;
-  gap:0.5rem;
-  margin-bottom:1rem;
+  gap:var(--space-2);
+  margin-bottom:var(--space-4);
 }
 
 .meta-pill {
-  font-size:0.75rem;
-  padding:0.25rem 0.75rem;
+  font-size:var(--text-xs);
+  padding:var(--space-1) var(--space-3);
   border-radius:var(--radius-full);
   background: var(--bg-tertiary);
   color: var(--text-secondary);
-  font-weight: 500;
+  font-weight: var(--weight-medium);
 }
 
 .meta-pill.accent {
   background: var(--accent-primary-10);
   color: var(--accent-primary);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 
 .rerank-stats {
-  padding:1rem;
-  margin-bottom:1rem;
+  padding:var(--space-4);
+  margin-bottom:var(--space-4);
 }
 
 .rerank-header {
   display: flex;
   align-items: center;
-  gap:0.5rem;
-  margin-bottom:0.5rem;
+  gap:var(--space-2);
+  margin-bottom:var(--space-2);
 }
 
-.rerank-icon { font-size:1rem; display:inline-flex; align-items:center; color:var(--accent-primary); }
+.rerank-icon { font-size:var(--text-lg); display:inline-flex; align-items:center; color:var(--accent-primary); }
 .rerank-icon svg { width:1rem; height:1rem; }
 
 .rerank-badge {
   margin-left:auto;
-  font-size:0.6875rem;
+  font-size:var(--text-2xs);
   padding:0.125rem 0.625rem;
   border-radius:var(--radius-full);
   background: var(--accent-primary-10);
   color: var(--accent-primary);
-  font-weight: 500;
+  font-weight: var(--weight-medium);
 }
 
 .rerank-profile-summary {
   display: flex;
   flex-wrap: wrap;
-  gap:0.5rem;
-  margin-bottom:0.5rem;
+  gap:var(--space-2);
+  margin-bottom:var(--space-2);
 }
 
 .rerank-ps-item {
-  font-size:0.6875rem;
-  padding:0.125rem 0.5rem;
+  font-size:var(--text-2xs);
+  padding:0.125rem var(--space-2);
   border-radius:var(--radius-xs);
   background: var(--bg-tertiary);
   color: var(--text-secondary);
@@ -412,29 +373,29 @@ async function runSearch() {
 .rerank-ps-item.weak { color: var(--accent-danger); background: var(--accent-danger-10); }
 .rerank-ps-item.mastered { color: var(--accent-success); background: var(--accent-success-10); }
 
-.rerank-adjustments { display: flex; flex-direction: column; gap:0.25rem; }
+.rerank-adjustments { display: flex; flex-direction: column; gap:var(--space-1); }
 
 .rerank-adjust-item {
   display: flex;
   align-items: center;
-  gap:0.5rem;
-  font-size:0.75rem;
-  padding:0.25rem 0.5rem;
+  gap:var(--space-2);
+  font-size:var(--text-xs);
+  padding:var(--space-1) var(--space-2);
   background: var(--bg-tertiary);
   border-radius:var(--radius-xs);
 }
 
-.adj-score { font-weight: 700; color: var(--accent-primary); min-width:3.125rem; }
+.adj-score { font-weight: var(--weight-bold); color: var(--accent-primary); min-width:3.125rem; }
 .adj-reasons { color: var(--text-secondary); }
 
 .trajectory-timeline {
   display: flex;
   flex-direction: column;
-  gap:0.25rem;
-  padding:1rem;
+  gap:var(--space-1);
+  padding:var(--space-4);
   background: var(--bg-secondary);
   border-radius:var(--radius-md);
-  margin-bottom:1rem;
+  margin-bottom:var(--space-4);
 }
 
 .trajectory-step {
@@ -451,51 +412,51 @@ async function runSearch() {
 .trajectory-step.step-cross_subject_search {
   background: color-mix(in srgb, var(--subject-ds) 6%, transparent);
   border-radius:var(--radius-xs);
-  padding:0.375rem 0.5rem;
+  padding:0.375rem var(--space-2);
 }
 
-.trajectory-icon { font-size:1rem; flex-shrink: 0; margin-top:0.125rem; display:inline-flex; align-items:center; }
+.trajectory-icon { font-size:var(--text-lg); flex-shrink: 0; margin-top:0.125rem; display:inline-flex; align-items:center; }
 .trajectory-icon svg { width:1rem; height:1rem; }
-.traj-mini { display:inline-flex; vertical-align:middle; margin-right:0.25rem; }
+.traj-mini { display:inline-flex; vertical-align:middle; margin-right:var(--space-1); }
 .traj-mini svg { width:0.875rem; height:0.875rem; }
-.trajectory-content { display: flex; flex-direction: column; gap:0.125rem; font-size:0.8125rem; }
+.trajectory-content { display: flex; flex-direction: column; gap:0.125rem; font-size:var(--text-sm); }
 
 .trajectory-type {
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   color: var(--accent-primary);
-  font-size:0.6875rem;
+  font-size:var(--text-2xs);
   text-transform: uppercase;
 }
 
 .trajectory-query {
   color: var(--text-primary);
   font-family: var(--font-mono);
-  font-size:0.75rem;
+  font-size:var(--text-xs);
 }
 
-.trajectory-info { color: var(--text-secondary); font-size:0.75rem; }
-.trajectory-thought { color: var(--text-muted); font-size:0.75rem; font-style: italic; }
+.trajectory-info { color: var(--text-secondary); font-size:var(--text-xs); }
+.trajectory-thought { color: var(--text-muted); font-size:var(--text-xs); font-style: italic; }
 
 .engine-answer {
-  padding:1.25rem;
+  padding:var(--space-5);
   background: var(--bg-secondary);
   border-radius:var(--radius-md);
   border: 1px solid var(--border-color);
 }
 
 .engine-answer-title {
-  font-size:0.875rem;
-  font-weight: 700;
+  font-size:var(--text-base);
+  font-weight: var(--weight-bold);
   color: var(--text-primary);
-  margin-bottom:0.75rem;
+  margin-bottom:var(--space-3);
 }
 
 .engine-error {
-  padding:0.75rem 1rem;
+  padding:var(--space-3) var(--space-4);
   background: var(--accent-danger-10);
   border-radius:var(--radius-sm);
   color: var(--accent-danger);
-  font-size:0.8125rem;
+  font-size:var(--text-sm);
 }
 
 @media (max-width: 768px) {

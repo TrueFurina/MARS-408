@@ -41,10 +41,10 @@ function notifyNewAchievements() {
 
 // 分享成就
 function shareAchievement(ach: any) {
-  const text = ` 我在 MARS-408 解锁了成就「${ach.name}」！${ach.description}`
+  const text = ` 我在 芒得很职 解锁了成就「${ach.name}」！${ach.description}`
   try {
     if (navigator.share) {
-      navigator.share({ title: 'MARS-408 成就', text }).catch(() => {})
+      navigator.share({ title: '芒得很职 成就', text }).catch(() => {})
     } else if (navigator.clipboard) {
       navigator.clipboard.writeText(text).then(() => {
         const t = (window as any).__toast
@@ -111,18 +111,18 @@ async function loadMemoryOverview() {
 </template>
 
 <style scoped>
-.achievement-stats { text-align: center; font-size: 16px; margin-bottom: 20px; padding: 16px; background: var(--glass-bg); border-radius: var(--radius-md); }
-.achievement-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
-.achievement-card { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--glass-border); background: var(--glass-bg); transition: var(--transition); }
+.achievement-stats { text-align: center; font-size: var(--text-lg); margin-bottom: var(--space-5); padding: var(--space-4); background: var(--glass-bg); border-radius: var(--radius-md); }
+.achievement-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-3); }
+.achievement-card { display: flex; align-items: center; gap: var(--space-3); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--glass-border); background: var(--glass-bg); transition: var(--transition); }
 .achievement-card.unlocked { border-color: var(--accent-primary); background: var(--accent-primary-05); }
 .ach-icon { font-size: 32px; width: 48px; text-align: center; }
 .ach-info { flex: 1; }
-.ach-title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
-.ach-desc { font-size: 12px; color: var(--text-muted); }
-.ach-badge { font-size: 18px; }
-.ach-share { width: 32px; height: 32px; border-radius: var(--radius-sm); border: 1px solid var(--glass-border); background: transparent; cursor: pointer; font-size: 15px; flex-shrink: 0; transition: var(--transition); opacity: 0; }
+.ach-title { font-size: var(--text-base); font-weight: var(--weight-semibold); margin-bottom: 2px; }
+.ach-desc { font-size: var(--text-xs); color: var(--text-muted); }
+.ach-badge { font-size: var(--text-xl); }
+.ach-share { width: 32px; height: 32px; border-radius: var(--radius-sm); border: 1px solid var(--glass-border); background: transparent; cursor: pointer; font-size: var(--text-md); flex-shrink: 0; transition: var(--transition); opacity: 0; }
 .achievement-card:hover .ach-share { opacity: 1; }
 .ach-share:hover { background: var(--accent-primary-10); border-color: var(--accent-primary); }
-.newly-unlocked-strip { margin-top: 16px; padding: 12px 16px; border-radius: var(--radius-md); background: linear-gradient(135deg, rgba(var(--warning-rgb),0.15), rgba(var(--warning-rgb),0.1)); border: 1px solid rgba(var(--warning-rgb),0.3); color: var(--text-primary); font-size: 14px; font-weight: 500; animation: ach-pop 0.4s ease; }
+.newly-unlocked-strip { margin-top: var(--space-4); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); background: linear-gradient(135deg, rgba(var(--warning-rgb),0.15), rgba(var(--warning-rgb),0.1)); border: 1px solid rgba(var(--warning-rgb),0.3); color: var(--text-primary); font-size: var(--text-base); font-weight: var(--weight-medium); animation: ach-pop 0.4s ease; }
 @keyframes ach-pop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 </style>

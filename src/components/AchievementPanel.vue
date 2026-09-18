@@ -132,19 +132,19 @@ const sortedAchievements = computed(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.25rem;
-  padding: 0 0 1rem;
+  margin-bottom: var(--space-5);
+  padding: 0 0 var(--space-4);
   border-bottom: 1px solid var(--border-color);
 }
 
 .ach-title {
-  font-size: 1.125rem;
-  font-weight: 700;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
   color: var(--text-primary);
 }
 
 .ach-subtitle {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   color: var(--text-muted);
   margin-top: 0.125rem;
 }
@@ -153,7 +153,7 @@ const sortedAchievements = computed(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
+  gap: var(--space-1);
 }
 
 .ach-overall-circle {
@@ -174,57 +174,57 @@ const sortedAchievements = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.6875rem;
-  font-weight: 700;
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-bold);
   color: var(--accent-primary);
 }
 
 .ach-overall-count {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
   color: var(--text-secondary);
 }
 
 /* 最近解锁 */
 .ach-recent {
-  margin-bottom: 1.25rem;
+  margin-bottom: var(--space-5);
 }
 
 .ach-recent-title {
-  font-size: 0.8125rem;
-  font-weight: 600;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
   color: var(--text-secondary);
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--space-2);
 }
 
 .ach-recent-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .ach-recent-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
   border: 1px solid;
   background: var(--bg-tertiary);
 }
 
 .ach-recent-icon {
-  font-size: 1.25rem;
+  font-size: var(--text-2xl);
 }
 
 .ach-recent-name {
-  font-size: 0.8125rem;
-  font-weight: 600;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
   color: var(--text-primary);
 }
 
 .ach-recent-desc {
-  font-size: 0.6875rem;
+  font-size: var(--text-2xs);
   color: var(--text-muted);
   margin-top: 0.0625rem;
 }
@@ -239,7 +239,7 @@ const sortedAchievements = computed(() => {
 .ach-card {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
+  gap: var(--space-3);
   padding: 0.875rem;
   border-radius: var(--radius-md);
   background: var(--bg-tertiary);
@@ -264,7 +264,7 @@ const sortedAchievements = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25rem;
+  font-size: var(--text-2xl);
   flex-shrink: 0;
 }
 
@@ -279,13 +279,13 @@ const sortedAchievements = computed(() => {
 }
 
 .ach-card-name {
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
   color: var(--text-primary);
 }
 
 .ach-card-desc {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   color: var(--text-muted);
   margin-top: 0.125rem;
 }
@@ -293,8 +293,8 @@ const sortedAchievements = computed(() => {
 .ach-card-progress {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
 }
 
 .ach-progress-bar-bg {
@@ -312,7 +312,7 @@ const sortedAchievements = computed(() => {
 }
 
 .ach-progress-label {
-  font-size: 0.6875rem;
+  font-size: var(--text-2xs);
   color: var(--text-muted);
   white-space: nowrap;
 }
@@ -320,11 +320,11 @@ const sortedAchievements = computed(() => {
 .ach-card-unlocked {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  margin-top: 0.5rem;
-  font-size: 0.6875rem;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+  font-size: var(--text-2xs);
   color: var(--accent-success);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 
 .ach-unlocked-dot {
@@ -338,7 +338,7 @@ const sortedAchievements = computed(() => {
   top: 0.5rem;
   right: 0.5rem;
   font-size: 0.625rem;
-  padding: 0.125rem 0.5rem;
+  padding: 0.125rem var(--space-2);
   border-radius: var(--radius-full);
   background: var(--color-surface);
   color: var(--text-muted);
@@ -349,15 +349,15 @@ const sortedAchievements = computed(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 0.375rem;
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
 }
 .ach-filter-btn {
-  padding: 0.3125rem 0.75rem;
+  padding: 0.3125rem var(--space-3);
   border-radius: var(--radius-full);
   border: 1px solid var(--border-color);
   background: var(--bg-tertiary);
   color: var(--text-secondary);
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -369,6 +369,6 @@ const sortedAchievements = computed(() => {
   background: var(--accent-primary-15);
   border-color: var(--accent-primary);
   color: var(--accent-primary);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 </style>

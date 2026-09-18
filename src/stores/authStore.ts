@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { api } from '@/utils/api'
+import { api, resetUnauthorizedLatch } from '@/utils/api'
 
 // ── 类型 ──
 type AuthState = { token: string; user: { id: string; user_id: string; username: string; role: string; display_name?: string } } | null
@@ -28,6 +28,11 @@ function loadAuth(): AuthState {
 }
 
 function saveAuth(auth: AuthState) {
+  // 写入新 token 前必须重置 401 自动登出 latch：后端 create_token 的 iat/exp
+  // 是秒级粒度，同一秒内重新登录会拿到与上次**完全相同**的 token，若不重置，
+  // 该 token 再遇 401 会被 loggedOutToken 早退拦住，永久不再跳转登录页。
+  // （这里是全仓库唯一写入 mars408_token 的地方，见 router/index.ts 只读）
+  resetUnauthorizedLatch()
   if (auth) {
     try {
       localStorage.setItem('mars408_token', auth.token)

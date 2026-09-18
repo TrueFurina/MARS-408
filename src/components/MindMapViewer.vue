@@ -137,7 +137,7 @@ const flatNodes = computed(() => {
   border: 1px solid var(--border-light);
   border-radius:var(--radius-md);
   overflow: auto;
-  padding:1rem;
+  padding:var(--space-4);
 }
 .mindmap-tree {
   font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
@@ -145,8 +145,8 @@ const flatNodes = computed(() => {
 .mindmap-node {
   display: flex;
   align-items: center;
-  gap:0.5rem;
-  padding:0.375rem 0.5rem;
+  gap:var(--space-2);
+  padding:0.375rem var(--space-2);
   border-radius:0.375rem;
   line-height:1.6;
   transition: background 0.2s;
@@ -155,26 +155,26 @@ const flatNodes = computed(() => {
   background: var(--accent-1-light);
 }
 .mindmap-node.root {
-  font-size:1rem;
-  font-weight: 700;
+  font-size:var(--text-lg);
+  font-weight: var(--weight-bold);
   color: var(--accent-1);
-  margin-bottom:0.5rem;
-  padding-bottom:0.5rem;
+  margin-bottom:var(--space-2);
+  padding-bottom:var(--space-2);
   border-bottom: 1px solid var(--border-light);
 }
 .mindmap-node.leaf {
   color: var(--text-secondary);
-  font-size:0.8125rem;
+  font-size:var(--text-sm);
 }
 .mindmap-bullet {
   flex-shrink: 0;
   width:1.25rem;
   text-align: center;
-  font-size:0.875rem;
+  font-size:var(--text-base);
   color: var(--accent-2);
 }
 .mindmap-bullet.root {
-  font-size:1.125rem;
+  font-size:var(--text-xl);
 }
 .mindmap-text {
   flex: 1;
@@ -186,6 +186,6 @@ const flatNodes = computed(() => {
   justify-content: center;
   height:18.75rem;
   color: var(--text-muted);
-  font-size:0.875rem;
+  font-size:var(--text-base);
 }
 </style>

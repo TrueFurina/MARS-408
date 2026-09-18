@@ -272,14 +272,14 @@ watch(currentSubject, () => {
 
 <style scoped>
 .back-all-btn {
-  padding:0.4375rem 1rem;
+  padding:0.4375rem var(--space-4);
   border-radius:var(--radius-full);
   border: 1px solid var(--border-color);
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
   color: var(--accent-primary);
-  font-size:0.8125rem;
-  font-weight: 600;
+  font-size:var(--text-sm);
+  font-weight: var(--weight-semibold);
   cursor: pointer;
   transition: var(--transition);
   white-space: nowrap;
@@ -291,7 +291,7 @@ watch(currentSubject, () => {
 }
 .kg-controls {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 .kg-btn {
   width: 2.25rem;
@@ -324,23 +324,23 @@ watch(currentSubject, () => {
 }
 
 /* ── P3 归并：知识图谱页内 Tab 栏 ── */
-.kg-tab-bar { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid var(--glass-border); }
+.kg-tab-bar { display: flex; gap: var(--space-2); margin-bottom: var(--space-4); border-bottom: 1px solid var(--glass-border); }
 .kg-tab-bar .tab-btn {
-  padding: 8px 18px; background: transparent; border: none; cursor: pointer;
-  font-size: 14px; color: var(--text-muted); border-bottom: 2px solid transparent;
+  padding: var(--space-2) 18px; background: transparent; border: none; cursor: pointer;
+  font-size: var(--text-base); color: var(--text-muted); border-bottom: 2px solid transparent;
   transition: var(--transition);
 }
-.kg-tab-bar .tab-btn.active { color: var(--accent-primary); border-bottom-color: var(--accent-primary); font-weight: 600; }
+.kg-tab-bar .tab-btn.active { color: var(--accent-primary); border-bottom-color: var(--accent-primary); font-weight: var(--weight-semibold); }
 
 /* ── 多角色2：移动端响应式适配 ── */
 @media (max-width: 768px) {
   .graph-container { min-height: 50vh; }
   .kg-controls { gap: 0.375rem; }
   .kg-btn { width: 2rem; height: 2rem; }
-  .kg-header { flex-direction: column; align-items: stretch; gap: 0.5rem; }
+  .kg-header { flex-direction: column; align-items: stretch; gap: var(--space-2); }
 }
 @media (max-width: 480px) {
   .graph-container { min-height: 45vh; }
-  .back-all-btn { padding: 0.375rem 0.75rem; font-size: 0.75rem; }
+  .back-all-btn { padding: 0.375rem var(--space-3); font-size: var(--text-xs); }
 }
 </style>

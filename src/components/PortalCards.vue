@@ -51,27 +51,27 @@ const emit = defineEmits<{
 
 <style scoped>
 .portals-section {
-  padding: 0 2rem 2rem;
+  padding: 0 var(--space-8) var(--space-8);
   max-width: 75rem;
   margin: 0 auto;
 }
 .section-label {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   color: var(--text-muted);
-  font-weight: 600;
-  margin-bottom: 0.75rem;
+  font-weight: var(--weight-semibold);
+  margin-bottom: var(--space-3);
   letter-spacing: 0.0312rem;
 }
 .portals-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
+  gap: var(--space-4);
 }
 .portal-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  padding: 1.5rem 1.25rem;
+  padding: var(--space-6) var(--space-5);
   cursor: pointer;
   transition: var(--transition-slow);
   display: flex;
@@ -96,34 +96,34 @@ const emit = defineEmits<{
 .portal-icon-wrap svg { width: 1.5rem; height: 1.5rem; }
 .portal-title {
   font-size: 1.0625rem;
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   color: var(--text-primary);
   letter-spacing: -0.0187rem;
 }
 .portal-subtitle {
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
   color: var(--text-secondary);
   line-height: 1.5;
-  margin-top: 0.25rem;
+  margin-top: var(--space-1);
 }
 .portal-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 0.375rem;
-  margin-top: 0.25rem;
+  margin-top: var(--space-1);
 }
 .portal-tag {
-  font-size: 0.6875rem;
+  font-size: var(--text-2xs);
   padding: 0.1875rem 0.625rem;
   border-radius: var(--radius-full);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .portal-enter {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
   margin-top: auto;
   transition: var(--transition);
 }
@@ -134,8 +134,8 @@ const emit = defineEmits<{
   .portals-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 768px) {
-  .portals-section { padding: 0 1.25rem 1.25rem; }
+  .portals-section { padding: 0 var(--space-5) var(--space-5); }
   .portals-grid { grid-template-columns: 1fr; }
-  .portal-card { padding: 1.25rem 1rem; }
+  .portal-card { padding: var(--space-5) var(--space-4); }
 }
 </style>

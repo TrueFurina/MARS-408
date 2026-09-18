@@ -55,7 +55,6 @@ withDefaults(defineProps<Props>(), {
 
 <style scoped>
 .engine-icon {
-  font-size: 1.375rem;
   display: inline-flex;
   align-items: center;
 }

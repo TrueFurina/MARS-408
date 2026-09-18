@@ -24,7 +24,7 @@ export interface Achievement {
 // 成就定义表
 const ACHIEVEMENT_DEFS: Omit<Achievement, 'unlocked' | 'unlockedAt' | 'progress' | 'progressLabel'>[] = [
   // ── 学习里程碑 ──
-  { id: 'first_login', name: '初次见面', description: '首次登录 MARS-408 学习系统', icon: '', category: 'milestone', color: '#7c6af2' },
+  { id: 'first_login', name: '初次见面', description: '首次登录 芒得很职 学习系统', icon: '', category: 'milestone', color: '#7c6af2' },
   { id: 'profile_built', name: '画像大师', description: '完成学生画像构建', icon: '', category: 'milestone', color: '#8b5cf6' },
   { id: 'first_chat', name: '初次对话', description: '完成第一次 AI 对话', icon: '', category: 'milestone', color: '#3b82f6' },
   { id: 'first_resource', name: '资源猎人', description: '生成第一份学习资源', icon: '', category: 'milestone', color: '#06b6d4' },

@@ -1,0 +1,208 @@
+{
+  "totals": {
+    "font-size": 99,
+    "hex": 42,
+    "spacing": 205
+  },
+  "total": 346,
+  "files": {
+    "App.vue": {
+      "font-size": 1
+    },
+    "components/AchievementPanel.vue": {
+      "font-size": 1
+    },
+    "components/CompareProfilesPanel.vue": {
+      "hex": 1,
+      "font-size": 1
+    },
+    "components/EmptyState.vue": {
+      "font-size": 1
+    },
+    "components/ErrorBoundary.vue": {
+      "hex": 1
+    },
+    "components/EvidenceCheckPanel.vue": {
+      "hex": 1,
+      "font-size": 3
+    },
+    "components/FrugalRAGPanel.vue": {
+      "hex": 1,
+      "font-size": 1
+    },
+    "components/GOMARLPanel.vue": {
+      "hex": 1,
+      "font-size": 2
+    },
+    "components/KnowledgeGraph.vue": {
+      "font-size": 2,
+      "spacing": 16
+    },
+    "components/KnowledgeGraph3D.vue": {
+      "font-size": 1,
+      "spacing": 1
+    },
+    "components/LangGraphFlow.vue": {
+      "hex": 2,
+      "font-size": 1
+    },
+    "components/PdfReader.vue": {
+      "hex": 1,
+      "font-size": 2,
+      "spacing": 4
+    },
+    "components/PortalCards.vue": {
+      "font-size": 1
+    },
+    "components/SkillCard.vue": {
+      "font-size": 1
+    },
+    "components/SourceLabPane.vue": {
+      "font-size": 1
+    },
+    "components/TeachingRulesPanel.vue": {
+      "font-size": 1
+    },
+    "components/ToastNotification.vue": {
+      "spacing": 1
+    },
+    "components/VideoPlayer.vue": {
+      "spacing": 2
+    },
+    "views/AchievementView.vue": {
+      "font-size": 1,
+      "spacing": 1
+    },
+    "views/AdminView.vue": {
+      "font-size": 1
+    },
+    "views/AssessmentView.vue": {
+      "font-size": 2
+    },
+    "views/AuditLogView.vue": {
+      "font-size": 1
+    },
+    "views/BenchmarkView.vue": {
+      "font-size": 2,
+      "spacing": 4
+    },
+    "views/CareerTrainingView.vue": {
+      "font-size": 10,
+      "spacing": 44
+    },
+    "views/ChatView.vue": {
+      "font-size": 1,
+      "spacing": 2
+    },
+    "views/CourseExplorerView.vue": {
+      "hex": 2,
+      "font-size": 3,
+      "spacing": 12
+    },
+    "views/CreatorDashboardView.vue": {
+      "font-size": 2
+    },
+    "views/DailyPlanView.vue": {
+      "font-size": 1,
+      "spacing": 10
+    },
+    "views/DashboardView.vue": {
+      "hex": 2,
+      "font-size": 8,
+      "spacing": 1
+    },
+    "views/DesignSystemView.vue": {
+      "font-size": 3
+    },
+    "views/DiagnosticView.vue": {
+      "hex": 1,
+      "font-size": 2,
+      "spacing": 4
+    },
+    "views/EngineView.vue": {
+      "hex": 3,
+      "font-size": 3
+    },
+    "views/KnowledgeAdminView.vue": {
+      "font-size": 3
+    },
+    "views/KnowledgeBaseView.vue": {
+      "font-size": 1,
+      "spacing": 1
+    },
+    "views/KnowledgeGraphView.vue": {
+      "hex": 1,
+      "font-size": 1,
+      "spacing": 15
+    },
+    "views/LandingView.vue": {
+      "font-size": 5,
+      "spacing": 7
+    },
+    "views/LearningPathView.vue": {
+      "hex": 5,
+      "font-size": 2
+    },
+    "views/LoginView.vue": {
+      "hex": 4,
+      "spacing": 13
+    },
+    "views/MemoryView.vue": {
+      "font-size": 1,
+      "spacing": 6
+    },
+    "views/PracticeView.vue": {
+      "hex": 3
+    },
+    "views/ProfileBuilder.vue": {
+      "hex": 4
+    },
+    "views/ProfileView.vue": {
+      "hex": 1,
+      "font-size": 2,
+      "spacing": 17
+    },
+    "views/PromptStudioView.vue": {
+      "font-size": 1,
+      "spacing": 1
+    },
+    "views/QuizHistoryView.vue": {
+      "font-size": 1
+    },
+    "views/ResourceView.vue": {
+      "hex": 3
+    },
+    "views/ReviewView.vue": {
+      "font-size": 1,
+      "spacing": 1
+    },
+    "views/ShowcaseView.vue": {
+      "hex": 2,
+      "font-size": 2,
+      "spacing": 5
+    },
+    "views/SkillDetailView.vue": {
+      "hex": 1,
+      "font-size": 1
+    },
+    "views/SkillPlatformView.vue": {
+      "hex": 2,
+      "font-size": 9,
+      "spacing": 10
+    },
+    "views/SkillStudioView.vue": {
+      "font-size": 1,
+      "spacing": 7
+    },
+    "views/TeacherCareerView.vue": {
+      "font-size": 6
+    },
+    "views/TeacherView.vue": {
+      "font-size": 1
+    },
+    "views/WrongQuestionsView.vue": {
+      "font-size": 1,
+      "spacing": 20
+    }
+  }
+}

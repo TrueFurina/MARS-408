@@ -134,7 +134,7 @@ defineExpose({ focusInput })
   background: var(--bg-input);
   border: 1px solid var(--border-color);
   border-radius:var(--radius-lg);
-  padding:1rem 1rem 0.625rem;
+  padding:var(--space-4) var(--space-4) 0.625rem;
   transition: var(--transition);
   box-shadow: var(--shadow-sm);
   backdrop-filter: blur(var(--glass-blur));
@@ -151,11 +151,11 @@ defineExpose({ focusInput })
   outline: none;
   background: transparent;
   color: var(--text-primary);
-  font-size:1rem;
+  font-size:var(--text-lg);
   line-height:1.6;
   resize: none;
   overflow-y: hidden;
-  padding:0 0 0.5rem;
+  padding:0 0 var(--space-2);
   max-height:21.3em;
   min-height:3.7em;
   font-family: inherit;
@@ -168,7 +168,7 @@ defineExpose({ focusInput })
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top:0.5rem;
+  padding-top:var(--space-2);
 }
 
 .input-bottom-left {
@@ -180,20 +180,20 @@ defineExpose({ focusInput })
 .input-bottom-right {
   display: flex;
   align-items: center;
-  gap:0.25rem;
+  gap:var(--space-1);
 }
 
 .deep-think-btn {
   display: inline-flex;
   align-items: center;
   gap:0.3125rem;
-  padding:0.3125rem 0.75rem;
+  padding:0.3125rem var(--space-3);
   border-radius:var(--radius-sm);
   border: 1px solid var(--border-color);
   background: transparent;
   color: var(--text-muted);
-  font-size:0.8125rem;
-  font-weight: 500;
+  font-size:var(--text-sm);
+  font-weight: var(--weight-medium);
   cursor: pointer;
   transition: var(--transition);
   user-select: none;
@@ -217,13 +217,13 @@ defineExpose({ focusInput })
   display: inline-flex;
   align-items: center;
   gap:0.3125rem;
-  padding:0.3125rem 0.75rem;
+  padding:0.3125rem var(--space-3);
   border-radius:var(--radius-sm);
   border: 1px solid var(--border-color);
   background: transparent;
   color: var(--text-muted);
-  font-size:0.8125rem;
-  font-weight: 500;
+  font-size:var(--text-sm);
+  font-weight: var(--weight-medium);
   cursor: pointer;
   transition: var(--transition);
   user-select: none;
@@ -288,5 +288,5 @@ defineExpose({ focusInput })
 :deep(.send-btn svg) { width:1.125rem; height:1.125rem; }
 
 .deep-think-btn svg { width:1.125rem; height:1.125rem; }
-.input-bottom-right { gap:0.5rem; }
+.input-bottom-right { gap:var(--space-2); }
 </style>

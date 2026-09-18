@@ -92,23 +92,23 @@ const strokeColor = computed(() => props.color || `url(#${gradId})`)
   pointer-events: none;
 }
 .ring-num {
-  font-size: 1.25rem;
+  font-size: var(--text-2xl);
   font-weight: 800;
   color: var(--text-primary);
   letter-spacing: -0.0312rem;
-  line-height: 1;
+  line-height: var(--leading-none);
   font-variant-numeric: tabular-nums;
 }
 .ring-pct {
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
   margin-left: 1px;
   color: var(--text-secondary);
 }
 .ring-label {
-  font-size: 0.6875rem;
+  font-size: var(--text-2xs);
   color: var(--text-muted);
   margin-top: 2px;
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 </style>

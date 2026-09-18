@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import LangGraphFlow from '@/components/LangGraphFlow.vue'
 import { icons } from '@/components/icons'
+import EngineSection from '@/components/EngineSection.vue'
 import { useStudyStore } from '@/stores/studyStore'
 import { api } from '@/utils/api'
 
@@ -87,15 +88,12 @@ async function runConsensus() {
 </script>
 
 <template>
-  <div class="engine-section glass-card">
-    <div class="engine-section-title">
-      <span class="engine-icon" v-html="icons.robot"></span>
-      GoMARL 多智能体共识引擎
-      <span class="engine-tag">NeuralMixer + 冲突消解 + 动态权重</span>
-    </div>
-    <div class="engine-desc">
-      E5编码 → 知识一致性校验 → 证据冲突消解 → 动态权重(画像+教学规则) → NeuralMixer共识 → 历史记录
-    </div>
+  <EngineSection
+    title="GoMARL 多智能体共识引擎"
+    tag="NeuralMixer + 冲突消解 + 动态权重"
+    desc="E5编码 → 知识一致性校验 → 证据冲突消解 → 动态权重(画像+教学规则) → NeuralMixer共识 → 历史记录"
+  >
+    <template #icon><span v-html="icons.robot"></span></template>
 
     <div class="engine-input-row">
       <input v-model="topic" class="engine-input" placeholder="学习主题" />
@@ -182,83 +180,39 @@ async function runConsensus() {
     <div v-else-if="result?.status === 'error'" class="engine-error">
       {{ result.message }}
     </div>
-  </div>
+  </EngineSection>
 </template>
 
 <style scoped>
-.engine-section {
-  margin-bottom:2rem;
-  padding:1.5rem;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius:var(--radius-lg);
-  backdrop-filter: blur(12px);
-}
-
-.glass-card {
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border-color);
-  border-radius:var(--radius-md);
-}
-
-.engine-section-title {
-  display: flex;
-  align-items: center;
-  gap:0.5rem;
-  font-size:1.125rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom:0.25rem;
-}
-
-.engine-icon { font-size:1.375rem; display:inline-flex; align-items:center; color:var(--accent-primary); }
-.engine-icon svg { width:1.375rem; height:1.375rem; }
-.mini-icon { display:inline-flex; vertical-align:middle; margin-right:0.25rem; }
+.mini-icon { display:inline-flex; vertical-align:middle; margin-right:var(--space-1); }
 .mini-icon svg { width:0.875rem; height:0.875rem; }
-
-.engine-tag {
-  margin-left:auto;
-  font-size:0.6875rem;
-  padding:0.1875rem 0.75rem;
-  border-radius:var(--radius-full);
-  background: var(--accent-primary-10);
-  color: var(--accent-primary);
-  font-weight: 500;
-}
-
-.engine-desc {
-  font-size:0.8125rem;
-  color: var(--text-secondary);
-  margin-bottom:1rem;
-}
 
 .engine-input-row {
   display: flex;
-  gap:0.5rem;
-  margin-bottom:1rem;
+  gap:var(--space-2);
+  margin-bottom:var(--space-4);
 }
 
 .engine-input {
   flex: 1;
-  padding:0.625rem 1rem;
+  padding:0.625rem var(--space-4);
   border-radius:var(--radius-sm);
   background: var(--bg-input);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
-  font-size:0.875rem;
+  font-size:var(--text-base);
   outline: none;
   transition: var(--transition);
 }
 
 .engine-btn {
-  padding:0.625rem 1.5rem;
+  padding:0.625rem var(--space-6);
   border-radius:var(--radius-full);
   border: none;
   background: var(--gradient-primary);
   color: #fff;
-  font-size:0.875rem;
-  font-weight: 600;
+  font-size:var(--text-base);
+  font-weight: var(--weight-semibold);
   cursor: pointer;
   transition: var(--transition-bounce);
   white-space: nowrap;
@@ -289,40 +243,40 @@ async function runConsensus() {
   transition: width 0.3s ease;
 }
 
-.engine-result { margin-top:1rem; }
+.engine-result { margin-top:var(--space-4); }
 
 .engine-error {
-  padding:0.75rem 1rem;
+  padding:var(--space-3) var(--space-4);
   background: var(--accent-danger-10);
   border-radius:var(--radius-sm);
   color: var(--accent-danger);
-  font-size:0.8125rem;
+  font-size:var(--text-sm);
 }
 
 .gomarl-agents-preview {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap:0.75rem;
-  margin-bottom:1rem;
+  gap:var(--space-3);
+  margin-bottom:var(--space-4);
 }
 
-.gomarl-agent-preview-card { padding:0.75rem; }
-.gomarl-agent-name { font-size:0.8125rem; font-weight: 700; color: var(--accent-primary); margin-bottom:0.25rem; }
-.gomarl-agent-score { font-size:0.6875rem; color: var(--text-muted); margin-bottom:0.25rem; }
-.gomarl-agent-content { font-size:0.6875rem; color: var(--text-secondary); line-height:1.4; }
+.gomarl-agent-preview-card { padding:var(--space-3); }
+.gomarl-agent-name { font-size:var(--text-sm); font-weight: var(--weight-bold); color: var(--accent-primary); margin-bottom:var(--space-1); }
+.gomarl-agent-score { font-size:var(--text-2xs); color: var(--text-muted); margin-bottom:var(--space-1); }
+.gomarl-agent-content { font-size:var(--text-2xs); color: var(--text-secondary); line-height:1.4; }
 
 .gomarl-consensus-score {
   display: flex;
   align-items: center;
-  gap:0.75rem;
-  padding:1.25rem;
-  margin-bottom:1rem;
+  gap:var(--space-3);
+  padding:var(--space-5);
+  margin-bottom:var(--space-4);
 }
 
-.score-label { font-size:0.875rem; color: var(--text-secondary); }
+.score-label { font-size:var(--text-base); color: var(--text-secondary); }
 
 .score-value {
-  font-size:2.25rem;
+  font-size:var(--text-5xl);
   font-weight: 800;
   background: var(--gradient-primary);
   -webkit-background-clip: text;
@@ -331,26 +285,26 @@ async function runConsensus() {
 
 .score-neural {
   margin-left:auto;
-  font-size:0.75rem;
-  padding:0.25rem 0.75rem;
+  font-size:var(--text-xs);
+  padding:var(--space-1) var(--space-3);
   border-radius:var(--radius-full);
   background: var(--accent-primary-10);
   color: var(--accent-primary);
 }
 
-.gomarl-weights { margin-bottom:1rem; }
-.gomarl-weights-title { font-size:0.8125rem; font-weight: 700; color: var(--text-primary); margin-bottom:0.5rem; }
+.gomarl-weights { margin-bottom:var(--space-4); }
+.gomarl-weights-title { font-size:var(--text-sm); font-weight: var(--weight-bold); color: var(--text-primary); margin-bottom:var(--space-2); }
 .gomarl-weights-grid { display: flex; flex-direction: column; gap:0.375rem; }
-.gomarl-weight-item { display: flex; align-items: center; gap:0.5rem; }
-.weight-name { font-size:0.75rem; color: var(--text-secondary); min-width:6.25rem; }
+.gomarl-weight-item { display: flex; align-items: center; gap:var(--space-2); }
+.weight-name { font-size:var(--text-xs); color: var(--text-secondary); min-width:6.25rem; }
 .weight-bar { flex: 1; height:0.375rem; background: var(--bg-tertiary); border-radius:var(--radius-full); overflow: hidden; }
-.weight-value { font-size:0.75rem; color: var(--text-primary); font-weight: 600; min-width:2.5rem; text-align: right; }
+.weight-value { font-size:var(--text-xs); color: var(--text-primary); font-weight: var(--weight-semibold); min-width:2.5rem; text-align: right; }
 
-.gomarl-conflicts { margin-bottom:1rem; }
-.gomarl-conflicts-title { display: flex; align-items: center; gap:0.5rem; font-size:0.8125rem; font-weight: 700; color: var(--text-primary); margin-bottom:0.5rem; }
+.gomarl-conflicts { margin-bottom:var(--space-4); }
+.gomarl-conflicts-title { display: flex; align-items: center; gap:var(--space-2); font-size:var(--text-sm); font-weight: var(--weight-bold); color: var(--text-primary); margin-bottom:var(--space-2); }
 
 .consistency-badge {
-  font-size:0.6875rem;
+  font-size:var(--text-2xs);
   padding:0.125rem 0.625rem;
   border-radius:var(--radius-full);
   background: color-mix(in srgb, var(--conflict-detected) 20%, transparent);
@@ -359,31 +313,31 @@ async function runConsensus() {
 
 .consistency-badge.high { background: color-mix(in srgb, var(--conflict-resolved) 20%, transparent); color: var(--conflict-resolved); }
 
-.gomarl-conflict-stats { display: flex; gap:0.75rem; margin-bottom:0.5rem; }
-.conflict-stat { font-size:0.75rem; color: var(--text-secondary); }
+.gomarl-conflict-stats { display: flex; gap:var(--space-3); margin-bottom:var(--space-2); }
+.conflict-stat { font-size:var(--text-xs); color: var(--text-secondary); }
 .conflict-stat.resolved { color: var(--conflict-resolved); }
 .conflict-stat.unresolved { color: var(--conflict-detected); }
 
 .gomarl-conflict-detail {
   display: flex;
   align-items: center;
-  gap:0.5rem;
+  gap:var(--space-2);
   padding:0.375rem 0.625rem;
   background: var(--bg-tertiary);
   border-radius:var(--radius-sm);
-  margin-bottom:0.25rem;
-  font-size:0.75rem;
+  margin-bottom:var(--space-1);
+  font-size:var(--text-xs);
 }
 
-.conflict-type { font-size:0.625rem; padding:0.125rem 0.375rem; border-radius:var(--radius-xs); background: var(--accent-primary-10); color: var(--accent-primary); font-weight: 600; }
+.conflict-type { font-size:0.625rem; padding:0.125rem 0.375rem; border-radius:var(--radius-xs); background: var(--accent-primary-10); color: var(--accent-primary); font-weight: var(--weight-semibold); }
 .conflict-desc { color: var(--text-secondary); flex: 1; }
-.conflict-resolution { color: var(--conflict-resolved); font-weight: 500; }
+.conflict-resolution { color: var(--conflict-resolved); font-weight: var(--weight-medium); }
 
-.gomarl-groups { margin-bottom:1rem; }
-.gomarl-groups-title { font-size:0.8125rem; font-weight: 700; color: var(--text-primary); margin-bottom:0.5rem; }
+.gomarl-groups { margin-bottom:var(--space-4); }
+.gomarl-groups-title { font-size:var(--text-sm); font-weight: var(--weight-bold); color: var(--text-primary); margin-bottom:var(--space-2); }
 .gomarl-groups-list { display: flex; flex-wrap: wrap; gap:0.375rem; }
-.gomarl-group-tag { font-size:0.6875rem; padding:0.1875rem 0.625rem; border-radius:var(--radius-full); background: var(--bg-tertiary); color: var(--text-secondary); }
-.gomarl-sd-loss { font-size:0.6875rem; color: var(--text-muted); margin-top:0.25rem; }
+.gomarl-group-tag { font-size:var(--text-2xs); padding:0.1875rem 0.625rem; border-radius:var(--radius-full); background: var(--bg-tertiary); color: var(--text-secondary); }
+.gomarl-sd-loss { font-size:var(--text-2xs); color: var(--text-muted); margin-top:var(--space-1); }
 
 /* 已删除本地 @keyframes pulse-glow：动画 box-shadow 模糊半径（违反"只动 GPU 属性"），
    且全组件无引用，属死代码。需要呼吸效果请用全局 mars-pulse-soft。 */

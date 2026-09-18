@@ -334,7 +334,7 @@ onBeforeUnmount(() => {
 .workspace-switch {
   display: inline-flex;
   gap: 0.375rem;
-  margin-top: 0.5rem;
+  margin-top: var(--space-2);
 }
 .workspace-switch button {
   padding: 0.3125rem 0.875rem;
@@ -342,7 +342,7 @@ onBeforeUnmount(() => {
   border: 1px solid var(--border-color);
   background: transparent;
   color: var(--text-secondary);
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   cursor: pointer;
   transition: var(--transition);
 }
@@ -351,12 +351,12 @@ onBeforeUnmount(() => {
   background: var(--gradient-accent);
   color: var(--text-user);
   border-color: transparent;
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .sandbox-layout {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: var(--space-4);
   height: calc(100vh - 12.5rem);
   min-height: 31.25rem;
 }
@@ -380,54 +380,54 @@ onBeforeUnmount(() => {
   border-bottom: 1px solid var(--border-light);
   flex-shrink: 0;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
-.sandbox-title { font-size: 0.8125rem; font-weight: 600; color: var(--text-secondary); }
+.sandbox-title { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-secondary); }
 .sandbox-actions { display: flex; gap: 0.375rem; align-items: center; }
 .sandbox-btn {
-  padding: 0.3125rem 0.75rem;
+  padding: 0.3125rem var(--space-3);
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-color);
   background: transparent;
   color: var(--text-secondary);
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   cursor: pointer;
   transition: var(--transition);
 }
 .sandbox-btn:hover { border-color: var(--accent-1); color: var(--accent-1); }
 .sandbox-run-btn {
-  padding: 0.3125rem 1rem;
+  padding: 0.3125rem var(--space-4);
   border-radius: var(--radius-sm);
   border: none;
   background: var(--gradient-accent);
   color: var(--text-user);
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
   cursor: pointer;
   transition: var(--transition);
 }
 .sandbox-run-btn.stop { background: var(--accent-danger); }
 .sandbox-run-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .sandbox-run-btn:hover:not(:disabled) { opacity: 0.9; }
-.lang-switch { display: flex; gap: 0.25rem; }
+.lang-switch { display: flex; gap: var(--space-1); }
 .lang-switch button {
-  padding: 0.25rem 0.75rem;
+  padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-color);
   background: transparent;
   color: var(--text-secondary);
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   cursor: pointer;
   transition: var(--transition);
 }
 .lang-switch button.active { background: var(--gradient-accent); color: var(--text-user); border-color: transparent; }
 .example-select {
-  padding: 0.25rem 0.5rem;
+  padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-color);
   background: var(--bg-card);
   color: var(--text-primary);
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
 }
 .sandbox-editor {
   flex: 1;
@@ -437,7 +437,7 @@ onBeforeUnmount(() => {
   background: var(--color-surface-2);
   color: var(--color-text);
   font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
   line-height: 1.6;
   resize: none;
   tab-size: 4;
@@ -445,8 +445,8 @@ onBeforeUnmount(() => {
 .stdin-editor { flex: 0 0 5rem; border-bottom: 1px solid var(--border-light); }
 .sandbox-editor::placeholder { color: var(--color-text-3); }
 .sandbox-info {
-  padding: 0.5rem 0.875rem;
-  font-size: 0.6875rem;
+  padding: var(--space-2) 0.875rem;
+  font-size: var(--text-2xs);
   color: var(--text-muted);
   border-top: 1px solid var(--border-light);
   flex-shrink: 0;
@@ -459,7 +459,7 @@ onBeforeUnmount(() => {
 }
 .output-text {
   font-family: 'SF Mono', 'Consolas', monospace;
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
   line-height: 1.5;
   color: var(--accent-success);
   white-space: pre-wrap;
@@ -472,21 +472,21 @@ onBeforeUnmount(() => {
   justify-content: center;
   height: 100%;
   color: var(--color-text-3);
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
   text-align: center;
-  padding: 2.5rem;
+  padding: var(--space-10);
 }
 .compiler-notice {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.75rem 1rem;
-  margin-bottom: 1rem;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
   border-radius: var(--radius-md);
   background: var(--accent-warning-light);
   border: 1px solid rgba(var(--warning-rgb), 0.35);
   color: var(--text-primary);
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
 }
 .compiler-notice small { color: var(--text-muted); }
 </style>

@@ -330,7 +330,7 @@ watch(chartWidth, () => { /* trigger re-render via computed */ })
         注：原页面展示的"矛盾检出数"在真产物中不存在（来自 --demo 合成数据），已移除，改为真产物中确实存在的准确率与一致性指标。
       </div>
 
-      <!-- 准确率对比（真产物：83.33% vs 76.67%） -->
+      <!-- 准确率对比（数值全部来自 /api/benchmark/results 真产物，随最新产物自动更新） -->
       <div class="contradiction-compare">
         <div class="contra-row">
           <div class="contra-label">
@@ -460,11 +460,11 @@ watch(chartWidth, () => { /* trigger re-render via computed */ })
   border: 1px solid var(--accent-primary-20);
 }
 .prov-badge {
-  padding: 2px 8px; border-radius: 999px;
+  padding: 2px var(--space-2); border-radius: 999px;
   background: rgba(var(--success-rgb), 0.15); color: var(--color-success);
-  font-weight: 700; font-size: var(--text-2xs);
+  font-weight: var(--weight-bold); font-size: var(--text-2xs);
 }
-.prov-item b { color: var(--text-secondary); font-weight: 600; margin-right: 4px; }
+.prov-item b { color: var(--text-secondary); font-weight: var(--weight-semibold); margin-right: var(--space-1); }
 .prov-item code { font-size: var(--text-2xs); color: var(--text-secondary); }
 .prov-skeleton { font-size: var(--text-xs); color: var(--text-muted); padding: var(--space-3); }
 
@@ -473,11 +473,11 @@ watch(chartWidth, () => { /* trigger re-render via computed */ })
   padding: var(--space-8) var(--space-5); text-align: center;
   border: 1px dashed var(--color-border-strong);
 }
-.no-data-title { font-size: var(--text-base); font-weight: 700; color: var(--text-primary, var(--text-secondary)); margin-bottom: var(--space-2); }
+.no-data-title { font-size: var(--text-base); font-weight: var(--weight-bold); color: var(--text-primary, var(--text-secondary)); margin-bottom: var(--space-2); }
 .no-data-desc { font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-2); }
 .no-data-desc code { font-size: var(--text-2xs); }
 .no-data-btn {
-  margin-top: var(--space-2); padding: 6px 16px; border-radius: var(--radius-md);
+  margin-top: var(--space-2); padding: 6px var(--space-4); border-radius: var(--radius-md);
   background: var(--accent-primary-10); color: var(--accent-primary);
   border: 1px solid var(--accent-primary-20); cursor: pointer; font-size: var(--text-xs);
 }
@@ -485,7 +485,7 @@ watch(chartWidth, () => { /* trigger re-render via computed */ })
 /* ── 如实说明 / 口径变更说明 ── */
 .honest-note, .method-change-note {
   margin-top: var(--space-3); padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md); font-size: var(--text-xs); line-height: 1.7;
+  border-radius: var(--radius-md); font-size: var(--text-xs); line-height: var(--leading-relaxed);
   background: rgba(var(--warning-rgb), 0.08);
   border-left: 3px solid var(--color-warning);
   color: var(--text-secondary);
@@ -513,7 +513,7 @@ watch(chartWidth, () => { /* trigger re-render via computed */ })
 .metric-recall::before { background: linear-gradient(90deg, var(--accent-primary), var(--flow-control)); }
 .metric-precision::before { background: linear-gradient(90deg, var(--subject-co), var(--color-success)); }
 .metric-accuracy::before { background: linear-gradient(90deg, var(--color-warning), var(--accent-primary)); }
-.metric-unit { font-size: var(--text-lg); font-weight: 700; margin-left: 2px; -webkit-text-fill-color: var(--text-muted); }
+.metric-unit { font-size: var(--text-lg); font-weight: var(--weight-bold); margin-left: 2px; -webkit-text-fill-color: var(--text-muted); }
 
 .metric-icon-wrap {
   width: 40px; height: 40px;

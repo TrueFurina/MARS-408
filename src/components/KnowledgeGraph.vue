@@ -448,16 +448,16 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
 .kg-canvas-container { position: relative; width: 100%; }
 .kg-canvas { width: 100%; height: auto; display: block; border-radius: 12px; background: rgba(255,255,255,0.02); border: 1px solid var(--color-border); }
 
-.kg-search-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; padding: 0 4px; }
-.kg-search-input { flex: 1; padding: 8px 14px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface-2); color: var(--color-text); font-size: 14px; }
+.kg-search-bar { display: flex; align-items: center; gap: var(--space-2); margin-bottom: 10px; padding: 0 var(--space-1); }
+.kg-search-input { flex: 1; padding: var(--space-2) 14px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface-2); color: var(--color-text); font-size: var(--text-base); }
 .kg-search-input:focus { outline: none; border-color: var(--color-border-focus); }
-.kg-search-clear { background: none; border: none; color: var(--color-text-3); cursor: pointer; font-size: 16px; padding: 4px; }
+.kg-search-clear { background: none; border: none; color: var(--color-text-3); cursor: pointer; font-size: var(--text-lg); padding: var(--space-1); }
 
-.kg-zoom-controls { position: absolute; top: 50px; right: 10px; display: flex; flex-direction: column; gap: 4px; z-index: 10; }
-.kg-zoom-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text-2); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.kg-zoom-controls { position: absolute; top: 50px; right: 10px; display: flex; flex-direction: column; gap: var(--space-1); z-index: 10; }
+.kg-zoom-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text-2); font-size: var(--text-lg); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
 .kg-zoom-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
 
-.kg-mastery-legend { position: absolute; top: 50px; left: 10px; display: flex; align-items: center; gap: 4px; padding: 6px 12px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; font-size: 11px; color: var(--color-text-2); z-index: 10; }
+.kg-mastery-legend { position: absolute; top: 50px; left: 10px; display: flex; align-items: center; gap: var(--space-1); padding: 6px var(--space-3); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; font-size: var(--text-2xs); color: var(--color-text-2); z-index: 10; }
 .kg-legend-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 
 /* 详情面板 */
@@ -466,62 +466,62 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
 .kg-detail-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--color-border); }
 .kg-detail-title-row { display: flex; align-items: center; gap: 10px; }
 .kg-detail-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.kg-detail-title { font-size: 16px; font-weight: 600; color: var(--color-text); }
-.kg-detail-mastery { font-size: 11px; padding: 1px 8px; border-radius: 10px; font-weight: 600; }
-.kg-detail-close { background: none; border: none; color: var(--color-text-3); font-size: 18px; cursor: pointer; padding: 4px; }
+.kg-detail-title { font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--color-text); }
+.kg-detail-mastery { font-size: var(--text-2xs); padding: 1px var(--space-2); border-radius: 10px; font-weight: var(--weight-semibold); }
+.kg-detail-close { background: none; border: none; color: var(--color-text-3); font-size: var(--text-xl); cursor: pointer; padding: var(--space-1); }
 .kg-detail-close:hover { color: var(--color-text); }
 .kg-detail-tabs { display: flex; border-bottom: 1px solid var(--color-border); }
-.kg-tab { flex: 1; padding: 10px; border: none; background: transparent; color: var(--color-text-2); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+.kg-tab { flex: 1; padding: 10px; border: none; background: transparent; color: var(--color-text-2); font-size: var(--text-sm); font-weight: var(--weight-medium); cursor: pointer; transition: all 0.15s; }
 .kg-tab:hover { color: var(--color-text); background: var(--color-surface-hover); }
 .kg-tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
 .kg-detail-body { flex: 1; overflow-y: auto; padding: 14px 18px; }
-.kg-detail-row { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--color-border); }
+.kg-detail-row { display: flex; gap: var(--space-3); padding: var(--space-2) 0; border-bottom: 1px solid var(--color-border); }
 .kg-detail-row:last-child { border-bottom: none; }
-.kg-detail-label { width: 80px; font-size: 13px; color: var(--color-text-3); flex-shrink: 0; }
-.kg-detail-val { flex: 1; font-size: 13px; color: var(--color-text); line-height: 1.5; }
-.kg-rel-item { display: flex; align-items: center; gap: 6px; padding: 8px 0; font-size: 13px; }
-.kg-rel-node { color: var(--accent); font-weight: 500; }
-.kg-rel-arrow { color: var(--color-text-3); font-size: 12px; }
-.kg-detail-empty { text-align: center; padding: 30px; color: var(--color-text-3); font-size: 14px; }
-.kg-resource-item { padding: 10px 14px; border-radius: 8px; cursor: pointer; font-size: 14px; color: var(--color-text-2); transition: all 0.15s; }
+.kg-detail-label { width: 80px; font-size: var(--text-sm); color: var(--color-text-3); flex-shrink: 0; }
+.kg-detail-val { flex: 1; font-size: var(--text-sm); color: var(--color-text); line-height: 1.5; }
+.kg-rel-item { display: flex; align-items: center; gap: 6px; padding: var(--space-2) 0; font-size: var(--text-sm); }
+.kg-rel-node { color: var(--accent); font-weight: var(--weight-medium); }
+.kg-rel-arrow { color: var(--color-text-3); font-size: var(--text-xs); }
+.kg-detail-empty { text-align: center; padding: 30px; color: var(--color-text-3); font-size: var(--text-base); }
+.kg-resource-item { padding: 10px 14px; border-radius: 8px; cursor: pointer; font-size: var(--text-base); color: var(--color-text-2); transition: all 0.15s; }
 .kg-resource-item:hover { background: var(--color-surface-hover); color: var(--accent); }
-.kg-empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; pointer-events: none; }
+.kg-empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-2); pointer-events: none; }
 .empty-icon { font-size: 48px; }
-.empty-text { font-size: 18px; font-weight: 600; color: var(--color-text-2); }
-.empty-hint { font-size: 14px; color: var(--color-text-3); }
+.empty-text { font-size: var(--text-xl); font-weight: var(--weight-semibold); color: var(--color-text-2); }
+.empty-hint { font-size: var(--text-base); color: var(--color-text-3); }
 
 /* 大纲模式 */
-.outline-view { padding: 16px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; min-height: 400px; }
-.outline-node { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 8px; cursor: pointer; transition: all 0.15s; border-left: 3px solid transparent; margin-bottom: 4px; }
+.outline-view { padding: var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; min-height: 400px; }
+.outline-node { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 8px; cursor: pointer; transition: all 0.15s; border-left: 3px solid transparent; margin-bottom: var(--space-1); }
 .outline-node:hover { background: var(--color-surface-hover); border-left-color: var(--accent); }
 .outline-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.outline-label { flex: 1; font-size: 14px; color: var(--color-text); font-weight: 500; }
-.outline-mastery { font-size: 11px; font-weight: 600; }
-.outline-importance { font-size: 12px; }
+.outline-label { flex: 1; font-size: var(--text-base); color: var(--color-text); font-weight: var(--weight-medium); }
+.outline-mastery { font-size: var(--text-2xs); font-weight: var(--weight-semibold); }
+.outline-importance { font-size: var(--text-xs); }
 .outline-importance.high { color: var(--accent-warm); }
 .outline-importance.medium { color: var(--accent-cyan); }
 .outline-importance.low { color: var(--color-text-3); }
 
 /* 思维导图模式 */
-.mindmap-view { position: relative; display: flex; flex-direction: column; align-items: center; padding: 20px; min-height: 400px; }
-.mindmap-center { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 16px 24px; border-radius: 14px; background: var(--color-surface); border: 2px solid var(--accent); cursor: pointer; margin-bottom: 40px; }
+.mindmap-view { position: relative; display: flex; flex-direction: column; align-items: center; padding: var(--space-5); min-height: 400px; }
+.mindmap-center { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: var(--space-4) var(--space-6); border-radius: 14px; background: var(--color-surface); border: 2px solid var(--accent); cursor: pointer; margin-bottom: var(--space-10); }
 .mindmap-center:hover { transform: scale(1.05); }
 .mindmap-center-dot { width: 12px; height: 12px; border-radius: 50%; }
-.mindmap-center-label { font-size: 16px; font-weight: 700; color: var(--color-text); }
-.mindmap-ring { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; max-width: 700px; }
-.mindmap-node { display: flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 10px; background: var(--color-surface); border: 1px solid var(--color-border); cursor: pointer; transition: all 0.15s; }
+.mindmap-center-label { font-size: var(--text-lg); font-weight: var(--weight-bold); color: var(--color-text); }
+.mindmap-ring { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); max-width: 700px; }
+.mindmap-node { display: flex; align-items: center; gap: 6px; padding: 10px var(--space-4); border-radius: 10px; background: var(--color-surface); border: 1px solid var(--color-border); cursor: pointer; transition: all 0.15s; }
 .mindmap-node:hover { border-color: var(--accent); transform: translateY(-2px); }
 .mindmap-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.mindmap-label { font-size: 13px; color: var(--color-text); }
+.mindmap-label { font-size: var(--text-sm); color: var(--color-text); }
 
 /* 学习地图模式 */
-.map-view { padding: 20px; min-height: 400px; }
-.map-path { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; justify-content: center; }
-.map-node { display: flex; align-items: center; gap: 8px; }
-.map-node-card { padding: 12px 16px; border-radius: 10px; background: var(--color-surface); border: 2px solid var(--color-border); cursor: pointer; transition: all 0.15s; min-width: 120px; text-align: center; }
+.map-view { padding: var(--space-5); min-height: 400px; }
+.map-path { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); justify-content: center; }
+.map-node { display: flex; align-items: center; gap: var(--space-2); }
+.map-node-card { padding: var(--space-3) var(--space-4); border-radius: 10px; background: var(--color-surface); border: 2px solid var(--color-border); cursor: pointer; transition: all 0.15s; min-width: 120px; text-align: center; }
 .map-node-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-.map-node-step { font-size: 11px; font-weight: 700; color: var(--color-text-3); margin-bottom: 4px; }
-.map-node-label { font-size: 13px; font-weight: 600; color: var(--color-text); }
-.map-node-mastery { font-size: 10px; padding: 1px 8px; border-radius: 8px; margin-top: 4px; display: inline-block; }
-.map-arrow { font-size: 20px; color: var(--color-text-3); }
+.map-node-step { font-size: var(--text-2xs); font-weight: var(--weight-bold); color: var(--color-text-3); margin-bottom: var(--space-1); }
+.map-node-label { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--color-text); }
+.map-node-mastery { font-size: 10px; padding: 1px var(--space-2); border-radius: 8px; margin-top: var(--space-1); display: inline-block; }
+.map-arrow { font-size: var(--text-2xl); color: var(--color-text-3); }
 </style>

@@ -165,30 +165,30 @@ const filteredStudents = computed(() => {
 </template>
 
 <style scoped>
-.dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
 @media (max-width: 768px) { .dashboard-grid { grid-template-columns: 1fr; } }
-.dash-card { padding: 20px; background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--glass-border); border-radius: var(--radius-md); }
-.dash-card-title { font-size:1rem; font-weight: 700; margin-bottom:0.875rem; color: var(--text-primary); }
-.dash-stats { display: flex; gap:1rem; flex-wrap: wrap; margin-bottom:1rem; }
-.dash-stat { text-align: center; min-width:4.375rem; padding:0.5rem; background: var(--bg-tertiary); border-radius:var(--radius-sm); }
+.dash-card { padding: var(--space-5); background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--glass-border); border-radius: var(--radius-md); }
+.dash-card-title { font-size:var(--text-lg); font-weight: var(--weight-bold); margin-bottom:0.875rem; color: var(--text-primary); }
+.dash-stats { display: flex; gap:var(--space-4); flex-wrap: wrap; margin-bottom:var(--space-4); }
+.dash-stat { text-align: center; min-width:4.375rem; padding:var(--space-2); background: var(--bg-tertiary); border-radius:var(--radius-sm); }
 .dash-value { display: block; font-size:1.375rem; font-weight: 800; color: var(--accent-primary); }
-.dash-label { font-size:0.6875rem; color: var(--text-muted); }
+.dash-label { font-size:var(--text-2xs); color: var(--text-muted); }
 .student-list { display: flex; flex-direction: column; gap:0.375rem; }
-.student-filter { display: flex; gap:0.5rem; margin-bottom:0.625rem; }
-.filter-select, .filter-input { padding:0.375rem 0.625rem; border-radius:var(--radius-sm); border:1px solid var(--glass-border); background:var(--bg-tertiary); color:var(--text-primary); font-size:0.75rem; }
+.student-filter { display: flex; gap:var(--space-2); margin-bottom:0.625rem; }
+.filter-select, .filter-input { padding:0.375rem 0.625rem; border-radius:var(--radius-sm); border:1px solid var(--glass-border); background:var(--bg-tertiary); color:var(--text-primary); font-size:var(--text-xs); }
 .filter-input { flex:1; min-width:0; }
 /* 多角色1：班级掌握度条形图 */
-.mastery-bars { display:flex; flex-direction:column; gap:0.5rem; }
-.mastery-bar-row { display:flex; align-items:center; gap:0.5rem; }
-.mb-name { width:7rem; font-size:0.75rem; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mastery-bars { display:flex; flex-direction:column; gap:var(--space-2); }
+.mastery-bar-row { display:flex; align-items:center; gap:var(--space-2); }
+.mb-name { width:7rem; font-size:var(--text-xs); color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .mb-track { flex:1; height:0.5rem; border-radius:var(--radius-full); background:var(--bg-tertiary); overflow:hidden; }
 .mb-fill { height:100%; border-radius:var(--radius-full); transition:width 0.5s ease; }
-.mb-value { width:2.75rem; font-size:0.75rem; font-weight:700; color:var(--text-primary); text-align:right; }
-.student-row { display: flex; align-items: center; gap:0.75rem; padding:0.5rem 0.75rem; border-radius:var(--radius-sm); background: var(--bg-secondary); font-size:0.8125rem; }
-.student-name { flex: 1; color: var(--text-primary); font-weight: 500; }
+.mb-value { width:2.75rem; font-size:var(--text-xs); font-weight:var(--weight-bold); color:var(--text-primary); text-align:right; }
+.student-row { display: flex; align-items: center; gap:var(--space-3); padding:var(--space-2) var(--space-3); border-radius:var(--radius-sm); background: var(--bg-secondary); font-size:var(--text-sm); }
+.student-name { flex: 1; color: var(--text-primary); font-weight: var(--weight-medium); }
 .student-progress { color: var(--text-muted); }
-.student-mastery { font-weight: 700; }
-.weak-list { display: flex; flex-wrap: wrap; gap:0.5rem; }
-.weak-item { display: flex; align-items: center; gap:0.375rem; padding:0.375rem 0.75rem; border-radius:var(--radius-full); background: var(--accent-danger-10); color: var(--accent-danger); font-size:0.75rem; }
-.weak-rank { font-weight: 700; opacity: 0.6; }
+.student-mastery { font-weight: var(--weight-bold); }
+.weak-list { display: flex; flex-wrap: wrap; gap:var(--space-2); }
+.weak-item { display: flex; align-items: center; gap:0.375rem; padding:0.375rem var(--space-3); border-radius:var(--radius-full); background: var(--accent-danger-10); color: var(--accent-danger); font-size:var(--text-xs); }
+.weak-rank { font-weight: var(--weight-bold); opacity: 0.6; }
 </style>

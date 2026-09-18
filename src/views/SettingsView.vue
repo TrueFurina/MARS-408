@@ -205,41 +205,41 @@ onMounted(loadConfig)
 
 <style scoped>
 /* 本视图 .card 补内边距（全局 .card 不带 padding，避免内容贴边） */
-.card { padding: 1.5rem; }
+.card { padding: var(--space-6); }
 
 .settings-shell { max-width: 35rem; margin: 0 auto; }
 .section-header--center { text-align: center; }
 
-.settings-block { margin-bottom: 1.5rem; }
+.settings-block { margin-bottom: var(--space-6); }
 .settings-block:last-child { margin-bottom: 0; }
 
 .settings-subtitle {
-  font-size: 0.9375rem; font-weight: 600; margin-bottom: 1rem;
+  font-size: var(--text-md); font-weight: var(--weight-semibold); margin-bottom: var(--space-4);
   color: var(--accent-primary);
 }
 .settings-subtitle--secondary { color: var(--accent-secondary); }
 
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
 
-.input-with-action { position: relative; margin-bottom: 0.75rem; }
-.input-secret { padding-right: 2.5rem; }
+.input-with-action { position: relative; margin-bottom: var(--space-3); }
+.input-secret { padding-right: var(--space-10); }
 .input-action {
   position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%);
   border: none; background: none; cursor: pointer; color: var(--text-muted);
-  padding: 0.25rem; display: inline-flex; border-radius: var(--radius-sm);
+  padding: var(--space-1); display: inline-flex; border-radius: var(--radius-sm);
   transition: color var(--duration-fast);
 }
 .input-action:hover { color: var(--text-primary); }
 
 .badge-configured {
-  margin-left: 0.5rem; font-size: 0.6875rem; font-weight: 600;
-  color: var(--accent-success); padding: 0.125rem 0.5rem; border-radius: var(--radius-xs);
+  margin-left: var(--space-2); font-size: var(--text-2xs); font-weight: var(--weight-semibold);
+  color: var(--accent-success); padding: 0.125rem var(--space-2); border-radius: var(--radius-xs);
   background: var(--accent-success-10);
 }
 
-.settings-inline { display: flex; align-items: center; gap: 0.75rem; }
+.settings-inline { display: flex; align-items: center; gap: var(--space-3); }
 
-.embed-options { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.embed-options { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
 .embed-option {
   display: flex; align-items: center; gap: 0.625rem; padding: 0.875rem;
   border-radius: var(--radius-sm); border: 2px solid var(--border-color);
@@ -250,23 +250,23 @@ onMounted(loadConfig)
   background: var(--accent-primary-10);
 }
 .embed-radio { accent-color: var(--accent-primary); width: auto; }
-.embed-option-title { font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); }
-.embed-option-desc { font-size: 0.6875rem; color: var(--text-muted); }
+.embed-option-title { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.embed-option-desc { font-size: var(--text-2xs); color: var(--text-muted); }
 
-.test-result { font-size: 0.75rem; }
+.test-result { font-size: var(--text-xs); }
 .test-result.is-ok { color: var(--accent-success); }
 .test-result.is-err { color: var(--accent-danger); }
 
 .settings-actions {
-  display: flex; gap: 0.75rem; justify-content: flex-end; align-items: center;
-  margin-top: 1.5rem;
+  display: flex; gap: var(--space-3); justify-content: flex-end; align-items: center;
+  margin-top: var(--space-6);
 }
-.settings-backlink { font-size: 0.8125rem; color: var(--text-muted); text-decoration: underline; }
+.settings-backlink { font-size: var(--text-sm); color: var(--text-muted); text-decoration: underline; }
 .settings-backlink:hover { color: var(--text-secondary); }
 
 /* 骨架屏尺寸（复用全局 .skeleton 微光动画） */
-.skel-line-200 { width: 12.5rem; height: 1.75rem; margin: 0 auto 1.25rem; border-radius: var(--radius-sm); }
-.skel-card { width: 100%; height: 3.75rem; margin-bottom: 0.75rem; border-radius: var(--radius-md); }
+.skel-line-200 { width: 12.5rem; height: 1.75rem; margin: 0 auto var(--space-5); border-radius: var(--radius-sm); }
+.skel-card { width: 100%; height: 3.75rem; margin-bottom: var(--space-3); border-radius: var(--radius-md); }
 .skel-card-lg { width: 100%; height: 7.5rem; border-radius: var(--radius-md); }
 
 @media (max-width: 640px) {

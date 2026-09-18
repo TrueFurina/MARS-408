@@ -246,5 +246,5 @@ defineExpose({ zoomIn, zoomOut, resetZoom })
 .graph-container { height: 520px; position: relative; background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--glass-border); border-radius: var(--radius-md); }
 .graph-canvas-wrapper { position: absolute; inset: 0; }
 .graph-container canvas { display: block; }
-.graph-legend { position: absolute; top: 0.75rem; left: 0.75rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.625rem 0.875rem; font-size: 0.75rem; box-shadow: var(--shadow-sm); }
+.graph-legend { position: absolute; top: 0.75rem; left: 0.75rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.625rem 0.875rem; font-size: var(--text-xs); box-shadow: var(--shadow-sm); }
 </style>

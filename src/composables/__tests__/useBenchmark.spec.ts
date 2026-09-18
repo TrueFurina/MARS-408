@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { readFileSync, existsSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 import { useBenchmark } from '@/composables/useBenchmark'
@@ -20,28 +20,43 @@ import { useBenchmark } from '@/composables/useBenchmark'
  * 端到端契约（接口是否真的返回该结构）由 tests/benchmark_evidence_gate.py R3 守。
  */
 
-const REAL_ARTIFACT = resolve(process.cwd(), 'py-server/experiments/results/benchmark_2026-08-17.json')
+const REAL_RESULTS_DIR = resolve(process.cwd(), 'py-server/experiments/results')
 
-function loadRealArtifact(): any {
-  if (!existsSync(REAL_ARTIFACT)) {
+/**
+ * 选取最新真产物（与后端 api/benchmark.py `_latest_real_result` 同规则：
+ * benchmark_*.json、排除 reproduce/exp2 复现文件；mode 校验由门禁 R2/R3 负责）。
+ * 权威挑选逻辑在后端，此处只为测试夹具取最新样本——若两处规则漂移，
+ * tests/benchmark_evidence_gate.py 会先红。
+ */
+function latestRealArtifactPath(): string {
+  const files = readdirSync(REAL_RESULTS_DIR)
+    .filter((f) => f.startsWith('benchmark_') && f.endsWith('.json'))
+    .filter((f) => !f.includes('reproduce') && !f.includes('exp2'))
+    .sort()
+  if (files.length === 0) {
     throw new Error(
-      `真产物缺失：${REAL_ARTIFACT}\n` +
+      `真产物缺失：${REAL_RESULTS_DIR} 下无 benchmark_*.json\n` +
         '这不是测试写错，而是证据链断了。请先跑 tests/benchmark_evidence_gate.py 定位。',
     )
   }
-  return JSON.parse(readFileSync(REAL_ARTIFACT, 'utf-8'))
+  return resolve(REAL_RESULTS_DIR, files[files.length - 1])
 }
 
-/** 按后端 api/benchmark.py 的响应结构组装 payload（字段映射见该文件 100-119 行） */
+function loadRealArtifact(): any {
+  const path = latestRealArtifactPath()
+  return JSON.parse(readFileSync(path, 'utf-8'))
+}
+
 function toApiPayload(data: any) {
   const exp1 = data?.experiment1 ?? {}
   const exp2 = data?.experiment2 ?? {}
+  const fileName = latestRealArtifactPath().split(/[\\/]/).pop() ?? 'benchmark.json'
   return {
     provenance: {
-      source_file: 'experiments/results/benchmark_2026-08-17.json',
-      file_name: 'benchmark_2026-08-17.json',
-      file_mtime: '2026-08-17T00:00:00',
-      file_size_bytes: 261662,
+      source_file: `experiments/results/${fileName}`,
+      file_name: fileName,
+      file_mtime: '',
+      file_size_bytes: 0,
       mode: 'real',
       n_queries: exp1.summary?.n_queries ?? null,
       n_questions: exp2.summary?.n_questions ?? null,

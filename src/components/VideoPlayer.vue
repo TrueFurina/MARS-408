@@ -94,18 +94,18 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 20px;
+  padding: var(--space-3) var(--space-5);
   border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
 .video-title {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
   color: var(--color-text);
 }
 .video-actions {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
 }
 .video-btn {
   width: 36px;
@@ -114,7 +114,7 @@ onUnmounted(() => {
   border: 1px solid var(--color-glass-border);
   background: transparent;
   color: var(--color-text-2);
-  font-size: 16px;
+  font-size: var(--text-lg);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -144,7 +144,7 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: var(--space-3);
 }
 .loading-spinner {
   width: 36px;
@@ -158,19 +158,19 @@ onUnmounted(() => {
   to { transform: rotate(360deg); }
 }
 .loading-text {
-  font-size: 14px;
+  font-size: var(--text-base);
   color: var(--color-text-2);
 }
 .video-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 20px;
+  padding: 10px var(--space-5);
   border-top: 1px solid var(--color-border);
   flex-shrink: 0;
 }
 .video-hint {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--color-text-3);
 }
 @keyframes fade-in {
@@ -182,7 +182,7 @@ onUnmounted(() => {
 @media (max-width: 768px) {
   .video-player { width: 100%; height: 100vh; max-height: 100vh; border-radius: 0; }
   .video-header { padding: 10px 14px; }
-  .video-footer { padding: 8px 14px; }
+  .video-footer { padding: var(--space-2) 14px; }
   .video-hint { display: none; }
 }
 </style>

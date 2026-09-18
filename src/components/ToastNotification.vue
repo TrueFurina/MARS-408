@@ -51,26 +51,26 @@ onUnmounted(() => { delete (window as any).__toast })
 <style scoped>
 .toast-container {
   position: fixed; top: 16px; right: 16px; z-index: 10000;
-  display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+  display: flex; flex-direction: column; gap: var(--space-2); pointer-events: none;
 }
 .toast-item {
   display: flex; align-items: center; gap: 10px;
-  padding: 12px 16px; border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4); border-radius: var(--radius-md);
   background: var(--color-elevated); border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-lg); pointer-events: auto;
   min-width: 280px; max-width: 420px;
-  font-size: 13px; color: var(--text-primary);
+  font-size: var(--text-sm); color: var(--text-primary);
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
 }
 .toast-success { border-left: 4px solid var(--accent-success); }
 .toast-error { border-left: 4px solid var(--accent-danger); }
 .toast-info { border-left: 4px solid var(--accent-secondary); }
 .toast-warning { border-left: 4px solid var(--accent-warm); }
-.toast-icon { font-size: 16px; flex-shrink: 0; }
+.toast-icon { font-size: var(--text-lg); flex-shrink: 0; }
 .toast-msg { flex: 1; line-height: 1.4; }
 .toast-close {
   width: 20px; height: 20px; border: none; background: transparent;
-  color: var(--text-muted); cursor: pointer; font-size: 12px;
+  color: var(--text-muted); cursor: pointer; font-size: var(--text-xs);
   border-radius: 50%; display: flex; align-items: center; justify-content: center;
   flex-shrink: 0; transition: var(--transition);
 }

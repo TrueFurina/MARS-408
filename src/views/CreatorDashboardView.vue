@@ -166,48 +166,48 @@ async function loadMemoryOverview() {
 </template>
 
 <style scoped>
-.section-header { display: flex; justify-content: space-between; align-items: flex-start; gap:1rem; flex-wrap: wrap; margin-bottom:1.25rem; }
-.section-title-group { display: flex; align-items: center; gap:0.75rem; }
-.section-actions { display: flex; gap:0.5rem; }
+.section-header { display: flex; justify-content: space-between; align-items: flex-start; gap:var(--space-4); flex-wrap: wrap; margin-bottom:var(--space-5); }
+.section-title-group { display: flex; align-items: center; gap:var(--space-3); }
+.section-actions { display: flex; gap:var(--space-2); }
 
-.dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
 @media (max-width: 800px) { .dashboard-grid { grid-template-columns: 1fr; } }
 .wide-card { grid-column: 1 / -1; }
 
-.dash-card { padding:1.25rem; background: var(--color-surface); border: 1px solid var(--color-border); border-radius:0.75rem; }
-.dash-card-title { font-size:0.9375rem; font-weight: 600; margin-bottom:1rem; color: var(--color-text); }
+.dash-card { padding:var(--space-5); background: var(--color-surface); border: 1px solid var(--color-border); border-radius:0.75rem; }
+.dash-card-title { font-size:var(--text-md); font-weight: var(--weight-semibold); margin-bottom:var(--space-4); color: var(--color-text); }
 
-.dash-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.dash-stat { text-align: center; padding:0.75rem; background: var(--color-surface-2); border-radius:0.5rem; }
-.dash-value { display: block; font-size:1.75rem; font-weight: 700; color: var(--color-text); }
+.dash-stats { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.dash-stat { text-align: center; padding:var(--space-3); background: var(--color-surface-2); border-radius:0.5rem; }
+.dash-value { display: block; font-size:1.75rem; font-weight: var(--weight-bold); color: var(--color-text); }
 .dash-value.success { color: var(--accent-success); }
 .dash-value.warm { color: var(--accent-warm); }
 .dash-value.accent { color: var(--accent); }
-.dash-label { display: block; font-size:0.75rem; color: var(--color-text-3); margin-top:0.125rem; }
+.dash-label { display: block; font-size:var(--text-xs); color: var(--color-text-3); margin-top:0.125rem; }
 
 /* 趋势图 */
-.trend-chart { padding:0.5rem 0; }
-.trend-bar-wrapper { display: flex; align-items: flex-end; gap:0.5rem; height:7.5rem; }
-.trend-bar-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap:0.25rem; }
-.trend-bar-value { font-size:0.6875rem; font-weight: 600; color: var(--color-text-2); }
+.trend-chart { padding:var(--space-2) 0; }
+.trend-bar-wrapper { display: flex; align-items: flex-end; gap:var(--space-2); height:7.5rem; }
+.trend-bar-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap:var(--space-1); }
+.trend-bar-value { font-size:var(--text-2xs); font-weight: var(--weight-semibold); color: var(--color-text-2); }
 .trend-bar { width:100%; max-width:2.5rem; background: linear-gradient(to top, var(--accent), var(--accent-cyan)); border-radius:0.25rem 0.25rem 0 0; min-height:0.25rem; transition: height 0.3s ease; }
 .trend-bar-label { font-size:0.625rem; color: var(--color-text-3); }
 
-.no-data { text-align: center; padding:2.5rem 1.25rem; color: var(--color-text-3); font-size:0.875rem; }
+.no-data { text-align: center; padding:var(--space-10) var(--space-5); color: var(--color-text-3); font-size:var(--text-base); }
 
 /* 技能列表 */
 .skill-list { display: flex; flex-direction: column; gap:0.375rem; }
-.skill-row { display: flex; align-items: center; gap:0.625rem; padding:0.625rem 0.75rem; border-radius:0.5rem; cursor: pointer; transition: background 0.15s; }
+.skill-row { display: flex; align-items: center; gap:0.625rem; padding:0.625rem var(--space-3); border-radius:0.5rem; cursor: pointer; transition: background 0.15s; }
 .skill-row:hover { background: var(--color-surface-hover); }
-.skill-row-icon { font-size:1.25rem; }
-.skill-row-name { flex: 1; font-size:0.875rem; font-weight: 500; color: var(--color-text); }
-.skill-row-status { font-size:0.6875rem; padding:0.125rem 0.5rem; border-radius:1.25rem; font-weight: 500; }
+.skill-row-icon { font-size:var(--text-2xl); }
+.skill-row-name { flex: 1; font-size:var(--text-base); font-weight: var(--weight-medium); color: var(--color-text); }
+.skill-row-status { font-size:var(--text-2xs); padding:0.125rem var(--space-2); border-radius:1.25rem; font-weight: var(--weight-medium); }
 .badge-draft { background: rgba(var(--warning-rgb),0.12); color: var(--accent-warm); }
 .badge-published { background: rgba(var(--success-rgb),0.12); color: var(--accent-success); }
 .badge-archived { background: color-mix(in srgb, var(--color-text-2) 12%, transparent); color: var(--color-text-2); }
-.skill-row-usage { font-size:0.75rem; color: var(--color-text-3); }
-.skill-row-rating { font-size:0.75rem; color: var(--accent-warm); font-weight: 600; }
+.skill-row-usage { font-size:var(--text-xs); color: var(--color-text-3); }
+.skill-row-rating { font-size:var(--text-xs); color: var(--accent-warm); font-weight: var(--weight-semibold); }
 
-.view-all { text-align: center; padding:0.5rem; margin-top:0.5rem; color: var(--accent); font-size:0.8125rem; cursor: pointer; }
+.view-all { text-align: center; padding:var(--space-2); margin-top:var(--space-2); color: var(--accent); font-size:var(--text-sm); cursor: pointer; }
 .view-all:hover { text-decoration: underline; }
 </style>

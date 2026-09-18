@@ -92,20 +92,20 @@ onUnmounted(() => stopSpeak())
 .multimodal-card {
   display: flex;
   flex-direction: column;
-  gap:1rem;
+  gap:var(--space-4);
 }
 
 .mm-image-section, .mm-audio-section {
   background: color-mix(in srgb, var(--accent-primary) 8%, var(--color-surface));
   border: 1px solid color-mix(in srgb, var(--accent-primary) 16%, transparent);
   border-radius:var(--radius-md);
-  padding:1rem;
+  padding:var(--space-4);
 }
 
 .mm-label {
-  font-size:0.875rem;
-  font-weight: 600;
-  margin-bottom:0.75rem;
+  font-size:var(--text-base);
+  font-weight: var(--weight-semibold);
+  margin-bottom:var(--space-3);
   color: var(--text-primary);
 }
 
@@ -135,8 +135,8 @@ onUnmounted(() => stopSpeak())
 }
 
 .mm-source-tag {
-  margin-top:0.5rem;
-  font-size:0.75rem;
+  margin-top:var(--space-2);
+  font-size:var(--text-xs);
   text-align: right;
   color: var(--text-secondary);
 }
@@ -156,15 +156,15 @@ onUnmounted(() => stopSpeak())
 .mm-tts-fallback {
   display: flex;
   align-items: center;
-  gap:0.75rem;
+  gap:var(--space-3);
   flex-wrap: wrap;
 }
 
 .mm-speak-btn, .mm-stop-btn {
-  padding:0.5rem 1.25rem;
+  padding:var(--space-2) var(--space-5);
   border: none;
   border-radius:var(--radius-sm);
-  font-size:0.875rem;
+  font-size:var(--text-base);
   cursor: pointer;
   transition: var(--transition);
 }
@@ -191,7 +191,7 @@ onUnmounted(() => stopSpeak())
 }
 
 .mm-tts-source {
-  font-size:0.75rem;
+  font-size:var(--text-xs);
   color: var(--text-secondary);
 }
 
@@ -199,10 +199,10 @@ onUnmounted(() => stopSpeak())
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap:0.75rem;
-  padding:1.25rem;
+  gap:var(--space-3);
+  padding:var(--space-5);
   color: var(--text-secondary);
-  font-size:0.875rem;
+  font-size:var(--text-base);
 }
 .mm-loading-text { color: var(--text-muted); }
 </style>

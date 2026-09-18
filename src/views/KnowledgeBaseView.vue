@@ -225,30 +225,30 @@ async function askAboutText(text: string) {
 </template>
 
 <style scoped>
-.textbook-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
-.textbook-card { padding: 20px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; cursor: pointer; text-align: center; transition: all 0.15s; }
+.textbook-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--space-3); }
+.textbook-card { padding: var(--space-5); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; cursor: pointer; text-align: center; transition: all 0.15s; }
 .textbook-card:hover { border-color: var(--color-border-focus); transform: translateY(-2px); }
-.textbook-icon { font-size: 40px; margin-bottom: 8px; }
-.textbook-name { font-size: 14px; font-weight: 600; color: var(--color-text); margin-bottom: 4px; }
-.textbook-meta { font-size: 12px; color: var(--color-text-3); }
-.search-panel { padding: 16px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; }
-.search-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-.search-title { font-size: 15px; font-weight: 600; color: var(--color-text); }
+.textbook-icon { font-size: 40px; margin-bottom: var(--space-2); }
+.textbook-name { font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--color-text); margin-bottom: var(--space-1); }
+.textbook-meta { font-size: var(--text-xs); color: var(--color-text-3); }
+.search-panel { padding: var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; }
+.search-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-3); }
+.search-title { font-size: var(--text-md); font-weight: var(--weight-semibold); color: var(--color-text); }
 .search-item { padding: 10px 0; border-bottom: 1px solid var(--color-border); }
 .search-item:last-child { border-bottom: none; }
-.search-source { font-size: 12px; color: var(--accent); font-weight: 600; margin-bottom: 4px; }
-.search-content { font-size: 13px; color: var(--color-text-2); line-height: 1.5; }
-.search-empty { text-align: center; padding: 20px; color: var(--color-text-3); }
-.ask-panel { padding: 16px; background: var(--color-surface); border: 1px solid var(--color-border-focus); border-radius: 12px; }
-.ask-header { font-size: 15px; font-weight: 600; color: var(--color-text); margin-bottom: 8px; }
-.ask-selected { font-size: 13px; color: var(--color-text-3); font-style: italic; padding: 8px 12px; background: var(--color-surface-2); border-radius: 6px; margin-bottom: 12px; }
-.ask-answer { font-size: 14px; line-height: 1.7; color: var(--color-text-2); }
-.ask-loading { font-size: 14px; color: var(--color-text-3); font-style: italic; }
+.search-source { font-size: var(--text-xs); color: var(--accent); font-weight: var(--weight-semibold); margin-bottom: var(--space-1); }
+.search-content { font-size: var(--text-sm); color: var(--color-text-2); line-height: 1.5; }
+.search-empty { text-align: center; padding: var(--space-5); color: var(--color-text-3); }
+.ask-panel { padding: var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border-focus); border-radius: 12px; }
+.ask-header { font-size: var(--text-md); font-weight: var(--weight-semibold); color: var(--color-text); margin-bottom: var(--space-2); }
+.ask-selected { font-size: var(--text-sm); color: var(--color-text-3); font-style: italic; padding: var(--space-2) var(--space-3); background: var(--color-surface-2); border-radius: 6px; margin-bottom: var(--space-3); }
+.ask-answer { font-size: var(--text-base); line-height: var(--leading-relaxed); color: var(--color-text-2); }
+.ask-loading { font-size: var(--text-base); color: var(--color-text-3); font-style: italic; }
 
 /* 移动端适配 */
 @media (max-width: 768px) {
-  .page-section { padding: 0.75rem; }
-  .section-header { flex-direction: column; gap: 8px; }
+  .page-section { padding: var(--space-3); }
+  .section-header { flex-direction: column; gap: var(--space-2); }
   .textbook-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
   .section-actions { width: 100%; }
   .search-input-wrap { width: 100%; }

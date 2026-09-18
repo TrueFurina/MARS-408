@@ -115,22 +115,22 @@ function goHome() {
       <div class="onboard-guide">
         <div class="og-title"> 接下来建议这样做</div>
         <div class="og-grid">
-          <div class="og-card" @click="router.push('/chat')">
+          <div class="og-card" role="button" tabindex="0" @click="router.push('/chat')" @keydown.enter="router.push('/chat')" @keydown.space.prevent="router.push('/chat')">
             <div class="og-icon"></div>
             <div class="og-name">智能对话学习</div>
             <div class="og-desc">向 AI 助教提问，针对薄弱点查漏补缺</div>
           </div>
-          <div class="og-card" @click="router.push('/practice')">
+          <div class="og-card" role="button" tabindex="0" @click="router.push('/practice')" @keydown.enter="router.push('/practice')" @keydown.space.prevent="router.push('/practice')">
             <div class="og-icon"></div>
             <div class="og-name">刷题巩固</div>
             <div class="og-desc">针对薄弱知识点生成专项练习</div>
           </div>
-          <div class="og-card" @click="router.push('/learning-path')">
+          <div class="og-card" role="button" tabindex="0" @click="router.push('/learning-path')" @keydown.enter="router.push('/learning-path')" @keydown.space.prevent="router.push('/learning-path')">
             <div class="og-icon"></div>
             <div class="og-name">查看学习路径</div>
             <div class="og-desc">了解四科学习顺序和推荐进度</div>
           </div>
-          <div class="og-card" @click="router.push('/knowledge')">
+          <div class="og-card" role="button" tabindex="0" @click="router.push('/knowledge')" @keydown.enter="router.push('/knowledge')" @keydown.space.prevent="router.push('/knowledge')">
             <div class="og-icon"></div>
             <div class="og-name">浏览知识图谱</div>
             <div class="og-desc">可视化四科知识点关联关系</div>
@@ -144,39 +144,39 @@ function goHome() {
 </template>
 
 <style scoped>
-.diagnostic-page { max-width: 800px; margin: 0 auto; padding: 24px; }
-.diag-header { text-align: center; margin-bottom: 24px; }
-.diag-title { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
-.diag-desc { font-size: 14px; color: var(--text-muted); }
+.diagnostic-page { max-width: 800px; margin: 0 auto; padding: var(--space-6); }
+.diag-header { text-align: center; margin-bottom: var(--space-6); }
+.diag-title { font-size: var(--text-3xl); font-weight: var(--weight-bold); margin-bottom: var(--space-2); }
+.diag-desc { font-size: var(--text-base); color: var(--text-muted); }
 .diag-loading { text-align: center; padding: 60px; color: var(--text-muted); }
-.diag-progress { font-size: 14px; color: var(--accent-primary); margin-bottom: 16px; text-align: center; }
-.diag-question-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 16px; margin-bottom: 16px; }
-.q-number { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
-.q-subject { font-size: 12px; color: var(--accent-primary); margin-bottom: 8px; }
-.q-text { font-size: 15px; font-weight: 500; margin-bottom: 12px; line-height: 1.5; }
-.q-options { display: flex; flex-direction: column; gap: 8px; }
-.q-option { padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--glass-border); cursor: pointer; transition: var(--transition); font-size: 14px; }
+.diag-progress { font-size: var(--text-base); color: var(--accent-primary); margin-bottom: var(--space-4); text-align: center; }
+.diag-question-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: var(--space-4); margin-bottom: var(--space-4); }
+.q-number { font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-1); }
+.q-subject { font-size: var(--text-xs); color: var(--accent-primary); margin-bottom: var(--space-2); }
+.q-text { font-size: var(--text-md); font-weight: var(--weight-medium); margin-bottom: var(--space-3); line-height: 1.5; }
+.q-options { display: flex; flex-direction: column; gap: var(--space-2); }
+.q-option { padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--glass-border); cursor: pointer; transition: var(--transition); font-size: var(--text-base); }
 .q-option:hover { border-color: var(--accent-primary); }
 .q-option.selected { border-color: var(--accent-primary); background: var(--accent-primary-10); color: var(--accent-primary); }
-.diag-submit { display: block; margin: 24px auto; padding: 12px 32px; border: none; border-radius: var(--radius-md); background: var(--accent-primary); color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; }
+.diag-submit { display: block; margin: var(--space-6) auto; padding: var(--space-3) var(--space-8); border: none; border-radius: var(--radius-md); background: var(--accent-primary); color: #fff; font-size: var(--text-lg); font-weight: var(--weight-semibold); cursor: pointer; }
 .diag-submit:disabled { opacity: 0.5; cursor: not-allowed; }
-.result-title { font-size: 28px; font-weight: 700; text-align: center; margin-bottom: 16px; }
-.result-accuracy { text-align: center; font-size: 18px; margin-bottom: 24px; }
-.result-subjects { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
-.result-subject-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 16px; text-align: center; }
-.rs-name { font-size: 14px; font-weight: 500; margin-bottom: 8px; }
-.rs-accuracy { font-size: 24px; font-weight: 700; }
-.rs-weak { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
-.result-recommend { text-align: center; font-size: 15px; color: var(--text-secondary); margin-bottom: 24px; line-height: 1.6; padding: 16px; background: var(--glass-bg); border-radius: var(--radius-md); }
+.result-title { font-size: 28px; font-weight: var(--weight-bold); text-align: center; margin-bottom: var(--space-4); }
+.result-accuracy { text-align: center; font-size: var(--text-xl); margin-bottom: var(--space-6); }
+.result-subjects { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin-bottom: var(--space-6); }
+.result-subject-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: var(--space-4); text-align: center; }
+.rs-name { font-size: var(--text-base); font-weight: var(--weight-medium); margin-bottom: var(--space-2); }
+.rs-accuracy { font-size: var(--text-3xl); font-weight: var(--weight-bold); }
+.rs-weak { font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-2); }
+.result-recommend { text-align: center; font-size: var(--text-md); color: var(--text-secondary); margin-bottom: var(--space-6); line-height: 1.6; padding: var(--space-4); background: var(--glass-bg); border-radius: var(--radius-md); }
 
 /* ── 新手引导：诊断后下一步 ── */
-.onboard-guide { margin-bottom: 24px; }
-.og-title { font-size: 16px; font-weight: 700; text-align: center; margin-bottom: 16px; color: var(--text-primary); }
-.og-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.onboard-guide { margin-bottom: var(--space-6); }
+.og-title { font-size: var(--text-lg); font-weight: var(--weight-bold); text-align: center; margin-bottom: var(--space-4); color: var(--text-primary); }
+.og-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); }
 @media (max-width: 768px) { .og-grid { grid-template-columns: repeat(2, 1fr); } }
-.og-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 16px; text-align: center; cursor: pointer; transition: var(--transition); }
+.og-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: var(--space-4); text-align: center; cursor: pointer; transition: var(--transition); }
 .og-card:hover { border-color: var(--accent-primary); box-shadow: 0 4px 20px rgba(0,0,0,0.08); transform: translateY(-2px); }
-.og-icon { font-size: 28px; margin-bottom: 8px; }
-.og-name { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
-.og-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+.og-icon { font-size: 28px; margin-bottom: var(--space-2); }
+.og-name { font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--text-primary); margin-bottom: 6px; }
+.og-desc { font-size: var(--text-xs); color: var(--text-muted); line-height: 1.5; }
 </style>

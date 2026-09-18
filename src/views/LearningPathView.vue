@@ -260,7 +260,7 @@ const nextStepNode = computed<PathNode | null>(() => {
   display: flex;
   gap:0.375rem;
   justify-content: center;
-  margin-bottom:0.5rem;
+  margin-bottom:var(--space-2);
   flex-wrap: wrap;
 }
 .subject-tab {
@@ -269,8 +269,8 @@ const nextStepNode = computed<PathNode | null>(() => {
   border: 1px solid var(--border-color);
   background: var(--bg-secondary);
   color: var(--text-secondary);
-  font-size:0.75rem;
-  font-weight: 600;
+  font-size:var(--text-xs);
+  font-weight: var(--weight-semibold);
   cursor: pointer;
   transition: var(--transition);
 }
@@ -302,8 +302,8 @@ const nextStepNode = computed<PathNode | null>(() => {
 .path-card:hover:not(.locked) { transform: translateY(-1px); box-shadow: var(--shadow-card-hover); }
 .path-card-inner {
   display: flex;
-  gap:1rem;
-  padding:1.25rem;
+  gap:var(--space-4);
+  padding:var(--space-5);
 }
 .path-card-left { flex-shrink: 0; }
 .path-icon {
@@ -321,46 +321,46 @@ const nextStepNode = computed<PathNode | null>(() => {
   display: flex;
   align-items: center;
   gap:0.625rem;
-  margin-bottom:0.25rem;
+  margin-bottom:var(--space-1);
 }
-.path-chapter { font-size:0.75rem; font-weight: 600; color: var(--text-muted); }
-.path-status-tag { font-size:0.6875rem; padding:0.125rem 0.625rem; border-radius:var(--radius-full); font-weight: 600; }
+.path-chapter { font-size:var(--text-xs); font-weight: var(--weight-semibold); color: var(--text-muted); }
+.path-status-tag { font-size:var(--text-2xs); padding:0.125rem 0.625rem; border-radius:var(--radius-full); font-weight: var(--weight-semibold); }
 .path-status-tag.completed { background: var(--accent-success-10); color: var(--accent-success); }
 .path-status-tag.current { background: var(--accent-primary-10); color: var(--accent-primary); }
 .path-status-tag.ready { background: var(--accent-primary-10); color: var(--accent-primary); }
 .path-status-tag.locked { background: var(--bg-tertiary); color: var(--text-muted); }
-.path-title { font-size:1.0625rem; font-weight: 700; color: var(--text-primary); margin-bottom:0.5rem; }
+.path-title { font-size:1.0625rem; font-weight: var(--weight-bold); color: var(--text-primary); margin-bottom:var(--space-2); }
 .path-topics { display: flex; flex-wrap: wrap; gap:0.375rem; }
 .path-topic-tag {
-  font-size:0.6875rem; padding:0.1875rem 0.625rem;
+  font-size:var(--text-2xs); padding:0.1875rem 0.625rem;
   border-radius:6.1875rem; background: var(--accent-primary-10);
   color: var(--accent-primary);
 }
 .path-start-btn {
   margin-top:0.625rem;
-  padding:0.5rem 1.25rem;
+  padding:var(--space-2) var(--space-5);
   background: var(--gradient-primary);
   color: #fff;
   border: none;
   border-radius:var(--radius-full);
-  font-size:0.8125rem;
-  font-weight: 600;
+  font-size:var(--text-sm);
+  font-weight: var(--weight-semibold);
   cursor: pointer;
   transition: var(--transition-bounce);
 }
 .path-start-btn:hover { transform: translateY(-2px) scale(1.02); box-shadow: var(--shadow-glow), var(--glow-primary); }
 .path-resources {
   margin-top:0.625rem;
-  padding:0.625rem 0.75rem;
+  padding:0.625rem var(--space-3);
   background: var(--accent-primary-10);
   border-radius:var(--radius-sm);
   border: 1px solid var(--accent-primary-20);
   display: flex;
   flex-direction: column;
-  gap:0.25rem;
+  gap:var(--space-1);
 }
 .path-resource-item {
-  font-size:0.75rem;
+  font-size:var(--text-xs);
   color: var(--text-secondary);
   line-height:1.5;
 }
@@ -377,22 +377,22 @@ const nextStepNode = computed<PathNode | null>(() => {
 .path-error {
   max-width: 40rem;
   margin: 0 auto;
-  padding: 1.5rem;
+  padding: var(--space-6);
   text-align: center;
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--accent-danger) 10%, transparent);
   border: 1px solid color-mix(in srgb, var(--accent-danger) 35%, transparent);
 }
-.path-error-title { font-size: 1rem; font-weight: 700; color: var(--accent-danger); }
-.path-error-msg { font-size: 0.8125rem; color: var(--text-secondary); margin: 0.5rem 0 1rem; word-break: break-all; }
+.path-error-title { font-size: var(--text-lg); font-weight: var(--weight-bold); color: var(--accent-danger); }
+.path-error-msg { font-size: var(--text-sm); color: var(--text-secondary); margin: var(--space-2) 0 var(--space-4); word-break: break-all; }
 .path-error-retry {
-  padding: 0.5rem 1.5rem;
+  padding: var(--space-2) var(--space-6);
   border: none;
   border-radius: var(--radius-full);
   background: var(--gradient-primary);
   color: #fff;
-  font-size: 0.8125rem;
-  font-weight: 600;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
   cursor: pointer;
 }
 
@@ -400,9 +400,9 @@ const nextStepNode = computed<PathNode | null>(() => {
 .next-step-banner {
   display: flex;
   align-items: center;
-  gap:0.75rem;
-  padding:0.875rem 1rem;
-  margin-bottom:1rem;
+  gap:var(--space-3);
+  padding:0.875rem var(--space-4);
+  margin-bottom:var(--space-4);
   border-radius:var(--radius-md);
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
@@ -424,17 +424,17 @@ const nextStepNode = computed<PathNode | null>(() => {
 }
 .next-step-icon svg { width:1.25rem; height:1.25rem; }
 .next-step-body { flex: 1; min-width:0; }
-.next-step-title { font-size:0.75rem; font-weight: 600; color: var(--accent-primary); }
-.next-step-desc { font-size:0.9375rem; font-weight: 700; color: var(--text-primary); margin-top:0.125rem; }
-.next-step-weak { font-size:0.6875rem; color: var(--accent-danger); font-weight: 500; }
+.next-step-title { font-size:var(--text-xs); font-weight: var(--weight-semibold); color: var(--accent-primary); }
+.next-step-desc { font-size:var(--text-md); font-weight: var(--weight-bold); color: var(--text-primary); margin-top:0.125rem; }
+.next-step-weak { font-size:var(--text-2xs); color: var(--accent-danger); font-weight: var(--weight-medium); }
 .next-step-btn {
-  padding:0.5rem 1.125rem;
+  padding:var(--space-2) 1.125rem;
   background: var(--gradient-primary);
   color: #fff;
   border: none;
   border-radius:var(--radius-full);
-  font-size:0.8125rem;
-  font-weight: 600;
+  font-size:var(--text-sm);
+  font-weight: var(--weight-semibold);
   cursor: pointer;
   white-space: nowrap;
   transition: var(--transition-bounce);
@@ -445,16 +445,16 @@ const nextStepNode = computed<PathNode | null>(() => {
 /* ── 多角色2：移动端响应式适配 ── */
 @media (max-width: 768px) {
   .subject-tabs { gap: 0.375rem; }
-  .subject-tab { padding: 0.375rem 0.75rem; font-size: 0.8125rem; }
+  .subject-tab { padding: 0.375rem var(--space-3); font-size: var(--text-sm); }
   .path-card { padding: 0.875rem; }
-  .path-title { font-size: 1rem; }
-  .path-topics { gap: 0.25rem; }
-  .path-topic { padding: 0.25rem 0.5rem; font-size: 0.6875rem; }
-  .path-header { flex-direction: column; align-items: stretch; gap: 0.5rem; }
+  .path-title { font-size: var(--text-lg); }
+  .path-topics { gap: var(--space-1); }
+  .path-topic { padding: var(--space-1) var(--space-2); font-size: var(--text-2xs); }
+  .path-header { flex-direction: column; align-items: stretch; gap: var(--space-2); }
 }
 @media (max-width: 480px) {
-  .path-meta { font-size: 0.75rem; }
-  .path-actions { flex-direction: column; gap: 0.5rem; }
+  .path-meta { font-size: var(--text-xs); }
+  .path-actions { flex-direction: column; gap: var(--space-2); }
   .path-actions .engine-btn { width: 100%; }
 }
 </style>

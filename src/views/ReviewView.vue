@@ -139,17 +139,17 @@ function goPractice(courseKey: string) {
 </template>
 
 <style scoped>
-.dash-stats { display: flex; gap: 16px; flex-wrap: wrap; padding: 12px 0; }
+.dash-stats { display: flex; gap: var(--space-4); flex-wrap: wrap; padding: var(--space-3) 0; }
 .dash-stat { display: flex; flex-direction: column; align-items: center; min-width: 80px; }
-.dash-value { font-size: 28px; font-weight: 700; color: var(--accent-primary); }
-.dash-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
-.subject-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; cursor: pointer; transition: var(--transition); border-bottom: 1px solid var(--glass-border); }
+.dash-value { font-size: 28px; font-weight: var(--weight-bold); color: var(--accent-primary); }
+.dash-label { font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-1); }
+.subject-row { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) 0; cursor: pointer; transition: var(--transition); border-bottom: 1px solid var(--glass-border); }
 .subject-row:hover { background: var(--bg-card-hover); }
-.subject-name { flex: 1; font-size: 14px; font-weight: 500; }
-.subject-accuracy { font-size: 16px; font-weight: 700; min-width: 48px; text-align: right; }
-.subject-count { font-size: 12px; color: var(--text-muted); min-width: 60px; text-align: right; }
+.subject-name { flex: 1; font-size: var(--text-base); font-weight: var(--weight-medium); }
+.subject-accuracy { font-size: var(--text-lg); font-weight: var(--weight-bold); min-width: 48px; text-align: right; }
+.subject-count { font-size: var(--text-xs); color: var(--text-muted); min-width: 60px; text-align: right; }
 .tag-list { display: flex; gap: 6px; flex-wrap: wrap; }
-.tag { padding: 4px 10px; border-radius: 12px; font-size: 12px; }
+.tag { padding: var(--space-1) 10px; border-radius: 12px; font-size: var(--text-xs); }
 .tag-warning { background: rgba(var(--warning-rgb), 0.15); color: var(--accent-warm); }
-.recommendation-text { font-size: 14px; line-height: 1.6; color: var(--text-secondary); padding: 8px 0; }
+.recommendation-text { font-size: var(--text-base); line-height: 1.6; color: var(--text-secondary); padding: var(--space-2) 0; }
 </style>

@@ -205,10 +205,10 @@ onMounted(() => {
 .audit-page {
   max-width: 56rem;
   margin: 0 auto;
-  padding: 1.5rem 1rem 3rem;
+  padding: var(--space-6) var(--space-4) var(--space-12);
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: var(--space-5);
 }
 
 /* ── 页头 ── */
@@ -216,27 +216,27 @@ onMounted(() => {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 .audit-title {
-  font-size: 1.5rem;
+  font-size: var(--text-3xl);
   font-weight: 800;
   color: var(--color-text);
   margin: 0;
 }
 .audit-subtitle {
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
   color: var(--color-text-3);
-  margin: 0.25rem 0 0;
+  margin: var(--space-1) 0 0;
 }
 .refresh-btn {
-  padding: 0.5rem 1.125rem;
+  padding: var(--space-2) 1.125rem;
   background: var(--color-glass);
   border: 1px solid var(--color-glass-border);
   border-radius: var(--radius-md);
   color: var(--color-text);
-  font-size: 0.8125rem;
-  font-weight: 600;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
   cursor: pointer;
   transition: var(--transition);
   white-space: nowrap;
@@ -251,11 +251,11 @@ onMounted(() => {
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 .stat-card {
   text-align: center;
-  padding: 1rem 0.5rem;
+  padding: var(--space-4) var(--space-2);
   background: var(--color-glass);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
@@ -263,14 +263,14 @@ onMounted(() => {
   border-radius: var(--radius-md);
 }
 .stat-num {
-  font-size: 1.5rem;
+  font-size: var(--text-3xl);
   font-weight: 800;
   color: var(--color-text);
 }
 .stat-label {
-  font-size: 0.6875rem;
+  font-size: var(--text-2xs);
   color: var(--color-text-3);
-  margin-top: 0.25rem;
+  margin-top: var(--space-1);
 }
 .stat-blocked .stat-num { color: var(--accent-danger); }
 .stat-failure .stat-num { color: var(--accent-warm); }
@@ -280,16 +280,16 @@ onMounted(() => {
 .filter-bar {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-3);
   flex-wrap: wrap;
 }
 .filter-select {
-  padding: 0.4375rem 0.75rem;
+  padding: 0.4375rem var(--space-3);
   background: var(--color-glass);
   border: 1px solid var(--color-glass-border);
   border-radius: var(--radius-sm);
   color: var(--color-text);
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
   cursor: pointer;
   transition: var(--transition);
 }
@@ -298,34 +298,34 @@ onMounted(() => {
   outline: none;
 }
 .filter-count {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   color: var(--color-text-3);
   margin-left: auto;
 }
 
 /* ── 错误/空状态 ── */
 .error-banner {
-  padding: 0.75rem 1rem;
+  padding: var(--space-3) var(--space-4);
   background: var(--accent-danger-10);
   border: 1px solid var(--accent-danger-20);
   border-radius: var(--radius-md);
   color: var(--text-danger);
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
 }
 .loading-state {
   text-align: center;
-  padding: 3rem;
+  padding: var(--space-12);
   color: var(--color-text-3);
-  font-size: 0.875rem;
+  font-size: var(--text-base);
 }
 .log-skeleton { display: flex; flex-direction: column; gap: 0.625rem; }
 .empty-state {
   text-align: center;
-  padding: 3rem 1rem;
+  padding: var(--space-12) var(--space-4);
 }
-.empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
-.empty-text { font-size: 0.9375rem; color: var(--color-text-2); font-weight: 600; }
-.empty-hint { font-size: 0.75rem; color: var(--color-text-3); margin-top: 0.375rem; }
+.empty-icon { font-size: 2.5rem; margin-bottom: var(--space-3); }
+.empty-text { font-size: var(--text-md); color: var(--color-text-2); font-weight: var(--weight-semibold); }
+.empty-hint { font-size: var(--text-xs); color: var(--color-text-3); margin-top: 0.375rem; }
 
 /* ── 日志卡片 ── */
 .log-list {
@@ -334,7 +334,7 @@ onMounted(() => {
   gap: 0.625rem;
 }
 .log-card {
-  padding: 0.875rem 1rem;
+  padding: 0.875rem var(--space-4);
   background: var(--color-glass);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
@@ -350,23 +350,23 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 0.625rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--space-2);
 }
 .log-action {
-  font-size: 0.6875rem;
-  font-weight: 700;
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-bold);
   padding: 0.1875rem 0.625rem;
   border-radius: var(--radius-full);
 }
 .log-result {
-  font-size: 0.6875rem;
-  font-weight: 700;
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-bold);
   padding: 0.1875rem 0.625rem;
   border-radius: var(--radius-full);
 }
 .log-time {
   margin-left: auto;
-  font-size: 0.6875rem;
+  font-size: var(--text-2xs);
   color: var(--color-text-3);
 }
 .log-card-body {
@@ -376,15 +376,15 @@ onMounted(() => {
 }
 .log-meta {
   display: flex;
-  gap: 1rem;
-  font-size: 0.6875rem;
+  gap: var(--space-4);
+  font-size: var(--text-2xs);
   color: var(--color-text-3);
 }
 .log-detail {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   color: var(--color-text-2);
   line-height: 1.5;
-  padding: 0.375rem 0.5rem;
+  padding: 0.375rem var(--space-2);
   background: var(--color-glass);
   border-radius: var(--radius-sm);
   word-break: break-word;
@@ -395,7 +395,7 @@ onMounted(() => {
   display: inline-flex;
   width: 1.5rem;
   height: 1.5rem;
-  margin-right: 0.5rem;
+  margin-right: var(--space-2);
   color: var(--accent-primary);
   vertical-align: -0.35rem;
 }
@@ -425,6 +425,6 @@ onMounted(() => {
 
 @media (max-width: 640px) {
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
-  .audit-title { font-size: 1.25rem; }
+  .audit-title { font-size: var(--text-2xl); }
 }
 </style>

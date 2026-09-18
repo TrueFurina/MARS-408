@@ -204,8 +204,8 @@ watch(() => [props.nodes], () => { initSphere() })
 <style scoped>
 .sphere-wrapper { position: relative; width: 100%; }
 .sphere-canvas { width: 100%; height: auto; display: block; border-radius: 12px; background: rgba(255,255,255,0.02); border: 1px solid var(--color-border); cursor: pointer; }
-.sphere-hint { text-align: center; font-size: 12px; color: var(--color-text-3); margin-top: 6px; }
-.sphere-empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; pointer-events: none; }
+.sphere-hint { text-align: center; font-size: var(--text-xs); color: var(--color-text-3); margin-top: 6px; }
+.sphere-empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-2); pointer-events: none; }
 .empty-icon { font-size: 48px; }
-.empty-text { font-size: 18px; font-weight: 600; color: var(--color-text-2); }
+.empty-text { font-size: var(--text-xl); font-weight: var(--weight-semibold); color: var(--color-text-2); }
 </style>

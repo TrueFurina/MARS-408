@@ -210,26 +210,26 @@ async function loadMemoryOverview() {
 </template>
 
 <style scoped>
-.section-header { display: flex; justify-content: space-between; align-items: flex-start; gap:1rem; flex-wrap: wrap; }
-.section-title-group { display: flex; align-items: center; gap:0.75rem; }
+.section-header { display: flex; justify-content: space-between; align-items: flex-start; gap:var(--space-4); flex-wrap: wrap; }
+.section-title-group { display: flex; align-items: center; gap:var(--space-3); }
 .section-title-group :deep(svg) { width:2rem; height:2rem; color: var(--accent); }
-.section-actions { display: flex; gap:0.5rem; }
+.section-actions { display: flex; gap:var(--space-2); }
 
-.tab-bar { display: flex; gap:0.25rem; margin:1rem 0; background: var(--color-surface-2); border-radius:0.625rem; padding:0.25rem; }
-.tab-btn { flex: 1; padding:0.5rem 1rem; border: none; border-radius:0.5rem; background: transparent; color: var(--color-text-2); font-size:0.875rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+.tab-bar { display: flex; gap:var(--space-1); margin:var(--space-4) 0; background: var(--color-surface-2); border-radius:0.625rem; padding:var(--space-1); }
+.tab-btn { flex: 1; padding:var(--space-2) var(--space-4); border: none; border-radius:0.5rem; background: transparent; color: var(--color-text-2); font-size:var(--text-base); font-weight: var(--weight-medium); cursor: pointer; transition: all 0.2s; }
 .tab-btn.active { background: var(--color-elevated); color: var(--color-text); box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
 .tab-btn:hover:not(.active) { color: var(--color-text); }
 
-.search-bar { display: flex; gap:0.5rem; margin-bottom:1rem; flex-wrap: wrap; }
+.search-bar { display: flex; gap:var(--space-2); margin-bottom:var(--space-4); flex-wrap: wrap; }
 .search-input-wrap { flex: 1; min-width:12.5rem; position: relative; display: flex; align-items: center; }
 .search-icon { position: absolute; left:0.75rem; width:1.125rem; height:1.125rem; color: var(--color-text-3); }
-.search-input { width:100%; padding:0.625rem 0.75rem 0.625rem 2.375rem; border: 1px solid var(--color-border); border-radius:0.5rem; background: var(--color-surface-2); color: var(--color-text); font-size:0.875rem; }
+.search-input { width:100%; padding:0.625rem var(--space-3) 0.625rem 2.375rem; border: 1px solid var(--color-border); border-radius:0.5rem; background: var(--color-surface-2); color: var(--color-text); font-size:var(--text-base); }
 .search-input:focus { outline: none; border-color: var(--color-border-focus); }
-.filter-select { padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface-2); color: var(--color-text); font-size: 14px; cursor: pointer; }
+.filter-select { padding: 10px var(--space-3); border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface-2); color: var(--color-text); font-size: var(--text-base); cursor: pointer; }
 
-.official-banner { margin-bottom:1rem; padding:1rem; border-radius:0.75rem; background: linear-gradient(135deg, rgba(var(--accent-rgb),0.08), rgba(var(--subject-co-rgb),0.08)); border: 1px solid var(--color-border-focus); }
-.official-title { font-size:0.875rem; font-weight: 600; color: var(--accent); margin-bottom:0.75rem; }
-.official-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+.official-banner { margin-bottom:var(--space-4); padding:var(--space-4); border-radius:0.75rem; background: linear-gradient(135deg, rgba(var(--accent-rgb),0.08), rgba(var(--subject-co-rgb),0.08)); border: 1px solid var(--color-border-focus); }
+.official-title { font-size:var(--text-base); font-weight: var(--weight-semibold); color: var(--accent); margin-bottom:var(--space-3); }
+.official-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--space-2); }
 
-.skill-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.skill-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-3); }
 </style>

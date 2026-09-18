@@ -120,6 +120,18 @@ const router = createRouter({
       component: () => import('@/views/AssessmentView.vue'),
     },
     {
+      // 职业素养测评（对照实验载体）：10 题行为分档计分，六维前后测
+      path: '/literacy',
+      name: 'literacy-assessment',
+      component: () => import('@/views/LiteracyAssessmentView.vue'),
+    },
+    {
+      // 教师端：班级素养六维报告（前后测聚合 + CSV 导出）
+      path: '/literacy/teacher',
+      name: 'literacy-teacher',
+      component: () => import('@/views/TeacherLiteracyReportView.vue'),
+    },
+    {
       path: '/achievements',
       name: 'achievements',
       component: () => import('@/views/AchievementView.vue'),

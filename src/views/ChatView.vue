@@ -7,7 +7,7 @@ import EmptyState from '@/components/EmptyState.vue'
 import { icons } from '@/components/icons'
 import { api } from '@/utils/api'
 import { renderMarkdownSafe, sanitizeSvg } from '@/utils/markdown'
-import { ttsSynthesize } from '@/utils/api'
+import { ttsSynthesize, friendlyError } from '@/utils/api'
 import { useVirtualizer, type Virtualizer } from '@tanstack/vue-virtual'
 import VideoPlayer from '@/components/VideoPlayer.vue'
 
@@ -324,8 +324,9 @@ async function sendMessage(text: string) {
   } catch (e: any) {
     // BugFix：原 catch {} 静默吞掉异常，导致「发不出消息却无任何反馈」。
     // 现在将错误打到控制台并展示给用户，便于定位（后端恢复后此处自然恢复）。
+    // friendlyError 把裸状态码/网络错误翻译成可操作提示（如 401 → 重新登录）。
     console.error('[ChatView] 发送消息失败:', e)
-    sendError.value = e?.message || '消息发送失败，请稍后重试'
+    sendError.value = friendlyError(e, '消息发送失败，请稍后重试')
   } finally {
     isLoading.value = false
     scrollToBottom()
@@ -605,37 +606,37 @@ onBeforeUnmount(() => {
 .chat-layout { display: flex; height:100vh; width:100%; position: relative; }
 .chat-sidebar { width: 280px; min-width: 280px; display: flex; flex-direction: column; background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border-right: 1px solid var(--glass-border); transition: all 0.25s ease; overflow: hidden; }
 .chat-sidebar.collapsed { width:0; min-width:0; border-right: none; }
-.sidebar-header { display: flex; align-items: center; gap:0.375rem; padding:0.75rem; border-bottom: 1px solid var(--glass-border); }
-.xfyun-badge { display:inline-flex; align-items:center; gap:0.25rem; margin-left:auto; padding:0.1875rem 0.5rem; font-size:0.6875rem; font-weight:600; line-height:1; color:var(--accent-primary); background:var(--accent-primary-10); border:1px solid var(--accent-primary-20); border-radius:999px; white-space:nowrap; }
+.sidebar-header { display: flex; align-items: center; gap:0.375rem; padding:var(--space-3); border-bottom: 1px solid var(--glass-border); }
+.xfyun-badge { display:inline-flex; align-items:center; gap:var(--space-1); margin-left:auto; padding:0.1875rem var(--space-2); font-size:var(--text-2xs); font-weight:var(--weight-semibold); line-height:var(--leading-none); color:var(--accent-primary); background:var(--accent-primary-10); border:1px solid var(--accent-primary-20); border-radius:999px; white-space:nowrap; }
 .xfyun-badge-icon { display:inline-flex; }
 .xfyun-badge-icon :deep(svg) { width:12px; height:12px; }
-.greeting-powered { margin-top:0.625rem; font-size:0.8125rem; color:var(--text-muted); }
-.greeting-powered strong { color:var(--accent-primary); font-weight:600; }
-.new-chat-btn { flex: 1; display: flex; align-items: center; gap:0.375rem; padding:0.5rem 0.75rem; border-radius:var(--radius-sm); border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--text-primary); cursor: pointer; font-size:0.8125rem; transition: var(--transition); }
+.greeting-powered { margin-top:0.625rem; font-size:var(--text-sm); color:var(--text-muted); }
+.greeting-powered strong { color:var(--accent-primary); font-weight:var(--weight-semibold); }
+.new-chat-btn { flex: 1; display: flex; align-items: center; gap:0.375rem; padding:var(--space-2) var(--space-3); border-radius:var(--radius-sm); border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--text-primary); cursor: pointer; font-size:var(--text-sm); transition: var(--transition); }
 .new-chat-btn:hover { background: var(--bg-card-hover); border-color: var(--accent-primary); color: var(--accent-primary); }
 .sidebar-toggle { width:2rem; height:2rem; display: flex; align-items: center; justify-content: center; border-radius:var(--radius-sm); border: none; background: transparent; color: var(--text-muted); cursor: pointer; transition: var(--transition); flex-shrink: 0; }
 .sidebar-toggle:hover { background: var(--bg-card-hover); color: var(--text-primary); }
 .sidebar-conversations { flex: 1; overflow-y: auto; padding:0.375rem; }
-.sidebar-conv-item { display: flex; align-items: center; gap:0.5rem; padding:0.625rem; border-radius:var(--radius-sm); cursor: pointer; transition: var(--transition); font-size:0.8125rem; color: var(--text-secondary); }
+.sidebar-conv-item { display: flex; align-items: center; gap:var(--space-2); padding:0.625rem; border-radius:var(--radius-sm); cursor: pointer; transition: var(--transition); font-size:var(--text-sm); color: var(--text-secondary); }
 .sidebar-conv-item:hover { background: var(--bg-card-hover); color: var(--text-primary); }
 .sidebar-conv-item.active { background: var(--color-accent-solid); color: var(--text-user); }
 .conv-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .conv-delete { width:1.5rem; height:1.5rem; display: flex; align-items: center; justify-content: center; border-radius:0.25rem; border: none; background: transparent; color: var(--text-muted); cursor: pointer; opacity: 0; transition: var(--transition); flex-shrink: 0; }
 .sidebar-conv-item:hover .conv-delete { opacity: 1; }
 .conv-delete:hover { background: var(--accent-danger-20); color: var(--accent-danger); }
-.sidebar-empty { text-align: center; padding:2.5rem 0.75rem; color: var(--text-muted); font-size:0.8125rem; }
+.sidebar-empty { text-align: center; padding:var(--space-10) var(--space-3); color: var(--text-muted); font-size:var(--text-sm); }
 .chat-main { flex: 1; display: flex; flex-direction: column; position: relative; min-width:0; }
 .chat-menu-btn { position: absolute; top: 12px; left: 12px; z-index: 10; width: 2.75rem; height: 2.75rem; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); border: 1px solid var(--glass-border); background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); color: var(--text-secondary); cursor: pointer; transition: var(--transition); }
 .chat-menu-btn:hover { background: var(--bg-card-hover); color: var(--accent-primary); }
 
-.meta-card { border: 1px solid var(--glass-border); border-radius: var(--radius-sm); margin-bottom: 0.25rem; background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); overflow: hidden; }
-.meta-card-header { display: flex; align-items: center; gap:0.375rem; padding:0.25rem 0.625rem; background: var(--color-surface); cursor: pointer; user-select: none; transition: var(--transition); font-size:0.75rem; color: var(--text-muted); }
+.meta-card { border: 1px solid var(--glass-border); border-radius: var(--radius-sm); margin-bottom: var(--space-1); background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); overflow: hidden; }
+.meta-card-header { display: flex; align-items: center; gap:0.375rem; padding:var(--space-1) 0.625rem; background: var(--color-surface); cursor: pointer; user-select: none; transition: var(--transition); font-size:var(--text-xs); color: var(--text-muted); }
 .meta-card-header:hover { background: var(--bg-card-hover); }
-.meta-card-label { font-weight: 500; display: flex; align-items: center; gap:0.25rem; }
-.meta-card-duration { margin-left:auto; font-weight: 400; font-size:0.6875rem; opacity: 0.6; white-space: nowrap; }
-.meta-card-body { font-size:0.75rem; color: var(--text-muted); padding:0.375rem 0.625rem; line-height:1.5; opacity: 0.8; max-height:18.75rem; overflow-y: auto; }
-.tool-args { font-family: var(--font-mono); font-size:0.6875rem; word-break: break-all; }
-.scroll-bottom-btn { position: absolute; bottom: 100%; right: 20px; margin-bottom: 8px; z-index: 50; width: 2.75rem; height: 2.75rem; border-radius: 50%; background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); color: var(--text-secondary); border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: var(--shadow-md), var(--glow-primary); transition: var(--transition); animation: btn-in 0.2s ease; }
+.meta-card-label { font-weight: var(--weight-medium); display: flex; align-items: center; gap:var(--space-1); }
+.meta-card-duration { margin-left:auto; font-weight: var(--weight-regular); font-size:var(--text-2xs); opacity: 0.6; white-space: nowrap; }
+.meta-card-body { font-size:var(--text-xs); color: var(--text-muted); padding:0.375rem 0.625rem; line-height:1.5; opacity: 0.8; max-height:18.75rem; overflow-y: auto; }
+.tool-args { font-family: var(--font-mono); font-size:var(--text-2xs); word-break: break-all; }
+.scroll-bottom-btn { position: absolute; bottom: 100%; right: 20px; margin-bottom: var(--space-2); z-index: 50; width: 2.75rem; height: 2.75rem; border-radius: 50%; background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); color: var(--text-secondary); border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: var(--shadow-md), var(--glow-primary); transition: var(--transition); animation: btn-in 0.2s ease; }
 .scroll-bottom-btn:hover { background: var(--glass-bg-hover); color: var(--accent-primary); box-shadow: var(--shadow-card-hover), var(--glow-primary-strong); }
 @keyframes btn-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -652,24 +653,24 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap:0.625rem;
-  padding:0.5rem 0.75rem;
-  margin-bottom:0.5rem;
+  padding:var(--space-2) var(--space-3);
+  margin-bottom:var(--space-2);
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-border);
   border-radius:var(--radius-md);
-  font-size:0.75rem;
+  font-size:var(--text-xs);
   color: var(--text-secondary);
 }
 .image-preview-chip img {
   width:2.5rem; height:2.5rem; object-fit: cover; border-radius:var(--radius-sm);
   flex-shrink: 0;
 }
-.image-preview-name { font-weight: 500; color: var(--text-primary); max-width:10rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.image-preview-name { font-weight: var(--weight-medium); color: var(--text-primary); max-width:10rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .image-preview-remove {
   width:1.375rem; height:1.375rem; border-radius:50%; border: none; cursor: pointer;
-  background: var(--accent-danger-20); color: var(--accent-danger); font-size:0.75rem; flex-shrink: 0;
+  background: var(--accent-danger-20); color: var(--accent-danger); font-size:var(--text-xs); flex-shrink: 0;
 }
 .image-preview-remove:hover { background: var(--accent-danger-20); }
 .image-preview-hint { color: var(--text-muted); margin-left:auto; }
@@ -679,7 +680,7 @@ onBeforeUnmount(() => {
   display: inline-flex; align-items: center; justify-content: center;
   width:1.75rem; height:1.75rem; border-radius:50%; border: none;
   background: transparent; color: var(--text-muted); cursor: pointer;
-  transition: var(--transition); margin-top:0.25rem; flex-shrink: 0;
+  transition: var(--transition); margin-top:var(--space-1); flex-shrink: 0;
 }
 .speak-btn:hover { background: var(--bg-card-hover); color: var(--accent-primary); }
 .speak-btn.speaking { color: var(--accent-primary); background: var(--accent-primary-20); animation: speak-pulse 1.5s ease-in-out infinite; }
@@ -691,22 +692,22 @@ onBeforeUnmount(() => {
 .quick-actions {
   display: flex;
   gap: 6px;
-  margin-top: 8px;
+  margin-top: var(--space-2);
   flex-wrap: wrap;
 }
 .qa-btn {
-  padding: 4px 12px; border-radius: 6px; border: 1px solid var(--glass-border);
+  padding: var(--space-1) var(--space-3); border-radius: 6px; border: 1px solid var(--glass-border);
   background: var(--glass-bg); color: var(--text-secondary); cursor: pointer;
-  font-size: 12px; transition: var(--transition); white-space: nowrap;
+  font-size: var(--text-xs); transition: var(--transition); white-space: nowrap;
 }
 .qa-btn:hover { background: var(--bg-card-hover); color: var(--accent-primary); border-color: var(--accent-primary); }
 }
 
 /* ── TTS 语速选择 ── */
-.tts-controls { display: inline-flex; align-items: center; gap:0.25rem; margin-top:0.25rem; }
+.tts-controls { display: inline-flex; align-items: center; gap:var(--space-1); margin-top:var(--space-1); }
 .tts-speed-select {
   appearance: none; -webkit-appearance: none;
-  padding:0.0625rem 0.25rem; font-size:0.625rem; border: 1px solid var(--glass-border);
+  padding:0.0625rem var(--space-1); font-size:0.625rem; border: 1px solid var(--glass-border);
   border-radius:0.25rem; background: var(--glass-bg); color: var(--text-muted);
   cursor: pointer; outline: none; transition: var(--transition); width: 44px; text-align: center;
 }
@@ -717,20 +718,20 @@ onBeforeUnmount(() => {
 .greeting-chips {
   display: flex;
   flex-wrap: wrap;
-  gap:0.5rem;
+  gap:var(--space-2);
   justify-content: center;
-  margin-top:1.5rem;
+  margin-top:var(--space-6);
   max-width:32rem;
 }
 .greeting-chip {
-  padding:0.5rem 0.875rem;
+  padding:var(--space-2) 0.875rem;
   border-radius:var(--radius-full);
   border:1px solid var(--glass-border);
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
   color: var(--text-secondary);
-  font-size:0.8125rem;
+  font-size:var(--text-sm);
   cursor: pointer;
   transition: var(--transition);
 }
@@ -742,13 +743,13 @@ onBeforeUnmount(() => {
 }
 
 /* ── 导师答疑模式切换 ── */
-.chat-profile-bar { display:flex; align-items:center; gap:8px; padding:8px 16px; border-bottom:1px solid var(--color-border); flex-shrink:0; }
-.chat-profile-btn { display:flex; align-items:center; gap:6px; padding:4px 12px; border-radius:20px; border:1px solid var(--color-border); background:var(--color-surface); font-size:12px; color:var(--color-text-2); cursor:pointer; transition:all 0.15s; }
+.chat-profile-bar { display:flex; align-items:center; gap:var(--space-2); padding:var(--space-2) var(--space-4); border-bottom:1px solid var(--color-border); flex-shrink:0; }
+.chat-profile-btn { display:flex; align-items:center; gap:6px; padding:var(--space-1) var(--space-3); border-radius:20px; border:1px solid var(--color-border); background:var(--color-surface); font-size:var(--text-xs); color:var(--color-text-2); cursor:pointer; transition:all 0.15s; }
 .chat-profile-btn:hover { border-color:var(--color-border-focus); color:var(--color-text); }
-.cpb-avatar { font-size:16px; }
-.cpb-level { font-weight:500; }
-.cpb-weak { font-size:0.75rem; padding:0.0625rem 0.375rem; border-radius:var(--radius-xs); background:color-mix(in srgb, var(--accent-warm) 12%, transparent); color:var(--accent-warm); }
-.chat-skill-badge { display:flex; align-items:center; gap:0.25rem; padding:0.25rem 0.625rem; border-radius:var(--radius-full); border:1px solid var(--color-border-focus); background:var(--accent-primary-10); font-size:0.75rem; color:var(--accent); cursor:pointer; }
+.cpb-avatar { font-size:var(--text-lg); }
+.cpb-level { font-weight:var(--weight-medium); }
+.cpb-weak { font-size:var(--text-xs); padding:0.0625rem 0.375rem; border-radius:var(--radius-xs); background:color-mix(in srgb, var(--accent-warm) 12%, transparent); color:var(--accent-warm); }
+.chat-skill-badge { display:flex; align-items:center; gap:var(--space-1); padding:var(--space-1) 0.625rem; border-radius:var(--radius-full); border:1px solid var(--color-border-focus); background:var(--accent-primary-10); font-size:var(--text-xs); color:var(--accent); cursor:pointer; }
 .chat-skill-badge:hover { background:var(--accent-primary-20); }
 
 .chat-mode-bar {
@@ -756,18 +757,18 @@ onBeforeUnmount(() => {
   align-items: center;
   gap:0.625rem;
   max-width:var(--chat-max-width);
-  margin:0 auto 0.5rem;
+  margin:0 auto var(--space-2);
 }
 .chat-send-error {
   max-width:var(--chat-max-width);
-  margin:0 auto 0.5rem;
-  padding:0.5rem 0.875rem;
+  margin:0 auto var(--space-2);
+  padding:var(--space-2) 0.875rem;
   border-radius:var(--radius-sm);
   background:color-mix(in srgb, var(--accent-danger) 12%, transparent);
   border:1px solid color-mix(in srgb, var(--accent-danger) 40%, transparent);
   color:var(--accent-danger);
-  font-size:0.8125rem;
-  font-weight:600;
+  font-size:var(--text-sm);
+  font-weight:var(--weight-semibold);
   cursor:pointer;
 }
 .mode-toggle {
@@ -779,8 +780,8 @@ onBeforeUnmount(() => {
   border: 1px solid var(--glass-border);
   background: var(--glass-bg);
   color: var(--text-secondary);
-  font-size:0.75rem;
-  font-weight: 600;
+  font-size:var(--text-xs);
+  font-weight: var(--weight-semibold);
   cursor: pointer;
   transition: var(--transition);
 }
@@ -793,7 +794,7 @@ onBeforeUnmount(() => {
 }
 .mode-toggle-icon { display: inline-flex; }
 .mode-toggle-icon svg { width:0.875rem; height:0.875rem; }
-.mode-hint { font-size:0.6875rem; color: var(--text-muted); }
+.mode-hint { font-size:var(--text-2xs); color: var(--text-muted); }
 
 /* ── 导师答疑多模态卡片 ── */
 .tutor-media-block {
@@ -815,8 +816,8 @@ onBeforeUnmount(() => {
   align-items: center;
   gap:0.3125rem;
   padding:0.3125rem 0.625rem;
-  font-size:0.6875rem;
-  font-weight: 600;
+  font-size:var(--text-2xs);
+  font-weight: var(--weight-semibold);
   color: var(--accent-primary);
   background: var(--accent-primary-10);
 }
@@ -830,8 +831,8 @@ onBeforeUnmount(() => {
 }
 .tutor-svg-container svg { max-width: 100%; height: auto; }
 .tutor-video-content {
-  padding:0.5rem 0.75rem;
-  font-size:0.8125rem;
+  padding:var(--space-2) var(--space-3);
+  font-size:var(--text-sm);
   line-height:1.6;
   color: var(--text-secondary);
 }

@@ -157,8 +157,8 @@ function goTo(routePath: string) {
     <!-- 左侧边栏（桌面） -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <div class="sidebar-logo" v-html="safeIcon(icons.logo)"></div>
-        <span class="sidebar-brand">MARS-408</span>
+        <div class="sidebar-logo"><img class="brand-img" src="/brand/mangxiaocheng.png" alt="芒得很职" /></div>
+        <span class="sidebar-brand">芒得很职</span>
       </div>
 
       <nav class="sidebar-nav">
@@ -244,8 +244,8 @@ function goTo(routePath: string) {
             </span>
           </button>
           <router-link to="/" class="topbar-logo">
-            <div class="logo-icon" v-html="safeIcon(icons.logo)"></div>
-            <span class="logo-text">MARS-408</span>
+            <div class="logo-icon"><img class="brand-img" src="/brand/mangxiaocheng.png" alt="芒得很职" /></div>
+            <span class="logo-text">芒得很职</span>
           </router-link>
         </div>
 

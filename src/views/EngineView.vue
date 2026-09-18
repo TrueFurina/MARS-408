@@ -5,6 +5,7 @@ import Skeleton from '@/components/Skeleton.vue'
 import LangGraphFlow from '@/components/LangGraphFlow.vue'
 import DebateSimulation from '@/components/DebateSimulation.vue'
 import TeachingRulesPanel from '@/components/TeachingRulesPanel.vue'
+import SectionHeader from '@/components/SectionHeader.vue'
 import FrugalRAGPanel from '@/components/FrugalRAGPanel.vue'
 import GOMARLPanel from '@/components/GOMARLPanel.vue'
 import CompareProfilesPanel from '@/components/CompareProfilesPanel.vue'
@@ -156,12 +157,14 @@ function formatModuleName(name: string): string {
 
     <!-- ── 循环11-P1: 熔断器/令牌桶实时状态（可观测性） ── -->
     <div v-if="engineStatus?.status === 'ok' && engineStatus.reliability" class="engine-section glass-card engine-enter" style="animation-delay:0.07s">
-      <div class="engine-section-title">
-        <span v-html="icons.shield" class="engine-icon-svg"></span>
-        容灾可观测性
-        <span class="engine-tag">熔断器 + 令牌桶实时状态</span>
-      </div>
-      <div class="engine-desc">多级兜底降级：限流快速失败 + 熔断隔离，故障自动切换通道</div>
+      <SectionHeader>
+        <template #title>
+          <span v-html="icons.shield" class="engine-icon-svg"></span>
+          容灾可观测性
+          <span class="engine-tag">熔断器 + 令牌桶实时状态</span>
+        </template>
+        <template #description>多级兜底降级：限流快速失败 + 熔断隔离，故障自动切换通道</template>
+      </SectionHeader>
 
       <!-- 熔断器 -->
       <div class="reli-sub-title"> 熔断器（LLM 通道 / Skill 插件）</div>
@@ -190,12 +193,14 @@ function formatModuleName(name: string): string {
 
     <!-- ── §5.2.2 核心#1: Agent协同流 ── -->
     <div class="engine-section glass-card engine-enter" style="animation-delay:0.10s">
-      <div class="engine-section-title">
-        <span v-html="icons.agent" class="engine-icon-svg"></span>
-        LangGraph 10 节点协同流程
-        <span class="engine-tag">StateGraph 实时状态</span>
-      </div>
-      <div class="engine-desc">协调→诊断→规划→检索→生成→评估→审核→证据校验→产物验收→路径规划，每节点含动画spinner+完成checkmark</div>
+      <SectionHeader>
+        <template #title>
+          <span v-html="icons.agent" class="engine-icon-svg"></span>
+          LangGraph 10 节点协同流程
+          <span class="engine-tag">StateGraph 实时状态</span>
+        </template>
+        <template #description>协调→诊断→规划→检索→生成→评估→审核→证据校验→产物验收→路径规划，每节点含动画spinner+完成checkmark</template>
+      </SectionHeader>
 
       <LangGraphFlow
         :current-node="flowCurrentNode"
@@ -222,12 +227,14 @@ function formatModuleName(name: string): string {
 
     <!-- ── 幻觉防控演示（现场构造矛盾输入 → 冲突检测 → 展示） ── -->
     <div class="engine-section glass-card engine-enter" style="animation-delay:0.22s">
-      <div class="engine-section-title">
-        <span v-html="icons.shield" class="engine-icon-svg"></span>
-        幻觉防控 · 证据校验演示
-        <span class="engine-tag">现场构造矛盾输入</span>
-      </div>
-      <div class="engine-desc">点击演示按钮，系统将构造两个 Agent 的矛盾回答并现场检测——答辩时可直接展示幻觉防控真实工作</div>
+      <SectionHeader>
+        <template #title>
+          <span v-html="icons.shield" class="engine-icon-svg"></span>
+          幻觉防控 · 证据校验演示
+          <span class="engine-tag">现场构造矛盾输入</span>
+        </template>
+        <template #description>点击演示按钮，系统将构造两个 Agent 的矛盾回答并现场检测——答辩时可直接展示幻觉防控真实工作</template>
+      </SectionHeader>
       <EvidenceCheckPanel :report="null" />
     </div>
 
@@ -244,8 +251,8 @@ function formatModuleName(name: string): string {
 
 <style scoped>
 .engine-section {
-  margin-bottom:2rem;
-  padding:1.5rem;
+  margin-bottom:var(--space-8);
+  padding:var(--space-6);
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius:var(--radius-lg);
@@ -257,16 +264,6 @@ function formatModuleName(name: string): string {
   backdrop-filter: blur(12px);
   border: 1px solid var(--border-color);
   border-radius:var(--radius-md);
-}
-
-.engine-section-title {
-  display: flex;
-  align-items: center;
-  gap:0.5rem;
-  font-size:1.125rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom:0.25rem;
 }
 
 .engine-icon { font-size:1.375rem; }
@@ -288,24 +285,18 @@ function formatModuleName(name: string): string {
 
 .engine-tag {
   margin-left:auto;
-  font-size:0.6875rem;
-  padding:0.1875rem 0.75rem;
+  font-size:var(--text-2xs);
+  padding:0.1875rem var(--space-3);
   border-radius:var(--radius-full);
   background: var(--accent-primary-10);
   color: var(--accent-primary);
-  font-weight: 500;
-}
-
-.engine-desc {
-  font-size:0.8125rem;
-  color: var(--text-secondary);
-  margin-bottom:1rem;
+  font-weight: var(--weight-medium);
 }
 
 .engine-input-row {
   display: flex;
-  gap:0.5rem;
-  margin-bottom:1rem;
+  gap:var(--space-2);
+  margin-bottom:var(--space-4);
 }
 
 .engine-select {
@@ -314,18 +305,18 @@ function formatModuleName(name: string): string {
   background: var(--bg-input);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
-  font-size:0.875rem;
+  font-size:var(--text-base);
   outline: none;
 }
 
 .engine-input {
   flex: 1;
-  padding:0.625rem 1rem;
+  padding:0.625rem var(--space-4);
   border-radius:var(--radius-sm);
   background: var(--bg-input);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
-  font-size:0.875rem;
+  font-size:var(--text-base);
   outline: none;
   transition: var(--transition);
 }
@@ -336,13 +327,13 @@ function formatModuleName(name: string): string {
 }
 
 .engine-btn {
-  padding:0.625rem 1.5rem;
+  padding:0.625rem var(--space-6);
   border-radius:var(--radius-full);
   border: none;
   background: var(--gradient-primary);
   color: #fff;
-  font-size:0.875rem;
-  font-weight: 600;
+  font-size:var(--text-base);
+  font-weight: var(--weight-semibold);
   cursor: pointer;
   transition: var(--transition-bounce);
   white-space: nowrap;
@@ -364,9 +355,9 @@ function formatModuleName(name: string): string {
 .engine-status-grid {
   display: flex;
   flex-wrap: wrap;
-  gap:0.5rem;
-  margin-bottom:1.5rem;
-  padding:1rem;
+  gap:var(--space-2);
+  margin-bottom:var(--space-6);
+  padding:var(--space-4);
   background: var(--bg-card);
   border-radius:var(--radius-md);
   border: 1px solid var(--border-color);
@@ -376,25 +367,25 @@ function formatModuleName(name: string): string {
   display: flex;
   align-items: center;
   gap:0.375rem;
-  padding:0.25rem 0.625rem;
+  padding:var(--space-1) 0.625rem;
   border-radius:var(--radius-full);
   background: var(--bg-tertiary);
-  font-size:0.75rem;
+  font-size:var(--text-xs);
 }
 
 /* ── 循环11-P1: 容灾可观测性（熔断器/令牌桶） ── */
-.reli-sub-title { font-size:0.8125rem; font-weight:600; color: var(--text-secondary); margin-bottom:0.5rem; }
-.reli-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:0.5rem; }
-.reli-card { padding:0.625rem 0.75rem; border-radius:var(--radius-sm); border:1px solid var(--border-color); background: var(--bg-tertiary); }
-.reli-name { font-size:0.75rem; font-weight:600; color: var(--text-primary); margin-bottom:0.25rem; word-break: break-all; }
-.reli-badge { display:inline-block; padding:0.125rem 0.5rem; border-radius:var(--radius-full); font-size:0.6875rem; font-weight:700; text-transform:uppercase; }
+.reli-sub-title { font-size:var(--text-sm); font-weight:var(--weight-semibold); color: var(--text-secondary); margin-bottom:var(--space-2); }
+.reli-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:var(--space-2); }
+.reli-card { padding:0.625rem var(--space-3); border-radius:var(--radius-sm); border:1px solid var(--border-color); background: var(--bg-tertiary); }
+.reli-name { font-size:var(--text-xs); font-weight:var(--weight-semibold); color: var(--text-primary); margin-bottom:var(--space-1); word-break: break-all; }
+.reli-badge { display:inline-block; padding:0.125rem var(--space-2); border-radius:var(--radius-full); font-size:var(--text-2xs); font-weight:var(--weight-bold); text-transform:uppercase; }
 .reli-badge.st-closed { background: rgba(var(--success-rgb),0.15); color: var(--accent-success); }
 .reli-badge.st-open { background: rgba(var(--danger-rgb),0.15); color: var(--accent-danger); }
 .reli-badge.st-half_open { background: rgba(var(--warning-rgb),0.15); color: var(--accent-warm); }
-.reli-meta { font-size:0.6875rem; color: var(--text-muted); margin-top:0.25rem; }
-.reli-tokens { height:0.375rem; border-radius:var(--radius-full); background: var(--bg-card); overflow:hidden; margin-top:0.25rem; }
+.reli-meta { font-size:var(--text-2xs); color: var(--text-muted); margin-top:var(--space-1); }
+.reli-tokens { height:0.375rem; border-radius:var(--radius-full); background: var(--bg-card); overflow:hidden; margin-top:var(--space-1); }
 .reli-token-fill { display:block; height:100%; border-radius:var(--radius-full); background: var(--accent-primary); transition: width 0.3s ease; }
-.reli-empty { font-size:0.75rem; color: var(--text-muted); padding:0.5rem 0; }
+.reli-empty { font-size:var(--text-xs); color: var(--text-muted); padding:var(--space-2) 0; }
 
 .engine-status-dot {
   width:0.5rem;
@@ -408,40 +399,40 @@ function formatModuleName(name: string): string {
   box-shadow: 0 0 6px var(--accent-success);
 }
 
-.engine-status-name { color: var(--text-secondary); font-weight: 500; }
+.engine-status-name { color: var(--text-secondary); font-weight: var(--weight-medium); }
 
 /* ── 差异对比表 ── */
-.diff-panel { padding:1.25rem; margin-bottom:1.5rem; }
+.diff-panel { padding:var(--space-5); margin-bottom:var(--space-6); }
 .diff-panel-header {
-  display: flex; align-items: center; gap:0.5rem;
-  font-size:1.125rem; font-weight: 700; color: var(--text-primary);
-  margin-bottom:1.25rem; flex-wrap: wrap;
+  display: flex; align-items: center; gap:var(--space-2);
+  font-size:var(--text-xl); font-weight: var(--weight-bold); color: var(--text-primary);
+  margin-bottom:var(--space-5); flex-wrap: wrap;
 }
 .diff-panel-tag {
-  margin-left:auto; font-size:0.625rem; font-weight: 700;
+  margin-left:auto; font-size:0.625rem; font-weight: var(--weight-bold);
   padding:0.1875rem 0.625rem; border-radius:var(--radius-full);
   background: linear-gradient(135deg, var(--accent-warm), var(--accent-danger));
   color: #fff; text-transform: uppercase; letter-spacing: 0.5px;
 }
-.diff-category { margin-bottom:1.25rem; }
+.diff-category { margin-bottom:var(--space-5); }
 .diff-category-title {
-  font-size:0.875rem; font-weight: 700; color: var(--accent-primary);
+  font-size:var(--text-base); font-weight: var(--weight-bold); color: var(--accent-primary);
   margin-bottom:0.625rem; padding-bottom:0.375rem;
   border-bottom: 1px solid var(--border-color);
 }
 .diff-table { width:100%; border-collapse: collapse; table-layout: fixed; }
 .diff-table th, .diff-table td {
-  padding:0.625rem 0.75rem; text-align: left; font-size:0.8125rem;
+  padding:0.625rem var(--space-3); text-align: left; font-size:var(--text-sm);
   border-bottom: 1px solid var(--border-light);
   vertical-align: top; line-height:1.5;
 }
-.diff-th-other { width:28%; color: var(--text-muted); font-weight: 600; }
-.diff-th-ours { width:52%; color: var(--accent-primary); font-weight: 600; }
+.diff-th-other { width:28%; color: var(--text-muted); font-weight: var(--weight-semibold); }
+.diff-th-ours { width:52%; color: var(--accent-primary); font-weight: var(--weight-semibold); }
 .diff-th-tag { width:20%; }
 .diff-td-other { color: var(--text-muted); }
-.diff-td-ours { color: var(--text-primary); font-weight: 500; }
+.diff-td-ours { color: var(--text-primary); font-weight: var(--weight-medium); }
 .diff-tag {
-  display: inline-block; font-size:0.625rem; font-weight: 700;
+  display: inline-block; font-size:0.625rem; font-weight: var(--weight-bold);
   padding:0.125rem 0.625rem; border-radius:var(--radius-full);
   text-transform: uppercase; letter-spacing: 0.3px;
 }
@@ -458,18 +449,18 @@ function formatModuleName(name: string): string {
 .demo-trigger-row {
   display: flex;
   align-items: center;
-  gap:0.75rem;
-  margin-top:1rem;
+  gap:var(--space-3);
+  margin-top:var(--space-4);
 }
 
 .demo-btn {
-  padding:0.5rem 1.25rem;
+  padding:var(--space-2) var(--space-5);
   border-radius:1.25rem;
   border: 1px solid var(--accent-primary);
   background: var(--accent-primary-10);
   color: var(--accent-primary);
-  font-size:0.8125rem;
-  font-weight: 600;
+  font-size:var(--text-sm);
+  font-weight: var(--weight-semibold);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -481,15 +472,15 @@ function formatModuleName(name: string): string {
 }
 
 .demo-hint {
-  font-size:0.6875rem;
+  font-size:var(--text-2xs);
   color: var(--text-muted);
 }
 
 .engine-error {
-  padding:0.75rem 1rem;
+  padding:var(--space-3) var(--space-4);
   background: var(--accent-danger-10);
   border-radius:var(--radius-sm);
   color: var(--accent-danger);
-  font-size:0.8125rem;
+  font-size:var(--text-sm);
 }
 </style>

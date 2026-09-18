@@ -161,20 +161,20 @@ onMounted(loadMemory)
 .memory-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  gap: var(--space-4);
 }
 .memory-card {
-  padding: 20px;
+  padding: var(--space-5);
 }
 .memory-card-title {
-  font-size: 15px;
-  font-weight: 700;
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
   color: var(--text-primary);
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
 }
 .memory-stats {
   display: flex;
-  gap: 24px;
+  gap: var(--space-6);
 }
 .memory-stat {
   display: flex;
@@ -186,31 +186,31 @@ onMounted(loadMemory)
   color: var(--accent-primary);
 }
 .mem-label {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--text-secondary);
 }
 .memory-level-badge {
   display: inline-block;
-  margin-top: 12px;
-  font-size: 12px;
-  padding: 3px 12px;
+  margin-top: var(--space-3);
+  font-size: var(--text-xs);
+  padding: 3px var(--space-3);
   border-radius: var(--radius-full);
   background: var(--accent-primary-10);
   color: var(--accent-primary);
 }
 .memory-hint {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--text-muted);
-  margin-top: 12px;
+  margin-top: var(--space-3);
 }
 .mem-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
 }
 .mem-tag {
-  font-size: 11px;
+  font-size: var(--text-2xs);
   padding: 3px 10px;
   border-radius: var(--radius-xs);
 }
@@ -219,18 +219,18 @@ onMounted(loadMemory)
 .mem-tag.clickable { cursor: pointer; transition: var(--transition); }
 .mem-tag.clickable:hover { background: rgba(var(--danger-rgb),0.25); transform: scale(1.05); }
 .mem-tag-label {
-  font-size: 11px;
+  font-size: var(--text-2xs);
   color: var(--text-muted);
   align-self: center;
 }
-.mem-actions { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--glass-border); }
-.mem-actions-title { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; }
-.mem-action-btn { display: block; width: 100%; text-align: left; padding: 10px 14px; margin-bottom: 6px; border-radius: var(--radius-sm); border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--text-secondary); font-size: 13px; cursor: pointer; transition: var(--transition); }
+.mem-actions { margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--glass-border); }
+.mem-actions-title { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-primary); margin-bottom: var(--space-2); }
+.mem-action-btn { display: block; width: 100%; text-align: left; padding: 10px 14px; margin-bottom: 6px; border-radius: var(--radius-sm); border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--text-secondary); font-size: var(--text-sm); cursor: pointer; transition: var(--transition); }
 .mem-action-btn:hover { border-color: var(--accent-primary); color: var(--accent-primary); background: var(--accent-primary-10); }
 .mem-empty {
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--text-muted);
-  padding: 16px 0;
+  padding: var(--space-4) 0;
 }
 .mem-context {
   color: var(--text-secondary);

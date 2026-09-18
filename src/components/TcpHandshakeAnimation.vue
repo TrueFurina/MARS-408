@@ -43,7 +43,7 @@ function drawBackground() {
   const h = canvas.clientHeight
 
   // Background
-  ctx.fillStyle = '#0f0f1a'
+  ctx.fillStyle = '#0E1217'
   ctx.fillRect(0, 0, w, h)
 
   // Grid
@@ -307,29 +307,29 @@ onUnmounted(() => {
   overflow: hidden;
   backdrop-filter: blur(12px);
 }
-.tcp-btn { padding:0.3125rem 1rem; font-size:0.75rem; }
+.tcp-btn { padding:0.3125rem var(--space-4); font-size:var(--text-xs); }
 .tcp-btn-ghost { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); }
-.tcp-select { padding:0.3125rem 0.5rem; font-size:0.75rem; width:auto; }
+.tcp-select { padding:0.3125rem var(--space-2); font-size:var(--text-xs); width:auto; }
 
 .tcp-controls {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding:0.75rem 1rem;
+  padding:var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--border-light);
   flex-wrap: wrap;
-  gap:0.5rem;
+  gap:var(--space-2);
 }
 .tcp-title {
-  font-size:0.9375rem;
-  font-weight: 700;
+  font-size:var(--text-md);
+  font-weight: var(--weight-bold);
   color: var(--text-primary);
 }
 .tcp-step-info {
   display: flex;
-  gap:0.75rem;
-  font-size:0.8125rem;
-  font-weight: 600;
+  gap:var(--space-3);
+  font-size:var(--text-sm);
+  font-weight: var(--weight-semibold);
 }
 .tcp-buttons {
   display: flex;
