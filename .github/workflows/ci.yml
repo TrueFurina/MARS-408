@@ -1,3 +1,6 @@
+env:
+  DISABLE_RATE_LIMIT: true
+
 name: CI Security Gate (MARS-408 / study-help-pro)
 
 # 固化已修复的安全缺陷，防 regression。任一阻塞门禁失败即阻断 PR 合并。
