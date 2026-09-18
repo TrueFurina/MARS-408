@@ -147,6 +147,7 @@ jobs:
       - name: Slow tests
         working-directory: py-server
         run: |
+          set +e   # 禁用 errexit：否则 pytest exit 5（0 测试收集）会立即中止脚本，rc=$? 与兜底逻辑无法执行
           pytest -m slow --timeout=600 -q
           rc=$?
           if [ "$rc" -eq 5 ]; then
