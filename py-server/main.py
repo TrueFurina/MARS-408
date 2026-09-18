@@ -583,6 +583,10 @@ _rate_lock = threading.Lock()
 
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next) -> Response:
+    # 测试/CI 环境豁免限流：in-process 测试客户端在同一 pytest session 内累积请求易触发 429，
+    # 导致依赖 /api/skills 等的集成测试级联失败（KeyError 等）。生产默认仍限流（不设置该 env）。
+    if os.environ.get("DISABLE_RATE_LIMIT"):
+        return await call_next(request)
     path = request.url.path
     group = next((g for p, g in _RATE_GROUPS.items() if path.startswith(p)), None)
     if group is None:
