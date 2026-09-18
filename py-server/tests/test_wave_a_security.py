@@ -41,6 +41,10 @@ class _LLMProvider:
     """桩：config_routes 仅将其作为类型引用，不参与任何调用。"""
 _db_llm = types.ModuleType("db.llm_provider")
 _db_llm.LLMProvider = _LLMProvider
+# config_routes 还导入了 _provider_configured（纯函数，桩提供同签名轻实现）
+def _provider_configured(name, cfg):
+    return bool(cfg and cfg.get("api_key"))
+_db_llm._provider_configured = _provider_configured
 _stub_sub("db.llm_provider", _db_llm)
 for _sub in ("db.milvus_client", "db.pg_client", "db.redis_client"):
     _stub_sub(_sub, types.ModuleType(_sub))
