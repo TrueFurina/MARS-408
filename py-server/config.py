@@ -474,6 +474,9 @@ def _apply_env_overrides(config: dict) -> None:
         "REDIS_PORT": ("redis", "port"),
         "REDIS_PASSWORD": ("redis", "password"),
         "REDIS_ENABLED": ("redis", "enabled"),
+        # 主通道可由环境变量 LLM_PROVIDER 切换（守护测试 2026-09-15：原先 env_map 缺该映射，
+        # 导致只能改 config.json 才能切主通道）。section=None 表示写入 config 顶层字段。
+        "LLM_PROVIDER": (None, "llm_provider"),
     }
 
     for env_key, (section, field) in env_map.items():
@@ -488,7 +491,10 @@ def _apply_env_overrides(config: dict) -> None:
                     val = int(val)
                 except ValueError:
                     continue
-            if section in config:
+            if section is None:
+                # 顶层字段（如 llm_provider）直接写入 config 根
+                config[field] = val
+            elif section in config:
                 config[section][field] = val
 
 
