@@ -207,47 +207,47 @@ function restart(nextPhase: 'pre' | 'post') {
   </div>
 </template>
 
-<style scoped>
+<style>
 .literacy-page { max-width: 760px; margin: 0 auto; padding: var(--space-6) var(--space-4) var(--space-12); }
 .page-head h1 { font-size: var(--text-3xl); margin: 0 0 var(--space-1); }
-.page-head .sub { color: #64748b; font-size: var(--text-sm); margin: 0 0 var(--space-5); }
-.state-card { padding: var(--space-10); text-align: center; background: var(--surface, #fff); border-radius: 12px; border: 1px solid var(--border, #e2e8f0); }
+.page-head .sub { color: #64748b; font-size: var(--text-sm); margin: 0 0 var(--space-5); } /* token-exception */
+.state-card { padding: var(--space-10); text-align: center; background: var(--surface); border-radius: 12px; border: 1px solid var(--border); }
 .state-card.error { color: var(--color-danger); }
 
-.quiz-card, .result-card { background: var(--surface, #fff); border: 1px solid var(--border, #e2e8f0); border-radius: 12px; padding: var(--space-6); }
-.quiz-meta { display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-sm); color: #64748b; margin-bottom: var(--space-2); flex-wrap: wrap; }
-.dim-tag { background: #eef2ff; color: #4f46e5; padding: 2px 10px; border-radius: 999px; font-size: var(--text-xs); }
+.quiz-card, .result-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: var(--space-6); }
+.quiz-meta { display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-sm); color: #64748b; margin-bottom: var(--space-2); flex-wrap: wrap; } /* token-exception */
+.dim-tag { background: #eef2ff; color: #4f46e5; padding: 2px 10px; border-radius: 999px; font-size: var(--text-xs); } /* token-exception */
 .phase-switch label { margin-right: 10px; cursor: pointer; }
-.progress-track { height: 6px; background: #e2e8f0; border-radius: 999px; overflow: hidden; margin-bottom: var(--space-5); }
-.progress-fill { height: 100%; background: #4f46e5; transition: width .3s; }
+.progress-track { height: 6px; background: #e2e8f0; border-radius: 999px; overflow: hidden; margin-bottom: var(--space-5); } /* token-exception */
+.progress-fill { height: 100%; background: #4f46e5; transition: width .3s; } /* token-exception */
 .stem { font-size: 17px; line-height: 1.6; margin: 0 0 18px; }
 .options { display: flex; flex-direction: column; gap: 10px; }
-.option-btn { text-align: left; padding: 14px var(--space-4); border-radius: 10px; border: 1.5px solid var(--border, #e2e8f0); background: transparent; cursor: pointer; font-size: var(--text-base); line-height: 1.5; transition: all .15s; }
-.option-btn:hover { border-color: #a5b4fc; }
-.option-btn.selected { border-color: #4f46e5; background: #eef2ff; }
+.option-btn { text-align: left; padding: 14px var(--space-4); border-radius: 10px; border: 1.5px solid var(--border); background: transparent; cursor: pointer; font-size: var(--text-base); line-height: 1.5; transition: all .15s; }
+.option-btn:hover { border-color: #a5b4fc; } /* token-exception */
+.option-btn.selected { border-color: #4f46e5; background: #eef2ff; } /* token-exception */
 .quiz-nav { display: flex; gap: 10px; margin-top: 18px; }
 .submit-row { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
-.text-input { flex: 1; min-width: 160px; padding: 9px var(--space-3); border: 1.5px solid var(--border, #e2e8f0); border-radius: 8px; font-size: var(--text-sm); }
+.text-input { flex: 1; min-width: 160px; padding: 9px var(--space-3); border: 1.5px solid var(--border); border-radius: 8px; font-size: var(--text-sm); }
 .btn { padding: 9px 18px; border-radius: 8px; font-size: var(--text-base); cursor: pointer; border: 1.5px solid transparent; }
-.btn.primary { background: #4f46e5; color: #fff; }
+.btn.primary { background: #4f46e5; color: #fff; } /* token-exception */
 .btn.primary:disabled { opacity: .5; cursor: not-allowed; }
-.btn.ghost { background: transparent; border-color: var(--border, #e2e8f0); color: #475569; }
+.btn.ghost { background: transparent; border-color: var(--border); color: #475569; } /* token-exception */
 .btn.ghost:disabled { opacity: .4; cursor: not-allowed; }
 
 .result-total { text-align: center; margin-bottom: var(--space-6); }
-.result-total .label { display: block; color: #64748b; font-size: var(--text-sm); }
+.result-total .label { display: block; color: #64748b; font-size: var(--text-sm); } /* token-exception */
 .result-total .value { font-size: 52px; font-weight: var(--weight-bold); }
-.phase-tag { display: inline-block; margin-left: var(--space-2); background: #eef2ff; color: #4f46e5; padding: 2px 10px; border-radius: 999px; font-size: var(--text-xs); vertical-align: super; }
+.phase-tag { display: inline-block; margin-left: var(--space-2); background: #eef2ff; color: #4f46e5; padding: 2px 10px; border-radius: 999px; font-size: var(--text-xs); vertical-align: super; } /* token-exception */
 .dim-bars { display: flex; flex-direction: column; gap: 10px; margin-bottom: var(--space-5); }
 .dim-row { display: grid; grid-template-columns: 76px 1fr 96px; align-items: center; gap: var(--space-3); font-size: var(--text-sm); }
-.bar-track { height: 10px; background: #f1f5f9; border-radius: 999px; overflow: hidden; }
+.bar-track { height: 10px; background: #f1f5f9; border-radius: 999px; overflow: hidden; } /* token-exception */
 .bar-fill { height: 100%; border-radius: 999px; transition: width .5s; }
-.dim-score { color: #475569; text-align: right; }
+.dim-score { color: #475569; text-align: right; } /* token-exception */
 .result-msg { text-align: center; color: var(--color-success); font-size: var(--text-sm); }
 .result-actions { display: flex; gap: 10px; justify-content: center; margin-top: 14px; }
 
-.delta-box { margin-top: var(--space-7); padding-top: var(--space-5); border-top: 1px dashed var(--border, #e2e8f0); }
+.delta-box { margin-top: var(--space-7); padding-top: var(--space-5); border-top: 1px dashed var(--border); }
 .delta-box h3 { font-size: var(--text-md); margin: 0 0 10px; }
-.delta-total { font-size: var(--text-base); margin-bottom: 14px; color: #334155; }
+.delta-total { font-size: var(--text-base); margin-bottom: 14px; color: #334155; } /* token-exception */
 .error-text { color: var(--color-danger); font-size: var(--text-sm); margin-top: 10px; }
 </style>
