@@ -96,7 +96,7 @@
 
 > 根据赛题要求："如若使用 AI Coding 工具，给出相关说明。"
 
-本项目在开发过程中使用了 **Claude Code (Anthropic)** 和 **AtomCode (AtomGit)** 作为 AI 辅助编程工具，用于：
+本项目在开发过程中使用了 **Trae (字节跳动)**、**Claude Code (Anthropic)** 和 **AtomCode (AtomGit)** 作为 AI 辅助编程工具，用于：
 
 1. **代码生成与优化**：辅助生成标准化代码结构、数据模型定义、API 路由模板
 2. **文档撰写**：辅助生成产品需求文档、技术方案文档、测试说明
