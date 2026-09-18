@@ -27,7 +27,7 @@ DOCS = [os.path.join(ROOT, "docs", "reports", "DESIGN.md")]
 
 HEX_RE = re.compile(r"#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b")
 WHITE_BLACK = {"#fff", "#ffffff", "#000", "#000000"}
-RETIRED_MARK = ("废弃", "旧", "历史", "retired", "superseded", "已被")
+RETIRED_MARK = ("废弃", "旧", "历史", "retired", "superseded", "已被", "token-exception")
 
 
 def norm(h):
