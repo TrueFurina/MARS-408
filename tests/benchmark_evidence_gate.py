@@ -106,10 +106,31 @@ def _load_backend_module():
             stub.HTTPException = _HTTPException
             sys.modules["fastapi"] = stub
 
+        # pydantic：后端模块定义了 response_model（BenchmarkResultsResponse 等），
+        # 本门禁只调用端点函数取 dict，从不实例化模型 —— 最小 stub 即可。
+        try:
+            import pydantic  # noqa: F401
+        except ImportError:
+            pstub = types.ModuleType("pydantic")
+
+            class _BaseModel:  # noqa: D401
+                def __init__(self, **data):
+                    self.__dict__.update(data)
+
+                def model_dump(self):
+                    return dict(self.__dict__)
+
+            pstub.BaseModel = _BaseModel
+            sys.modules["pydantic"] = pstub
+
         spec = importlib.util.spec_from_file_location("_bm_api_gate", mod_path)
         if spec is None or spec.loader is None:
             return None, f"无法加载 {mod_path}"
         mod = importlib.util.module_from_spec(spec)
+        # 必须先注册 sys.modules：api/benchmark.py 现含 pydantic response_model，
+        # 且顶部有 from __future__ import annotations —— 不注册会导致
+        # pydantic 解析字符串注解失败（PydanticUserError: not fully defined）。
+        sys.modules["_bm_api_gate"] = mod
         spec.loader.exec_module(mod)
         return mod, None
     except Exception as e:  # noqa: BLE001

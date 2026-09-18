@@ -15,7 +15,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "gate:evidence": "python tests/benchmark_evidence_gate.py",
-    "verify": "npm run type-check && npm run test && npm run gate:evidence"
+    "verify": "npm run type-check && npm run test && npm run gate:evidence",
+    "types:generate": "openapi-typescript py-server/openapi.json -o src/types/api.generated.ts"
   },
   "dependencies": {
     "@obsidize/tar-browserify": "^6.3.2",
@@ -47,6 +48,7 @@
     "happy-dom": "^15.11.0",
     "lightningcss": "^1.33.0",
     "npm-run-all2": "^8.0.4",
+    "openapi-typescript": "^7.13.0",
     "postcss": "^8.5.20",
     "prettier": "3.8.3",
     "typescript": "^5.7.2",

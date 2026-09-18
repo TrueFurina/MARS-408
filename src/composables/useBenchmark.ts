@@ -91,8 +91,45 @@ export interface BenchmarkSummary {
   kappaVotingVsTruth: number | null
 }
 
-function arm(raw: any): ArmSummary {
+/**
+ * /api/benchmark/results 响应契约（镜像后端 api/benchmark.py::BenchmarkResultsResponse）。
+ *
+ * 【为什么手写而不是从 api.generated.ts 取】该端点此前返回 Dict[str, Any]，
+ * OpenAPI 契约是开放索引签名（{[k: string]: unknown}），生成类型无字段信息；
+ * 现后端已挂 response_model 并刷新 py-server/openapi.json 快照，待本机
+ * node_modules 环境修复（其文件会被安全层隔离成 *.DELETE.*）后，
+ * `npm run types:generate` 可自动生成并替换本接口。
+ */
+export interface BenchmarkPayload {
+  provenance: Record<string, unknown>
+  meta: Record<string, unknown>
+  experiment1: Record<string, unknown>
+  experiment2: Record<string, unknown>
+  per_query: unknown[]
+  per_question: unknown[]
+}
+
+/** 契约字段 → 视图友好 provenance（字段缺失一律 null，绝不编造） */
+function toProvenance(raw: Record<string, unknown> | undefined): BenchmarkProvenance | null {
+  if (!raw || typeof raw !== 'object') return null
+  const s = (k: string): string => String(raw[k] ?? '')
+  const n = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? v : null)
   return {
+    source_file: s('source_file'),
+    file_name: s('file_name'),
+    file_mtime: s('file_mtime'),
+    file_size_bytes: n(raw['file_size_bytes']) ?? 0,
+    mode: s('mode'),
+    n_queries: n(raw['n_queries']),
+    n_questions: n(raw['n_questions']),
+    n_trials_per_question: n(raw['n_trials_per_question']),
+    random_seed: n(raw['random_seed']),
+    benchmark_date: typeof raw['benchmark_date'] === 'string' ? raw['benchmark_date'] : null,
+    env: (raw['env'] && typeof raw['env'] === 'object' ? raw['env'] : {}) as Record<string, string>,
+  }
+}
+
+function arm(raw: any): ArmSummary {  return {
     mean_recall_5: raw?.['mean_recall@5'] ?? null,
     mean_precision_5: raw?.['mean_precision@5'] ?? null,
     mean_mrr: raw?.['mean_mrr'] ?? null,
@@ -192,8 +229,8 @@ export function useBenchmark() {
     loading.value = true
     error.value = null
     try {
-      const data = await api.get<any>('/benchmark/results')
-      provenance.value = (data?.provenance as BenchmarkProvenance) ?? null
+      const data = await api.get<BenchmarkPayload>('/benchmark/results')
+      provenance.value = toProvenance(data?.provenance)
       rawExp1.value = data?.experiment1 ?? null
       rawExp2.value = data?.experiment2 ?? null
       rows.value = mapRows(data?.per_query)

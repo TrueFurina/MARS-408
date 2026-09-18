@@ -25,11 +25,31 @@ from __future__ import annotations
 import json
 import os
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/benchmark", tags=["benchmark"])
+
+
+# ── 响应契约（OpenAPI/前端类型生成的真值源）──
+# 【为什么必须挂 response_model】此前端点返回 Dict[str, Any]，OpenAPI 里是
+# 开放索引签名 {[k: string]: unknown}，前端从契约拿不到任何字段信息——
+# 契约层形同虚设。此处给出顶层形状；行级明细保持 Dict 宽容（产物字段
+# 可能随版本演化，过度收紧会把"新字段"变成 500）。
+class BenchmarkResultsResponse(BaseModel):
+    provenance: Dict[str, Any]
+    meta: Dict[str, Any]
+    experiment1: Dict[str, Any]
+    experiment2: Dict[str, Any]
+    per_query: List[Dict[str, Any]]
+    per_question: List[Dict[str, Any]]
+
+
+class PerQuestionResponse(BaseModel):
+    provenance: Dict[str, Any]
+    per_question: List[Dict[str, Any]]
 
 # py-server/experiments/results/
 _RESULTS_DIR = os.path.join(
@@ -74,7 +94,7 @@ def _latest_real_result() -> Optional[str]:
     return os.path.join(_RESULTS_DIR, candidates[-1])
 
 
-@router.get("/results")
+@router.get("/results", response_model=BenchmarkResultsResponse)
 async def get_benchmark_results() -> Dict[str, Any]:
     """返回最新的真实 benchmark 产物（汇总 + per_query 明细 + provenance）。"""
     path = _latest_real_result()
@@ -119,7 +139,7 @@ async def get_benchmark_results() -> Dict[str, Any]:
     }
 
 
-@router.get("/results/per-question")
+@router.get("/results/per-question", response_model=PerQuestionResponse)
 async def get_benchmark_per_question() -> Dict[str, Any]:
     """experiment2 的逐题明细（30 题 × 3 次观测），供下钻查看。"""
     path = _latest_real_result()
