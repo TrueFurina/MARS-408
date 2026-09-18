@@ -67,6 +67,9 @@ ENV PYTHONPATH=/app
 ENV STATIC_DIR=/app/static
 ENV HOST=0.0.0.0
 ENV PORT=8002
+# ADR-007/008 单写者：环境变量层固化单进程，防编排器注入 >1
+# （uvicorn 不读该变量，但 main.py 启动守卫会核验 WEB_CONCURRENCY/UVICORN_WORKERS，>1 即 fail-fast）
+ENV WEB_CONCURRENCY=1
 ENV LLM_PROVIDER=auto
 ENV MILVUS_HOST=milvus
 ENV MILVUS_PORT=19530
@@ -84,4 +87,5 @@ HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
 # 启动命令（作为 entrypoint 的参数；entrypoint 负责修复挂载卷属主并以非 root 用户运行）
 # ADR-007 硬约束：必须 --workers 1（单进程），多进程会重新引入多写者(last-writer-wins)。切勿加 --workers N (N>1)。
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
-CMD ["uv", "run", "python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8002"]
+# ADR-007 硬约束：CLI 显式 --workers 1（单进程），与上方 ENV WEB_CONCURRENCY=1 双保险
+CMD ["uv", "run", "python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8002", "--workers", "1"]
