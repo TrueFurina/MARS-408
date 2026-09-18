@@ -1,0 +1,5 @@
+=== teaching_rules._dependencies ===
+知识点(节点)数: 86
+依赖/关联边数: 82
+按 course: {'computer_network': 50, 'data_structures': 16, 'computer_organization': 10, 'operating_system': 10}
+样例: overview -> TopicDependency(topic_id='overview', topic_name='计算机网络概述', course='computer_network', prerequisites=[], exam_weight=0.08, difficulty='basic')

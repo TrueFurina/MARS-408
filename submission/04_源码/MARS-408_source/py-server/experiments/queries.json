@@ -1,0 +1,37 @@
+{
+  "description": "MARS-408 benchmark 查询集 — 408考研四科真题风格",
+  "count": 28,
+  "queries": [
+    {"id": "cn_01", "text": "TCP三次握手的过程是怎样的", "course": "computer_network", "expected_subjects": ["transport", "tcp"]},
+    {"id": "cn_02", "text": "OSI参考模型有哪七层 各层功能是什么", "course": "computer_network", "expected_subjects": ["overview", "architecture"]},
+    {"id": "cn_03", "text": "CSMA/CD协议的工作原理", "course": "computer_network", "expected_subjects": ["csma", "datalink", "ethernet"]},
+    {"id": "cn_04", "text": "IP地址分类 A类B类C类地址范围", "course": "computer_network", "expected_subjects": ["ip", "network"]},
+    {"id": "cn_05", "text": "ARP协议的作用和工作过程", "course": "computer_network", "expected_subjects": ["arp", "network"]},
+    {"id": "cn_06", "text": "DNS域名解析的递归查询和迭代查询", "course": "computer_network", "expected_subjects": ["dns", "application"]},
+    {"id": "cn_07", "text": "HTTP和HTTPS的区别 SSL握手过程", "course": "computer_network", "expected_subjects": ["http", "security", "ssl", "application"]},
+
+    {"id": "os_01", "text": "进程和线程的区别 上下文切换", "course": "operating_system", "expected_subjects": ["os_process"]},
+    {"id": "os_02", "text": "页面置换算法 LRU LFU FIFO", "course": "operating_system", "expected_subjects": ["os_memory"]},
+    {"id": "os_03", "text": "银行家算法死锁避免", "course": "operating_system", "expected_subjects": ["os_process"]},
+    {"id": "os_04", "text": "生产者消费者问题 PV操作信号量", "course": "operating_system", "expected_subjects": ["os_process"]},
+    {"id": "os_05", "text": "文件的物理结构 连续链接索引", "course": "operating_system", "expected_subjects": ["os_file"]},
+    {"id": "os_06", "text": "磁盘调度算法 SCAN C-SCAN SSTF", "course": "operating_system", "expected_subjects": ["os_io"]},
+    {"id": "os_07", "text": "虚拟内存的概念和地址变换", "course": "operating_system", "expected_subjects": ["os_memory"]},
+
+    {"id": "co_01", "text": "计算机性能指标 CPI 主频 MIPS", "course": "computer_organization", "expected_subjects": ["co_overview"]},
+    {"id": "co_02", "text": "原码反码补码移码表示范围", "course": "computer_organization", "expected_subjects": ["co_data"]},
+    {"id": "co_03", "text": "Cache映射方式 直接全相联组相联", "course": "computer_organization", "expected_subjects": ["co_memory"]},
+    {"id": "co_04", "text": "指令周期 取指执行间址中断", "course": "computer_organization", "expected_subjects": ["co_cpu", "co_isa"]},
+    {"id": "co_05", "text": "CPU数据通路 ALU寄存器", "course": "computer_organization", "expected_subjects": ["co_cpu"]},
+    {"id": "co_06", "text": "总线仲裁方式 链式查询计数器", "course": "computer_organization", "expected_subjects": ["co_bus"]},
+    {"id": "co_07", "text": "I/O控制方式 程序查询中断DMA", "course": "computer_organization", "expected_subjects": ["co_io"]},
+
+    {"id": "ds_01", "text": "栈和队列的区别 应用场景", "course": "data_structures", "expected_subjects": ["ds_stack", "ds_queue"]},
+    {"id": "ds_02", "text": "二叉树遍历 前序中序后序", "course": "data_structures", "expected_subjects": ["ds_tree"]},
+    {"id": "ds_03", "text": "图的遍历 深度优先DFS广度优先BFS", "course": "data_structures", "expected_subjects": ["ds_graph"]},
+    {"id": "ds_04", "text": "快速排序算法的时间复杂度和过程", "course": "data_structures", "expected_subjects": ["ds_sort"]},
+    {"id": "ds_05", "text": "二分查找的条件和实现", "course": "data_structures", "expected_subjects": ["ds_search"]},
+    {"id": "ds_06", "text": "哈希表冲突解决 开放定址链地址", "course": "data_structures", "expected_subjects": ["ds_search"]},
+    {"id": "ds_07", "text": "线性表顺序存储和链式存储比较", "course": "data_structures", "expected_subjects": ["ds_linear"]}
+  ]
+}

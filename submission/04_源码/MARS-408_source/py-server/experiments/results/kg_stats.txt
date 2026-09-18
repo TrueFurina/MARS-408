@@ -1,0 +1,19 @@
+Traceback (most recent call last):
+  File "<string>", line 17, in <module>
+TypeError: TeachingRuleEngine.get_cross_subject_prerequisites() missing 1 required positional argument: 'topic_id'
+=== teaching_rules.get_stats() ===
+{'total_topics': 86, 'course_distribution': {'computer_network': 50, 'data_structures': 16, 'computer_organization': 10, 'operating_system': 10}, 'difficulty_distribution': {'basic': 9, 'medium': 39, 'advanced': 34, 'comprehensive': 4}, 'review_stages': ['basic', 'medium', 'advanced', 'comprehensive'], 'agent_count': 7, 'agents': ['teacher', 'quizmaster', 'media_designer', 'extension', 'ppt_designer', 'code_practice', 'assessor'], 'top_exam_weight_topics': [{'id': 'transport', 'name': '运输层', 'course': 'computer_network', 'weight': 0.2}, {'id': 'sorting', 'name': '排序', 'course': 'data_structures', 'weight': 0.2}, {'id': 'cpu', 'name': 'CPU', 'course': 'computer_organization', 'weight': 0.2}, {'id': 'process', 'name': '进程管理', 'course': 'operating_system', 'weight': 0.2}, {'id': 'network', 'name': '网络层', 'course': 'computer_network', 'weight': 0.18}]}
+
+=== 跨科目前置依赖 ===
+err: TeachingRuleEngine.get_cross_subject_prerequisites() missing 1 required positional argument: 'topic_id'
+
+=== 依赖边详细统计 ===
+prerequisites 边: 82
+related 边: 0
+总边数: 82
+
+=== _agent_affinities ===
+agent affinities keys: ['teacher', 'quizmaster', 'media_designer', 'extension', 'ppt_designer', 'code_practice', 'assessor']
+  teacher: AgentTopicAffinity(agent_name='teacher', preferred_courses=['computer_network', 'data_structures', 'computer_organization', 'operating_system'], preferred_difficulty=['medium', 'advanced'], topic_keywords=['讲解', '概念', '原理', '定义', '理解'])
+  quizmaster: AgentTopicAffinity(agent_name='quizmaster', preferred_courses=['computer_network', 'data_structures', 'computer_organization', 'operating_system'], preferred_difficulty=['medium', 'advanced', 'comprehensive'], topic_keywords=['练习', '真题', '模拟题', '考点', '考查'])
+  media_designer: AgentTopicAffinity(agent_name='media_designer', preferred_courses=['computer_network', 'data_structures'], preferred_difficulty=['basic', 'medium'], topic_keywords=['思维导图', '可视化', '动画', '图解'])

@@ -1,0 +1,46 @@
+{
+  "generated_at": "2026-09-03T22:29:42",
+  "harness": "gold_qa_external",
+  "provenance": "历年计算机统考408真题（公开/回忆版），外部独立来源，非本KB派生",
+  "corpus_size": 2122,
+  "gold_size": 22,
+  "vector_status": "e5_real",
+  "reranker": "enabled(local:bge-reranker-base)",
+  "metrics": {
+    "subject_recall@k": {
+      "1": 1.0,
+      "3": 1.0,
+      "5": 1.0,
+      "10": 1.0
+    },
+    "mrr": 1.0,
+    "fact_recall@10": 0.8682,
+    "cross_course_pollution": 0.0
+  },
+  "per_course": {
+    "computer_network": {
+      "n": 6,
+      "subj@5": 1.0,
+      "mrr": 1.0,
+      "fact@10": 0.7996
+    },
+    "computer_organization": {
+      "n": 5,
+      "subj@5": 1.0,
+      "mrr": 1.0,
+      "fact@10": 0.95
+    },
+    "data_structures": {
+      "n": 6,
+      "subj@5": 1.0,
+      "mrr": 1.0,
+      "fact@10": 0.8958
+    },
+    "operating_system": {
+      "n": 5,
+      "subj@5": 1.0,
+      "mrr": 1.0,
+      "fact@10": 0.8357
+    }
+  }
+}

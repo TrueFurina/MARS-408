@@ -1,0 +1,58 @@
+{
+  "meta": {
+    "source": "diag_shadow_sim2real.py (read-only diagnostic)",
+    "n_samples": 240,
+    "data_seed": 20260914,
+    "note": "eff=探针口径真实质量分(0-100)；rew=训练奖励(review_reward)；两者 argmax 若不一致即奖励与验收口径错位"
+  },
+  "arm_means_eff": {
+    "uniform": 66.809,
+    "rule": 68.948,
+    "oracle_by_quality": 72.275,
+    "oracle_by_reward": 72.275,
+    "fixed_trust_honest": 66.615,
+    "fixed_trust_critic": 66.224,
+    "fixed_trust_consensus": 66.831,
+    "fixed_balanced": 66.809
+  },
+  "headroom": {
+    "total_vs_uniform": 5.466,
+    "rule_capture_pct": 39.1,
+    "reward_oracle_capture_pct": 100.0
+  },
+  "Q1_reward_vs_quality_argmax": {
+    "exact_agree_pct": 98.8,
+    "tie_inclusive_agree_pct": 100.0,
+    "reward_oracle_quality_loss": 0.0
+  },
+  "Q2_rule_is_quality_optimal_pct": 43.3,
+  "Q3_reachable_by_threshold": {
+    "f2_high_to_trust_honest_else_consensus": {
+      "mean_eff": 69.838,
+      "threshold": 0.656
+    },
+    "f2_high_to_trust_honest_else_balanced": {
+      "mean_eff": 68.602,
+      "threshold": 0.663
+    },
+    "two_feature_tree": {
+      "mean_eff": 69.82,
+      "thresholds": [
+        0.663,
+        0.473
+      ]
+    }
+  },
+  "Q4_quality_argmax_dist": {
+    "trust_honest": 93,
+    "trust_critic": 71,
+    "trust_consensus": 76,
+    "balanced": 0
+  },
+  "Q4_reward_argmax_dist": {
+    "trust_honest": 90,
+    "trust_critic": 71,
+    "trust_consensus": 79,
+    "balanced": 0
+  }
+}

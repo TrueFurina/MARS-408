@@ -1,0 +1,311 @@
+{
+  "baselines": {
+    "uniform": 66.809,
+    "rule": 68.948,
+    "heuristic_f2": 69.807
+  },
+  "config": {
+    "seeds": [
+      7,
+      42,
+      2026
+    ],
+    "data_seed": 20260914,
+    "n_samples": 240,
+    "horizon": 32,
+    "warmup_steps": 600
+  },
+  "results": [
+    {
+      "n": 240,
+      "arm_means": {
+        "uniform": 66.809,
+        "rule": 68.948,
+        "mappo_current": 66.997,
+        "heuristic_f2": 69.807,
+        "shadow": 69.48
+      },
+      "shadow_action_dist": {
+        "3": 31,
+        "0": 91,
+        "2": 78,
+        "1": 40
+      },
+      "rule_action_dist": {
+        "0": 155,
+        "3": 53,
+        "1": 26,
+        "2": 6
+      },
+      "mappo_action_dist": {
+        "3": 240
+      },
+      "heuristic_action_dist": {
+        "2": 121,
+        "0": 119
+      },
+      "delta_vs_uniform": {
+        "mean": 2.671,
+        "std": 3.37,
+        "pct_improve": 78.8
+      },
+      "delta_vs_rule": {
+        "mean": 0.532,
+        "std": 4.059,
+        "pct_improve": 38.8
+      },
+      "delta_vs_mappo": {
+        "mean": 2.483,
+        "std": 6.987,
+        "pct_improve": 53.3
+      },
+      "delta_vs_heuristic": {
+        "mean": -0.327,
+        "std": 3.763,
+        "pct_improve": 26.7
+      },
+      "shadow_skip_rate": 0.0,
+      "shadow_differs_from_uniform_rate": 87.1,
+      "shadow_differs_from_rule_rate": 47.1,
+      "shadow_seed_std": 1.546,
+      "meta": {
+        "label": "pre-fix语义(200ep,逐ep更新)",
+        "episodes": 200,
+        "batch_episodes": 1,
+        "n_updates_per_seed": [
+          200,
+          200,
+          200
+        ],
+        "seeds": [
+          7,
+          42,
+          2026
+        ],
+        "horizon": 32,
+        "warmup_steps": 600,
+        "train_env": "calibrated",
+        "n_samples": 240,
+        "data_seed": 20260914
+      }
+    },
+    {
+      "n": 240,
+      "arm_means": {
+        "uniform": 66.809,
+        "rule": 68.948,
+        "mappo_current": 66.997,
+        "heuristic_f2": 69.807,
+        "shadow": 68.445
+      },
+      "shadow_action_dist": {
+        "3": 92,
+        "0": 138,
+        "1": 10
+      },
+      "rule_action_dist": {
+        "0": 155,
+        "3": 53,
+        "1": 26,
+        "2": 6
+      },
+      "mappo_action_dist": {
+        "3": 240
+      },
+      "heuristic_action_dist": {
+        "2": 121,
+        "0": 119
+      },
+      "delta_vs_uniform": {
+        "mean": 1.636,
+        "std": 3.087,
+        "pct_improve": 56.7
+      },
+      "delta_vs_rule": {
+        "mean": -0.503,
+        "std": 2.531,
+        "pct_improve": 16.7
+      },
+      "delta_vs_mappo": {
+        "mean": 1.448,
+        "std": 6.828,
+        "pct_improve": 46.2
+      },
+      "delta_vs_heuristic": {
+        "mean": -1.362,
+        "std": 4.236,
+        "pct_improve": 21.2
+      },
+      "shadow_skip_rate": 0.0,
+      "shadow_differs_from_uniform_rate": 61.7,
+      "shadow_differs_from_rule_rate": 22.9,
+      "shadow_seed_std": 0.763,
+      "meta": {
+        "label": "当前默认(200ep,batch48)",
+        "episodes": 200,
+        "batch_episodes": 48,
+        "n_updates_per_seed": [
+          5,
+          5,
+          5
+        ],
+        "seeds": [
+          7,
+          42,
+          2026
+        ],
+        "horizon": 32,
+        "warmup_steps": 600,
+        "train_env": "calibrated",
+        "n_samples": 240,
+        "data_seed": 20260914
+      }
+    },
+    {
+      "n": 240,
+      "arm_means": {
+        "uniform": 66.809,
+        "rule": 68.948,
+        "mappo_current": 66.997,
+        "heuristic_f2": 69.807,
+        "shadow": 68.964
+      },
+      "shadow_action_dist": {
+        "3": 17,
+        "0": 97,
+        "1": 62,
+        "2": 64
+      },
+      "rule_action_dist": {
+        "0": 155,
+        "3": 53,
+        "1": 26,
+        "2": 6
+      },
+      "mappo_action_dist": {
+        "3": 240
+      },
+      "heuristic_action_dist": {
+        "2": 121,
+        "0": 119
+      },
+      "delta_vs_uniform": {
+        "mean": 2.155,
+        "std": 2.936,
+        "pct_improve": 70.4
+      },
+      "delta_vs_rule": {
+        "mean": 0.016,
+        "std": 3.782,
+        "pct_improve": 36.2
+      },
+      "delta_vs_mappo": {
+        "mean": 1.967,
+        "std": 6.523,
+        "pct_improve": 52.5
+      },
+      "delta_vs_heuristic": {
+        "mean": -0.843,
+        "std": 4.078,
+        "pct_improve": 27.5
+      },
+      "shadow_skip_rate": 0.0,
+      "shadow_differs_from_uniform_rate": 92.9,
+      "shadow_differs_from_rule_rate": 51.7,
+      "shadow_seed_std": 2.244,
+      "meta": {
+        "label": "中档(1200ep,batch48)",
+        "episodes": 1200,
+        "batch_episodes": 48,
+        "n_updates_per_seed": [
+          25,
+          25,
+          25
+        ],
+        "seeds": [
+          7,
+          42,
+          2026
+        ],
+        "horizon": 32,
+        "warmup_steps": 600,
+        "train_env": "calibrated",
+        "n_samples": 240,
+        "data_seed": 20260914
+      }
+    },
+    {
+      "n": 240,
+      "arm_means": {
+        "uniform": 66.809,
+        "rule": 68.948,
+        "mappo_current": 66.997,
+        "heuristic_f2": 69.807,
+        "shadow": 69.896
+      },
+      "shadow_action_dist": {
+        "2": 88,
+        "0": 94,
+        "3": 9,
+        "1": 49
+      },
+      "rule_action_dist": {
+        "0": 155,
+        "3": 53,
+        "1": 26,
+        "2": 6
+      },
+      "mappo_action_dist": {
+        "3": 240
+      },
+      "heuristic_action_dist": {
+        "2": 121,
+        "0": 119
+      },
+      "delta_vs_uniform": {
+        "mean": 3.087,
+        "std": 4.124,
+        "pct_improve": 79.2
+      },
+      "delta_vs_rule": {
+        "mean": 0.948,
+        "std": 4.771,
+        "pct_improve": 35.0
+      },
+      "delta_vs_mappo": {
+        "mean": 2.899,
+        "std": 7.311,
+        "pct_improve": 50.8
+      },
+      "delta_vs_heuristic": {
+        "mean": 0.09,
+        "std": 4.167,
+        "pct_improve": 21.2
+      },
+      "shadow_skip_rate": 0.0,
+      "shadow_differs_from_uniform_rate": 96.2,
+      "shadow_differs_from_rule_rate": 49.6,
+      "shadow_seed_std": 0.821,
+      "meta": {
+        "label": "标准档(3000ep,batch48)",
+        "episodes": 3000,
+        "batch_episodes": 48,
+        "n_updates_per_seed": [
+          63,
+          63,
+          63
+        ],
+        "seeds": [
+          7,
+          42,
+          2026
+        ],
+        "horizon": 32,
+        "warmup_steps": 600,
+        "train_env": "calibrated",
+        "n_samples": 240,
+        "data_seed": 20260914
+      }
+    }
+  ]
+}

@@ -1,0 +1,375 @@
+{
+  "experiment": "review_mappo_3seed_comparison",
+  "created_at": "2026-09-14T17:09:33",
+  "source_order": "docs/CTO-芒得很职三元评审权重MAPPO化攻坚令-2026-09-14.md 阶段 3",
+  "config": {
+    "seeds": [
+      7,
+      42,
+      2026
+    ],
+    "eval_episodes_per_cell": 30,
+    "horizon": 6,
+    "warmup_steps": 300,
+    "ppo_episodes": 60,
+    "schemes": {
+      "uniform": "均匀权重（绝对基线 = 灰度关闭现状）",
+      "rule": "固定规则 _rule_action_idx（现有规则因子）",
+      "supervised": "监督学习 warmup_with_rules（回归规则标签，无 RL）",
+      "rl": "warmup 预热 + PPO 微调"
+    },
+    "discipline": {
+      "skip_streak_limit": 2,
+      "review_min_review": 2,
+      "acceptance": "skip 连发 >= 2 发生率必须为 0"
+    }
+  },
+  "per_cell": {
+    "uniform/seed=7": {
+      "scheme": "uniform",
+      "seed": 7,
+      "episodes": 30,
+      "mean_return": 10.659166666666668,
+      "mean_quality_gain": 0.17793408714285208,
+      "mean_final_quality": 0.7499006522838431,
+      "mean_tokens": 5700.0,
+      "skip_rate": 0.0,
+      "mean_skip_per_episode": 0.0,
+      "precision_rate": 0.0,
+      "max_skip_streak": 0,
+      "discipline_violation_rate": 0.0,
+      "reviews_done_mean": 6.0
+    },
+    "uniform/seed=42": {
+      "scheme": "uniform",
+      "seed": 42,
+      "episodes": 30,
+      "mean_return": 11.325833333333334,
+      "mean_quality_gain": 0.16422364190633176,
+      "mean_final_quality": 0.7245657645840499,
+      "mean_tokens": 5700.0,
+      "skip_rate": 0.0,
+      "mean_skip_per_episode": 0.0,
+      "precision_rate": 0.0,
+      "max_skip_streak": 0,
+      "discipline_violation_rate": 0.0,
+      "reviews_done_mean": 6.0
+    },
+    "uniform/seed=2026": {
+      "scheme": "uniform",
+      "seed": 2026,
+      "episodes": 30,
+      "mean_return": 10.525833333333335,
+      "mean_quality_gain": 0.17904249480380827,
+      "mean_final_quality": 0.6897198055114161,
+      "mean_tokens": 5700.0,
+      "skip_rate": 0.0,
+      "mean_skip_per_episode": 0.0,
+      "precision_rate": 0.0,
+      "max_skip_streak": 0,
+      "discipline_violation_rate": 0.0,
+      "reviews_done_mean": 6.0
+    },
+    "rule/seed=7": {
+      "scheme": "rule",
+      "seed": 7,
+      "episodes": 30,
+      "mean_return": 7.2884166666666665,
+      "mean_quality_gain": 0.17793408714285208,
+      "mean_final_quality": 0.7499006522838431,
+      "mean_tokens": 4776.666666666667,
+      "skip_rate": 0.1388888888888889,
+      "mean_skip_per_episode": 0.8333333333333334,
+      "precision_rate": 0.0,
+      "max_skip_streak": 2,
+      "discipline_violation_rate": 0.4,
+      "reviews_done_mean": 5.166666666666667
+    },
+    "rule/seed=42": {
+      "scheme": "rule",
+      "seed": 42,
+      "episodes": 30,
+      "mean_return": 6.6879583333333334,
+      "mean_quality_gain": 0.16422364190633176,
+      "mean_final_quality": 0.7245657645840499,
+      "mean_tokens": 4738.333333333333,
+      "skip_rate": 0.16111111111111112,
+      "mean_skip_per_episode": 0.9666666666666667,
+      "precision_rate": 0.0,
+      "max_skip_streak": 2,
+      "discipline_violation_rate": 0.43333333333333335,
+      "reviews_done_mean": 5.033333333333333
+    },
+    "rule/seed=2026": {
+      "scheme": "rule",
+      "seed": 2026,
+      "episodes": 30,
+      "mean_return": 8.25625,
+      "mean_quality_gain": 0.17904249480380827,
+      "mean_final_quality": 0.6897198055114161,
+      "mean_tokens": 4983.333333333333,
+      "skip_rate": 0.10555555555555556,
+      "mean_skip_per_episode": 0.6333333333333333,
+      "precision_rate": 0.0,
+      "max_skip_streak": 2,
+      "discipline_violation_rate": 0.3,
+      "reviews_done_mean": 5.366666666666666
+    },
+    "supervised/seed=7": {
+      "scheme": "supervised",
+      "seed": 7,
+      "episodes": 30,
+      "mean_return": 6.371583333333334,
+      "mean_quality_gain": 0.17793408714285208,
+      "mean_final_quality": 0.7499006522838431,
+      "mean_tokens": 5623.333333333333,
+      "skip_rate": 0.0,
+      "mean_skip_per_episode": 0.0,
+      "precision_rate": 0.0,
+      "max_skip_streak": 0,
+      "discipline_violation_rate": 0.0,
+      "reviews_done_mean": 6.0
+    },
+    "supervised/seed=42": {
+      "scheme": "supervised",
+      "seed": 42,
+      "episodes": 30,
+      "mean_return": 6.848833333333333,
+      "mean_quality_gain": 0.16422364190633176,
+      "mean_final_quality": 0.7245657645840499,
+      "mean_tokens": 5660.0,
+      "skip_rate": 0.0,
+      "mean_skip_per_episode": 0.0,
+      "precision_rate": 0.0,
+      "max_skip_streak": 0,
+      "discipline_violation_rate": 0.0,
+      "reviews_done_mean": 6.0
+    },
+    "supervised/seed=2026": {
+      "scheme": "supervised",
+      "seed": 2026,
+      "episodes": 30,
+      "mean_return": 6.684333333333333,
+      "mean_quality_gain": 0.17904249480380827,
+      "mean_final_quality": 0.6897198055114161,
+      "mean_tokens": 5720.0,
+      "skip_rate": 0.0,
+      "mean_skip_per_episode": 0.0,
+      "precision_rate": 0.0,
+      "max_skip_streak": 0,
+      "discipline_violation_rate": 0.0,
+      "reviews_done_mean": 6.0
+    },
+    "rl/seed=7": {
+      "scheme": "rl",
+      "seed": 7,
+      "episodes": 30,
+      "mean_return": 6.528833333333334,
+      "mean_quality_gain": 0.17793408714285208,
+      "mean_final_quality": 0.7499006522838431,
+      "mean_tokens": 5660.0,
+      "skip_rate": 0.0,
+      "mean_skip_per_episode": 0.0,
+      "precision_rate": 0.0,
+      "max_skip_streak": 0,
+      "discipline_violation_rate": 0.0,
+      "reviews_done_mean": 6.0
+    },
+    "rl/seed=42": {
+      "scheme": "rl",
+      "seed": 42,
+      "episodes": 30,
+      "mean_return": 7.160833333333333,
+      "mean_quality_gain": 0.16422364190633176,
+      "mean_final_quality": 0.7245657645840499,
+      "mean_tokens": 5766.666666666667,
+      "skip_rate": 0.0,
+      "mean_skip_per_episode": 0.0,
+      "precision_rate": 0.0,
+      "max_skip_streak": 0,
+      "discipline_violation_rate": 0.0,
+      "reviews_done_mean": 6.0
+    },
+    "rl/seed=2026": {
+      "scheme": "rl",
+      "seed": 2026,
+      "episodes": 30,
+      "mean_return": 7.1042499999999995,
+      "mean_quality_gain": 0.17904249480380827,
+      "mean_final_quality": 0.6897198055114161,
+      "mean_tokens": 5810.0,
+      "skip_rate": 0.0,
+      "mean_skip_per_episode": 0.0,
+      "precision_rate": 0.0,
+      "max_skip_streak": 0,
+      "discipline_violation_rate": 0.0,
+      "reviews_done_mean": 6.0
+    }
+  },
+  "train_stats": [
+    {
+      "degraded": false,
+      "kind": "supervised",
+      "seed": 7,
+      "warmup": {
+        "steps": 300,
+        "mean_loss": 1.4640255451864665,
+        "final_loss": 1.7152376174926758
+      }
+    },
+    {
+      "degraded": false,
+      "kind": "supervised",
+      "seed": 42,
+      "warmup": {
+        "steps": 300,
+        "mean_loss": 1.4614528943432703,
+        "final_loss": 0.9581092000007629
+      }
+    },
+    {
+      "degraded": false,
+      "kind": "supervised",
+      "seed": 2026,
+      "warmup": {
+        "steps": 300,
+        "mean_loss": 1.4468355864286422,
+        "final_loss": 0.9688550233840942
+      }
+    },
+    {
+      "degraded": false,
+      "kind": "rl",
+      "seed": 7,
+      "warmup": {
+        "steps": 300,
+        "mean_loss": 1.4640255451864665,
+        "final_loss": 1.7152376174926758
+      },
+      "ppo": {
+        "trained": true,
+        "episodes": 60,
+        "final_mean_return": null,
+        "first_mean_return": null,
+        "reason": null
+      }
+    },
+    {
+      "degraded": false,
+      "kind": "rl",
+      "seed": 42,
+      "warmup": {
+        "steps": 300,
+        "mean_loss": 1.4614528943432703,
+        "final_loss": 0.9581092000007629
+      },
+      "ppo": {
+        "trained": true,
+        "episodes": 60,
+        "final_mean_return": null,
+        "first_mean_return": null,
+        "reason": null
+      }
+    },
+    {
+      "degraded": false,
+      "kind": "rl",
+      "seed": 2026,
+      "warmup": {
+        "steps": 300,
+        "mean_loss": 1.4468355864286422,
+        "final_loss": 0.9688550233840942
+      },
+      "ppo": {
+        "trained": true,
+        "episodes": 60,
+        "final_mean_return": null,
+        "first_mean_return": null,
+        "reason": null
+      }
+    }
+  ],
+  "aggregate_by_scheme": {
+    "uniform": {
+      "seeds": [
+        7,
+        42,
+        2026
+      ],
+      "mean_return": 10.836944444444446,
+      "mean_return_std": 0.34995590551163563,
+      "mean_quality_gain": 0.17373340795099737,
+      "mean_final_quality": 0.7213954074597697,
+      "mean_tokens": 5700.0,
+      "skip_rate": 0.0,
+      "precision_rate": 0.0,
+      "max_skip_streak": 0,
+      "discipline_violation_rate": 0.0
+    },
+    "rule": {
+      "seeds": [
+        7,
+        42,
+        2026
+      ],
+      "mean_return": 7.410875,
+      "mean_return_std": 0.6460813779940887,
+      "mean_quality_gain": 0.17373340795099737,
+      "mean_final_quality": 0.7213954074597697,
+      "mean_tokens": 4832.777777777777,
+      "skip_rate": 0.13518518518518519,
+      "precision_rate": 0.0,
+      "max_skip_streak": 2,
+      "discipline_violation_rate": 0.37777777777777777
+    },
+    "supervised": {
+      "seeds": [
+        7,
+        42,
+        2026
+      ],
+      "mean_return": 6.634916666666666,
+      "mean_return_std": 0.19794510322028386,
+      "mean_quality_gain": 0.17373340795099737,
+      "mean_final_quality": 0.7213954074597697,
+      "mean_tokens": 5667.777777777777,
+      "skip_rate": 0.0,
+      "precision_rate": 0.0,
+      "max_skip_streak": 0,
+      "discipline_violation_rate": 0.0
+    },
+    "rl": {
+      "seeds": [
+        7,
+        42,
+        2026
+      ],
+      "mean_return": 6.931305555555556,
+      "mean_return_std": 0.2855268062700333,
+      "mean_quality_gain": 0.17373340795099737,
+      "mean_final_quality": 0.7213954074597697,
+      "mean_tokens": 5745.555555555556,
+      "skip_rate": 0.0,
+      "precision_rate": 0.0,
+      "max_skip_streak": 0,
+      "discipline_violation_rate": 0.0
+    }
+  },
+  "degraded": false,
+  "notes": [
+    "警告：出现 skip 连发 ≥2 的纪律违规，需回查奖励/硬约束"
+  ],
+  "verdict": {
+    "available_schemes": [
+      "uniform",
+      "rule",
+      "supervised",
+      "rl"
+    ],
+    "rl_ge_rule": false,
+    "rl_vs_rule_gain_pct": -6.471158189072729,
+    "rule_ge_supervised": true,
+    "discipline_ok": false,
+    "max_skip_streak_overall": 2
+  }
+}

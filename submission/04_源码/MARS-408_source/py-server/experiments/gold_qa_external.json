@@ -1,0 +1,200 @@
+[
+  {
+    "id": "ext_cn_01",
+    "course": "computer_network",
+    "expected_subject": "transport",
+    "source": "历年计算机统考408真题（公开/回忆版，非本KB派生）",
+    "question": "简述 TCP 建立连接的三次握手过程，并说明每一次握手的作用。",
+    "answer_key": "第一次：客户端发 SYN，seq=x，进入 SYN_SENT；第二次：服务端回 SYN+ACK，seq=y，ack=x+1，进入 SYN_RCVD；第三次：客户端发 ACK，ack=y+1，双方进入 ESTABLISHED。三次握手同步序号并确认双方收发能力。",
+    "answer_facts": ["SYN", "SYN+ACK", "ACK", "三次握手", "确认号", "序号同步", "ESTABLISHED"]
+  },
+  {
+    "id": "ext_cn_02",
+    "course": "computer_network",
+    "expected_subject": "transport",
+    "source": "历年计算机统考408真题（公开/回忆版，非本KB派生）",
+    "question": "从连接方式、可靠性、传输单位三个方面比较 TCP 与 UDP 的主要区别。",
+    "answer_key": "TCP 面向连接、提供可靠交付、面向字节流；UDP 无连接、尽最大努力交付不可靠、面向数据报。TCP 有流量控制和拥塞控制，UDP 没有。",
+    "answer_facts": ["面向连接", "无连接", "可靠", "不可靠", "字节流", "数据报", "UDP", "TCP"]
+  },
+  {
+    "id": "ext_cn_03",
+    "course": "computer_network",
+    "expected_subject": "network",
+    "source": "历年计算机统考408真题（公开/回忆版，非本KB派生）",
+    "question": "ARP 协议的作用是什么？它在什么范围内工作？",
+    "answer_key": "ARP（地址解析协议）将 IP 地址解析为 MAC 地址，工作在同一局域网内，主机通过广播 ARP 请求、目标主机单播应答完成解析。",
+    "answer_facts": ["IP地址", "MAC地址", "地址解析", "同一局域网", "广播", "ARP"]
+  },
+  {
+    "id": "ext_cn_04",
+    "course": "computer_network",
+    "expected_subject": "network",
+    "source": "历年计算机统考408真题（公开/回忆版，非本KB派生）",
+    "question": "什么是 CIDR 和子网划分？网络前缀的作用是什么？",
+    "answer_key": "CIDR 采用可变长网络前缀消除 A/B/C 类边界，配合子网掩码划分网络号和主机号；网络前缀长度决定网络部分位数，剩余为主机位。",
+    "answer_facts": ["CIDR", "网络前缀", "子网掩码", "网络号", "主机号", "可变长"]
+  },
+  {
+    "id": "ext_cn_05",
+    "course": "computer_network",
+    "expected_subject": "application",
+    "source": "历年计算机统考408真题（公开/回忆版，非本KB派生）",
+    "question": "HTTPS 与 HTTP 相比增加了什么安全机制？默认端口是多少？",
+    "answer_key": "HTTPS = HTTP over SSL/TLS，提供身份认证、数据加密和完整性保护；HTTP 明文、端口 80，HTTPS 端口 443。",
+    "answer_facts": ["HTTPS", "SSL", "TLS", "加密", "443", "身份认证", "完整性"]
+  },
+  {
+    "id": "ext_cn_06",
+    "course": "computer_network",
+    "expected_subject": "datalink",
+    "source": "历年计算机统考408真题（公开/回忆版，非本KB派生）",
+    "question": "CSMA/CD 的基本思想是什么？冲突发生后如何处理？",
+    "answer_key": "CSMA/CD 先侦听信道，空闲才发送，发送中持续检测冲突；一旦冲突立即停止并发送阻塞信号，随后按二进制指数退避算法重传。",
+    "answer_facts": ["载波侦听", "冲突检测", "CSMA/CD", "二进制指数退避", "阻塞信号", "重传"]
+  },
+  {
+    "id": "ext_ds_01",
+    "course": "data_structures",
+    "expected_subject": "ds_sort",
+    "source": "历年计算机统考408真题（公开/回忆版，非本KB派生）",
+    "question": "快速排序在最好、平均、最坏情况下的时间复杂度分别是多少？什么输入会导致最坏情况？",
+    "answer_key": "平均 O(n log n)，最好 O(n log n)（每次划分均衡），最坏 O(n^2)（已正序或逆序、每次划分极不均衡）。可通过随机化选取基准缓解。",
+    "answer_facts": ["快速排序", "O(nlogn)", "O(n^2)", "最坏", "已排序", "基准", "pivot", "平均"]
+  },
+  {
+    "id": "ext_ds_02",
+    "course": "data_structures",
+    "expected_subject": "ds_search",
+    "source": "历年计算机统考408真题（公开/回忆版，非本KB派生）",
+    "question": "处理哈希冲突的常用方法有哪些？分别简述。",
+    "answer_key": "链地址法（同义词拉成单链表）、开放定址法（线性探测/平方探测/双散列探测下一个空位）、再散列法（换哈希函数）。",
+    "answer_facts": ["哈希冲突", "链地址法", "开放定址", "线性探测", "再散列", "同义词", "单链表"]
+  },
+  {
+    "id": "ext_ds_03",
+    "course": "data_structures",
+    "expected_subject": "ds_tree",
+    "source": "历年计算机统考408真题（公开/回忆版，非本KB派生）",
+    "question": "平衡二叉树（AVL）中插入结点可能导致哪几种失衡类型？分别如何调整？",
+    "answer_key": "失衡分 LL、LR、RL、RR 四类：LL/RR 各做一次单旋转，LR/RL 各做两次旋转（先局部后整体）恢复平衡因子绝对值≤1。",
+    "answer_facts": ["AVL", "平衡因子", "LL", "LR", "RL", "RR", "旋转", "失衡"]
+  },
+  {
+    "id": "ext_ds_04",
+    "course": "data_structures",
+    "expected_subject": "ds_graph",
+    "source": "历年计算机统考408真题（公开/回忆版，非本KB派生）",
+    "question": "图的深度优先遍历（DFS）和广度优先遍历（BFS）分别借助什么数据结构实现？",
+    "answer_key": "DFS 借助栈（递归或显式栈）实现，沿一条路径深入到底再回溯；BFS 借助队列实现，逐层扩展邻接结点。",
+    "answer_facts": ["DFS", "BFS", "深度优先", "广度优先", "栈", "队列", "遍历", "邻接"]
+  },
+  {
+    "id": "ext_ds_05",
+    "course": "data_structures",
+    "expected_subject": "ds_sort",
+    "source": "历年计算机统考408真题（公开/回忆版，非本KB派生）",
+    "question": "堆排序中建堆的时间复杂度是多少？堆调整（向下筛选）的时间复杂度是多少？",
+    "answer_key": "自底向上建堆时间复杂度 O(n)；每次向下筛选（sift-down）为 O(log n)，共 n-1 次得有序序列，总排序 O(n log n)。",
+    "answer_facts": ["堆排序", "建堆", "O(n)", "O(logn)", "大根堆", "小根堆", "筛选", "向下调整"]
+  },
+  {
+    "id": "ext_ds_06",
+    "course": "data_structures",
+    "expected_subject": "ds_stack",
+    "source": "历年计算机统考408真题（公开/回忆版，非本KB派生）",
+    "question": "栈和队列的主要区别是什么？分别说明其存取特点。",
+    "answer_key": "栈是后进先出（LIFO）线性表，只允许在一端（栈顶）插入删除；队列是先进先出（FIFO）线性表，在一端入队另一端出队。",
+    "answer_facts": ["栈", "队列", "LIFO", "FIFO", "后进先出", "先进先出", "栈顶", "入队", "出队"]
+  },
+  {
+    "id": "ext_co_01",
+    "course": "computer_organization",
+    "expected_subject": "co_memory",
+    "source": "历年计算机统考408真题（公开/回忆版，非本KB派生）",
+    "question": "Cache 的三种地址映射方式是什么？各有什么特点？",
+    "answer_key": "直接映射（主存块固定对应一个Cache行，冲突率高）、全相联（可放任意行，查表慢）、组相联（折中，分组、组内全相联）。",
+    "answer_facts": ["Cache", "直接映射", "全相联", "组相联", "主存块", "冲突", "映射"]
+  },
+  {
+    "id": "ext_co_02",
+    "course": "computer_organization",
+    "expected_subject": "co_cpu",
+    "source": "历年计算机统考408真题（公开/回忆版，非本KB派生）",
+    "question": "一个完整的指令周期通常包含哪几个 CPU 工作周期？",
+    "answer_key": "指令周期包含取指周期、间址周期（如需）、执行周期，以及中断周期（若响应中断）；机器周期（总线周期）是节拍级基本单位。",
+    "answer_facts": ["指令周期", "取指", "间址", "执行", "中断", "机器周期", "CPU"]
+  },
+  {
+    "id": "ext_co_03",
+    "course": "computer_organization",
+    "expected_subject": "co_data",
+    "source": "历年计算机统考408真题（公开/回忆版，非本KB派生）",
+    "question": "IEEE 754 单精度浮点数的格式由哪几部分组成？阶码采用什么编码？",
+    "answer_key": "由 1 位符号位、8 位阶码（移码/偏置 127）、23 位尾数（隐含最高位 1）组成；阶码用移码表示，尾数用原码规格化。",
+    "answer_facts": ["IEEE754", "符号位", "阶码", "尾数", "偏置", "移码", "规格化", "单精度"]
+  },
+  {
+    "id": "ext_co_04",
+    "course": "computer_organization",
+    "expected_subject": "co_cpu",
+    "source": "历年计算机统考408真题（公开/回忆版，非本KB派生）",
+    "question": "微程序控制器与硬布线控制器相比各有什么优缺点？",
+    "answer_key": "微程序控制器用控制存储器存放微指令，规整、易修改扩充，但速度较慢；硬布线控制器由组合逻辑直接产生控制信号，速度快，但设计复杂、不便修改。",
+    "answer_facts": ["微程序", "硬布线", "控制存储器", "组合逻辑", "速度", "易修改", "控制信号"]
+  },
+  {
+    "id": "ext_co_05",
+    "course": "computer_organization",
+    "expected_subject": "co_memory",
+    "source": "历年计算机统考408真题（公开/回忆版，非本KB派生）",
+    "question": "存储器层次结构自顶向下一般包含哪些层次？其速度和容量如何变化？",
+    "answer_key": "自上而下为寄存器、Cache、主存、辅存；越往下速度越慢、容量越大、单价越低，形成速度/容量/成本的权衡。",
+    "answer_facts": ["寄存器", "Cache", "主存", "辅存", "层次结构", "速度", "容量", "成本"]
+  },
+  {
+    "id": "ext_os_01",
+    "course": "operating_system",
+    "expected_subject": "os_process",
+    "source": "历年计算机统考408真题（公开/回忆版，非本KB派生）",
+    "question": "产生死锁的四个必要条件是什么？",
+    "answer_key": "互斥条件、请求和保持（占有且等待）条件、不可抢占条件、循环等待条件；四个同时成立才会出现死锁。",
+    "answer_facts": ["死锁", "互斥", "请求和保持", "占有等待", "不可抢占", "循环等待", "必要条件"]
+  },
+  {
+    "id": "ext_os_02",
+    "course": "operating_system",
+    "expected_subject": "os_memory",
+    "source": "历年计算机统考408真题（公开/回忆版，非本KB派生）",
+    "question": "常见的页面置换算法有哪些？分别简述其基本思想。",
+    "answer_key": "OPT（最佳，置换最远将用到的页，理论最优难实现）、FIFO（置换最早进入的页）、LRU（置换最久未使用的页）、CLOCK（近似 LRU，用访问位轮转）。",
+    "answer_facts": ["页面置换", "OPT", "FIFO", "LRU", "CLOCK", "缺页", "最佳置换", "最近最少使用"]
+  },
+  {
+    "id": "ext_os_03",
+    "course": "operating_system",
+    "expected_subject": "os_process",
+    "source": "历年计算机统考408真题（公开/回忆版，非本KB派生）",
+    "question": "进程与线程的主要区别是什么？",
+    "answer_key": "进程是资源分配的基本单位，线程是 CPU 调度的基本单位；同一进程内线程共享地址空间和资源，切换开销小于进程。",
+    "answer_facts": ["进程", "线程", "资源分配", "调度", "地址空间", "共享", "切换开销"]
+  },
+  {
+    "id": "ext_os_04",
+    "course": "operating_system",
+    "expected_subject": "os_memory",
+    "source": "历年计算机统考408真题（公开/回忆版，非本KB派生）",
+    "question": "请求分页（请求调页）存储管理的基本思想是什么？缺页中断如何发生？",
+    "answer_key": "进程运行时只把部分页面装入内存，访问的页不在内存时触发缺页中断，由 OS 调入所需页面；需位/存在位标记页是否在内存。",
+    "answer_facts": ["请求分页", "请求调页", "部分装入", "缺页中断", "逻辑地址", "页表", "存在位", "调入"]
+  },
+  {
+    "id": "ext_os_05",
+    "course": "operating_system",
+    "expected_subject": "os_process",
+    "source": "历年计算机统考408真题（公开/回忆版，非本KB派生）",
+    "question": "银行家算法用于解决什么问题？其核心的“安全序列”指什么？",
+    "answer_key": "银行家算法用于避免死锁，通过判断是否存在一个安全序列（所有进程能按序获得所需最大资源并依次完成归还）来决定是否分配资源。",
+    "answer_facts": ["银行家算法", "死锁避免", "安全序列", "最大需求", "可用资源", "分配", "安全性检查"]
+  }
+]

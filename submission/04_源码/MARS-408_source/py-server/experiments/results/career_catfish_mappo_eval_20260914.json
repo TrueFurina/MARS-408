@@ -1,0 +1,70 @@
+{
+  "date": "2026-09-14",
+  "host": "ubantu",
+  "args": {
+    "steps": 3000,
+    "seeds": "1,42,2024",
+    "horizon": 8,
+    "template_student": false
+  },
+  "seeds": {
+    "1": {
+      "rule": {
+        "reward": -0.138,
+        "mean_step_reward": -0.0172,
+        "density": 0.405,
+        "six_avg": 2.441,
+        "max_catfish_run": 1
+      },
+      "mappo": {
+        "reward": -0.091,
+        "mean_step_reward": -0.0113,
+        "density": 0.547,
+        "six_avg": 2.465,
+        "max_catfish_run": 0
+      }
+    },
+    "42": {
+      "rule": {
+        "reward": -0.127,
+        "mean_step_reward": -0.0159,
+        "density": 0.468,
+        "six_avg": 2.435,
+        "max_catfish_run": 1
+      },
+      "mappo": {
+        "reward": -0.103,
+        "mean_step_reward": -0.0129,
+        "density": 0.526,
+        "six_avg": 2.452,
+        "max_catfish_run": 0
+      }
+    },
+    "2024": {
+      "rule": {
+        "reward": -0.127,
+        "mean_step_reward": -0.0158,
+        "density": 0.411,
+        "six_avg": 2.459,
+        "max_catfish_run": 1
+      },
+      "mappo": {
+        "reward": -0.081,
+        "mean_step_reward": -0.0102,
+        "density": 0.557,
+        "six_avg": 2.477,
+        "max_catfish_run": 0
+      }
+    }
+  },
+  "train": {
+    "trained": true,
+    "episodes": 3000,
+    "mean_ep_reward": -0.162,
+    "mean_loss": -0.01278
+  },
+  "checkpoint": "/home/user/models/career_mode_policy.pt",
+  "discipline_violations": 0,
+  "mappo_reward_ge_rule": true,
+  "passed": true
+}

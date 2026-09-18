@@ -1,0 +1,50 @@
+{
+  "date": "2026-09-13",
+  "seeds": {
+    "1": {
+      "rule": {
+        "reward": -0.204,
+        "density": 0.747,
+        "max_catfish_run": 0,
+        "six_avg": 2.573
+      },
+      "mappo": {
+        "reward": -0.204,
+        "density": 0.747,
+        "max_catfish_run": 0,
+        "six_avg": 2.573
+      }
+    },
+    "42": {
+      "rule": {
+        "reward": -0.222,
+        "density": 0.734,
+        "max_catfish_run": 0,
+        "six_avg": 2.536
+      },
+      "mappo": {
+        "reward": -0.222,
+        "density": 0.734,
+        "max_catfish_run": 0,
+        "six_avg": 2.536
+      }
+    },
+    "2024": {
+      "rule": {
+        "reward": -0.186,
+        "density": 0.754,
+        "max_catfish_run": 0,
+        "six_avg": 2.607
+      },
+      "mappo": {
+        "reward": -0.186,
+        "density": 0.754,
+        "max_catfish_run": 0,
+        "six_avg": 2.607
+      }
+    }
+  },
+  "note": "torch 不可用：MAPPO 路径=规则预热降级（与规则版同构），训练对比留待 torch 环境复跑",
+  "discipline_violations": 0,
+  "passed": true
+}

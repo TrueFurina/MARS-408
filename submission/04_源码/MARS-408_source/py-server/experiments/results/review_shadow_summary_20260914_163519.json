@@ -1,0 +1,74 @@
+{
+  "n": 240,
+  "arm_means": {
+    "uniform": 66.809,
+    "rule": 68.948,
+    "mappo_current": 66.997,
+    "heuristic_f2": 69.807,
+    "shadow": 67.259
+  },
+  "shadow_action_dist": {
+    "3": 168,
+    "0": 38,
+    "1": 34
+  },
+  "rule_action_dist": {
+    "0": 155,
+    "3": 53,
+    "1": 26,
+    "2": 6
+  },
+  "mappo_action_dist": {
+    "3": 240
+  },
+  "heuristic_action_dist": {
+    "2": 121,
+    "0": 119
+  },
+  "delta_vs_uniform": {
+    "mean": 0.45,
+    "std": 2.382,
+    "pct_improve": 38.8
+  },
+  "delta_vs_rule": {
+    "mean": -1.689,
+    "std": 3.998,
+    "pct_improve": 24.2
+  },
+  "delta_vs_mappo": {
+    "mean": 0.262,
+    "std": 5.194,
+    "pct_improve": 41.2
+  },
+  "delta_vs_heuristic": {
+    "mean": -2.547,
+    "std": 5.126,
+    "pct_improve": 25.0
+  },
+  "shadow_skip_rate": 0.0,
+  "shadow_differs_from_uniform_rate": 30.0,
+  "shadow_differs_from_rule_rate": 60.4,
+  "shadow_seed_std": 0.986,
+  "meta": {
+    "source": "run_shadow_probe.py (shadow observer, read-only)",
+    "generated_at": "20260914_163519",
+    "n_samples": 240,
+    "shadow_seeds": [
+      7,
+      42,
+      2026
+    ],
+    "warmup_steps": 300,
+    "ppo_episodes": 3000,
+    "horizon": 6,
+    "data_seed": 20260914,
+    "train_env": "legacy",
+    "ppo_batch_episodes": "auto",
+    "n_updates_per_seed": [
+      63,
+      63,
+      63
+    ],
+    "note": "delta = 影子有效分 − 基线有效分；正=相对基线质量提升（真实 weighted_consistency_score 复算）"
+  }
+}

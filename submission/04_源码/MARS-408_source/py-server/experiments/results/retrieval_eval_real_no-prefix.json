@@ -1,0 +1,24 @@
+{
+  "generated_at": "2026-09-02T18:00:08",
+  "corpus_size": 2113,
+  "gold_size": 30,
+  "query_prefix": false,
+  "zero_vector_rows": 0,
+  "modes": {
+    "bm25": {
+      "recall@5": 0.9,
+      "mrr@10": 0.8289,
+      "groundedness": 0.5594
+    },
+    "e5": {
+      "recall@5": 0.7,
+      "mrr@10": 0.5397,
+      "groundedness": 0.2933
+    },
+    "hybrid": {
+      "recall@5": 0.9,
+      "mrr@10": 0.8237,
+      "groundedness": 0.5811
+    }
+  }
+}
