@@ -1,3 +1,6 @@
+env:
+  DISABLE_RATE_LIMIT: true
+
 name: P0 Regression Gate (wave-1)
 
 # wave-1 回归门禁：P0 用例最先跑且不可失败；其余分档并行。
