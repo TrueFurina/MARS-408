@@ -30,7 +30,7 @@
 | 8 | NetLearn：API 路由 ~209-214 | 209-214 | 🟡 可用但需标注 | 路由数为统计区间值，会随迭代变化 | 写"200+"或具体测量时点 |
 | 9 | 知识库构建 1883 chunk（旧表述） | 1883 | 🟠 需改口径 | 与 #5 冲突（实测 2083） | 删除 / 改 2083 |
 | 10 | 知识图谱 201 chunk（旧表述） | 201 | 🔴 禁止使用 | 201 是早期**种子数据集**的 chunk 数（数据结构 32 + 计算机网络 48 + 计算机组成原理 27 + 操作系统 21 = 128…与 201 也不符），是过时数据 | 删除 / 改 2083 |
-| 11 | 408申报书：9-Agent（StateGraph 9 节点） | 9 | 🟡 可用但需标注 | LangGraph 实际是 **8 节点**（coordinator → diagnostician → planner → retriever → generator_cluster → assessor → critic → path_planner + 条件路由）；文档历史版本有 9/10 不一致 | 统一为 8-Agent（含条件路由节点），或保留 9-Agent 并注明含条件路由 |
+| 11 | 408申报书：9-Agent（StateGraph 9 节点） | 11 | 🟡 可用但需标注 | `py-server/agents/graph.py` `create_agent_graph()` 实际 `add_node` **11 次**（triage 入口 + coordinator → diagnostician → planner → retriever → generator_cluster → assessor → critic → evidence_check → quality_gate → path_planner）；`evidence_check` 已包含（第 9 个节点）。文档历史版本 8/9/10 均不准确 | 统一为 11-Agent / 11 节点（含 triage 入口路由与 evidence_check、quality_gate） |
 | 12 | NeuralMixer Kappa(NM↔truth) 0.7763 | 0.7763 | 🟢 可直接使用 | `量化创新实测报告-2026-07-19.md` Cohen's Kappa 段 | 直接使用 |
 | 13 | NeuralMixer 准确率 0.8333（0.7667 加权投票） | 0.8333 | 🟢 可直接使用 | 同上；附"合成弱标注"限定 | "0.8333（合成弱标注集）" |
 | 14 | FrugalRAG 延迟 122.99 ms | 122.99 | 🟢 可直接使用 | 实测值 | "122.99 ms（28 题离线 A/B）" |
