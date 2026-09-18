@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark" data-page-node-id="3DMJ2sFfu0A4hc7Kb0PaYg">
+<head data-page-node-id="qDXH8jCD3phy0nHvc1YGOO">
+<meta charset="UTF-8" data-page-node-id="iAdqAILt12eV6sue9wEuky" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="GXUuZKanNqN2tdzGNhHhze" />
+<title>芒得很职 · 国创赛路演展示</title>
+<style>
+:root{
+  --font-sans: 'Geist','Outfit','Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans SC',sans-serif;
+  --font-mono: 'Geist Mono','SF Mono','JetBrains Mono','Consolas',monospace;
+  --text-2xs:.6875rem; --text-xs:.75rem; --text-sm:.8125rem; --text-base:.875rem; --text-md:.9375rem;
+  --text-lg:1rem; --text-xl:1.125rem; --text-2xl:1.25rem; --text-3xl:1.5rem; --text-4xl:1.875rem; --text-5xl:2.5rem; --text-6xl:3.25rem;
+  --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-5:20px; --space-6:24px; --space-8:32px; --space-10:40px; --space-12:48px; --space-16:64px; --space-20:80px; --space-24:96px;
+  --radius-xs:6px; --radius-sm:10px; --radius-md:14px; --radius-lg:18px; --radius-xl:24px; --radius-full:9999px;
+  --duration-fast:140ms; --duration-normal:220ms; --duration-slow:340ms;
+  --ease-out:cubic-bezier(.16,1,.3,1); --ease-std:cubic-bezier(.2,0,0,1);
+  --color-canvas:#080812; --color-surface:rgba(255,255,255,.03); --color-surface-2:#0f0f1a;
+  --color-elevated:#1c1c2b; --color-overlay:rgba(0,0,0,.55);
+  --color-border:rgba(255,255,255,.07); --color-border-light:rgba(255,255,255,.04);
+  --color-border-focus:rgba(124,106,242,.45); --color-border-glow:rgba(124,106,242,.22);
+  --color-text:#f8fafc; --color-text-2:#aab4c5; --color-text-3:#7c8aa0; --color-text-invert:#0f0f1a;
+  --accent:#7c6af2; --accent-dark:#6b5cdb; --accent-blue:#5b8bd8;
+  --c-ds:#7c6af2; --c-net:#3b82f6; --c-os:#06b6d4; --c-arch:#ec4899; --c-green:#22c55e; --c-amber:#f59e0b;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.4); --shadow-md:0 8px 24px rgba(0,0,0,.45); --shadow-lg:0 20px 50px rgba(0,0,0,.55);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-sans);background:var(--color-canvas);color:var(--color-text);line-height:1.62;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+::selection{background:rgba(124,106,242,.35);color:#fff}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1200px;margin:0 auto;padding:0 var(--space-6)}
+.eyebrow{display:inline-flex;align-items:center;gap:var(--space-2);font-size:var(--text-xs);font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:var(--space-4)}
+.eyebrow::before{content:"";width:22px;height:1px;background:var(--accent);display:inline-block}
+h1,h2,h3{line-height:1.18;letter-spacing:-.02em;font-weight:700}
+.section{padding:var(--space-24) 0;position:relative}
+.section-title{font-size:var(--text-4xl);margin-bottom:var(--space-4)}
+.section-sub{color:var(--color-text-2);font-size:var(--text-lg);max-width:680px;margin-bottom:var(--space-12)}
+.muted{color:var(--color-text-2)}
+.card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-6);transition:transform var(--duration-normal) var(--ease-out),border-color var(--duration-fast),box-shadow var(--duration-normal)}
+.card:hover{transform:translateY(-4px);border-color:var(--color-border-glow);box-shadow:var(--shadow-md)}
+.btn{display:inline-flex;align-items:center;gap:var(--space-2);padding:.75rem 1.4rem;border-radius:var(--radius-full);font-weight:600;font-size:var(--text-md);cursor:pointer;border:1px solid transparent;transition:all var(--duration-fast) var(--ease-std)}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-dark);transform:translateY(-2px);box-shadow:0 8px 22px rgba(124,106,242,.35)}
+.btn-ghost{border-color:var(--color-border);color:var(--color-text)}
+.btn-ghost:hover{border-color:var(--accent);color:#fff}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:var(--radius-full);font-size:var(--text-xs);font-weight:600;border:1px solid var(--color-border);color:var(--color-text-2);background:var(--color-surface)}
+.pill.done{color:var(--c-green);border-color:rgba(34,197,94,.3)}
+.pill.plan{color:var(--c-amber);border-color:rgba(245,158,11,.3)}
+.badge-road{font-size:var(--text-2xs);font-weight:700;letter-spacing:.05em;padding:2px 8px;border-radius:var(--radius-full);background:rgba(245,158,11,.14);color:var(--c-amber);border:1px solid rgba(245,158,11,.3)}
+/* Nav */
+header.nav{position:sticky;top:0;z-index:100;backdrop-filter:blur(14px);background:rgba(8,8,18,.72);border-bottom:1px solid var(--color-border-light)}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;height:64px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:var(--text-lg);letter-spacing:-.01em}
+.brand .dot{width:11px;height:11px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(124,106,242,.18)}
+.nav-links{display:flex;gap:var(--space-6);font-size:var(--text-sm);color:var(--color-text-2)}
+.nav-links a{transition:color var(--duration-fast)}
+.nav-links a:hover,.nav-links a.active{color:#fff}
+/* Hero */
+.hero{padding:var(--space-24) 0 var(--space-20);position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;background:radial-gradient(900px 500px at 78% -10%,rgba(124,106,242,.18),transparent 60%),radial-gradient(700px 400px at 10% 20%,rgba(6,182,212,.08),transparent 55%);pointer-events:none}
+.hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:var(--space-12);align-items:center;position:relative}
+.hero h1{font-size:var(--text-6xl);margin:var(--space-4) 0 var(--space-5)}
+.hero h1 .accent{color:var(--accent)}
+.hero p.lead{font-size:var(--text-lg);color:var(--color-text-2);max-width:560px;margin-bottom:var(--space-8)}
+.hero-cta{display:flex;gap:var(--space-3);flex-wrap:wrap}
+.hero-stats{display:flex;gap:var(--space-8);margin-top:var(--space-10);padding-top:var(--space-8);border-top:1px solid var(--color-border-light)}
+.hero-stats .s b{display:block;font-size:var(--text-3xl);font-weight:700;color:#fff;font-variant-numeric:tabular-nums}
+.hero-stats .s span{font-size:var(--text-xs);color:var(--color-text-3)}
+/* device mock */
+.device{background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius-xl);padding:14px;box-shadow:var(--shadow-lg);position:relative}
+.device .bar{display:flex;gap:6px;margin-bottom:12px}
+.device .bar i{width:9px;height:9px;border-radius:50%;background:var(--color-border)}
+.device .screen{background:var(--color-canvas);border-radius:var(--radius-md);padding:16px;font-size:var(--text-sm)}
+.chat-row{display:flex;gap:10px;margin-bottom:12px;align-items:flex-start}
+.chat-row .av{width:26px;height:26px;border-radius:50%;flex:0 0 26px;display:grid;place-items:center;font-size:11px;font-weight:700;color:#fff}
+.chat-row.ai .av{background:var(--accent)}
+.chat-row.me .av{background:var(--color-elevated);color:var(--accent-blue)}
+.bubble{background:var(--color-surface);border:1px solid var(--color-border);border-radius:12px;padding:9px 12px;color:var(--color-text-2);line-height:1.5}
+.chat-row.me{flex-direction:row-reverse}.chat-row.me .bubble{background:rgba(91,139,216,.12);border-color:rgba(91,139,216,.25);color:#dbeafe}
+.catfish{margin-top:6px;font-size:var(--text-2xs);color:var(--c-amber);display:inline-flex;align-items:center;gap:5px;border:1px dashed rgba(245,158,11,.4);padding:3px 8px;border-radius:var(--radius-full)}
+/* generic grid */
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-5)}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--space-5)}
+.kpi{font-size:var(--text-4xl);font-weight:700;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.kpi small{font-size:var(--text-base);color:var(--color-text-3);font-weight:500;margin-left:4px}
+.card h3{font-size:var(--text-xl);margin-bottom:var(--space-3);display:flex;align-items:center;gap:10px}
+.card .ico{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:rgba(124,106,242,.14);color:var(--accent);font-size:17px;flex:0 0 34px}
+.card p{color:var(--color-text-2);font-size:var(--text-sm)}
+/* modes */
+.mode{position:relative;overflow:hidden}
+.mode .tag{position:absolute;top:14px;right:14px}
+.mode ul{list-style:none;margin-top:var(--space-4);display:grid;gap:8px}
+.mode li{font-size:var(--text-sm);color:var(--color-text-2);padding-left:22px;position:relative}
+.mode li::before{content:"";position:absolute;left:0;top:8px;width:7px;height:7px;border-radius:2px;background:var(--accent)}
+/* radar */
+.radar-wrap{display:grid;grid-template-columns:.9fr 1.1fr;gap:var(--space-10);align-items:center}
+.radar-box{background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius-xl);padding:var(--space-6);display:grid;place-items:center}
+.dim-list{display:grid;gap:10px}
+.dim{display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-surface);transition:border-color var(--duration-fast),transform var(--duration-fast)}
+.dim:hover{border-color:var(--accent);transform:translateX(4px)}
+.dim .n{width:26px;height:26px;border-radius:8px;background:rgba(124,106,242,.16);color:var(--accent);display:grid;place-items:center;font-weight:700;font-size:var(--text-sm);flex:0 0 26px}
+.dim .t{font-weight:600;font-size:var(--text-md)}
+.dim .d{font-size:var(--text-2xs);color:var(--color-text-3)}
+/* evidence chain */
+.chain{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;margin-top:var(--space-8)}
+.chain .node{flex:1;min-width:160px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-4);position:relative}
+.chain .node .k{font-size:var(--text-2xs);color:var(--accent);font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.chain .node .v{font-size:var(--text-md);font-weight:600;margin-top:6px}
+.chain .node .x{font-size:var(--text-2xs);color:var(--color-text-3);margin-top:4px}
+.chain .arrow{flex:0 0 36px;display:grid;place-items:center;color:var(--color-text-3);font-size:20px}
+/* roadmap */
+.road{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--space-4)}
+.road .step{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-4);position:relative}
+.road .step .ph{font-size:var(--text-2xs);color:var(--accent);font-weight:700;letter-spacing:.06em}
+.road .step h4{font-size:var(--text-md);margin:6px 0}
+.road .step p{font-size:var(--text-2xs);color:var(--color-text-3);line-height:1.5}
+/* value */
+.value-card{display:flex;gap:14px;align-items:flex-start}
+.value-card .ico{background:rgba(6,182,212,.12);color:var(--c-os)}
+/* footer cta */
+.cta{background:linear-gradient(135deg,rgba(124,106,242,.16),rgba(6,182,212,.06));border:1px solid var(--color-border-glow);border-radius:var(--radius-xl);padding:var(--space-12);text-align:center}
+.cta h2{font-size:var(--text-4xl);margin-bottom:var(--space-4)}
+.cta p{color:var(--color-text-2);max-width:560px;margin:0 auto var(--space-8)}
+/* reveal */
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .6s var(--ease-out),transform .6s var(--ease-out)}
+.reveal.in{opacity:1;transform:none}
+/* responsive */
+@media(max-width:900px){
+  .hero-grid{grid-template-columns:1fr;gap:var(--space-10)}
+  .radar-wrap,.grid-3,.grid-2,.road{grid-template-columns:1fr}
+  .road{grid-auto-flow:row}
+  .nav-links{display:none}
+  .hero h1{font-size:var(--text-5xl)}
+  .chain .arrow{transform:rotate(90deg);flex-basis:36px}
+}
+.foot{text-align:center;color:var(--color-text-3);font-size:var(--text-xs);padding:var(--space-10) 0;margin-top:var(--space-12);border-top:1px solid var(--color-border-light)}
+.note{font-size:var(--text-2xs);color:var(--color-text-3);margin-top:var(--space-4);line-height:1.6}
+</style>
+</head>
+<body data-page-node-id="SiPxYiXxPHyjAmxGneNxnZ">
+
+<header class="nav" data-page-node-id="AEPPQ93yENlWE6s93IxGMD">
+  <div class="wrap nav-inner" data-page-node-id="6zev2WLgKEc86k7kW8oqpu">
+    <div class="brand" data-page-node-id="cldEwM7j6vcjOYBADdSciK"><span class="dot" data-page-node-id="mArPSWhBoCOtbEpETkXCFI"></span>芒得很职 <span class="muted" style="font-weight:500;font-size:var(--text-sm)" data-page-node-id="iTptb2sTfycDvgJMWwqquc">技术底座 MARS-408</span></div>
+    <nav class="nav-links" data-page-node-id="5lDzeqKVEWMUDCTi0H73xg">
+      <a href="#problem" data-page-node-id="1bg7s0YW9mURS9nQJW8hOH">痛点</a>
+      <a href="#solution" data-page-node-id="GyXoN6FCMF6V4qTUDzEeAe">解法</a>
+      <a href="#ecd" data-page-node-id="dUxkAjmC3voOSvkBAIWJj8">六维评估</a>
+      <a href="#evidence" data-page-node-id="1lzRoXMR1j4lNFYad6ch75">证据链</a>
+      <a href="#tech" data-page-node-id="ijqE4kNfZjJpl6hMaHpq0f">技术创新</a>
+      <a href="#roadmap" data-page-node-id="uII3hB5GkfrmKkvAQ5u3fE">路线</a>
+    </nav>
+    <a href="#cta" class="btn btn-primary" style="padding:.55rem 1.1rem;font-size:var(--text-sm)" data-page-node-id="g03cdsgV4Zl30vqbRO3FqZ">路演预约</a>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero" data-page-node-id="PghZvHllMzlEvv9n9gmz24">
+  <div class="wrap hero-grid" data-page-node-id="3MprREHAYCdoVAfxnoU2UU">
+    <div data-page-node-id="PVkab848RhwD0i7rgbOG56">
+      <span class="eyebrow" data-page-node-id="WDCc6Zvgpo3jKLsPrlAOko">国创赛 · 高教主赛道 · 创意组</span>
+      <h1 data-page-node-id="OcMOfG8Y7ApWwWkrxgg2a9">用 <span class="accent" data-page-node-id="GSIL1oCnkCAcCePVrUWAfL">AI 对抗实训</span><br data-page-node-id="5SgLeCUpbVyGhXRQSpbM2o"/>重塑职业素养培养</h1>
+      <p class="lead" data-page-node-id="17ZwFV7391aV2UQD9iEDmJ">芒得很职是一套多智能体赋能的计算机类学生职业素养对抗实训平台——让学生在「被追问、被质疑、被加压」的真实压力场景里，练出表达能力、解题逻辑与抗压应变，并且<span style="color:#fff" data-page-node-id="JgwxYBjoi6dqXOcBrQJyKu">每一次评分都可追溯到原话</span>。</p>
+      <div class="hero-cta" data-page-node-id="7Ud7z7udILoXErwl3o1xCJ">
+        <a href="#solution" class="btn btn-primary" data-page-node-id="WhNa5CmLqK5ZVuyFSGcDUn">看产品闭环 →</a>
+        <a href="#ecd" class="btn btn-ghost" data-page-node-id="ILrnAoUfoiT2rzZcUxCBeI">六维能力画像</a>
+      </div>
+      <div class="hero-stats" data-page-node-id="zkFO6PoxF461ghCOrmcCuJ">
+        <div class="s" data-page-node-id="Qq0DSTzYJeuortTp7MM4at"><b data-page-node-id="7S8qXpruyCabTyEGy0CN5g">3</b><span data-page-node-id="WzGZ941gzMHohHeBkWzTI9">实训模式（自学/对抗/导师）</span></div>
+        <div class="s" data-page-node-id="NilfeONBilEjvIEh8hdLdW"><b data-page-node-id="X0laDuDAp8gsjVlqAnqiRj">6</b><span data-page-node-id="YJ7SUySRuUfHjLFnMAGEHj">维 ECD 职业素养评估</span></div>
+        <div class="s" data-page-node-id="sik55D918Lx3uKtifqqYSp"><b data-page-node-id="KfcTPJZKg06SIvNX466LE3">41</b><span data-page-node-id="LpU0P0oPHonUnyWPgiy3I9">前端视图 · 已落地</span></div>
+        <div class="s" data-page-node-id="t0IOCddH7lQ2Lyhfa1vMzs"><b data-page-node-id="5ZLeGgbhKMDjlA8J8zzCM4">40+</b><span data-page-node-id="QqHtbqCPG1CTeTM1VjToPK">真实实验产物</span></div>
+      </div>
+    </div>
+    <div class="device" aria-label="实训对话界面示意" data-page-node-id="CNrFTJsD0cD1Aj45Pgtxns">
+      <div class="bar" data-page-node-id="qSGidMpeUibLftC4H3aejJ"><i data-page-node-id="vZannxUFTBPEhWnmZzdnV0"></i><i data-page-node-id="kV3W96MhbFhEHf8W9EyU4u"></i><i data-page-node-id="ucuIQRbkkqJ0aU4FBVFudO"></i></div>
+      <div class="screen" data-page-node-id="85AHJkOT1bfIjoCTMPhgCB">
+        <div class="chat-row ai" data-page-node-id="y1n3IYByMDldGaY7E7tGlp"><div class="av" data-page-node-id="9OSsTGtd2vllOGFJRU0qsK">AI</div><div class="bubble" data-page-node-id="XJXrdlIHseWDACeWDU6cxl">你作为后端负责人，向非技术总监汇报这次线上故障的根因。请用一句话说清影响与下一步。</div></div>
+        <div class="chat-row me" data-page-node-id="AhTJ6es4bC8JSgVqrO6Euw"><div class="av" data-page-node-id="pLuVRZwL2rm8NM0XZ9Nlmk">我</div><div class="bubble" data-page-node-id="B6C8o7syuCFgdTOOmjmiXG">影响约 12% 用户登录，已降级处理，30 分钟内发公告并回滚。</div></div>
+        <div class="chat-row ai" data-page-node-id="Qp8MY0S2WDsxMdX2usEFJf"><div class="av" data-page-node-id="urlZxzDJLLzShBPID6FHyb">AI</div><div class="bubble" data-page-node-id="vGR2bJsyZyctZk5INNrGg5">如果回滚后发现根因在第三方 SDK，且你无法联系到对方工程师，你的预案是什么？</div></div>
+        <div class="chat-row me" data-page-node-id="cM0Y0UEHcaMhYrli9YCU4S"><div class="av" data-page-node-id="OCJKHBjvtWJJZKPdumPDyr">我</div><div class="bubble" data-page-node-id="Gonr8M3wXJ8D53of89OIrS">我会切到备用通道，并拉群同步进展，先保核心链路……</div></div>
+        <span class="catfish" data-page-node-id="fp6UFdCFH9Z4egOx010iIy">🐟 鲶鱼加压 · 抗压应变维度取证中</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section class="section" id="problem" data-page-node-id="TbWGY3vHLfI1bSWPS92sqe">
+  <div class="wrap" data-page-node-id="uQl1KiLm8PUX6YuMrtWkqB">
+    <span class="eyebrow" data-page-node-id="ElyLPYLWNKuGMT7ZqqPpJG">为什么是现在</span>
+    <h2 class="section-title" data-page-node-id="ibAFJuEf0fFxjsqLzV1Ri6">职业素养，是「练」出来的，不是「教」出来的</h2>
+    <p class="section-sub" data-page-node-id="b03DDq4KMf7346hsBDPXLW">传统培养重知识轻实战、缺过程反馈、难量化。学生背得下八股，却在一次真实质询里露怯——而企业恰恰看中表达、协作与抗压。</p>
+    <div class="grid-3" data-page-node-id="Htc0RIxjst1x2DIamgSaN6">
+      <div class="card reveal" data-page-node-id="ADn4GWgWevNlmt8QSI3di3"><div class="ico" data-page-node-id="Y98iZekCUDANlOQS7UXZ23">🗣️</div><h3 data-page-node-id="sn2Xt7qsDnxzORDyySzvnO">重知识 · 轻实战</h3><p data-page-node-id="BaPDYNTYZxCnkviwfJURrr">课堂讲透原理，却少有「被面试官连续追问、被质疑方案前提」的高压演练，临场能力无处生长。</p></div>
+      <div class="card reveal" data-page-node-id="95Bxid0hsH9l9NLrNfuTWE"><div class="ico" data-page-node-id="B6ZhEtoTfJXxPrb0kgqf6L">🔍</div><h3 data-page-node-id="dFEqyKLrFZl5D9jaUpXQbK">反馈滞后 · 不可追溯</h3><p data-page-node-id="dmgeuOGyWsEC1Av02JnSVM">一次答辩结束只有一句「再练练」。哪句表达扣分、哪个维度薄弱，无法定位，更无法复盘。</p></div>
+      <div class="card reveal" data-page-node-id="3CcjVwBGEQuvgKtCEi0OUh"><div class="ico" data-page-node-id="hKDcgNVrBPcCfOeMKFLD6N">📊</div><h3 data-page-node-id="oXWs18IDDpHPPiqaV4JQdT">素养难量化 · 难评价</h3><p data-page-node-id="QzQCwAZehUK0exTst1ljWX">表达逻辑、协作沟通、抗压应变长期靠主观印象，缺乏可解释、可比对的过程性数据。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- SOLUTION -->
+<section class="section" id="solution" data-page-node-id="LpBqQpugiaLIiZhYFFHeEO">
+  <div class="wrap" data-page-node-id="jrmTgu0ZR6zzawwGZc3Y3m">
+    <span class="eyebrow" data-page-node-id="TVQZXwe1FGj7u0CBJdVA8E">解决方案 · 三模式对抗闭环</span>
+    <h2 class="section-title" data-page-node-id="DNUlyWrZKLFO7kY6D5wX8X">一个平台，三种角色，陪学生从「会答」到「扛得住」</h2>
+    <p class="section-sub" data-page-node-id="DFJ5nfXwTyorasMqEQBT21">基于同一套多智能体技术底座，芒得很职提供自学、对抗、导师三种模式，覆盖「输入—压力演练—归因提升」的完整闭环。</p>
+    <div class="grid-3" data-page-node-id="p5lWJvQYiiSKAh7lhXX2JS">
+      <div class="card mode reveal" data-page-node-id="jaISe2TEW0qaVd2KQYODWr">
+        <span class="tag pill done" data-page-node-id="iLPqxprijbgvNWpT3PSFOW">✓ 已落地</span>
+        <div class="ico" data-page-node-id="c9vTDyM2Z460iGmE4jMbqk">📚</div>
+        <h3 data-page-node-id="lyc4W4p4GBoFX8wU7bGWCf">自学模式</h3>
+        <p data-page-node-id="nAtGxne14YfCsJzBnAFhif">对话式画像 + 个性化素养提升路径，像学长一样梳理短板、给出练习地图。</p>
+        <ul data-page-node-id="8GdmKHDXTq7k9TL6VLDEdj"><li data-page-node-id="x7737vX56SUVCHV3Nb2yBl">8 维对话式画像，随练随新</li><li data-page-node-id="lPmmlk7euIF7Px4TtXFPNK">素养提升路径动态生成</li></ul>
+      </div>
+      <div class="card mode reveal" style="border-color:var(--color-border-glow)" data-page-node-id="QbYPRcK2vvcUmTdIp3nvvG">
+        <span class="tag pill done" data-page-node-id="gBdllO57U59FXDuDbxrSHu">✓ 已落地</span>
+        <div class="ico" data-page-node-id="kGlWA1vGxyM9htbio0ECed">⚔️</div>
+        <h3 data-page-node-id="vYRFQyv6LeTtnb5yZAn5OK">对抗模式 · 核心</h3>
+        <p data-page-node-id="XKPj64ClGvIQfk1Fm8GFhb">AI 扮演面试官/需求方/事故方，多轮连续追问；学生一旦「背模板」，<b style="color:#fff" data-page-node-id="3zd4sGWA2QhzOMV8JqNPBg">鲶鱼加压</b>自动触发反事实质询。</p>
+        <ul data-page-node-id="n6oMiGWCiQwkRQxhd677kC"><li data-page-node-id="zAWxHQavoNXCxr39ALyMnA">三模式 adversary：常规 / 升级 / 鲶鱼</li><li data-page-node-id="TgnYuQl8HovkX6ORY7uf21">模板检测 + 实时按压，逼出真实水平</li></ul>
+      </div>
+      <div class="card mode reveal" data-page-node-id="N0sjRv0EDzZ9cL7oKcBv1Y">
+        <span class="tag pill done" data-page-node-id="bYijbTfVVilsiubELMajtS">✓ 已落地</span>
+        <div class="ico" data-page-node-id="kSVHuFe0xeduEzna9hOL36">🧑‍🏫</div>
+        <h3 data-page-node-id="AGKqpka2spqkfIGrwyq340">导师模式</h3>
+        <p data-page-node-id="uJhOJTh9lsNJUKLmuVXxa5">教师建班、下发情景、查看班级六维看板，把过程性证据用于教学督导与复盘。</p>
+        <ul data-page-node-id="8MoBmCGd8iyV6nmSiGvVzw"><li data-page-node-id="DLc8N2N1MFAKu7cEb7kHZP">班级维度分布看板</li><li data-page-node-id="01ULo2zLoY8x9QDo8QbKyl">每生报告可下钻到原话</li></ul>
+      </div>
+    </div>
+    <p class="note" data-page-node-id="hgf2B9LAGJDzVjgn7tHj3w">答辩口径（以代码为准）：技术上是「多智能体协同架构（角色化编排）」，不夸大分布式；鲶鱼是对抗 Agent 内部的一种策略模式，并非独立常驻进程。</p>
+  </div>
+</section>
+
+<!-- ECD RADAR -->
+<section class="section" id="ecd" data-page-node-id="0kjg7SDOqYvrCZhv43qBms">
+  <div class="wrap" data-page-node-id="5qfnHYPiItXYdWO1o8qaZt">
+    <span class="eyebrow" data-page-node-id="BuSOFagP5WGs3SxgQ3FxJR">六维 ECD 职业素养评估</span>
+    <h2 class="section-title" data-page-node-id="LXx6vpiJDGsZpqC5JXScVC">六个维度，每一分都挂着「证据」</h2>
+    <p class="section-sub" data-page-node-id="3zKNn1ZAthlhUN55CBtZaG">平台以 BARS 行为锚定对六维打分，<b style="color:#fff" data-page-node-id="KejnbmLE64is80ZT4ZCDdm">强制每个分数绑定对话轮次 turn_id</b>；无证据的维度标 insufficient，绝不允许 LLM 随口编分。</p>
+    <div class="radar-wrap" data-page-node-id="P79lBaU7dHjIgT1W5Ezhkn">
+      <div class="radar-box reveal" data-page-node-id="2bYkkMP3d6AWiKBjOjX1AB">
+        <svg id="radar" viewBox="0 0 400 400" width="100%" role="img" aria-label="六维职业素养雷达图（平台输出样例）" data-page-node-id="V0pGgh77HBAVCAbY8FJW7Q"></svg>
+        <p class="note" style="text-align:center;margin-top:10px" data-page-node-id="FAOm43YINwOIqL1312sZmQ">↑ 平台评估报告样例（CareerReportView 可视化）</p>
+      </div>
+      <div class="dim-list reveal" data-page-node-id="uqcsjmW1jrdsp8c0z7BErQ">
+        <div class="dim" data-page-node-id="fX1LC38OH9hFnXEWF4wk0i"><span class="n" data-page-node-id="ZZyKwd4MGhmunXizYh6jkI">1</span><div data-page-node-id="bziXO8gNvXDR0u6M006fRY"><div class="t" data-page-node-id="HXBiVcuygdugDBxeoFQOPc">表达逻辑</div><div class="d" data-page-node-id="698hPtpEAd94gKhyvjdCQT">观点组织、条理与说服力</div></div></div>
+        <div class="dim" data-page-node-id="5VDamILUkyplLUa4JMMDTH"><span class="n" data-page-node-id="CN3GTim4XgYW2uTPfBiUln">2</span><div data-page-node-id="7HfzOWnOIHxRuDWMVvhzYG"><div class="t" data-page-node-id="sEypPC5ORm4pVS4rtDd0CX">方案拆解</div><div class="d" data-page-node-id="jGyMm5ZJ9XW9EhOnPP7AOe">把复杂问题拆成可执行步骤</div></div></div>
+        <div class="dim" data-page-node-id="gLGICvBLEtiI6KX876A1Ec"><span class="n" data-page-node-id="7CHIjz3MxNF7jyposh3trU">3</span><div data-page-node-id="B5dGns5IctCndA777lRzzP"><div class="t" data-page-node-id="Rtv2MmKa7ixM6HlvXvhaws">技术汇报</div><div class="d" data-page-node-id="YsTq3AQG9zhithpKmh9kjZ">对非技术听众讲清技术影响</div></div></div>
+        <div class="dim" data-page-node-id="ispH5jnaHBlq2GHmQfYWR5"><span class="n" data-page-node-id="FtlBsZh9nxxWwPlRFMcnyt">4</span><div data-page-node-id="4vBdtPhPFZRQPuKmJDERBs"><div class="t" data-page-node-id="YepkjLNnDQfzYZ1b4BqGS7">协作沟通</div><div class="d" data-page-node-id="OzE4sUi8BNiS3juoFK3SDR">对齐需求、谈判与冲突协调</div></div></div>
+        <div class="dim" data-page-node-id="CErgrhlPHpV1d52BcLbAWB"><span class="n" data-page-node-id="bnLhoq2eWaEU2trxAO4xhy">5</span><div data-page-node-id="UfZG6kOEfJuMMH2YffMetm"><div class="t" data-page-node-id="iuUBLCgZPHJiZYBE6iZjEM">问题解决</div><div class="d" data-page-node-id="6FlOBsiX4WaveMQj8eaczn">定位根因、给出取舍与预案</div></div></div>
+        <div class="dim" data-page-node-id="0TPZsUocKwKptH3fweWFC2"><span class="n" data-page-node-id="BhPCHAcopRLG5ZywS79doL">6</span><div data-page-node-id="MS5ihS4qFufaFJHvjILZIx"><div class="t" data-page-node-id="aEXYDVwbq710Wcwyoo0Vdb">抗压应变</div><div class="d" data-page-node-id="l8HB44JjLbgwTCJpnxGC2o">高压与突发下的稳定与弹性</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EVIDENCE CHAIN -->
+<section class="section" id="evidence" data-page-node-id="NvH5IllWfqkze9Ewd8p9jd">
+  <div class="wrap" data-page-node-id="0qkyh5A7OSDkLsVWpZ4LQw">
+    <span class="eyebrow" data-page-node-id="jMWtWVP5TAQj9aOjxsNI1M">护城河 · 证据链回放</span>
+    <h2 class="section-title" data-page-node-id="lw5LcLYHJtnItBxqnrfnWs">可解释，是这套平台最硬的底气</h2>
+    <p class="section-sub" data-page-node-id="73vCr2L1ifgvE9WcQr29zN">每一轮对话都是一条证据单元。评分不再是一个黑箱数字，而是一条「原话 → 维度命中 → 行为标记 → 分数」可点回的链。</p>
+    <div class="chain reveal" data-page-node-id="yvY6LL2JCWjDmH9rmnH39n">
+      <div class="node" data-page-node-id="TFa3G1lC9c3QATJNmMHNoe"><div class="k" data-page-node-id="54BHMmJKLTGOyXMl4FJdeB">① 取证</div><div class="v" data-page-node-id="Vk9SSWfigPBGNOtD4Ot0if">单轮对话</div><div class="x" data-page-node-id="JTCu40VN0AI7msyuHpPpM4">维度命中 / 行为标记 / 原话摘录 / 模板嫌疑</div></div>
+      <div class="arrow" data-page-node-id="kxJgfG5FtJTCCYQ7nh8l2t">→</div>
+      <div class="node" data-page-node-id="xNH0SzBZ9bAS0zRW2W8dJf"><div class="k" data-page-node-id="7Ija5J83tEUz6tQLBBXeLG">② 评分</div><div class="v" data-page-node-id="IZCCQHx7JpAUo0ESJuQ5Bl">六维 BARS</div><div class="x" data-page-node-id="CFULPwF0CMGA4cF3JXYe9o">每分强制挂 turn_id 证据</div></div>
+      <div class="arrow" data-page-node-id="wDKmydMzfyBYNlPVKSTzWX">→</div>
+      <div class="node" data-page-node-id="dAyhvHgn1EvdEPTmmEnEna"><div class="k" data-page-node-id="v5Ai9qFnr16UUmpCdAvjcM">③ 质控</div><div class="v" data-page-node-id="Uo72lirASxkpMKNXDjATmx">分-证一致</div><div class="x" data-page-node-id="Z1kamaUmPZfsmGDK3C3KUR">evidence_check 复核，无证据即拦截</div></div>
+      <div class="arrow" data-page-node-id="I9iVMQsnewnpzRbkGbOr7F">→</div>
+      <div class="node" data-page-node-id="oQbCSh9T7x5Dto9rtpPyVw"><div class="k" data-page-node-id="wrYbI0l2pqqB3pfxZXwqhn">④ 回放</div><div class="v" data-page-node-id="ZAVA78PUrSxfPvrxmnVDeG">点击溯源</div><div class="x" data-page-node-id="HlU1QWE5pxNWYIpwIKLkMj">点任一维度 → 高亮对应原话轮次</div></div>
+    </div>
+    <div class="grid-2" style="margin-top:var(--space-8)" data-page-node-id="sCuk1E7bVset3kq3uwPCtQ">
+      <div class="card reveal" data-page-node-id="raQURMG6MbxV8aD8TEx2AD"><h3 style="font-size:var(--text-lg)" data-page-node-id="yy4kUMucyT2X7KiC1EE4Ci">过程性 > 结果性</h3><p data-page-node-id="xjsWA4l3hXgZbQ3LmEfn2H">比「最终答案对不对」更重要的是「他是怎么想的、怎么被追问的」。多轮过程性证据正是 ECD 与通用测评的本质差异。</p></div>
+      <div class="card reveal" data-page-node-id="loTuQSDdWOFjT8i8UJvj87"><h3 style="font-size:var(--text-lg)" data-page-node-id="4Ls01Uwypjjfxk8dttGbLO">诚实优于漂亮</h3><p data-page-node-id="inI56qgE7L1HQJMiLTq7sh">平台沿用「失败开放 + 规则降级 + 诚实标注」的风格：证据不足就标 insufficient，宁可少给分，也不编分骗用户。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- TECH -->
+<section class="section" id="tech" data-page-node-id="7MZ39dJ09H7wKaeL5uhtc7">
+  <div class="wrap" data-page-node-id="M59fBxoJodVSvga8CamGkG">
+    <span class="eyebrow" data-page-node-id="xRoHDMZ7C9zEoxRLsoPcB8">技术创新</span>
+    <h2 class="section-title" data-page-node-id="yIWrA50F2DcltLCT2jM7M6">不是套壳 Prompt，是工程化的多智能体系统</h2>
+    <div class="grid-3" data-page-node-id="GWDEfQJaRTo13K1EqGD2s5">
+      <div class="card reveal" data-page-node-id="Vzvnca6msQGMOon3PGM7HV"><div class="ico" data-page-node-id="tyqbhAqFZ233EqSQrNCb4R">🧩</div><h3 data-page-node-id="SffGBo0TdoK2gN0yCMzzLl">角色化编排</h3><p data-page-node-id="jtozhWeG8vYZi4BtycOCGl">协调者 / 情景规划 / 对抗(含鲶鱼) / 取证 / 评估 / 路径规划 六类 Agent 各司其职，轻量模型取证、强模型评估，控制成本与时延。</p></div>
+      <div class="card reveal" data-page-node-id="JRSRNbJwMGl4FhIZAQ9fSd"><div class="ico" data-page-node-id="m6yK1ZsTfTSM5sE64phR50">🎯</div><h3 data-page-node-id="xUetyUbHZxXeF6QjPV4Qjw">三元评审 + MAPPO</h3><p data-page-node-id="hRREY9H3HoitZmM4YN7emj">六维评估用解析可证的加权平均，实测泛化集捕获 100%；教学策略层以 MAPPO 优化加压节奏，锐度可训练。</p></div>
+      <div class="card reveal" data-page-node-id="couEDhfuunrBuYujv98ISs"><div class="ico" data-page-node-id="GRKVAVPhunjdL00H3501Jp">🔗</div><h3 data-page-node-id="VOq5i4ilVQ1owIVYlhfSZJ">证据即数据</h3><p data-page-node-id="izcDaxMrzGfWbHRp43kq0o">结构化取证 + 向量检索（E5-base-v2 / 768 维）让每一次实训都沉淀为可分析的过程性数据集，支撑一致性研究。</p></div>
+    </div>
+    <p class="note" data-page-node-id="UTfx7m2iZ2zvJCc9hIdmBG">实测口径：六维评估采用解析可证（analytic）打法，泛化集捕获 100.0%（动作逐位一致），优于折阈值规则（50.1%）与 RL（56.1%）——部署优先级为解析式 &gt; 折阈值 &gt; RL。</p>
+  </div>
+</section>
+
+<!-- VALUE -->
+<section class="section" id="value" data-page-node-id="kzBplTNlMHSghKSfOJFRDb">
+  <div class="wrap" data-page-node-id="TIbsYSDdJGM3FSJPEvBsV4">
+    <span class="eyebrow" data-page-node-id="IcA7WpOxukbpIindOocC1g">教育价值 · 社会价值</span>
+    <h2 class="section-title" data-page-node-id="RBDct5MANKoNg8jyCRK4x3">让「软素养」变得可教、可练、可证</h2>
+    <div class="grid-2" data-page-node-id="RUR74O66WGHjqKCv2J690U">
+      <div class="card value-card reveal" data-page-node-id="ARzgG6MP1xLpudxM3jrjvZ"><div class="ico" data-page-node-id="yDPcQHRIzJSsc8Sme1LSse">🎓</div><div data-page-node-id="5Yf8CnuCK2IhUWFsReEVE5"><h3 style="font-size:var(--text-lg)" data-page-node-id="wEklYTFIKS1AxrfcDYUM7V">补足实践培养短板</h3><p data-page-node-id="exWjTgstQa8kSUmsDHDEQv">面向计算机类学生，把企业真正看重的表达、协作、抗压，从「玄学」变成可拆解、可反馈的训练科目。</p></div></div>
+      <div class="card value-card reveal" data-page-node-id="dY7BehyguT4WTcpmGGVD6x"><div class="ico" data-page-node-id="luSEenNCP93XGkxFNGcCJ4">⚖️</div><div data-page-node-id="7quKrJX1ejwsrLXWuyjoBg"><h3 style="font-size:var(--text-lg)" data-page-node-id="BLpvtsTS7PKz1CuDZeIiPr">公平可解释的评价</h3><p data-page-node-id="vjte7UHCJKtksBt9Hzk58Z">评分绑定证据、可点回溯源，减少主观偏差，让不同背景学生获得一致的成长反馈。</p></div></div>
+      <div class="card value-card reveal" data-page-node-id="Z6NsZv2Bi9srKUqyJf40GJ"><div class="ico" data-page-node-id="wpn2RYqvTCdSOSJ34gOep3">🏫</div><div data-page-node-id="JYZXw5ntHODiGVj6eH7FYt"><h3 style="font-size:var(--text-lg)" data-page-node-id="9dapyef0fIwygo3NqPyK6u">可推广到专业实训</h3><p data-page-node-id="36K5DjRXaKhoBPHHMpqAtP">已在闽江大学信息安全等专业规划小范围试点，框架可迁移至更多需要「高压实战演练」的工科场景。</p></div></div>
+      <div class="card value-card reveal" data-page-node-id="xCJQluUyH9hSds2EiEQnoF"><div class="ico" data-page-node-id="CrbcQaqugBxbLy1qE95UUB">🔬</div><div data-page-node-id="QunZQW4W6DRcaIPBTBmLZo"><h3 style="font-size:var(--text-lg)" data-page-node-id="s2tx6ag59lrG4jKZKDZUGg">数据驱动教研</h3><p data-page-node-id="MCbUED1rFvlFsktY7q9Qyp">过程性证据沉淀为研究资产，支撑「ECD vs 人工评分一致性」等可发表的教学研究。</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section class="section" id="roadmap" data-page-node-id="wyY0bpPBwnv3rrXM1AF1iP">
+  <div class="wrap" data-page-node-id="zXCgTBgf2VbhFJWE1znl2G">
+    <span class="eyebrow" data-page-node-id="PdQlqfVaRbOKJvrCqOiCKM">落地路线 · 诚实标注</span>
+    <h2 class="section-title" data-page-node-id="MTTW4rJuIinSKijwnASXPY">已完成与进行中，分开讲</h2>
+    <p class="section-sub" data-page-node-id="MNqfnXRkBVV35jdTlTLQkR">P0–P2 已代码级完成并验证；P3–P5 为当前冲刺与试点规划，如实标注，不把 WIP 包装成成果。</p>
+    <div class="road" data-page-node-id="7cEq4GEWjkuU8V8Nd8eOWs">
+      <div class="step reveal" data-page-node-id="wD1wro9G3Dey7j0WxEbVvy"><div class="ph" data-page-node-id="JlOKGI3UlbRhV77okCmO9D">P0 · 后端闭环</div><h4 data-page-node-id="BeuoOlMspBLrrE75X52Guo">六维ECD+三模式+5表+6API</h4><p data-page-node-id="2iposqoHcu3wdWqHUufGSU">✓ 验证脚本通过，18 例测试补建，401 鉴权生效</p></div>
+      <div class="step reveal" data-page-node-id="C8vBveMCDyBVzaV8tPh7WU"><div class="ph" data-page-node-id="Q9DMuYBTvM2SMOQX9WNZab">P1 · 前端闭环</div><h4 data-page-node-id="0RTqoVdAjRTmcmBX2pepwA">对抗界面 + 实时维度标记</h4><p data-page-node-id="wVcfl0Qmeu5AKVU1zPO5Sv">✓ ChatView 改造，鲶鱼提示与轮次进度</p></div>
+      <div class="step reveal" data-page-node-id="jjPQLEYvdKCEx7ZOWYJsnl"><div class="ph" data-page-node-id="uXJps7jPTFGxaEKYeNPa2L">P2 · 评估深化</div><h4 data-page-node-id="wmkOKh0KFFPrq2mPRXl8kY">Claim-Evidence 证据链</h4><p data-page-node-id="ZdVTDJCvIDUzntkcFhqnvC">✓ 追溯到轮次，离线 ECD 8 断言通过</p></div>
+      <div class="step reveal" data-page-node-id="75LDTm0CF5M6CDLdpg9LkS"><div class="ph" data-page-node-id="Aldd9Hp0IpioDRtTfY0Jfg">P3 · 鲶鱼+路径 <span class="badge-road" data-page-node-id="ET2wBgaGfx1pGWHGxM94Je">规划中</span></div><h4 data-page-node-id="UVM5mqq9bGDQTubZHHJslx">三模式加压 + 提升路径</h4><p data-page-node-id="wNcxu7x3NVPMdZvaPdtaoR">模板化作答识别并加压，生成训练建议</p></div>
+      <div class="step reveal" data-page-node-id="cDjC8TxtSFGPPFyNmDI0Do"><div class="ph" data-page-node-id="UkrXYHPC7rPnuTC4K2zMK5">P4/P5 · 试点 <span class="badge-road" data-page-node-id="zipIARnt3u7PNhqDiyL2PW">规划中</span></div><h4 data-page-node-id="IusYMIkXZe29cQNeXkKkmE">教师端 + 46 人试点</h4><p data-page-node-id="pprqVPeWBdeja3r9oulpxT">班级看板 + 信息安全1班一致性分析</p></div>
+    </div>
+    <p class="note" data-page-node-id="OA0Q26BHDoyguYJkIoB4RW">诚信备注：当前后端回归有 1 个用例待修复（discipline_gate 等效性断言），正随 P3 批次收口；对外数字均以来源可核的实测为准，不引用失真口径。</p>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="section" id="cta" data-page-node-id="5uItSM2AAo3iejXpT0Lhi4">
+  <div class="wrap" data-page-node-id="bEtg0aXamWnDRH4GqEOTua">
+    <div class="cta reveal" data-page-node-id="DJyWK78DIghESNFeFL2Fvl">
+      <span class="eyebrow" style="justify-content:center" data-page-node-id="L9JGzfWy3KFh2LEVJjJhuT">芒得很职 · 技术底座 MARS-408</span>
+      <h2 data-page-node-id="5IDFDSQI90FCzfXbvdvBIo">让每一次「被质疑」，都变成下一次「更稳」</h2>
+      <p data-page-node-id="PwPPW82yCqfyFHB3l0gFjk">多智能体对抗实训 + 六维可解释评估 + 证据链回放——把职业素养从主观印象，变成可练、可量、可证的成长数据。</p>
+      <div class="hero-cta" style="justify-content:center" data-page-node-id="tefanO6cTtmjeDQkggJobr">
+        <a href="#solution" class="btn btn-primary" data-page-node-id="ojwSWINCLMkvsnMq3zxkzn">查看产品演示</a>
+        <a href="#evidence" class="btn btn-ghost" data-page-node-id="AsE341VDgyFtMTIrnjbBYY">看证据链护城河</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="foot wrap" data-page-node-id="J93xfLReSWWZDesoen4955">
+  芒得很职 · 国创赛（高教主赛道·创意组）路演展示页 · 设计语言复用项目既有 Design System（深色 / #7c6af2 / 克制用色）<br data-page-node-id="UXicPwJIMIaEyEAfgiWCxs"/>
+  本页为产品与能力展示，标注「规划中」的项为进行中工作，非已交付成果。
+</div>
+
+<script>
+// ---- Radar (六维 ECD 样例) ----
+(function(){
+  const svg=document.getElementById('radar');
+  const cx=200,cy=200,R=140;
+  const dims=[
+    {n:'表达逻辑',v:4.2},{n:'方案拆解',v:3.8},{n:'技术汇报',v:4.0},
+    {n:'协作沟通',v:3.5},{n:'问题解决',v:4.1},{n:'抗压应变',v:3.2}
+  ];
+  const N=dims.length;
+  const ang=i=>(-90+i*360/N)*Math.PI/180;
+  const pt=(i,r)=>[cx+r*Math.cos(ang(i)),cy+r*Math.sin(ang(i))];
+  let g='';
+  // grid rings
+  [.25,.5,.75,1].forEach(f=>{
+    let p='';for(let i=0;i<N;i++){const[x,y]=pt(i,R*f);p+=(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);}
+    g+=`<path d="${p}Z" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="1"/>`;
+  });
+  // spokes + labels
+  for(let i=0;i<N;i++){
+    const[x,y]=pt(i,R);
+    g+=`<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,.07)"/>`;
+    const[lx,ly]=pt(i,R+26);
+    g+=`<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" fill="#aab4c5" font-size="12" text-anchor="middle" dominant-baseline="middle">${dims[i].n}</text>`;
+  }
+  // data polygon
+  let dp='';for(let i=0;i<N;i++){const[x,y]=pt(i,R*dims[i].v/5);dp+=(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);}
+  g+=`<path d="${dp}Z" fill="rgba(124,106,242,.22)" stroke="#7c6af2" stroke-width="2.5"/>`;
+  for(let i=0;i<N;i++){const[x,y]=pt(i,R*dims[i].v/5);g+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="#7c6af2" stroke="#0f0f1a" stroke-width="2"/>`;}
+  svg.innerHTML=g;
+})();
+
+// ---- scroll reveal ----
+(function(){
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}})},{threshold:.14});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+})();
+
+// ---- nav active ----
+(function(){
+  const links=[...document.querySelectorAll('.nav-links a')];
+  const map={};links.forEach(a=>map[a.getAttribute('href').slice(1)]=a);
+  const so=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.remove('active'));const a=map[e.target.id];if(a)a.classList.add('active');}})},{rootMargin:'-45% 0px -50% 0px'});
+  ['problem','solution','ecd','evidence','tech','roadmap'].forEach(id=>{const el=document.getElementById(id);if(el)so.observe(el);});
+})();
+</script>
+</body>
+</html>

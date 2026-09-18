@@ -1,0 +1,12 @@
+=== netlearn_kb.json ===
+总 chunks: 2083
+按 type: {'knowledge_point': 739, 'knowledge_variant': 1144, 'question': 200}
+text 以 [choice] 开头: 147
+subject 数: 32
+subject 分布: [('overview', 220), ('os_process', 173), ('os_memory', 128), ('co_data', 122), ('co_memory', 107), ('co_overview', 97), ('co_cpu', 97), ('os_io', 96), ('os_overview', 82), ('os_file', 79), ('network', 73), ('ds_graph', 67), ('security', 63), ('ds_sort', 58), ('co_io', 58), ('datalink', 53), ('ds_tree', 51), ('ds', 47), ('os', 46), ('co', 42)]
+
+=== seed_data.py ===
+SEED_KNOWLEDGE_CHUNKS: 1883
+seed 按 type: {'knowledge_point': 739, 'knowledge_variant': 1144}
+seed subject 数: 31
+seed_data_expanded import err: cannot import name 'SEED_KNOWLEDGE_CHUNKS' from 'seed_data_expanded' (E:\Program\MARL\study-help-pro\py-server\seed_data_expanded.py)

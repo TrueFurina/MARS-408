@@ -1,0 +1,207 @@
+{
+  "meta": {
+    "source": "tune_shadow_budget.py (read-only; 只训练影子策略)",
+    "eval_main_seed": 20260914,
+    "eval_gen_seed": 313131,
+    "n_eval": 240,
+    "note": "捕获率 = (策略−uniform)/(oracle−uniform)；躺平率 = 低 f2 区选 balanced 的占比。参照线：rule/heuristic_f2 的捕获率见 baselines。"
+  },
+  "baselines": {
+    "main": {
+      "uniform": 66.80916666666667,
+      "oracle": 72.27525,
+      "headroom": 5.46608333333333,
+      "rule": 68.94797222222222,
+      "heuristic_f2": 69.80675,
+      "rule_capture_pct": 39.1,
+      "heuristic_capture_pct": 54.8
+    },
+    "gen": {
+      "uniform": 64.39666666666666,
+      "oracle": 70.47202777777778,
+      "headroom": 6.075361111111121,
+      "rule": 66.40625,
+      "heuristic_f2": 67.43802777777778,
+      "rule_capture_pct": 33.1,
+      "heuristic_capture_pct": 50.1
+    }
+  },
+  "rows": [
+    {
+      "config": "hz=32 ep=10000 wu=600 lr=3e-4 e4",
+      "horizon": 32,
+      "episodes": 10000,
+      "warmup": 600,
+      "lr": 0.0003,
+      "epochs": 4,
+      "batch_episodes": "auto",
+      "main": {
+        "mean_eff": 70.032,
+        "delta_vs_uniform": 3.223,
+        "capture_pct": 59.0,
+        "balanced_retreat_low_f2_pct": 0.8
+      },
+      "gen": {
+        "mean_eff": 67.806,
+        "delta_vs_uniform": 3.41,
+        "capture_pct": 56.1,
+        "balanced_retreat_low_f2_pct": 0.7
+      },
+      "seconds": 164.6
+    },
+    {
+      "config": "hz=8  ep=10000 wu=600 lr=3e-4 e4",
+      "horizon": 8,
+      "episodes": 10000,
+      "warmup": 600,
+      "lr": 0.0003,
+      "epochs": 4,
+      "batch_episodes": "auto",
+      "main": {
+        "mean_eff": 69.997,
+        "delta_vs_uniform": 3.187,
+        "capture_pct": 58.3,
+        "balanced_retreat_low_f2_pct": 9.1
+      },
+      "gen": {
+        "mean_eff": 67.674,
+        "delta_vs_uniform": 3.277,
+        "capture_pct": 53.9,
+        "balanced_retreat_low_f2_pct": 9.4
+      },
+      "seconds": 28.7
+    },
+    {
+      "config": "hz=32 ep=10000 wu=600 lr=1e-3 e8",
+      "horizon": 32,
+      "episodes": 10000,
+      "warmup": 600,
+      "lr": 0.001,
+      "epochs": 8,
+      "batch_episodes": "auto",
+      "main": {
+        "mean_eff": 69.844,
+        "delta_vs_uniform": 3.035,
+        "capture_pct": 55.5,
+        "balanced_retreat_low_f2_pct": 47.1
+      },
+      "gen": {
+        "mean_eff": 67.315,
+        "delta_vs_uniform": 2.919,
+        "capture_pct": 48.0,
+        "balanced_retreat_low_f2_pct": 37.4
+      },
+      "seconds": 238.5
+    },
+    {
+      "config": "hz=1  ep=10000 wu=600 lr=1e-3 e4",
+      "horizon": 1,
+      "episodes": 10000,
+      "warmup": 600,
+      "lr": 0.001,
+      "epochs": 4,
+      "batch_episodes": "auto",
+      "main": {
+        "mean_eff": 69.757,
+        "delta_vs_uniform": 2.948,
+        "capture_pct": 53.9,
+        "balanced_retreat_low_f2_pct": 24.0
+      },
+      "gen": {
+        "mean_eff": 67.792,
+        "delta_vs_uniform": 3.395,
+        "capture_pct": 55.9,
+        "balanced_retreat_low_f2_pct": 15.8
+      },
+      "seconds": 5.5
+    },
+    {
+      "config": "hz=32 ep=3000  wu=600 lr=3e-4 e8",
+      "horizon": 32,
+      "episodes": 3000,
+      "warmup": 600,
+      "lr": 0.0003,
+      "epochs": 8,
+      "batch_episodes": "auto",
+      "main": {
+        "mean_eff": 69.364,
+        "delta_vs_uniform": 2.555,
+        "capture_pct": 46.7,
+        "balanced_retreat_low_f2_pct": 58.7
+      },
+      "gen": {
+        "mean_eff": 66.83,
+        "delta_vs_uniform": 2.433,
+        "capture_pct": 40.1,
+        "balanced_retreat_low_f2_pct": 48.9
+      },
+      "seconds": 85.8
+    },
+    {
+      "config": "hz=1  ep=10000 wu=600 lr=3e-4 e4",
+      "horizon": 1,
+      "episodes": 10000,
+      "warmup": 600,
+      "lr": 0.0003,
+      "epochs": 4,
+      "batch_episodes": "auto",
+      "main": {
+        "mean_eff": 69.048,
+        "delta_vs_uniform": 2.239,
+        "capture_pct": 41.0,
+        "balanced_retreat_low_f2_pct": 45.5
+      },
+      "gen": {
+        "mean_eff": 66.471,
+        "delta_vs_uniform": 2.074,
+        "capture_pct": 34.1,
+        "balanced_retreat_low_f2_pct": 46.8
+      },
+      "seconds": 5.4
+    },
+    {
+      "config": "hz=1  ep=3000  wu=600 lr=3e-4 e4",
+      "horizon": 1,
+      "episodes": 3000,
+      "warmup": 600,
+      "lr": 0.0003,
+      "epochs": 4,
+      "batch_episodes": "auto",
+      "main": {
+        "mean_eff": 68.72,
+        "delta_vs_uniform": 1.911,
+        "capture_pct": 35.0,
+        "balanced_retreat_low_f2_pct": 75.2
+      },
+      "gen": {
+        "mean_eff": 66.123,
+        "delta_vs_uniform": 1.726,
+        "capture_pct": 28.4,
+        "balanced_retreat_low_f2_pct": 74.1
+      },
+      "seconds": 4.9
+    },
+    {
+      "config": "hz=1  ep=3000  wu=600 lr=3e-4 e4 b128",
+      "horizon": 1,
+      "episodes": 3000,
+      "warmup": 600,
+      "lr": 0.0003,
+      "epochs": 4,
+      "batch_episodes": 128,
+      "main": {
+        "mean_eff": 68.416,
+        "delta_vs_uniform": 1.607,
+        "capture_pct": 29.4,
+        "balanced_retreat_low_f2_pct": 77.7
+      },
+      "gen": {
+        "mean_eff": 65.762,
+        "delta_vs_uniform": 1.365,
+        "capture_pct": 22.5,
+        "balanced_retreat_low_f2_pct": 78.4
+      },
+      "seconds": 4.4
+    }
+  ]
+}

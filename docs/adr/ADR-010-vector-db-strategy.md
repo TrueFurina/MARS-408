@@ -12,7 +12,7 @@
 ## 决策
 
 1. **生产（Milvus 优先）**：`milvus.enabled=true` 时，Milvus 不可达 → **fail-fast 启动失败**（不静默回退），由部署方保证 Milvus 可达（docker `--profile milvus`）。
-2. **开发（InMemory 回退）**：`milvus.enabled=false` 或显式 dev 模式时，使用 `InMemoryVectorStore`；9 节点流水线（含 `evidence_check`）仍可完整运行，仅检索规模受限。
+2. **开发（InMemory 回退）**：`milvus.enabled=false` 或显式 dev 模式时，使用 `InMemoryVectorStore`；11 节点流水线（含 `evidence_check`）仍可完整运行，仅检索规模受限。
 3. **抽象层**：所有向量操作经 `db/milvus_client.vector_db` 统一接口，调用方不感知后端。
 4. **写单写者**：所有写入经 `services/import_worker.store_lock` 串行化（见 ADR-007），`uvicorn --workers 1`。
 

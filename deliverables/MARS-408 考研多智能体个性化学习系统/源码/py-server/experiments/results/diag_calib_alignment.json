@@ -1,0 +1,233 @@
+{
+  "meta": {
+    "source": "diag_calib_alignment.py (read-only)",
+    "n_samples": 240,
+    "data_seed": 20260914,
+    "note": "R1=训练/评测同分布核验；R2=逐样本配对显著性；R3=策略可解释性。全部数字为生产质量函数口径，所有臂过 discipline_gate(reviews_done=0)。"
+  },
+  "R1_distribution_alignment": {
+    "worst_dim": 3,
+    "worst_std_mean_diff": 0.1747,
+    "all_dims_below_0_2": true,
+    "f2_ks_statistic": 0.05,
+    "f2_ge_0_675_pct": {
+      "env": 50.8,
+      "real": 50.0
+    },
+    "per_dim": [
+      {
+        "dim": 1,
+        "mean_env": 0.5616,
+        "mean_real": 0.5672,
+        "std_env": 0.2211,
+        "std_real": 0.2161,
+        "std_mean_diff": 0.0257
+      },
+      {
+        "dim": 2,
+        "mean_env": 0.6644,
+        "mean_real": 0.6681,
+        "std_env": 0.1981,
+        "std_real": 0.1955,
+        "std_mean_diff": 0.0189
+      },
+      {
+        "dim": 3,
+        "mean_env": 0.6671,
+        "mean_real": 0.7071,
+        "std_env": 0.3462,
+        "std_real": 0.3504,
+        "std_mean_diff": 0.115
+      },
+      {
+        "dim": 4,
+        "mean_env": 0.4313,
+        "mean_real": 0.5042,
+        "std_env": 0.4139,
+        "std_real": 0.4208,
+        "std_mean_diff": 0.1747
+      },
+      {
+        "dim": 5,
+        "mean_env": 0.4917,
+        "mean_real": 0.4736,
+        "std_env": 0.3726,
+        "std_real": 0.373,
+        "std_mean_diff": 0.0484
+      },
+      {
+        "dim": 6,
+        "mean_env": 0.4916,
+        "mean_real": 0.5,
+        "std_env": 0.2871,
+        "std_real": 0.2764,
+        "std_mean_diff": 0.0299
+      },
+      {
+        "dim": 7,
+        "mean_env": 0.4908,
+        "mean_real": 0.5233,
+        "std_env": 0.338,
+        "std_real": 0.3393,
+        "std_mean_diff": 0.096
+      },
+      {
+        "dim": 8,
+        "mean_env": 0.5033,
+        "mean_real": 0.5075,
+        "std_env": 0.3582,
+        "std_real": 0.3316,
+        "std_mean_diff": 0.0121
+      },
+      {
+        "dim": 9,
+        "mean_env": 0.51,
+        "mean_real": 0.5237,
+        "std_env": 0.1424,
+        "std_real": 0.125,
+        "std_mean_diff": 0.1022
+      },
+      {
+        "dim": 10,
+        "mean_env": 0.4895,
+        "mean_real": 0.4921,
+        "std_env": 0.2765,
+        "std_real": 0.2911,
+        "std_mean_diff": 0.009
+      },
+      {
+        "dim": 11,
+        "mean_env": 0.5039,
+        "mean_real": 0.4952,
+        "std_env": 0.2867,
+        "std_real": 0.2803,
+        "std_mean_diff": 0.0308
+      },
+      {
+        "dim": 12,
+        "mean_env": 0.506,
+        "mean_real": 0.4928,
+        "std_env": 0.2772,
+        "std_real": 0.288,
+        "std_mean_diff": 0.0466
+      }
+    ]
+  },
+  "R1b_arm_levels": {
+    "arms_real": {
+      "uniform": 66.809,
+      "rule": 68.948,
+      "heuristic_f2": 69.807,
+      "oracle": 72.275
+    },
+    "arms_env": {
+      "uniform": 66.438,
+      "rule": 68.71,
+      "heuristic_f2": 70.079,
+      "oracle": 72.1
+    },
+    "ordering_identical": true,
+    "ordering": [
+      "oracle",
+      "heuristic_f2",
+      "rule",
+      "uniform"
+    ],
+    "max_abs_gap": 0.371
+  },
+  "R2_significance": {
+    "summary_file": "review_shadow_summary_20260914_172149.json",
+    "jsonl_file": "review_shadow_20260914_172149.jsonl",
+    "n": 240,
+    "arm_means": {
+      "uniform": 66.809,
+      "rule": 68.948,
+      "mappo_current": 66.997,
+      "heuristic_f2": 69.807,
+      "shadow": 69.999
+    },
+    "shadow_action_dist": {
+      "3": 16,
+      "0": 119,
+      "2": 59,
+      "1": 46
+    },
+    "per_seed": [
+      {
+        "seed_index": 0,
+        "d_uniform": 3.223,
+        "d_rule": 1.084,
+        "d_heuristic": 0.225
+      },
+      {
+        "seed_index": 1,
+        "d_uniform": 2.946,
+        "d_rule": 0.808,
+        "d_heuristic": -0.051
+      },
+      {
+        "seed_index": 2,
+        "d_uniform": 3.4,
+        "d_rule": 1.261,
+        "d_heuristic": 0.402
+      }
+    ],
+    "aggregate": {
+      "uniform": {
+        "mean": 3.19,
+        "std": 4.042,
+        "t": 12.23,
+        "pct_positive": 78.3
+      },
+      "rule": {
+        "mean": 1.051,
+        "std": 3.904,
+        "t": 4.17,
+        "pct_positive": 46.2
+      },
+      "heuristic_f2": {
+        "mean": 0.192,
+        "std": 3.564,
+        "t": 0.84,
+        "pct_positive": 39.2
+      }
+    }
+  },
+  "R3_interpretability": {
+    "r3_seed": 7,
+    "r3_episodes": 10000,
+    "r3_horizon": 32,
+    "agreement_pct": 75.0,
+    "rl_better": 30,
+    "rl_better_mean_gain": 7.138,
+    "rl_worse": 30,
+    "rl_worse_mean_loss": 5.335,
+    "actions_low_f2": {
+      "trust_honest": 8,
+      "trust_critic": 47,
+      "trust_consensus": 65,
+      "balanced": 1
+    },
+    "actions_high_f2": {
+      "trust_honest": 115,
+      "trust_consensus": 4
+    }
+  },
+  "R4_reward_alignment": {
+    "exact_agree_pct": 98.5,
+    "n": 400,
+    "quality_argmax_dist": {
+      "trust_honest": 140,
+      "trust_critic": 137,
+      "trust_consensus": 123
+    },
+    "reward_argmax_dist": {
+      "trust_honest": 134,
+      "trust_critic": 137,
+      "trust_consensus": 129
+    },
+    "mismatch_n": 6,
+    "mismatch_mean_quality_loss": 0.0,
+    "verdict": "reward 与验收口径对齐（不一致处为并列，损失≈0）⇒ 排除奖励设计错位"
+  }
+}

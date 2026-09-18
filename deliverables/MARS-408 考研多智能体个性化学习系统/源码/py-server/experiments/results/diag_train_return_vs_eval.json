@@ -1,0 +1,142 @@
+{
+  "meta": {
+    "source": "diag_train_return_vs_eval.py (read-only)",
+    "k_episodes": 150,
+    "eval_seed": 909090,
+    "note": "同一策略、同一环境分布下的三种 rollout 口径对比"
+  },
+  "rows": [
+    {
+      "episodes": 3000,
+      "batch_episodes": 48,
+      "seed": 7,
+      "n_updates": 63,
+      "train_return_first_third": 22.436,
+      "train_return_last_third": 10.687,
+      "train_reported_improved": false,
+      "stochastic": {
+        "mean_return": 11.296,
+        "pct_steps_action4": 19.9
+      },
+      "deterministic": {
+        "mean_return": 44.43,
+        "pct_steps_action4": 0.06
+      },
+      "stochastic_no_skip": {
+        "mean_return": 21.266,
+        "pct_steps_action4": 0.0
+      },
+      "deterministic_minus_stochastic": 33.134
+    },
+    {
+      "episodes": 3000,
+      "batch_episodes": 48,
+      "seed": 42,
+      "n_updates": 63,
+      "train_return_first_third": 25.642,
+      "train_return_last_third": 10.883,
+      "train_reported_improved": false,
+      "stochastic": {
+        "mean_return": 9.857,
+        "pct_steps_action4": 19.31
+      },
+      "deterministic": {
+        "mean_return": 43.414,
+        "pct_steps_action4": 0.0
+      },
+      "stochastic_no_skip": {
+        "mean_return": 22.262,
+        "pct_steps_action4": 0.0
+      },
+      "deterministic_minus_stochastic": 33.557
+    },
+    {
+      "episodes": 3000,
+      "batch_episodes": 48,
+      "seed": 2026,
+      "n_updates": 63,
+      "train_return_first_third": 25.504,
+      "train_return_last_third": 9.567,
+      "train_reported_improved": false,
+      "stochastic": {
+        "mean_return": 8.453,
+        "pct_steps_action4": 19.27
+      },
+      "deterministic": {
+        "mean_return": 45.408,
+        "pct_steps_action4": 0.0
+      },
+      "stochastic_no_skip": {
+        "mean_return": 17.096,
+        "pct_steps_action4": 0.0
+      },
+      "deterministic_minus_stochastic": 36.955
+    },
+    {
+      "episodes": 200,
+      "batch_episodes": 48,
+      "seed": 7,
+      "n_updates": 5,
+      "train_return_first_third": 26.27,
+      "train_return_last_third": 27.385,
+      "train_reported_improved": true,
+      "stochastic": {
+        "mean_return": 25.227,
+        "pct_steps_action4": 2.48
+      },
+      "deterministic": {
+        "mean_return": 31.034,
+        "pct_steps_action4": 0.0
+      },
+      "stochastic_no_skip": {
+        "mean_return": 27.334,
+        "pct_steps_action4": 0.0
+      },
+      "deterministic_minus_stochastic": 5.807
+    },
+    {
+      "episodes": 200,
+      "batch_episodes": 48,
+      "seed": 42,
+      "n_updates": 5,
+      "train_return_first_third": 26.167,
+      "train_return_last_third": 29.107,
+      "train_reported_improved": true,
+      "stochastic": {
+        "mean_return": 28.812,
+        "pct_steps_action4": 1.02
+      },
+      "deterministic": {
+        "mean_return": 29.405,
+        "pct_steps_action4": 0.0
+      },
+      "stochastic_no_skip": {
+        "mean_return": 28.625,
+        "pct_steps_action4": 0.0
+      },
+      "deterministic_minus_stochastic": 0.593
+    },
+    {
+      "episodes": 200,
+      "batch_episodes": 48,
+      "seed": 2026,
+      "n_updates": 5,
+      "train_return_first_third": 24.697,
+      "train_return_last_third": 24.925,
+      "train_reported_improved": true,
+      "stochastic": {
+        "mean_return": 26.484,
+        "pct_steps_action4": 0.29
+      },
+      "deterministic": {
+        "mean_return": 29.296,
+        "pct_steps_action4": 0.0
+      },
+      "stochastic_no_skip": {
+        "mean_return": 26.84,
+        "pct_steps_action4": 0.0
+      },
+      "deterministic_minus_stochastic": 2.812
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "date": "2026-09-13",
+  "script": "_smoke_career_llm.py",
+  "checks": {
+    "scenario_started": true,
+    "script_has_probe_plan": true,
+    "evidence_collected": true,
+    "next_question_returned": true,
+    "six_dims_complete": true,
+    "scores_in_range": true,
+    "evidence_chain_nonempty": true
+  },
+  "scenario_title": "需求评审会：产品经理临时加需求且工期不变",
+  "script_gen": {
+    "probe_plan": 6,
+    "success_signals": 4,
+    "llm_generated": true
+  },
+  "turn1": {
+    "status": "ongoing",
+    "mode": "normal",
+    "evidence_hits": 3,
+    "template_suspect": false,
+    "density": 0.95,
+    "next_question": "竞品体验是完整的，老板只看结果。你那个两步走的方案业务价值不够。别推脱技术难，现在就甩一份两周做完智能推荐的完整排期，否则业务怎么交代？"
+  },
+  "assessment": {
+    "source": "llm",
+    "overall": 4.5,
+    "dims_present": [
+      "collab",
+      "decompose",
+      "expression",
+      "presentation",
+      "problem_solving",
+      "stress"
+    ],
+    "scores": {
+      "expression": 4.5,
+      "decompose": 4.8,
+      "collab": 4.2,
+      "problem_solving": 4.6
+    },
+    "evidence_chain_len": 6,
+    "chain_with_quotes": 4
+  },
+  "passed": true
+}

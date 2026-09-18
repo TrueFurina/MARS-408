@@ -1,12 +1,12 @@
 # MARS-408 架构总览（权威）
 
 > 文档类型：架构总览（Architecture Overview）｜维护者：架构师（architect）
-> canonical 口径：多智能体流水线 **9 节点**；向量库 **Milvus 主 + InMemory dev 回退**；LLM **两通道**（讯飞 X2 主 + DeepSeek 降）。
+> canonical 口径：多智能体流水线 **11 节点**（含 triage 入口路由）；向量库 **Milvus 主 + InMemory dev 回退**；LLM **两通道**（讯飞 X2 主 + DeepSeek 降）。
 > 本文件为「事实类」单一真相源，架构决策（ADR）见 `docs/adr/INDEX.md`，不在此重复。
 
 ---
 
-## 1. 9 节点 LangGraph 图
+## 1. 11 节点 LangGraph 图
 
 `agents/graph.py` `create_agent_graph()` 构建 `StateGraph`，全局实例 `agent_graph`（`graph.py:135`）。
 
@@ -80,7 +80,7 @@ Vue 3 SPA (src/)
 
 ## 4. 双线（Lite / 大创真版）说明
 
-- **Lite 版（v1，软件杯演示就绪）**：功能规格见 `docs/MARS-408_PRD_Lite_2026-07.md`；本总览描述的 9 节点图与两通道 LLM 即 Lite 交付基线。
+- **Lite 版（v1，软件杯演示就绪）**：功能规格见 `docs/MARS-408_PRD_Lite_2026-07.md`；本总览描述的 11 节点图与两通道 LLM 即 Lite 交付基线。
 - **大创真版（v2）**：范围/路线图见 `deliverables/product-strategy/*`；v2 工程化文档（扩展节点/能力）待立项后补充，不在此文件展开。
 
 > 相关决策（向量库回退、LLM 通道）以 `docs/adr/` 中的 ADR-009 / ADR-010 为权威，本文件只陈述事实。

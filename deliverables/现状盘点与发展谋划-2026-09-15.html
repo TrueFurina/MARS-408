@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>study-help-pro · 现状盘点与发展谋划 · 2026-09-15</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#ffffff; --ink:#1f2430; --sub:#5b6472; --line:#e4e8ee;
+    --brand:#3b5bdb; --brand-soft:#e7ecff;
+    --red:#e03131; --red-soft:#ffe3e3; --orange:#f08c00; --orange-soft:#fff3bf;
+    --green:#2f9e44; --green-soft:#d3f9d8; --blue:#1971c2; --blue-soft:#d0ebff;
+    --gray:#868e96; --gray-soft:#f1f3f5;
+    --shadow:0 1px 3px rgba(16,24,40,.06),0 8px 24px rgba(16,24,40,.06);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"PingFang SC","Microsoft YaHei",-apple-system,system-ui,"Segoe UI",sans-serif;
+    line-height:1.6;font-size:14px;}
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 22px 64px;}
+  header.hero{background:linear-gradient(135deg,#3b5bdb,#5c7cfa);color:#fff;border-radius:16px;
+    padding:26px 30px;box-shadow:var(--shadow);}
+  header.hero h1{margin:0 0 6px;font-size:24px;letter-spacing:.5px;}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;font-size:12.5px;}
+  header.hero .pill{background:rgba(255,255,255,.16);padding:4px 11px;border-radius:999px;}
+  .verdict{margin-top:16px;background:#fff;border-left:5px solid var(--brand);border-radius:10px;
+    padding:14px 18px;font-size:14.5px;box-shadow:var(--shadow);}
+  .verdict b{color:var(--brand);}
+  section{margin-top:30px;}
+  h2{font-size:18px;margin:0 0 4px;display:flex;align-items:center;gap:9px;}
+  h2 .num{background:var(--brand);color:#fff;width:26px;height:26px;border-radius:8px;
+    display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex:none;}
+  .note{color:var(--sub);font-size:12.5px;margin:2px 0 16px;}
+  .grid2{display:grid;grid-template-columns:340px 1fr;gap:22px;align-items:start;}
+  @media(max-width:820px){.grid2{grid-template-columns:1fr;}}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow);}
+  .panel h3{margin:0 0 12px;font-size:15px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
+  th{color:var(--sub);font-weight:600;font-size:12px;text-transform:none;}
+  tr:last-child td{border-bottom:none;}
+  .tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:6px;font-weight:600;white-space:nowrap;}
+  .t-bad{background:var(--red-soft);color:var(--red);}
+  .t-warn{background:var(--orange-soft);color:var(--orange);}
+  .t-ok{background:var(--green-soft);color:var(--green);}
+  .t-info{background:var(--blue-soft);color:var(--blue);}
+  .risk{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;}
+  .rcard{border:1px solid var(--line);border-radius:12px;padding:13px 14px;background:var(--panel);}
+  .rcard .sev{font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;display:inline-block;margin-bottom:8px;}
+  .s0{background:var(--red-soft);color:var(--red);}
+  .s1{background:var(--orange-soft);color:var(--orange);}
+  .s2{background:var(--blue-soft);color:var(--blue);}
+  .rcard h4{margin:0 0 5px;font-size:13.5px;}
+  .rcard p{margin:0;font-size:12.3px;color:var(--sub);}
+  .phase{border-left:4px solid var(--brand);background:var(--panel);border-radius:0 12px 12px 0;
+    padding:14px 18px;margin-bottom:14px;box-shadow:var(--shadow);}
+  .phase .ph{font-weight:700;font-size:14.5px;margin-bottom:4px;}
+  .phase .when{font-size:11.5px;color:var(--brand);font-weight:600;margin-bottom:8px;}
+  .phase ul{margin:6px 0 0;padding-left:18px;font-size:13px;}
+  .phase li{margin:3px 0;}
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  @media(max-width:820px){.steps{grid-template-columns:1fr;}}
+  .step{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;position:relative;box-shadow:var(--shadow);}
+  .step .k{position:absolute;top:-12px;left:16px;background:var(--brand);color:#fff;width:26px;height:26px;
+    border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;}
+  .step h4{margin:6px 0 6px;font-size:14px;}
+  .step p{margin:0;font-size:12.5px;color:var(--sub);}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--sub);margin-top:8px;}
+  .legend span{display:inline-flex;align-items:center;gap:5px;}
+  .dot{width:10px;height:10px;border-radius:3px;display:inline-block;}
+  footer{margin-top:36px;color:var(--gray);font-size:11.5px;border-top:1px solid var(--line);padding-top:14px;}
+  .kv{display:flex;justify-content:space-between;font-size:12.5px;padding:4px 0;border-bottom:1px dashed var(--line);}
+  .kv:last-child{border-bottom:none;}
+  .kv b{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <h1>study-help-pro · 现状盘点与发展谋划</h1>
+    <div style="opacity:.92;font-size:13px;">MARS-408 / 芒得很职 双分支多智能体学习平台 — 工程体检 + 战略路线图</div>
+    <div class="meta">
+      <span class="pill">分支：career-literacy（活跃）</span>
+      <span class="pill">HEAD：894af83</span>
+      <span class="pill">审计日期：2026-09-15</span>
+      <span class="pill">审计方式：读真实文件 + 运行日志核对</span>
+    </div>
+  </header>
+
+  <div class="verdict">
+    <b>一句话结论：</b>平台<b>可构建、可运行、底座扎实</b>（10 节点流水线 + 证据链 + 三级容灾 + 设计系统令牌门禁已落地）。
+    但它现在<b>不是"开箱即绿"</b>：① 后端有 <b>1 个失败测试</b>；② <b>66 个文件的设计系统/证据链重构未提交</b>（属其他会话，勿动）；③ <b>README 宣称严重过时</b>（"843 测试/0 失败""38 视图"均与实测不符）。
+    向前的主线应锁定<b>芒得很职（三创赛）P3→P5</b>，同时补齐工程可信度与 Demo 体验。
+  </div>
+
+  <!-- 1. 成熟度 -->
+  <section>
+    <h2><span class="num">1</span>项目成熟度雷达（0–5，实测评估）</h2>
+    <p class="note">基于本次逐文件核查与运行日志，对 8 个维度给出工程成熟度评分，非主观臆断。</p>
+    <div class="grid2">
+      <div class="panel">
+        <h3>能力成熟度</h3>
+        <svg id="radar" width="320" height="320" viewBox="0 0 320 320" role="img" aria-label="成熟度雷达图"></svg>
+        <div class="legend">
+          <span><span class="dot" style="background:var(--brand)"></span>当前评分</span>
+          <span><span class="dot" style="background:#ced4da"></span>满分基准</span>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>维度速读</h3>
+        <div class="kv"><span>架构底座（双图编排 / 证据链 / 三级降级）</span><b>4.5 · 强</b></div>
+        <div class="kv"><span>后端服务（40 路由器 / 可启动 / 容灾）</span><b>4.0 · 强</b></div>
+        <div class="kv"><span>前端界面（41 视图 / 构建通过）</span><b>3.5 · 良</b></div>
+        <div class="kv"><span>测试质量（1 失败 / 前端测试薄）</span><b>2.5 · 偏弱</b></div>
+        <div class="kv"><span>设计系统（令牌 SSOT + 3 门禁，重构未提交）</span><b>3.5 · 良</b></div>
+        <div class="kv"><span>文档口径（README 过时 / 双分支混淆）</span><b>3.0 · 中</b></div>
+        <div class="kv"><span>部署容灾（Docker / 逐级降级）</span><b>4.0 · 强</b></div>
+        <div class="kv"><span>竞赛就绪（P0–P2 完 / P3–P5 待做）</span><b>3.0 · 中</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. 宣称 vs 实测 -->
+  <section>
+    <h2><span class="num">2</span>宣称 vs 实测（口径失真清单）</h2>
+    <p class="note">README 是<b>对外与答辩的权威口径</b>，当前多处与源码/运行日志不符，必须刷新，否则对外陈述失真。</p>
+    <div class="panel">
+      <table>
+        <thead><tr><th style="width:34%">README 宣称</th><th style="width:34%">本次实测</th><th style="width:14%">判定</th><th style="width:18%">影响</th></tr></thead>
+        <tbody>
+          <tr><td>"843 项测试通过（全量回归 0 失败）"</td><td>最新 run4：<b>1 failed, 759 passed, 203 skipped</b>，1 xfailed / 2 xpassed</td><td><span class="tag t-bad">不实</span></td><td>对外"0 失败"口径失真</td></tr>
+          <tr><td>"38 个 views（70 个 .vue）"</td><td>实际 <b>41 views / 78 .vue / 30 .ts</b>（108 源文件）</td><td><span class="tag t-warn">过时</span></td><td>数字需 +3</td></tr>
+          <tr><td>"230+ API 端点"</td><td>40 个 APIRouter 注册于 <code>main.py</code>（端点合计 230+ 可信）</td><td><span class="tag t-ok">可信</span></td><td>—</td></tr>
+          <tr><td>能力表将"芒得很职 P2"列为待启动</td><td>改造方案文档记 P2（ECD 评估深化）已于 <code>6f0288a</code> 完成</td><td><span class="tag t-warn">文档互不一致</span></td><td>README 落后于改造方案</td></tr>
+          <tr><td>"全量回归 0 失败"（工程指标表）</td><td><code>test_review_env_calibrated::test_discipline_gate_equivalent_to_production_select_action</code> 当前失败</td><td><span class="tag t-bad">当前不绿</span></td><td>提交前必修</td></tr>
+          <tr><td>根目录无污染文件</td><td>2 张架构 PNG <b>未被 .gitignore</b>，提交即入库</td><td><span class="tag t-bad">卫生缺陷</span></td><td>污染仓库</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 3. 风险登记 -->
+  <section>
+    <h2><span class="num">3</span>风险登记表（按严重度）</h2>
+    <p class="note">🔴 立即处理 · 🟠 本周处理 · 🔵 计划内消化。</p>
+    <div class="risk">
+      <div class="rcard"><span class="sev s0">🔴 P0</span><h4>后端 1 个失败测试</h4><p>discipline_gate 与 production select_action 等效性断言失败。修复前不应宣称"全绿回归"。</p></div>
+      <div class="rcard"><span class="sev s0">🔴 P0</span><h4>66 文件未提交</h4><p>设计系统令牌 + 证据链 + BenchmarkView 裸值清零重构（1705+/1829−）仍在工作树，属其他会话产物，<b>勿动、勿背书</b>，需厘清归属后提交。</p></div>
+      <div class="rcard"><span class="sev s1">🟠 P1</span><h4>根 PNG 未忽略</h4><p>2 张架构图未被 gitignore，提交将污染仓库。建议补 <code>*.png</code> 规则或移出根目录。</p></div>
+      <div class="rcard"><span class="sev s1">🟠 P1</span><h4>pyproject 版本号异常</h4><p>fastapi 0.136.3 / numpy 2.4.6 / matplotlib 3.11.0 等偏高，当前 venv 可跑；<b>全新 clone 若索引无此版，pip 将失败</b>。需对齐 PyPI 真实可解析版本并加锁。</p></div>
+      <div class="rcard"><span class="sev s1">🟠 P1</span><h4>README 口径失真</h4><p>测试数、视图数、失败状态多处过时且与改造方案文档互不一致，对外/答辩前必须刷新。</p></div>
+      <div class="rcard"><span class="sev s2">🔵 P2</span><h4>crypto_platform 嵌套 vendored</h4><p>每个模块下整份复制（253K），靠 pyproject <code>--ignore</code> 规避 ImportPathMismatch。脆弱，建议改依赖/submodule。</p></div>
+      <div class="rcard"><span class="sev s2">🔵 P2</span><h4>前端测试薄弱</h4><p>仅 12 个 vitest vs 108 源文件，质量保障几乎全压在 Python 门禁与 CI。5 个 career 页面尤其需要补组件测试。</p></div>
+      <div class="rcard"><span class="sev s2">🔵 P2</span><h4>工作区脏（~63 个 _*.log）</h4><p>根目录散落大量日志（已 gitignore），但反映并行会话频繁跑批，建议定期归档到 <code>diagnostics/</code>。</p></div>
+    </div>
+  </section>
+
+  <!-- 4. 发展路线图 -->
+  <section>
+    <h2><span class="num">4</span>发展谋划：四阶段路线图</h2>
+    <p class="note">主线聚焦<b>芒得很职（三创赛）</b>P3→P5；横切补齐工程可信度与 Demo 体验；main 分支冻结用于大创结题。</p>
+
+    <div class="phase">
+      <div class="ph">阶段 A · 立即可做（本周，单机可完成）</div>
+      <div class="when">目标：把"不绿/失真"清零，恢复可对外陈述</div>
+      <ul>
+        <li>修掉 <code>test_review_env_calibrated</code> 的 discipline_gate 等效性失败，使后端回归全绿。</li>
+        <li>刷新 README 第〇节/第八节：视图数→41、测试口径→实测（注明 skipped/xfail）、移除"0 失败"承诺。</li>
+        <li>补 gitignore：根 PNG 规则（或移出根目录）+ 收敛散落日志。</li>
+      </ul>
+    </div>
+
+    <div class="phase" style="border-color:var(--orange)">
+      <div class="ph">阶段 B · 竞赛主线 P3→P5（芒得很职，三创赛）</div>
+      <div class="when">P0/P1/P2 已完成；P3–P5 为剩余闭环与试点</div>
+      <ul>
+        <li><b>P3 鲶鱼 + 提升路径</b>：三模式 adversary（normal/escalating/catfish）升级、鲶鱼唤醒逻辑、<code>career_path_planner</code>。验收：模板化作答被识别并加压。</li>
+        <li><b>P4 教师端</b>：建班 / 导入 46 人名单 / 发任务 / 班级学情看板（<code>career_classes</code>、<code>career_tasks</code> 表已建，接口与前端待做）。</li>
+        <li><b>P5 interrupt 升级 + 46 人试点</b>：LangGraph checkpointer 真中断恢复（替代"API 持状态"简化备选）；闽江大学信息安全 1 班真实试点；ECD 评分 vs 人工一致性分析。</li>
+      </ul>
+    </div>
+
+    <div class="phase" style="border-color:var(--blue)">
+      <div class="ph">阶段 C · 工程可信度 + UI/UX 专项（贯穿）</div>
+      <div class="when">让"技术不是 PPT"真正站得住，并打磨答辩 Demo</div>
+      <ul>
+        <li><b>设计系统收尾</b>：把未提交的三门禁/令牌改动锁定提交；以 <code>DesignSystemView</code> 作为对外设计令牌展示面。</li>
+        <li><b>前端测试补强</b>：对 5 个 career 页面 + 证据链组件加 vitest，把质量保障从"Python 门禁独挑"补到前端。</li>
+        <li><b>依赖锁定</b>：pyproject 版本对齐 PyPI 真实可解析版本，补 <code>uv.lock</code>/<code>requirements</code> 锁，确保新 clone 可装。</li>
+        <li><b>Demo 黄金路径打磨（UI 重点）</b>：按改造方案 §13 的 5 分钟路径做端到端走查与录屏脚本——对抗对话 UI、六维雷达"点维度→高亮原话轮次"溯源交互、教师看板。</li>
+      </ul>
+    </div>
+
+    <div class="phase" style="border-color:var(--gray)">
+      <div class="ph">阶段 D · 双分支治理</div>
+      <div class="when">避免主线交叉污染，守护大创结题</div>
+      <ul>
+        <li>main 冻结用于大创结题，仅接受 <code>main → career-literacy</code> 单向同步底座修复。</li>
+        <li>厘清当前 HEAD（<code>docs(school)</code> 教改收尾提交）与 career 工作线是否同仓混用；若混用，建议显式拆分或加分支前缀，防止提交交叉。</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 5. 本周三步 -->
+  <section>
+    <h2><span class="num">5</span>本周落地三步（高杠杆、低风险）</h2>
+    <div class="steps">
+      <div class="step"><span class="k">1</span><h4>修复失败测试</h4><p>定位 <code>discipline_gate</code> 等效性断言，使后端回归回到全绿，恢复"可宣称"状态。</p></div>
+      <div class="step"><span class="k">2</span><h4>刷新 README 口径</h4><p>把视图数、测试数、失败状态改为实测值，消除对外失真；与新版改造方案文档对齐。</p></div>
+      <div class="step"><span class="k">3</span><h4>清工作区卫生</h4><p>补根 PNG 的 gitignore、收敛日志；清点 66 未提交文件归属（不动他人会话产物）。</p></div>
+    </div>
+  </section>
+
+  <footer>
+    审计方法：读取 <code>README.md</code> / <code>CLAUDE.md</code> / <code>docs/职业素养对抗实训改造方案.md</code> 等真实文件；核对 <code>_qa_pytest_run4.log</code> 等运行日志；用 <code>git diff --stat</code> / <code>git check-ignore</code> 验证工作区与忽略规则；前端/后端构建与启动状态引自 Explore 子代理逐文件核查。
+    所有数字均指向可复现来源，未做模糊宣称。本报告为规划文档，不含任何代码改动；未提交文件与失败测试的处理需用户在确认归属后执行。
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  const axes=[
+    {label:'架构底座',score:4.5},
+    {label:'后端服务',score:4.0},
+    {label:'前端界面',score:3.5},
+    {label:'测试质量',score:2.5},
+    {label:'设计系统',score:3.5},
+    {label:'文档口径',score:3.0},
+    {label:'部署容灾',score:4.0},
+    {label:'竞赛就绪',score:3.0},
+  ];
+  const cx=160,cy=160,R=120,max=5;
+  const svg=document.getElementById('radar');
+  const ns='http://www.w3.org/2000/svg';
+  function pt(i,r){const a=(-90+i*360/axes.length)*Math.PI/180;return [cx+r*Math.cos(a),cy+r*Math.sin(a)];}
+  // rings
+  [1,2,3,4,5].forEach(t=>{
+    const pts=axes.map((_,i)=>pt(i,R*t/max).join(',')).join(' ');
+    const p=document.createElementNS(ns,'polygon');
+    p.setAttribute('points',pts);
+    p.setAttribute('fill','none');
+    p.setAttribute('stroke','#e4e8ee');
+    p.setAttribute('stroke-width','1');
+    svg.appendChild(p);
+  });
+  // axes + labels
+  axes.forEach((ax,i)=>{
+    const [x,y]=pt(i,R);
+    const l=document.createElementNS(ns,'line');
+    l.setAttribute('x1',cx);l.setAttribute('y1',cy);l.setAttribute('x2',x);l.setAttribute('y2',y);
+    l.setAttribute('stroke','#e4e8ee');svg.appendChild(l);
+    const [lx,ly]=pt(i,R+20);
+    const t=document.createElementNS(ns,'text');
+    t.setAttribute('x',lx);t.setAttribute('y',ly);
+    t.setAttribute('font-size','11');t.setAttribute('fill','#5b6472');
+    t.setAttribute('text-anchor',lx<cx-5?'end':lx>cx+5?'start':'middle');
+    t.setAttribute('dominant-baseline',ly<cy?'auto':'hanging');
+    t.textContent=ax.label;svg.appendChild(t);
+  });
+  // data polygon
+  const dpts=axes.map((ax,i)=>pt(i,R*ax.score/max).join(',')).join(' ');
+  const dp=document.createElementNS(ns,'polygon');
+  dp.setAttribute('points',dpts);
+  dp.setAttribute('fill','rgba(59,91,219,.18)');
+  dp.setAttribute('stroke','#3b5bdb');
+  dp.setAttribute('stroke-width','2');
+  svg.appendChild(dp);
+  axes.forEach((ax,i)=>{
+    const [x,y]=pt(i,R*ax.score/max);
+    const c=document.createElementNS(ns,'circle');
+    c.setAttribute('cx',x);c.setAttribute('cy',y);c.setAttribute('r','3');
+    c.setAttribute('fill','#3b5bdb');svg.appendChild(c);
+  });
+})();
+</script>
+</body>
+</html>
