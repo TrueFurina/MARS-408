@@ -134,6 +134,8 @@
 **字重**：`--weight-regular 400` / `medium 500` / `semibold 600` / `bold 700`。
 **字距**：`--tracking-tighter -0.022em`（大标题）/ `tight -0.011em` / `normal 0` / `wide 0.03em` / `caps 0.08em`（全大写 overline）。
 
+> **Linear 校准的主动取舍——不引入 Inter Variable 510 签名档**：Linear 的 510 字重依赖 Inter **可变**字体，而本项目硬约束是「中文字体栈零加载、禁引入 web font」。在系统字体下 510 会回落为 500（等于无效改动），故字重维持 400/500/600/700 四档；其余 Linear 纪律（半透明白边框、唯一彩色、亮度分层做进深）均已对齐。
+
 ---
 
 ## 4. Component Stylings

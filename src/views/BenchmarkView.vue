@@ -184,18 +184,15 @@ watch(chartWidth, () => { /* trigger re-render via computed */ })
       <div class="chart-container" ref="recallChartRef">
         <svg :width="chartWidth" :height="chartHeight" :viewBox="`0 0 ${chartWidth} ${chartHeight}`" class="recall-chart">
           <defs>
+            <!-- 渐变 stop-color 经 CSS 类走令牌（SVG 表现属性不支持 var()）-->
             <linearGradient id="frugalGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#7c6af2" stop-opacity="0.9"/>
-              <stop offset="100%" stop-color="#6b5cdb" stop-opacity="0.6"/>
+              <stop offset="0%" class="grad-frugal-a" stop-opacity="0.9"/>
+              <stop offset="100%" class="grad-frugal-b" stop-opacity="0.6"/>
             </linearGradient>
             <linearGradient id="fullGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#5b8bd8" stop-opacity="0.7"/>
-              <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.4"/>
+              <stop offset="0%" class="grad-full-a" stop-opacity="0.7"/>
+              <stop offset="100%" class="grad-full-b" stop-opacity="0.4"/>
             </linearGradient>
-            <filter id="barGlow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="2" result="blur"/>
-              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-            </filter>
           </defs>
 
           <!-- Y 轴网格线 + 刻度 -->
@@ -207,7 +204,7 @@ watch(chartWidth, () => { /* trigger re-render via computed */ })
               :y1="yToPx(tick)"
               :x2="chartWidth - chartPadding.right"
               :y2="yToPx(tick)"
-              stroke="rgba(255,255,255,0.05)"
+              class="grid-line"
               stroke-width="1"
             />
             <text
@@ -216,7 +213,7 @@ watch(chartWidth, () => { /* trigger re-render via computed */ })
               :x="chartPadding.left - 8"
               :y="yToPx(tick) + 4"
               text-anchor="end"
-              fill="rgba(148,163,184,0.6)"
+              class="tick-label"
               font-size="10"
             >{{ (tick * 100).toFixed(0) }}%</text>
           </g>
@@ -232,7 +229,6 @@ watch(chartWidth, () => { /* trigger re-render via computed */ })
                 :height="barHeight(item.frugalRecall * animProgress)"
                 fill="url(#frugalGrad)"
                 rx="3"
-                filter="url(#barGlow)"
                 class="bar-frugal"
               >
                 <title>{{ item.query }}（{{ item.course }}）· FrugalRAG recall@5={{ (item.frugalRecall * 100).toFixed(1) }}% · {{ item.frugalLatency.toFixed(1) }}ms</title>
@@ -254,9 +250,8 @@ watch(chartWidth, () => { /* trigger re-render via computed */ })
                 :x="chartPadding.left + i * groupWidth + groupWidth / 2"
                 :y="chartHeight - chartPadding.bottom + 16"
                 text-anchor="middle"
-                fill="rgba(148,163,184,0.7)"
+                class="x-label tick-label"
                 font-size="9"
-                class="x-label"
               >{{ i + 1 }}</text>
             </template>
           </g>
@@ -265,7 +260,7 @@ watch(chartWidth, () => { /* trigger re-render via computed */ })
             :x="chartWidth / 2"
             :y="chartHeight / 2"
             text-anchor="middle"
-            fill="rgba(148,163,184,0.6)"
+            class="tick-label"
             font-size="12"
           >无真实查询级数据</text>
 
@@ -275,7 +270,7 @@ watch(chartWidth, () => { /* trigger re-render via computed */ })
             :y1="chartHeight - chartPadding.bottom"
             :x2="chartWidth - chartPadding.right"
             :y2="chartHeight - chartPadding.bottom"
-            stroke="rgba(255,255,255,0.1)"
+            class="axis-line"
             stroke-width="1"
           />
         </svg>
@@ -389,11 +384,9 @@ watch(chartWidth, () => { /* trigger re-render via computed */ })
               :cx="chartPadding.left + 18 + i * (innerWidth - 36) / Math.max(questions.length - 1, 1)"
               :cy="26 + (n - 1) * 12"
               r="4"
-              :fill="n <= q.neuralCorrect ? '#7c6af2' : 'transparent'"
-              :stroke="n <= q.neuralCorrect ? 'none' : 'rgba(148,163,184,0.45)'"
               stroke-width="1"
               :opacity="animProgress"
-              class="consensus-dot-svg"
+              :class="n <= q.neuralCorrect ? 'consensus-dot-svg dot-on-neural' : 'consensus-dot-svg dot-off'"
             >
               <title>{{ q.id }} {{ q.stem }} · NeuralMixer {{ q.neuralCorrect }}/{{ q.nTrials }} 次答对</title>
             </circle>
@@ -406,16 +399,15 @@ watch(chartWidth, () => { /* trigger re-render via computed */ })
               :cx="chartPadding.left + 18 + i * (innerWidth - 36) / Math.max(questions.length - 1, 1)"
               :cy="76 + (n - 1) * 12"
               r="4"
-              :fill="n <= q.votingCorrect ? '#5b8bd8' : 'transparent'"
-              :stroke="n <= q.votingCorrect ? 'none' : 'rgba(148,163,184,0.45)'"
               stroke-width="1"
               :opacity="animProgress"
+              :class="n <= q.votingCorrect ? 'dot-on-voting' : 'dot-off'"
             >
               <title>{{ q.id }} {{ q.stem }} · 加权投票 {{ q.votingCorrect }}/{{ q.nTrials }} 次答对</title>
             </circle>
           </g>
-          <text :x="chartPadding.left" y="18" font-size="10" font-weight="600" fill="rgba(226,232,240,0.85)">NeuralMixer</text>
-          <text :x="chartPadding.left" y="120" font-size="10" fill="rgba(148,163,184,0.7)">加权投票</text>
+          <text :x="chartPadding.left" y="18" font-size="10" font-weight="600" class="series-label-main">NeuralMixer</text>
+          <text :x="chartPadding.left" y="120" font-size="10" class="series-label-sub">加权投票</text>
         </svg>
         <div v-else class="round-empty">无逐题明细数据</div>
       </div>
@@ -614,6 +606,20 @@ watch(chartWidth, () => { /* trigger re-render via computed */ })
 .method-desc { font-size: var(--text-xs); line-height: 1.5; color: var(--text-secondary); }
 .methodology-footer { font-size: var(--text-2xs); color: var(--text-muted); padding-top: 0.625rem; border-top: 1px solid rgba(255,255,255,0.04); }
 .methodology-footer code { background: rgba(var(--accent-rgb),0.1); padding: 0.125rem 0.375rem; border-radius: 4px; font-size: var(--text-2xs); color: var(--accent-primary); }
+
+/* ── 图表令牌类（SVG 表现属性不支持 var()，故经 CSS 类引用设计令牌）── */
+.grad-frugal-a { stop-color: var(--color-accent); }
+.grad-frugal-b { stop-color: var(--color-accent-active); }
+.grad-full-a   { stop-color: var(--color-info); }
+.grad-full-b   { stop-color: var(--subject-cn); }
+.grid-line     { stroke: var(--chart-grid); }
+.axis-line     { stroke: var(--chart-axis); }
+.tick-label    { fill: var(--chart-tick); }
+.series-label-main { fill: color-mix(in srgb, var(--color-text) 85%, transparent); }
+.series-label-sub  { fill: var(--chart-tick); }
+.dot-on-neural { fill: var(--color-accent); }
+.dot-on-voting { fill: var(--color-info); }
+.dot-off       { fill: transparent; stroke: var(--chart-tick); stroke-opacity: 0.45; }
 
 /* ── 响应式 ── */
 @media (max-width: 640px) {
