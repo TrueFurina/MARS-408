@@ -104,6 +104,13 @@ py-server/data/*.db-wal
 py-server/data/*.sqlite
 py-server/data/*.sqlite3
 py-server/data/*.db-journal
+# SQLite 备份（*.db.bak_* 是 .bak 后缀，上面的 *.db 规则匹配不到，须单独覆盖）
+py-server/data/*.db.bak_*
+# 一次性调试/补丁脚本（上一会话技术债，内容已落盘或使命已完，不入库）
+_fix_*.py
+scripts/_fix_*.py
+scripts/_patch_*.py
+scripts/_patch_*.json
 # 视频生成器产物（运行时生成，不入库）
 py-server/data/videos/
 py-server/data/video_cache/
