@@ -207,13 +207,13 @@ function onKeydown(e: KeyboardEvent) {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: #fff;
+  color: var(--color-text-on-accent);
   box-shadow: var(--shadow-glow);
 }
 .profile-msg-avatar svg { width:1.125rem; height:1.125rem; }
 .user-avatar {
   background: var(--gradient-primary);
-  color: #fff;
+  color: var(--color-text-on-accent);
   box-shadow: var(--glow-primary);
 }
 .profile-msg-bubble {
@@ -232,7 +232,7 @@ function onKeydown(e: KeyboardEvent) {
 }
 .profile-msg.user .profile-msg-bubble {
   background: var(--gradient-primary);
-  color: #fff;
+  color: var(--color-text-on-accent);
   border-bottom-right-radius:0.375rem;
   box-shadow: 0 2px 8px var(--accent-primary-20);
 }
@@ -273,7 +273,7 @@ function onKeydown(e: KeyboardEvent) {
   height:2.25rem;
   border-radius:var(--radius-sm);
   background: var(--gradient-primary);
-  color: #fff;
+  color: var(--color-text-on-accent);
   display: flex;
   align-items: center;
   justify-content: center;

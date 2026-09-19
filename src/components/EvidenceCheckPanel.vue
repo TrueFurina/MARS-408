@@ -562,7 +562,7 @@ function agentName(a: string) {
   display: inline-block;
   font-size:var(--text-2xs);
   font-weight: var(--weight-bold);
-  color: #fff;
+  color: var(--color-text-on-accent);
   padding:0.125rem 0.625rem;
   border-radius:var(--radius-full);
 }

@@ -154,7 +154,7 @@ function arrowClass(index: number): string {
     <div class="flow-progress-bar">
       <div
         class="flow-progress-fill"
-        :style="{ width: `${(completedNodes.length / nodeLabels.length) * 100}%` }"
+        :style="{ width: '100%', transform: `scaleX(${completedNodes.length / nodeLabels.length})`, transformOrigin: 'left' }"
       ></div>
     </div>
   </div>
@@ -168,7 +168,7 @@ function arrowClass(index: number): string {
   border: 1px solid var(--border-color);
   border-radius:1rem;
   margin-bottom:var(--space-5);
-  transition: all 0.3s ease;
+  transition: var(--transition)
 }
 
 .langgraph-flow.is-loading {
@@ -224,7 +224,7 @@ function arrowClass(index: number): string {
   gap:0.375rem;
   padding:var(--space-2) 0.375rem;
   min-width:5rem;
-  transition: all 0.3s ease;
+  transition: var(--transition);
   opacity: 0.55;
   position: relative;
 }
@@ -271,7 +271,7 @@ function arrowClass(index: number): string {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: var(--transition);
   position: relative;
 }
 
@@ -310,13 +310,13 @@ function arrowClass(index: number): string {
 .spinner-icon {
   width:1.375rem;
   height:1.375rem;
-  color: #fff;
+  color: var(--color-text-on-accent);
 }
 
 .circle-check {
   font-size:var(--text-2xl);
   font-weight: 900;
-  color: #fff;
+  color: var(--color-text-on-accent);
   animation: check-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -361,7 +361,7 @@ function arrowClass(index: number): string {
   margin-top:var(--space-4);
   padding:0 0.125rem;
   color: var(--color-text-3);
-  transition: all 0.4s ease;
+  transition: var(--transition);
   flex-shrink: 0;
 }
 
@@ -391,7 +391,7 @@ function arrowClass(index: number): string {
   height:100%;
   background: var(--gradient-progress, linear-gradient(135deg, var(--accent-primary), var(--subject-ds)));
   border-radius:0.125rem;
-  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  width: 100%; transform-origin: left; transition: transform var(--duration-slow) var(--ease-standard);
   min-width:0;
 }
 

@@ -136,7 +136,7 @@ async function runConsensus() {
           <div v-for="(weight, name) in result.dynamic_weights" :key="name" class="gomarl-weight-item">
             <span class="weight-name">{{ name }}</span>
             <div class="weight-bar">
-              <div class="weight-fill gradient-bar" :style="{ width: Math.min(weight * 50, 100) + '%' }"></div>
+              <div class="weight-fill gradient-bar" :style="{ width: '100%', transform: 'scaleX(' + (Math.min(weight * 50, 100) / 100) + ')', transformOrigin: 'left' }"></div>
             </div>
             <span class="weight-value">{{ (weight ?? 0).toFixed(2) }}</span>
           </div>
@@ -210,7 +210,7 @@ async function runConsensus() {
   border-radius:var(--radius-full);
   border: none;
   background: var(--gradient-primary);
-  color: #fff;
+  color: var(--color-text-on-accent);
   font-size:var(--text-base);
   font-weight: var(--weight-semibold);
   cursor: pointer;
@@ -240,7 +240,7 @@ async function runConsensus() {
 .gradient-bar {
   background: linear-gradient(90deg, var(--nm-mix-from), var(--nm-mix-to));
   border-radius:var(--radius-full);
-  transition: width 0.3s ease;
+  width: 100%; transform-origin: left; transition: transform var(--duration-slow) var(--ease-standard);
 }
 
 .engine-result { margin-top:var(--space-4); }

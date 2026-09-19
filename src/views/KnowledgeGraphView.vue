@@ -156,9 +156,9 @@ onMounted(() => {
           <div class="kg-mastery-stats" v-if="masteryStats.total > 0">
             <div class="kg-stats-title" style="margin-top:10px;"> 掌握度分布</div>
             <div class="kg-mastery-bar">
-              <div class="kg-mastery-seg" :style="{ flex: masteryStats.mastered || 1, background: '#22c55e' }" :title="'已掌握: ' + masteryStats.mastered"></div>
-              <div class="kg-mastery-seg" :style="{ flex: masteryStats.weak || 1, background: '#f59e0b' }" :title="'薄弱: ' + masteryStats.weak"></div>
-              <div class="kg-mastery-seg" :style="{ flex: masteryStats.unlearned || 1, background: '#ef4444' }" :title="'未学: ' + masteryStats.unlearned"></div>
+              <div class="kg-mastery-seg" :style="{ flex: masteryStats.mastered || 1, background: 'var(--mastery-high)' }" :title="'已掌握: ' + masteryStats.mastered"></div>
+              <div class="kg-mastery-seg" :style="{ flex: masteryStats.weak || 1, background: 'var(--mastery-mid)' }" :title="'薄弱: ' + masteryStats.weak"></div>
+              <div class="kg-mastery-seg" :style="{ flex: masteryStats.unlearned || 1, background: 'var(--mastery-none)' }" :title="'未学: ' + masteryStats.unlearned"></div>
             </div>
             <div class="kg-mastery-labels">
               <span> {{ masteryStats.mastered }} 已掌握</span>
@@ -212,7 +212,7 @@ onMounted(() => {
           :height="600"
         />
         <div v-if="graphData.nodes.length" class="kg-legend">
-          <div v-for="(color, type) in {'concept':'#7c6af2','chapter':'#3b82f6','algorithm':'#06b6d4','protocol':'#22c55e','structure':'#f59e0b'}" :key="type" class="kg-legend-item">
+          <div v-for="(color, type) in {'已掌握':'var(--mastery-high)','薄弱':'var(--mastery-mid)','未学':'var(--mastery-none)'}" :key="type" class="kg-legend-item">
             <span class="kg-legend-dot" :style="{ background: color }"></span>
             <span class="kg-legend-label">{{ type }}</span>
           </div>
@@ -239,7 +239,7 @@ onMounted(() => {
 .panel-title-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-3); flex-wrap: wrap; }
 .panel-title-row .panel-title { margin-bottom: 0; }
 .view-mode-tabs { display: flex; gap: var(--space-1); background: var(--color-surface-2); border-radius: 10px; padding: 3px; }
-.view-mode-tab { padding: 6px 14px; border: none; border-radius: 8px; background: transparent; color: var(--color-text-2); font-size: var(--text-sm); font-weight: var(--weight-medium); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+.view-mode-tab { padding: 6px 14px; border: none; border-radius: 8px; background: transparent; color: var(--color-text-2); font-size: var(--text-sm); font-weight: var(--weight-medium); cursor: pointer; transition: var(--transition); white-space: nowrap; }
 .view-mode-tab:hover { color: var(--color-text); }
 .view-mode-tab.active { background: var(--color-elevated); color: var(--color-text); box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
 
@@ -272,6 +272,6 @@ onMounted(() => {
 .kg-legend-label { font-size: var(--text-2xs); color: var(--color-text-2); }
 
 /* 加载动画 */
-.loading-spinner-sm { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; animation: spin 0.6s linear infinite; margin-right: var(--space-1); vertical-align: middle; }
+.loading-spinner-sm { display: inline-block; width: 14px; height:14px; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--color-text-on-accent) 30%, transparent); border-top-color: var(--color-text-on-accent); animation: spin 0.6s linear infinite; margin-right: var(--space-1); vertical-align: middle; }
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>

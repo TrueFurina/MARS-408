@@ -434,7 +434,7 @@ async function loadMemoryOverview() {
 
 .template-picker { margin:var(--space-3) 0; }
 .template-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 6px; margin-top: 6px; }
-.template-btn { display: flex; flex-direction: column; align-items: center; gap:var(--space-1); padding:0.625rem var(--space-2); border: 1px solid var(--color-border); border-radius:0.625rem; background: var(--color-surface); cursor: pointer; transition: all 0.15s; }
+.template-btn { display: flex; flex-direction: column; align-items: center; gap:var(--space-1); padding:0.625rem var(--space-2); border: 1px solid var(--color-border); border-radius:0.625rem; background: var(--color-surface); cursor: pointer; transition: var(--transition) }
 .template-btn:hover { border-color: var(--color-border-focus); background: var(--color-surface-hover); }
 .template-btn.active { border-color: var(--accent); background: rgba(var(--accent-rgb),0.08); }
 .tpl-icon { font-size:var(--text-3xl); }
@@ -475,7 +475,7 @@ async function loadMemoryOverview() {
 .form-section-divider { font-size:var(--text-lg); font-weight: var(--weight-semibold); color: var(--color-text); padding:var(--space-4) 0 var(--space-2); border-top: 1px solid var(--color-border); margin:var(--space-4) 0 var(--space-2); }
 
 .icon-picker { display: flex; flex-wrap: wrap; gap:var(--space-1); }
-.icon-opt { width:2.25rem; height:2.25rem; display: flex; align-items: center; justify-content: center; border: 1px solid var(--color-border); border-radius:0.5rem; background: var(--color-surface); font-size:var(--text-xl); cursor: pointer; transition: all 0.15s; }
+.icon-opt { width:2.25rem; height:2.25rem; display: flex; align-items: center; justify-content: center; border: 1px solid var(--color-border); border-radius:0.5rem; background: var(--color-surface); font-size:var(--text-xl); cursor: pointer; transition: var(--transition) }
 .icon-opt:hover { border-color: var(--color-border-focus); }
 .icon-opt.active { border-color: var(--accent); background: rgba(var(--accent-rgb),0.12); }
 

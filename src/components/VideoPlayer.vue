@@ -119,7 +119,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s;
+  transition: var(--transition)
 }
 .video-btn:hover {
   background: color-mix(in srgb, var(--accent-primary) 15%, transparent);

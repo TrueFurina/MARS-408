@@ -227,7 +227,7 @@ async function loadMemoryOverview() {
 
 .template-strip { display: flex; align-items: center; gap:0.375rem; flex-wrap: wrap; margin-bottom:var(--space-4); padding:0.625rem var(--space-3); background: var(--color-surface-2); border-radius:0.625rem; }
 .strip-label { font-size:var(--text-xs); color: var(--color-text-3); font-weight: var(--weight-medium); white-space: nowrap; }
-.strip-btn { padding:var(--space-1) 0.625rem; border: 1px solid var(--color-border); border-radius:0.375rem; background: var(--color-surface); color: var(--color-text-2); font-size:var(--text-xs); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+.strip-btn { padding:var(--space-1) 0.625rem; border: 1px solid var(--color-border); border-radius:0.375rem; background: var(--color-surface); color: var(--color-text-2); font-size:var(--text-xs); cursor: pointer; transition: var(--transition); white-space: nowrap; }
 .strip-btn:hover { border-color: var(--color-border-focus); }
 .strip-btn.active { border-color: var(--accent); background: var(--accent-primary-10); color: var(--accent); }
 

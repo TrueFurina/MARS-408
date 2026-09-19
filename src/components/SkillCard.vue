@@ -56,7 +56,7 @@ function statusClass(s: string): string {
   border-radius:var(--radius-md);
   padding:var(--space-4);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition);
   display: flex;
   flex-direction: column;
   gap:var(--space-2);

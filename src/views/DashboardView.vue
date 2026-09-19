@@ -658,7 +658,7 @@ onMounted(async () => {
   padding:0.875rem var(--space-7);
   border-radius:var(--radius-full);
   background: var(--gradient-primary);
-  color: #fff;
+  color: var(--color-text-on-accent);
   font-size:var(--text-md);
   font-weight: var(--weight-semibold);
   cursor: pointer;
@@ -696,7 +696,7 @@ onMounted(async () => {
 /*  评审推荐卡片 */
 .rec-section { padding:0 var(--space-8) var(--space-6); max-width:75rem; margin:0 auto; }
 .rec-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:var(--space-2); }
-.rec-card { display:flex; align-items:center; gap:10px; padding:var(--space-3) 14px; border-radius:10px; background:var(--color-surface); border:1px solid var(--color-border); cursor:pointer; transition:all 0.15s; }
+.rec-card { display:flex; align-items:center; gap:10px; padding:var(--space-3) 14px; border-radius:10px; background:var(--color-surface); border:1px solid var(--color-border); cursor:pointer; transition:var(--transition); }
 .rec-card:hover { border-color:var(--color-border-focus); background:var(--color-surface-hover); transform:translateY(-1px); }
 .rec-card.high { border-left:3px solid var(--accent-danger); }
 .rec-card.medium { border-left:3px solid var(--accent-warm); }
@@ -746,7 +746,7 @@ onMounted(async () => {
   padding:0.1875rem 0.625rem;
   border-radius:var(--radius-full);
   background: linear-gradient(135deg, var(--accent), var(--accent-warm));
-  color: #fff;
+  color: var(--color-text-on-accent);
   letter-spacing:0.0187rem;
 }
 .judge-icon {

@@ -351,7 +351,7 @@ onUnmounted(() => {
             <span class="dim-value">{{ trait.value }}%</span>
           </div>
           <div class="dim-bar-bg">
-            <div class="dim-bar-fill" :style="{ width: trait.value + '%', background: `linear-gradient(90deg, ${TRAIT_COLORS[traits.indexOf(trait) % TRAIT_COLORS.length]}, ${TRAIT_COLORS[(traits.indexOf(trait) + 1) % TRAIT_COLORS.length]})` }"></div>
+            <div class="dim-bar-fill" :style="{ width: '100%', transform: 'scaleX(' + (trait.value / 100) + ')', transformOrigin: 'left', background: `linear-gradient(90deg, ${TRAIT_COLORS[traits.indexOf(trait) % TRAIT_COLORS.length]}, ${TRAIT_COLORS[(traits.indexOf(trait) + 1) % TRAIT_COLORS.length]})` }"></div>
           </div>
           <div class="dim-desc">{{ trait.desc }}</div>
         </div>
@@ -395,7 +395,7 @@ onUnmounted(() => {
         <div class="mastery-grid">
           <div v-for="m in (store.data?.masteryData ?? [])" :key="m.subject" class="mastery-card">
             <div class="mastery-label">{{ m.label || m.subject }}</div>
-            <div class="mastery-bar-bg"><div class="mastery-bar-fill" :style="{ width: (m.pct ?? 0) + '%' }"></div></div>
+            <div class="mastery-bar-bg"><div class="mastery-bar-fill" :style="{ width: '100%', transform: 'scaleX(' + ((m.pct ?? 0) / 100) + ')', transformOrigin: 'left' }"></div></div>
             <div class="mastery-pct">{{ m.pct ?? 0 }}%</div>
           </div>
           <div v-if="(store.data?.masteryData ?? []).length === 0" class="mastery-empty">
@@ -481,7 +481,7 @@ onUnmounted(() => {
 
 <style scoped>
 .profile-hero { display:flex; gap:var(--space-5); padding:var(--space-6); background:var(--color-surface); border:1px solid var(--color-border); border-radius:14px; margin-bottom:var(--space-5); }
-.profile-avatar-large { width:72px; height:72px; border-radius:16px; background:var(--gradient-primary); display:flex; align-items:center; justify-content:center; font-size:28px; color:#fff; font-weight:var(--weight-bold); flex-shrink:0; }
+.profile-avatar-large { width:72px; height:72px; border-radius:16px; background:var(--gradient-primary); display:flex; align-items:center; justify-content:center; font-size:28px; color:var(--color-text-on-accent); font-weight:var(--weight-bold); flex-shrink:0; }
 .profile-hero-body { flex:1; min-width:0; }
 .profile-hero-top { display:flex; align-items:center; gap:var(--space-3); margin-bottom:var(--space-2); }
 .profile-name { font-size:22px; font-weight:var(--weight-bold); color:var(--color-text); }
@@ -499,7 +499,7 @@ onUnmounted(() => {
 .dim-label { flex:1; font-size:var(--text-base); font-weight:var(--weight-semibold); color:var(--color-text); }
 .dim-value { font-size:var(--text-lg); font-weight:var(--weight-bold); color:var(--color-text); }
 .dim-bar-bg { height:6px; background:var(--color-surface-2); border-radius:3px; overflow:hidden; margin-bottom:6px; }
-.dim-bar-fill { height:100%; border-radius:3px; transition:width 0.8s ease; }
+.dim-bar-fill { height:100%; border-radius:3px; width: 100%; transform-origin: left; transition: transform var(--duration-slow) var(--ease-standard); }
 .dim-desc { font-size:var(--text-2xs); color:var(--color-text-3); }
 .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:var(--space-4); }
 @media(max-width:800px){ .grid-2{grid-template-columns:1fr} }
@@ -518,7 +518,7 @@ onUnmounted(() => {
 .mastery-card { padding:14px; background:var(--color-surface-2); border-radius:8px; }
 .mastery-label { font-size:var(--text-sm); font-weight:var(--weight-semibold); color:var(--color-text); margin-bottom:var(--space-2); }
 .mastery-bar-bg { height:6px; background:var(--color-surface); border-radius:3px; overflow:hidden; }
-.mastery-bar-fill { height:100%; background:var(--gradient-primary); border-radius:3px; transition:width 0.8s ease; }
+.mastery-bar-fill { height:100%; background:var(--gradient-primary); border-radius:3px; width: 100%; transform-origin: left; transition: transform var(--duration-slow) var(--ease-standard); }
 .mastery-pct { font-size:var(--text-xs); font-weight:var(--weight-semibold); color:var(--color-text-2); margin-top:var(--space-1); text-align:right; }
 .mastery-empty { grid-column:1/-1; text-align:center; padding:30px; }
 .weakness-item { display:flex; align-items:center; gap:10px; padding:10px var(--space-3); border-radius:6px; margin-bottom:var(--space-1); }

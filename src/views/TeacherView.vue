@@ -147,7 +147,7 @@ const filteredStudents = computed(() => {
           <div v-for="bar in masteryBars" :key="bar.name" class="mastery-bar-row">
             <span class="mb-name" :title="bar.name">{{ bar.name }}</span>
             <div class="mb-track">
-              <div class="mb-fill" :style="{ width: Math.min(100, bar.value) + '%', background: bar.value >= 70 ? 'var(--accent-success)' : bar.value >= 50 ? 'var(--accent-warm)' : 'var(--accent-danger)' }"></div>
+              <div class="mb-fill" :style="{ width: '100%', transform: 'scaleX(' + (Math.min(100, bar.value) / 100) + ')', transformOrigin: 'left', background: bar.value >= 70 ? 'var(--accent-success)' : bar.value >= 50 ? 'var(--accent-warm)' : 'var(--accent-danger)' }"></div>
             </div>
             <span class="mb-value">{{ bar.value }}%</span>
           </div>
@@ -182,7 +182,7 @@ const filteredStudents = computed(() => {
 .mastery-bar-row { display:flex; align-items:center; gap:var(--space-2); }
 .mb-name { width:7rem; font-size:var(--text-xs); color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .mb-track { flex:1; height:0.5rem; border-radius:var(--radius-full); background:var(--bg-tertiary); overflow:hidden; }
-.mb-fill { height:100%; border-radius:var(--radius-full); transition:width 0.5s ease; }
+.mb-fill { height:100%; border-radius:var(--radius-full); width: 100%; transform-origin: left; transition: transform var(--duration-slow) var(--ease-standard); }
 .mb-value { width:2.75rem; font-size:var(--text-xs); font-weight:var(--weight-bold); color:var(--text-primary); text-align:right; }
 .student-row { display: flex; align-items: center; gap:var(--space-3); padding:var(--space-2) var(--space-3); border-radius:var(--radius-sm); background: var(--bg-secondary); font-size:var(--text-sm); }
 .student-name { flex: 1; color: var(--text-primary); font-weight: var(--weight-medium); }

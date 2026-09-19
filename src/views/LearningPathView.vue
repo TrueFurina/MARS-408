@@ -174,7 +174,7 @@ const nextStepNode = computed<PathNode | null>(() => {
         已完成 {{ completed }}/{{ total }} 章
       </div>
       <div style="margin-top:12px;height:8px;background:var(--bg-secondary);border-radius:var(--radius-full);overflow:hidden;max-width:400px;margin-left:auto;margin-right:auto;">
-        <div :style="{width: pct+'%', height:'100%', background:'var(--gradient-accent)', borderRadius:'var(--radius-full)', transition:'width 0.6s ease'}"></div>
+        <div :style="{width:'100%', height:'100%', background:'var(--gradient-accent)', borderRadius:'var(--radius-full)', transform:'scaleX(' + (pct/100) + ')', transformOrigin:'left', transition:'transform 0.6s ease'}"></div>
       </div>
       <div v-if="!store.profileCompleted" style="margin-top:12px;font-size:13px;color:var(--accent-4);">
         建议先完成<a href="/profile/build" style="color:var(--accent-1);text-decoration:underline;">学生画像</a>，获取更精准的学习路径
@@ -314,7 +314,7 @@ const nextStepNode = computed<PathNode | null>(() => {
   align-items: center;
   justify-content: center;
   font-size:1.375rem;
-  color: #fff;
+  color: var(--color-text-on-accent);
 }
 .path-card-content { flex: 1; min-width:0; }
 .path-card-header {
@@ -340,7 +340,7 @@ const nextStepNode = computed<PathNode | null>(() => {
   margin-top:0.625rem;
   padding:var(--space-2) var(--space-5);
   background: var(--gradient-primary);
-  color: #fff;
+  color: var(--color-text-on-accent);
   border: none;
   border-radius:var(--radius-full);
   font-size:var(--text-sm);
@@ -390,7 +390,7 @@ const nextStepNode = computed<PathNode | null>(() => {
   border: none;
   border-radius: var(--radius-full);
   background: var(--gradient-primary);
-  color: #fff;
+  color: var(--color-text-on-accent);
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
   cursor: pointer;
@@ -419,7 +419,7 @@ const nextStepNode = computed<PathNode | null>(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--color-text-on-accent);
   flex-shrink: 0;
 }
 .next-step-icon svg { width:1.25rem; height:1.25rem; }
@@ -430,7 +430,7 @@ const nextStepNode = computed<PathNode | null>(() => {
 .next-step-btn {
   padding:var(--space-2) 1.125rem;
   background: var(--gradient-primary);
-  color: #fff;
+  color: var(--color-text-on-accent);
   border: none;
   border-radius:var(--radius-full);
   font-size:var(--text-sm);

@@ -184,7 +184,7 @@ function masteryColor(score: number): string {
 
 /** Canvas 取色：把语义令牌解析为实际色值（双主题安全，避免裸 hex） */
 function resolveToken(name: string): string {
-  if (typeof window === 'undefined') return '#7c6af2'
+  if (typeof window === 'undefined') return 'var(--color-accent)'
   const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
   return v || '#7c6af2'
 }
@@ -425,7 +425,7 @@ function goToLearningPath() {
         <div class="card-title"><span v-html="icons.bookOpen" class="card-title-icon"></span> 各科正确率</div>
         <div v-for="(data, subject) in assessment!.by_subject" :key="subject" class="subject-row">
           <span class="subject-label">{{ store.subjects[subject]?.name || subject }}</span>
-          <div class="subject-bar-bg"><div class="subject-bar-fill" :style="{width: (data.accuracy * 100) + '%', background: masteryColor(data.accuracy * 100)}"></div></div>
+          <div class="subject-bar-bg"><div class="subject-bar-fill" :style="{width: '100%', transform: 'scaleX(' + data.accuracy + ')', background: masteryColor(data.accuracy * 100)}"></div></div>
           <span class="subject-pct">{{ ((data?.accuracy ?? 0) * 100).toFixed(0) }}%</span>
           <span class="subject-count">({{ data.correct }}/{{ data.total }})</span>
         </div>
@@ -503,7 +503,7 @@ function goToLearningPath() {
 .subject-row { display: flex; align-items: center; gap:0.625rem; margin-bottom:0.625rem; }
 .subject-label { width:5rem; font-size:var(--text-sm); color: var(--text-secondary); flex-shrink: 0; }
 .subject-bar-bg { flex: 1; height:0.5rem; background: var(--bg-tertiary); border-radius:var(--radius-full); overflow: hidden; }
-.subject-bar-fill { height:100%; border-radius:var(--radius-full); transition: width 0.6s ease; }
+.subject-bar-fill { height:100%; border-radius:var(--radius-full); width:100%; transform-origin:left; transition: transform var(--duration-slow) var(--ease-standard); }
 .subject-pct { font-size:var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-primary); width:2.5rem; text-align: right; }
 .subject-count { font-size:var(--text-xs); color: var(--text-muted); }
 .weak-list { display: flex; flex-direction: column; gap:0.375rem; }

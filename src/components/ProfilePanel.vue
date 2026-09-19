@@ -240,7 +240,8 @@ const learningPhase = computed(() => {
             <div
               class="trait-bar-fill"
               :style="{
-                width: trait.value + '%',
+                width: '100%',
+                transform: 'scaleX(' + (trait.value / 100) + ')',
                 background: TRAIT_COLORS[idx % TRAIT_COLORS.length],
               }"
             ></div>
@@ -258,7 +259,8 @@ const learningPhase = computed(() => {
             <div
               class="trait-bar-fill"
               :style="{
-                width: m.pct + '%',
+                width: '100%',
+                transform: 'scaleX(' + (m.pct / 100) + ')',
                 background: subjectColors[m.subject] || 'var(--accent-primary)',
               }"
             ></div>

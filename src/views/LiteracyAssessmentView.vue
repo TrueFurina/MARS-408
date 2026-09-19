@@ -133,7 +133,7 @@ function restart(nextPhase: 'pre' | 'post') {
           <div v-for="d in dimensions" :key="d" class="dim-row">
             <span class="dim-name">{{ d }}</span>
             <div class="bar-track">
-              <div class="bar-fill" :style="{ width: (result.dim_scores[d] || 0) + '%', background: scoreColor(result.dim_scores[d] || 0) }" />
+              <div class="bar-fill" :style="{ width: '100%', transform: 'scaleX(' + ((result.dim_scores[d] || 0) / 100) + ')', transformOrigin: 'left', background: scoreColor(result.dim_scores[d] || 0) }" />
             </div>
             <span class="dim-score">{{ result.dim_scores[d] ?? 0 }}</span>
           </div>
@@ -149,7 +149,7 @@ function restart(nextPhase: 'pre' | 'post') {
           <h3>前后测对比</h3>
           <div class="delta-total">
             前测 {{ report.pre.total }} → 后测 {{ report.post.total }}
-            <strong :style="{ color: (report.post.total! - report.pre.total!) >= 0 ? '#22c55e' : '#ef4444' }">
+            <strong :style="{ color: (report.post.total! - report.pre.total!) >= 0 ? 'var(--accent-success)' : 'var(--accent-danger)' }">
               {{ ((report.post.total! - report.pre.total!) !== 0 ? ((report.post.total! - report.pre.total!) > 0 ? '+' : '') + (report.post.total! - report.pre.total!).toFixed(1) : '') }}
             </strong>
           </div>
@@ -157,7 +157,7 @@ function restart(nextPhase: 'pre' | 'post') {
             <div v-for="d in dimensions" :key="'d-' + d" class="dim-row">
               <span class="dim-name">{{ d }}</span>
               <div class="bar-track">
-                <div class="bar-fill" :style="{ width: (report.post.dims[d] || 0) + '%', background: scoreColor(report.post.dims[d] || 0) }" />
+                <div class="bar-fill" :style="{ width: '100%', transform: 'scaleX(' + ((report.post.dims[d] || 0) / 100) + ')', transformOrigin: 'left', background: scoreColor(report.post.dims[d] || 0) }" />
               </div>
               <span class="dim-score">{{ report.pre.dims[d] ?? '-' }} → {{ report.post.dims[d] ?? '-' }}</span>
             </div>
@@ -176,7 +176,7 @@ function restart(nextPhase: 'pre' | 'post') {
             <label><input type="radio" value="post" v-model="phase" /> 后测</label>
           </span>
         </div>
-        <div class="progress-track"><div class="progress-fill" :style="{ width: (answeredCount / questions.length * 100) + '%' }" /></div>
+        <div class="progress-track"><div class="progress-fill" :style="{ width: '100%', transform: 'scaleX(' + (answeredCount / questions.length) + ')', transformOrigin: 'left' }" /></div>
 
         <h2 class="stem">{{ currentQ?.stem }}</h2>
         <div class="options">
@@ -219,7 +219,7 @@ function restart(nextPhase: 'pre' | 'post') {
 .dim-tag { background: var(--accent-primary-10); color: var(--color-accent); padding: 2px 10px; border-radius: 999px; font-size: var(--text-xs); }
 .phase-switch label { margin-right: 10px; cursor: pointer; }
 .progress-track { height: 6px; background: var(--color-surface-2); border-radius: 999px; overflow: hidden; margin-bottom: var(--space-5); }
-.progress-fill { height: 100%; background: var(--color-accent); transition: width .3s; }
+.progress-fill { height: 100%; background: var(--color-accent); width: 100%; transform-origin: left; transition: transform var(--duration-slow) var(--ease-standard); }
 .stem { font-size: 17px; line-height: 1.6; margin: 0 0 18px; }
 .options { display: flex; flex-direction: column; gap: 10px; }
 .option-btn { text-align: left; padding: 14px var(--space-4); border-radius: 10px; border: 1.5px solid var(--border); background: transparent; cursor: pointer; font-size: var(--text-base); line-height: 1.5; transition: var(--transition) }
@@ -241,7 +241,7 @@ function restart(nextPhase: 'pre' | 'post') {
 .dim-bars { display: flex; flex-direction: column; gap: 10px; margin-bottom: var(--space-5); }
 .dim-row { display: grid; grid-template-columns: 76px 1fr 96px; align-items: center; gap: var(--space-3); font-size: var(--text-sm); }
 .bar-track { height: 10px; background: var(--color-surface-2); border-radius: 999px; overflow: hidden; }
-.bar-fill { height: 100%; border-radius: 999px; transition: width .5s; }
+.bar-fill { height: 100%; border-radius: 999px; width: 100%; transform-origin: left; transition: transform var(--duration-slow) var(--ease-standard); }
 .dim-score { color: var(--text-secondary); text-align: right; }
 .result-msg { text-align: center; color: var(--color-success); font-size: var(--text-sm); }
 .result-actions { display: flex; gap: 10px; justify-content: center; margin-top: 14px; }

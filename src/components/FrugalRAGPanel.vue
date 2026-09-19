@@ -245,7 +245,7 @@ async function runSearch() {
   border-radius:var(--radius-full);
   border: none;
   background: var(--gradient-primary);
-  color: #fff;
+  color: var(--color-text-on-accent);
   font-size:var(--text-base);
   font-weight: var(--weight-semibold);
   cursor: pointer;

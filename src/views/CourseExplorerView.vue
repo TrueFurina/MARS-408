@@ -5,10 +5,10 @@ import KnowledgeGraph from '@/components/KnowledgeGraph.vue'
 
 // ── 四科「专属查看器」定义（真实映射后端 KNOWLEDGE_GRAPH 节点 id 前缀）──
 const COURSES = [
-  { key: 'ds', label: '数据结构', prefix: 'ds_', color: '#06b6d4', icon: '', tagline: '线性表 · 树 · 图 · 查找 · 排序' },
-  { key: 'co', label: '计算机组成原理', prefix: 'co_', color: '#f59e0b', icon: '', tagline: '数据表示 · 存储 · CPU · 总线 · I/O' },
-  { key: 'os', label: '操作系统', prefix: 'os_', color: '#22c55e', icon: '', tagline: '进程 · 调度 · 内存 · 文件 · I/O' },
-  { key: 'cn', label: '计算机网络', prefix: '', color: '#7c6af2', icon: '', tagline: '体系结构 · 各层协议 · 安全' },
+  { key: 'ds', label: '数据结构', prefix: 'ds_', color: 'var(--subject-ds)', icon: '', tagline: '线性表 · 树 · 图 · 查找 · 排序' },
+  { key: 'co', label: '计算机组成原理', prefix: 'co_', color: 'var(--subject-co)', icon: '', tagline: '数据表示 · 存储 · CPU · 总线 · I/O' },
+  { key: 'os', label: '操作系统', prefix: 'os_', color: 'var(--subject-os)', icon: '', tagline: '进程 · 调度 · 内存 · 文件 · I/O' },
+  { key: 'cn', label: '计算机网络', prefix: '', color: 'var(--subject-cn)', icon: '', tagline: '体系结构 · 各层协议 · 安全' },
 ] as const
 
 type CourseKey = (typeof COURSES)[number]['key']
@@ -154,7 +154,7 @@ onMounted(load)
               <span class="ce-chapter-name">{{ s.name }}</span>
               <span class="ce-chapter-count">{{ densityFor(s.key) }} 点</span>
             </div>
-            <div class="ce-density"><div class="ce-density-fill" :style="{ width: (densityFor(s.key) / maxDensity * 100) + '%' }"></div></div>
+            <div class="ce-density"><div class="ce-density-fill" :style="{ width: '100%', transform: 'scaleX(' + (densityFor(s.key) / maxDensity) + ')', transformOrigin: 'left' }"></div></div>
             <div class="ce-chapter-chips">
               <span v-for="ch in s.chapters" :key="ch" class="ce-chip">{{ ch }}</span>
             </div>
@@ -203,7 +203,7 @@ onMounted(load)
   display: flex; align-items: center; gap: var(--space-3);
   padding: 14px var(--space-4); border-radius: 14px; cursor: pointer; text-align: left;
   background: var(--color-surface); border: 1px solid var(--color-border);
-  transition: all 0.18s ease; color: var(--color-text);
+  transition: var(--transition); color: var(--color-text);
 }
 .ce-course-pill:hover { border-color: var(--pill-color); transform: translateY(-2px); }
 .ce-course-pill.active {
@@ -230,7 +230,7 @@ onMounted(load)
 }
 .ce-hero-body { flex: 1; min-width: 220px; }
 .ce-hero-title { font-size: 22px; font-weight: 800; margin: 0; display: flex; align-items: center; gap: var(--space-3); color: var(--color-text); }
-.ce-hero-badge { font-size: var(--text-2xs); font-weight: var(--weight-semibold); padding: 3px 10px; border-radius: 999px; color: #fff; background: var(--course-color); }
+.ce-hero-badge { font-size: var(--text-2xs); font-weight: var(--weight-semibold); padding: 3px 10px; border-radius: 999px; color: var(--color-text-on-accent); background: var(--course-color); }
 .ce-hero-sub { margin: 6px 0 0; font-size: var(--text-sm); color: var(--color-text-2); }
 .ce-stat-row { display: flex; gap: 22px; }
 .ce-stat { text-align: center; }
@@ -253,7 +253,7 @@ onMounted(load)
 .ce-chapter-name { font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--color-text); }
 .ce-chapter-count { font-size: var(--text-2xs); font-weight: var(--weight-bold); color: var(--course-color); }
 .ce-density { height: 6px; border-radius: 4px; background: var(--color-surface-hover); overflow: hidden; margin-bottom: var(--space-2); }
-.ce-density-fill { height: 100%; border-radius: 4px; background: var(--course-color); transition: width 0.5s ease; }
+.ce-density-fill { height: 100%; border-radius: 4px; background: var(--course-color); width: 100%; transform-origin: left; transition: transform var(--duration-slow) var(--ease-standard); }
 .ce-chapter-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .ce-chip { font-size: var(--text-2xs); padding: 3px var(--space-2); border-radius: 6px; background: var(--color-elevated); color: var(--color-text-2); border: 1px solid var(--color-border); }
 
@@ -264,13 +264,13 @@ onMounted(load)
 
 /* tabs */
 .view-mode-tabs { display: flex; gap: var(--space-1); background: var(--color-surface-2); border-radius: 10px; padding: 3px; }
-.view-mode-tab { padding: 6px var(--space-3); border: none; border-radius: 8px; background: transparent; color: var(--color-text-2); font-size: var(--text-xs); font-weight: var(--weight-medium); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+.view-mode-tab { padding: 6px var(--space-3); border: none; border-radius: 8px; background: transparent; color: var(--color-text-2); font-size: var(--text-xs); font-weight: var(--weight-medium); cursor: pointer; transition: var(--transition); white-space: nowrap; }
 .view-mode-tab:hover { color: var(--color-text); }
 .view-mode-tab.active { background: var(--color-elevated); color: var(--color-text); box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
 
 .ce-loading, .ce-error { padding: var(--space-10); text-align: center; color: var(--color-text-2); }
 .ce-error { color: var(--accent-danger); }
 
-.loading-spinner-sm { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; animation: spin 0.6s linear infinite; margin-right: var(--space-1); vertical-align: middle; }
+.loading-spinner-sm { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--color-text-on-accent) 30%, transparent); border-top-color: var(--color-text-on-accent); animation: spin 0.6s linear infinite; margin-right: var(--space-1); vertical-align: middle; }
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>

@@ -297,7 +297,7 @@ function enterScene(c: SceneCard) {
   font-size: var(--text-2xs);
   font-weight: var(--weight-bold);
   letter-spacing: 0.04em;
-  color: #fff;
+  color: var(--color-text-on-accent);
   background: var(--card-accent);
   padding: 2px 9px;
   border-radius: var(--radius-full);

@@ -291,8 +291,8 @@ watch(() => route.query.tab, syncTabFromRoute)
             <div v-for="s in stats.subject_distribution" :key="s.subject" class="bar-item">
               <div class="bar-label">{{ subjectName(s.subject) }}</div>
               <div class="bar-track">
-                <div class="bar-fill" :style="{ width: stats.total ? (s.count / stats.total * 100) + '%' : '0%' }"></div>
-                <div class="bar-fill mastered-fill" :style="{ width: stats.total ? (s.mastered / stats.total * 100) + '%' : '0%' }"></div>
+                <div class="bar-fill" :style="{ width: '100%', transform: 'scaleX(' + (stats.total ? (s.count / stats.total) : 0) + ')', transformOrigin: 'left' }"></div>
+                <div class="bar-fill mastered-fill" :style="{ width: '100%', transform: 'scaleX(' + (stats.total ? (s.mastered / stats.total) : 0) + ')', transformOrigin: 'left' }"></div>
               </div>
               <div class="bar-num">{{ s.mastered }}/{{ s.count }}</div>
             </div>
@@ -381,7 +381,7 @@ watch(() => route.query.tab, syncTabFromRoute)
 .q-options { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
 .q-opt {
   padding: 7px var(--space-3); border-radius: var(--radius-sm); font-size: var(--text-sm);
-  background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+  background: var(--color-surface-2); border: 1px solid var(--glass-border);
 }
 .q-opt.opt-correct {
   background: rgba(var(--success-rgb),0.08); border-color: rgba(var(--success-rgb),0.4); color: var(--color-success);
@@ -428,8 +428,8 @@ watch(() => route.query.tab, syncTabFromRoute)
 .bar-list { display: flex; flex-direction: column; gap: 10px; }
 .bar-item { display: flex; align-items: center; gap: 10px; }
 .bar-label { width: 120px; font-size: var(--text-sm); flex-shrink: 0; }
-.bar-track { flex: 1; height: 22px; background: rgba(255,255,255,0.05); border-radius: 6px; position: relative; overflow: hidden; }
-.bar-fill { position: absolute; left: 0; top: 0; height: 100%; background: rgba(var(--danger-rgb),0.35); border-radius: 6px; transition: width 0.5s; }
+.bar-track { flex: 1; height: 22px; background: var(--color-surface-2); border-radius: 6px; position: relative; overflow: hidden; }
+.bar-fill { position: absolute; left: 0; top: 0; height: 100%; background: rgba(var(--danger-rgb),0.35); border-radius: 6px; width: 100%; transform-origin: left; transition: transform var(--duration-slow) var(--ease-standard); }
 .bar-fill.mastered-fill { background: rgba(var(--success-rgb),0.5); }
 .bar-num { width: 60px; text-align: right; font-size: var(--text-sm); color: var(--text-muted); flex-shrink: 0; }
 

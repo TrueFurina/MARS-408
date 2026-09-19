@@ -158,7 +158,7 @@ function goHome() {
 .q-option { padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--glass-border); cursor: pointer; transition: var(--transition); font-size: var(--text-base); }
 .q-option:hover { border-color: var(--accent-primary); }
 .q-option.selected { border-color: var(--accent-primary); background: var(--accent-primary-10); color: var(--accent-primary); }
-.diag-submit { display: block; margin: var(--space-6) auto; padding: var(--space-3) var(--space-8); border: none; border-radius: var(--radius-md); background: var(--accent-primary); color: #fff; font-size: var(--text-lg); font-weight: var(--weight-semibold); cursor: pointer; }
+.diag-submit { display: block; margin: var(--space-6) auto; padding: var(--space-3) var(--space-8); border: none; border-radius: var(--radius-md); background: var(--accent-primary); color: var(--color-text-on-accent); font-size: var(--text-lg); font-weight: var(--weight-semibold); cursor: pointer; }
 .diag-submit:disabled { opacity: 0.5; cursor: not-allowed; }
 .result-title { font-size: 28px; font-weight: var(--weight-bold); text-align: center; margin-bottom: var(--space-4); }
 .result-accuracy { text-align: center; font-size: var(--text-xl); margin-bottom: var(--space-6); }

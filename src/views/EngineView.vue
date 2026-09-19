@@ -183,7 +183,7 @@ function formatModuleName(name: string): string {
         <div v-for="(tb, name) in engineStatus.reliability.token_buckets" :key="name" class="reli-card">
           <div class="reli-name">{{ name }}</div>
           <div class="reli-tokens">
-            <span class="reli-token-fill" :style="{ width: Math.min(100, (tb.tokens / Math.max(tb.capacity, 1)) * 100) + '%' }"></span>
+            <span class="reli-token-fill" :style="{ width: '100%', transform: 'scaleX(' + (Math.min(100, (tb.tokens / Math.max(tb.capacity, 1)) * 100) / 100) + ')', transformOrigin: 'left' }"></span>
           </div>
           <div class="reli-meta">{{ tb.tokens }}/{{ tb.capacity }} 令牌 · {{ tb.rate_per_sec }}/s</div>
         </div>
@@ -331,7 +331,7 @@ function formatModuleName(name: string): string {
   border-radius:var(--radius-full);
   border: none;
   background: var(--gradient-primary);
-  color: #fff;
+  color: var(--color-text-on-accent);
   font-size:var(--text-base);
   font-weight: var(--weight-semibold);
   cursor: pointer;
@@ -384,7 +384,7 @@ function formatModuleName(name: string): string {
 .reli-badge.st-half_open { background: rgba(var(--warning-rgb),0.15); color: var(--accent-warm); }
 .reli-meta { font-size:var(--text-2xs); color: var(--text-muted); margin-top:var(--space-1); }
 .reli-tokens { height:0.375rem; border-radius:var(--radius-full); background: var(--bg-card); overflow:hidden; margin-top:var(--space-1); }
-.reli-token-fill { display:block; height:100%; border-radius:var(--radius-full); background: var(--accent-primary); transition: width 0.3s ease; }
+.reli-token-fill { display:block; height:100%; border-radius:var(--radius-full); background: var(--accent-primary); width: 100%; transform-origin: left; transition: transform var(--duration-slow) var(--ease-standard); }
 .reli-empty { font-size:var(--text-xs); color: var(--text-muted); padding:var(--space-2) 0; }
 
 .engine-status-dot {
@@ -412,7 +412,7 @@ function formatModuleName(name: string): string {
   margin-left:auto; font-size:0.625rem; font-weight: var(--weight-bold);
   padding:0.1875rem 0.625rem; border-radius:var(--radius-full);
   background: linear-gradient(135deg, var(--accent-warm), var(--accent-danger));
-  color: #fff; text-transform: uppercase; letter-spacing: 0.5px;
+  color: var(--color-text-on-accent); text-transform: uppercase; letter-spacing: 0.5px;
 }
 .diff-category { margin-bottom:var(--space-5); }
 .diff-category-title {
@@ -462,12 +462,12 @@ function formatModuleName(name: string): string {
   font-size:var(--text-sm);
   font-weight: var(--weight-semibold);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition)
 }
 
 .demo-btn:hover {
   background: var(--accent-primary);
-  color: #fff;
+  color: var(--color-text-on-accent);
   transform: translateY(-1px);
 }
 

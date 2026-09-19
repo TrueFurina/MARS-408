@@ -372,16 +372,18 @@ function goTo(routePath: string) {
 .hamburger-line {
   display: block;
   height:0.125rem;
+  width:1.25rem;
   border-radius:0.0625rem;
   background: currentColor;
-  transition: width 0.25s ease;
+  transform: scaleX(1);
+  transition: transform var(--duration-fast) var(--ease-standard);
 }
 
-.hamburger-line.top { width:0.75rem; }
-.hamburger-line.bottom { width:1.25rem; }
+.hamburger-line.top { transform: scaleX(0.6); }
+.hamburger-line.bottom { transform: scaleX(1); }
 
-.history-btn.open .hamburger-line.top { width:1.25rem; }
-.history-btn.open .hamburger-line.bottom { width:0.75rem; }
+.history-btn.open .hamburger-line.top { transform: scaleX(1); }
+.history-btn.open .hamburger-line.bottom { transform: scaleX(0.6); }
 
 .login-screen {
   min-height:100vh;
@@ -398,7 +400,7 @@ function goTo(routePath: string) {
   color: var(--text-secondary);
   font-size:var(--text-xs);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition);
 }
 .logout-btn:hover {
   color: var(--text-danger);

@@ -226,7 +226,7 @@ async function askAboutText(text: string) {
 
 <style scoped>
 .textbook-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--space-3); }
-.textbook-card { padding: var(--space-5); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; cursor: pointer; text-align: center; transition: all 0.15s; }
+.textbook-card { padding: var(--space-5); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; cursor: pointer; text-align: center; transition: var(--transition) }
 .textbook-card:hover { border-color: var(--color-border-focus); transform: translateY(-2px); }
 .textbook-icon { font-size: 40px; margin-bottom: var(--space-2); }
 .textbook-name { font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--color-text); margin-bottom: var(--space-1); }

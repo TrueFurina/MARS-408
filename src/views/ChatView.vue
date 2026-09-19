@@ -744,7 +744,7 @@ onBeforeUnmount(() => {
 
 /* ── 导师答疑模式切换 ── */
 .chat-profile-bar { display:flex; align-items:center; gap:var(--space-2); padding:var(--space-2) var(--space-4); border-bottom:1px solid var(--color-border); flex-shrink:0; }
-.chat-profile-btn { display:flex; align-items:center; gap:6px; padding:var(--space-1) var(--space-3); border-radius:20px; border:1px solid var(--color-border); background:var(--color-surface); font-size:var(--text-xs); color:var(--color-text-2); cursor:pointer; transition:all 0.15s; }
+.chat-profile-btn { display:flex; align-items:center; gap:6px; padding:var(--space-1) var(--space-3); border-radius:20px; border:1px solid var(--color-border); background:var(--color-surface); font-size:var(--text-xs); color:var(--color-text-2); cursor:pointer; transition: var(--transition) }
 .chat-profile-btn:hover { border-color:var(--color-border-focus); color:var(--color-text); }
 .cpb-avatar { font-size:var(--text-lg); }
 .cpb-level { font-weight:var(--weight-medium); }

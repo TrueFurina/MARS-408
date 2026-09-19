@@ -71,11 +71,11 @@ function taskIcon(type: string) {
 
 function subjectColor(subject: string) {
   const colors: Record<string, string> = {
-    '数据结构': '#3b82f6',
-    '计算机组成原理': '#10b981',
-    '操作系统': '#f59e0b',
-    '计算机网络': '#8b5cf6',
-    '综合': '#6b7280',
+    '数据结构': 'var(--subject-ds)',
+    '计算机组成原理': 'var(--subject-co)',
+    '操作系统': 'var(--subject-os)',
+    '计算机网络': 'var(--subject-cn)',
+    '综合': 'var(--color-text-2)',
   }
   return colors[subject] || 'var(--accent-primary)'
 }
@@ -278,7 +278,7 @@ onMounted(() => {
           <div class="h-date">{{ formatDisplayDate(h.plan_date) }} <small>{{ h.plan_date }}</small></div>
           <div class="h-bar-wrap">
             <div class="h-bar">
-              <div class="h-bar-fill" :style="{ width: h.completion_rate + '%' }"></div>
+              <div class="h-bar-fill" :style="{ width: '100%', transform: 'scaleX(' + (h.completion_rate / 100) + ')' }"></div>
             </div>
             <span class="h-rate">{{ h.completion_rate }}%</span>
           </div>
@@ -364,7 +364,7 @@ onMounted(() => {
 .task-progress-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
 .progress-slider {
   flex: 1; -webkit-appearance: none; appearance: none; height: 6px;
-  border-radius: 3px; background: rgba(255,255,255,0.08); outline: none; cursor: pointer;
+  border-radius: 3px; background: var(--color-surface-2); outline: none; cursor: pointer;
 }
 .progress-slider::-webkit-slider-thumb {
   -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%;
@@ -390,8 +390,8 @@ onMounted(() => {
 .h-date { font-size: var(--text-base); font-weight: var(--weight-semibold); margin-bottom: var(--space-2); }
 .h-date small { font-weight: var(--weight-regular); color: var(--text-muted); margin-left: var(--space-2); font-size: var(--text-xs); }
 .h-bar-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
-.h-bar { flex: 1; height: 10px; background: rgba(255,255,255,0.06); border-radius: 5px; overflow: hidden; }
-.h-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent-primary), var(--subject-ds)); border-radius: 5px; transition: width 0.5s; }
+.h-bar { flex: 1; height: 10px; background: var(--color-surface-2); border-radius: 5px; overflow: hidden; }
+.h-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent-primary), var(--subject-ds)); border-radius: 5px; width:100%; transform-origin:left; transition: transform var(--duration-slow) var(--ease-standard); }
 .h-rate { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--accent-primary); min-width: 48px; text-align: right; }
 .h-meta { font-size: var(--text-xs); color: var(--text-muted); }
 </style>

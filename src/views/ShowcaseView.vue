@@ -196,16 +196,16 @@ function openNew() { window.open(iframeSrc.value, '_blank', 'noopener') }
 .rail-title { font-size: var(--text-lg); font-weight: var(--weight-bold); color: var(--color-text); }
 .rail-sub { font-size: var(--text-xs); color: var(--color-text-3); margin-top: 2px; }
 .rail-list { flex: 1; overflow-y: auto; padding: var(--space-2); }
-.rail-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px var(--space-3); border: none; border-radius: 8px; background: transparent; color: var(--color-text-2); cursor: pointer; transition: all 0.15s; text-align: left; }
+.rail-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px var(--space-3); border: none; border-radius: 8px; background: transparent; color: var(--color-text-2); cursor: pointer; transition: var(--transition); text-align: left; }
 .rail-item:hover { background: var(--color-surface-hover); color: var(--color-text); }
 .rail-item.active { background: rgba(var(--accent-rgb),0.1); color: var(--accent); }
 .rail-icon :deep(svg) { width: 20px; height: 20px; }
 .rail-title-sm { font-size: var(--text-sm); font-weight: var(--weight-semibold); }
 .rail-scene { font-size: var(--text-2xs); color: var(--color-text-3); margin-top: 1px; }
 .rail-footer { padding: var(--space-3); border-top: 1px solid var(--color-border); }
-.rail-tech-btn { width: 100%; padding: 10px; border: 1px solid var(--color-border); border-radius: 8px; background: transparent; color: var(--color-text-2); font-size: var(--text-sm); font-weight: var(--weight-semibold); cursor: pointer; transition: all 0.15s; }
+.rail-tech-btn { width: 100%; padding: 10px; border: 1px solid var(--color-border); border-radius: 8px; background: transparent; color: var(--color-text-2); font-size: var(--text-sm); font-weight: var(--weight-semibold); cursor: pointer; transition: var(--transition) }
 .rail-tech-btn:hover { border-color: var(--accent); color: var(--accent); }
-.rail-tech-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.rail-tech-btn.active { background: var(--accent); color: var(--color-text-on-accent); border-color: var(--accent); }
 
 .showcase-main { flex: 1; overflow-y: auto; }
 
@@ -217,7 +217,7 @@ function openNew() { window.open(iframeSrc.value, '_blank', 'noopener') }
 .tech-section { margin-bottom: var(--space-7); }
 .tech-section-title { font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--accent); margin-bottom: var(--space-3); padding-bottom: var(--space-2); border-bottom: 1px solid var(--color-border); }
 .tech-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
-.tech-card { padding: 14px var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 10px; transition: all 0.15s; }
+.tech-card { padding: 14px var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 10px; transition: var(--transition) }
 .tech-card:hover { border-color: var(--color-border-focus); transform: translateY(-1px); }
 .tech-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-2); margin-bottom: 6px; }
 .tech-card-title { font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--color-text); }
@@ -239,6 +239,6 @@ function openNew() { window.open(iframeSrc.value, '_blank', 'noopener') }
 .view-desc { font-size: var(--text-sm); color: var(--color-text-2); max-width: 300px; }
 .view-open-btn { padding: var(--space-2) var(--space-4); border: 1px solid var(--color-border); border-radius: 8px; background: transparent; color: var(--color-text-2); font-size: var(--text-sm); cursor: pointer; white-space: nowrap; }
 .view-open-btn:hover { border-color: var(--accent); color: var(--accent); }
-.view-iframe-wrapper { border-radius: 12px; overflow: hidden; border: 1px solid var(--color-border); background: #fff; }
+.view-iframe-wrapper { border-radius: 12px; overflow: hidden; border: 1px solid var(--color-border); background: var(--color-surface); }
 .view-iframe { width: 100%; height: calc(100vh - 200px); border: none; display: block; }
 </style>

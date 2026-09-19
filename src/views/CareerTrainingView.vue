@@ -294,7 +294,7 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
               <span class="dim-score">{{ row.score ?? '—' }}</span>
               <span class="dim-level" :class="levelClass(row.level)">{{ levelLabel[row.level as string] || '—' }}</span>
             </div>
-            <div class="dim-bar"><div class="dim-fill" :style="{ width: ((row.score || 0) / 5 * 100) + '%' }"></div></div>
+            <div class="dim-bar"><div class="dim-fill" :style="{ width: '100%', transform: 'scaleX(' + ((row.score || 0) / 5) + ')', transformOrigin: 'left' }"></div></div>
             <div class="dim-rationale">{{ row.rationale }}</div>
             <div v-if="row.evidence_quotes?.length" class="dim-evidence">
               <span class="ev-label">证据引用</span>
@@ -359,10 +359,10 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
 .opt-label { font-size: var(--text-sm); color: var(--text-secondary); }
 .chip { padding: 5px 14px; border-radius: 16px; border: 1px solid var(--border-color);
   background: var(--bg-card); font-size: var(--text-sm); cursor: pointer; color: var(--text-primary); }
-.chip.on { background: var(--accent-primary); color: #fff; border-color: transparent; }
+.chip.on { background: var(--accent-primary); color: var(--color-text-on-accent); border-color: transparent; }
 
 .primary-btn { padding: 10px 22px; border-radius: 10px; border: none; cursor: pointer; font-size: var(--text-base); font-weight: var(--weight-semibold);
-  background: var(--accent-primary); color: #fff; }
+  background: var(--accent-primary); color: var(--color-text-on-accent); }
 .primary-btn:disabled { opacity: .5; cursor: not-allowed; }
 .ghost-btn { padding: 10px 18px; border-radius: 10px; cursor: pointer; font-size: var(--text-base);
   background: transparent; border: 1px solid var(--border-color); color: var(--text-primary); }
@@ -396,10 +396,10 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
 .bubble { max-width: 82%; padding: 10px 14px; border-radius: 14px; font-size: var(--text-base); line-height: 1.6; }
 .bubble.interviewer { background: var(--bg-card); border: 1px solid var(--border-color);
   border-top-left-radius: 4px; }
-.bubble.student { background: var(--accent-primary); color: #fff; border-top-right-radius: 4px; }
+.bubble.student { background: var(--accent-primary); color: var(--color-text-on-accent); border-top-right-radius: 4px; }
 .role-tag { display: inline-block; font-size: 10px; padding: 1px 7px; border-radius: 8px; margin-right: 6px;
   background: var(--accent-primary-15); color: var(--accent-primary); vertical-align: middle; }
-.role-tag.me { background: rgba(255,255,255,.25); color: #fff; }
+.role-tag.me { background: rgba(255,255,255,.25); color: var(--color-text-on-accent); }
 .mode-tag { display: inline-block; font-size: 10px; padding: 1px 7px; border-radius: 8px; vertical-align: middle; margin-right: 6px; }
 .m-escalating { background: rgba(var(--warning-rgb),.16); color: var(--color-warning); }
 .m-catfish { background: var(--accent-danger-10); color: var(--accent-danger); }
@@ -441,7 +441,7 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
 .lv-excellent, .lv-good { color: var(--accent-success); }
 .lv-average { color: var(--color-warning); } .lv-weak, .lv-insufficient { color: var(--accent-danger); }
 .dim-bar { height: 6px; border-radius: 4px; background: var(--bg-secondary); overflow: hidden; }
-.dim-fill { height: 100%; background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary)); border-radius: 4px; transition: width .5s; }
+.dim-fill { height: 100%; background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary)); border-radius: 4px; width: 100%; transform-origin: left; transition: transform var(--duration-slow) var(--ease-standard); }
 .dim-rationale { font-size: 11.5px; color: var(--text-secondary); margin-top: var(--space-1); line-height: 1.5; }
 .dim-evidence { margin-top: 5px; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) 6px; }
 .ev-label { font-size: 10px; color: var(--accent-primary); font-weight: var(--weight-semibold); background: rgba(var(--accent-rgb),0.1); padding: 1px 6px; border-radius: 4px; }

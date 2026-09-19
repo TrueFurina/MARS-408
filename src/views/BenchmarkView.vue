@@ -333,8 +333,7 @@ watch(chartWidth, () => { /* trigger re-render via computed */ })
             NeuralMixer
           </div>
           <div class="contra-bar-wrap">
-            <div class="contra-bar consensus-bar" :style="{ width: ((summary?.neuralAccuracy ?? 0) * 100 * animProgress) + '%' }">
-              <span class="contra-bar-text">{{ pct(summary?.neuralAccuracy ?? null) }}%</span>
+            <div class="contra-bar consensus-bar" :style="{ width: '100%', transform: 'scaleX(' + ((summary?.neuralAccuracy ?? 0) * animProgress) + ')', transformOrigin: 'left' }">
             </div>
           </div>
           <div class="contra-count consensus-count">{{ pct(summary?.neuralAccuracy ?? null) }}%</div>
@@ -345,8 +344,7 @@ watch(chartWidth, () => { /* trigger re-render via computed */ })
             加权投票
           </div>
           <div class="contra-bar-wrap">
-            <div class="contra-bar voting-bar" :style="{ width: ((summary?.votingAccuracy ?? 0) * 100 * animProgress) + '%' }">
-              <span class="contra-bar-text">{{ pct(summary?.votingAccuracy ?? null) }}%</span>
+            <div class="contra-bar voting-bar" :style="{ width: '100%', transform: 'scaleX(' + ((summary?.votingAccuracy ?? 0) * animProgress) + ')', transformOrigin: 'left' }">
             </div>
           </div>
           <div class="contra-count voting-count">{{ pct(summary?.votingAccuracy ?? null) }}%</div>
@@ -571,19 +569,17 @@ watch(chartWidth, () => { /* trigger re-render via computed */ })
 .contra-dot { width: 10px; height: 10px; border-radius: 50%; }
 .consensus-dot { background: var(--color-accent); box-shadow: 0 0 8px rgba(var(--accent-rgb),0.4); }
 .voting-dot { background: var(--color-info); opacity: 0.5; }
-.contra-bar-wrap { flex: 1; height: 36px; background: rgba(255,255,255,0.03); border-radius: var(--radius-sm); overflow: hidden; position: relative; }
-.contra-bar { height: 100%; border-radius: var(--radius-sm); display: flex; align-items: center; padding: 0 var(--space-3); transition: width 0.1s linear; min-width: 60px; }
+.contra-bar-wrap { flex: 1; height: 36px; background: var(--color-surface-2); border-radius: var(--radius-sm); overflow: hidden; position: relative; }
+.contra-bar { height: 100%; border-radius: var(--radius-sm); width: 100%; transform-origin: left; transition: transform var(--duration-slow) var(--ease-standard); }
 .consensus-bar { background: linear-gradient(90deg, rgba(var(--accent-rgb),0.8), rgba(var(--accent-rgb),0.5)); box-shadow: 0 0 12px rgba(var(--accent-rgb),0.2); }
 .voting-bar { background: linear-gradient(90deg, rgba(var(--info-rgb),0.4), rgba(var(--info-rgb),0.2)); }
-.contra-bar-text { font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--text-inverse); white-space: nowrap; }
-.contra-bar-text-zero { font-size: var(--text-xs); color: var(--text-muted); }
 .contra-count { font-size: var(--text-3xl); font-weight: 800; width: 48px; text-align: right; }
 .consensus-count { color: var(--accent-primary); }
 .voting-count { color: var(--text-muted); }
 
 /* ── 共识详情 ── */
 .consensus-detail { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); margin-bottom: var(--space-5); }
-.detail-stat { padding: 0.875rem; background: rgba(255,255,255,0.02); border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.04); }
+.detail-stat { padding: 0.875rem; background: var(--color-surface-2); border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.04); }
 .detail-label { font-size: var(--text-2xs); color: var(--text-muted); margin-bottom: var(--space-1); }
 .detail-val { font-size: var(--text-2xl); font-weight: 800; }
 .low-consistency { color: var(--accent-warm); }
@@ -601,7 +597,7 @@ watch(chartWidth, () => { /* trigger re-render via computed */ })
 .methodology { padding: var(--space-5); }
 .methodology-title { font-size: var(--text-md); font-weight: var(--weight-semibold); color: var(--text-primary); margin-bottom: 0.875rem; display: flex; align-items: center; }
 .methodology-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-4); margin-bottom: 0.875rem; }
-.method-item { padding: var(--space-3); background: rgba(255,255,255,0.02); border-radius: var(--radius-sm); border-left: 3px solid var(--accent-primary); }
+.method-item { padding: var(--space-3); background: var(--color-surface-2); border-radius: var(--radius-sm); border-left: 3px solid var(--accent-primary); }
 .method-label { font-size: var(--text-xs); font-weight: var(--weight-bold); color: var(--accent-primary); margin-bottom: var(--space-1); }
 .method-desc { font-size: var(--text-xs); line-height: 1.5; color: var(--text-secondary); }
 .methodology-footer { font-size: var(--text-2xs); color: var(--text-muted); padding-top: 0.625rem; border-top: 1px solid rgba(255,255,255,0.04); }

@@ -478,7 +478,7 @@ const platformStats = [
   border-radius: var(--radius-full);
   border: none;
   background: var(--gradient-primary);
-  color: #fff;
+  color: var(--color-text-on-accent);
   font-size: var(--text-md);
   font-weight: var(--weight-bold);
   cursor: pointer;
@@ -799,7 +799,7 @@ const platformStats = [
   border-radius: var(--radius-md);
   border: none;
   background: var(--gradient-primary);
-  color: #fff;
+  color: var(--color-text-on-accent);
   font-size: var(--text-sm);
   font-weight: var(--weight-bold);
   cursor: pointer;

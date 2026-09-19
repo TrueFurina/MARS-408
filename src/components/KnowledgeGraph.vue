@@ -44,9 +44,9 @@ const filteredNodes = computed(() => {
 // 掌握度颜色映射
 function masteryColor(mastery?: string): string {
   const map: Record<string, string> = {
-    mastered: '#22c55e', weak: '#f59e0b', unlearned: '#ef4444',
+    mastered: 'var(--mastery-high)', weak: 'var(--mastery-mid)', unlearned: 'var(--mastery-none)',
   }
-  return map[mastery || ''] || '#7c6af2'
+  return map[mastery || ''] || 'var(--color-accent)'
 }
 
 function masteryLabel(mastery?: string): string {
@@ -277,9 +277,9 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
       </div>
       <!-- 掌握度图例 -->
       <div class="kg-mastery-legend">
-        <span class="kg-legend-dot" style="background:#22c55e"></span> 已掌握
-        <span class="kg-legend-dot" style="background:#f59e0b;margin-left:10px;"></span> 薄弱
-        <span class="kg-legend-dot" style="background:#ef4444;margin-left:10px;"></span> 未学
+        <span class="kg-legend-dot" style="background:var(--mastery-high)"></span> 已掌握
+        <span class="kg-legend-dot" style="background:var(--mastery-mid);margin-left:10px;"></span> 薄弱
+        <span class="kg-legend-dot" style="background:var(--mastery-none);margin-left:10px;"></span> 未学
       </div>
       <div class="kg-canvas-container">
         <canvas ref="canvasRef" :width="width || 800" :height="height || 600" class="kg-canvas"
@@ -446,7 +446,7 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
 <style scoped>
 .kg-wrapper { position: relative; width: 100%; }
 .kg-canvas-container { position: relative; width: 100%; }
-.kg-canvas { width: 100%; height: auto; display: block; border-radius: 12px; background: rgba(255,255,255,0.02); border: 1px solid var(--color-border); }
+.kg-canvas { width: 100%; height: auto; display: block; border-radius: 12px; background: var(--color-surface-2); border: 1px solid var(--color-border); }
 
 .kg-search-bar { display: flex; align-items: center; gap: var(--space-2); margin-bottom: 10px; padding: 0 var(--space-1); }
 .kg-search-input { flex: 1; padding: var(--space-2) 14px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface-2); color: var(--color-text); font-size: var(--text-base); }
@@ -454,8 +454,8 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
 .kg-search-clear { background: none; border: none; color: var(--color-text-3); cursor: pointer; font-size: var(--text-lg); padding: var(--space-1); }
 
 .kg-zoom-controls { position: absolute; top: 50px; right: 10px; display: flex; flex-direction: column; gap: var(--space-1); z-index: 10; }
-.kg-zoom-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text-2); font-size: var(--text-lg); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
-.kg-zoom-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+.kg-zoom-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text-2); font-size: var(--text-lg); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); }
+.kg-zoom-btn:hover { background: var(--accent); color: var(--color-text-on-accent); border-color: var(--accent); }
 
 .kg-mastery-legend { position: absolute; top: 50px; left: 10px; display: flex; align-items: center; gap: var(--space-1); padding: 6px var(--space-3); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; font-size: var(--text-2xs); color: var(--color-text-2); z-index: 10; }
 .kg-legend-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
@@ -471,7 +471,7 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
 .kg-detail-close { background: none; border: none; color: var(--color-text-3); font-size: var(--text-xl); cursor: pointer; padding: var(--space-1); }
 .kg-detail-close:hover { color: var(--color-text); }
 .kg-detail-tabs { display: flex; border-bottom: 1px solid var(--color-border); }
-.kg-tab { flex: 1; padding: 10px; border: none; background: transparent; color: var(--color-text-2); font-size: var(--text-sm); font-weight: var(--weight-medium); cursor: pointer; transition: all 0.15s; }
+.kg-tab { flex: 1; padding: 10px; border: none; background: transparent; color: var(--color-text-2); font-size: var(--text-sm); font-weight: var(--weight-medium); cursor: pointer; transition: var(--transition); }
 .kg-tab:hover { color: var(--color-text); background: var(--color-surface-hover); }
 .kg-tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
 .kg-detail-body { flex: 1; overflow-y: auto; padding: 14px 18px; }
@@ -483,7 +483,7 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
 .kg-rel-node { color: var(--accent); font-weight: var(--weight-medium); }
 .kg-rel-arrow { color: var(--color-text-3); font-size: var(--text-xs); }
 .kg-detail-empty { text-align: center; padding: 30px; color: var(--color-text-3); font-size: var(--text-base); }
-.kg-resource-item { padding: 10px 14px; border-radius: 8px; cursor: pointer; font-size: var(--text-base); color: var(--color-text-2); transition: all 0.15s; }
+.kg-resource-item { padding: 10px 14px; border-radius: 8px; cursor: pointer; font-size: var(--text-base); color: var(--color-text-2); transition: var(--transition); }
 .kg-resource-item:hover { background: var(--color-surface-hover); color: var(--accent); }
 .kg-empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-2); pointer-events: none; }
 .empty-icon { font-size: 48px; }
@@ -492,7 +492,7 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
 
 /* 大纲模式 */
 .outline-view { padding: var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; min-height: 400px; }
-.outline-node { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 8px; cursor: pointer; transition: all 0.15s; border-left: 3px solid transparent; margin-bottom: var(--space-1); }
+.outline-node { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 8px; cursor: pointer; transition: var(--transition); border-left: 3px solid transparent; margin-bottom: var(--space-1); }
 .outline-node:hover { background: var(--color-surface-hover); border-left-color: var(--accent); }
 .outline-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .outline-label { flex: 1; font-size: var(--text-base); color: var(--color-text); font-weight: var(--weight-medium); }
@@ -509,7 +509,7 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
 .mindmap-center-dot { width: 12px; height: 12px; border-radius: 50%; }
 .mindmap-center-label { font-size: var(--text-lg); font-weight: var(--weight-bold); color: var(--color-text); }
 .mindmap-ring { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); max-width: 700px; }
-.mindmap-node { display: flex; align-items: center; gap: 6px; padding: 10px var(--space-4); border-radius: 10px; background: var(--color-surface); border: 1px solid var(--color-border); cursor: pointer; transition: all 0.15s; }
+.mindmap-node { display: flex; align-items: center; gap: 6px; padding: 10px var(--space-4); border-radius: 10px; background: var(--color-surface); border: 1px solid var(--color-border); cursor: pointer; transition: var(--transition); }
 .mindmap-node:hover { border-color: var(--accent); transform: translateY(-2px); }
 .mindmap-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .mindmap-label { font-size: var(--text-sm); color: var(--color-text); }
@@ -518,7 +518,7 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
 .map-view { padding: var(--space-5); min-height: 400px; }
 .map-path { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); justify-content: center; }
 .map-node { display: flex; align-items: center; gap: var(--space-2); }
-.map-node-card { padding: var(--space-3) var(--space-4); border-radius: 10px; background: var(--color-surface); border: 2px solid var(--color-border); cursor: pointer; transition: all 0.15s; min-width: 120px; text-align: center; }
+.map-node-card { padding: var(--space-3) var(--space-4); border-radius: 10px; background: var(--color-surface); border: 2px solid var(--color-border); cursor: pointer; transition: var(--transition); min-width: 120px; text-align: center; }
 .map-node-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
 .map-node-step { font-size: var(--text-2xs); font-weight: var(--weight-bold); color: var(--color-text-3); margin-bottom: var(--space-1); }
 .map-node-label { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--color-text); }

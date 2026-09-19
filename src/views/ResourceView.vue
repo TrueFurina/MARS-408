@@ -750,10 +750,10 @@ function parseWeakPoints(wpStr: string): string[] {
         </div>
         <div class="rv-progress-track">
           <div :style="{
-            width: progressPct + '%',
+            width: '100%', transform: 'scaleX(' + (progressPct / 100) + ')', transformOrigin: 'left',
             height: '100%',
             background: 'var(--gradient-primary)',
-            transition: 'width 0.4s ease',
+            transition: 'transform 0.4s ease',
             borderRadius: 'var(--radius-full)',
           }"></div>
         </div>
@@ -768,7 +768,7 @@ function parseWeakPoints(wpStr: string): string[] {
         >
           <div class="agent-node-icon" :style="{
             background: pipelineStage >= step.stage ? 'var(--gradient-primary)' : 'var(--bg-secondary)',
-            color: pipelineStage >= step.stage ? '#fff' : 'var(--text-muted)',
+            color: pipelineStage >= step.stage ? 'var(--color-text-on-accent)' : 'var(--text-muted)',
           }" v-html="step.icon"></div>
           <div class="agent-node-name">{{ step.name }}</div>
           <div class="agent-node-status">
@@ -1191,7 +1191,7 @@ function parseWeakPoints(wpStr: string): string[] {
 .rv-card-header { border-bottom: 1px solid var(--border-light); padding-bottom: var(--space-3); margin-bottom: var(--space-3); }
 .rv-tab-row { display: flex; gap: var(--space-2); flex-wrap: wrap; }
 .rv-tab { padding: 0.375rem 0.875rem; font-size: var(--text-xs); }
-.rv-tab.is-active { background: var(--gradient-primary); color: #fff; border: none; }
+.rv-tab.is-active { background: var(--gradient-primary); color: var(--color-text-on-accent); border: none; }
 .rv-tab:not(.is-active) { background: transparent; color: var(--text-secondary); border: 1px solid var(--border-color); }
 
 .rv-stat-row { margin-top: var(--space-3); display: flex; gap: var(--space-3); flex-wrap: wrap; }
@@ -1222,7 +1222,7 @@ function parseWeakPoints(wpStr: string): string[] {
 .rv-mm-note { margin-left: var(--space-1); font-size: var(--text-sm); color: var(--text-secondary); }
 
 /* 视频生成按钮（绿色语义：配音教学视频） */
-.btn-video { background: var(--accent-success); color: #fff; }
+.btn-video { background: var(--accent-success); color: var(--color-text-on-accent); }
 .btn-video:hover { background: color-mix(in srgb, var(--accent-success) 85%, var(--color-text-invert)); }
 
 /* ── 产物验收闸门 ── */
@@ -1245,7 +1245,7 @@ function parseWeakPoints(wpStr: string): string[] {
   height: 1.5rem;
   border-radius: 50%;
   background: var(--accent-danger);
-  color: #fff;
+  color: var(--color-text-on-accent);
   display: flex;
   align-items: center;
   justify-content: center;

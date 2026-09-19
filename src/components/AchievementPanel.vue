@@ -105,7 +105,7 @@ const sortedAchievements = computed(() => {
           <!-- 进度条 -->
           <div v-if="!ach.unlocked" class="ach-card-progress">
             <div class="ach-progress-bar-bg">
-              <div class="ach-progress-bar-fill" :style="{ width: ach.progress + '%', background: ach.color }"></div>
+              <div class="ach-progress-bar-fill" :style="{ width: '100%', transform: 'scaleX(' + (ach.progress / 100) + ')', transformOrigin: 'left', background: ach.color }"></div>
             </div>
             <span class="ach-progress-label">{{ ach.progressLabel }}</span>
           </div>
@@ -245,7 +245,7 @@ const sortedAchievements = computed(() => {
   background: var(--bg-tertiary);
   border: 1px solid var(--border-color);
   position: relative;
-  transition: all 0.2s;
+  transition: var(--transition)
 }
 
 .ach-card:hover {
@@ -308,7 +308,7 @@ const sortedAchievements = computed(() => {
 .ach-progress-bar-fill {
   height: 100%;
   border-radius: var(--radius-full);
-  transition: width 0.4s ease;
+  width: 100%; transform-origin: left; transition: transform var(--duration-slow) var(--ease-standard);
 }
 
 .ach-progress-label {
@@ -359,7 +359,7 @@ const sortedAchievements = computed(() => {
   color: var(--text-secondary);
   font-size: var(--text-xs);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition)
 }
 .ach-filter-btn:hover {
   border-color: var(--accent-primary);

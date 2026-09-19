@@ -35,9 +35,9 @@ const CENTER_FORCE = 0
 const MIN_VELOCITY = 2
 
 function resolveToken(name: string): string {
-  if (typeof window === 'undefined') return '#7c6af2'
+  if (typeof window === 'undefined') return 'var(--color-accent)'
   const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
-  return v || '#7c6af2'
+  return v || 'var(--color-accent)'
 }
 
 function groupColor(g: number): string {

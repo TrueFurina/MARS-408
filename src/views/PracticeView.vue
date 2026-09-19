@@ -339,9 +339,9 @@ async function refreshQuestions() { await generateQuestions() }
   font-size:var(--text-sm); font-weight: var(--weight-bold); flex-shrink: 0;
   background: var(--bg-tertiary); color: var(--text-secondary);
 }
-.quiz-option.selected .option-letter { background: var(--accent-primary); color: #fff; }
-.quiz-option.correct .option-letter { background: var(--accent-success); color: #fff; }
-.quiz-option.wrong .option-letter { background: var(--accent-danger); color: #fff; }
+.quiz-option.selected .option-letter { background: var(--accent-primary); color: var(--color-text-on-accent); }
+.quiz-option.correct .option-letter { background: var(--accent-success); color: var(--color-text-on-accent); }
+.quiz-option.wrong .option-letter { background: var(--accent-danger); color: var(--color-text-on-accent); }
 .option-text { flex: 1; font-size:var(--text-base); color: var(--text-primary); }
 .option-correct { color: var(--accent-success); font-weight: var(--weight-bold); font-size:var(--text-lg); }
 .option-wrong { color: var(--accent-danger); font-weight: var(--weight-bold); font-size:var(--text-lg); }

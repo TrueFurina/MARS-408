@@ -9,6 +9,8 @@
 
 **MARS-408** is a multi-agent personalized learning system for China's Postgraduate CS Entrance Exam ("408"): an 11-node LangGraph pipeline (triage → coordinator → diagnostician → planner → retriever → generator → assessor → critic → evidence_check → quality_gate → path_planner) delivers a full *diagnose → plan → teach → practice → review* loop, with SSE streaming, three-tier degradation (Redis/PostgreSQL/Milvus), E5 vector retrieval, and MAPPO-trained teaching policy.
 
+> 注：MARS-408 为本系统的技术底座代号（多智能体个性化学习系统）。本项目为真实可运行的代码工程，参加 2026 福建高校「火山杯」Agent 创新大赛。
+
 > **2026 福建高校「火山杯」Agent 创新大赛 · 参赛作品**
 >
 > 覆盖 408 计算机考研四科：数据结构 / 计算机组成原理 / 操作系统 / 计算机网络
@@ -73,7 +75,7 @@
 ### 4. 全链路工程化与容灾
 
 - 前端 Vue 3 + TypeScript，**38 个页面**，多端多角色（学生 / 教师看板）
-- 后端 FastAPI + LangGraph，**196+ API 端点**，**834 项测试通过**（全量回归 0 失败）
+- 后端 FastAPI + LangGraph，**451 个 API 端点**（43 路由模块），**834 项测试通过**（全量回归 0 失败）
 - **双通道大模型自动容灾**：DeepSeek（主）→ 讯飞星火 generalv3.5（兜底）
 - Milvus / PostgreSQL / Redis 缺失时逐级自动降级，单机即可完整运行
 
@@ -82,7 +84,7 @@
 ## 二、系统架构
 
 ```
-┌─ 前端 Vue 3 + TypeScript (38 页面) ──────────────────────────┐
+┌─ 前端 Vue 3 + TypeScript (45 页面 / 45 views) ───────────────┐
 │  Vite :5173 → 代理 → 后端 :8002                               │
 │  学生端：对话 / 学习路径 / 知识图谱 / 练习 / 评估              │
 │  教师端：班级学情看板                                          │
@@ -206,7 +208,7 @@ npm install && npm run dev                   # :5173，代理 /api → 8002
 | 维度 | 指标 |
 |------|------|
 | 前端 | Vue 3 + TypeScript · 45 个 views（82 个 .vue） · Vite 构建 |
-| 后端 | FastAPI + LangGraph · 196+ API 端点 · 10 Agent 节点 |
+| 后端 | FastAPI + LangGraph · 451 个 API 端点 · 11 Agent 节点 |
 | 代码量 | 后端 414 个 Python 文件 / 约 10.2 万行 · 前端 93 文件 / 约 2.8 万行 |
 | 测试 | 834 项测试通过（全量回归 0 失败） |
 | LLM | DeepSeek（主）+ 讯飞星火 generalv3.5（兜底）双通道自动容灾 |

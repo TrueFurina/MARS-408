@@ -482,7 +482,7 @@ watch(chatMessages, () => {
 .chat-msg.assistant { align-items: flex-start; }
 .chat-msg-role { font-size:var(--text-2xs); font-weight: var(--weight-semibold); color: var(--text-muted); }
 .chat-msg-content { padding:0.625rem 0.875rem; border-radius:var(--radius-sm); font-size:var(--text-base); line-height:1.6; max-width:85%; white-space: pre-wrap; }
-.chat-msg.user .chat-msg-content { background: var(--accent-primary); color: #fff; border-bottom-right-radius:0.25rem; }
+.chat-msg.user .chat-msg-content { background: var(--accent-primary); color: var(--color-text-on-accent); border-bottom-right-radius:0.25rem; }
 .chat-msg.assistant .chat-msg-content { background: var(--bg-secondary); color: var(--text-primary); border-bottom-left-radius:0.25rem; border:1px solid var(--glass-border); }
 .chat-dialog-input { display: flex; gap:var(--space-2); padding:var(--space-3) var(--space-4); border-top: 1px solid var(--glass-border); }
 .chat-input-field {

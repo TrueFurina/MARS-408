@@ -55,7 +55,7 @@ function reset() {
 .eb-desc { font-size: var(--text-base); color: var(--text-muted); max-width: 400px; line-height: 1.6; margin-bottom: var(--space-6); }
 .eb-btn {
   padding: 10px var(--space-7); border: none; border-radius: var(--radius-md);
-  background: var(--accent-primary); color: #fff; font-size: var(--text-base); font-weight: var(--weight-semibold);
+  background: var(--accent-primary); color: var(--color-text-on-accent); font-size: var(--text-base); font-weight: var(--weight-semibold);
   cursor: pointer; transition: var(--transition);
 }
 .eb-btn:hover { opacity: 0.9; transform: translateY(-1px); }

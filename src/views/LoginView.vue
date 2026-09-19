@@ -116,37 +116,37 @@ function toggleMode() { mode.value = isRegister.value ? 'login' : 'register'; er
 .brand { text-align: center; margin-bottom: var(--space-6); }
 .brand-badge { display: inline-block; padding: 3px var(--space-3); border-radius: 20px; background: rgba(var(--accent-rgb),0.15); color: var(--color-accent-text); font-size: var(--text-2xs); border: 1px solid rgba(var(--accent-rgb),0.2); margin-bottom: 14px; }
 .brand-logo { margin-bottom: var(--space-2); }
-.logo-m { font-size: var(--text-5xl); font-weight: 800; color: #fff; letter-spacing: -1px; }
+.logo-m { font-size: var(--text-5xl); font-weight: 800; color: var(--color-text); letter-spacing: -1px; }
 .logo-a { font-size: var(--text-5xl); font-weight: 800; background: linear-gradient(135deg,var(--color-accent),var(--color-accent-text)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-.brand-title { font-size: var(--text-xl); font-weight: var(--weight-bold); color: rgba(255,255,255,0.9); margin-bottom: var(--space-1); }
-.brand-desc { font-size: var(--text-sm); color: rgba(255,255,255,0.4); line-height: 1.5; }
+.brand-title { font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--color-text); margin-bottom: var(--space-1); }
+.brand-desc { font-size: var(--text-sm); color: var(--color-text-3); line-height: 1.5; }
 
 /* 模式切换 */
-.mode-row { display: flex; gap: var(--space-1); padding: 3px; background: rgba(255,255,255,0.04); border-radius: 10px; margin-bottom: var(--space-5); }
-.mode-btn { flex: 1; padding: 9px; border: none; border-radius: 8px; background: transparent; color: rgba(255,255,255,0.4); font-size: var(--text-base); cursor: pointer; transition: all 0.2s; }
-.mode-btn:hover { color: rgba(255,255,255,0.7); }
+.mode-row { display: flex; gap: var(--space-1); padding: 3px; background: var(--color-surface-2); border-radius: 10px; margin-bottom: var(--space-5); }
+.mode-btn { flex: 1; padding: 9px; border: none; border-radius: 8px; background: transparent; color: var(--color-text-3); font-size: var(--text-base); cursor: pointer; transition: var(--transition); }
+.mode-btn:hover { color: var(--color-text-2); }
 .mode-btn.on { background: rgba(var(--accent-rgb),0.2); color: var(--color-accent-text); }
 
 /* 表单 */
 .form { display: flex; flex-direction: column; gap: 14px; }
-.fld-lbl { display: block; font-size: var(--text-sm); color: rgba(255,255,255,0.5); margin-bottom: 5px; }
-.fld-wrap { display: flex; align-items: center; gap: 10px; padding: 0 14px; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; background: rgba(255,255,255,0.02); transition: all 0.2s; }
+.fld-lbl { display: block; font-size: var(--text-sm); color: var(--color-text-2); margin-bottom: 5px; }
+.fld-wrap { display: flex; align-items: center; gap: 10px; padding: 0 14px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface-2); transition: var(--transition); }
 .fld-wrap:focus-within { border-color: rgba(var(--accent-rgb),0.4); }
 .fld-ico { font-size: var(--text-md); }
-.fld-inp { flex: 1; padding: var(--space-3) 0; border: none; background: transparent; color: #fff; font-size: var(--text-md); outline: none; }
-.fld-inp::placeholder { color: rgba(255,255,255,0.2); }
-.pw-eye { background: none; border: none; color: rgba(255,255,255,0.3); cursor: pointer; font-size: var(--text-md); padding: var(--space-1); }
+.fld-inp { flex: 1; padding: var(--space-3) 0; border: none; background: transparent; color: var(--color-text); font-size: var(--text-md); outline: none; }
+.fld-inp::placeholder { color: var(--color-text-3); }
+.pw-eye { background: none; border: none; color: var(--color-text-3); cursor: pointer; font-size: var(--text-md); padding: var(--space-1); }
 .err { padding: 10px 14px; background: rgba(var(--danger-rgb),0.1); border: 1px solid rgba(var(--danger-rgb),0.2); border-radius: 10px; color: var(--color-danger); font-size: var(--text-sm); }
-.sbtn { width: 100%; padding: 13px; border: none; border-radius: 10px; background: linear-gradient(135deg,var(--color-accent),var(--color-accent-solid)); color: #fff; font-size: var(--text-lg); font-weight: var(--weight-semibold); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: var(--space-2); }
+.sbtn { width: 100%; padding: 13px; border: none; border-radius: 10px; background: linear-gradient(135deg,var(--color-accent),var(--color-accent-solid)); color: var(--color-text-on-accent); font-size: var(--text-lg); font-weight: var(--weight-semibold); cursor: pointer; transition: var(--transition); display: flex; align-items: center; justify-content: center; gap: var(--space-2); }
 .sbtn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(var(--accent-rgb),0.3); }
 .sbtn:disabled { opacity: 0.5; cursor: not-allowed; }
-.spin { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; animation: spin 0.6s linear infinite; }
+.spin { width: 16px; height: 16px; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--color-text-on-accent) 30%, transparent); border-top-color: var(--color-text-on-accent); animation: spin 0.6s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* 底部 */
-.bot { text-align: center; font-size: var(--text-base); color: rgba(255,255,255,0.35); margin-top: 18px; }
+.bot { text-align: center; font-size: var(--text-base); color: var(--color-text-3); margin-top: 18px; }
 .bot-link { background: none; border: none; color: var(--color-accent-text); font-size: var(--text-base); cursor: pointer; margin-left: var(--space-1); padding: 0; }
 .bot-link:hover { color: var(--color-accent-text); text-decoration: underline; }
-.demo { margin-top: var(--space-3); padding: 10px; background: rgba(255,255,255,0.02); border-radius: 10px; text-align: center; font-size: var(--text-sm); color: rgba(255,255,255,0.35); }
+.demo { margin-top: var(--space-3); padding: 10px; background: var(--color-surface-2); border-radius: 10px; text-align: center; font-size: var(--text-sm); color: var(--color-text-3); }
 .demo code { padding: 1px 6px; background: rgba(var(--accent-rgb),0.1); border-radius: 4px; font-size: var(--text-xs); color: var(--color-accent-text); }
 </style>

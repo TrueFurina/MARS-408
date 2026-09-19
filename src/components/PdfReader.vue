@@ -87,11 +87,11 @@ function selectChapter(i: number) {
 .pdf-sidebar { width: 260px; min-width: 260px; border-right: 1px solid var(--color-border); display: flex; flex-direction: column; background: var(--color-surface); }
 .pdf-sidebar-title { padding: var(--space-4); font-size: var(--text-md); font-weight: var(--weight-bold); color: var(--color-text); border-bottom: 1px solid var(--color-border); }
 .pdf-chapter-list { flex: 1; overflow-y: auto; padding: var(--space-2); }
-.pdf-chapter-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px var(--space-3); border: none; border-radius: 8px; background: transparent; color: var(--color-text-2); cursor: pointer; text-align: left; transition: all 0.15s; font-size: var(--text-sm); }
+.pdf-chapter-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px var(--space-3); border: none; border-radius: 8px; background: transparent; color: var(--color-text-2); cursor: pointer; text-align: left; transition: var(--transition); font-size: var(--text-sm); }
 .pdf-chapter-item:hover { background: var(--color-surface-hover); color: var(--color-text); }
 .pdf-chapter-item.active { background: rgba(var(--accent-rgb),0.1); color: var(--accent); }
 .pdf-chapter-num { width: 22px; height: 22px; border-radius: 50%; background: var(--color-surface-2); display: flex; align-items: center; justify-content: center; font-size: var(--text-2xs); font-weight: var(--weight-semibold); flex-shrink: 0; }
-.pdf-chapter-item.active .pdf-chapter-num { background: var(--accent); color: #fff; }
+.pdf-chapter-item.active .pdf-chapter-num { background: var(--accent); color: var(--color-text-on-accent); }
 .pdf-chapter-title { flex: 1; line-height: 1.4; }
 .pdf-content { flex: 1; overflow-y: auto; padding: var(--space-6) var(--space-8); }
 .pdf-chapter-header { margin-bottom: var(--space-5); }
