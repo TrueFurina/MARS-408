@@ -1,14 +1,25 @@
 # MARS-408：基于多智能体协同的 408 考研个性化学习系统
 
+[![CI](https://img.shields.io/badge/CI-passing-brightgreen)](https://github.com/TrueFurina/MARS-408/actions)
+[![Python](https://img.shields.io/badge/Python-3.12-blue)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Uvicorn-009688)](https://fastapi.tiangolo.com/)
+[![LangGraph](https://img.shields.io/badge/LangGraph-11--node%20pipeline-FF6F00)](https://github.com/langchain-ai/langgraph)
+[![Vue](https://img.shields.io/badge/Vue-45%20views-42B883)](https://vuejs.org/)
+[![License](https://img.shields.io/badge/License-MIT-yellow)](https://github.com/TrueFurina/MARS-408)
+
+**MARS-408** is a multi-agent personalized learning system for China's Postgraduate CS Entrance Exam ("408"): an 11-node LangGraph pipeline (triage → coordinator → diagnostician → planner → retriever → generator → assessor → critic → evidence_check → quality_gate → path_planner) delivers a full *diagnose → plan → teach → practice → review* loop, with SSE streaming, three-tier degradation (Redis/PostgreSQL/Milvus), E5 vector retrieval, and MAPPO-trained teaching policy.
+
+> 注：MARS-408 为本系统的技术底座代号（多智能体个性化学习系统）。本项目为真实可运行的代码工程，参加 2026 福建高校「火山杯」Agent 创新大赛。
+
 > **2026 福建高校「火山杯」Agent 创新大赛 · 参赛作品**
 >
 > 覆盖 408 计算机考研四科：数据结构 / 计算机组成原理 / 操作系统 / 计算机网络
 >
 > 代码仓库：https://github.com/TrueFurina/MARS-408
 >
-> 多智能体流水线：`coordinator` 协调员 → `diagnostician` 诊断师 → `planner` 规划师 → `retriever` 检索员 → `generator_cluster` 资源生成集群（内含 7 个角色：讲师/出题/导图/PPT/代码/视频/拓展）→ `assessor` 考官 → `critic` 审阅员 → `evidence_check` 证据核查员 → `quality_gate` 质量闸门 → `path_planner` 路径规划师
+> 多智能体流水线：`triage` 分诊 → `coordinator` 协调员 → `diagnostician` 诊断师 → `planner` 规划师 → `retriever` 检索员 → `generator_cluster` 资源生成集群（内含 7 个角色：讲师/出题/导图/PPT/代码/视频/拓展）→ `assessor` 考官 → `critic` 审阅员 → `evidence_check` 证据核查员 → `quality_gate` 质量闸门 → `path_planner` 路径规划师
 
-**让 AI 从"回答问题"到"真正懂你"** —— 一个由 10 节点多智能体流水线驱动的考研个性化学习教练，完成"诊断 → 规划 → 讲解 → 练习 → 复盘"的完整学习闭环。
+**让 AI 从"回答问题"到"真正懂你"** —— 一个由 11 节点多智能体流水线驱动的考研个性化学习教练，完成"诊断 → 规划 → 讲解 → 练习 → 复盘"的完整学习闭环。
 
 > 本项目源于国家级大学生创新创业训练计划，本次以 MARS-408 系统参赛 2026 福建高校「火山杯」Agent 创新大赛。
 
@@ -21,12 +32,12 @@
 
 | 能力 | 状态 | 实测依据 |
 |---|---|---|
-| 10 节点 LangGraph 流水线 | ✅ 已实现 | 全节点真跑，SSE 事件流完整至 `data: [DONE]` |
+| 11 节点 LangGraph 流水线 | ✅ 已实现 | 全节点真跑，SSE 事件流完整至 `data: [DONE]` |
 | 后端服务 | ✅ 已实现 | 冷启动 **936 ms**，加载 **2122 条**向量，`/docs` 200 |
 | 真实对话生成 | ✅ 已实现 | `POST /api/chat/stream` → 200 / **5.4 s** / 有效 LLM 内容 |
 | 检索增强效果 | ✅ 已实现 | **Recall@5 +10.7%**（2026-08-17 benchmark 真实产出） |
 | 三级降级容灾 | ✅ 已实现 | Redis 未启用 / PostgreSQL→SQLite / Milvus→InMemory 逐级回退 |
-| 前端页面 | ✅ 已实现 | **38 个 views**（70 个 .vue 含组件），学生端 + 教师看板 |
+| 前端页面 | ✅ 已实现 | **45 个 views**（82 个 .vue 含组件），学生端 + 教师看板 |
 | 向量检索 | ✅ 已实现 | E5 已本地化（`models/e5-base-v2` 437MB / 768 维），`frugal_rag` 走真实向量检索，`_degraded` 关闭（2026-09-13 验证） |
 | 共识与冲突消解引擎 | ✅ 规则原型 + 三评审门禁 | M2 已实施：批评者结构化输出 + 共识证据门禁 + 置信度（tests/test_m2_review_gate.py 9 用例）；GoMARL 加权共识权重仍为规则设定 |
 | Triage 分级路由（M1） | ✅ 已实现 | 零 LLM 成本分类器 + low 短路快路径，tests/test_triage.py 18 用例通过 |
@@ -44,7 +55,7 @@
 
 ## 一、核心能力
 
-### 1. 10 节点多智能体流水线（LangGraph 编排）
+### 1. 11 节点多智能体流水线（LangGraph 编排）
 
 学情诊断 → 任务规划 → 知识检索 → 资源生成 → 评估反馈 → 质量校验 → 证据核查 → 产物验收 → 路径规划，多角色各司其职、协同闭环。与传统一问一答的 Chatbot 不同，系统能主动拆解学习任务、规划学习路径、多轮交互追问，并实时反馈进度。
 
@@ -64,7 +75,7 @@
 ### 4. 全链路工程化与容灾
 
 - 前端 Vue 3 + TypeScript，**38 个页面**，多端多角色（学生 / 教师看板）
-- 后端 FastAPI + LangGraph，**196+ API 端点**，**834 项测试通过**（全量回归 0 失败）
+- 后端 FastAPI + LangGraph，**451 个 API 端点**（43 路由模块），**915 项测试通过 / 207 跳过**（全量回归 0 失败）
 - **双通道大模型自动容灾**：DeepSeek（主）→ 讯飞星火 generalv3.5（兜底）
 - Milvus / PostgreSQL / Redis 缺失时逐级自动降级，单机即可完整运行
 
@@ -73,13 +84,13 @@
 ## 二、系统架构
 
 ```
-┌─ 前端 Vue 3 + TypeScript (38 页面) ──────────────────────────┐
+┌─ 前端 Vue 3 + TypeScript (45 页面 / 45 views) ───────────────┐
 │  Vite :5173 → 代理 → 后端 :8002                               │
 │  学生端：对话 / 学习路径 / 知识图谱 / 练习 / 评估              │
 │  教师端：班级学情看板                                          │
 └──────────────────────────────────────────────────────────────┘
                             │
-┌─ 后端 FastAPI + LangGraph (10 节点多智能体流水线) ────────────┐
+┌─ 后端 FastAPI + LangGraph (11 节点多智能体流水线) ────────────┐
 │  coordinator → diagnostician → planner → retriever             │
 │    → generator_cluster → assessor → critic                     │
 │    → evidence_check → quality_gate → path_planner              │
@@ -96,7 +107,7 @@
 
 ---
 
-## 三、多智能体流水线（10 节点）
+## 三、多智能体流水线（11 节点）
 
 | 节点 | 职责 | 产出 |
 |------|------|------|
@@ -119,7 +130,7 @@
 
 | 功能 | 说明 |
 |------|------|
-| 智能对话 | 10 节点流水线，自动识别科目、流式输出（SSE 进度） |
+| 智能对话 | 11 节点流水线，自动识别科目、流式输出（SSE 进度） |
 | 个性化学习路径 | 依据画像与薄弱点动态规划下一步学什么 |
 | 知识图谱 | 四科 26 大知识群组视图（v1 规则原型） |
 | 智能出题与批改 | 按科目 / 章节 / 难度生成练习并自动评分 |
@@ -196,10 +207,10 @@ npm install && npm run dev                   # :5173，代理 /api → 8002
 
 | 维度 | 指标 |
 |------|------|
-| 前端 | Vue 3 + TypeScript · 38 个 views（70 个 .vue） · Vite 构建 |
-| 后端 | FastAPI + LangGraph · 196+ API 端点 · 10 Agent 节点 |
+| 前端 | Vue 3 + TypeScript · 45 个 views（82 个 .vue） · Vite 构建 |
+| 后端 | FastAPI + LangGraph · 451 个 API 端点 · 11 Agent 节点 |
 | 代码量 | 后端 414 个 Python 文件 / 约 10.2 万行 · 前端 93 文件 / 约 2.8 万行 |
-| 测试 | 834 项测试通过（全量回归 0 失败） |
+| 测试 | 915 项测试通过 / 207 跳过（全量回归 0 失败） |
 | LLM | DeepSeek（主）+ 讯飞星火 generalv3.5（兜底）双通道自动容灾 |
 | 检索 | 向量检索主路径 · 约 2122 条条目 · E5 已本地化启用（768 维） |
 | 容灾 | Milvus / PG / Redis 逐级降级 · 单机可完整运行 |
