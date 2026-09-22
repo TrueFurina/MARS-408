@@ -700,18 +700,94 @@ app.include_router(api_router)
 # ── 健康检查 ──
 @app.get("/api/status")
 async def status():
+    """系统健康探针（D5：停止硬编码 "ok"，显式化静默降级）。
+
+    - status: "ok" 仅当所有「已配置启用」的核心能力实际可用；任一意图启用却回落/失败 → "degraded"
+    - health: 各组件真实状态（vector_db / postgresql / redis / embedding / llm）
+    - degraded_reasons: 人类可读的降级原因列表（空列表表示全绿）
+    约定：未配置的组件（如开发环境未启用 Milvus）视为「不要求」，不计入降级。
+    """
     from config import load_config
+    from db import embedder
     cfg = load_config()
+
+    # ── 向量库 ──
+    milvus_cfg_enabled = bool(cfg.get("milvus", {}).get("enabled", False))
+    milvus_connected = bool(getattr(vector_db, "_milvus_connected", False))
+    vector_db_mode = "milvus" if milvus_connected else "inmemory"
     count = vector_db.count("netlearn_kb")
-    db_status = "milvus" if vector_db._milvus_connected else "inmemory"
+
+    # ── PostgreSQL（意图启用却未连上 / 回落 SQLite 兜底 → 降级）──
+    pg_cfg_enabled = bool(cfg.get("postgresql", {}).get("enabled", False))
+    pg_enabled = bool(getattr(pg_client, "is_enabled", False))
+    pg_fallback = bool(getattr(pg_client, "is_fallback", False))
+
+    # ── Redis（意图启用却未连上 → 降级）──
+    redis_cfg_enabled = bool(cfg.get("redis", {}).get("enabled", False))
+    redis_enabled = bool(getattr(redis_client, "is_enabled", False))
+
+    # ── 嵌入（E5 静默回落零向量占位计数 + 模型是否已加载）──
+    embedding_model = embedder.EMBED_MODEL_NAME
+    embedding_loaded = embedder._e5_model is not None
+    embedding_fallback = int(getattr(vector_db, "embedding_fallback_count", 0))
+
+    # ── LLM（核心能力，无可用凭证 → 资源生成不可用）──
+    llm_provider_name = cfg.get("llm_provider", "auto")
+    llm_available = bool(
+        cfg.get("deepseek", {}).get("api_key")
+        or cfg.get("xfyun", {}).get("app_id")
+    )
+
+    # ── 计算总体状态（仅「意图启用却未达成」才计为降级）──
+    degraded_reasons: list[str] = []
+    if milvus_cfg_enabled and not milvus_connected:
+        degraded_reasons.append(
+            "vector_db: 已配置 Milvus 但未连接，回落内存存储（重启即丢失）"
+        )
+    if pg_cfg_enabled and not pg_enabled:
+        degraded_reasons.append("postgresql: 已配置但未连接（数据层降级）")
+    elif pg_cfg_enabled and pg_fallback:
+        degraded_reasons.append("postgresql: 已配置但回落本地 SQLite 兜底（非主库）")
+    if redis_cfg_enabled and not redis_enabled:
+        degraded_reasons.append("redis: 已配置但未连接（缓存/部分限流降级）")
+    if embedding_fallback > 0:
+        degraded_reasons.append(
+            f"embedding: {embedding_fallback} 个文档因 E5 失败使用零向量占位，检索质量下降"
+        )
+    if not llm_available:
+        degraded_reasons.append("llm: 未配置任何可用供应商凭证（资源生成不可用）")
+
+    overall = "degraded" if degraded_reasons else "ok"
+
     return {
-        "status": "ok",
-        "vector_db": db_status,
-        "collection_size": count,
-        "pg_enabled": cfg.get("postgresql", {}).get("enabled", False),
-        "redis_enabled": cfg.get("redis", {}).get("enabled", False),
-        "llm_provider": cfg.get("llm_provider", "auto"),
-        "llm_available": bool(cfg.get("deepseek", {}).get("api_key") or cfg.get("xfyun", {}).get("app_id")),
+        "status": overall,
+        "degraded_reasons": degraded_reasons,
+        "health": {
+            "vector_db": {
+                "mode": vector_db_mode,
+                "milvus_configured": milvus_cfg_enabled,
+                "milvus_connected": milvus_connected,
+                "collection_size": count,
+            },
+            "postgresql": {
+                "configured": pg_cfg_enabled,
+                "enabled": pg_enabled,
+                "fallback_sqlite": pg_fallback,
+            },
+            "redis": {
+                "configured": redis_cfg_enabled,
+                "enabled": redis_enabled,
+            },
+            "embedding": {
+                "model": embedding_model,
+                "loaded": embedding_loaded,
+                "fallback_zero_docs": embedding_fallback,
+            },
+            "llm": {
+                "provider": llm_provider_name,
+                "available": llm_available,
+            },
+        },
     }
 
 

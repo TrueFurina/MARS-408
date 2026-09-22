@@ -854,6 +854,7 @@ class VectorDB:
                 # P1-2: 零向量占位而非随机向量
                 emb = [0.0] * dim
                 meta["embedding_status"] = "fallback_zero"
+                self._embedding_fallback_count += 1
             metas.append(meta)
             embeddings_list.append(emb)
 

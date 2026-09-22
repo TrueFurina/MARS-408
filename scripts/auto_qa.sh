@@ -38,12 +38,17 @@ FE_CODE=$(curl -s -m 5 -o /dev/null -w "%{http_code}" "http://127.0.0.1:$FE_PORT
 if [ "$FE_CODE" = "200" ]; then line "- ✅ 前端 5173 HTTP 200（页面服务正常）"; ok=$((ok+1))
 else line "- ❌ 前端 5173 HTTP $FE_CODE（页面空白根因！应开 5173 非 8002/5181）"; fail=$((fail+1)); fi
 
-# 3. 后端 /api/status
+# 3. 后端 /api/status（D5：status 可能为 ok / degraded，HTTP 200 即存活）
 ST=$(curl -s -m 5 "http://127.0.0.1:$BE_PORT/api/status" 2>/dev/null)
-ST_OK=$(echo "$ST" | sed -n 's/.*"status":"\([^"]*\)".*/\1/p')
-LLM_OK=$(echo "$ST" | sed -n 's/.*"llm_available":\([^,}]*\).*/\1/p')
-if [ "$ST_OK" = "ok" ]; then line "- ✅ 后端 /api/status ok（llm_available=$LLM_OK）"; ok=$((ok+1))
-else line "- ❌ 后端 /api/status 异常：$ST"; fail=$((fail+1)); fi
+ST_OK=$(echo "$ST" | sed -n 's/.*"status"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
+LLM_OK=$(echo "$ST" | sed -n 's/.*"available"[[:space:]]*:[[:space:]]*\(true\|false\).*/\1/p')
+if [ "$ST_OK" = "ok" ]; then
+    line "- ✅ 后端 /api/status ok（llm_available=$LLM_OK）"; ok=$((ok+1))
+elif [ "$ST_OK" = "degraded" ]; then
+    line "- ⚠️ 后端 /api/status degraded（存活但存在降级，见 degraded_reasons；llm_available=$LLM_OK）"; ok=$((ok+1))
+else
+    line "- ❌ 后端 /api/status 异常：$ST"; fail=$((fail+1))
+fi
 
 # 4. 主聊天 /chat/stream（流式，15s）
 if [ -n "$TOKEN" ]; then
