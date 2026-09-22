@@ -67,3 +67,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 include = ["agents*", "api*", "config*", "data*", "db*", "engines*", "experiments*", "schemas*", "services*", "sessions*", "shared*", "tools*", "utils*"]
+# D1（技术债 P0）：排除 vendored 的 408 整份嵌套副本 crypto_platform（188 文件），
+# 否则 packages.find 的 "agents*" 等通配会把 agents/crypto_platform 等打进 wheel。
+# 该副本已由 .gitignore 的 crypto_platform/ 排除入库，此处补齐打包侧隔离（仅隔离，不删除）。
+exclude = ["*crypto_platform*"]
