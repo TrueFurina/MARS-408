@@ -238,3 +238,6 @@ py-server/experiments/results/review_mappo_real_eval_20260914_214450.json
 
 # ── 2026-09-15 设计系统卫生：陈旧 CSS 备份（保留磁盘，不入库）──
 *.css.bak
+
+# ── 2026-09-23 五源融合·本地救援库（抢救自 C:\netlearn_clean / BACKUP-20260912 / mars-main-submit / _archive_20260920 / E:\Code\MARS-408；含 e5 模型/独有交付物/独有 git 提交副本，保留磁盘不入库）──
+_salvaged/
