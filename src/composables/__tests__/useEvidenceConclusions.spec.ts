@@ -76,7 +76,7 @@ describe('useEvidenceConclusions 结论看板', () => {
     const marl = loadReal('marl_algorithms_eval_20260912')
     const budget = loadReal('tune_shadow_budget')
     const calib = loadReal('diag_calib_alignment')
-    const bench = loadReal('benchmark_2026-08-17')
+    const bench = loadReal('benchmark_2026-09-18')
     const career = loadReal('career_mappo_train_20260914')
 
     const c = useEvidenceConclusions()
@@ -123,7 +123,7 @@ describe('useEvidenceConclusions 结论看板', () => {
     expect(recall.value).toBe(`${(fr['mean_recall@5'] * 100).toFixed(1)}%`)
     const mult = rb.metrics.find((m) => m.label === '延迟倍数')!
     expect(mult.value).toBe(`≈${(fr.mean_latency_ms / fu.mean_latency_ms).toFixed(0)}×`)
-    // 召回提升是"比例差 × 100"的百分点（0.1071 → "+10.7pp"），防止再犯 ×100 遗漏
+    // 召回提升是"比例差 × 100"的百分点（0.0714 → "+7.14pp"），防止再犯 ×100 遗漏
     const pp = rb.metrics.find((m) => m.label === '召回提升')!
     expect(pp.value).toBe(`+${(bench.experiment1.summary.deltas.recall_delta * 100).toFixed(1)}pp`)
 

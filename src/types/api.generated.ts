@@ -110,6 +110,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/profile/ability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Ability Profile
+         * @description 统一能力画像（双场景集成 · F4 + M1）—— 一个账号、一份画像。
+         *
+         *     读路径（M1 聚合表优先，未命中实时聚合后回写）：
+         *       1. db.ability_store.get_profile —— ability_profiles 聚合表命中即返回
+         *       2. 未命中 → 实时聚合两源（下述）并回写聚合表，供下次命中
+         *     两源：professional-场景A 考研408（db.memory_store）/ soft_skills-场景B 职业素养（db.career_store）。
+         *     任一源失败一律 **fail-open**，绝不 500；前端 useAbilityProfile 另有本地缓存回退。
+         */
+        get: operations["get_ability_profile_api_profile_ability_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/quiz/submit": {
         parameters: {
             query?: never;
@@ -4449,6 +4475,89 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/literacy/questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Questions
+         * @description 获取素养测评题库（学生端答题页）。
+         */
+        get: operations["get_questions_api_literacy_questions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/literacy/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit Literacy
+         * @description 提交素养测评：分档计分 → 六维得分 → 落库（pre/post 各一次）。
+         *
+         *     user_id 解析顺序：Bearer token（登录态）→ 请求体 user_id（课堂场景）→ demo 兜底。
+         *     此前硬编码 demo 导致同班学生互相覆盖（并发试测实锤，46 人课堂不可用）。
+         */
+        post: operations["submit_literacy_api_literacy_submit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/literacy/report/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Report
+         * @description 个人素养报告：pre/post 六维对比（前后测差值）。
+         */
+        get: operations["get_report_api_literacy_report__user_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/literacy/class-report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get Class Report
+         * @description 教师端班级六维聚合：全班 pre/post 均值 + 逐人明细。
+         */
+        post: operations["get_class_report_api_literacy_class_report_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/status": {
         parameters: {
             query?: never;
@@ -4790,6 +4899,33 @@ export interface components {
              * @default false
              */
             updated: boolean;
+        };
+        /** BenchmarkResultsResponse */
+        BenchmarkResultsResponse: {
+            /** Provenance */
+            provenance: {
+                [key: string]: unknown;
+            };
+            /** Meta */
+            meta: {
+                [key: string]: unknown;
+            };
+            /** Experiment1 */
+            experiment1: {
+                [key: string]: unknown;
+            };
+            /** Experiment2 */
+            experiment2: {
+                [key: string]: unknown;
+            };
+            /** Per Query */
+            per_query: {
+                [key: string]: unknown;
+            }[];
+            /** Per Question */
+            per_question: {
+                [key: string]: unknown;
+            }[];
         };
         /** Body_api_import_pdf_api_knowledge_base_import_pdf_post */
         Body_api_import_pdf_api_knowledge_base_import_pdf_post: {
@@ -5536,6 +5672,36 @@ export interface components {
              */
             llm_adjusted: boolean;
         };
+        /** LiteracyClassReportRequest */
+        LiteracyClassReportRequest: {
+            /** Class Name */
+            class_name: string;
+        };
+        /** LiteracySubmitRequest */
+        LiteracySubmitRequest: {
+            /**
+             * Phase
+             * @default pre
+             */
+            phase: string;
+            /**
+             * Class Name
+             * @default
+             */
+            class_name: string;
+            /**
+             * User Name
+             * @default
+             */
+            user_name: string;
+            /**
+             * User Id
+             * @default
+             */
+            user_id: string;
+            /** Answers */
+            answers: unknown[];
+        };
         /** LogUsageRequest */
         LogUsageRequest: {
             /** Skill Id */
@@ -5645,6 +5811,17 @@ export interface components {
              * @default true
              */
             search: boolean;
+        };
+        /** PerQuestionResponse */
+        PerQuestionResponse: {
+            /** Provenance */
+            provenance: {
+                [key: string]: unknown;
+            };
+            /** Per Question */
+            per_question: {
+                [key: string]: unknown;
+            }[];
         };
         /** PlanTaskUpdateRequest */
         PlanTaskUpdateRequest: {
@@ -6676,6 +6853,37 @@ export interface operations {
                 "application/json": components["schemas"]["ProfileUpdateRequest"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_ability_profile_api_profile_ability_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -14251,9 +14459,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["BenchmarkResultsResponse"];
                 };
             };
         };
@@ -14273,9 +14479,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["PerQuestionResponse"];
                 };
             };
         };
@@ -14336,6 +14540,125 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_questions_api_literacy_questions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    submit_literacy_api_literacy_submit_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LiteracySubmitRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_report_api_literacy_report__user_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_class_report_api_literacy_class_report_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LiteracyClassReportRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

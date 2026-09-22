@@ -63,12 +63,12 @@ function fmt(v: number | null, digits = 2, suffix = ''): string {
   return v === null ? '—' : `${v.toFixed(digits)}${suffix}`
 }
 
-/** 把 0~1 的比例值转成百分数文本（如 0.7857 → "78.6%"） */
+/** 把 0~1 的比例值转成百分数文本（如 0.8214 → "82.14%"） */
 function pctFromFrac(v: number | null, digits = 1): string {
   return v === null ? '—' : `${(v * 100).toFixed(digits)}%`
 }
 
-/** 把 0~1 的比例差值转成百分点文本（如 0.1071 → "+10.7pp"） */
+/** 把 0~1 的比例差值转成百分点文本（如 0.0714 → "+7.14pp"） */
 function ppFromFrac(v: number | null, digits = 1): string {
   if (v === null) return '—'
   return `${v >= 0 ? '+' : ''}${(v * 100).toFixed(digits)}pp`
@@ -183,8 +183,8 @@ export const CONCLUSION_SPECS: ConclusionSpec[] = [
   {
     id: 'retrieval-benchmark',
     theme: '检索基准',
-    title: 'FrugalRAG 召回 +10.7pp，但延迟约 20×、token 未降（如实呈现）',
-    artifacts: ['benchmark_2026-08-17'],
+    title: 'FrugalRAG 检索质量更优，但延迟与 token 代价显著（如实呈现）',
+    artifacts: ['benchmark_2026-09-18'],
     claim: (d) => {
       const f = d?.experiment1?.summary?.frugalrag ?? {}
       const full = d?.experiment1?.summary?.full_retrieval ?? {}
