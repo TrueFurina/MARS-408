@@ -109,24 +109,25 @@ footer{margin-top:32px;color:var(--text-3);font-size:12px;border-top:1px solid v
 </div></article>
 <article class="card">
 <span class="badge">检索基准</span>
-<h3>FrugalRAG 召回 +10.7pp，但延迟约 20×、token 未降（如实呈现）</h3>
-<p class="claim">28 条真实查询：FrugalRAG 召回@5 78.6%（全量 67.9%，+10.7pp），精度 66.4%（全量 50.0%）；代价是延迟 108.2ms vs 5.4ms（≈20×）、token -0.14%（未降）。另一组 30 题×3：NeuralMixer 准确率 83.3% vs 加权投票 76.7%。</p>
+<h3>FrugalRAG 召回 +7.14pp，但延迟约 213×、token 未降反增（如实呈现）</h3>
+<p class="claim">28 条真实查询：FrugalRAG 召回@5 82.14%（全量 75.00%，+7.14pp），精度 68.57%（全量 52.86%）；代价是延迟 574.36ms vs 2.70ms（≈213×）、token -11.99%（未降反增）。另一组 30 题×3：NeuralMixer 准确率 88.89% vs 加权投票 76.67%。</p>
+<p class="claim" style="opacity:.72;font-size:.85em">⚠️ 口径于 2026-09-22 同步至 <code>benchmark_2026-09-18.json</code>：实验2 与 9/17 复现逐位一致；实验1 因 FrugalRAG 代码与 torch/numpy 版本演化而漂移（诚实实测，非口径硬凑）。</p>
 <div class="metrics">
-<div class="metric"><div class="k">FrugalRAG 召回@5</div><div class="v">78.6%</div></div>
-<div class="metric"><div class="k">全量检索召回@5</div><div class="v">67.9%</div></div>
-<div class="metric"><div class="k">召回提升</div><div class="v">+10.7pp</div></div>
-<div class="metric"><div class="k">FrugalRAG 精度@5</div><div class="v">66.4%</div></div>
-<div class="metric"><div class="k">全量精度@5</div><div class="v">50.0%</div></div>
-<div class="metric"><div class="k">FrugalRAG 延迟</div><div class="v">108.2ms</div></div>
-<div class="metric"><div class="k">全量延迟</div><div class="v">5.4ms</div></div>
-<div class="metric"><div class="k">延迟倍数</div><div class="v">≈20×</div></div>
-<div class="metric"><div class="k">token 变化</div><div class="v">-0.14%</div></div>
-<div class="metric"><div class="k">NeuralMixer 准确率</div><div class="v">83.3%</div></div>
-<div class="metric"><div class="k">加权投票准确率</div><div class="v">76.7%</div></div>
-<div class="metric"><div class="k">NeuralMixer κ(对真值)</div><div class="v">0.776</div></div>
+<div class="metric"><div class="k">FrugalRAG 召回@5</div><div class="v">82.14%</div></div>
+<div class="metric"><div class="k">全量检索召回@5</div><div class="v">75.00%</div></div>
+<div class="metric"><div class="k">召回提升</div><div class="v">+7.14pp</div></div>
+<div class="metric"><div class="k">FrugalRAG 精度@5</div><div class="v">68.57%</div></div>
+<div class="metric"><div class="k">全量精度@5</div><div class="v">52.86%</div></div>
+<div class="metric"><div class="k">FrugalRAG 延迟</div><div class="v">574.36ms</div></div>
+<div class="metric"><div class="k">全量延迟</div><div class="v">2.70ms</div></div>
+<div class="metric"><div class="k">延迟倍数</div><div class="v">≈213×</div></div>
+<div class="metric"><div class="k">token 变化</div><div class="v">-11.99%</div></div>
+<div class="metric"><div class="k">NeuralMixer 准确率</div><div class="v">88.89%</div></div>
+<div class="metric"><div class="k">加权投票准确率</div><div class="v">76.67%</div></div>
+<div class="metric"><div class="k">NeuralMixer κ(对真值)</div><div class="v">0.8512</div></div>
 </div>
 <div class="prov">依据产物：
-<code>benchmark_2026-08-17.json</code> sha256 88983a78476ec6e1… 
+<code>benchmark_2026-09-18.json</code> sha256 0c17657a4d85e50f… 
 </div></article>
 <article class="card">
 <span class="badge">职业素养 MAPPO</span>
