@@ -260,8 +260,8 @@ async def lifespan(app: FastAPI):
                 "画像/资源生成/学习路径等核心链路使用内置样例运行。"
                 "配置 LLM 凭证后重启即可恢复完整 AI 能力。"
             )
-    except Exception:
-        pass  # 检测失败不影响启动
+    except Exception as _e:
+        logger.debug("LLM 凭证检测失败（不影响启动）: %s", _e)  # 检测失败不影响启动
 
     # ── 导入队列 Worker（ADR-007）── 在 yield 前拉起
     # 硬约束：uvicorn 必须 --workers 1，多进程会重新引入多写者(last-writer-wins)
@@ -272,8 +272,8 @@ async def lifespan(app: FastAPI):
         if arg == "--workers" and i + 1 < len(sys.argv):
             try:
                 _workers = int(sys.argv[i+1])
-            except ValueError:
-                pass
+            except ValueError as _e:
+                logger.debug("--workers 参数非整数，使用默认 workers=1: %s", _e)
             break
     if _workers > 1:
         raise RuntimeError(
@@ -303,13 +303,13 @@ async def lifespan(app: FastAPI):
                                 if os.path.isfile(fpath) and (now - os.path.getmtime(fpath)) > _SESSION_MAX_AGE:
                                     os.remove(fpath)
                                     removed += 1
-                            except OSError:
-                                pass
+                            except OSError as _e:
+                                logger.debug("清理旧会话文件失败，跳过: %s", _e)
                         try:
                             if not os.listdir(user_path):
                                 os.rmdir(user_path)
-                        except OSError:
-                            pass
+                        except OSError as _e:
+                            logger.debug("清理空用户目录失败，跳过: %s", _e)
                     if removed:
                         logger.info("artifact lifecycle: removed %d old session files (>7d)", removed)
 
@@ -343,25 +343,25 @@ async def lifespan(app: FastAPI):
     # Cancel artifact cleanup task
     try:
         _cleanup_task.cancel()
-    except Exception:
-        pass
+    except Exception as _e:
+        logger.debug("取消 artifact 清理任务失败（忽略）: %s", _e)
     # 关闭连接
     await import_worker.stop()
     # P1：释放 httpx 连接池（避免未关闭客户端警告）
     try:
         from db.llm_provider import _close_http_clients
         await _close_http_clients()
-    except Exception:
-        pass
+    except Exception as _e:
+        logger.debug("释放 httpx 连接池失败（忽略）: %s", _e)
     vector_db.disconnect()
     try:
         pg_client.disconnect()
-    except Exception:
-        pass
+    except Exception as _e:
+        logger.debug("关闭 PG 连接失败（忽略）: %s", _e)
     try:
         redis_client.disconnect()
-    except Exception:
-        pass
+    except Exception as _e:
+        logger.debug("关闭 Redis 连接失败（忽略）: %s", _e)
 
 
 # ── FastAPI App ──
@@ -524,7 +524,8 @@ async def request_size_limit_middleware(request: Request, call_next) -> Response
     if content_length is not None:
         try:
             body_len = int(content_length)
-        except ValueError:
+        except ValueError as _e:
+            logger.debug("Content-Length 非整数，按 0 处理: %s", _e)
             body_len = 0
         if body_len > _MAX_REQUEST_BYTES:
             logger.warning(

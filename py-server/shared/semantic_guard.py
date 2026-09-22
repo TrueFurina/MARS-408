@@ -82,7 +82,8 @@ def _load_config() -> dict:
     try:
         from config import load_config
         return load_config().get("semantic_check", {})
-    except Exception:
+    except Exception as _e:
+        logger.debug("semantic_check 配置读取失败，使用默认值: %s", _e)
         return {}
 
 
@@ -160,8 +161,8 @@ def _parse_verdict(raw_text: str) -> IntentVerdict:
                 reason=reason,
                 raw=raw_text,
             )
-    except (json.JSONDecodeError, ValueError, TypeError):
-        pass
+    except (json.JSONDecodeError, ValueError, TypeError) as _e:
+        logger.debug("语义分类结果 JSON 解析失败，降级关键词匹配: %s", _e)
 
     # 降级：关键词匹配
     lower = raw_text.lower()

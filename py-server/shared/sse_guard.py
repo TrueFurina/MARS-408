@@ -37,7 +37,7 @@ async def sse_disconnect_guard(
                 if await request.is_disconnected():
                     logger.info("SSE 客户端已断开，提前终止生成（节省 LLM 算力）")
                     return
-            except Exception:
+            except Exception as _e:
                 # 检测异常不应中断正常事件流
-                pass
+                logger.debug("SSE 断连检测异常（已忽略，不影响事件流）: %s", _e)
         yield chunk

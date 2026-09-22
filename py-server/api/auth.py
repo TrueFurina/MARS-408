@@ -76,7 +76,8 @@ async def login(req: LoginRequest, request: Request):
         profile = get_profile(user["id"])
         if not profile or not profile.get("diagnostic_completed"):
             diagnostic_required = True
-    except Exception:
+    except Exception as _e:
+        logger.warning("获取入学测评状态失败，保守要求测评: %s", _e)
         diagnostic_required = True
     return TokenResponse(token=token, user=user, diagnostic_required=diagnostic_required)
 
