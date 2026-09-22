@@ -20,7 +20,11 @@ node_modules
 dist
 dist-ssr
 coverage
-*.local
+# 覆盖率门禁(D3)产物：本地产出，禁止入库
+.coverage
+.coverage.*
+htmlcov/
+*.coverage
 
 # Environment variables (secrets)
 .env

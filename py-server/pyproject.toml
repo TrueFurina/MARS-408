@@ -42,7 +42,13 @@ testpaths = ["tests"]
 # INC-pytest: tests/crypto_platform 是 vendored 的第三方项目副本，其内嵌套
 # py-server/tests/conftest.py 与根 tests/conftest.py 撞名（tests.conftest），
 # 导致收集阶段 ImportPathMismatchError 全盘中止。显式忽略该副本。
-addopts = ["-m", "not system and not requires_milvus and not slow", "--ignore=tests/crypto_platform"]
+# D3（技术债 P0）：覆盖率门禁强制生效——每次 pytest 都收集覆盖率并按 [tool.coverage.report].fail_under 阻断退化。
+# 必须用单个 `--cov=.`（而非裸 `--cov` 或多 `--cov=<pkg>` 列表）：
+#   - 裸 `--cov`(无值) 会把紧跟的 `--cov-report=...` 误吞作 cov 目标值，触发 Windows
+#     numpy/torch "cannot load module more than once per process" 导入竞态（全量多文件收集必现）；
+#   - 多个 `--cov=<pkg>` 同样会在多文件收集时触发该竞态；
+#   - 单个 `--cov=.` 经实测全量 915 用例稳定运行，不触发竞态。故采用之。
+addopts = ["-m", "not system and not requires_milvus and not slow", "--ignore=tests/crypto_platform", "--cov=.", "--cov-report=term-missing"]
 markers = [
     "import_queue: 导入队列单写者保证与任务生命周期测试 (ADR-007)",
     "unit: 单元测试（最快，纯逻辑，无进程/无网络）",
@@ -57,9 +63,19 @@ markers = [
 ]
 
 [tool.coverage.run]
-# 仅统计应用代码，排除测试与迁移，使 cov-fail-under=80 反映业务覆盖率
+# D3（技术债 P0）：覆盖率门禁。source 保持 ["."]（与命令行 `--cov=.` 一致，避免覆盖冲突）。
+# 注：原注释称 cov-fail-under=80 系误导——此前从未配置真正门槛，本次补齐。
+# 实测全量覆盖率 55.68%（wave-1 默认集 915 passed / 207 skipped，2026-09-23），
+# 含 root CLI 脚本（train_*/import_*/seed_*/start_*/export_onnx 等不可单测入口）拉低分母。
 source = ["."]
 omit = ["tests/*", "*/__pycache__/*", "*/migrations/*"]
+
+[tool.coverage.report]
+# 门槛 = 实测全量覆盖(55.68%) 下浮 ~2pp，锁定当前覆盖、阻断显著退化。
+# 80 为愿景目标，待 D8（补 Top5 模块单测）按 ratchet 逐步抬升；每次抬升须以新增测试支撑、不得凭空上调。
+fail_under = 54
+show_missing = true
+skip_covered = false
 
 [build-system]
 requires = ["setuptools>=68.0", "wheel"]
