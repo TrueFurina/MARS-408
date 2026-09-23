@@ -53,6 +53,14 @@ npm install
 npm run dev
 ```
 
+> 💡 **依赖锁定（推荐用 uv）**：`pyproject.toml` 以 `>=` 声明依赖（允许浮动）。为避免 `>=` 漂移导致 CI / 部署构建不一致，仓库已提交 `py-server/uv.lock`（冻结 137 个包的精确版本，含 `pymilvus` 正确收敛到 `<3` 的最新 2.6.x）。推荐：
+> ```bash
+> cd py-server
+> uv sync --frozen          # 按 uv.lock 精确还原依赖，不浮动
+> uv run python main.py     # 在 uv 管理的环境中启动
+> ```
+> 无 uv 时退回 `pip install -e .`，此时依赖按 `>=` 浮动解析、不做版本锁定。
+
 ---
 
 ## 三、访问方式

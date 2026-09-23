@@ -21,6 +21,9 @@ python -m venv .venv
 
 # 安装依赖
 pip install -e .
+# 推荐：用 uv 按 uv.lock 精确锁定（避免 >= 浮动漂移）
+#   uv sync --frozen
+#   uv run python main.py
 ```
 
 ## 配置
