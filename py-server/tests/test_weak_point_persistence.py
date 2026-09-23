@@ -8,7 +8,6 @@
 import copy
 import threading
 
-import pytest
 
 from engines.quiz_engine import (
     WeakPointTracker,

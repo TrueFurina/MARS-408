@@ -12,7 +12,7 @@ from agents.career_nodes import (
     _normalize_assessment, _rule_based_assessment, build_improvement_plan,
     norm_dimension,
 )
-from agents.career_state import DIMENSIONS, DIMENSION_LABELS
+from agents.career_state import DIMENSIONS
 
 
 SCRIPT = {

@@ -13,11 +13,10 @@
 
 import logging
 import random
-import re
 from dataclasses import dataclass
 from typing import Optional
 
-from shared.prompt_guard import sanitize_user_input, _INJECTION_PATTERNS
+from shared.prompt_guard import sanitize_user_input
 
 logger = logging.getLogger("netlearn.semantic_guard")
 

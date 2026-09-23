@@ -10,7 +10,6 @@
 
 import logging
 import os
-from typing import Optional, list as ListType
 
 logger = logging.getLogger("netlearn.graph_db")
 
@@ -117,7 +116,6 @@ class MemoryGraphDB(GraphDB):
         return dependents
 
     def get_learning_path(self, subject: str, weak_topics: list[str]) -> list[dict]:
-        from agents.kg_dag import chapter_to_group
         path = []
         seen = set()
 
@@ -280,7 +278,7 @@ class Neo4jGraphDB(GraphDB):
 
     def import_from_kg_dag(self):
         """从 kg_dag.py 导入知识点依赖关系到 Neo4j"""
-        from agents.kg_dag import SUBJECT_GROUP_MAP, GROUP_PREREQS
+        from agents.kg_dag import GROUP_PREREQS
 
         subject_names = {
             "computer_network": "计算机网络", "data_structures": "数据结构",

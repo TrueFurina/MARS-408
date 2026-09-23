@@ -19,12 +19,11 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from engines.mappo_policy import _ensure_torch as _torch_mappo
 from engines.mappo_policy import TeachingEnv as _TeachingEnv
-from engines.mappo_policy import MappoPolicy, _COST_FACTOR, encode_state
+from engines.mappo_policy import MappoPolicy, _COST_FACTOR
 from engines.marl_dqn import (
     _ensure_torch, MultiAgentTeachingEnv, IQLearner, VDNLearner, QMIXLearner,
-    train_value_learner, DIFFICULTIES, TEACHING_MODES, REVIEW_INTENSITIES,
+    train_value_learner, REVIEW_INTENSITIES,
 )
 from engines.teaching_rules import teaching_rules
 

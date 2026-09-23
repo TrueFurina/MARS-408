@@ -8,7 +8,6 @@
 """
 import asyncio
 
-import pytest
 
 from agents.critic import _parse_critic_report
 from engines.gomarl import GOMARLConsensus, AgentResult, QualityScore

@@ -24,8 +24,6 @@ from engines.algorithm_factory import (
 )
 from engines.evidence.schema import (
     ArgumentChain,
-    ChainEdge,
-    ChainNode,
     Evidence,
     EvidenceCard,
     EvidenceChain,

@@ -17,7 +17,6 @@ import types
 import json
 import logging
 import importlib.util
-import pytest
 
 _PY_SERVER = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _PY_SERVER not in sys.path:

@@ -7,8 +7,6 @@ import json
 import logging
 import asyncio
 import time
-import os
-import traceback
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
@@ -38,7 +36,6 @@ async def langgraph_stream(req: LangGraphStreamRequest, request: Request, user: 
     async def event_stream():
         try:
             from agents.graph import agent_graph
-            from agents.state import AgentState
 
             # ── Triage 分级路由（三评审集成·增量一）──
             # 低风险请求（寒暄/简短答疑）短路到快路径 quick_answer，零评审、低时延；

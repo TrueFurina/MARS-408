@@ -5,7 +5,6 @@
 # ============================================================
 import os
 import sys
-import shutil
 
 # 将 py-server 加入 sys.path，确保能 import db / shared
 HERE = os.path.dirname(os.path.abspath(__file__))

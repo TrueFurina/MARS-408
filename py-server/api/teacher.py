@@ -4,11 +4,9 @@
 # ============================================================
 
 import logging
-from typing import Optional
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
 
-from db.llm_provider import LLMProvider
 from seed_data import SEED_KNOWLEDGE_CHUNKS, SEED_QUESTIONS, KNOWLEDGE_GRAPH
 from shared.auth import get_current_user, require_teacher_or_demo_open
 from services.cache import cached
@@ -22,7 +20,7 @@ router = APIRouter(prefix="/teacher", tags=["teacher"])
 async def get_students_overview(user: dict = Depends(require_teacher_or_demo_open)):
     """获取所有学生概览（教师仪表板）— 基于真实用户与答题历史聚合"""
     from db.user_store import list_all_users, get_quiz_history
-    from datetime import datetime, timedelta
+    from datetime import datetime
 
     users = list_all_users()
     students = [u for u in users if u.get("role") == "student"]

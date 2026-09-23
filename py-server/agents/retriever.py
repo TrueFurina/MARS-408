@@ -6,7 +6,7 @@
 import logging
 
 from agents.state import AgentState
-from engines.frugal_rag import frugal_rag, format_retrieval_for_llm
+from engines.frugal_rag import frugal_rag
 
 logger = logging.getLogger("netlearn.retriever")
 

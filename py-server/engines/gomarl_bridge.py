@@ -13,7 +13,6 @@
 import logging
 import os
 import sys
-from typing import Optional
 
 logger = logging.getLogger("netlearn.gomarl_bridge")
 
@@ -40,8 +39,6 @@ def is_gomarl_available() -> bool:
 
     try:
         sys.path.insert(0, GOMARL_PROJECT_PATH)
-        from src.learners.group_learner import GROUPLearner
-        from src.modules.mixers.group import Mixer as GroupMixer
         _GOMARL_AVAILABLE = True
         logger.info(f"GoMARL 科研项目可用: {GOMARL_PROJECT_PATH}")
         return True

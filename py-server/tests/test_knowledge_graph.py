@@ -3,8 +3,6 @@
 覆盖：实体抽取 / 图谱持久化 / 导出 / 学习路径推荐
 """
 
-import json
-import pytest
 from fastapi.testclient import TestClient
 
 

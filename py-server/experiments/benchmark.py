@@ -488,7 +488,7 @@ def weighted_voting_aggregate(agent_results: list[dict]) -> dict:
 
 def load_neural_mixer_net(embed_dim: int = 768):
     """加载训练后的 GroupMixerNet（768 维与训练权重一致）"""
-    from engines.gomarl_mixer import _ensure_torch, GroupMixerNet
+    from engines.gomarl_mixer import _ensure_torch
     import engines.gomarl_mixer as _gm
 
     torch, _, _ = _ensure_torch()

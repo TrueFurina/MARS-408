@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """408四科教材批量导入脚本 — 读取PDF → 分块 → 写入VectorDB(Milvus/InMemory)"""
-import os, sys, re, json, hashlib, logging, time
+import os, sys, re, logging
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")

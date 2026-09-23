@@ -240,7 +240,6 @@ async def generate_full_media_package(
 ) -> dict:
     """生成完整多模态媒体包（视频脚本+SVG+Mermaid+信息图）"""
     from agents.mindmap import generate_mindmap
-    from agents.video_script import generate_video_script
     from schemas.mindmap import MindMapRequest
 
     # 并行生成各媒体类型

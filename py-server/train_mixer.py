@@ -25,8 +25,6 @@ GoMARL NeuralMixer 训练脚本 — 结构验证版
 """
 
 import sys
-import os
-import json
 import random
 import argparse
 import logging
@@ -40,7 +38,6 @@ import numpy as np
 
 try:
     import torch
-    import torch.nn as nn
     import torch.nn.functional as F
     from torch.optim import Adam
     HAS_TORCH = True
@@ -49,10 +46,8 @@ except ImportError:
     print("ERROR: PyTorch not installed. Run: pip install torch")
     sys.exit(1)
 
-from engines.gomarl_mixer import AgentOutputEncoder
 
 # GroupMixerNet 是延迟定义的（需要先调用 _ensure_torch）
-from engines.gomarl_mixer import GroupMixerNet as _LazyGroupMixerNet
 _ = None  # 触发实际定义
 import engines.gomarl_mixer as _gm
 _t, _nn, _f = _gm._ensure_torch()

@@ -6,7 +6,6 @@
 import os
 import re
 import logging
-import json as json_mod
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File

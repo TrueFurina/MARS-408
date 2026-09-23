@@ -10,10 +10,8 @@
 # 适用于赛题要求：多模态教学视频/动画生成
 # ============================================================
 
-import io
 import os
 import re
-import json
 import logging
 import tempfile
 import subprocess

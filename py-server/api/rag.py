@@ -3,14 +3,13 @@
 # ============================================================
 
 import logging
-from fastapi import APIRouter, HTTPException, Query, Depends
-from db.milvus_client import vector_db
+from fastapi import APIRouter, Depends
 from engines.frugal_rag import frugal_rag
 from models import (
     RAGSearchRequest, RAGSearchResponse, RAGSearchResult,
     GenerateQuestionsRequest, GenerateQuestionsResponse,
 )
-from seed_data import SEED_SUBJECTS, SEED_QUESTIONS
+from seed_data import SEED_QUESTIONS
 from shared.auth import get_current_user
 from shared.ratelimit import require_llm_quota
 

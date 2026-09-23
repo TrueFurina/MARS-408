@@ -11,7 +11,6 @@ import asyncio
 import pytest
 
 from shared.circuit_breaker import get_breaker, reset_breaker, CircuitOpenError
-from shared.token_bucket import get_bucket, reset_bucket
 
 
 # ── 熔断器故障注入 ──

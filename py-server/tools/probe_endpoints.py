@@ -19,7 +19,6 @@ NetLearn 端口/端点可用率探活脚本
 import argparse
 import json
 import sys
-import time
 import urllib.request
 import urllib.error
 

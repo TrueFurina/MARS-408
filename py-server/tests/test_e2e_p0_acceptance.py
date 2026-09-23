@@ -8,8 +8,6 @@
 
 import os
 import sys
-import json
-import time
 import pytest
 
 # segv_env：本模块在导入期即加载真实 E5 模型（Windows 原生 torch/numpy 下触发 SIGSEGV）；
@@ -28,7 +26,6 @@ from fastapi.testclient import TestClient
 from main import app, _seed_vector_db
 from db.milvus_client import vector_db
 from seed_data import SEED_KNOWLEDGE_CHUNKS, SEED_QUESTIONS, DS_SEED_KNOWLEDGE_CHUNKS, DS_SEED_QUESTIONS
-from seed_data import KNOWLEDGE_GRAPH
 
 
 # ── Test Client ──
@@ -402,7 +399,7 @@ class TestT9_GOMARLConsensus:
 
     def test_gomarl_data_classes(self):
         """GOMARL should have AgentResult, QualityScore, ConsensusResult dataclasses."""
-        from engines.gomarl import AgentResult, QualityScore, ConsensusResult
+        from engines.gomarl import AgentResult, QualityScore
         # Create sample instances
         agent_result = AgentResult(agent_name="teacher", content="test content")
         assert agent_result.agent_name == "teacher"

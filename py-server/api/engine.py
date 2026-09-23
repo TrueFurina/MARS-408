@@ -12,11 +12,10 @@
 # 异常处理: 统一由 main.py 全局处理器接管 (DomainError → 4xx/5xx, Exception → 500)
 # ============================================================
 
-from fastapi import APIRouter, Request, Depends
+from fastapi import APIRouter, Depends
 from shared.auth import get_current_user
 from shared.ratelimit import require_llm_quota
 from pydantic import BaseModel, field_validator
-from typing import Optional
 
 # F-011：鉴权由各端点分别持有（get_current_user / require_llm_quota）。
 # LLM 配额只挂在真正调用 LLM 的端点（frugal-rag-full / gomarl-consensus / conflict-check），

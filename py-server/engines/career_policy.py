@@ -9,7 +9,6 @@
 #   - 默认灰度关闭（config: career.use_career_mappo=False），规则版兜底
 # ============================================================
 
-import json
 import logging
 import random
 from pathlib import Path
@@ -282,7 +281,7 @@ class CareerModePolicy:
         if seed is not None:
             _seed_all(seed)
         try:
-            import torch  # noqa: 延迟导入
+            import torch  # noqa: F401
             self._torch = torch
             if _mp_build_networks is not None:
                 # 复用 mappo_policy 的网络构建（encoder + 动作头框架）

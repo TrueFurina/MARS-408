@@ -1,6 +1,5 @@
 """启动嵌入式 Milvus Lite 服务器并保持运行"""
 import os
-import sys
 import time
 import logging
 

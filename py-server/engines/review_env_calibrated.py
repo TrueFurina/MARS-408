@@ -30,14 +30,10 @@
 # ============================================================
 
 import random
-from typing import Optional
 
 from agents.quality_gate import review_signals, weighted_consistency_score
 from engines.review_policy import (
     ACTION_TOKENS,
-    REVIEW_MIN_REVIEW,
-    SKIP_STREAK_LIMIT,
-    STATE_DIM,
     UNIFORM_WEIGHTS,
     _weights_of,
     # 纪律门：直接复用生产**唯一实现**，不再在本模块内逐字复刻。

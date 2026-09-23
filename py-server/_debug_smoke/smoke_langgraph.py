@@ -1,6 +1,6 @@
 """LangGraph 完整流水线冒烟测试（直调 agent_graph，绕开 HTTP/鉴权）。
 验证 10 节点全链路 + ppt_file 真产出 + 无空壳异常。"""
-import sys, os, asyncio, time, json
+import sys, os, asyncio, time
 # 复刻 main.py 启动期环境（HF 离线 + .env），否则 bge-reranker 会连 HF 超时卡死
 os.environ["HF_HUB_OFFLINE"] = "1"
 os.environ["TRANSFORMERS_OFFLINE"] = "1"

@@ -14,7 +14,7 @@ from db.llm_provider import LLMProvider
 from shared.sse_guard import sse_disconnect_guard
 from db.xfyun_multimodal import (
     generate_image, generate_speech, generate_multimodal_resource,
-    get_multimodal_status, is_tti_available, is_tts_available,
+    get_multimodal_status,
 )
 from shared.auth import get_current_user
 from shared.ratelimit import require_llm_quota

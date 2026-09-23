@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from db.llm_provider import LLMProvider
 from db.skill_store import create_skill, get_skill, delete_skill, list_skills
-from schemas.skills import Skill, SkillStatus
+from schemas.skills import Skill
 
 # ── 配置 ──
 

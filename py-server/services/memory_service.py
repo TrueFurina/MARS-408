@@ -9,7 +9,6 @@
 #   3. 提供「答题后记忆回写」：答题事件 → L2 掌握度更新 + L3 情景记录
 # ============================================================
 
-import json
 import logging
 import time
 from typing import Optional

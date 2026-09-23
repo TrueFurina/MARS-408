@@ -49,7 +49,6 @@ async def test_f20_docling_chain_no_import_error_and_ingests(
     )
 
     import db.milvus_client as mc
-    import services.import_worker as iw_mod
     from db.milvus_client import InMemoryVectorStore, vector_db
 
     # 用真实 InMemoryVectorStore 作底层存储，但保留 VectorDB 包装（生产路径即走

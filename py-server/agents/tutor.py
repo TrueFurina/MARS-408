@@ -6,9 +6,7 @@
 # 流程: 检索相关知识点 → Qwen2.5 生成文字解答 → [可选] 生成图解说明
 # ============================================================
 
-import json
 import logging
-from typing import Optional
 
 from db.llm_provider import LLMProvider
 from engines.frugal_rag import frugal_rag, format_retrieval_for_llm

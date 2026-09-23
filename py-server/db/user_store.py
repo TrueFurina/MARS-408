@@ -4,10 +4,8 @@
 # 管理员聚合：list_all_users / get_platform_stats
 # ============================================================
 
-import os
 import json
 import sqlite3
-import threading
 import hashlib
 import hmac
 import secrets
@@ -19,7 +17,7 @@ logger = logging.getLogger("netlearn.userstore")
 
 # D2 修复：SQLite 共享连接与锁统一由 db.core 提供，确保 user_store 与 skill_store
 # 并发写同一 netlearn_users.db 时互斥（消除「两连接 + 两把不互斥的锁」写同文件）。
-from db.core import get_conn as _core_get_conn, LOCK as _lock, DB_PATH as _DB_PATH
+from db.core import get_conn as _core_get_conn, LOCK as _lock
 
 _initialized = False
 
@@ -958,7 +956,7 @@ def get_error_profile(user_id: str) -> dict:
 
 def record_review(wid: int, recalled_correct: bool, now: str = None) -> Optional[dict]:
     """记录一次复习回忆结果，按遗忘曲线推进排程。返回更新后的错题（含新排程）。"""
-    from engines.review_scheduler import schedule_after_review, is_due
+    from engines.review_scheduler import schedule_after_review
     conn = _get_conn()
     now = now or _now()
     with _lock:

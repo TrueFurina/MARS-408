@@ -7,8 +7,7 @@
 import logging
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
-from typing import Optional, List
-from db.user_store import get_quiz_history, get_profile
+from db.user_store import get_quiz_history
 from shared.auth import get_current_user
 
 logger = logging.getLogger("netlearn.review")

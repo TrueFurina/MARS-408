@@ -3,7 +3,7 @@
 # 用法：python import_docling.py [--rebuild] [--max-pages 50]
 # ============================================================
 
-import os, sys, json, hashlib, logging, time
+import os, sys, hashlib, logging, time
 from pathlib import Path
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")

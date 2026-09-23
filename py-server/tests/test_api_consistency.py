@@ -5,7 +5,6 @@
 # Tests: sessions load/list/save/delete + knowledge-graph endpoint
 # ============================================================
 
-import pytest
 
 from fastapi.testclient import TestClient
 from main import app

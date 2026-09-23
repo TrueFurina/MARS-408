@@ -2,7 +2,7 @@
 # 使用真实类 VectorDB（非 MilvusClient），仅被 `requires_milvus` 标记收集，
 # 由 ci.yml 的 backend-milvus 作业配合真实 Milvus 服务端运行。
 import pytest
-from db.milvus_client import VectorDB, MILVUS_AVAILABLE
+from db.milvus_client import VectorDB
 
 pytestmark = pytest.mark.requires_milvus
 

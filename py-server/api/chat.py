@@ -11,7 +11,7 @@ from fastapi.responses import StreamingResponse
 from shared.sse_guard import sse_disconnect_guard
 
 from db.llm_provider import LLMProvider, LLMUnavailable
-from shared.errors import DomainError, LLMUnavailableError, ValidationError
+from shared.errors import LLMUnavailableError, ValidationError
 from utils.safety import filter_sensitive
 from shared.content_safety import audit_output  # P1-7：统一输出内容安全审核
 from models import ChatSendRequest, ChatSendResponse

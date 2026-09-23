@@ -24,7 +24,7 @@ GPU 自适应: 有 CUDA 用 GPU，无则 CPU。
     HUGGINGFACE_OFFLINE=1 python train_mixer_real_v2.py
     # 强制CPU: CUDA_VISIBLE_DEVICES="" python train_mixer_real_v2.py
 """
-import sys, os, json, argparse, logging, random, time
+import sys, os, json, logging, random, time
 from pathlib import Path
 from datetime import datetime
 sys.path.insert(0, str(Path(__file__).parent))

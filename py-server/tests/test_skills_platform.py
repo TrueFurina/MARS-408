@@ -3,8 +3,6 @@
 覆盖：技能 CRUD / 市场 / 评价 / 收藏 / 运行时 / 模板
 """
 
-import json
-import pytest
 from fastapi.testclient import TestClient
 
 # ── 辅助 ──

@@ -24,7 +24,6 @@
 # 生产真值源仅：`discipline_gate` / `review_precision` / `analytic_review_action` /
 # `decide_review_weight`（均轻量、无 torch 依赖）。
 
-import json
 import logging
 import math
 import random

@@ -13,7 +13,7 @@ from typing import Optional
 
 from agents.career_state import (
     DIMENSIONS, DIMENSION_LABELS, ADVERSARY_MODE_LABELS,
-    DEFAULT_MAX_TURNS, CATFISH_MAX_CONTINUE,
+    CATFISH_MAX_CONTINUE,
 )
 from prompts_career import (
     SCENARIO_SCRIPT_SYSTEM, SCENARIO_SCRIPT_USER_TMPL,

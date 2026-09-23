@@ -6,16 +6,14 @@
 import asyncio
 import json as json_mod
 import logging
-import random
 import re
 
-from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 from shared.sse_guard import sse_disconnect_guard
 
 from db.llm_provider import LLMProvider
 from db.milvus_client import vector_db
-from utils.safety import filter_sensitive, check_hallucination
 from shared.content_safety import audit_output  # P1-7：统一输出内容安全审核
 from shared.auth import get_current_user
 from shared.ratelimit import require_llm_quota

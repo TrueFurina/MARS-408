@@ -17,7 +17,6 @@ from engines.marl_dqn import (
     _ensure_torch, MultiAgentTeachingEnv, IQLearner, VDNLearner, QMIXLearner,
     train_value_learner, AGENT_NAMES, AGENT_ACTION_SIZES,
 )
-from engines.mappo_policy import encode_state, DIFFICULTIES, TEACHING_MODES, REVIEW_INTENSITIES
 
 
 class TestMultiAgentTeachingEnv:

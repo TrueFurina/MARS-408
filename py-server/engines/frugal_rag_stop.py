@@ -22,7 +22,7 @@
 import logging
 import re
 from typing import Optional
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from db.llm_provider import LLMProvider
 from engines.frugal_rag import frugal_rag

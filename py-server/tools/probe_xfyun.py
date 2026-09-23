@@ -16,7 +16,6 @@ import argparse
 import base64
 import json
 import sys
-import time
 import urllib.request
 import urllib.error
 import zlib

@@ -15,22 +15,20 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-import numpy as np
 from sklearn.metrics import cohen_kappa_score
 
 # 复用 benchmark 的实验2组件（题目/合成/聚合）
 sys.path.insert(0, str(PROJECT_ROOT / "experiments"))
 from benchmark import (
-    QUESTIONS, AGENT_NAMES, BASE_WEIGHTS, AGENT_SPECIALTY,
-    synthesize_agent_answers, neural_mixer_aggregate, weighted_voting_aggregate,
-    RANDOM_SEED, mean, median,
+    QUESTIONS, synthesize_agent_answers, neural_mixer_aggregate, weighted_voting_aggregate,
+    RANDOM_SEED,
 )
 from db.embedder import embed_batch
 
 
 def load_model(custom_path: Path):
     """复刻 load_neural_mixer_net 的加载逻辑，但用自定义路径。"""
-    from engines.gomarl_mixer import _ensure_torch, GroupMixerNet
+    from engines.gomarl_mixer import _ensure_torch
     import engines.gomarl_mixer as _gm
 
     torch, _, _ = _ensure_torch()

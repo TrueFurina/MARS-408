@@ -4,12 +4,9 @@
 # 功能：诊断式初始画像构建，覆盖四科知识点掌握度评估
 # ============================================================
 
-import json
 import logging
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from typing import Optional, List
-from seed_data import SEED_KNOWLEDGE_CHUNKS, SEED_QUESTIONS
 from shared.auth import get_current_user
 
 logger = logging.getLogger("netlearn.diagnostic")

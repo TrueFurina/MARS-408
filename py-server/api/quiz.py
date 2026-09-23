@@ -11,7 +11,7 @@ from shared.auth import get_current_user
 from shared.ratelimit import require_llm_quota
 from db.user_store import save_profile, get_profile, add_wrong_question
 from db.llm_provider import LLMProvider
-from engines.quiz_engine import STEP_QUESTIONS, error_analyzer, weak_point_tracker, StepResult, QuestionStep
+from engines.quiz_engine import STEP_QUESTIONS, error_analyzer, weak_point_tracker, StepResult
 
 logger = logging.getLogger("netlearn.quiz")
 router = APIRouter(prefix="/quiz", tags=["quiz"])

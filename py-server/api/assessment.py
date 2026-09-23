@@ -7,7 +7,6 @@ import asyncio
 import json
 import logging
 import hashlib
-from typing import Optional
 
 from fastapi import APIRouter, Depends
 from db.llm_provider import LLMProvider
@@ -103,7 +102,6 @@ async def assessment_evaluate(req: AssessmentRequest, user: dict = Depends(requi
     # L1/L2/L3 三层学情记忆回写（低侵入：评估结果写入 L2 掌握度 + L3 情景事件）
     try:
         user_id = user["user_id"]
-        from db import memory_store as _ms
         # L2：薄弱点登记（保留既有薄弱点并追加本次评估发现的）
         from db import memory_store as _mems
         if weak_focus_list:
@@ -210,8 +208,6 @@ async def get_assessment_recommendations(
     """基于画像生成个性化学习推荐（兼容 /api/assessment/recommendations 路径）"""
     profile = body.get("profile", {})
     quiz_history = body.get("quiz_history", [])
-    from db.llm_provider import LLMProvider
-    from prompts import ASSESSMENT_PROMPT
 
     weak_topics = []
     for r in quiz_history:

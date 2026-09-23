@@ -10,7 +10,6 @@
 # 无 LLM/无网络依赖（纯函数 + mock）
 # ============================================================
 
-import json
 import sys
 from pathlib import Path
 from unittest.mock import AsyncMock, patch, MagicMock
@@ -347,7 +346,7 @@ class TestSemanticGuardRedline:
     @pytest.mark.asyncio
     async def test_classify_injection_detected(self):
         """LLM 分类器对注入文本应判定 is_injection=True"""
-        from shared.semantic_guard import classify_intent, IntentVerdict
+        from shared.semantic_guard import classify_intent
 
         mock_llm = MagicMock()
         mock_llm._skip_semantic = False

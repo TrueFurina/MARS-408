@@ -13,7 +13,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, 
 from fastapi.concurrency import run_in_threadpool
 
 from db.milvus_client import vector_db
-from config import load_config
 from shared.auth import get_current_user, require_admin
 from shared.audit import log_event
 # ADR-007：在线写端点与导入 Worker 共用同一把锁，保证后端为向量库唯一写者
@@ -360,7 +359,6 @@ async def knowledge_preview(
 
 def _parse_and_preview(raw_body: bytes, filename: str, tmp_path: str, subject: str, chapter: str) -> dict:
     """同步解析文件内容并返回预览数据（在线程池中执行）。"""
-    import shutil
 
     with open(tmp_path, "wb") as f:
         f.write(raw_body)

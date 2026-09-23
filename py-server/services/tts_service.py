@@ -120,7 +120,6 @@ async def xfyun_synthesize(text: str, language: str = "zh") -> Optional[bytes]:
 
         # 讯飞 TTS WebAPI 端点
         # 参考文档：https://www.xfyun.cn/doc/tts/online_tts/API.html
-        import time
         import json
         import base64
         import hashlib
@@ -181,7 +180,6 @@ async def xfyun_synthesize(text: str, language: str = "zh") -> Optional[bytes]:
                     break
 
         # MP3 转 WAV（前端 Audio API 更易播放）
-        import pydub
         from pydub import AudioSegment
 
         mp3_data = b"".join(audio_chunks)

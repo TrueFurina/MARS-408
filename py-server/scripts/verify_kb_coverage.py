@@ -18,7 +18,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # ── 静态结构校验：直接基于种子数据（确定、无副作用）──
-from seed_data import SEED_KNOWLEDGE_CHUNKS, SEED_QUESTIONS
+from seed_data import SEED_KNOWLEDGE_CHUNKS
 
 # 优先复用 kg_dag 的单一真源 chapter_to_group；失败则本地前缀兜底
 try:

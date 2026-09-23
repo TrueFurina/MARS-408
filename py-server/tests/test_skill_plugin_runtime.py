@@ -13,7 +13,6 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
 
 # 隔离测试 DB
 _TEST_DB = os.path.join(os.path.dirname(__file__), "_test_skill_plugin.db")
@@ -200,7 +199,6 @@ def test_trigger_paths_allows_matched_input():
 
 def test_tools_meta_passed_to_llm():
     """tools 元数据：技能配置结构化工具后，execute 透传给 LLM.chat(tools=...)"""
-    import asyncio
     import inspect
     from engines.skill_plugin_runtime import SkillPluginRuntime
 

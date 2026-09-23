@@ -31,7 +31,6 @@ from agents.quality_gate import review_signals, weighted_consistency_score  # no
 from engines.review_policy import (  # noqa: E402
     ACTION_TOKENS,
     REVIEW_ACTIONS,
-    UNIFORM_WEIGHTS,
     _rule_action_idx,
     _weights_of,
     review_reward,

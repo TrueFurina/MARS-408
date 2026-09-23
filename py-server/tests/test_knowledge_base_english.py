@@ -3,7 +3,6 @@
 覆盖：教材导入/搜索/提问 / 英语词库/单词/测验
 """
 
-import pytest
 from fastapi.testclient import TestClient
 
 

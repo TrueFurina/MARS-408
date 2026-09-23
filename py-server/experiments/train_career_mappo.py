@@ -19,7 +19,6 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from engines.career_policy import (  # noqa: E402
-    CAREER_ACTIONS,
     CATFISH_MAX_CONTINUE,
     CareerAdversaryEnv,
     CareerModePolicy,

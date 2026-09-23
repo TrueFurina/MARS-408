@@ -11,8 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, Body
 
 from shared.auth import require_admin
 from services.import_worker import (
-    import_worker, STATUS_QUEUED, STATUS_RUNNING,
-    STATUS_SUCCEEDED, STATUS_FAILED, STATUS_CANCELLED,
+    import_worker, STATUS_QUEUED, STATUS_SUCCEEDED, STATUS_FAILED, STATUS_CANCELLED,
 )
 import services.import_worker as _iw_mod  # 动态引用模块级 DOCS_DIR（与 Worker 同一对象，可被测试 monkeypatch）
 

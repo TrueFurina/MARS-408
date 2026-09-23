@@ -6,7 +6,6 @@
 用法：.venv/Scripts/python.exe scripts/diag_fact_gap.py
 """
 import asyncio, sys, json, re
-from collections import defaultdict
 
 sys.path.insert(0, '.')
 from db.milvus_client import vector_db

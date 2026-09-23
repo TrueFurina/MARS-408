@@ -13,7 +13,7 @@ NeuralMixer 真实训练脚本 — 用 E5 编码 seed data 训练 GroupMixerNet
     HUGGINGFACE_OFFLINE=1 python train_mixer_real.py --epochs 200
 """
 
-import sys, os, json, argparse, logging, random
+import sys, os, argparse, logging, random
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -91,7 +91,6 @@ def main():
     # 构建训练数据：每组样本 = 6 个 Agent 的 (score, embedding, consensus)
     # 同类 Agent 相似度高 → 高共识分数；异类低 → 低共识分数
     train_data = []
-    import hashlib
     for _ in range(500):
         n_agents = 6
         indices = random.sample(range(len(all_texts)), min(n_agents, len(all_texts)))

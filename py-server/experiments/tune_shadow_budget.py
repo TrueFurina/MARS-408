@@ -40,7 +40,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from agents.quality_gate import weighted_consistency_score  # noqa: E402
 from engines.review_env_calibrated import CalibratedReviewEnv, discipline_gate  # noqa: E402
 from engines.review_policy import (  # noqa: E402
-    UNIFORM_WEIGHTS,
     _rule_action_idx,
     _weights_of,
     review_state_features,

@@ -7,11 +7,9 @@
 import os
 import sys
 import re
-import json
 import hashlib
 import logging
 from pathlib import Path
-from typing import Optional
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
 logger = logging.getLogger("import_pdfs")
@@ -322,7 +320,6 @@ def import_all(rebuild: bool = False, use_ocr: bool = False):
     # 延迟导入（避免启动时依赖）
     sys.path.insert(0, str(PROJECT_ROOT))
     from db.milvus_client import vector_db
-    from db.embedder import embed_text
 
     # 扫描所有可解析的文件
     supported_exts = {".pdf", ".pptx", ".docx", ".doc"}

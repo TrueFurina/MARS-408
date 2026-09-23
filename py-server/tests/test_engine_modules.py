@@ -6,7 +6,6 @@
 
 import os
 import sys
-import json
 import pytest
 import numpy as np
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -14,7 +13,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 # segv_env：本模块调用真实 torch/numpy 嵌入等，Windows 原生库下触发 SIGSEGV；
 # 仅 CI/Linux 干净环境运行，本地 Windows 由 conftest 自动跳过。
 pytestmark = pytest.mark.segv_env
-from dataclasses import dataclass
 
 # ── Project paths ──
 PY_SERVER_DIR = os.path.dirname(os.path.dirname(__file__))
@@ -675,7 +673,6 @@ class TestPersonalizedRerank:
 
     def test_match_chunk_to_topic_with_topic_id(self):
         """metadata.topic_id 精确匹配"""
-        from engines.teaching_rules import teaching_rules
         # 使用已知topic_id
         metadata = {"topic_id": "transport", "chapter_name": "运输层"}
         result = self.rag._match_chunk_to_topic("", metadata, "computer_network")
@@ -683,7 +680,6 @@ class TestPersonalizedRerank:
 
     def test_match_chunk_to_topic_with_chapter_name(self):
         """chapter_name 模糊匹配"""
-        from engines.teaching_rules import teaching_rules
         metadata = {"chapter_name": "TCP协议详解"}
         result = self.rag._match_chunk_to_topic("", metadata, "computer_network")
         # TCP 在 computer_network 中有 topic_id="tcp"
@@ -692,7 +688,6 @@ class TestPersonalizedRerank:
 
     def test_match_chunk_to_topic_no_match(self):
         """无法匹配时返回None"""
-        from engines.teaching_rules import teaching_rules
         metadata = {"chapter_name": "量子力学基础"}
         result = self.rag._match_chunk_to_topic("", metadata, "computer_network")
         # 无匹配

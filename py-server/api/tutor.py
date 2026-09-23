@@ -4,14 +4,12 @@
 # ============================================================
 
 import logging
-from typing import Optional
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
 from agents.tutor import tutor_answer, quick_answer
 from db.llm_provider import LLMProvider
-from shared.auth import get_current_user
 from shared.content_safety import audit_output  # P1-7：统一输出内容安全审核
 from shared.ratelimit import require_llm_quota
 

@@ -4,7 +4,6 @@
 # ============================================================
 
 import logging
-import uuid
 import json as json_mod
 from typing import Optional
 

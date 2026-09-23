@@ -11,8 +11,6 @@
 #   - 无讯飞API key → SVG编程绘图 + 浏览器Web Speech API
 # ============================================================
 
-import os
-import time
 import json
 import base64
 import hashlib
@@ -23,7 +21,7 @@ import asyncio
 from datetime import datetime
 from wsgiref.handlers import format_date_time
 from time import mktime
-from urllib.parse import urlencode, quote
+from urllib.parse import urlencode
 from typing import Optional
 from dataclasses import dataclass
 

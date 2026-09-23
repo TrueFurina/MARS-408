@@ -7,11 +7,9 @@
 # 3. 薄弱点追踪：记录错因 → 优先出同类题 → 闭环追踪
 # ============================================================
 
-import json
 import logging
 import threading
 import time
-from typing import Optional
 from dataclasses import dataclass, field, asdict
 
 try:

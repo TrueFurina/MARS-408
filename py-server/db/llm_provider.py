@@ -8,10 +8,9 @@ import logging
 import asyncio
 import random
 import threading
-from typing import Optional, AsyncIterator, Any
+from typing import Optional, AsyncIterator
 import httpx
 
-from config import load_config, get_llm_config
 from utils.safety import ANTI_INJECTION_INSTRUCTION
 from shared.prompt_guard import sanitize_user_input  # F-015：轻量提示注入防护（统一边界，覆盖全部经 LLMProvider 的入口）
 from shared.metrics import record_llm_call, record_llm_fallback  # P1-4：LLM 级指标

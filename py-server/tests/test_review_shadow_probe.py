@@ -14,7 +14,6 @@ import pytest
 
 torch = pytest.importorskip("torch")  # 真训 PPO 路径需要 torch；缺失则跳过
 
-from engines.review_policy import ReviewWeightPolicy  # noqa: E402
 from engines.review_shadow_probe import (  # noqa: E402
     HEURISTIC_F2_THRESHOLD,
     build_shadow_policy,

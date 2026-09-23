@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pytest
 
 from engines.mappo_policy import (
-    DIFFICULTIES, REVIEW_INTENSITIES, TeachingEnv, MappoPolicy,
+    TeachingEnv, MappoPolicy,
     compute_reward, encode_state, _ensure_torch,
 )
 from engines.teaching_rules import teaching_rules

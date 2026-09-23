@@ -6,7 +6,6 @@
 import os
 import re
 import logging
-import tempfile
 from typing import Optional
 
 logger = logging.getLogger("netlearn.pdf_reader")

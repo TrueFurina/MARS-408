@@ -8,15 +8,13 @@
 
 用法: cd py-server && HUGGINGFACE_OFFLINE=1 python experiments/benchmark_exp2_only.py
 """
-import sys, json, logging, time, random
+import sys, json, logging, time
 from pathlib import Path
 from datetime import date
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-import numpy as np
-from sklearn.metrics import cohen_kappa_score
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
 logger = logging.getLogger("benchmark_exp2")
@@ -24,11 +22,8 @@ logger = logging.getLogger("benchmark_exp2")
 # 复用 benchmark.py 的实验2组件
 sys.path.insert(0, str(Path(__file__).parent))
 from benchmark import (
-    run_experiment2, QUESTIONS, AGENT_NAMES, BASE_WEIGHTS, AGENT_SPECIALTY,
-    synthesize_agent_answers, neural_mixer_aggregate, weighted_voting_aggregate,
-    load_neural_mixer_net, RANDOM_SEED, mean, median,
+    run_experiment2, QUESTIONS, RANDOM_SEED,
 )
-from db.embedder import embed_batch
 
 
 def main():

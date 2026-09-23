@@ -3,10 +3,8 @@
 # 技能 CRUD / 市场查询 / 评价 / 使用日志
 # ============================================================
 
-import os
 import json
 import sqlite3
-import threading
 import uuid
 import logging
 from typing import Optional
@@ -24,7 +22,7 @@ logger = logging.getLogger("netlearn.skillstore")
 
 # D2 修复：与 user_store 共用 db.core 的单一连接与锁（同一 netlearn_users.db）。
 # 原先各自持有独立连接与锁，并发写跨 store 不互斥，会触发 database is locked。
-from db.core import get_conn as _core_get_conn, LOCK as _lock, DB_PATH as _DB_PATH
+from db.core import get_conn as _core_get_conn, LOCK as _lock
 
 _initialized = False
 

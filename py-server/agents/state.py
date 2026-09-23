@@ -2,7 +2,7 @@
 # AgentState — LangGraph 共享状态定义
 # ============================================================
 
-from typing import TypedDict, Optional, Annotated, Sequence
+from typing import TypedDict, Optional, Annotated
 from langgraph.graph.message import add_messages
 
 

@@ -25,7 +25,6 @@ from api.admin_users import router as admin_users_router
 from api.xfyun import router as xfyun_router
 from api.llm_health import router as llm_health_router
 from api.skills import router as skills_router
-from api.cn_distinction import router as cn_distinction_router
 from api.tts import router as tts_router
 from api.diagnostic import router as diagnostic_router
 from api.benchmark import router as benchmark_router
@@ -69,4 +68,5 @@ __all__ = [
     "career_training_router",
     "benchmark_router",
     "experiments_router",
+    "literacy_router",
 ]

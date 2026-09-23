@@ -8,12 +8,10 @@
 
 import asyncio
 import logging
-from typing import Optional
 
 from agents.tutor import tutor_answer, quick_answer
 from agents.media_generator import generate_teaching_diagram, generate_enhanced_video_script, _fallback_svg
 from db.llm_provider import LLMProvider
-from engines.frugal_rag import frugal_rag, format_retrieval_for_llm
 
 logger = logging.getLogger("netlearn.tutor_enhanced")
 

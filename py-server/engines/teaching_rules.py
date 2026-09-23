@@ -15,7 +15,6 @@ import logging
 from dataclasses import dataclass, field
 from typing import Optional
 
-from config import load_config
 
 logger = logging.getLogger("netlearn.teaching_rules")
 

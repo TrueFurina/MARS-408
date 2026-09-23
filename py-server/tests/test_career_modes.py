@@ -5,7 +5,6 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
 
 from agents.career_nodes import decide_adversary_mode
 from agents.career_state import CATFISH_MAX_CONTINUE

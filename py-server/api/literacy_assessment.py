@@ -11,7 +11,7 @@ import sqlite3
 import threading
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel
 
 logger = logging.getLogger("netlearn.literacy")

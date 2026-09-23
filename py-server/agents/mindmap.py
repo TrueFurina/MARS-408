@@ -13,7 +13,6 @@ from typing import Optional
 from db.llm_provider import LLMProvider
 from schemas.mindmap import (
     MasteryLevel,
-    MASTERY_COLORS,
     MASTERY_LABELS,
     MindMapNode,
     MindMapResult,

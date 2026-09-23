@@ -8,7 +8,6 @@ import json
 import os
 import sys
 import traceback
-import types
 
 # 让 Python 不把 bytes 静默 repr，便于观察
 os.environ.setdefault("NETLEARN_ENV", "development")

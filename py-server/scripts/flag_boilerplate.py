@@ -1,4 +1,4 @@
-import json, re, shutil, os, sys
+import json, re, shutil, sys
 sys.path.insert(0, '.')
 
 SRC = 'vectordb_data/netlearn_kb.json'

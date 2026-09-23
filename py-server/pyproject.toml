@@ -77,6 +77,21 @@ fail_under = 54
 show_missing = true
 skip_covered = false
 
+[tool.ruff]
+# D11（技术债 P1）：F401 门禁配套配置。
+# 仅启用 F401（未使用导入）——单一目标，不引入其它 lint 规则干扰既有代码风格（零行为改动原则）。
+# ruff 默认尊重 .gitignore，自动跳过 crypto_platform 等 vendored 副本；per-file-ignores 再兜底一层。
+line-length = 100
+target-version = "py312"
+respect-gitignore = true
+
+[tool.ruff.lint]
+select = ["F401"]
+
+[tool.ruff.lint.per-file-ignores]
+# 第三方 vendored 副本：即便被强制暂存也不扫描（与 setuptools packages.find exclude 一致）。
+"**/crypto_platform/**" = ["F401"]
+
 [build-system]
 requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"

@@ -4,7 +4,6 @@
 # 复用现有 prompts.py 中的 PLANNER_PROMPT
 # ============================================================
 
-import json
 import re
 import logging
 

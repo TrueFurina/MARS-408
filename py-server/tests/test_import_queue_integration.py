@@ -16,7 +16,6 @@
 import asyncio
 import json
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
 
 import pytest
 

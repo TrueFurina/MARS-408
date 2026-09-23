@@ -5,7 +5,7 @@
 
 import time
 import logging
-from typing import Optional, Any, Callable
+from typing import Callable
 from functools import wraps
 
 logger = logging.getLogger("netlearn.cache")

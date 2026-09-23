@@ -14,7 +14,7 @@
 
 import pytest
 
-from db.milvus_client import VectorDB, MILVUS_AVAILABLE
+from db.milvus_client import VectorDB
 
 pytestmark = pytest.mark.requires_milvus
 

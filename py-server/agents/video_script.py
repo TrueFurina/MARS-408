@@ -9,10 +9,8 @@
 # ============================================================
 
 import logging
-from typing import Optional
 
 from db.llm_provider import LLMProvider
-from engines.frugal_rag import format_retrieval_for_llm
 
 logger = logging.getLogger("netlearn.video_script")
 

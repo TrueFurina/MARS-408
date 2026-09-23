@@ -10,8 +10,6 @@
 import logging
 import tempfile
 import zipfile
-from pathlib import Path
-from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import Response

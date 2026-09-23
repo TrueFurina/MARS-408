@@ -123,7 +123,6 @@ async def api_search_kg(
 
     根据关键词搜索匹配的实体，返回关联的关系网络。
     """
-    from db.skill_store import list_skills
 
     keyword = body.query.lower()
     # 从技能的知识库中搜索匹配的知识点
