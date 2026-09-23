@@ -17,6 +17,10 @@ from shared.auth import get_current_user
 from shared.ratelimit import require_llm_quota
 from pydantic import BaseModel, field_validator
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 # F-011：鉴权由各端点分别持有（get_current_user / require_llm_quota）。
 # LLM 配额只挂在真正调用 LLM 的端点（frugal-rag-full / gomarl-consensus / conflict-check），
 # 不挂在 router 级——否则只读观测端点（/status、/neural-mixer 等）每次轮询都会扣减配额，

@@ -15,7 +15,7 @@
 import io
 import logging
 import os
-from typing import Optional
+from typing import Optional, Any
 
 logger = logging.getLogger("netlearn.tts")
 
@@ -46,7 +46,7 @@ XFYUN_LANGUAGES = {
 
 # ── MeloTTS 引擎（单例，延迟加载） ──
 
-_melo_instances: dict[str, "TTS"] = {}  # type: ignore
+_melo_instances: dict[str, Any] = {}  # type: ignore
 
 
 def _get_melo(language: str):

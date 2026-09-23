@@ -31,6 +31,8 @@ import logging
 from pathlib import Path
 from datetime import datetime
 
+logger = logging.getLogger("train_mixer")
+
 # 确保能导入项目模块
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -58,7 +60,6 @@ if GroupMixerNet is None:
     sys.exit(1)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
-logger = logging.getLogger("train_mixer")
 
 
 # ── 1. 合成训练数据生成 ──
