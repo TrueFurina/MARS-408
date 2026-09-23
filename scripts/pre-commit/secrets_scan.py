@@ -93,6 +93,12 @@ def main():
         # 跳过已知忽略
         if any(ign in str(p) for ign in ['.git', '__pycache__', 'node_modules', '.venv', 'venv', 'dist', 'build']):
             continue
+        # 跳过依赖锁文件：其内容本就是 package URL + hash，非密钥（避免 SHA256 等被误判为 AWS secret）
+        if p.name in {
+            'uv.lock', 'poetry.lock', 'package-lock.json', 'yarn.lock',
+            'pnpm-lock.yaml', 'Pipfile.lock', 'Cargo.lock', 'go.sum',
+        }:
+            continue
 
         hits = scan_file(p)
         if hits:
