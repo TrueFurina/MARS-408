@@ -1,26 +1,28 @@
-# MARS-408 — Personalized 408 Postgraduate-Exam Study Multi-Agent System
+# Mangdehenzhi (芒得很职) — Career-Literacy Adversarial Training Platform on the MARS-408 Multi-Agent Base
 
 > 📖 English README (this page) · [中文 README](README.md)
 
-> Entry for the **2026 Fujian "Volcano Cup" (火山杯) Agent Innovation Contest** · Future Learning Center track
-> Covers all four subjects of China's 408 Computer Science postgraduate entrance exam:
-> **Data Structures / Computer Organization / Operating Systems / Computer Networks**
+> Entry for **China International College Students' Innovation Competition (高教主赛道·创意组)** and the **16th "Three Creations" (三创赛) E-Commerce Challenge**.
+> A next-generation, multi-agent empowered platform that trains computer-science students' career literacy through adversarial practice:
+> in high-pressure scenarios of *being questioned, challenged, and pushed*, students build expression, problem-solving logic, and resilience —
+> **and every score is traceable back to the exact words spoken.**
 >
 > Repository: https://github.com/TrueFurina/MARS-408
 >
-> Agent roster: `triage` → `coordinator` → `diagnostician` → `planner` → `retriever` → `generator_cluster`
+> Agent roster (MARS-408 base): `triage` → `coordinator` → `diagnostician` → `planner` → `retriever` → `generator_cluster`
 > (which fans out to 7 roles: lecturer / quiz / mind-map / slides / code / video / extension)
-> → `assessor` → `critic` → `evidence_check` → `quality_gate` → `path_planner`
+> → `assessor` → `critic` → `evidence_check` → `quality_gate` → `path_planner`;
+> on top of this base, 芒得很职 adds `career_nodes` adversarial loop with six-dimension ECD assessment.
 
-**From "answering questions" to "actually understanding you."**
-A personalized exam-prep coach driven by an 11-node multi-agent pipeline that closes the full loop:
-**diagnose → plan → explain → practice → review.**
+**From "answering questions" to "actually training literacy."**
+A career-literacy coaching system driven by an 11-node multi-agent pipeline that closes the full loop:
+**diagnose → plan → adversarial practice → evidence assessment → improvement.**
 
 ---
 
 ## 1. Highlights
 
-### 1. 11-Node Multi-Agent Pipeline (LangGraph)
+### 1. 11-Node Multi-Agent Pipeline (LangGraph, MARS-408 technical base)
 
 Learning-state diagnosis → task planning → knowledge retrieval → resource generation → assessment
 → quality audit → evidence verification → artifact acceptance → path planning. Agents own distinct
@@ -28,7 +30,13 @@ responsibilities and cooperate in a closed loop. Unlike a one-shot Q&A chatbot, 
 decomposes study tasks, plans learning paths, asks follow-up questions across turns, and streams
 live progress.
 
-### 2. GOMARL-Style Weighted Consensus + Conflict Resolution (the anti-hallucination core)
+### 2. Career-Literacy Adversarial Training (芒得很职 main line, layered on the base)
+
+Built on the same multi-agent base, 芒得很职 runs a closed loop of *profile → scenario-script generation →
+multi-turn adversarial dialogue with an AI interviewer → six-dimension ECD assessment after the dialogue →
+traceable report*. Each dimension is anchored to verbatim evidence — trainable, measurable, and verifiable.
+
+### 3. GOMARL-Style Weighted Consensus + Conflict Resolution (the anti-hallucination core)
 
 Multiple agents answer independently, then a weighted-consensus engine inspired by **GOMARL** adjudicates
 their disagreement. When agents contradict each other on factual knowledge (e.g. "three-way handshake
@@ -36,14 +44,14 @@ vs. four-way wave-off"), a conflict-resolution engine retrieves evidence chains 
 and has a **real LLM re-verify the facts before ruling** — hallucination is constrained **mechanically**,
 not merely by prompt wording.
 
-### 3. FrugalRAG Adaptive Retrieval Pipeline
+### 4. FrugalRAG Adaptive Retrieval Pipeline
 
 E5 768-dimension vector retrieval + BM25 full-text retrieval + personalized re-ranking + adaptive
 early stopping. Ships with **1,883 real knowledge chunks + 200 practice questions**, loaded as
-**2,122 vector entries**, organized into **26 subject groups** across the four subjects. If any stage of the retrieval
+**2,122 vector entries**, organized into **26 subject groups**. If any stage of the retrieval
 chain fails, the system **degrades to BM25-only** so demos and usage never break.
 
-### 4. Production-Grade Engineering and Graceful Degradation
+### 5. Production-Grade Engineering and Graceful Degradation
 
 - Frontend: Vue 3 + TypeScript, **45 pages (45 views)**, multi-role (student / teacher dashboard)
 - Backend: FastAPI + LangGraph, **~240 API endpoints** (openapi.json: 223 paths / 240 operations), **917 tests passing** (full regression, 0 failures)
@@ -57,8 +65,8 @@ chain fails, the system **degrades to BM25-only** so demos and usage never break
 ```
 ┌─ Frontend: Vue 3 + TypeScript (45 pages / 45 views) ──────────┐
 │  Vite :5173  ──proxy──▶  Backend :8002                        │
-│  Student: chat / learning path / knowledge graph / practice    │
-│  Teacher: class-level learning dashboard                       │
+│  Student: chat / learning path / knowledge graph / practice     │
+│  Teacher: class-level learning dashboard                        │
 └───────────────────────────────────────────────────────────────┘
                             │
 ┌─ Backend: FastAPI + LangGraph (11-node agent pipeline) ────────┐
@@ -66,6 +74,7 @@ chain fails, the system **degrades to BM25-only** so demos and usage never break
 │    → generator_cluster → assessor → critic                     │
 │    → evidence_check → quality_gate → path_planner              │
 │  GOMARL consensus + conflict resolution · FrugalRAG retrieval   │
+│  + career_nodes adversarial loop (芒得很职 main line)            │
 └───────────────────────────────────────────────────────────────┘
                             │
 ┌─ Data Layer ───────────────────────────────────────────────────┐
@@ -78,7 +87,7 @@ chain fails, the system **degrades to BM25-only** so demos and usage never break
 
 ---
 
-## 3. The 11-Node Agent Pipeline
+## 3. The 11-Node Agent Pipeline (MARS-408 technical base)
 
 | Node | Responsibility | Output |
 |------|----------------|--------|
@@ -105,11 +114,12 @@ readings, slide outlines, hands-on code, and video scripts.
 |---------|-------------|
 | Intelligent chat | 11-node pipeline, auto-detects subject, streams output via SSE progress |
 | Personalized learning path | Dynamically plans what to study next from the profile and weak points |
-| Knowledge graph | 26 knowledge-group view across four subjects (v1 rule-based prototype) |
-| Question generation & grading | Generates and auto-scores practice by subject / chapter / difficulty |
+| Knowledge graph | 26 knowledge-group view (v1 rule-based prototype) |
+| Question generation & grading | Generates and auto-scores practice by knowledge point / chapter / difficulty |
 | Learning-effect assessment | Multi-dimensional report (mastery / accuracy / weak-point trajectory) |
 | Teacher dashboard | Class-level aggregation (progress / mastery / weak points) |
-| Interactive 408 teaching tools | Visual teaching components such as a TCP handshake animation |
+| Career-literacy adversarial training | Multi-turn adversarial dialogue + six-dimension ECD assessment + evidence replay (芒得很职 main line, v1 rule-based prototype) |
+| Interactive training visualizers | Scenario-simulation / protocol-demonstration visual components (v1 rule-based prototype) |
 | Code sandbox | In-browser Python execution |
 | Text-to-speech | Dual-engine TTS (local offline + iFlytek API) |
 
@@ -120,9 +130,9 @@ readings, slide outlines, hands-on code, and video scripts.
 | Data | Count | Notes |
 |------|-------|-------|
 | Knowledge chunks | 1,883 | 739 `knowledge_point` + 1,144 `knowledge_variant` |
-| Practice questions | 200 | Multiple-choice / fill-in / short-answer, all four subjects |
+| Practice questions | 200 | Multiple-choice / fill-in / short-answer, core subjects |
 | Vector entries | 2,122 | All real E5 embeddings (768-dim), **zero all-zero vectors** |
-| Knowledge groups | 26 | Chapter-level groups enabling cross-group conflict detection |
+| Knowledge groups | 26 | Topic-level groups enabling cross-group conflict detection |
 
 Retrieval chain: user query → E5 vector search → BM25 full-text search → fusion ranking →
 personalized re-ranking → augmented generation. On failure it degrades to BM25-only (flagged
@@ -135,10 +145,14 @@ personalized re-ranking → augmented generation. On failure it degrades to BM25
 | Metric | Result | Notes |
 |--------|--------|-------|
 | Retrieval augmentation | **Recall@5 +10.7% / MRR +9.6%** | vs. no-reranking baseline, real CPU run (measured 2026-08-17) |
-| Retrieval-layer answerability baseline | `answerable_rate` = 0.533 | 30-question four-subject gold set (`eval_gold`), used for regression |
+| Retrieval-layer answerability baseline | `answerable_rate` = 0.533 | 30-question gold set (`eval_gold`), used for regression |
 
 Evaluation scripts ship with the source (`py-server/experiments/`); every metric can be reproduced with
 one command. All reported numbers come from **real runs** — no fabricated user-study data.
+
+> Note: career-literacy adversarial-training metrics (MAPPO / P3 catfish) are **synthetic-environment**
+> results — they prove "analytically optimal under the *effective* criterion" only, and are **not** cited
+> as real teaching gains. See `deliverables/国创赛对外材料诚信口径检查清单.md`.
 
 ---
 
@@ -148,7 +162,7 @@ one command. All reported numbers come from **real runs** — no fabricated user
 
 ```bash
 docker-compose up -d
-# Open http://localhost:8002 — log in with demo / demo123456
+# Open http://localhost:8002 — register an account first (/api/auth/register)
 ```
 
 ### Local development
@@ -185,7 +199,8 @@ core features still run.
 
 - Demo videos: `submission/03_演示视频/`
 - Evaluation and regression scripts: `py-server/experiments/` (`eval_gold.py`, benchmarks)
-- Core architecture diagram: `documents/MARS-408核心架构图.svg`
+- Core architecture diagram (MARS-408 multi-agent base): `documents/MARS-408核心架构图.svg`
+- Career-literacy transformation plan: `docs/职业素养对抗实训改造方案.md`
 
 ---
 
@@ -194,13 +209,14 @@ core features still run.
 This is a real, runnable engineering project (Vue 3 + TypeScript frontend / FastAPI + LangGraph backend).
 Core modules were developed and iterated with **Trae** (ByteDance's AI IDE, with built-in Doubao /
 DeepSeek model capabilities). The repository opens, builds, and runs directly inside Trae, satisfying the
-"built with Trae" tooling requirement of the 2026 Fujian "Volcano Cup" Agent Innovation Contest.
+"built with an AI IDE" tooling requirement of the competition.
 
 Key module map: `py-server/agents/graph.py` (multi-agent pipeline),
 `py-server/engines/frugal_rag.py` (retrieval engine), `py-server/engines/gomarl.py` (consensus engine),
-`src/` (frontend pages).
+`py-server/agents/career_nodes.py` (career-literacy adversarial nodes), `src/` (frontend pages).
 
 ---
 
 *This English README mirrors the Chinese README's data; every quantitative metric is reproducible via
-the scripts shipped with the source.*
+the scripts shipped with the source. On the `career-literacy` branch, **芒得很职 (Mangdehenzhi)** is the
+external product name and MARS-408 is its multi-agent technical base.*

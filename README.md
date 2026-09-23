@@ -1,27 +1,27 @@
-# MARS-408：基于多智能体协同的 408 考研个性化学习系统
+# 芒得很职 — 基于 MARS-408 多智能体底座的职业素养对抗实训平台
 
 [![CI](https://img.shields.io/badge/CI-passing-brightgreen)](https://github.com/TrueFurina/MARS-408/actions)
 [![Python](https://img.shields.io/badge/Python-3.12-blue)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-Uvicorn-009688)](https://fastapi.tiangolo.com/)
 [![LangGraph](https://img.shields.io/badge/LangGraph-11--node%20pipeline-FF6F00)](https://github.com/langchain-ai/langgraph)
-[![Vue](https://img.shields.io/badge/Vue-45%20views-42B883)](https://vuejs.org/)
+[![Vue](https://img.shields.io/badge/Vue-45%20views-42B883)](https://vuejs.org)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](https://github.com/TrueFurina/MARS-408)
 
-**MARS-408** is a multi-agent personalized learning system for China's Postgraduate CS Entrance Exam ("408"): an 11-node LangGraph pipeline (triage → coordinator → diagnostician → planner → retriever → generator → assessor → critic → evidence_check → quality_gate → path_planner) delivers a full *diagnose → plan → teach → practice → review* loop, with SSE streaming, three-tier degradation (Redis/PostgreSQL/Milvus), E5 vector retrieval, and MAPPO-trained teaching policy.
+**芒得很职** is a next-generation, multi-agent empowered career-literacy adversarial training platform for computer-science students, built on the **MARS-408** multi-agent technical base: an 11-node LangGraph pipeline (triage → coordinator → diagnostician → planner → retriever → generator → assessor → critic → evidence_check → quality_gate → path_planner) delivers a full *diagnose → plan → teach → practice → review* loop, with SSE streaming, three-tier degradation (Redis/PostgreSQL/Milvus), E5 vector retrieval, and MAPPO-trained teaching policy. On top of this shared base, 芒得很职 adds a scenario-driven adversarial training loop (画像 → 对抗实训 → 证据评估 → 提升) with six-dimension ECD-aligned assessment.
 
-> 注：MARS-408 为本系统的技术底座代号（多智能体个性化学习系统）。本项目为真实可运行的代码工程，参加 2026 福建高校「火山杯」Agent 创新大赛。
+> 注：MARS-408 为多智能体个性化学习系统的**技术底座代号**；本仓库 `career-literacy` 分支以**芒得很职**为对外产品（计算机类学生职业素养对抗实训），复用同一套多智能体底座。本项目为真实可运行的代码工程，参加中国国际大学生创新大赛（高教主赛道·创意组）与第十六届全国大学生电子商务"创新、创意及创业"挑战赛（三创赛）。
 
-> **2026 福建高校「火山杯」Agent 创新大赛 · 参赛作品**
+> **中国国际大学生创新大赛 · 高教主赛道·创意组 · 参赛作品**
 >
-> 覆盖 408 计算机考研四科：数据结构 / 计算机组成原理 / 操作系统 / 计算机网络
+> 面向计算机类学生：在"被追问、被质疑、被加压"的真实压力场景里，练出表达能力、解题逻辑与抗压应变，并且**每一次评分都可追溯到原话**。
 >
 > 代码仓库：https://github.com/TrueFurina/MARS-408
 >
-> 多智能体流水线：`triage` 分诊 → `coordinator` 协调员 → `diagnostician` 诊断师 → `planner` 规划师 → `retriever` 检索员 → `generator_cluster` 资源生成集群（内含 7 个角色：讲师/出题/导图/PPT/代码/视频/拓展）→ `assessor` 考官 → `critic` 审阅员 → `evidence_check` 证据核查员 → `quality_gate` 质量闸门 → `path_planner` 路径规划师
+> 多智能体底座流水线：`triage` 分诊 → `coordinator` 协调员 → `diagnostician` 诊断师 → `planner` 规划师 → `retriever` 检索员 → `generator_cluster` 资源生成集群（内含 7 个角色：讲师/出题/导图/PPT/代码/视频/拓展）→ `assessor` 考官 → `critic` 审阅员 → `evidence_check` 证据核查员 → `quality_gate` 质量闸门 → `path_planner` 路径规划师；职业素养对抗实训在此基础上叠加 `career_nodes` 对抗循环与六维 ECD 评估。
 
-**让 AI 从"回答问题"到"真正懂你"** —— 一个由 11 节点多智能体流水线驱动的考研个性化学习教练，完成"诊断 → 规划 → 讲解 → 练习 → 复盘"的完整学习闭环。
+**让 AI 从"回答问题"到"真正练出素养"** —— 一个由 11 节点多智能体底座驱动的职业素养对抗实训教练，完成"诊断 → 规划 → 对抗演练 → 证据评估 → 提升"的完整闭环。
 
-> 本项目源于国家级大学生创新创业训练计划，本次以 MARS-408 系统参赛 2026 福建高校「火山杯」Agent 创新大赛。
+> 本项目源于国家级大学生创新创业训练计划，本次以**芒得很职**参赛中国国际大学生创新大赛与"三创赛"。
 
 ---
 
@@ -48,31 +48,36 @@
 | MAPPO 教学策略层（M3） | ✅ 已训练（合成教学环境） | 规则监督预热 + PPO；3-seed 动态环境正确率与规则持平、成本≤规则、beginner 回合奖励 +1.9%（experiments/results/mappo_policy_eval_*.json） |
 | MARL 算法实测对比（M4） | ✅ 已产出数据 | IQL / VDN / QMIX / MAPPO 教学决策 3-seed 对比：MAPPO 最优最稳（正确率 0.963±0.000 持平规则）、QMIX 次优、VDN 最差；报告见 docs/MARL算法与Agent架构对比研究.md |
 | 三评审/MAPPO 生产链路集成（M5） | ✅ 端到端打通 | policy_action 由 coordinator 写入并流经全图（mock LLM 13 节点冒烟通过）；consensus 携带 confidence_score/filtered_issues；演示面板 docs/demo/三评审MAPPO演示面板.html（比赛/答辩用） |
+| 职业素养对抗实训（career） | ✅ 已实现（v1 规则原型） | `api/career_training.py` + `agents/career_nodes.py` + `db/career_store.py`；六维 ECD 评估、对抗循环、证据链回放；真实 LLM 单情景冒烟 `career_llm_smoke_20260913.json` overall 4.5 |
 
-> 上表中 ⚠️ 与 ⏳ 项**不作为项目卖点**列出；对外介绍时以此表口径为准。
+> 上表中 ⚠️ 与 ⏳ 项**不作为项目卖点**列出；对外介绍时以此表口径为准。职业素养对抗实训相关训练指标（MAPPO / P3 鲶鱼）为**合成环境**结论，仅证 effective 口径下"可解析最优"，**不作真实教学增益引用**（详见 `deliverables/国创赛对外材料诚信口径检查清单.md`）。
 
 ---
 
 ## 一、核心能力
 
-### 1. 11 节点多智能体流水线（LangGraph 编排）
+### 1. 11 节点多智能体流水线（LangGraph 编排，MARS-408 技术底座）
 
 学情诊断 → 任务规划 → 知识检索 → 资源生成 → 评估反馈 → 质量校验 → 证据核查 → 产物验收 → 路径规划，多角色各司其职、协同闭环。与传统一问一答的 Chatbot 不同，系统能主动拆解学习任务、规划学习路径、多轮交互追问，并实时反馈进度。
 
-### 2. 共识引擎 + 冲突消解（v1 规则原型）
+### 2. 职业素养对抗实训（芒得很职主线，叠加于底座之上）
+
+基于同一套多智能体底座，芒得很职提供"画像 → 生成情景脚本 → 学生与 AI 面试官多轮对抗 → 对话结束后按证据做六维软素养评分 → 输出可溯源报告"的闭环。每一维评分都挂接原话证据，可练、可量、可证。
+
+### 3. 共识引擎 + 冲突消解（v1 规则原型）
 
 多个 Agent 独立作答后，由加权共识引擎裁决分歧；当 Agent 间出现知识矛盾（如"三次握手 vs 四次挥手"）时，由冲突消解引擎基于知识库证据链检索，并由真实大模型复核事实后再裁决——从机制上防控 AI 幻觉，而非仅靠提示词约束。
 
 > **成熟度说明**：共识为 v1 规则原型（权重规则设定），已叠加三评审门禁（M2：批评者结构化输出 + 证据门禁 + 置信度阈值）。教学策略层已升级为 MAPPO（M3：`engines/mappo_policy.py`，规则预热 + PPO 训练，checkpoint 见 `models/mappo_policy.pt`），经 `use_mappo_policy` flag 灰度接入 Mixer 权重来源（默认关闭）。NeuralMixer（GroupMixerNet）权重的真训仍规划于后续真版目标。
 
-### 3. FrugalRAG 自适应检索管线
+### 4. FrugalRAG 自适应检索管线
 
-向量检索 + BM25 全文检索 + 个性化重排 + 自适应停止策略。内置约 **2100 条知识分片与练习题**，按四科 26 大知识群组组织；检索链路异常时自动降级 BM25，保证演示与使用不中断。
+向量检索 + BM25 全文检索 + 个性化重排 + 自适应停止策略。内置约 **2100 条知识分片与练习题**，按主题知识群组组织；检索链路异常时自动降级 BM25，保证演示与使用不中断。
 
 > **当前状态**：E5 模型已本地化（2026-09-13 验证），向量检索分支已启用、召回达设计上限；BM25-only 为容灾降级路径（`_degraded` 标记），仅在 E5 不可用时触发。
 > **E5 本地化**：模型不入库（`.gitignore` 排除 `e5-base-v2/`），会话重置/换机后运行 `python scripts/fetch_e5_model.py` 一键从 hf-mirror 恢复；恢复后向量检索自动启用。
 
-### 4. 全链路工程化与容灾
+### 5. 全链路工程化与容灾
 
 - 前端 Vue 3 + TypeScript，**45 个页面（45 views）**，多端多角色（学生 / 教师看板）
 - 后端 FastAPI + LangGraph，**约 240 个 API 端点**（openapi.json 实测 223 路径 / 240 操作，43 路由模块），**917 项测试通过 / 207 跳过**（全量回归 0 失败）
@@ -86,7 +91,7 @@
 ```
 ┌─ 前端 Vue 3 + TypeScript (45 页面 / 45 views) ───────────────┐
 │  Vite :5173 → 代理 → 后端 :8002                               │
-│  学生端：对话 / 学习路径 / 知识图谱 / 练习 / 评估              │
+│  学生端：对话 / 学习路径 / 知识图谱 / 练习 / 评估 / 职业素养实训│
 │  教师端：班级学情看板                                          │
 └──────────────────────────────────────────────────────────────┘
                             │
@@ -95,6 +100,7 @@
 │    → generator_cluster → assessor → critic                     │
 │    → evidence_check → quality_gate → path_planner              │
 │  共识引擎(v1 规则) + 冲突消解 · FrugalRAG 检索 · 三级异常降级   │
+│  + career_nodes 对抗实训循环（芒得很职主线）                    │
 └──────────────────────────────────────────────────────────────┘
                             │
 ┌─ 数据层 ──────────────────────────────────────────────────────┐
@@ -107,7 +113,7 @@
 
 ---
 
-## 三、多智能体流水线（11 节点）
+## 三、多智能体流水线（11 节点，MARS-408 技术底座）
 
 | 节点 | 职责 | 产出 |
 |------|------|------|
@@ -132,11 +138,12 @@
 |------|------|
 | 智能对话 | 11 节点流水线，自动识别科目、流式输出（SSE 进度） |
 | 个性化学习路径 | 依据画像与薄弱点动态规划下一步学什么 |
-| 知识图谱 | 四科 26 大知识群组视图（v1 规则原型） |
-| 智能出题与批改 | 按科目 / 章节 / 难度生成练习并自动评分 |
+| 知识图谱 | 26 大知识群组视图（v1 规则原型） |
+| 智能出题与批改 | 按知识点 / 章节 / 难度生成练习并自动评分 |
 | 学习效果评估 | 多维评估报告（知识点掌握 / 答题正确率 / 薄弱点变化） |
 | 教师看板 | 班级学情聚合（进度 / 掌握度 / 薄弱点） |
-| 408 交互教学工具 | TCP 握手动画模拟等可视化教学组件 |
+| 职业素养对抗实训 | 多轮对抗演练 + 六维 ECD 评估 + 证据链回放（芒得很职主线，v1 规则原型） |
+| 交互式实训可视化组件 | 情景推演 / 协议演示等可视化教学组件（v1 规则原型） |
 | 代码沙箱 | 在线 Python 代码执行 |
 | 语音朗读 | 双引擎 TTS（本地离线 + 讯飞 API） |
 
@@ -147,9 +154,9 @@
 | 数据 | 数量 | 说明 |
 |------|------|------|
 | 知识分片 | 约 1900 | knowledge_point + knowledge_variant |
-| 练习题 | 200 | 选择 / 填空 / 简答，覆盖四科 |
+| 练习题 | 200 | 选择 / 填空 / 简答，覆盖核心知识点 |
 | 向量条目 | **2122**（2026-09-13 实测加载） | 缓存二进制加载；E5 已本地化（2026-09-13 验证），重嵌入与缓存刷新按需执行 |
-| 知识群组 | 26 | 按四科章节划分，供跨群冲突检测 |
+| 知识群组 | 26 | 按主题知识群组划分，供跨群冲突检测 |
 
 检索链路：用户提问 → 向量检索（已启用）→ BM25 全文检索 → 融合排序 → 个性化重排 → 增强生成。
 向量分支不可用时降级 BM25-only（`_degraded` 标记），绝不静默返回空结果。
@@ -161,7 +168,7 @@
 | 指标 | 结果 | 说明 |
 |------|------|------|
 | 检索增强效果 | **Recall@5 +10.7%** | 对照无重排基线，CPU 真实运行（2026-08-17 实测） |
-| 检索层可回答率基线 | answerable_rate 0.533 | 30 题四科验证集（eval_gold），持续回归用 |
+| 检索层可回答率基线 | answerable_rate 0.533 | 30 题验证集（eval_gold），持续回归用 |
 | 后端冷启动 | 936 ms | 2026-09-13 实测，含 2122 条向量加载 |
 | 端到端对话时延 | 5.4 s | 2026-09-02 实测，真实 LLM 流式返回 |
 
@@ -222,17 +229,18 @@ npm install && npm run dev                   # :5173，代理 /api → 8002
 
 - 演示视频：`submission/03_演示视频/`
 - 评测与回归脚本：`py-server/experiments/`（eval_gold / benchmark）
-- 核心架构图：`documents/MARS-408核心架构图.svg`
+- 核心架构图（MARS-408 多智能体底座）：`documents/MARS-408核心架构图.svg`
 - 项目体检报告：`diagnostics/项目体检报告-2026-09-02.md`（宣称与实测逐条核对）
+- 职业素养对抗实训方案：`docs/职业素养对抗实训改造方案.md`
 
 ---
 
 ## 十、开发工具合规声明
 
-本项目为真实可运行的代码工程（Vue 3 + TypeScript 前端 / FastAPI + LangGraph 后端），采用 **Trae**（字节跳动 AI IDE）作为开发工具完成核心模块的开发与迭代；代码仓库可在 Trae 中直接打开、构建并运行，满足 2026 福建高校「火山杯」Agent 创新大赛"基于 Trae 开发"的工具要求。
+本项目为真实可运行的代码工程（Vue 3 + TypeScript 前端 / FastAPI + LangGraph 后端），采用 **Trae**（字节跳动 AI IDE）作为开发工具完成核心模块的开发与迭代；代码仓库可在 Trae 中直接打开、构建并运行，满足参赛"基于 AI IDE 开发"的工具要求。
 
-关键模块清单：`py-server/agents/graph.py`（多智能体流水线）、`py-server/engines/frugal_rag.py`（检索引擎）、`py-server/engines/gomarl.py`（共识引擎）、`src/`（前端页面）。
+关键模块清单：`py-server/agents/graph.py`（多智能体流水线）、`py-server/engines/frugal_rag.py`（检索引擎）、`py-server/engines/gomarl.py`（共识引擎）、`py-server/agents/career_nodes.py`（职业素养对抗实训节点）、`src/`（前端页面）。
 
 ---
 
-*本 README 数据口径与源码一致；第〇节「能力兑现状态」为权威口径，量化指标均可通过随源码提供的脚本复现。*
+*本 README 数据口径与源码一致；第〇节「能力兑现状态」为权威口径，量化指标均可通过随源码提供的脚本复现。当前分支 `career-literacy` 以**芒得很职**为对外产品，MARS-408 为其多智能体技术底座。*
