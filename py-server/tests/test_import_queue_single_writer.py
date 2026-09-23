@@ -260,7 +260,7 @@ async def test_worker_job_tracking_under_milvus_like_backend(worker_and_loop, mo
 @pytest.mark.xfail(
     reason="Gap B: ADR §6 risk 6 要求 seen_ids 预过滤，但当前 _process_file 未实现；"
     "InMemoryVectorStore.add 不去重 → 重导同内容会重复插入。需 Dev 补 seen_ids 预过滤。",
-    strict=False,
+    strict=True,
 )
 async def test_reimport_same_source_no_duplicate(worker_and_loop, monkeypatch, tmp_path):
     """重导同一来源（同 id chunks）→ count 不得翻倍。

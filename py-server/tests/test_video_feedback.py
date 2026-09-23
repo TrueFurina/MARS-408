@@ -23,7 +23,7 @@ class TestVideoGeneration:
     def setup_method(self):
         self.client = _client()
 
-    @pytest.mark.xfail(reason="需要真实 LLM 连接，在 CI 中可能超时")
+    @pytest.mark.xfail(strict=True, reason="生成式教学视频/缓存需真实多模态 LLM 产出（scenes/duration/svg 内容）；测试套件注入 mock LLM 无法生成有效内容，故标记；接入真实模型且产出有效时转绿")
     def test_generate_teaching_video(self):
         """生成教学视频（零 API 成本方案）"""
         resp = self.client.post("/api/multimodal/generate-teaching-video", json={
@@ -41,7 +41,7 @@ class TestVideoGeneration:
         assert "<svg" in data.get("html", "")
         assert "NetLearn" in data.get("html", "")
 
-    @pytest.mark.xfail(reason="需要真实 LLM 连接，在 CI 中可能超时")
+    @pytest.mark.xfail(strict=True, reason="生成式教学视频/缓存需真实多模态 LLM 产出（scenes/duration/svg 内容）；测试套件注入 mock LLM 无法生成有效内容，故标记；接入真实模型且产出有效时转绿")
     def test_generate_video_with_cache(self):
         """视频生成缓存（相同 topic 命中缓存）"""
         topic = "TCP三次握手"
