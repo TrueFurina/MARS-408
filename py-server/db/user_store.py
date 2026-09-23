@@ -17,16 +17,11 @@ from datetime import datetime, timedelta
 
 logger = logging.getLogger("netlearn.userstore")
 
-# 支持 NETLEARN_USER_DB 环境变量覆盖 DB 路径（测试隔离用，低侵入）
-_DB_PATH = os.environ.get("NETLEARN_USER_DB") or os.path.join(
-    os.path.dirname(os.path.dirname(__file__)), "data", "netlearn_users.db"
-)
-os.makedirs(os.path.dirname(_DB_PATH), exist_ok=True)
+# D2 修复：SQLite 共享连接与锁统一由 db.core 提供，确保 user_store 与 skill_store
+# 并发写同一 netlearn_users.db 时互斥（消除「两连接 + 两把不互斥的锁」写同文件）。
+from db.core import get_conn as _core_get_conn, LOCK as _lock, DB_PATH as _DB_PATH
 
-_conn: Optional[sqlite3.Connection] = None
-# RLock（可重入）：读路径与写路径共用同一把锁；list_all_users/get_platform_stats
-# 内部会回调 get_profile 等读函数，非重入 Lock 会死锁，故用 RLock。
-_lock = threading.RLock()
+_initialized = False
 
 
 def _now() -> str:
@@ -34,13 +29,15 @@ def _now() -> str:
 
 
 def _get_conn() -> sqlite3.Connection:
-    global _conn
-    if _conn is None:
-        _conn = sqlite3.connect(_DB_PATH, check_same_thread=False)
-        _conn.row_factory = sqlite3.Row
-        _conn.execute("PRAGMA journal_mode=WAL")
-        _init_schema(_conn)
-    return _conn
+    """返回共享连接（来自 db.core 单例）；首次调用时在本模块锁内幂等建表。"""
+    conn = _core_get_conn()
+    global _initialized
+    if not _initialized:
+        with _lock:
+            if not _initialized:
+                _init_schema(conn)
+                _initialized = True
+    return conn
 
 
 def get_db_conn() -> sqlite3.Connection:

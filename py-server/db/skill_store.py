@@ -22,13 +22,11 @@ from schemas.skills import (
 
 logger = logging.getLogger("netlearn.skillstore")
 
-# 与 user_store 共享同一数据库目录
-_DB_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
-_DB_PATH = os.path.join(_DB_DIR, "netlearn_users.db")
-os.makedirs(_DB_DIR, exist_ok=True)
+# D2 修复：与 user_store 共用 db.core 的单一连接与锁（同一 netlearn_users.db）。
+# 原先各自持有独立连接与锁，并发写跨 store 不互斥，会触发 database is locked。
+from db.core import get_conn as _core_get_conn, LOCK as _lock, DB_PATH as _DB_PATH
 
-_conn: Optional[sqlite3.Connection] = None
-_lock = threading.RLock()
+_initialized = False
 
 
 def _now() -> str:
@@ -37,14 +35,15 @@ def _now() -> str:
 
 
 def _get_conn() -> sqlite3.Connection:
-    """获取数据库连接（延迟初始化 + 自动建表）"""
-    global _conn
-    if _conn is None:
-        _conn = sqlite3.connect(_DB_PATH, check_same_thread=False)
-        _conn.row_factory = sqlite3.Row
-        _conn.execute("PRAGMA journal_mode=WAL")
-        _init_schema(_conn)
-    return _conn
+    """返回共享连接（来自 db.core 单例）；首次调用时在本模块锁内幂等建表。"""
+    conn = _core_get_conn()
+    global _initialized
+    if not _initialized:
+        with _lock:
+            if not _initialized:
+                _init_schema(conn)
+                _initialized = True
+    return conn
 
 
 def _init_schema(conn: sqlite3.Connection):
