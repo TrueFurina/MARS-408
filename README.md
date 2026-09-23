@@ -74,8 +74,8 @@
 
 ### 4. 全链路工程化与容灾
 
-- 前端 Vue 3 + TypeScript，**38 个页面**，多端多角色（学生 / 教师看板）
-- 后端 FastAPI + LangGraph，**451 个 API 端点**（43 路由模块），**915 项测试通过 / 207 跳过**（全量回归 0 失败）
+- 前端 Vue 3 + TypeScript，**45 个页面（45 views）**，多端多角色（学生 / 教师看板）
+- 后端 FastAPI + LangGraph，**约 240 个 API 端点**（openapi.json 实测 223 路径 / 240 操作，43 路由模块），**917 项测试通过 / 207 跳过**（全量回归 0 失败）
 - **双通道大模型自动容灾**：DeepSeek（主）→ 讯飞星火 generalv3.5（兜底）
 - Milvus / PostgreSQL / Redis 缺失时逐级自动降级，单机即可完整运行
 
@@ -208,9 +208,9 @@ npm install && npm run dev                   # :5173，代理 /api → 8002
 | 维度 | 指标 |
 |------|------|
 | 前端 | Vue 3 + TypeScript · 45 个 views（82 个 .vue） · Vite 构建 |
-| 后端 | FastAPI + LangGraph · 451 个 API 端点 · 11 Agent 节点 |
+| 后端 | FastAPI + LangGraph · 约 240 个 API 端点（openapi.json 实测 223 路径 / 240 操作）· 11 Agent 节点 |
 | 代码量 | 后端 414 个 Python 文件 / 约 10.2 万行 · 前端 93 文件 / 约 2.8 万行 |
-| 测试 | 915 项测试通过 / 207 跳过（全量回归 0 失败） |
+| 测试 | 917 项测试通过 / 207 跳过（全量回归 0 失败） |
 | LLM | DeepSeek（主）+ 讯飞星火 generalv3.5（兜底）双通道自动容灾 |
 | 检索 | 向量检索主路径 · 约 2122 条条目 · E5 已本地化启用（768 维） |
 | 容灾 | Milvus / PG / Redis 逐级降级 · 单机可完整运行 |

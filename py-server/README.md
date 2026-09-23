@@ -68,8 +68,8 @@ python -m pytest tests/test_engine_modules.py -v
 
 ```
 py-server/
-├── api/           # API 路由（25 模块, 97 端点）
-├── agents/        # 多智能体节点（9 个 LangGraph 节点）
+├── api/           # API 路由（43 模块, 约 240 端点 / openapi.json 实测 223 路径）
+├── agents/        # 多智能体节点（11 个 LangGraph 节点）
 ├── engines/       # 核心引擎
 │   ├── gomarl.py          # GOMARL 共识聚合
 │   ├── gomarl_mixer.py    # Neural GroupMixer 神经网络
@@ -90,7 +90,7 @@ py-server/
 │   └── audit.py           # 安全审计日志
 ├── models/       # 预训练模型权重
 ├── tools/        # 工具脚本
-├── tests/        # 测试（281+ 个）
+├── tests/        # 测试（900+ 用例）
 ├── main.py       # 应用入口
 ├── config.py     # 配置管理
 ├── prompts.py    # 提示词模板

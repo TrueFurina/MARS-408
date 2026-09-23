@@ -8,19 +8,19 @@
 >
 > Repository: https://github.com/TrueFurina/MARS-408
 >
-> Agent roster: `coordinator` → `diagnostician` → `planner` → `retriever` → `generator_cluster`
+> Agent roster: `triage` → `coordinator` → `diagnostician` → `planner` → `retriever` → `generator_cluster`
 > (which fans out to 7 roles: lecturer / quiz / mind-map / slides / code / video / extension)
 > → `assessor` → `critic` → `evidence_check` → `quality_gate` → `path_planner`
 
 **From "answering questions" to "actually understanding you."**
-A personalized exam-prep coach driven by a 10-node multi-agent pipeline that closes the full loop:
+A personalized exam-prep coach driven by an 11-node multi-agent pipeline that closes the full loop:
 **diagnose → plan → explain → practice → review.**
 
 ---
 
 ## 1. Highlights
 
-### 1. 10-Node Multi-Agent Pipeline (LangGraph)
+### 1. 11-Node Multi-Agent Pipeline (LangGraph)
 
 Learning-state diagnosis → task planning → knowledge retrieval → resource generation → assessment
 → quality audit → evidence verification → artifact acceptance → path planning. Agents own distinct
@@ -45,9 +45,9 @@ chain fails, the system **degrades to BM25-only** so demos and usage never break
 
 ### 4. Production-Grade Engineering and Graceful Degradation
 
-- Frontend: Vue 3 + TypeScript, **68 pages**, multi-role (student / teacher dashboard)
-- Backend: FastAPI + LangGraph, **230+ API endpoints**, **843 tests passing** (full regression, 0 failures)
-- **Dual-channel LLM failover**: iFlytek Spark X2 (primary) + DeepSeek (fallback)
+- Frontend: Vue 3 + TypeScript, **45 pages (45 views)**, multi-role (student / teacher dashboard)
+- Backend: FastAPI + LangGraph, **~240 API endpoints** (openapi.json: 223 paths / 240 operations), **917 tests passing** (full regression, 0 failures)
+- **Dual-channel LLM failover**: DeepSeek (primary) + iFlytek Spark generalv3.5 (fallback; X2 not authorized)
 - Milvus / PostgreSQL / Redis each degrade independently — a single machine runs the system end to end
 
 ---
@@ -55,13 +55,13 @@ chain fails, the system **degrades to BM25-only** so demos and usage never break
 ## 2. System Architecture
 
 ```
-┌─ Frontend: Vue 3 + TypeScript (68 pages) ─────────────────────┐
+┌─ Frontend: Vue 3 + TypeScript (45 pages / 45 views) ──────────┐
 │  Vite :5173  ──proxy──▶  Backend :8002                        │
 │  Student: chat / learning path / knowledge graph / practice    │
 │  Teacher: class-level learning dashboard                       │
 └───────────────────────────────────────────────────────────────┘
                             │
-┌─ Backend: FastAPI + LangGraph (10-node agent pipeline) ────────┐
+┌─ Backend: FastAPI + LangGraph (11-node agent pipeline) ────────┐
 │  coordinator → diagnostician → planner → retriever             │
 │    → generator_cluster → assessor → critic                     │
 │    → evidence_check → quality_gate → path_planner              │
@@ -78,10 +78,11 @@ chain fails, the system **degrades to BM25-only** so demos and usage never break
 
 ---
 
-## 3. The 10-Node Agent Pipeline
+## 3. The 11-Node Agent Pipeline
 
 | Node | Responsibility | Output |
 |------|----------------|--------|
+| `triage` | Triage routing & intent classification; low-cost classifier with short-circuit fast path | Task routing / quick answer |
 | `coordinator` | Intent recognition, global orchestration, dispatch | Task routing |
 | `diagnostician` | Diagnoses learning state, locates weak knowledge points | Diagnostic report |
 | `planner` | Analyzes the learner profile, builds a step-by-step plan | Study plan |
@@ -102,7 +103,7 @@ readings, slide outlines, hands-on code, and video scripts.
 
 | Feature | Description |
 |---------|-------------|
-| Intelligent chat | 10-node pipeline, auto-detects subject, streams output via SSE progress |
+| Intelligent chat | 11-node pipeline, auto-detects subject, streams output via SSE progress |
 | Personalized learning path | Dynamically plans what to study next from the profile and weak points |
 | Knowledge graph | 26 knowledge-group view across four subjects (v1 rule-based prototype) |
 | Question generation & grading | Generates and auto-scores practice by subject / chapter / difficulty |
@@ -133,7 +134,7 @@ personalized re-ranking → augmented generation. On failure it degrades to BM25
 
 | Metric | Result | Notes |
 |--------|--------|-------|
-| Retrieval augmentation | **Recall@5 +15.8% / MRR +16.0%** | vs. no-reranking baseline, real CPU run (measured 2026-08) |
+| Retrieval augmentation | **Recall@5 +10.7% / MRR +9.6%** | vs. no-reranking baseline, real CPU run (measured 2026-08-17) |
 | Retrieval-layer answerability baseline | `answerable_rate` = 0.533 | 30-question four-subject gold set (`eval_gold`), used for regression |
 
 Evaluation scripts ship with the source (`py-server/experiments/`); every metric can be reproduced with
@@ -170,10 +171,10 @@ core features still run.
 
 | Dimension | Metric |
 |-----------|--------|
-| Frontend | Vue 3 + TypeScript · 68 pages · Vite build |
-| Backend | FastAPI + LangGraph · 230+ API endpoints · 10 agent nodes |
-| Tests | 843 tests passing (full regression, 0 failures) |
-| LLM | iFlytek Spark X2 (primary) + DeepSeek (fallback), dual-channel failover |
+| Frontend | Vue 3 + TypeScript · 45 pages (45 views) · Vite build |
+| Backend | FastAPI + LangGraph · ~240 API endpoints (openapi.json: 223 paths / 240 ops) · 11 agent nodes |
+| Tests | 917 tests passing (full regression, 0 failures) |
+| LLM | DeepSeek (primary) + iFlytek Spark generalv3.5 (fallback; X2 not authorized), dual-channel failover |
 | Retrieval | Real E5 768-dim embeddings · 2,122 vectors · BM25 degradation guard |
 | Resilience | Milvus / PG / Redis degrade independently · runs fully on one machine |
 | Data | 1,883 knowledge chunks + 200 questions · 26 knowledge groups |

@@ -55,10 +55,10 @@ docker-compose --profile production up -d   # 生产模式（需 AUTH_SECRET + A
 
 ### 后端多智能体流水线（py-server/agents/）
 
-LangGraph StateGraph，10 节点单向主流程 + 条件回环：
+LangGraph StateGraph，11 节点单向主流程（首节点为 triage 分诊）+ 条件回环：
 
 ```
-coordinator → diagnostician → planner → retriever
+triage → coordinator → diagnostician → planner → retriever
   → generator_cluster (7 并行子 Agent) → assessor → critic
   → evidence_check → quality_gate → path_planner → END
 
