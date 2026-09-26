@@ -1,0 +1,298 @@
+{
+  "_meta": {
+    "purpose": "408 骨架 26 章 ↔ py-server/seed_data.py SEED_SUBJECTS 27 章 的显式映射（人工维护）。",
+    "group_semantics": "节点 group 字段按 POST /knowledge/graph 口径回填 = SEED_SUBJECTS 的 1-based 插入顺序索引。映射不上时为 null（不伪造）。",
+    "honesty_policy": "骨架与 SEED 章数不齐（26 vs 27），差异逐条列出，**不强行对齐**。",
+    "author": "kg408-importer",
+    "date": "2026-09-24",
+    "review_status": "pending_discipline_owner_review",
+    "schema_version": "kg408-chaptermap-v1"
+  },
+  "seed_subject_index": {
+    "overview": 1,
+    "physical": 2,
+    "datalink": 3,
+    "network": 4,
+    "transport": 5,
+    "application": 6,
+    "security": 7,
+    "ds_linear": 8,
+    "ds_stack": 9,
+    "ds_queue": 10,
+    "ds_string": 11,
+    "ds_tree": 12,
+    "ds_graph": 13,
+    "ds_search": 14,
+    "ds_sort": 15,
+    "co_overview": 16,
+    "co_data": 17,
+    "co_memory": 18,
+    "co_isa": 19,
+    "co_cpu": 20,
+    "co_bus": 21,
+    "co_io": 22,
+    "os_overview": 23,
+    "os_process": 24,
+    "os_memory": 25,
+    "os_file": 26,
+    "os_io": 27
+  },
+  "mapping": [
+    {
+      "subject": "DS",
+      "chapter": "绪论",
+      "seed_subject": null,
+      "group": null,
+      "seed_subject_extra": [],
+      "status": "unmapped",
+      "reason": "SEED_SUBJECTS 无 DS 绪论章（DS 首章为 ds_linear 线性表）。骨架多出此章。"
+    },
+    {
+      "subject": "DS",
+      "chapter": "线性表",
+      "seed_subject": "ds_linear",
+      "group": 8,
+      "seed_subject_extra": [],
+      "status": "exact",
+      "reason": "章名一致。"
+    },
+    {
+      "subject": "DS",
+      "chapter": "栈与队列",
+      "seed_subject": "ds_stack",
+      "group": 9,
+      "seed_subject_extra": ["ds_queue"],
+      "status": "split_in_seed",
+      "reason": "骨架合并为 1 章，SEED 拆成 ds_stack(9) 与 ds_queue(10) 两章。group 取主章 ds_stack；ds_queue 记为 extra，用于 KB 对齐时双向覆盖。"
+    },
+    {
+      "subject": "DS",
+      "chapter": "串",
+      "seed_subject": "ds_string",
+      "group": 11,
+      "seed_subject_extra": [],
+      "status": "exact",
+      "reason": "章名一致。"
+    },
+    {
+      "subject": "DS",
+      "chapter": "树与二叉树",
+      "seed_subject": "ds_tree",
+      "group": 12,
+      "seed_subject_extra": [],
+      "status": "exact",
+      "reason": "章名一致。"
+    },
+    {
+      "subject": "DS",
+      "chapter": "图",
+      "seed_subject": "ds_graph",
+      "group": 13,
+      "seed_subject_extra": [],
+      "status": "exact",
+      "reason": "章名一致。"
+    },
+    {
+      "subject": "DS",
+      "chapter": "查找",
+      "seed_subject": "ds_search",
+      "group": 14,
+      "seed_subject_extra": [],
+      "status": "exact",
+      "reason": "章名一致。"
+    },
+    {
+      "subject": "DS",
+      "chapter": "排序",
+      "seed_subject": "ds_sort",
+      "group": 15,
+      "seed_subject_extra": [],
+      "status": "exact",
+      "reason": "章名一致。"
+    },
+    {
+      "subject": "CO",
+      "chapter": "系统概述",
+      "seed_subject": "co_overview",
+      "group": 16,
+      "seed_subject_extra": [],
+      "status": "name_near_match",
+      "reason": "骨架『系统概述』↔ SEED『计算机系统概述』，指向同一章。"
+    },
+    {
+      "subject": "CO",
+      "chapter": "数据表示与运算",
+      "seed_subject": "co_data",
+      "group": 17,
+      "seed_subject_extra": [],
+      "status": "name_near_match",
+      "reason": "骨架『数据表示与运算』↔ SEED『数据的表示和运算』，指向同一章。"
+    },
+    {
+      "subject": "CO",
+      "chapter": "存储系统",
+      "seed_subject": "co_memory",
+      "group": 18,
+      "seed_subject_extra": [],
+      "status": "exact",
+      "reason": "章名一致。"
+    },
+    {
+      "subject": "CO",
+      "chapter": "指令系统",
+      "seed_subject": "co_isa",
+      "group": 19,
+      "seed_subject_extra": [],
+      "status": "exact",
+      "reason": "章名一致。"
+    },
+    {
+      "subject": "CO",
+      "chapter": "中央处理器",
+      "seed_subject": "co_cpu",
+      "group": 20,
+      "seed_subject_extra": [],
+      "status": "exact",
+      "reason": "章名一致。"
+    },
+    {
+      "subject": "CO",
+      "chapter": "总线",
+      "seed_subject": "co_bus",
+      "group": 21,
+      "seed_subject_extra": [],
+      "status": "exact",
+      "reason": "章名一致。"
+    },
+    {
+      "subject": "CO",
+      "chapter": "输入输出",
+      "seed_subject": "co_io",
+      "group": 22,
+      "seed_subject_extra": [],
+      "status": "name_near_match",
+      "reason": "骨架『输入输出』↔ SEED『输入输出系统』，指向同一章。"
+    },
+    {
+      "subject": "OS",
+      "chapter": "概述",
+      "seed_subject": "os_overview",
+      "group": 23,
+      "seed_subject_extra": [],
+      "status": "name_near_match",
+      "reason": "骨架『概述』↔ SEED『操作系统概述』，指向同一章。"
+    },
+    {
+      "subject": "OS",
+      "chapter": "进程管理",
+      "seed_subject": "os_process",
+      "group": 24,
+      "seed_subject_extra": [],
+      "status": "exact",
+      "reason": "章名一致。"
+    },
+    {
+      "subject": "OS",
+      "chapter": "内存管理",
+      "seed_subject": "os_memory",
+      "group": 25,
+      "seed_subject_extra": [],
+      "status": "exact",
+      "reason": "章名一致。"
+    },
+    {
+      "subject": "OS",
+      "chapter": "文件管理",
+      "seed_subject": "os_file",
+      "group": 26,
+      "seed_subject_extra": [],
+      "status": "name_near_match",
+      "reason": "骨架『文件管理』↔ SEED『文件系统』，指向同一章。"
+    },
+    {
+      "subject": "OS",
+      "chapter": "输入输出",
+      "seed_subject": "os_io",
+      "group": 27,
+      "seed_subject_extra": [],
+      "status": "name_near_match",
+      "reason": "骨架『输入输出』↔ SEED『IO管理』，指向同一章。"
+    },
+    {
+      "subject": "CN",
+      "chapter": "体系结构",
+      "seed_subject": "overview",
+      "group": 1,
+      "seed_subject_extra": [],
+      "status": "manual",
+      "reason": "骨架 CN 首章『体系结构』（考点：OSI/TCP-IP/性能指标）↔ SEED CN 首章 overview『计算机网络概述』（含子章『网络体系结构』『性能指标』）。置信度中等，需学科负责人复核。"
+    },
+    {
+      "subject": "CN",
+      "chapter": "物理层",
+      "seed_subject": "physical",
+      "group": 2,
+      "seed_subject_extra": [],
+      "status": "exact",
+      "reason": "章名一致。"
+    },
+    {
+      "subject": "CN",
+      "chapter": "数据链路层",
+      "seed_subject": "datalink",
+      "group": 3,
+      "seed_subject_extra": [],
+      "status": "exact",
+      "reason": "章名一致。"
+    },
+    {
+      "subject": "CN",
+      "chapter": "网络层",
+      "seed_subject": "network",
+      "group": 4,
+      "seed_subject_extra": [],
+      "status": "exact",
+      "reason": "章名一致。"
+    },
+    {
+      "subject": "CN",
+      "chapter": "传输层",
+      "seed_subject": "transport",
+      "group": 5,
+      "seed_subject_extra": [],
+      "status": "name_near_match",
+      "reason": "骨架『传输层』↔ SEED『运输层』，同义异名（408 大纲两种译法）。"
+    },
+    {
+      "subject": "CN",
+      "chapter": "应用层",
+      "seed_subject": "application",
+      "group": 6,
+      "seed_subject_extra": [],
+      "status": "exact",
+      "reason": "章名一致。"
+    }
+  ],
+  "unmapped_seed_subjects": [
+    {
+      "seed_subject": "security",
+      "group": 7,
+      "name": "网络安全",
+      "reason": "骨架 CN 只有 6 章，**无网络安全章**。SEED 有。属 SEED 多出，不强行造节点。"
+    }
+  ],
+  "unmapped_skeleton_chapters": [
+    {
+      "subject": "DS",
+      "chapter": "绪论",
+      "reason": "SEED_SUBJECTS 无对应章（SEED DS 无绪论）。属骨架多出，不强行并入他章。"
+    }
+  ],
+  "seed_subject_level": {
+    "_note": "SEED_KNOWLEDGE_CHUNKS 中有 163 条 chunk 的 metadata.subject 是科目级键（ds/co/os/cn），不在 SEED_SUBJECTS 27 章之内。T04 KB 对齐时按科目级绑定，不走章级。",
+    "ds": "DS",
+    "co": "CO",
+    "os": "OS",
+    "cn": "CN"
+  }
+}

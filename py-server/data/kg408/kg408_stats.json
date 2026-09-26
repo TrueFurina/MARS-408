@@ -1,0 +1,72 @@
+{
+  "schema": "kg408/v1",
+  "provenance": {
+    "source_path": "E:/Program/MARL/SAGE/pdf/03_408知识图谱骨架.html",
+    "source_sha256": "a127702b519d54670517bf35a8b1c2ae0d2c917c4ec464d4e5e98246defcdee5",
+    "source_bytes": 9995,
+    "source_mtime_utc": "2026-09-20T15:42:37Z",
+    "alias_path": "data/kg408/kg408_alias.json",
+    "alias_sha256": "d97bcdfe5e12c0ab8a225f3a437e90edec452d40e13235fa5f7cbfea78e3162f",
+    "chapter_map_path": "data/kg408/kg408_chapter_map.json",
+    "chapter_map_sha256": "f2a9e2a55c841247bc756f63e8c1d857aca65ab15070970109517b16c2aaf6ec",
+    "manual_nodes_path": "data/kg408/kg408_manual_nodes.json",
+    "manual_nodes_sha256": "767effe393b1d6b170a64ffd43ccfc8b17ecc8843055af923eb19fe84c8e2dc0",
+    "generator": "scripts/build_kg408.py",
+    "generator_version": "1.0.0",
+    "parser_rule_version": "kg408-parse-r1",
+    "command": "python scripts/build_kg408.py --source E:/Program/MARL/SAGE/pdf/03_408知识图谱骨架.html --out-dir data/kg408",
+    "generated_at_utc": "2026-09-20T15:42:37Z",
+    "generated_at_utc_basis": "source_file_mtime_utc__deterministic"
+  },
+  "stats": {
+    "nodes_total": 136,
+    "nodes_subject": 4,
+    "nodes_chapter": 26,
+    "nodes_knowledge_point": 106,
+    "nodes_from_source": 135,
+    "nodes_manual_supplement": 1,
+    "nodes_knowledge_point_from_source": 105,
+    "nodes_knowledge_point_manual": 1,
+    "edges_total": 18,
+    "edges_prerequisite": 14,
+    "edges_association": 4,
+    "unresolved_total": 17,
+    "unresolved_by_reason": {
+      "absent_in_skeleton": 11,
+      "chapter_level_only": 5,
+      "ambiguous_multi_match": 1
+    },
+    "by_subject": {
+      "DS": {
+        "chapters": 8,
+        "knowledge_points": 35
+      },
+      "CO": {
+        "chapters": 7,
+        "knowledge_points": 22
+      },
+      "OS": {
+        "chapters": 5,
+        "knowledge_points": 21
+      },
+      "CN": {
+        "chapters": 6,
+        "knowledge_points": 28
+      }
+    },
+    "weight_null_count": 18,
+    "resolution_counts": {
+      "alias": 16,
+      "exact": 2
+    },
+    "edges_depending_on_alias": 16,
+    "edges_pure_exact": 2,
+    "edges_prerequisite_cross_subject": 1,
+    "source_prereq_rows": 13,
+    "source_prereq_declarations": 23,
+    "source_prereq_declarations_resolved": 14,
+    "source_cross_rows": 7,
+    "source_cross_refs": 18,
+    "prereq_success_pct": 60.9
+  }
+}

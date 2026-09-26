@@ -1,0 +1,10 @@
+# 408 知识图谱（kg408）生成产物：强制 LF（跨平台逐字节可复现的硬前提）。
+#
+# 背景：本仓库 core.autocrlf=true，检出时会把 LF 转成 CRLF（现存 753 个文件即
+# i/lf w/crlf）。而 kg408 产物按设计必须写 LF —— 否则：
+#   1) tests/test_kg408.py::test_generated_artifacts_use_lf_line_endings 在新检出即失败；
+#   2) verify_kg408.py 的「重跑逐字节比对」重生成 LF vs 检出 CRLF → 不一致；
+#   3) kg408_inputs_frozen.json 冻结的输入表 sha256 与检出文件 sha 不符 → 关卡失败。
+# 用 eol=lf 固定这些路径的检出行为，使「可复现」在任意平台/任意克隆成立。
+py-server/data/kg408/** text eol=lf
+deliverables/408-kg/** text eol=lf
