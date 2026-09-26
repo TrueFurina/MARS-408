@@ -514,6 +514,7 @@ class VectorDB:
     def __init__(self):
         self._milvus_connected = False
         self._mem_store: Optional[InMemoryVectorStore] = None
+        self._embedding_fallback_count = 0  # E5 嵌入失败（如 sentence-transformers 缺失）走零向量兜底的次数
 
     # ── 公共接口 ──
 
@@ -827,7 +828,6 @@ class VectorDB:
         # 尝试计算 E5 嵌入，失败则零向量占位
         precomputed_embeddings = [c.get("embedding", None) for c in chunks]
         has_precomputed = any(e is not None for e in precomputed_embeddings)
-        embedding_failed = False
 
         if not has_precomputed:
             try:
@@ -840,7 +840,6 @@ class VectorDB:
                 logger.info(f"E5 嵌入计算成功（{len(chunks)} 条文档）")
             except Exception as e:
                 logger.warning(f"E5 嵌入失败({e})，使用零向量占位并标记 fallback_zero")
-                embedding_failed = True
 
         for i, c in enumerate(chunks):
             ids.append(c.get("id", f"chunk_{i}"))

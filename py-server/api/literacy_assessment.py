@@ -195,18 +195,19 @@ async def submit_literacy(
 ):
     """提交素养测评：分档计分 → 六维得分 → 落库（pre/post 各一次）。
 
-    user_id 解析顺序：Bearer token（登录态）→ 请求体 user_id（课堂场景）→ demo 兜底。
-    此前硬编码 demo 导致同班学生互相覆盖（并发试测实锤，46 人课堂不可用）。
+    user_id 解析顺序：请求体 user_id（课堂实验编号=学号后4位）→ Bearer token → demo 兜底。
+    实验编号必须优先：全班共用 demo 账号登录时 token 一律是 demo，
+    若 token 优先会再次互相覆盖（并发试测实锤过一次）。
     """
-    uid = "demo"
-    if authorization and authorization.startswith("Bearer "):
+    uid = req.user_id.strip()
+    if not uid and authorization and authorization.startswith("Bearer "):
         try:
             from shared.auth import verify_token
             uid = verify_token(authorization[len("Bearer "):])["sub"]
         except Exception:
             pass
-    if uid == "demo" and req.user_id.strip():
-        uid = req.user_id.strip()
+    if not uid:
+        uid = "demo"
     if req.phase not in ("pre", "post"):
         raise HTTPException(status_code=422, detail="phase 必须为 pre 或 post")
     qmap = {q["id"]: q for q in QUESTION_BANK}
