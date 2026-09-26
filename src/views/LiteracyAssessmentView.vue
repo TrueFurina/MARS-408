@@ -34,7 +34,7 @@ const currentIndex = ref(0)
 const answers = ref<Record<number, number>>({})   // qid -> option_index
 const phase = ref<'pre' | 'post'>('pre')
 const className = ref('')
-const userName = ref('')
+const studentId = ref('')   // 实验编号=学号后4位：课堂身份主键（共享 demo 登录下唯一区分）
 const submitting = ref(false)
 const loading = ref(true)
 const errorMsg = ref('')
@@ -89,7 +89,8 @@ async function submit() {
     result.value = await api.post<SubmitResult>('/literacy/submit', {
       phase: phase.value,
       class_name: className.value,
-      user_name: userName.value,
+      user_id: studentId.value,
+      user_name: studentId.value,
       answers: Object.entries(answers.value).map(([qid, option_index]) => ({
         qid: Number(qid), option_index,
       })),
@@ -195,9 +196,9 @@ function restart(nextPhase: 'pre' | 'post') {
         </div>
 
         <div class="submit-row">
-          <input v-model="userName" class="text-input" placeholder="姓名（脱敏可填学号后4位）" />
+          <input v-model="studentId" class="text-input" placeholder="实验编号（学号后4位，如 9001）" maxlength="4" />
           <input v-model="className" class="text-input" placeholder="班级（如：信息安全1班-实验组）" />
-          <button class="btn primary" :disabled="!allAnswered || submitting" @click="submit">
+          <button class="btn primary" :disabled="!allAnswered || !studentId.trim() || submitting" @click="submit">
             {{ submitting ? '提交中…' : `提交测评（${answeredCount}/${questions.length}）` }}
           </button>
         </div>
