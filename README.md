@@ -9,7 +9,7 @@
 
 **芒得很职** is a next-generation, multi-agent empowered career-literacy adversarial training platform for computer-science students, built on the **MARS-408** multi-agent technical base: an 11-node LangGraph pipeline (triage → coordinator → diagnostician → planner → retriever → generator → assessor → critic → evidence_check → quality_gate → path_planner) delivers a full *diagnose → plan → teach → practice → review* loop, with SSE streaming, three-tier degradation (Redis/PostgreSQL/Milvus), E5 vector retrieval, and MAPPO-trained teaching policy. On top of this shared base, 芒得很职 adds a scenario-driven adversarial training loop (画像 → 对抗实训 → 证据评估 → 提升) with six-dimension ECD-aligned assessment.
 
-> 注：MARS-408 为多智能体个性化学习系统的**技术底座代号**；本仓库 `career-literacy` 分支以**芒得很职**为对外产品（计算机类学生职业素养对抗实训），复用同一套多智能体底座。本项目为真实可运行的代码工程，参加中国国际大学生创新大赛（高教主赛道·创意组）与第十六届全国大学生电子商务"创新、创意及创业"挑战赛（三创赛）。
+> 注：MARS-408 为多智能体个性化学习系统的**技术底座代号**；本仓库 `career-literacy` 分支以**芒得很职**为对外产品（计算机类学生职业素养对抗实训），复用同一套多智能体底座。本项目为真实可运行的代码工程。
 
 > **中国国际大学生创新大赛 · 高教主赛道·创意组 · 参赛作品**
 >

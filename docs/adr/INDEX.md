@@ -28,8 +28,10 @@
 | ADR-015 | career-literacy 分支治理（双分支双身份 / 零侵入 / `career_*` 公约） | Accepted | `docs/adr/ADR-015-career-branch-governance.md` |
 | ADR-017 | 评审单一真值源（`discipline_gate` / `review_precision` 收敛） | Accepted | `docs/adr/ADR-017-review-single-source.md` |
 | ADR-018 | 代码审查机制（标准/流程/PR模板/红线grep守护） | Accepted | `docs/adr/ADR-018-code-review-mechanism.md` |
+| ADR-019 | Jev 技术选型（不接入主线 / FrugalRAG 口径纠正 / 旁路试点边界） | Accepted | `docs/adr/ADR-019-jev-tech-selection.md` |
 
 > 注：ADR-007（导入队列单写者）与 ADR-008（并发模型）记**已生效现实**——`--workers 1` + import_worker filelock 真阻塞 + `pytest -m import_queue` 13 passed/1 xfailed；两者于 2026-09-14 由 Proposed 提升为 Accepted。ADR-008 的"水平扩展机制"部分仍待 ADR-012。
 > ADR-009 记录**现有已实现**两通道（Accepted）；ADR-010 的 prod fail-fast 尚未在代码中实现（`config.py:91`、`milvus_client.py:403` 仍为静默回退），属**待实现目标**（Proposed，纠正架构债 #8）。
 > ADR-011 记录三元评审权重 MAPPO 化的**三位一体**结论：解析式最优（生产默认）+ RL 兜底 + career 线真实 RL 增益；诚实边界=仅证 effective 口径下最优。ADR-015 记录双分支双身份零侵入公约。ADR-017 记录判定语义的单一真值源（49 例守护）。
+> ADR-019 记录 Jev（TypeSafe AI · System One）技术选型：**不接入 11 节点主线**，并纠正 FrugalRAG 叙事——其为**质量组件（Recall@5 +7.14 pp 等），非成本组件**（现行口径 token −11.99% / 延迟约 213×），对外禁止宣称「降本/提速」。P1 旁路试点前置条件 ①② 未齐（无 API key），**试点未执行**；旁路试点脚手架 `pilot_jev_judgment.py` 已于同日创建（旁路实验件，不接入运行链路），本 ADR 决策本身不含对业务主线的代码改动。
 > 状态约定：Proposed（提议，待评审）/ Accepted（已采纳）/ Superseded（被替代，须标注替代者）。
