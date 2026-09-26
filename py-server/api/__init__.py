@@ -41,6 +41,7 @@ from api.memory import router as memory_router
 from api.wrong_questions import router as wrong_questions_router
 from api.daily_plan import router as daily_plan_router
 from api.career_training import router as career_training_router
+from api.kg408 import router as kg408_router
 
 __all__ = [
     "chat_router", "profile_router", "quiz_router", "rag_router",
@@ -52,6 +53,7 @@ __all__ = [
     "admin_users_router",
     "xfyun_router", "imports_router", "llm_health_router",
     "skills_router",
+    "cn_distinction_router",
     "tts_router",
     "diagnostic_router",
     "review_router",
@@ -66,4 +68,5 @@ __all__ = [
     "daily_plan_router",
     "career_training_router",
     "benchmark_router",
+    "kg408_router",
 ]

@@ -1,0 +1,28 @@
+{
+  "_meta": {
+    "purpose": "人工补充节点表（人工维护）。收录**源骨架遗漏、但确属标准 408 考点**的节点。",
+    "warning": "本表内容**不是源骨架数据**。凡由此表产生的节点，其 node.origin = \"manual\"，统计时必须与 origin=\"source\" 的节点**分列呈现，禁止合并成一个数字**。",
+    "author": "kg408-importer",
+    "decision_source": "discipline_owner_decision_2026-09-25",
+    "review_status": "approved_by_discipline_owner",
+    "schema_version": "kg408-manual-nodes-v1",
+    "id_pinning": "手工节点的 id 在本表中**显式锁定**，不由源表格行序推导。构建脚本会校验：若该 id 与源节点 id 冲突，立即报错退出（不静默覆盖）。",
+    "provenance": "本文件的 sha256 会写入 kg408.json 的 provenance.manual_nodes_sha256，供追溯「改表 → 重跑 → 提交」链路。"
+  },
+  "nodes": [
+    {
+      "id": "408:OS:CH04:KP05",
+      "label": "磁盘调度",
+      "subject": "OS",
+      "chapter": "文件管理",
+      "level": "knowledge_point",
+      "ordinal": 5,
+      "aliases": [],
+      "rationale": "跨科关联表 row 328「排序与流水线」的 OS 列只写了「调度」两个字。独立 QA 指出这可能指磁盘调度而非进程调度；学科负责人 2026-09-25 裁定：确为**磁盘调度**。磁盘调度是标准 408 考点（操作系统·文件管理·磁盘组织与管理），源骨架恰好遗漏了它，故按裁决人工补入，使该改判有明确落点（而不是把这条引用删掉了事）。",
+      "decision": "discipline_owner_decision_2026-09-25",
+      "confidence": "high",
+      "source": "manual_supplement_not_in_source_skeleton"
+    }
+  ],
+  "rejected": []
+}

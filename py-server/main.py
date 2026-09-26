@@ -50,6 +50,7 @@ from shared.metrics import record_request, inc_inflight, render_prometheus
 
 # ── API 路由 ──
 from api import (
+    kg408_router,
     chat_router, profile_router, quiz_router, rag_router,
     agents_router, knowledge_router, sessions_router,
     learning_router, sandbox_router, config_router,
@@ -607,6 +608,7 @@ _all_routers = [
     daily_plan_router,
     career_training_router,
     benchmark_router,
+    kg408_router,
 ]
 
 api_router = APIRouter(prefix="/api")

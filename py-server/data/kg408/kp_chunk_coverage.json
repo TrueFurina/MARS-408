@@ -1,0 +1,93 @@
+{
+  "schema": "kg408-kp-coverage-v1",
+  "provenance": {
+    "source_path": "E:/Program/MARL/SAGE/pdf/03_408知识图谱骨架.html",
+    "source_sha256": "a127702b519d54670517bf35a8b1c2ae0d2c917c4ec464d4e5e98246defcdee5",
+    "source_bytes": 9995,
+    "source_mtime_utc": "2026-09-20T15:42:37Z",
+    "alias_path": "data/kg408/kg408_alias.json",
+    "alias_sha256": "d97bcdfe5e12c0ab8a225f3a437e90edec452d40e13235fa5f7cbfea78e3162f",
+    "chapter_map_path": "data/kg408/kg408_chapter_map.json",
+    "chapter_map_sha256": "f2a9e2a55c841247bc756f63e8c1d857aca65ab15070970109517b16c2aaf6ec",
+    "manual_nodes_path": "data/kg408/kg408_manual_nodes.json",
+    "manual_nodes_sha256": "767effe393b1d6b170a64ffd43ccfc8b17ecc8843055af923eb19fe84c8e2dc0",
+    "generator": "scripts/build_kg408.py",
+    "generator_version": "1.0.0",
+    "parser_rule_version": "kg408-parse-r1",
+    "command": "python scripts/build_kg408.py --source E:/Program/MARL/SAGE/pdf/03_408知识图谱骨架.html --out-dir data/kg408",
+    "generated_at_utc": "2026-09-20T15:42:37Z",
+    "generated_at_utc_basis": "source_file_mtime_utc__deterministic"
+  },
+  "coverage": {
+    "chunks_total": 1892,
+    "chunks_knowledge_point": 748,
+    "chunks_knowledge_variant": 1144,
+    "chapter_level": {
+      "bound": 1684,
+      "bound_pct": 89.01,
+      "subject_only": 163,
+      "unbound": 45,
+      "chapters_total": 26,
+      "chapters_with_chunk": 25,
+      "chapter_coverage_pct": 96.15
+    },
+    "kp_level": {
+      "eligible_chunks": 748,
+      "bound": 46,
+      "bound_pct_of_eligible": 6.15,
+      "bound_pct_of_total": 2.43,
+      "unbound_eligible": 702,
+      "variant_bound": 0,
+      "variant_excluded_by_design": 1144,
+      "kp_total": 106,
+      "kp_covered": 36,
+      "kp_coverage_pct": 33.96,
+      "match_methods": {
+        "subtopic_exact": 43,
+        "alias": 3
+      },
+      "per_kp_chunk_count": {
+        "408:CN:CH02:KP02": 1,
+        "408:CN:CH03:KP04": 1,
+        "408:CN:CH04:KP02": 1,
+        "408:CN:CH04:KP05": 1,
+        "408:CN:CH06:KP01": 1,
+        "408:CN:CH06:KP02": 1,
+        "408:CN:CH06:KP03": 1,
+        "408:CO:CH03:KP02": 1,
+        "408:CO:CH03:KP04": 1,
+        "408:CO:CH04:KP03": 1,
+        "408:CO:CH05:KP04": 1,
+        "408:CO:CH06:KP01": 1,
+        "408:CO:CH06:KP02": 1,
+        "408:DS:CH02:KP01": 2,
+        "408:DS:CH02:KP04": 1,
+        "408:DS:CH03:KP01": 1,
+        "408:DS:CH03:KP02": 1,
+        "408:DS:CH03:KP03": 1,
+        "408:DS:CH04:KP02": 1,
+        "408:DS:CH05:KP02": 1,
+        "408:DS:CH05:KP04": 1,
+        "408:DS:CH05:KP05": 1,
+        "408:DS:CH06:KP02": 1,
+        "408:DS:CH06:KP03": 1,
+        "408:DS:CH06:KP05": 1,
+        "408:DS:CH08:KP06": 1,
+        "408:OS:CH01:KP04": 1,
+        "408:OS:CH02:KP02": 1,
+        "408:OS:CH02:KP04": 4,
+        "408:OS:CH03:KP01": 1,
+        "408:OS:CH03:KP02": 1,
+        "408:OS:CH03:KP03": 1,
+        "408:OS:CH03:KP04": 4,
+        "408:OS:CH04:KP01": 4,
+        "408:OS:CH04:KP03": 1,
+        "408:OS:CH04:KP05": 1
+      }
+    },
+    "honesty": {
+      "fuzzy_matching_used": false,
+      "policy": "只使用 chapter_exact / subject_exact / subtopic_exact / alias 四种全等匹配；未命中一律记 kp_id=null，不丢弃、不伪造、不做模糊相似度兜底。"
+    }
+  }
+}

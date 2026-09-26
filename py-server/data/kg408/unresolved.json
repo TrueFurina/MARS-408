@@ -1,0 +1,194 @@
+{
+  "schema": "kg408/v1",
+  "provenance": {
+    "source_path": "E:/Program/MARL/SAGE/pdf/03_408知识图谱骨架.html",
+    "source_sha256": "a127702b519d54670517bf35a8b1c2ae0d2c917c4ec464d4e5e98246defcdee5",
+    "source_bytes": 9995,
+    "source_mtime_utc": "2026-09-20T15:42:37Z",
+    "alias_path": "data/kg408/kg408_alias.json",
+    "alias_sha256": "d97bcdfe5e12c0ab8a225f3a437e90edec452d40e13235fa5f7cbfea78e3162f",
+    "chapter_map_path": "data/kg408/kg408_chapter_map.json",
+    "chapter_map_sha256": "f2a9e2a55c841247bc756f63e8c1d857aca65ab15070970109517b16c2aaf6ec",
+    "manual_nodes_path": "data/kg408/kg408_manual_nodes.json",
+    "manual_nodes_sha256": "767effe393b1d6b170a64ffd43ccfc8b17ecc8843055af923eb19fe84c8e2dc0",
+    "generator": "scripts/build_kg408.py",
+    "generator_version": "1.0.0",
+    "parser_rule_version": "kg408-parse-r1",
+    "command": "python scripts/build_kg408.py --source E:/Program/MARL/SAGE/pdf/03_408知识图谱骨架.html --out-dir data/kg408",
+    "generated_at_utc": "2026-09-20T15:42:37Z",
+    "generated_at_utc_basis": "source_file_mtime_utc__deterministic"
+  },
+  "count": 17,
+  "unresolved": [
+    {
+      "kind": "prerequisite_target",
+      "raw_name": "归并/快排",
+      "subject_hint": null,
+      "context_row": 227,
+      "context": "归并/快排",
+      "reason": "absent_in_skeleton",
+      "detail": "骨架中不存在名为「归并/快排」的考点，也无同名章。 注意：原文含『/』，疑似复合引用——「归并」疑似→DS/排序/归并；「快排」疑似→DS/排序/冒泡/快排。本阶段**不自动拆分绑定**，需人工裁定。",
+      "suggested_action": "人工裁定：拆分为多个独立声明后重跑（本阶段**不自动拆分**），或删除该声明。"
+    },
+    {
+      "kind": "prerequisite",
+      "raw_name": "递归",
+      "subject_hint": null,
+      "context_row": 227,
+      "context": "归并/快排",
+      "reason": "absent_in_skeleton",
+      "detail": "骨架中不存在名为「递归」的考点，也无同名章。",
+      "suggested_action": "人工裁定：补考点节点（resolution=manual），或删除该声明。"
+    },
+    {
+      "kind": "prerequisite",
+      "raw_name": "分治",
+      "subject_hint": null,
+      "context_row": 227,
+      "context": "归并/快排",
+      "reason": "absent_in_skeleton",
+      "detail": "骨架中不存在名为「分治」的考点，也无同名章。",
+      "suggested_action": "人工裁定：补考点节点（resolution=manual），或删除该声明。"
+    },
+    {
+      "kind": "prerequisite",
+      "raw_name": "查找",
+      "subject_hint": "DS",
+      "context_row": 235,
+      "context": "B 树",
+      "reason": "chapter_level_only",
+      "detail": "「查找」命中章名而非考点名（DS/查找）。",
+      "suggested_action": "人工裁定：改为章级先修（补章级边），或补具体考点节点后重跑。"
+    },
+    {
+      "kind": "prerequisite",
+      "raw_name": "指令系统",
+      "subject_hint": "CO",
+      "context_row": 239,
+      "context": "指令流水线",
+      "reason": "chapter_level_only",
+      "detail": "「指令系统」命中章名而非考点名（CO/指令系统）。",
+      "suggested_action": "人工裁定：改为章级先修（补章级边），或补具体考点节点后重跑。"
+    },
+    {
+      "kind": "prerequisite",
+      "raw_name": "资源分配",
+      "subject_hint": "OS",
+      "context_row": 251,
+      "context": "死锁",
+      "reason": "absent_in_skeleton",
+      "detail": "骨架中不存在名为「资源分配」的考点，也无同名章。",
+      "suggested_action": "人工裁定：补考点节点（resolution=manual），或删除该声明。"
+    },
+    {
+      "kind": "prerequisite",
+      "raw_name": "队列/栈",
+      "subject_hint": "OS",
+      "context_row": 255,
+      "context": "页面置换 LRU",
+      "reason": "absent_in_skeleton",
+      "detail": "骨架中不存在名为「队列/栈」的考点，也无同名章。 注意：原文含『/』，疑似复合引用——「队列」疑似→DS/栈与队列/队列、DS/栈与队列/循环队列；「栈」疑似→DS/栈与队列/栈、DS/栈与队列/栈的应用（表达式/括号匹配）。本阶段**不自动拆分绑定**，需人工裁定。",
+      "suggested_action": "人工裁定：拆分为多个独立声明后重跑（本阶段**不自动拆分**），或删除该声明。"
+    },
+    {
+      "kind": "prerequisite",
+      "raw_name": "数据链路层差错/流量控制",
+      "subject_hint": "CN",
+      "context_row": 259,
+      "context": "TCP 可靠传输",
+      "reason": "absent_in_skeleton",
+      "detail": "骨架中不存在名为「数据链路层差错/流量控制」的考点，也无同名章。 注意：原文含『/』，疑似复合引用——「流量控制」疑似→CN/数据链路层/流量控制、CN/传输层/流量控制。本阶段**不自动拆分绑定**，需人工裁定。",
+      "suggested_action": "人工裁定：拆分为多个独立声明后重跑（本阶段**不自动拆分**），或删除该声明。"
+    },
+    {
+      "kind": "prerequisite",
+      "raw_name": "流量控制",
+      "subject_hint": "CN",
+      "context_row": 263,
+      "context": "TCP 拥塞控制",
+      "reason": "ambiguous_multi_match",
+      "detail": "骨架中有 2 个同名考点（CN/数据链路层、CN/传输层），源文本未给章前缀，无法消歧。",
+      "suggested_action": "人工裁定：补章前缀后重跑，或删除该声明。"
+    },
+    {
+      "kind": "prerequisite",
+      "raw_name": "滑动窗口",
+      "subject_hint": "CN",
+      "context_row": 263,
+      "context": "TCP 拥塞控制",
+      "reason": "absent_in_skeleton",
+      "detail": "骨架中不存在名为「滑动窗口」的考点，也无同名章。",
+      "suggested_action": "人工裁定：补考点节点（resolution=manual），或删除该声明。"
+    },
+    {
+      "kind": "cross_subject",
+      "raw_name": "页面-快表 TLB",
+      "subject_hint": "OS",
+      "context_row": 300,
+      "context": "散列/相联查找",
+      "reason": "absent_in_skeleton",
+      "detail": "骨架中不存在名为「页面-快表 TLB」的考点，也无同名章。",
+      "suggested_action": "人工裁定：补考点节点（resolution=manual），或删除该声明。"
+    },
+    {
+      "kind": "cross_subject",
+      "raw_name": "内容寻址",
+      "subject_hint": "CN",
+      "context_row": 300,
+      "context": "散列/相联查找",
+      "reason": "absent_in_skeleton",
+      "detail": "骨架中不存在名为「内容寻址」的考点，也无同名章。",
+      "suggested_action": "人工裁定：补考点节点（resolution=manual），或删除该声明。"
+    },
+    {
+      "kind": "cross_subject",
+      "raw_name": "排序",
+      "subject_hint": "DS",
+      "context_row": 307,
+      "context": "磁盘调度「电梯算法」",
+      "reason": "chapter_level_only",
+      "detail": "「排序」命中章名而非考点名（DS/排序）。",
+      "suggested_action": "人工裁定：改为章级先修（补章级边），或补具体考点节点后重跑。"
+    },
+    {
+      "kind": "cross_subject",
+      "raw_name": "输入输出",
+      "subject_hint": "CO",
+      "context_row": 307,
+      "context": "磁盘调度「电梯算法」",
+      "reason": "chapter_level_only",
+      "detail": "「输入输出」命中章名而非考点名（CO/输入输出、OS/输入输出）。",
+      "suggested_action": "人工裁定：改为章级先修（补章级边），或补具体考点节点后重跑。"
+    },
+    {
+      "kind": "cross_subject",
+      "raw_name": "队列/栈",
+      "subject_hint": "DS",
+      "context_row": 314,
+      "context": "页面置换 LRU",
+      "reason": "absent_in_skeleton",
+      "detail": "骨架中不存在名为「队列/栈」的考点，也无同名章。 注意：原文含『/』，疑似复合引用——「队列」疑似→DS/栈与队列/队列、DS/栈与队列/循环队列；「栈」疑似→DS/栈与队列/栈、DS/栈与队列/栈的应用（表达式/括号匹配）。本阶段**不自动拆分绑定**，需人工裁定。",
+      "suggested_action": "人工裁定：拆分为多个独立声明后重跑（本阶段**不自动拆分**），或删除该声明。"
+    },
+    {
+      "kind": "cross_subject",
+      "raw_name": "概述-系统调用/内核态",
+      "subject_hint": "OS",
+      "context_row": 321,
+      "context": "中断/系统调用",
+      "reason": "absent_in_skeleton",
+      "detail": "骨架中不存在名为「概述-系统调用/内核态」的考点，也无同名章。 注意：原文含『/』，疑似复合引用——「概述-系统调用」疑似→OS/概述/系统调用；「内核态」疑似→OS/概述/内核态用户态。本阶段**不自动拆分绑定**，需人工裁定。",
+      "suggested_action": "人工裁定：拆分为多个独立声明后重跑（本阶段**不自动拆分**），或删除该声明。"
+    },
+    {
+      "kind": "cross_subject",
+      "raw_name": "排序",
+      "subject_hint": "DS",
+      "context_row": 328,
+      "context": "排序与流水线",
+      "reason": "chapter_level_only",
+      "detail": "「排序」命中章名而非考点名（DS/排序）。",
+      "suggested_action": "人工裁定：改为章级先修（补章级边），或补具体考点节点后重跑。"
+    }
+  ]
+}

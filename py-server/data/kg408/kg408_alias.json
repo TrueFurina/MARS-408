@@ -1,0 +1,284 @@
+{
+  "_meta": {
+    "purpose": "408 骨架名称解析别名表（人工维护）。源 HTML 的边引用了大量『非考点原名』的写法（如『图的遍历 BFS/DFS』『最短路径 Dijkstra』），本表把它们逐条显式绑定到骨架中的真实考点。",
+    "resolution_semantics": "命中本表的引用，其 edge.resolution 记为 alias。",
+    "lookup_key": "raw（原文字符串，去空白后全等）→ {subject, chapter, label}。三元组必须在骨架中存在，否则构建脚本判定为 alias_target_missing 并转为挂起。",
+    "honesty_policy": "本表**不设模糊相似度兜底**。凡无法用『章名/科目别名前缀 + 唯一考点』确定的引用，一律不写入本表，交由 unresolved.json 如实挂起。",
+    "author": "kg408-importer",
+    "date": "2026-09-24",
+    "review_status": "pending_discipline_owner_review",
+    "review_note": "下列条目均为『去修饰词后与唯一考点对应』的可核验映射，非语义猜测；整体仍待学科负责人复核签字。复核前请勿用于对外材料。",
+    "review_log": [
+      {
+        "date": "2026-09-25",
+        "by": "discipline_owner",
+        "via": "independent_QA_flag_M9",
+        "action": "移除错配映射『调度 → OS/进程管理/调度算法』；改判 row 328 的『调度』为『磁盘调度』，并新增强映射『调度 → OS/文件管理/磁盘调度』；‘磁盘调度’节点作为人工补充节点写入 kg408_manual_nodes.json。",
+        "affected_edges": ["408:E:XSUB0004"]
+      }
+    ],
+    "schema_version": "kg408-alias-v1"
+  },
+  "entries": [
+    {
+      "raw": "图的遍历 BFS/DFS",
+      "subject": "DS",
+      "chapter": "图",
+      "label": "BFS/DFS",
+      "rationale": "去掉章名修饰『图的遍历』后，余下 BFS/DFS 与 DS-图 章考点名完全相等。",
+      "confidence": "high"
+    },
+    {
+      "raw": "树的遍历",
+      "subject": "DS",
+      "chapter": "树与二叉树",
+      "label": "遍历（前中后层）",
+      "rationale": "树与二叉树章内唯一遍历类考点；前/中/后/层序即树的遍历。",
+      "confidence": "high"
+    },
+    {
+      "raw": "二叉树遍历",
+      "subject": "DS",
+      "chapter": "树与二叉树",
+      "label": "遍历（前中后层）",
+      "rationale": "同『树的遍历』：该章唯一遍历类考点（前中后层序）。",
+      "confidence": "high"
+    },
+    {
+      "raw": "最短路径 Dijkstra",
+      "subject": "DS",
+      "chapter": "图",
+      "label": "最短路径（Dijkstra/Floyd）",
+      "rationale": "图章唯一最短路径考点，Dijkstra 为其括号标注的算法之一。",
+      "confidence": "high"
+    },
+    {
+      "raw": "图存储",
+      "subject": "DS",
+      "chapter": "图",
+      "label": "存储（邻接矩阵/表）",
+      "rationale": "图章唯一『存储』考点（邻接矩阵/邻接表）。",
+      "confidence": "high"
+    },
+    {
+      "raw": "BFS",
+      "subject": "DS",
+      "chapter": "图",
+      "label": "BFS/DFS",
+      "rationale": "图章唯一 BFS 考点（与 DFS 共节点）。",
+      "confidence": "high"
+    },
+    {
+      "raw": "B 树",
+      "subject": "DS",
+      "chapter": "查找",
+      "label": "B 树/B+ 树",
+      "rationale": "查找章唯一 B 树考点（与 B+ 树共节点）。",
+      "confidence": "high"
+    },
+    {
+      "raw": "指令流水线",
+      "subject": "CO",
+      "chapter": "中央处理器",
+      "label": "指令流水线（冲突/冒险）",
+      "rationale": "中央处理器章唯一流水线考点。",
+      "confidence": "high"
+    },
+    {
+      "raw": "CPU 数据通路",
+      "subject": "CO",
+      "chapter": "中央处理器",
+      "label": "数据通路",
+      "rationale": "去掉章别名『CPU』后与考点名『数据通路』相等。",
+      "confidence": "high"
+    },
+    {
+      "raw": "Cache",
+      "subject": "CO",
+      "chapter": "存储系统",
+      "label": "Cache（映射/替换）",
+      "rationale": "存储系统章唯一 Cache 考点。",
+      "confidence": "high"
+    },
+    {
+      "raw": "进程同步互斥",
+      "subject": "OS",
+      "chapter": "进程管理",
+      "label": "同步互斥（PV/管程）",
+      "rationale": "去掉章别名『进程』后与考点名『同步互斥（PV/管程）』相等。",
+      "confidence": "high"
+    },
+    {
+      "raw": "页面置换 LRU",
+      "subject": "OS",
+      "chapter": "内存管理",
+      "label": "页面置换（FIFO/LRU/OPT）",
+      "rationale": "LRU 为该考点括号标注的算法之一；内存管理章唯一页面置换考点。",
+      "confidence": "high"
+    },
+    {
+      "raw": "TCP 可靠传输",
+      "subject": "CN",
+      "chapter": "传输层",
+      "label": "可靠传输",
+      "rationale": "去掉章别名『TCP』后与考点名『可靠传输』相等。",
+      "confidence": "high"
+    },
+    {
+      "raw": "TCP 拥塞控制",
+      "subject": "CN",
+      "chapter": "传输层",
+      "label": "拥塞控制",
+      "rationale": "去掉章别名『TCP』后与考点名『拥塞控制』相等。",
+      "confidence": "high"
+    },
+    {
+      "raw": "路由算法（Dijkstra/距离向量）",
+      "subject": "CN",
+      "chapter": "网络层",
+      "label": "路由算法",
+      "rationale": "去掉括号内的算法举例后与考点名『路由算法』相等。",
+      "confidence": "high"
+    },
+    {
+      "raw": "图-Dijkstra",
+      "subject": "DS",
+      "chapter": "图",
+      "label": "最短路径（Dijkstra/Floyd）",
+      "rationale": "跨科表 DS 列：章名『图』+ Dijkstra → 图章最短路径考点。",
+      "confidence": "high"
+    },
+    {
+      "raw": "网络层-路由算法（同源）",
+      "subject": "CN",
+      "chapter": "网络层",
+      "label": "路由算法",
+      "rationale": "去掉章名与括号注释后与考点名『路由算法』相等。",
+      "confidence": "high"
+    },
+    {
+      "raw": "传输层-流量控制",
+      "subject": "CN",
+      "chapter": "传输层",
+      "label": "流量控制",
+      "rationale": "骨架 CN 有两个同名考点『流量控制』（数据链路层 / 传输层）。此处源文本显式写了章前缀『传输层』，故可唯一消歧。**若不写章前缀则挂起**（参见 unresolved: 流量控制）。",
+      "confidence": "high"
+    },
+    {
+      "raw": "查找-散列",
+      "subject": "DS",
+      "chapter": "查找",
+      "label": "散列",
+      "rationale": "跨科表 DS 列：章名『查找』+ 散列 → 查找章散列考点。",
+      "confidence": "high"
+    },
+    {
+      "raw": "Cache-映射",
+      "subject": "CO",
+      "chapter": "存储系统",
+      "label": "Cache（映射/替换）",
+      "rationale": "跨科表 CO 列：Cache 的映射子考点与骨架『Cache（映射/替换）』同节点。",
+      "confidence": "high"
+    },
+    {
+      "raw": "内存-页面置换",
+      "subject": "OS",
+      "chapter": "内存管理",
+      "label": "页面置换（FIFO/LRU/OPT）",
+      "rationale": "跨科表 OS 列：章名『内存』+ 页面置换 → 内存管理章页面置换考点。",
+      "confidence": "high"
+    },
+    {
+      "raw": "CPU-中断",
+      "subject": "CO",
+      "chapter": "中央处理器",
+      "label": "中断",
+      "rationale": "跨科表 CO 列：章别名『CPU』+ 中断 → 中央处理器章中断考点。",
+      "confidence": "high"
+    },
+    {
+      "raw": "CPU-流水线",
+      "subject": "CO",
+      "chapter": "中央处理器",
+      "label": "指令流水线（冲突/冒险）",
+      "rationale": "跨科表 CO 列：章别名『CPU』+ 流水线 → 中央处理器章指令流水线考点。",
+      "confidence": "high"
+    },
+    {
+      "raw": "文件-磁盘调度",
+      "subject": "OS",
+      "chapter": "文件管理",
+      "label": "磁盘调度",
+      "rationale": "跨科表 row 307「磁盘调度『电梯算法』」OS 列：章前缀『文件』+ 考点名『磁盘调度』。该节点由学科负责人裁决人工补入（见 kg408_manual_nodes.json）。",
+      "confidence": "high"
+    },
+    {
+      "raw": "调度",
+      "subject": "OS",
+      "chapter": "文件管理",
+      "label": "磁盘调度",
+      "rationale": "跨科表 row 328「排序与流水线」OS 列只写『调度』。**原判为「进程管理/调度算法」经独立 QA 指出属错配**；学科负责人 2026-09-25 裁定为『磁盘调度』（依据：紧邻 row 307 的 OS 列即磁盘调度主题，且该行整体是「排序与流水线」的外存侧关联）。",
+      "confidence": "high",
+      "supersedes": {
+        "raw": "调度",
+        "subject": "OS",
+        "chapter": "进程管理",
+        "label": "调度算法",
+        "retired_reason": "discipline_owner_decision_2026-09-25：错配（进程调度误当磁盘调度），已移除",
+        "retired_at": "2026-09-25"
+      }
+    }
+  ],
+  "explicitly_not_mapped": [
+    {
+      "raw": "递归",
+      "reason": "骨架中不存在该考点，且无章名可消歧。",
+      "policy": "absent_in_skeleton → 挂起"
+    },
+    {
+      "raw": "分治",
+      "reason": "骨架中不存在该考点，且无章名可消歧。",
+      "policy": "absent_in_skeleton → 挂起"
+    },
+    {
+      "raw": "资源分配",
+      "reason": "骨架中不存在该考点（OS 进程管理章无此考点）。",
+      "policy": "absent_in_skeleton → 挂起"
+    },
+    {
+      "raw": "滑动窗口",
+      "reason": "骨架中不存在该考点（CN 传输层章无此考点）。",
+      "policy": "absent_in_skeleton → 挂起"
+    },
+    {
+      "raw": "内容寻址",
+      "reason": "骨架中不存在该考点（跨科表 CN 列引用了相联存储器概念，骨架无对应节点）。",
+      "policy": "absent_in_skeleton → 挂起"
+    },
+    {
+      "raw": "快表 TLB / 页面-快表 TLB",
+      "reason": "骨架 OS 内存管理章只有『虚拟内存』『页面置换』，无『快表/TLB』考点。",
+      "policy": "absent_in_skeleton → 挂起"
+    },
+    {
+      "raw": "磁盘调度（原为『absent_in_skeleton → 挂起』）",
+      "reason": "**已改判**：学科负责人 2026-09-25 裁定，「磁盘调度」确为标准 408 考点（OS 文件管理·磁盘组织与管理）而源骨架遗漏，已作为**人工补充节点**写入 kg408_manual_nodes.json（origin=manual），不再是「因不存在而拒绝」。",
+      "policy": "manual_supplement → 已补节点（见 kg408_manual_nodes.json）"
+    },
+    {
+      "raw": "查找 / 排序 / 指令系统 / 输入输出",
+      "reason": "这些是**章名**而非考点名，命中章级。按 §8.4 默认挂起，需学科负责人裁定是『章级先修』还是『补考点』。",
+      "policy": "chapter_level_only → 挂起"
+    },
+    {
+      "raw": "归并/快排 / 队列/栈 / 数据链路层差错/流量控制 / 系统调用/内核态",
+      "reason": "源文本用『/』把两个不同考点写在一个单元格里，无法判定是 1 条边还是 2 条边。",
+      "policy": "ambiguous_multi_match → 挂起（待人工拆分）"
+    },
+    {
+      "raw": "流量控制（无章前缀）",
+      "reason": "骨架 CN 有两个同名考点『流量控制』（数据链路层 CH03 / 传输层 CH05），源文本未写章前缀，无法消歧。",
+      "policy": "ambiguous_multi_match → 挂起"
+    }
+  ]
+}
