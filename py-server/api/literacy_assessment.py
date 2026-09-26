@@ -188,6 +188,25 @@ async def get_questions():
                            "stem": q["stem"], "options": q["options"]} for q in QUESTION_BANK]}
 
 
+def _resolve_submitter_uid(req: LiteracySubmitRequest, authorization: Optional[str]) -> str:
+    """解析提交者 user_id（课堂防覆盖关键逻辑）。
+
+    优先级：请求体 user_id（课堂实验编号=学号后4位）→ Bearer token sub → demo 兜底。
+    请求体必须优先：全班共用 demo 账号登录时 token sub 一律是 demo，若 token 优先会再次
+    互相覆盖（并发试测实锤过一次）。
+    """
+    uid = req.user_id.strip()
+    if not uid and authorization and authorization.startswith("Bearer "):
+        try:
+            from shared.auth import verify_token
+            uid = verify_token(authorization[len("Bearer "):])["sub"]
+        except Exception:
+            pass
+    if not uid:
+        uid = "demo"
+    return uid
+
+
 @router.post("/submit")
 async def submit_literacy(
     req: LiteracySubmitRequest,
@@ -199,15 +218,7 @@ async def submit_literacy(
     实验编号必须优先：全班共用 demo 账号登录时 token 一律是 demo，
     若 token 优先会再次互相覆盖（并发试测实锤过一次）。
     """
-    uid = req.user_id.strip()
-    if not uid and authorization and authorization.startswith("Bearer "):
-        try:
-            from shared.auth import verify_token
-            uid = verify_token(authorization[len("Bearer "):])["sub"]
-        except Exception:
-            pass
-    if not uid:
-        uid = "demo"
+    uid = _resolve_submitter_uid(req, authorization)
     if req.phase not in ("pre", "post"):
         raise HTTPException(status_code=422, detail="phase 必须为 pre 或 post")
     qmap = {q["id"]: q for q in QUESTION_BANK}
@@ -229,7 +240,6 @@ async def submit_literacy(
     answered_dims = [v for v in final_dims.values() if v > 0]
     total = round(sum(answered_dims) / len(answered_dims), 1) if answered_dims else 0
 
-    uid = uid  # 已在上方按 token → 请求体 → demo 解析
     conn = _get_conn()
     with _lock:
         # 同一用户同 phase 允许多次作答（取最新）——先清旧记录保持一对一
