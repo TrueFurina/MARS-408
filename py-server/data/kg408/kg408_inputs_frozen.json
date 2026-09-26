@@ -1,0 +1,31 @@
+{
+  "_meta": {
+    "purpose": "人工维护输入表的【冻结基线】（drift detection）。锁定 3 张输入表在冻结时刻的 sha256，供 verify_kg408.py 检测『改表 → 重跑』漂移。",
+    "warning": "本文件**绝不由 build_kg408.py / bind_kb_to_kg408.py 改写**。任何工具自动重写本文件都会使冻结失去意义（漂移会被自动吸收）。只允许人手工更新，且更新必须留下 review 记录。",
+    "what_it_does_not_claim": "本文件**不是**『全表已获学科负责人批准』的声明。review_status 逐表如实标注：alias / chapter_map 整体仍是 pending_discipline_owner_review（仅其中『调度/磁盘调度』一条经 2026-09-25 裁决）。冻结 = 记录当前基线以便检测漂移，不等于背书。",
+    "closed_gap": "QA GAP-2：此前 assert_provenance_anchors 只证明 provenance.sha256 == 当前文件 sha256，而 sha 是 build 当场算的 → 『改表后重跑』锚点自动跟上，两个闸门全绿。现在改为与**本冻结清单**比对：当前文件 sha ≠ 清单 sha → FAIL。",
+    "update_procedure": "① 人工修改输入表 → ② 学科负责人复核（更新该表 _meta.review_status / review_log）→ ③ 手工更新本文件对应 sha256 与 review_status → ④ 重跑 build + bind + verify。禁止跳过 ②。",
+    "schema_version": "kg408-inputs-frozen-v1"
+  },
+  "frozen_at": "2026-09-25",
+  "frozen_by": "kg408-importer",
+  "decision_source": "discipline_owner_decision_2026-09-25",
+  "entries": {
+    "kg408_alias.json": {
+      "sha256": "d97bcdfe5e12c0ab8a225f3a437e90edec452d40e13235fa5f7cbfea78e3162f",
+      "review_status": "pending_discipline_owner_review",
+      "note": "共 25 条映射。其中**仅 2 条**经 2026-09-25 学科负责人裁决：『调度』改判为 OS/文件管理/磁盘调度（supersedes 旧的 OS/进程管理/调度算法），并新增『文件-磁盘调度』。其余 23 条仍为『去修饰词后与唯一考点对应』的可核验映射，**整体仍待学科负责人复核签字**。复核前请勿用于对外材料。"
+    },
+    "kg408_chapter_map.json": {
+      "sha256": "f2a9e2a55c841247bc756f63e8c1d857aca65ab15070970109517b16c2aaf6ec",
+      "review_status": "pending_discipline_owner_review",
+      "note": "SEED subject 键 → 骨架章 的映射表。整体**尚未经**学科负责人复核签字；本冻结仅记录当前基线以检测漂移。"
+    },
+    "kg408_manual_nodes.json": {
+      "sha256": "767effe393b1d6b170a64ffd43ccfc8b17ecc8843055af923eb19fe84c8e2dc0",
+      "review_status": "approved_by_discipline_owner",
+      "decision_source": "discipline_owner_decision_2026-09-25",
+      "note": "人工补充节点表（当前 1 条：408:OS:CH04:KP05『磁盘调度』，origin=manual）。该条**已获**学科负责人 2026-09-25 明确裁决批准。"
+    }
+  }
+}
