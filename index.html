@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MARS-408 · 考研多智能体个性化学习系统</title>
+<meta name="description" content="MARS-408：10-Agent LangGraph 流水线 + FrugalRAG 省油检索 + GoMARL 共识反幻觉的 408 考研多智能体个性化学习系统。2026 福建高校火山杯参赛作品。">
+<style>
+:root{
+  --bg:#07090f;--bg2:#0d1117;--panel:rgba(255,255,255,.035);
+  --border:rgba(255,255,255,.09);--fg:#eef2f8;--dim:#9aa4b2;
+  --orange:#ff7a18;--orange2:#ffb347;--blue:#4d9fff;--green:#3ddc84;
+  --grad:linear-gradient(90deg,#ff7a18,#ffb347 45%,#4d9fff);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--fg);font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;line-height:1.75;overflow-x:hidden}
+::selection{background:rgba(255,122,24,.35)}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:1120px;margin:0 auto;padding:0 28px}
+
+/* ---------- 背景光晕 ---------- */
+body::before{content:"";position:fixed;inset:0;z-index:-2;background:
+  radial-gradient(600px 400px at 15% -5%,rgba(255,122,24,.14),transparent 65%),
+  radial-gradient(700px 500px at 90% 10%,rgba(77,159,255,.13),transparent 65%),
+  radial-gradient(800px 600px at 50% 110%,rgba(61,220,132,.07),transparent 70%),
+  var(--bg)}
+body::after{content:"";position:fixed;inset:0;z-index:-1;opacity:.5;pointer-events:none;
+  background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+  background-size:56px 56px;
+  -webkit-mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,#000 30%,transparent 75%);
+  mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,#000 30%,transparent 75%)}
+
+/* ---------- Hero ---------- */
+.hero{min-height:92vh;display:flex;align-items:center;padding:90px 0 60px;position:relative}
+.hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:56px;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,122,24,.45);background:rgba(255,122,24,.08);
+  border-radius:999px;padding:6px 18px;font-size:.86rem;color:var(--orange2);margin-bottom:26px;backdrop-filter:blur(6px)}
+.pill .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+h1{font-size:clamp(2.2rem,5.2vw,3.6rem);line-height:1.18;font-weight:800;letter-spacing:-.02em}
+.grad-text{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p.sub{color:var(--dim);font-size:1.12rem;margin-top:20px;max-width:560px}
+.hero p.sub b{color:var(--fg)}
+.cta{margin-top:34px;display:flex;gap:14px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 28px;border-radius:12px;font-weight:600;font-size:1rem;transition:transform .2s,box-shadow .2s}
+.btn.primary{background:linear-gradient(135deg,#ff7a18,#ff9a3d);color:#fff;box-shadow:0 8px 28px rgba(255,122,24,.35)}
+.btn.primary:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(255,122,24,.45);text-decoration:none}
+.btn.ghost{border:1px solid var(--border);background:var(--panel);color:var(--fg);backdrop-filter:blur(6px)}
+.btn.ghost:hover{border-color:rgba(255,255,255,.25);transform:translateY(-2px);text-decoration:none}
+
+/* ---------- Hero 右侧可视化 ---------- */
+.hero-visual{position:relative}
+.node-graph{background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:26px;backdrop-filter:blur(10px)}
+.node-graph .title{font-size:.8rem;color:var(--dim);letter-spacing:.12em;margin-bottom:16px;text-transform:uppercase}
+.flow-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.node{border:1px solid var(--border);background:rgba(255,255,255,.05);border-radius:10px;padding:8px 13px;font-size:.82rem;white-space:nowrap;color:var(--dim)}
+.node.hot{border-color:rgba(255,122,24,.6);color:var(--orange2);background:rgba(255,122,24,.1);box-shadow:0 0 18px rgba(255,122,24,.18)}
+.node.cool{border-color:rgba(77,159,255,.5);color:var(--blue);background:rgba(77,159,255,.09)}
+.node.grn{border-color:rgba(61,220,132,.5);color:var(--green);background:rgba(61,220,132,.08)}
+.arrow{color:var(--dim);font-size:.8rem;flex-shrink:0}
+.stat-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
+.mini{border:1px solid var(--border);border-radius:12px;padding:12px 8px;text-align:center;background:rgba(255,255,255,.03)}
+.mini .v{font-weight:800;font-size:1.05rem;color:var(--orange2)}
+.mini .k{font-size:.72rem;color:var(--dim);margin-top:2px}
+
+/* ---------- 通用 section ---------- */
+section{padding:96px 0}
+.sec-tag{display:inline-block;font-size:.8rem;letter-spacing:.18em;text-transform:uppercase;color:var(--orange2);margin-bottom:12px}
+h2{font-size:clamp(1.6rem,3.4vw,2.3rem);font-weight:800;letter-spacing:-.02em;margin-bottom:14px}
+.sec-sub{color:var(--dim);max-width:640px;margin-bottom:44px}
+
+/* ---------- 痛点 ---------- */
+.pain-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:28px;backdrop-filter:blur(10px);transition:transform .25s,border-color .25s,box-shadow .25s}
+.card:hover{transform:translateY(-4px);border-color:rgba(255,122,24,.35);box-shadow:0 16px 40px rgba(0,0,0,.4)}
+.card .ico{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;margin-bottom:16px;background:rgba(255,122,24,.12);border:1px solid rgba(255,122,24,.3)}
+.card h3{font-size:1.08rem;margin-bottom:8px}
+.card p{color:var(--dim);font-size:.93rem}
+
+/* ---------- 流水线 ---------- */
+.pipeline-wrap{background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:34px;backdrop-filter:blur(10px);overflow-x:auto}
+.pl-row{display:flex;align-items:center;gap:6px;min-width:900px;flex-wrap:nowrap}
+.pl-node{flex:0 0 auto;text-align:center;padding:12px 14px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,.04);min-width:104px}
+.pl-node .nm{font-size:.85rem;font-weight:600}
+.pl-node .rl{font-size:.7rem;color:var(--dim);margin-top:3px}
+.pl-node.g1{border-color:rgba(255,122,24,.55);background:rgba(255,122,24,.08)}
+.pl-node.g2{border-color:rgba(61,220,132,.55);background:rgba(61,220,132,.07)}
+.pl-node.g3{border-color:rgba(77,159,255,.55);background:rgba(77,159,255,.08)}
+.pl-arrow{flex:0 0 auto;color:rgba(255,255,255,.28);font-size:.85rem}
+.gate-labels{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.gate-chip{font-size:.78rem;color:var(--dim);border:1px solid var(--border);border-radius:999px;padding:4px 14px}
+.gate-chip b{color:var(--fg)}
+
+/* ---------- 指标 ---------- */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px}
+.metric{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:28px 20px;text-align:center;backdrop-filter:blur(10px);transition:transform .25s,border-color .25s}
+.metric:hover{transform:translateY(-4px);border-color:rgba(77,159,255,.4)}
+.metric .v{font-size:2.3rem;font-weight:800;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.metric .k{color:var(--dim);font-size:.88rem;margin-top:6px}
+.src-note{margin-top:24px;color:var(--dim);font-size:.82rem;border-left:2px solid rgba(255,122,24,.4);padding-left:14px}
+
+/* ---------- Token 成本 ---------- */
+.tok-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.tok{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:26px;backdrop-filter:blur(10px)}
+.tok .big{font-size:1.5rem;font-weight:800;color:var(--orange2)}
+.tok p{color:var(--dim);font-size:.9rem;margin-top:8px}
+.tok.hl{border-color:rgba(255,122,24,.45);background:linear-gradient(160deg,rgba(255,122,24,.1),rgba(255,122,24,.03))}
+
+/* ---------- CTA 尾部 ---------- */
+.final-cta{padding:110px 0;text-align:center;position:relative}
+.final-cta h2{font-size:clamp(1.9rem,4vw,2.8rem)}
+.final-cta p{color:var(--dim);margin:16px auto 36px;max-width:520px}
+footer{border-top:1px solid var(--border);padding:34px 0;color:var(--dim);font-size:.86rem;text-align:center}
+footer a{color:var(--dim)}
+footer a:hover{color:var(--orange2)}
+
+/* ---------- 滚动淡入 ---------- */
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s ease}
+.reveal.on{opacity:1;transform:none}
+
+/* ---------- 响应式 ---------- */
+@media(max-width:900px){
+  .hero-grid{grid-template-columns:1fr;gap:40px}
+  .hero{min-height:auto;padding:70px 0 40px}
+  section{padding:70px 0}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="pill"><span class="dot"></span>2026 福建高校「火山杯」Agent 创新大赛 · 参赛作品</span>
+      <h1><span class="grad-text">MARS-408</span><br>考研多智能体<br>个性化学习系统</h1>
+      <p class="sub">覆盖数据结构 / 计算机组成 / 操作系统 / 计算机网络四科。
+        一条 <b>10 个 Agent</b> 组成的教学流水线——多候选生成、共识仲裁、证据核查、质量闸门，
+        配 <b>FrugalRAG 省油检索</b>与 <b>GoMARL 神经混音器</b>：答案更可信，检索成本只有全量 RAG 的约 <b>1/50</b>。</p>
+      <div class="cta">
+        <a class="btn primary" href="https://github.com/TrueFurina/MARS-408">GitHub 仓库 →</a>
+        <a class="btn ghost" href="#data">查看实测数据</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="node-graph">
+        <div class="title">10-Agent LangGraph Pipeline</div>
+        <div class="flow-row">
+          <span class="node">coordinator</span><span class="arrow">→</span>
+          <span class="node">diagnostician</span><span class="arrow">→</span>
+          <span class="node hot">generator×N</span><span class="arrow">→</span>
+          <span class="node">assessor</span>
+        </div>
+        <div class="flow-row">
+          <span class="node">critic</span><span class="arrow">→</span>
+          <span class="node cool">consensus</span><span class="arrow">→</span>
+          <span class="node cool">evidence_check</span><span class="arrow">→</span>
+          <span class="node grn">quality_gate</span>
+        </div>
+        <div class="flow-row">
+          <span class="node">planner</span><span class="arrow">→</span>
+          <span class="node grn">path_planner</span><span class="arrow">→</span>
+          <span class="node" style="border-style:dashed">学生画像反馈 ↺</span>
+        </div>
+        <div class="stat-strip">
+          <div class="mini"><div class="v">10</div><div class="k">Agent 节点</div></div>
+          <div class="mini"><div class="v">3</div><div class="k">出口闸门</div></div>
+          <div class="mini"><div class="v">70</div><div class="k">降级点</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ============ 痛点 ============ -->
+<section id="pain">
+  <div class="wrap">
+    <span class="sec-tag">Pain Points</span>
+    <h2>为什么需要一条流水线</h2>
+    <p class="sec-sub">通用大模型直接答 408，四个致命问题一个都躲不开。</p>
+    <div class="pain-grid">
+      <div class="card reveal"><div class="ico">🌀</div><h3>大模型答疑幻觉</h3><p>一本正经地编造：混淆协议、记错复杂度。考生无法辨别，被带偏的代价是整年备考方向。</p></div>
+      <div class="card reveal"><div class="ico">🧭</div><h3>学习路径千人一方</h3><p>四科交叉考点多——Cache×操作系统、TCP×安全。所有人推同一套计划，错题本沦为摘抄本。</p></div>
+      <div class="card reveal"><div class="ico">💸</div><h3>检索成本被忽视</h3><p>常规 RAG 把全库 chunk 塞进上下文，单轮动辄上万 tokens，成本最终转嫁给用户的会员费。</p></div>
+      <div class="card reveal"><div class="ico">🚪</div><h3>AI 答疑无闸门</h3><p>单模型直出没有第二双眼睛把关；多数多智能体方案缺共识仲裁与证据核查，错误随轮数累积。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 方案 ============ -->
+<section id="solution">
+  <div class="wrap">
+    <span class="sec-tag">Solution</span>
+    <h2>解决方案：十条流水线，三道闸门</h2>
+    <p class="sec-sub">每条答案必须过证据核查、质量闸门、共识仲裁三关才出口——从机制上压幻觉，而不是靠提示词求它别编。</p>
+    <div class="pipeline-wrap reveal">
+      <div class="pl-row">
+        <div class="pl-node"><div class="nm">coordinator</div><div class="rl">调度</div></div><span class="pl-arrow">→</span>
+        <div class="pl-node"><div class="nm">diagnostician</div><div class="rl">学情诊断</div></div><span class="pl-arrow">→</span>
+        <div class="pl-node g1"><div class="nm">generator ×N</div><div class="rl">多候选并行</div></div><span class="pl-arrow">→</span>
+        <div class="pl-node"><div class="nm">assessor</div><div class="rl">候选打分</div></div><span class="pl-arrow">→</span>
+        <div class="pl-node"><div class="nm">critic</div><div class="rl">批判复审</div></div><span class="pl-arrow">→</span>
+        <div class="pl-node g3"><div class="nm">consensus</div><div class="rl">共识仲裁</div></div><span class="pl-arrow">→</span>
+        <div class="pl-node g3"><div class="nm">evidence_check</div><div class="rl">证据核查</div></div><span class="pl-arrow">→</span>
+        <div class="pl-node g2"><div class="nm">quality_gate</div><div class="rl">质量闸门</div></div><span class="pl-arrow">→</span>
+        <div class="pl-node"><div class="nm">planner</div><div class="rl">学习规划</div></div><span class="pl-arrow">→</span>
+        <div class="pl-node g2"><div class="nm">path_planner</div><div class="rl">路径规划</div></div>
+      </div>
+      <div class="gate-labels">
+        <span class="gate-chip"><b>反幻觉</b> — 国密矛盾对误报 0，正确事实零误杀</span>
+        <span class="gate-chip"><b>不中断</b> — LLM 断供时规则兜底，来源显式标注</span>
+        <span class="gate-chip"><b>可解释</b> — 混音器权重与离线最优匹配 48/48</span>
+      </div>
+    </div>
+    <div class="pain-grid" style="margin-top:22px">
+      <div class="card reveal"><div class="ico">⛽</div><h3>FrugalRAG 省油检索</h3><p>先主题过滤再精排。28 题基准实测：单查询检索上下文仅 <b style="color:var(--fg)">173.46 tokens</b>（全量 RAG 的约 1/50–1/80），Recall@5=0.786。</p></div>
+      <div class="card reveal"><div class="ico">🎛️</div><h3>GoMARL 神经混音器</h3><p>多候选答案谁说了算？按学情画像动态加权。90 次观测：判题准确率 <b style="color:var(--fg)">83.33%</b>（基线 76.67%），判决 8.84ms。</p></div>
+      <div class="card reveal"><div class="ico">🛟</div><h3>三级降级容灾</h3><p>全链路 70 个降级点：LLM 断供时规则兜底、显式标注答案来源（llm / rule_fallback），服务不中断且不伪装。</p></div>
+      <div class="card reveal"><div class="ico">🧪</div><h3>全量测试保障</h3><p>后端 pytest 全量 839 passed；career 专项 42 项全绿；前端完整 build 通过——每个数字都有落盘证据。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 数据 ============ -->
+<section id="data">
+  <div class="wrap">
+    <span class="sec-tag">Benchmark</span>
+    <h2>实测数据</h2>
+    <p class="sec-sub">2026-08-17 基准：28 题 / 2,083 知识库 chunks / 随机种子 20260719。全部有落盘证据，无估算包装。</p>
+    <div class="metrics">
+      <div class="metric reveal"><span class="v">173.46</span><div class="k">检索上下文 tokens/查询<br>（中位 171.5）</div></div>
+      <div class="metric reveal"><span class="v">0.786</span><div class="k">Recall@5<br>MRR = 0.698</div></div>
+      <div class="metric reveal"><span class="v">83.33%</span><div class="k">神经混音器判题准确率<br>基线 76.67%</div></div>
+      <div class="metric reveal"><span class="v">108.2ms</span><div class="k">检索平均时延<br>混音器判决 8.84ms</div></div>
+      <div class="metric reveal"><span class="v">839</span><div class="k">后端测试通过数<br>pytest 全量</div></div>
+      <div class="metric reveal"><span class="v">70</span><div class="k">降级点<br>三级容灾</div></div>
+    </div>
+    <p class="src-note">证据出处：py-server/experiments/results/benchmark_2026-08-17.json（experiment1：28 题检索评测；experiment2：90 观测混音器对照实验）。tokens 口径：检索上下文为落盘实测；月度总耗为配置推算——遵守「无落盘不出数字」。</p>
+  </div>
+</section>
+
+<!-- ============ Token 成本 ============ -->
+<section id="tokens">
+  <div class="wrap">
+    <span class="sec-tag">Cost</span>
+    <h2>Token 成本（月度消耗）</h2>
+    <p class="sec-sub">单轮检索实测 173 tokens，全链路 4,000–6,000；按试点规模推算月度总耗与成本对比。</p>
+    <div class="tok-grid">
+      <div class="tok reveal"><div class="big">173</div><p><b style="color:var(--fg)">FrugalRAG 单查询检索</b>（实测均值）；常规全量 RAG 约需 8,000–15,000，为它的 50–80 倍。</p></div>
+      <div class="tok reveal"><div class="big">4,000–6,000</div><p><b style="color:var(--fg)">单轮答疑全链路</b>：检索 173 + 多候选生成约 2,500 + 审核共识核查约 1,200 + 对话历史输入约 1,000–2,000。</p></div>
+      <div class="tok reveal"><div class="big">1.8亿–2.7亿</div><p><b style="color:var(--fg)">试点月度总量</b>（估算）：100 名学生 × 日均 15 轮 × 30 天，中位约 2.2 亿 tokens/月。</p></div>
+      <div class="tok hl reveal"><div class="big">1/50</div><p><b style="color:var(--fg)">成本侧核心卖点</b>：同等服务质量下，全量 RAG 月度成本将翻数倍——省油检索直接决定产品定价空间。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 尾部 CTA ============ -->
+<div class="final-cta">
+  <div class="wrap reveal">
+    <h2>让 408 备考，<span class="grad-text">有据可查</span></h2>
+    <p>每条答案过三道闸门、每个分数有证据链、每个数字有落盘——这就是 MARS-408。</p>
+    <div class="cta" style="justify-content:center">
+      <a class="btn primary" href="https://github.com/TrueFurina/MARS-408">GitHub 仓库 →</a>
+      <a class="btn ghost" href="https://github.com/TrueFurina/MARS-408/blob/main/README.md">参赛 README</a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    MARS-408 · 2026 闽都×火山杯 Agent 创新大赛参赛作品 ·
+    <a href="https://github.com/TrueFurina/MARS-408">github.com/TrueFurina/MARS-408</a><br>
+    10-Agent LangGraph Pipeline · FrugalRAG (E5/BM25) · GoMARL Consensus · Vue 3 + TypeScript + FastAPI
+  </div>
+</footer>
+
+<script>
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('on');io.unobserve(e.target)}}),{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
