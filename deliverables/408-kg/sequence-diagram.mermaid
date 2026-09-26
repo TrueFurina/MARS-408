@@ -1,0 +1,52 @@
+sequenceDiagram
+    autonumber
+    participant SRC as 源 HTML<br/>03_408知识图谱骨架.html
+    participant BLD as scripts/build_kg408.py
+    participant PSR as HtmlSkeletonParser
+    participant RSV as NameResolver
+    participant FS as data/kg408/*.json
+    participant SVC as services/kg408.py<br/>Kg408Store
+    participant API as api/kg408.py
+    participant FE as 前端
+    participant VER as scripts/verify_kg408.py
+
+    Note over BLD: 冷启动：一次性生成
+    BLD->>SRC: 读取 + 计算 sha256
+    BLD->>PSR: parse_chapter_rows / prereq / cross
+    PSR-->>BLD: 26 章行 + 105 考点 + 13 先修行 + 7 跨科行
+    BLD->>BLD: 生成 135 节点（科目/章/考点三级）
+    loop 每条边声明
+        BLD->>RSV: resolve(raw_name, subject_hint)
+        alt 精确命中 / 别名命中
+            RSV-->>BLD: KgNode
+        else 未命中
+            RSV->>RSV: 记入 unresolved（reason）
+            RSV-->>BLD: None → 该边挂起
+        end
+    end
+    BLD->>FS: 写 kg408.json（nodes/edges/provenance）
+    BLD->>FS: 写 kg408_stats.json（计数 + 溯源）
+    BLD->>FS: 写 unresolved.json（如实挂起清单）
+    BLD->>FS: 写 deliverables/408-kg/kg408-stats.md
+
+    Note over SVC,FE: 运行期：查询
+    SVC->>FS: load(kg408.json)
+    SVC->>SVC: 建 _by_id / _children / _out / _in 索引
+    FE->>API: GET /kg408/graph?subject=DS
+    API->>SVC: by_subject("DS")
+    SVC-->>API: nodes + edges
+    API-->>FE: {nodes, edges, stats, provenance}
+
+    FE->>API: GET /kg408/ego/408:DS:CH06:KP04?hops=2
+    API->>SVC: ego_graph(kp_id, 2)
+    SVC->>SVC: hop1 = prerequisites ∪ associations
+    SVC->>SVC: hop2 = 对 hop1 再展开、去重、排除 ego
+    SVC-->>API: {ego, hop1, hop2, candidates[]}
+    Note right of SVC: candidates 排序：<br/>hop1-先修 > hop1-跨科 > hop2<br/>（聚焦掩码在此采样）
+
+    Note over VER: 回归：防伪证
+    VER->>BLD: 重跑 build（临时目录）
+    VER->>FS: 读已入库 kg408.json
+    VER->>VER: 断言 节点数/边数/sha256 全等
+    VER->>VER: 断言 stats.md 数字 == json 真值
+    VER-->>VER: 全绿 / 报差异并 fail

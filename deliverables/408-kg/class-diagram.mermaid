@@ -1,0 +1,124 @@
+classDiagram
+    class Provenance {
+        +str source_path
+        +str source_sha256
+        +int source_bytes
+        +str generator
+        +str generator_version
+        +str command
+        +str generated_at_utc
+        +str parser_rule_version
+        +to_dict() dict
+    }
+
+    class KgNode {
+        +str id
+        +str label
+        +str level
+        +str subject
+        +str chapter
+        +str parent_id
+        +int ordinal
+        +int source_row
+        +list aliases
+        +int group
+        +is_leaf() bool
+        +to_legacy() dict
+    }
+
+    class KgEdge {
+        +str id
+        +str source
+        +str target
+        +str type
+        +bool directed
+        +float weight
+        +str weight_source
+        +str subject_scope
+        +str resolution
+        +int source_row
+        +str evidence
+        +to_legacy() dict
+        +both_dirs() list
+    }
+
+    class UnresolvedRef {
+        +str kind
+        +str raw_name
+        +str context_row
+        +str reason
+        +str suggested_action
+    }
+
+    class Kg408 {
+        +list nodes
+        +list edges
+        +Provenance provenance
+        +list unresolved
+        +subject_view(subj) Kg408
+        +to_legacy() dict
+        +stats() dict
+    }
+
+    class HtmlSkeletonParser {
+        -str _html
+        +parse_subjects() list
+        +parse_chapter_rows(subject) list
+        +parse_prereq_rows() list
+        +parse_cross_rows() list
+        +table_row_index() dict
+    }
+
+    class NameResolver {
+        -dict _index
+        -dict _alias
+        -list _unresolved
+        +resolve(raw, subject_hint) KgNode
+        +resolve_all() list
+        +unresolved() list~UnresolvedRef~
+    }
+
+    class Kg408Builder {
+        -HtmlSkeletonParser _parser
+        -NameResolver _resolver
+        +build() Kg408
+        +_build_hierarchy() list
+        +_build_prereq_edges() list
+        +_build_cross_edges() list
+        +_emit_stats() dict
+    }
+
+    class Kg408Store {
+        -Kg408 _kg
+        -dict _by_id
+        -dict _children
+        -dict _out
+        -dict _in
+        +load(path) Kg408Store
+        +get(node_id) KgNode
+        +by_subject(subj) list
+        +children(node_id) list
+        +prerequisites(kp_id) list
+        +dependents(kp_id) list
+        +associations(kp_id) list
+        +ego_graph(kp_id, hops) dict
+        +subject_rollup(kp_id) str
+    }
+
+    class Kg408Verifier {
+        +rebuild_and_compare() bool
+        +assert_stats_match_doc(md_path) bool
+        +assert_all_edges_resolve() bool
+    }
+
+    Kg408 *-- KgNode
+    Kg408 *-- KgEdge
+    Kg408 *-- Provenance
+    Kg408 *-- UnresolvedRef
+    KgNode <.. KgEdge : source/target 引用
+    Kg408Builder --> HtmlSkeletonParser : 使用
+    Kg408Builder --> NameResolver : 使用
+    Kg408Builder ..> Kg408 : 产出
+    Kg408Store --> Kg408 : 加载
+    Kg408Verifier --> Kg408Builder : 重跑
+    Kg408Verifier --> Kg408Store : 比对
