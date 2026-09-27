@@ -9,6 +9,8 @@
    career_state.DIMENSIONS 的 6 维（旧版 408 学情画像遗留），属口径漂移。
 3. api/__init__.py 导出的 router 必须全部登记到 ALL_ROUTERS 且仅一次 —— 漏登记
    接口会静默消失，重复登记则让「注册顺序即匹配顺序」的约定失效。
+4. 对外 OpenAPI 描述宣称的 LangGraph 节点数必须等于图中真实节点数 —— 该描述
+   直接出现在 /docs 与 openapi.json 上（对外契约），数字写错不会报任何错。
 """
 
 import pytest
@@ -83,3 +85,27 @@ def test_every_exported_router_is_registered_exactly_once():
     assert not missing, f"以下 router 已导出但未登记，其接口将静默不存在: {missing}"
     assert not duplicated, f"以下 router 被重复登记，路由匹配顺序约定失效: {duplicated}"
     assert len(ALL_ROUTERS) == len(set(registered_ids)), "ALL_ROUTERS 存在重复条目"
+
+
+def test_openapi_description_langgraph_node_count_matches_graph():
+    """对外 OpenAPI 描述宣称的 LangGraph 节点数必须等于图中真实节点数。
+
+    该 description 会原样出现在 /docs 与 openapi.json（对外契约），
+    写错不报任何错，只能靠这条不变量发现。
+    2026-09-28 审查实测：描述曾长期写「10 节点」，而 agents/graph.py 真值为 11。
+    """
+    import re
+
+    from agents.graph import create_agent_graph
+    from main import app
+
+    # 编译图里 __start__ 是框架虚拟节点，不计入业务节点
+    compiled = create_agent_graph()
+    real = len([n for n in compiled.nodes if not n.startswith("__")])
+
+    desc = app.description or ""
+    m = re.search(r"(\d+)\s*节点\s*LangGraph", desc)
+    assert m, f"OpenAPI 描述未声明 LangGraph 节点数，对外口径失锚: {desc[:80]!r}"
+    assert int(m.group(1)) == real, (
+        f"对外宣称 {m.group(1)} 节点，而 agents/graph.py 真值为 {real} 节点"
+    )
