@@ -30,11 +30,19 @@ async def status():
     from db import embedder
     cfg = load_config()
 
+    # 探针自身永不抛异常：健康端点是故障时的生命线，若组件故障时探针先 500，
+    # 编排系统会误判实例不可用而反复重启。组件探测失败 == 降级原因之一。
+    probe_failures: list[str] = []
+
     # ── 向量库 ──
     milvus_cfg_enabled = bool(cfg.get("milvus", {}).get("enabled", False))
     milvus_connected = bool(getattr(vector_db, "_milvus_connected", False))
     vector_db_mode = "milvus" if milvus_connected else "inmemory"
-    count = vector_db.count("netlearn_kb")
+    try:
+        count = vector_db.count("netlearn_kb")
+    except Exception as e:  # noqa: BLE001 — 探针必须吞异常改走降级通道
+        count = 0
+        probe_failures.append(f"vector_db: 健康探测失败({type(e).__name__})")
 
     # ── PostgreSQL（意图启用却未连上 / 回落 SQLite 兜底 → 降级）──
     pg_cfg_enabled = bool(cfg.get("postgresql", {}).get("enabled", False))
@@ -75,6 +83,7 @@ async def status():
         )
     if not llm_available:
         degraded_reasons.append("llm: 未配置任何可用供应商凭证（资源生成不可用）")
+    degraded_reasons.extend(probe_failures)
 
     overall = "degraded" if degraded_reasons else "ok"
 
@@ -110,6 +119,22 @@ async def status():
     }
 
 
+def _profile_dimension_count() -> int:
+    """画像维度数 —— 取唯一真值源，禁止再硬编码。
+
+    权威定义在 ``agents.career_state.DIMENSIONS``（英文 key + DIMENSION_LABELS 中文名）。
+    此处刻意延迟导入并保持轻量（该模块不引入 torch），失败时返回 -1 而不是猜一个数字：
+    宁可让守护测试报错，也不要对外宣称一个未经源证的数值（见 CLAUDE.md 诚信红线）。
+    """
+    try:
+        from agents.career_state import DIMENSIONS  # 延迟导入：避免影响应用启动路径
+
+        return len(DIMENSIONS)
+    except Exception as e:  # noqa: BLE001
+        logger.warning("读取画像维度真值源失败，返回 -1 而非占位数字: %s", e)
+        return -1
+
+
 async def competition_status():
     """返回赛题5项功能 + 2项加分项的实现状态"""
     count = vector_db.count("netlearn_kb")
@@ -143,7 +168,9 @@ async def competition_status():
             "user_count": user_count,
             "agent_count": 13,
             "resource_types": 7,
-            "profile_dimensions": 8,
+            # 画像维度必须从唯一真值源派生：本分支权威定义在 agents.career_state.DIMENSIONS。
+            # 曾硬编码为 8（旧版 408 学情画像遗留），与本线口径不符 ⇒ 改为派生，杜绝再漂移。
+            "profile_dimensions": _profile_dimension_count(),
         },
     }
 
