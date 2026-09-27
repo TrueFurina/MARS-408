@@ -137,7 +137,7 @@ env -u PYTHONPATH -u PYTHONSTARTUP -u NODE_OPTIONS -u ELECTRON_RUN_AS_NODE \
 **机验**：`cd py-server && python scripts/verify_core_lock_unification.py` → 14 项全 PASS（同连接/同锁、与 core 注册表同一对象、8×50 并发写零异常且 400 行全落库、disconnect 后可重连）。
 **变异验证**：回退为 `sqlite3.connect` 后立即 5 项 FAIL + `OperationalError`，证明该检查非空跑。
 
-### M-4 ①：main.py 从 882 行收敛到 78 行纯组装层（2026-09-27）
+### M-4 ①：main.py 从 882 行收敛到 85 行纯组装层（2026-09-27）
 
 - 拆出 `app/` 包：`env.py`（环境引导）/ `lifespan.py`（生命周期，最大块 300 行）/ `middleware.py`（6 个中间件 + CORS）/ `errors.py`（4 类 handler）/ `routers.py`（42 个业务 router）/ `status.py`（3 个运维端点）/ `static_sites.py`（plots/media + SPA 挂载）。
 - **公开契约零断裂**：`main.app` / `main.lifespan` / `main._seed_vector_db` / `main.competition_status` 委托重导出，35 处 `from main import ...` 无需改动。

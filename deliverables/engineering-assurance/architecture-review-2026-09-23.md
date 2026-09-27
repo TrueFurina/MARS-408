@@ -105,16 +105,21 @@ def _get_conn() -> sqlite3.Connection:
 - **问题**：`main.py` 混合了 4 种职责，任何一处改动都触碰应用入口；`user_store.py` 单一文件同时负责用户、画像、答题历史、复习调度回调。
 **✅ 修复记录（2026-09-27）：建议 ①（main.py 拆分）已落地，882 行 → 78 行组装层。**
 
-| 新位置 | 职责 | 行数 |
+| 新位置 | 职责 | 行数（实测） |
 | --- | --- | --- |
-| `app/env.py` | 进程级环境引导（HF 离线标记 / .env / 结构化日志）+ `is_production()` | 63 |
-| `app/lifespan.py` | 启动关闭编排：密钥校验 → 向量库 → PG/Redis/Admin 并行 → 迁移 → demo seed → LLM 凭证 → worker 守卫 → 清理任务 | 300 |
-| `app/middleware.py` | CORS / GZip / 指标 / 安全头 / 请求体限制 / 限流 | 235 |
-| `app/errors.py` | 4 类异常处理器注册 | 62 |
-| `app/routers.py` | 42 个业务 router 汇总到 `/api` 前缀 | 88 |
-| `app/status.py` | `/api/status`、`/api/status/competition`、`/metrics` | 154 |
+| `app/env.py` | 进程级环境引导（HF 离线标记 / .env / 结构化日志）+ `is_production()` | 55 |
+| `app/lifespan.py` | 启动关闭编排：密钥校验 → 向量库 → PG/Redis/Admin 并行 → 迁移 → demo seed → LLM 凭证 → worker 守卫 → 清理任务 | 338 |
+| `app/middleware.py` | CORS / GZip / 指标 / 安全头 / 请求体限制 / 限流 | 261 |
+| `app/status.py` | `/api/status`、`/api/status/competition`、`/metrics` | 158 |
+| `app/routers.py` | 42 个业务 router 汇总到 `/api` 前缀 | 102 |
 | `app/static_sites.py` | plots / media 挂载 + 前端 SPA 挂载 | 74 |
-| `main.py` | 只做组装（7 步，顺序约束写进注释） | 78 |
+| `app/errors.py` | 4 类异常处理器注册 | 59 |
+| `app/__init__.py` | 包说明（刻意无副作用导入） | 22 |
+| `main.py` | 只做组装（7 步，顺序约束写进注释） | **85**（原 882） |
+
+行数复现命令：`cd py-server && wc -l main.py app/*.py`（拆分后总量 1,154 行，多于原 882 ——
+增量全部来自**职责说明注释与顺序约束注解**，非新业务逻辑；入口认知负荷从"读 882 行才能改一行中间件"
+降到"读 85 行定位到对应职责模块"）。
 
 - **公开契约不断**：`main.app` / `main.lifespan` / `main._seed_vector_db` / `main.competition_status` 全部委托重导出（35 处 `from main import ...` 的既有测试与脚本无需改动），由 `scripts/verify_app_wiring.py` 用 `is` 断言守护。
 - **顺序约束显式化**：中间件 / 静态挂载 / 路由 / SPA 的注册顺序 = Starlette 包装顺序，已写进 `main.py` 与各模块头注释。
