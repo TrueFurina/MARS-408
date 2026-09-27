@@ -29,6 +29,8 @@ from agents.state import AgentState
 # 下方名字是**委托再导出**，使既有实验/测试脚本 `from agents.quality_gate import ...` 不受影响。
 # review_signals 被多个实验脚本从本模块导入（不再被本模块自身引用）→ 标注 noqa: F401 以免 pyflakes 误报。
 from engines.review_policy import (
+    UNIFORM_REVIEW_W,  # noqa: F401  - 委托再导出（test_review_weight_protocol 从本模块导入）
+    _normalize_review_weights,  # noqa: F401  - 委托再导出（同上；权重归一化真值源在 engines）
     review_signals,  # noqa: F401  - 委托再导出（diag_* 实验脚本从本模块导入）
     weighted_consistency_score,
 )
