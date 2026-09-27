@@ -10,7 +10,7 @@
 | 场景 | 判定 | 理由 |
 |---|---|---|
 | **演示 / 答辩 / 评审**（单实例、可控路径、可复现） | ✅ **GO** | 前端构建绿、设计系统三门禁绿、部署件齐备（非 root + 健康检查 + 运维三文档）、安全红线 42 passed |
-| **真实生产上线**（多用户并发、长期演进、团队协作） | ❌ **NO-GO** | 架构分层 M-1/M-2/M-3/M-5 已修（2026-09-27），但 M-4（上帝文件集中，见 §二 备注）未修、覆盖率 52% < 54% 门禁、测试存在顺序依赖污染 |
+| **真实生产上线**（多用户并发、长期演进、团队协作） | ❌ **NO-GO** | 架构分层 M-1/M-2/M-3/M-5 已修、**M-4 第 1 条（main.py 拆分）已落地**（2026-09-27），但 M-4 ②③（user_store 拆域、seed_data 归位）未做、覆盖率 52% < 54% 门禁、测试存在顺序依赖污染 |
 
 ---
 
@@ -136,6 +136,19 @@ env -u PYTHONPATH -u PYTHONSTARTUP -u NODE_OPTIONS -u ELECTRON_RUN_AS_NODE \
 
 **机验**：`cd py-server && python scripts/verify_core_lock_unification.py` → 14 项全 PASS（同连接/同锁、与 core 注册表同一对象、8×50 并发写零异常且 400 行全落库、disconnect 后可重连）。
 **变异验证**：回退为 `sqlite3.connect` 后立即 5 项 FAIL + `OperationalError`，证明该检查非空跑。
+
+### M-4 ①：main.py 从 882 行收敛到 78 行纯组装层（2026-09-27）
+
+- 拆出 `app/` 包：`env.py`（环境引导）/ `lifespan.py`（生命周期，最大块 300 行）/ `middleware.py`（6 个中间件 + CORS）/ `errors.py`（4 类 handler）/ `routers.py`（42 个业务 router）/ `status.py`（3 个运维端点）/ `static_sites.py`（plots/media + SPA 挂载）。
+- **公开契约零断裂**：`main.app` / `main.lifespan` / `main._seed_vector_db` / `main.competition_status` 委托重导出，35 处 `from main import ...` 无需改动。
+- **机验 30 项全 PASS**：`python scripts/verify_app_wiring.py` —— 含 `ALL_ROUTERS` 与拆分前逐项逐序 AST 比对、252 条路由、4 类异常处理器、7 个安全头、413 / 429 行为。**变异验证**：注释掉 `middleware.install(app)` 一行即 9 项 FAIL（安全头全丢），证明能抓住「少装中间件」这一静默失败模式。
+- **回归**：`test_wave_a_security` + `test_wave_b_security` + `test_wave_b_sre` + `test_api_contract_comprehensive` + `test_literacy_assessment` + `test_config_observability` + `test_api_consistency` = **184 passed**。
+
+### M-4 附带修复：services/user_service 改为动态委托门面（修掉一处 M-2 埋下的雷）
+
+M-2 收敛出的 `services/user_service.py` 原本用静态 `from db.user_store import x` 重导出 —— 这会在 service 层绑定一份**函数对象快照**，此后任何针对 `db.user_store` 的 monkeypatch / 打桩都**静默失效**：测试以为在验证降级路径，实际走的仍是真实连接。
+实锤：`test_competition_status_warns_on_db_error` 在 M-2 后变为 FAIL（`user_count=125` 而非降级后的 0）。
+已改为 PEP 562 `__getattr__` 动态穿透（`DELEGATED_NAMES` 显式白名单、私有符号照旧拒绝、`__all__` 由白名单生成以避免 ruff F822 假报警——**未使用 noqa 压制**）。修复后上述用例 PASS。
 
 ### M-2：API 层越级访问存储收敛到 services 层（实测 `api/*.py` 直连 `db.user_store` = 0）
 

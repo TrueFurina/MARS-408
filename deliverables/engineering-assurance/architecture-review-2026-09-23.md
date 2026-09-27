@@ -5,7 +5,7 @@
 - **分支 / HEAD**：`career-literacy` @ `7b6b3b0`
 - **技术栈**：Vue 3 + TypeScript + Vite（前端）／ Python 3.13 + FastAPI + LangGraph + PyTorch(CPU) + SQLite/PostgreSQL + Milvus（后端）
 - **总体评分**：**6.5 / 10**
-- **结论**：⚠️ 可继续开发；**M-1 / M-2 / M-3 / M-5（存储锁域统一）已于 2026-09-27 修复**，剩余 M-4（上帝文件集中：`main.py` 拆分 / `user_store` 拆域）待处理
+- **结论**：⚠️ 可继续开发；**M-1 / M-2 / M-3 / M-5 已于 2026-09-27 修复**，M-4 的**第 1 条（main.py 拆分）已落地**、第 2/3 条（`user_store` 拆域、`seed_data` 归位）待处理
 
 > 编号订正（2026-09-27）：上一轮维护结论行时误把「存储锁域三分裂」写成 M-4、「main.py 职责过载」写成 M-5，
 > 与本报告正文编号相反。正文为准：**M-4 = 上帝文件集中**（含 main.py 拆分建议），**M-5 = 并发写保护只覆盖 2/3 存储域**。
@@ -93,7 +93,7 @@ def _get_conn() -> sqlite3.Connection:
   - `kg_dag.GROUP_PREREQS` 等常量 → 迁 `db/kg_prereqs.py` 或 `shared/kg_consts.py`
   迁移后删除全部函数内延迟导入。
 
-### [M-4] 上帝文件集中，单点认知负荷过高 — 🟠 Major
+### [M-4] 上帝文件集中，单点认知负荷过高 — 🟡 部分修复（2026-09-27）
 
 - **位置**：
   - `py-server/seed_data.py` 1,527 行
@@ -103,10 +103,31 @@ def _get_conn() -> sqlite3.Connection:
   - `py-server/engines/review_policy.py` 1,001 行
   - `py-server/main.py` 880 行（同时承担 lifespan、限流中间件、4 类异常处理器、路由注册）
 - **问题**：`main.py` 混合了 4 种职责，任何一处改动都触碰应用入口；`user_store.py` 单一文件同时负责用户、画像、答题历史、复习调度回调。
-- **修复建议**（按收益排序）：
-  1. `main.py` 拆分：`app/middleware.py`（限流）、`app/errors.py`（4 个 handler）、`app/routers.py`（`_all_routers` 列表），`main.py` 只留组装。
-  2. `db/user_store.py` 拆出 `db/profile_store.py`（画像 + 答题历史）。
-  3. `seed_data.py` 归入 `scripts/`（非运行时依赖）。
+**✅ 修复记录（2026-09-27）：建议 ①（main.py 拆分）已落地，882 行 → 78 行组装层。**
+
+| 新位置 | 职责 | 行数 |
+| --- | --- | --- |
+| `app/env.py` | 进程级环境引导（HF 离线标记 / .env / 结构化日志）+ `is_production()` | 63 |
+| `app/lifespan.py` | 启动关闭编排：密钥校验 → 向量库 → PG/Redis/Admin 并行 → 迁移 → demo seed → LLM 凭证 → worker 守卫 → 清理任务 | 300 |
+| `app/middleware.py` | CORS / GZip / 指标 / 安全头 / 请求体限制 / 限流 | 235 |
+| `app/errors.py` | 4 类异常处理器注册 | 62 |
+| `app/routers.py` | 42 个业务 router 汇总到 `/api` 前缀 | 88 |
+| `app/status.py` | `/api/status`、`/api/status/competition`、`/metrics` | 154 |
+| `app/static_sites.py` | plots / media 挂载 + 前端 SPA 挂载 | 74 |
+| `main.py` | 只做组装（7 步，顺序约束写进注释） | 78 |
+
+- **公开契约不断**：`main.app` / `main.lifespan` / `main._seed_vector_db` / `main.competition_status` 全部委托重导出（35 处 `from main import ...` 的既有测试与脚本无需改动），由 `scripts/verify_app_wiring.py` 用 `is` 断言守护。
+- **顺序约束显式化**：中间件 / 静态挂载 / 路由 / SPA 的注册顺序 = Starlette 包装顺序，已写进 `main.py` 与各模块头注释。
+- **顺带修一处 M-2 遗留缺陷（重要）**：`services/user_service.py` 原先是**静态 `from db.user_store import x` 的重导出**，会在 service 层绑定一份快照 —— 任何对 `db.user_store` 的 monkeypatch / 打桩都**静默失效**（表现：patch 了 DB 故障，走的却是真实连接，降级分支永远测不到）。已改为 **PEP 562 动态委托门面**（`__getattr__` 穿透到真值源、`DELEGATED_NAMES` 显式白名单、私有符号仍拒绝）。实锤：`test_competition_status_warns_on_db_error` 由 FAIL 转 PASS（修前 `user_count=125` 而非 0）。
+- **顺带修一处 CORS 静态复查**：`tests/test_wave_a_security.py::TestCORSStaticReview` 原先静态扫 `main.py` 文本，拆分后会失效；已改为扫 `app/middleware.py`（新真值源）并对 `main.py` 兼容回退，使两次提交各自的 CI 都是绿的。
+
+**机验**：`cd py-server && python scripts/verify_app_wiring.py` → 30 项断言全 PASS。
+覆盖：`ALL_ROUTERS` 与拆分前 `_all_routers` **逐项逐序一致**（AST 比对基线提交 `f36b83e`）、252 条路由、4 类异常处理器、7 个安全头（含 WASI 依赖的 COOP/COEP）、请求体超限 413、限流器 429 + Retry-After、4 个公开符号的 `is` 同一性。
+**变异验证**：仅注释 `middleware.install(app)` 一行，9 项断言立即 FAIL（安全头全丢、413 变 405、429 变 404）——证明这组检查真能抓住「少装一个中间件」这一最危险的静默失败。
+
+**🟡 剩余（未做，属 M-4 建议 ②③，各自独立、可单独开工）**：
+2. `db/user_store.py`（1,330 行）拆出 `db/profile_store.py`（画像 + 答题历史）——触及 30+ 模块的 import，改动面最大，需单独一轮并配 .is-progress 门禁。
+3. `seed_data.py`（1,527 行）归入 `scripts/`——运行时不被 main 之外的模块依赖，迁移风险最低，但需确认所有 `import seed_data` 的路径都能解析。
 
 ### [M-5] 并发写保护只覆盖了 2/3 的存储域 — ✅ 已修复（2026-09-27，🟢 收敛）
 
