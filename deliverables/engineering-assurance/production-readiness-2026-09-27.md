@@ -10,7 +10,7 @@
 | 场景 | 判定 | 理由 |
 |---|---|---|
 | **演示 / 答辩 / 评审**（单实例、可控路径、可复现） | ✅ **GO** | 前端构建绿、设计系统三门禁绿、部署件齐备（非 root + 健康检查 + 运维三文档）、安全红线 42 passed |
-| **真实生产上线**（多用户并发、长期演进、团队协作） | ❌ **NO-GO** | 架构分层 **M-1 / M-2 / M-3 / M-4 / M-5 全部已修**、测试顺序依赖污染已定位修复（2026-09-27）；唯一剩余阻塞 = **覆盖率 52% < 54% 门禁** |
+| **真实生产上线**（多用户并发、长期演进、团队协作） | ✅ **GO**（2026-09-28 更新） | 架构分层 **M-1~M-5 全部已修**、测试顺序依赖污染已根治、**覆盖率 54.08% ≥ 54% 门禁达标**；唯一遗留为**本机** torch c10.dll 加载失败（环境问题，Linux/CI 不受影响） |
 
 ---
 
@@ -36,7 +36,7 @@ env -u PYTHONPATH -u PYTHONSTARTUP -u NODE_OPTIONS -u ELECTRON_RUN_AS_NODE \
   --timeout=60 -q --basetemp=.pytest_tmp \
   --ignore=tests/test_review_shadow_probe.py -p no:randomly
 # → 2 failed, 928 passed, 221 skipped, 1 xfailed in 909.89s (15:09)
-# → 覆盖率 52.32%（门禁 54.0%）→ FAIL
+# → 覆盖率 52.32%（门禁 54.0%）→ FAIL（修复前；2026-09-28 补测后 54.08% → PASS）
 ```
 
 - 安全红线：`pytest tests/test_safety_redline.py` → **42 passed**
@@ -124,7 +124,32 @@ env -u PYTHONPATH -u PYTHONSTARTUP -u NODE_OPTIONS -u ELECTRON_RUN_AS_NODE \
 `tests/test_review_shadow_probe.py` 在 collection 阶段即崩：`OSError [WinError 1114] … torch/lib/c10.dll`（与既有 Windows torch SIGSEGV 同源），会让整轮 pytest `Interrupted: 1 error during collection`。
 **必须 `--ignore` 该文件**；权威回归以 Linux/CI 为准。
 
-### 🟠 覆盖率 52.32% < 54.0% 门禁
+### ✅ 覆盖率 52.32% → 54.08%（2026-09-28 补测达标）
+
+**根因不是"测试写得少"，而是 M-4 拆出的新模块没有对应测试**：`app/`（8 文件）、`seed/`、
+`db/profile_store.py` 共约 2,600 行新增结构拉低了分母（9-23 时是 55.68%）。
+补测聚焦"真实有价值"的目标，而非凑行数：
+
+| 新增/修复测试 | 覆盖对象 | 价值 |
+| --- | --- | --- |
+| `test_url_guard.py` | SSRF 域名白名单守卫（原 0%） | 含子域名伪装攻击负例（`api.deepseek.com.evil.com` 必须拒绝） |
+| `test_pdf_page_mapping.py` | PDF 页码对齐算法（原 0%） | 多锚点投票、相邻页聚类、落库损坏降级 |
+| `test_app_lifespan_guards.py` | `app/lifespan.py` 57%→84% | ADR-007 单写者硬约束、生产口令 fail-fast、PG/Redis 降级、清理任务 |
+| `test_app_middleware_matrix.py` | `app/middleware.py` 69%→99%、`errors.py`→100% | 限流 429 / 体积 413 / 生产 CSP+HSTS / 错误脱敏 |
+| `test_profile_store_contract.py` | 画像域（M-4 ② 新模块） | 读写契约、upsert 去重、坏 JSON 降级、动态委托同一性 |
+| `test_shared_dependencies.py` | DI 容器与依赖注入（原 0%） | 懒加载缓存、依赖可被 override |
+| `test_content_safety.py` | 内容安全审核链 | **永不抛异常** + 降级必须留痕 |
+| `test_static_sites.py` | plots/media + SPA 挂载 | SPA 回退生效、`/api` 404 不被 index.html 顶掉 |
+| `test_auth_token_and_roles.py` | JWT 底座 64%→ 更高 | 签名篡改 / payload 提权 / 过期 / 角色越权 |
+| `test_demo_credential_single_source.py`（**修复**） | 静态锚点扫描 | M-4 拆分把演示种子块移到 `app/lifespan.py`，测试锚点未同步 → 收集期 5 个 ERROR |
+
+**实测结果（2026-09-28 全量）**：`1139 passed / 221 skipped / 3 xfailed / 0 failed`，
+覆盖率 **54.08% ≥ 门禁 54%**（覆盖语句 +328）。唯一 error 为本机 torch `c10.dll` 加载失败（环境）。
+
+**过程中自己踩的三个坑（已修，记录以免重犯）**：
+1. 固定测试 uid 写真实库 → 第二次运行读到上次残留，顺序断言在全量下失败；改为每次运行生成唯一 uid（不删历史数据）。
+2. 容器测试依赖全局 import 现状 → 撞上其它测试的 `sys.modules` 替身（`RedisClient` 不存在）；改为自行注入伪依赖模块。
+3. 签名篡改用例用 `'A' + sig[1:]` → 签名恰好以 A 开头时"篡改"无效（约 1/64 概率偶发失败）；改为确定性构造并加断言。
 `shared/url_guard.py` 0%、`train_mixer*.py` 0%、`start_bg.py` 0% 拉低整体。
 
 ### 🟡 仓库卫生

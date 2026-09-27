@@ -25,6 +25,9 @@ if str(PY_SERVER) not in sys.path:
 import seed_demo_data as sd  # noqa: E402
 
 MAIN_PATH = PY_SERVER / "main.py"
+# M-4 装配层拆分：演示种子写入块已从 main.py 迁到 app/lifespan.py。
+# 扫描顺序 = 新真值源优先 + 旧位置兼容 —— 这样"先合实现/先合测试"两种顺序下本文件都成立。
+SOURCE_CANDIDATES = (PY_SERVER / "app" / "lifespan.py", PY_SERVER / "main.py")
 _ANCHOR_START = "# ── 首次启动时写入演示种子数据"
 _ANCHOR_END = "演示种子数据写入失败"
 
@@ -35,12 +38,21 @@ def _read(p: Path) -> str:
 
 @pytest.fixture(scope="module")
 def main_src() -> str:
-    return _read(MAIN_PATH)
+    """承载「演示种子写入块」的装配层源码（app/lifespan.py，兼容回退 main.py）。"""
+    for path in SOURCE_CANDIDATES:
+        if path.is_file():
+            text = _read(path)
+            if _ANCHOR_START in text:
+                return text
+    raise AssertionError(
+        "未在任何候选源文件中找到演示种子写入块: "
+        + ", ".join(str(p) for p in SOURCE_CANDIDATES)
+    )
 
 
 @pytest.fixture(scope="module")
 def demo_seed_block(main_src: str) -> str:
-    """切出 main.py 的演示种子写入块，避免断言被文件其它部分的同名字符串误伤。"""
+    """切出装配层里的演示种子写入块，避免断言被文件其它部分的同名字符串误伤。"""
     i = main_src.index(_ANCHOR_START)
     j = main_src.index(_ANCHOR_END, i)
     block = main_src[i:j]
@@ -65,7 +77,7 @@ def test_seed_module_is_the_only_definition_point() -> None:
 
 def test_main_never_embeds_demo_password_literal(main_src: str) -> None:
     assert sd.DEMO_PASSWORD not in main_src, (
-        "main.py 又出现了演示口令字面量——应改为从 seed_demo_data 导入常量，"
+        "装配层源码又出现了演示口令字面量——应改为从 seed_demo_data 导入常量，"
         "否则会漂移（幂等探测失效）并把凭据回显进日志"
     )
 
