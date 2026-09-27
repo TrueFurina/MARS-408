@@ -88,20 +88,60 @@ RATE_GROUPS = {
 _rate_buckets: "defaultdict[tuple, deque[float]]" = defaultdict(deque)
 _rate_lock = threading.Lock()
 
+# 桶回收：原实现只在某个 key 被再次访问时才挤出过期时间戳，
+# 于是"来过一次的 IP"对应的桶永久驻留 → 随来源 IP 多样性缓慢涨内存。
+# 这里补一个低频周期清扫（默认 60s），删掉最后一次请求已滑出窗口的桶。
+RATE_SWEEP_INTERVAL = float(os.environ.get("RATE_SWEEP_INTERVAL", "60"))
+_rate_last_sweep = time.monotonic()
+
+
+def _sweep_expired_buckets(now: float) -> int:
+    """删除最后一次请求已滑出限流窗口的桶，返回清理个数。
+
+    须在持有 _rate_lock 时调用；窗口内仍有时间戳的活跃桶不受影响。
+    """
+    stale = [
+        k for k, dq in _rate_buckets.items()
+        if not dq or now - dq[-1] >= RATE_LIMIT_WINDOW
+    ]
+    for k in stale:
+        del _rate_buckets[k]
+    return len(stale)
+
 
 def _rate_group_limit(group: str) -> int:
     return int(os.environ.get(f"RATE_{group.upper()}", str(RATE_LIMIT_DEFAULT)))
 
 
+# 仅当 TCP 直连对端是可信反代时，才采信 X-Forwarded-For / X-Real-IP。
+# 直接暴露时该 header 由客户端任意填写 —— 无条件下信等于把限流的 key 交给攻击者
+# （一条 `X-Forwarded-For: <随机值>` 就能换一个新桶，限流形同虚设）。
+# 默认信任 loopback（本机 nginx / 容器 sidecar 的常见写法）；
+# 独立网关请用 TRUSTED_PROXIES 显式声明其地址。
+DEFAULT_TRUSTED_PROXIES = "127.0.0.1,::1,::ffff:127.0.0.1"
+
+
+def _trusted_proxies() -> frozenset:
+    raw = os.environ.get("TRUSTED_PROXIES", DEFAULT_TRUSTED_PROXIES)
+    return frozenset(p.strip() for p in raw.split(",") if p.strip())
+
+
 def _client_ip(request: Request) -> str:
-    # 前置反代可能通过 X-Forwarded-For / X-Real-IP 传递真实客户端 IP
-    fwd = request.headers.get("x-forwarded-for")
-    if fwd:
-        return fwd.split(",")[0].strip()
-    real = request.headers.get("x-real-ip")
-    if real:
-        return real.strip()
-    return request.client.host if request.client else "unknown"
+    """取客户端 IP：不可信来源伪造的反代头一律忽略。
+
+    判据是「直连对端是否可信」而非「有没有这个头」——
+    未通过校验时按真实 TCP 对端计费，从而无法借助伪造头绕过限流。
+    """
+    peer = request.client.host if request.client else None
+    if peer and peer in _trusted_proxies():
+        # 前置反代可能通过 X-Forwarded-For / X-Real-IP 传递真实客户端 IP
+        fwd = request.headers.get("x-forwarded-for")
+        if fwd:
+            return fwd.split(",")[0].strip()
+        real = request.headers.get("x-real-ip")
+        if real:
+            return real.strip()
+    return peer or "unknown"
 
 
 # ── 各中间件实现 ──
@@ -188,11 +228,16 @@ async def rate_limit_middleware(request: Request, call_next) -> Response:
     if group is None:
         return await call_next(request)
 
+    global _rate_last_sweep
     now = time.monotonic()
     ip = _client_ip(request)
     limit = _rate_group_limit(group)
     key = (ip, group)
     with _rate_lock:
+        # 低频清扫：长期不再出现的来源其桶否则永久驻留（内存随 IP 多样性缓慢增长）
+        if now - _rate_last_sweep >= RATE_SWEEP_INTERVAL:
+            _rate_last_sweep = now
+            _sweep_expired_buckets(now)
         dq = _rate_buckets[key]
         # 丢弃窗口外的旧时间戳
         while dq and now - dq[0] >= RATE_LIMIT_WINDOW:

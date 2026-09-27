@@ -1,10 +1,12 @@
 # ============================================================
 # app/lifespan.py — 应用生命周期编排（M-4 拆分，自 main.py 下沉）
 #
-# 启动顺序是有意为之的全部内容：check_auth → vector_db → (PG/Redis/Admin 并行)
-# → migrations → demo seed → LLM 凭证检查 → workers 守卫 → import_worker
+# 启动顺序是有意为之的全部内容：check_auth → workers 守卫 → vector_db
+# → (PG/Redis/Admin 并行) → migrations → demo seed → LLM 凭证检查 → import_worker
 # → 会话清理任务 → 教材自动导入。任何重排序都可能引入竞态或冷启动失败，
 # 改动前请先把「为什么是这个顺序」讲清楚。
+# （ADR-007 单写者守卫曾在 workers 启动前才执行＝写完 schema 才拦；现已上移到
+#   第一次写入（向量库播种）之前，详见 lifespan() 内注释。）
 # ============================================================
 
 import asyncio
@@ -127,14 +129,19 @@ async def _init_admin():
             f"生产环境 ADMIN_PASSWORD 长度必须 >= 16（当前 {len(admin_pwd)}）。"
             " 请注入足够强的管理员口令。"
         )
+    admin_user = os.environ.get("ADMIN_USERNAME", "admin")
     try:
-        ensure_admin(
-            os.environ.get("ADMIN_USERNAME", "admin"),
-            admin_pwd,
-        )
-        logger.info("管理员账号已就绪（用户名: admin）")
+        ensure_admin(admin_user, admin_pwd)
+        logger.info("管理员账号已就绪（用户名: %s）", admin_user)
     except Exception as e:
-        logger.warning(f"管理员账号初始化失败: {e}")
+        # 生产环境：管理员是唯一特权入口，创建失败 = 系统无人可管，
+        # 与 AUTH_SECRET / 口令长度两道 gate 口径一致 → fail-fast（拒绝「零管理员」上线）。
+        # 非生产环境保留降级：本地只读库等场景不应阻断开发调试。
+        if env in ("production", "prod"):
+            raise RuntimeError(
+                f"生产环境管理员账号初始化失败，拒绝以「零管理员」状态启动: {e}"
+            ) from e
+        logger.warning("管理员账号初始化失败（非生产环境，降级启动）: %s", e)
 
 
 async def _run_migrations():
@@ -275,6 +282,12 @@ async def lifespan(app: FastAPI):
         logger.error("AUTH_SECRET 校验失败，应用拒绝启动：%s", _auth_err)
         raise
 
+    # ── ADR-007 单写者硬约束：必须在任何写操作之前完成校验 ──
+    # 原先放在 migrations / demo seed 之后：守卫要防的恰恰是"多进程同时写"，
+    # 却在已经写完整套 schema + 演示账户之后才拦下，等于事后验尸。
+    # 上移到此处（密钥校验之后、向量库播种之前）= 在第一次写入之前拒绝。
+    _assert_single_worker()
+
     # ── 向量数据库（Milvus 优先，InMemoryVectorStore 回退）─ 同步，先完成 ──
     count = await _init_vector_db()
 
@@ -294,7 +307,6 @@ async def lifespan(app: FastAPI):
     await _check_llm_credentials()
 
     # ── 导入队列 Worker（ADR-007）── 在 yield 前拉起
-    _assert_single_worker()
     await import_worker.start()
 
     cleanup_task = asyncio.create_task(_artifact_lifecycle_loop())
