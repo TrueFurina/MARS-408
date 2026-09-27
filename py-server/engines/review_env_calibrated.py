@@ -31,7 +31,9 @@
 
 import random
 
-from agents.quality_gate import review_signals, weighted_consistency_score
+# M-3：实现已下沉 engines.review_policy（原从 agents.quality_gate 导入，形成
+# engines → agents 反向依赖）。agents.quality_gate 仍委托再导出同名符号，行为等价。
+from engines.review_policy import review_signals, weighted_consistency_score
 from engines.review_policy import (
     ACTION_TOKENS,
     UNIFORM_WEIGHTS,

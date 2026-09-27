@@ -27,7 +27,9 @@ from engines.review_policy import (
     review_state_features,
     review_weight_schema,
 )
-from agents.quality_gate import weighted_consistency_score, review_signals
+# M-3：实现已下沉 engines.review_policy（原从 agents.quality_gate 导入，形成
+# engines → agents 反向依赖）。agents.quality_gate 仍委托再导出同名符号，行为等价。
+from engines.review_policy import review_signals, weighted_consistency_score
 from engines.review_env_calibrated import discipline_gate
 
 # ── 单特征理论阈值启发式（第 4 对照臂，解析推导、非拟合，故无泄漏）──

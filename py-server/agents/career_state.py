@@ -57,7 +57,10 @@ ADVERSARY_MODE_LABELS = {
 DIFFICULTIES = ["easy", "medium", "hard"]
 DEFAULT_MAX_TURNS = 8       # 默认对抗轮数
 MIN_TURNS = 4               # 少于该轮数不允许评估（证据不足）
-CATFISH_MAX_CONTINUE = 2    # 鲶鱼加压最多连续 2 轮即回到 normal
+# M-3：该常量同时被 engines/career_policy 消费，留在 agents 会形成
+# engines → agents 反向依赖。实现已下沉 shared/career_consts，此处委托再导出，
+# 使 `from agents.career_state import CATFISH_MAX_CONTINUE` 仍可用。
+from shared.career_consts import CATFISH_MAX_CONTINUE  # noqa: F401
 
 
 class CareerState(TypedDict, total=False):

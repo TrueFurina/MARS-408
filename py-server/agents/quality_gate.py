@@ -22,6 +22,17 @@ from typing import Literal
 
 from agents.state import AgentState
 
+# M-3：三元评审信号 / 有效分合成的**实现**已下沉 engines/review_policy.py。
+# 原位置（本模块）会与 engines.review_policy 形成双向循环 —— 后者的
+# analytic_review_action 必须与打分同源（test_review_analytic 以恒等式守护），
+# 只能靠函数内延迟导入规避。下沉后方向单一：agents.quality_gate → engines.review_policy。
+# 下方名字是**委托再导出**，使既有实验/测试脚本 `from agents.quality_gate import ...` 不受影响。
+# review_signals 被多个实验脚本从本模块导入（不再被本模块自身引用）→ 标注 noqa: F401 以免 pyflakes 误报。
+from engines.review_policy import (
+    review_signals,  # noqa: F401  - 委托再导出（diag_* 实验脚本从本模块导入）
+    weighted_consistency_score,
+)
+
 logger = logging.getLogger("netlearn.quality_gate")
 
 # 阈值常量
@@ -33,104 +44,7 @@ MAX_GATE_RETRIES = 1         # 最大闸门重试次数（提速：硬/软失败
 # ── 三元评审权重接线（攻坚令 3.4 插入点 B）──
 # 灰度契约：均匀权重 (1/3,1/3,1/3) 时 effective == 原 consistency_score，行为零变化；
 # 权重缺失/非法/异常 → 保持原值（fail-open）。只换判定输入，不换判定逻辑。
-UNIFORM_REVIEW_W = {"honest": 1 / 3, "critic": 1 / 3, "consensus": 1 / 3}
-_SKIP_EPS = 1e-9
-
-# consensus.status → 共识信号兜底映射（overall_score 缺失时使用）
-_STATUS_SIGNAL = {
-    "passed": 90.0, "pass": 90.0, "conflict": 50.0,
-    "flagged": 45.0, "regenerate": 40.0,
-}
-
-
-def review_signals(evidence: dict, consensus: dict) -> tuple[float, float, float]:
-    """抽取三元评审信号，各归一到 0-100：返回 (honest, critic, consensus)。
-
-    - honest    : evidence_report.consistency_score（证据/诚实 Agent）
-    - critic    : consensus.confidence_score × 100（批评者置信度，critic 节点写入）
-    - consensus : consensus.overall_score（GOMARL 共识总分），缺失时按 status 映射
-    """
-    evidence = evidence or {}
-    consensus = consensus or {}
-    try:
-        s_h = float(evidence.get("consistency_score", 100) or 0)
-    except (TypeError, ValueError):
-        s_h = 100.0
-
-    conf = consensus.get("confidence_score")
-    try:
-        s_c = float(conf) * 100.0 if conf is not None else 60.0
-    except (TypeError, ValueError):
-        s_c = 60.0
-
-    overall = consensus.get("overall_score")
-    if overall is not None:
-        try:
-            s_k = float(overall)
-        except (TypeError, ValueError):
-            s_k = None
-    else:
-        s_k = None
-    if s_k is None:
-        s_k = _STATUS_SIGNAL.get(
-            str(consensus.get("status", "")).lower(), 60.0)
-
-    return (
-        max(0.0, min(100.0, s_h)),
-        max(0.0, min(100.0, s_c)),
-        max(0.0, min(100.0, s_k)),
-    )
-
-
-def _normalize_review_weights(w) -> dict | None:
-    """归一化三元权重（非法 → None，交由调用方保持原值）。"""
-    if not isinstance(w, dict):
-        return None
-    try:
-        h = max(0.0, float(w.get("honest", 0.0)))
-        c = max(0.0, float(w.get("critic", 0.0)))
-        k = max(0.0, float(w.get("consensus", 0.0)))
-    except (TypeError, ValueError, AttributeError):
-        return None
-    total = h + c + k
-    if total <= _SKIP_EPS:
-        return {"honest": 0.0, "critic": 0.0, "consensus": 0.0}
-    return {"honest": h / total, "critic": c / total, "consensus": k / total}
-
-
-def weighted_consistency_score(
-    evidence: dict, consensus: dict, weights=None,
-) -> tuple[float, bool]:
-    """按三元评审权重合成有效一致性分。返回 (effective, applied)。
-
-    合成公式（保证均匀权重零偏移）：
-        weighted = w_h·S_h + w_c·S_c + w_k·S_k
-        uniform  = (S_h + S_c + S_k) / 3
-        effective = S_h + (weighted − uniform)
-
-    - 均匀权重：weighted == uniform ⇒ effective == S_h，applied=False（行为=现状）
-    - skip（权重全 0）：直接放行语义，effective=100，applied=True
-    - 其余：按信任对象拉高/拉低有效分，applied=True
-    """
-    s_h, s_c, s_k = review_signals(evidence, consensus)
-    # 空权重（None/{}/[]）一律视为「无权重」；空 dict 不得被当作 skip 全 0 放行，
-    # 否则会把「未加权」静默变成「直接放行」，是危险的语义混淆。
-    if not weights:
-        return s_h, False
-    w = _normalize_review_weights(weights)
-    if w is None:
-        return s_h, False
-
-    h, c, k = w["honest"], w["critic"], w["consensus"]
-    if h + c + k <= _SKIP_EPS:
-        return 100.0, True  # skip_review：不评审直接放行
-    if (abs(h - 1 / 3) < 1e-9 and abs(c - 1 / 3) < 1e-9 and abs(k - 1 / 3) < 1e-9):
-        return s_h, False   # 均匀权重 = 现状，不施加任何偏移
-
-    weighted = h * s_h + c * s_c + k * s_k
-    uniform = (s_h + s_c + s_k) / 3.0
-    effective = s_h + (weighted - uniform)
-    return max(0.0, min(100.0, effective)), True
+# （review_signals / weighted_consistency_score 见顶部委托导入）
 
 
 def _resolve_review_weights(state: dict, evidence: dict, consensus: dict):
@@ -177,20 +91,6 @@ async def quality_gate_node(state: AgentState) -> AgentState:
         gate_retry = state.get("gate_retry_count", 0)
         teacher_doc = (state.get("teacher_doc") or "").strip()
         quiz = (state.get("quiz") or "").strip()
-
-        # L1/L2/L3 三层学情记忆（低侵入：记忆薄弱点缺失的产物软告警）
-        memory_context = state.get("memory_context") or ""
-        memory_weak_missing = False
-        if memory_context and memory_context != "【学生记忆】暂无历史学习数据":
-            import re as _re
-            weak_block = _re.search(r"薄弱[：:]\s*(.+?)(?:\n|$)", memory_context)
-            if weak_block:
-                weak_terms = [w.strip() for w in weak_block.group(1).split(",") if w.strip()]
-                # 记忆薄弱点在产物中完全未出现 → 软告警（针对性讲解缺失）
-                if weak_terms and teacher_doc and not any(
-                    t.lower() in teacher_doc.lower() for t in weak_terms
-                ):
-                    memory_weak_missing = True
 
         hard_failures: list[str] = []
         soft_failures: list[str] = []

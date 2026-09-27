@@ -19,6 +19,16 @@ logger = logging.getLogger("netlearn.userstore")
 # 并发写同一 netlearn_users.db 时互斥（消除「两连接 + 两把不互斥的锁」写同文件）。
 from db.core import get_conn as _core_get_conn, LOCK as _lock
 
+# M-3：遗忘曲线排程原在 engines.review_scheduler，形成 db → engines 反向依赖，
+# 只能靠函数内延迟导入规避循环。实现已下沉 shared/review_scheduler（纯函数、零依赖），
+# 此处改为顶层导入，4 处延迟导入一并移除。
+from shared.review_scheduler import (  # noqa: E402
+    _coerce_dt,
+    compute_initial_review,
+    is_due,
+    schedule_after_review,
+)
+
 _initialized = False
 
 
@@ -819,7 +829,6 @@ def delete_learning_resource(resource_id: int, owner_user_id: str) -> bool:
 def add_wrong_question(user_id: str, question: dict, wrong_answer: str, error_type: str = "concept", attribution: Optional[dict] = None) -> dict:
     """添加错题，已存在则错误次数+1。attribution 为智能归因结果（可空）。
     新错题自动按遗忘曲线设置初始复习排程（阶段0，下次复习=首次错+1天）。"""
-    from engines.review_scheduler import compute_initial_review
     conn = _get_conn()
     now = _now()
     qid = question.get("id", str(hash(json.dumps(question, ensure_ascii=False))))
@@ -956,7 +965,6 @@ def get_error_profile(user_id: str) -> dict:
 
 def record_review(wid: int, recalled_correct: bool, now: str = None) -> Optional[dict]:
     """记录一次复习回忆结果，按遗忘曲线推进排程。返回更新后的错题（含新排程）。"""
-    from engines.review_scheduler import schedule_after_review
     conn = _get_conn()
     now = now or _now()
     with _lock:
@@ -986,7 +994,6 @@ def record_review(wid: int, recalled_correct: bool, now: str = None) -> Optional
 
 def get_due_reviews(user_id: str, now: str = None) -> list:
     """返回该用户「当前到期且未毕业」的待复习错题列表（按 next_review_at 升序）。"""
-    from engines.review_scheduler import is_due
     conn = _get_conn()
     now = now or _now()
     with _lock:
@@ -1011,7 +1018,6 @@ def _coerce_dt_safe(value):
     if value is None:
         return None
     try:
-        from engines.review_scheduler import _coerce_dt
         return _coerce_dt(value)
     except Exception:
         return None

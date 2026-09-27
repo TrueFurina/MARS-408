@@ -72,7 +72,9 @@ class MemoryGraphDB(GraphDB):
     """基于 kg_dag.py 的内存 DAG 实现"""
 
     def __init__(self):
-        from agents.kg_dag import (
+        # M-3：原为函数内 `from agents.kg_dag import ...`（db → agents 反向依赖）。
+        # 该模块是纯数据表 + 纯函数，已下沉 shared/kg_dag，此处改为顶层导入。
+        from shared.kg_dag import (
             SUBJECT_GROUP_MAP, GROUP_PREREQS, SUBJECT_GROUP_SPAN,
             SUBJECT_KEYWORD_MAP, chapter_to_group,
         )
@@ -277,13 +279,9 @@ class Neo4jGraphDB(GraphDB):
             } for r in result]
 
     def import_from_kg_dag(self):
-        """从 kg_dag.py 导入知识点依赖关系到 Neo4j"""
-        from agents.kg_dag import GROUP_PREREQS
+        """从 kg_dag 导入知识点依赖关系到 Neo4j（实现见 shared/kg_dag.py）"""
+        from shared.kg_dag import GROUP_PREREQS
 
-        subject_names = {
-            "computer_network": "计算机网络", "data_structures": "数据结构",
-            "computer_organization": "计算机组成原理", "operating_system": "操作系统",
-        }
         topic_names = {
             1: "计算机网络概述", 2: "物理层", 3: "数据链路层",
             4: "网络层", 5: "运输层", 6: "应用层", 7: "网络安全",

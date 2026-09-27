@@ -47,6 +47,112 @@ REVIEW_WEIGHTS = {
 # 均匀权重：灰度关闭 / 降级时的行为（等价于现状，零侵入）
 UNIFORM_WEIGHTS = {"honest": 1 / 3, "critic": 1 / 3, "consensus": 1 / 3}
 
+# ── 三元评审信号与有效分合成（M-3：由 agents/quality_gate 下沉）──
+# 原实现在 agents.quality_gate，但本模块的 analytic_review_action 必须与打分同源
+# （test_review_analytic 以恒等式守护），于是 agents ↔ engines 双向循环，只能靠
+# 函数内延迟导入规避。下沉后方向单一：agents.quality_gate → engines.review_policy。
+# agents/quality_gate 以委托再导出保留原命名空间（20+ 实验/测试脚本依赖之）。
+# 兼容别名：与 UNIFORM_WEIGHTS 同源派生（副本，防调用方就地修改污染原常量）。
+UNIFORM_REVIEW_W = dict(UNIFORM_WEIGHTS)
+
+_SKIP_EPS = 1e-9
+
+# consensus.status → 共识信号兜底映射（overall_score 缺失时使用）
+_STATUS_SIGNAL = {
+    "passed": 90.0, "pass": 90.0, "conflict": 50.0,
+    "flagged": 45.0, "regenerate": 40.0,
+}
+
+
+def review_signals(evidence: dict, consensus: dict) -> tuple[float, float, float]:
+    """抽取三元评审信号，各归一到 0-100：返回 (honest, critic, consensus)。
+
+    - honest    : evidence_report.consistency_score（证据/诚实 Agent）
+    - critic    : consensus.confidence_score × 100（批评者置信度，critic 节点写入）
+    - consensus : consensus.overall_score（GOMARL 共识总分），缺失时按 status 映射
+    """
+    evidence = evidence or {}
+    consensus = consensus or {}
+    try:
+        s_h = float(evidence.get("consistency_score", 100) or 0)
+    except (TypeError, ValueError):
+        s_h = 100.0
+
+    conf = consensus.get("confidence_score")
+    try:
+        s_c = float(conf) * 100.0 if conf is not None else 60.0
+    except (TypeError, ValueError):
+        s_c = 60.0
+
+    overall = consensus.get("overall_score")
+    if overall is not None:
+        try:
+            s_k = float(overall)
+        except (TypeError, ValueError):
+            s_k = None
+    else:
+        s_k = None
+    if s_k is None:
+        s_k = _STATUS_SIGNAL.get(
+            str(consensus.get("status", "")).lower(), 60.0)
+
+    return (
+        max(0.0, min(100.0, s_h)),
+        max(0.0, min(100.0, s_c)),
+        max(0.0, min(100.0, s_k)),
+    )
+
+
+def _normalize_review_weights(w) -> dict | None:
+    """归一化三元权重（非法 → None，交由调用方保持原值）。"""
+    if not isinstance(w, dict):
+        return None
+    try:
+        h = max(0.0, float(w.get("honest", 0.0)))
+        c = max(0.0, float(w.get("critic", 0.0)))
+        k = max(0.0, float(w.get("consensus", 0.0)))
+    except (TypeError, ValueError, AttributeError):
+        return None
+    total = h + c + k
+    if total <= _SKIP_EPS:
+        return {"honest": 0.0, "critic": 0.0, "consensus": 0.0}
+    return {"honest": h / total, "critic": c / total, "consensus": k / total}
+
+
+def weighted_consistency_score(
+    evidence: dict, consensus: dict, weights=None,
+) -> tuple[float, bool]:
+    """按三元评审权重合成有效一致性分。返回 (effective, applied)。
+
+    合成公式（保证均匀权重零偏移）：
+        weighted = w_h·S_h + w_c·S_c + w_k·S_k
+        uniform  = (S_h + S_c + S_k) / 3
+        effective = S_h + (weighted − uniform)
+
+    - 均匀权重：weighted == uniform ⇒ effective == S_h，applied=False（行为=现状）
+    - skip（权重全 0）：直接放行语义，effective=100，applied=True
+    - 其余：按信任对象拉高/拉低有效分，applied=True
+    """
+    s_h, s_c, s_k = review_signals(evidence, consensus)
+    # 空权重（None/{}/[]）一律视为「无权重」；空 dict 不得被当作 skip 全 0 放行，
+    # 否则会把「未加权」静默变成「直接放行」，是危险的语义混淆。
+    if not weights:
+        return s_h, False
+    w = _normalize_review_weights(weights)
+    if w is None:
+        return s_h, False
+
+    h, c, k = w["honest"], w["critic"], w["consensus"]
+    if h + c + k <= _SKIP_EPS:
+        return 100.0, True  # skip_review：不评审直接放行
+    if (abs(h - 1 / 3) < 1e-9 and abs(c - 1 / 3) < 1e-9 and abs(k - 1 / 3) < 1e-9):
+        return s_h, False   # 均匀权重 = 现状，不施加任何偏移
+
+    weighted = h * s_h + c * s_c + k * s_k
+    uniform = (s_h + s_c + s_k) / 3.0
+    effective = s_h + (weighted - uniform)
+    return max(0.0, min(100.0, effective)), True
+
 # 奖励权重（攻坚令 3.1 初值）
 REWARD_W = {"gate": 0.4, "precision": 0.35, "cost": 0.15, "discipline": 0.10}
 
@@ -491,7 +597,8 @@ def analytic_review_action(evidence: Optional[dict] = None,
 
     只在 0..3 中选（skip=4 由 `discipline_gate` 依纪律决定，不在此处放行）。
     """
-    from agents.quality_gate import review_signals  # 延迟导入，避免与 agents 循环
+    # M-3：review_signals 已下沉本模块（原为延迟导入 agents.quality_gate，
+    # 那条边造成 agents ↔ engines 双向循环）。此处直接调用，仍与打分同源。
     s_h, s_c, s_k = review_signals(evidence or {}, consensus or {})
     mean3 = (s_h + s_c + s_k) / 3.0
     best_a, best_v = 3, float("-inf")

@@ -14,6 +14,10 @@ import random
 from pathlib import Path
 from typing import Optional
 
+# M-3：跨层共享常量（同时被 agents/career_nodes 的规则决策消费）——
+# 原从 agents.career_state 延迟导入会形成 engines → agents 反向依赖，故下沉 shared。
+from shared.career_consts import CATFISH_MAX_CONTINUE  # noqa: F401
+
 logger = logging.getLogger("netlearn.career.policy")
 
 # 动作空间：与现有三模式一一对应（设计文档 0/1/2）
@@ -21,8 +25,6 @@ CAREER_ACTIONS = ["normal", "escalating", "catfish"]
 
 # 奖励权重（设计文档初值，可调）
 REWARD_W = {"gain": 0.5, "evidence": 0.3, "cost": 0.15, "discipline": 0.05}
-
-CATFISH_MAX_CONTINUE = 2  # 与 career_state 保持一致（纪律项）
 
 # 无证据轮的证据密度默认值。
 # 旧值 0.5 的缺陷（CTO 派单一根因 A）：规则判据 `density < 0.35` / `< 0.45` 恒不满足
@@ -509,7 +511,8 @@ def maybe_mappo_decide(turns: list[dict], current_mode: str, catfish_continuous:
     if not _mappo_enabled():
         return None
     try:
-        from agents.career_state import CATFISH_MAX_CONTINUE as _CMC
+        # M-3：CATFISH_MAX_CONTINUE 已下沉 shared/career_consts（原从
+        # agents.career_state 延迟导入，形成 engines → agents 反向依赖）。
         feats = career_state_features(turns, current_mode=current_mode,
                                       catfish_streak=catfish_continuous)
         policy = _get_shared_policy()
@@ -518,7 +521,7 @@ def maybe_mappo_decide(turns: list[dict], current_mode: str, catfish_continuous:
         # 契约对齐：触发标记与连压计数语义与规则版一致；纪律超限强制回 normal
         if mode == "catfish":
             cont = catfish_continuous + 1
-            if cont > _CMC:
+            if cont > CATFISH_MAX_CONTINUE:
                 return "normal", False, 0
         elif mode == "escalating":
             cont = catfish_continuous + 1 if current_mode == "escalating" else 1

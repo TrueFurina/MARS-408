@@ -285,7 +285,9 @@ class FrugalRAG:
         enhanced_query = query
         if use_kg_enhance:
             try:
-                from agents.knowledge_graph import search_kg_entities
+                # M-3：实现已下沉 shared/kg_search（原从 agents.knowledge_graph
+                # 延迟导入，形成 engines → agents 反向依赖）。
+                from shared.kg_search import search_kg_entities
                 related = search_kg_entities(query, subject=course)
                 if related.get("entities"):
                     names = [e["name"] for e in related["entities"][:5]]

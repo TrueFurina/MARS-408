@@ -326,7 +326,10 @@ async def generate_knowledge_graph(
 # 图谱持久化（保存/加载/导出/导入）
 # ═══════════════════════════════════════════════════════════════
 
-_KG_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "knowledge_graphs")
+# M-3：KG 落盘目录与实体检索已下沉 shared/kg_search.py。
+# 原因：engines/frugal_rag 的「KG 增强查询」需要 search_kg_entities，留在 agents
+# 会形成 engines → agents 反向依赖。此处委托导入，_KG_DIR 仍以 shared 为单一真源。
+from shared.kg_search import _KG_DIR, search_kg_entities  # noqa: F401
 
 
 def _ensure_kg_dir():
@@ -612,38 +615,5 @@ def export_graph_as_text(kg_data: dict) -> str:
 # ═══════════════════════════════════════════════════════════════
 
 
-def search_kg_entities(query: str, subject: str = "general") -> dict:
-    """在已保存的知识图谱中搜索匹配的实体和关系
-
-    Args:
-        query: 搜索关键词
-        subject: 科目过滤
-
-    Returns:
-        {"entities": [...], "relationships": [...]}
-    """
-    keyword = query.lower()
-    all_entities = []
-    all_relations = []
-
-    if not os.path.exists(_KG_DIR):
-        return {"entities": [], "relationships": []}
-
-    for fname in os.listdir(_KG_DIR):
-        if not fname.endswith(".json"):
-            continue
-        try:
-            with open(os.path.join(_KG_DIR, fname), "r", encoding="utf-8") as f:
-                data = json.load(f)
-            if subject != "general" and data.get("subject") != subject:
-                continue
-            for e in data.get("entities", []):
-                if keyword in e.get("name", "").lower() or keyword in e.get("description", "").lower():
-                    all_entities.append(e)
-            for r in data.get("relationships", []):
-                if keyword in r.get("type", "").lower():
-                    all_relations.append(r)
-        except Exception:
-            continue
-
-    return {"entities": all_entities[:10], "relationships": all_relations[:10]}
+# M-3：search_kg_entities 的实现已下沉 shared/kg_search.py（见上方委托导入），
+# 本模块不再重复定义，避免双真值源。

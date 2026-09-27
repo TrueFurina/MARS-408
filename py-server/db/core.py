@@ -30,16 +30,51 @@ LOCK = threading.RLock()
 
 _conn: Optional[sqlite3.Connection] = None
 
+# 按「DB 文件」维度登记连接与锁：新增 store 一律复用本表，
+# 不再各自 sqlite3.connect + 各自 threading.Lock（那会重现「两连接 + 两把
+# 不互斥的锁写同一文件」）。注意锁是**按文件隔离**的：不同 DB 文件互不互斥，
+# 这正是期望行为——需要互斥的是「写同一个文件」。
+_conns: dict[str, sqlite3.Connection] = {}
+_locks: dict[str, threading.RLock] = {}
+# 用 RLock：init 回调里若再次调用 get_conn_for（幂等建表路径）不会自锁。
+_REGISTRY_LOCK = threading.RLock()
+
+
+def get_lock_for(db_path: str) -> threading.RLock:
+    """返回该 DB 文件全局唯一的 RLock（可重入，读路径回调读函数不死锁）。"""
+    with _REGISTRY_LOCK:
+        lk = _locks.get(db_path)
+        if lk is None:
+            lk = threading.RLock()
+            _locks[db_path] = lk
+        return lk
+
+
+def get_conn_for(db_path: str, init=None) -> sqlite3.Connection:
+    """返回该 DB 文件全局唯一的 SQLite 连接（WAL + row_factory=Row）。
+
+    ``init`` 为可选的一次性建表回调（``init(conn)``），仅在新建连接时执行，
+    使各 store 的 ``_init_schema`` 仍由自己持有，本模块不耦合表结构。
+    """
+    with _REGISTRY_LOCK:
+        conn = _conns.get(db_path)
+        if conn is None:
+            conn = sqlite3.connect(db_path, check_same_thread=False)
+            conn.row_factory = sqlite3.Row
+            conn.execute("PRAGMA journal_mode=WAL")
+            _conns[db_path] = conn
+            if init is not None:
+                init(conn)
+        return conn
+
 
 def get_conn() -> sqlite3.Connection:
-    """返回全局唯一 SQLite 连接（延迟初始化 + WAL + row_factory=Row）。
+    """返回默认库（netlearn_users.db）的唯一连接（延迟初始化 + WAL + Row）。
 
     仅负责连接与 WAL；各 store 的建表由各自 ``_init_schema`` 在首次
     ``_get_conn`` 时幂等触发，避免本模块耦合具体表结构。
     """
     global _conn
     if _conn is None:
-        _conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-        _conn.row_factory = sqlite3.Row
-        _conn.execute("PRAGMA journal_mode=WAL")
+        _conn = get_conn_for(DB_PATH)
     return _conn

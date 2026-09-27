@@ -6,13 +6,12 @@
 
 import json
 import logging
-import os
-import sqlite3
-import threading
 from typing import Optional
 
 from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel
+
+from db.literacy_store import get_class_attempts, get_user_attempts, save_attempt
 
 logger = logging.getLogger("netlearn.literacy")
 
@@ -112,54 +111,10 @@ def _score_answer(q: dict, option_index: int) -> int:
 
 
 # ------------------------------------------------------------
-# 数据层：SQLite（复用 user_store 的连接模式）
-# 路径惰性解析：全量测试时其他用例可能先导入本模块，
-# 导入期固化 env 路径会导致测试库指向错位（测试间污染）
+# 数据层：已下沉至 db/literacy_store.py（M-1）
+#   接口层不再持有 sqlite3 连接 / 锁 / SQL；连接与锁由 db.core 按 DB 文件统一发放。
+#   保留的语义：NETLEARN_LITERACY_DB 惰性解析，避免测试库指向错位。
 # ------------------------------------------------------------
-_DEFAULT_DB = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "literacy.db")
-os.makedirs(os.path.dirname(_DEFAULT_DB), exist_ok=True)
-
-_conn: Optional[sqlite3.Connection] = None
-_conn_path: Optional[str] = None
-_lock = threading.Lock()
-
-
-def _get_conn() -> sqlite3.Connection:
-    global _conn, _conn_path
-    db_path = os.environ.get("NETLEARN_LITERACY_DB") or _DEFAULT_DB
-    if _conn is None or _conn_path != db_path:
-        with _lock:
-            if _conn is None or _conn_path != db_path:
-                old = _conn
-                _conn = sqlite3.connect(db_path, check_same_thread=False)
-                _conn.row_factory = sqlite3.Row
-                _conn_path = db_path
-                _init_schema(_conn)
-                if old is not None:
-                    try:
-                        old.close()
-                    except Exception:
-                        pass
-    return _conn
-
-
-def _init_schema(conn: sqlite3.Connection):
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS literacy_attempts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id TEXT NOT NULL,
-            user_name TEXT NOT NULL DEFAULT '',
-            class_name TEXT NOT NULL DEFAULT '',
-            phase TEXT NOT NULL DEFAULT 'pre',          -- pre / post
-            answers_json TEXT NOT NULL DEFAULT '[]',    -- [{qid, option_index}]
-            dim_scores_json TEXT NOT NULL DEFAULT '{}', -- {维度: 分数}
-            total_score REAL NOT NULL DEFAULT 0,
-            created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
-        )
-    """)
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_literacy_user_phase ON literacy_attempts(user_id, phase)")
-    conn.commit()
 
 
 # ------------------------------------------------------------
@@ -240,16 +195,9 @@ async def submit_literacy(
     answered_dims = [v for v in final_dims.values() if v > 0]
     total = round(sum(answered_dims) / len(answered_dims), 1) if answered_dims else 0
 
-    conn = _get_conn()
-    with _lock:
-        # 同一用户同 phase 允许多次作答（取最新）——先清旧记录保持一对一
-        conn.execute("DELETE FROM literacy_attempts WHERE user_id=? AND phase=?", (uid, req.phase))
-        conn.execute(
-            "INSERT INTO literacy_attempts (user_id, user_name, class_name, phase, answers_json, dim_scores_json, total_score) VALUES (?,?,?,?,?,?,?)",
-            (uid, req.user_name, req.class_name, req.phase,
-             json.dumps(req.answers, ensure_ascii=False),
-             json.dumps(final_dims, ensure_ascii=False), total))
-        conn.commit()
+    # 同一用户同 phase 允许多次作答（取最新）——store 内部先清旧记录保持一对一
+    save_attempt(uid, req.user_name, req.class_name, req.phase,
+                 req.answers, final_dims, total)
 
     return {"total_score": total, "dim_scores": final_dims,
             "per_question": per_q, "phase": req.phase,
@@ -259,9 +207,7 @@ async def submit_literacy(
 @router.get("/report/{user_id}")
 async def get_report(user_id: str):
     """个人素养报告：pre/post 六维对比（前后测差值）。"""
-    conn = _get_conn()
-    rows = conn.execute(
-        "SELECT * FROM literacy_attempts WHERE user_id=? ORDER BY created_at DESC", (user_id,)).fetchall()
+    rows = get_user_attempts(user_id)
     by_phase = {r["phase"]: r for r in rows}
     if not by_phase:
         raise HTTPException(status_code=404, detail="该学生暂无测评记录")
@@ -284,10 +230,7 @@ async def get_report(user_id: str):
 @router.post("/class-report")
 async def get_class_report(req: LiteracyClassReportRequest):
     """教师端班级六维聚合：全班 pre/post 均值 + 逐人明细。"""
-    conn = _get_conn()
-    rows = conn.execute(
-        "SELECT * FROM literacy_attempts WHERE class_name=? ORDER BY user_id, created_at DESC",
-        (req.class_name,)).fetchall()
+    rows = get_class_attempts(req.class_name)
     if not rows:
         raise HTTPException(status_code=404, detail="该班级暂无测评记录")
 
