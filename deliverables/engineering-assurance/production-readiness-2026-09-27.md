@@ -10,7 +10,7 @@
 | 场景 | 判定 | 理由 |
 |---|---|---|
 | **演示 / 答辩 / 评审**（单实例、可控路径、可复现） | ✅ **GO** | 前端构建绿、设计系统三门禁绿、部署件齐备（非 root + 健康检查 + 运维三文档）、安全红线 42 passed |
-| **真实生产上线**（多用户并发、长期演进、团队协作） | ❌ **NO-GO** | 架构分层 M-1/M-2/M-3/M-5 已修、**M-4 第 1 条（main.py 拆分）已落地**（2026-09-27），但 M-4 ②③（user_store 拆域、seed_data 归位）未做、覆盖率 52% < 54% 门禁、测试存在顺序依赖污染 |
+| **真实生产上线**（多用户并发、长期演进、团队协作） | ❌ **NO-GO** | 架构分层 M-1/M-2/M-3/M-5 已修、**M-4 ①③ 已落地**（2026-09-27），但 M-4 ②（`db/user_store.py` 1,330 行拆域）未做、覆盖率 52% < 54% 门禁、测试存在顺序依赖污染 |
 
 ---
 
@@ -137,7 +137,27 @@ env -u PYTHONPATH -u PYTHONSTARTUP -u NODE_OPTIONS -u ELECTRON_RUN_AS_NODE \
 **机验**：`cd py-server && python scripts/verify_core_lock_unification.py` → 14 项全 PASS（同连接/同锁、与 core 注册表同一对象、8×50 并发写零异常且 400 行全落库、disconnect 后可重连）。
 **变异验证**：回退为 `sqlite3.connect` 后立即 5 项 FAIL + `OperationalError`，证明该检查非空跑。
 
-### M-4 ①：main.py 从 882 行收敛到 85 行纯组装层（2026-09-27）
+### M-4 ③：seed_data.py 1,527 行按科目拆成 seed/ 包（2026-09-27，**未**按原建议归入 scripts/）
+
+**先订正评审原判断**：原建议写「归入 `scripts/`（非运行时依赖）」，实测不成立 —— 它有
+**7 个运行时消费方**（api/{knowledge×2, learning_path, rag, subjects, teacher}、engines/frugal_rag_sft、
+app/lifespan），且文件尾部承载 408 四科 group 偏移对齐的派生逻辑。塞进一次性脚本目录会迫使
+运行时依赖 hack `sys.path`，属净劣化。
+
+**实际做法**：新建 `py-server/seed/` 包，数据段**二进制原样搬运**拆为
+`net.py`(593) / `ds.py`(226) / `co.py`(147) / `os.py`(143) / `__init__.py`(501，含 EXTRA 试题的
+`.extend(...)` 执行语句、`seed_data_expanded` import、group 派生逻辑)。
+`seed_data.py` 缩到 **38 行**纯兼容委托层（PEP 562 动态穿透，`seed_data.X is seed.X` 恒成立），
+20 处既有 import 零改动。
+
+**两个硬约束（已写进模块头注释）**：① `extras` 段含执行语句，不能拆成独立子模块（拆了就 NameError，
+差分比对当场抓出）；② 文件内存在同名重复定义（CO/OS chunks 各有两版，后者覆盖前者），
+`net → ds → co → os` 的 import 顺序不可重排。
+
+**机验**：`python scripts/verify_seed_data_split.py` → 12 项全 PASS（33 个公共符号与拆分前冻结的
+基线快照逐一对账）。**变异验证（静默型）**：把 `co` 的 import 提到 `net` 之前 → CO chunks 27→20、
+语料 1892→1885，而 KG 节点数 / group 覆盖 / 试题数**全部不变** —— 粗粒度断言发现不了，
+只有逐符号差分能抓。回归 138 passed / 85 skipped。
 
 - 拆出 `app/` 包：`env.py`（环境引导）/ `lifespan.py`（生命周期，最大块 300 行）/ `middleware.py`（6 个中间件 + CORS）/ `errors.py`（4 类 handler）/ `routers.py`（42 个业务 router）/ `status.py`（3 个运维端点）/ `static_sites.py`（plots/media + SPA 挂载）。
 - **公开契约零断裂**：`main.app` / `main.lifespan` / `main._seed_vector_db` / `main.competition_status` 委托重导出，35 处 `from main import ...` 无需改动。

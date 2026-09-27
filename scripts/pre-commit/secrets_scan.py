@@ -41,6 +41,20 @@ ALLOWLIST_PATTERNS = [
     r'your[_-]?password',
 ]
 
+# 规则级路径豁免：仅对「低精度规则」在「特定目录」下豁免，其余规则照常生效。
+#
+# 背景（2026-09-27 实锤误报）：`[0-9a-zA-Z/+]{40}`（AWS Secret Access Key 形态）
+# 会命中**任何 40 字符以上的字母数字串**。py-server/seed/ 存放 408 静态教学语料，
+# 其中知识点长串（如 AES 轮变换 "SubBytes/ShiftRows/MixColumns/AddRoundKey"）
+# 必然命中该规则 —— 这是语料内容，不是凭据。
+#
+# 为什么不做「文件级整体豁免」：那会让该目录完全脱离密钥扫描，将来真写进去
+# 的凭据也扫不到。这里只豁免这一条低精度规则，generic/连接串/JWT/私钥等规则
+# 对 seed/ 依然生效。
+RULE_PATH_EXEMPT = {
+    'AWS Secret Access Key (base64)': ['py-server/seed/'],
+}
+
 
 def compile_patterns():
     secret_res = [(re.compile(p, re.IGNORECASE), desc) for p, desc in SECRET_PATTERNS]
@@ -62,6 +76,13 @@ def scan_file(filepath: Path) -> list:
 
     secret_res, allow_res = compile_patterns()
 
+    # 归一为 posix 形态，便于按仓库相对路径做规则级豁免
+    posix_path = str(filepath).replace('\\', '/')
+    exempt_rules = {
+        desc for desc, prefixes in RULE_PATH_EXEMPT.items()
+        if any(p in posix_path for p in prefixes)
+    }
+
     for i, line in enumerate(content.splitlines(), 1):
         stripped = line.strip()
         # 跳过空行、注释
@@ -69,6 +90,8 @@ def scan_file(filepath: Path) -> list:
             continue
 
         for pattern, desc in SECRET_PATTERNS:
+            if desc in exempt_rules:
+                continue
             matches = re.finditer(pattern, line, re.IGNORECASE)
             for m in matches:
                 matched = m.group(0)

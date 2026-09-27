@@ -1,0 +1,170 @@
+{
+ "symbol_count": 33,
+ "symbols": {
+  "CO_EXPANDED_CHUNKS": {
+   "type": "list",
+   "len": 480,
+   "sha256": "5e6d54172726e348"
+  },
+  "CO_EXPANDED_KG_EDGES": {
+   "type": "list",
+   "len": 20,
+   "sha256": "46ce38addc79cdae"
+  },
+  "CO_EXPANDED_KG_NODES": {
+   "type": "list",
+   "len": 20,
+   "sha256": "4b9ebdd4fd232f33"
+  },
+  "CO_EXTRA_SEED_QUESTIONS": {
+   "type": "list",
+   "len": 12,
+   "sha256": "ea7256b43ff5b766"
+  },
+  "CO_KNOWLEDGE_GRAPH": {
+   "type": "dict",
+   "len": 2,
+   "sha256": "14d2f7d893dc1050"
+  },
+  "CO_SEED_KNOWLEDGE_CHUNKS": {
+   "type": "list",
+   "len": 27,
+   "sha256": "997a02fd8e931c56"
+  },
+  "CO_SEED_QUESTIONS": {
+   "type": "list",
+   "len": 20,
+   "sha256": "6c488c1002da273b"
+  },
+  "CO_SEED_SUBJECTS": {
+   "type": "dict",
+   "len": 7,
+   "sha256": "5bb7e0540e4cdb7a"
+  },
+  "DS_EXPANDED_CHUNKS": {
+   "type": "list",
+   "len": 210,
+   "sha256": "c5e74ef2e0ca109f"
+  },
+  "DS_EXPANDED_KG_EDGES": {
+   "type": "list",
+   "len": 30,
+   "sha256": "01b39e80d94da979"
+  },
+  "DS_EXPANDED_KG_NODES": {
+   "type": "list",
+   "len": 30,
+   "sha256": "d2c7f93b06a6e052"
+  },
+  "DS_EXTRA_SEED_QUESTIONS": {
+   "type": "list",
+   "len": 8,
+   "sha256": "7f57929b6b3c9584"
+  },
+  "DS_KNOWLEDGE_GRAPH": {
+   "type": "dict",
+   "len": 2,
+   "sha256": "48245d18b7ec0b93"
+  },
+  "DS_LEARNING_PATH_DAG": {
+   "type": "dict",
+   "len": 7,
+   "sha256": "794d3efe59581442"
+  },
+  "DS_SEED_KNOWLEDGE_CHUNKS": {
+   "type": "list",
+   "len": 33,
+   "sha256": "d92ed109fb35e29d"
+  },
+  "DS_SEED_QUESTIONS": {
+   "type": "list",
+   "len": 30,
+   "sha256": "acd71f74fa299297"
+  },
+  "DS_SEED_SUBJECTS": {
+   "type": "dict",
+   "len": 8,
+   "sha256": "f605fa1476164432"
+  },
+  "KNOWLEDGE_GRAPH": {
+   "type": "dict",
+   "len": 2,
+   "sha256": "48793b56c56116d0"
+  },
+  "LEARNING_PATH_DAG": {
+   "type": "dict",
+   "len": 26,
+   "sha256": "b8e73eed33f305d2"
+  },
+  "NET_EXPANDED_CHUNKS": {
+   "type": "list",
+   "len": 245,
+   "sha256": "5fd58588b3c7b486"
+  },
+  "NET_EXPANDED_KG_EDGES": {
+   "type": "list",
+   "len": 82,
+   "sha256": "87404218b90618d1"
+  },
+  "NET_EXPANDED_KG_NODES": {
+   "type": "list",
+   "len": 81,
+   "sha256": "5bc566e043f793b5"
+  },
+  "OS_EXPANDED_CHUNKS": {
+   "type": "list",
+   "len": 495,
+   "sha256": "b130877e8b4a31f5"
+  },
+  "OS_EXPANDED_KG_EDGES": {
+   "type": "list",
+   "len": 20,
+   "sha256": "630a2bd2ec842a4a"
+  },
+  "OS_EXPANDED_KG_NODES": {
+   "type": "list",
+   "len": 20,
+   "sha256": "c3c3c6119f9347bf"
+  },
+  "OS_EXTRA_SEED_QUESTIONS": {
+   "type": "list",
+   "len": 10,
+   "sha256": "5e322d599879c7ea"
+  },
+  "OS_KNOWLEDGE_GRAPH": {
+   "type": "dict",
+   "len": 2,
+   "sha256": "322decd0f8ccf0a5"
+  },
+  "OS_SEED_KNOWLEDGE_CHUNKS": {
+   "type": "list",
+   "len": 25,
+   "sha256": "4d036197d6b6455a"
+  },
+  "OS_SEED_QUESTIONS": {
+   "type": "list",
+   "len": 21,
+   "sha256": "8256de84e683762c"
+  },
+  "OS_SEED_SUBJECTS": {
+   "type": "dict",
+   "len": 5,
+   "sha256": "e92a9d7819f6b865"
+  },
+  "SEED_KNOWLEDGE_CHUNKS": {
+   "type": "list",
+   "len": 1892,
+   "sha256": "46e8d16059e2e394"
+  },
+  "SEED_QUESTIONS": {
+   "type": "list",
+   "len": 230,
+   "sha256": "10da154018d591e5"
+  },
+  "SEED_SUBJECTS": {
+   "type": "dict",
+   "len": 27,
+   "sha256": "852e536c9668c810"
+  }
+ }
+}

@@ -130,9 +130,45 @@ def _get_conn() -> sqlite3.Connection:
 覆盖：`ALL_ROUTERS` 与拆分前 `_all_routers` **逐项逐序一致**（AST 比对基线提交 `f36b83e`）、252 条路由、4 类异常处理器、7 个安全头（含 WASI 依赖的 COOP/COEP）、请求体超限 413、限流器 429 + Retry-After、4 个公开符号的 `is` 同一性。
 **变异验证**：仅注释 `middleware.install(app)` 一行，9 项断言立即 FAIL（安全头全丢、413 变 405、429 变 404）——证明这组检查真能抓住「少装一个中间件」这一最危险的静默失败。
 
-**🟡 剩余（未做，属 M-4 建议 ②③，各自独立、可单独开工）**：
-2. `db/user_store.py`（1,330 行）拆出 `db/profile_store.py`（画像 + 答题历史）——触及 30+ 模块的 import，改动面最大，需单独一轮并配 .is-progress 门禁。
-3. `seed_data.py`（1,527 行）归入 `scripts/`——运行时不被 main 之外的模块依赖，迁移风险最低，但需确认所有 `import seed_data` 的路径都能解析。
+**✅ 修复记录（2026-09-27）：建议 ①②③ 全部落地。**
+
+**① main.py 拆分已落地（详见上文表格）。**
+
+**③ seed_data.py（1,527 行）已按科目拆域，但落点不是 `scripts/` —— 原建议的前提经实测不成立。**
+
+- **订正**：评审写的是「归入 `scripts/`（非运行时依赖）」。实测它有 **7 个运行时消费方**：
+  `api/knowledge.py`（2 处）、`api/learning_path.py`、`api/rag.py`、`api/subjects.py`、`api/teacher.py`、
+  `engines/frugal_rag_sft.py`、`app/lifespan.py`（启动期写种子语料），另加 4 个实验/脚本与 3 个测试。
+  它既不是「非运行时」，也含**必须留存的派生逻辑**（408 四科 group 偏移对齐）。硬塞进一次性脚本目录
+  会迫使运行时依赖去 hack `sys.path`，是净劣化。
+- **实际拆法**：新建 `py-server/seed/` 包，按科目切分（数据段**二进制原样搬运**，杜绝手抄）：
+
+| 位置 | 内容 | 行数 |
+| --- | --- | --- |
+| `seed/net.py` | 计网语料 + `SEED_SUBJECTS` + NET 基础 `KNOWLEDGE_GRAPH` / `LEARNING_PATH_DAG` | 593 |
+| `seed/ds.py` | 数据结构段 | 226 |
+| `seed/co.py` | 计组段 | 147 |
+| `seed/os.py` | 操作系统段 | 143 |
+| `seed/__init__.py` | 各科 EXTRA 试题 `.extend(...)` + `seed_data_expanded` import + group 偏移与自动 KG 派生 | 501 |
+| `seed_data.py` | 只剩兼容委托层（38 行，原 1,527） | 38 |
+
+- **两个必须写下来的坑**：
+  1. 原文件的 `extras` 段（1098-1249）**不是纯数据**，而是 `SEED_KNOWLEDGE_CHUNKS.extend(...)` 这类
+     **执行语句**，一旦拆成独立子模块就 `NameError` —— 该段只能留在 `__init__`。
+  2. 文件内存在**同名重复定义**（`CO_SEED_KNOWLEDGE_CHUNKS` / `OS_SEED_KNOWLEDGE_CHUNKS` 各有两版、
+     后者覆盖前者），因此 `net → ds → co → os` 的 import 顺序是硬约束，已写进模块头注释。
+- **兼容层用动态委托**（PEP 562 `__getattr__`）：沿用 M-2 的教训，静态星号导入会绑定对象快照，
+  令对 `seed` 包内符号的替换静默失效；现在 `seed_data.X is seed.X` 恒成立。
+
+**机验**：`cd py-server && python scripts/verify_seed_data_split.py` → 12 项全 PASS。
+覆盖：33 个公共符号与**拆分前冻结的基线快照**逐一对账（repr sha256 + 类型 + 长度）、委托层同一性、
+KG 643 节点/639 边、group 覆盖 1-26、chunks 1892 / questions 230 / 27 个方向、未登记符号按 AttributeError 拒绝。
+**变异验证（静默型）**：把 `from seed.co import *` 提前到 `net` 之前（让 v1 残留覆盖最终版）→
+`CO_SEED_KNOWLEDGE_CHUNKS` 27→20、语料 1892→1885，**但 KG 节点数、group 覆盖、试题数全部不变** ——
+粗粒度断言完全发现不了，只有逐符号差分能抓到。这正是本次必须冻结基线快照的原因。
+
+**② db/user_store.py 拆域（1,330 行）— 🟡 未做**：触及 30+ 模块的 import，改动面最大，
+建议单独开工，并配合「先冻结符号快照 + 拆后差分」的同一套方法。
 
 ### [M-5] 并发写保护只覆盖了 2/3 的存储域 — ✅ 已修复（2026-09-27，🟢 收敛）
 
