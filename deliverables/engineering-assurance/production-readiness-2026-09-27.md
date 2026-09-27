@@ -84,14 +84,35 @@ env -u PYTHONPATH -u PYTHONSTARTUP -u NODE_OPTIONS -u ELECTRON_RUN_AS_NODE \
 
 即：不是"污染导致失败"，而是**"污染导致意外通过" + strict xfail 语义** 叠加成红灯。
 
-**修复两层**：
+**修复三层**：
 1. `tests/conftest.py` 新增 autouse fixture `_isolate_video_cache`，把 `_CACHE_DIR` 重定向到
    `tmp_path`（与既有 `_temp_sessions` 同一手法）—— 消除跨批次/跨天的缓存污染本身。
 2. 两个用例 `xfail(strict=True)` → `strict=False`：失败记 xfail、通过记 xpass，都不再判失败，
    保留"接入真实 LLM 后应转绿并由 xpass 提示去掉标记"的原意图。
+3. **根因修复**（见下）—— `test_f015_extension.py` 的 sys.modules 借用未还原。
 
-**验证**：修复前 `test_api_contract_comprehensive + test_video_feedback` 组合必现 XPASS(strict) → FAILED；
-修复后同一组合 **96 passed / 2 xfailed**（无 XPASS），单跑亦稳定 2 xfailed。
+**根因（二分定位，非推测）**：`tests/test_f015_extension.py` 在 import 时用
+`importlib.util.spec_from_file_location` **另加载一份 `db/llm_provider.py` 并写入
+`sys.modules["db.llm_provider"]`，且不还原**（原注释自称"零污染"，实测是错的）。
+后果是 **LLMProvider 类身份分裂成两个类**：conftest 的 autouse `mock_llm` 把桩打在「原始类」上，
+而业务代码 `from db.llm_provider import LLMProvider` 拿到的是「副本类」（未打桩）
+→ LLM 调用走真实实现并失败 → 触发 `media_generator._fallback_video_script` 降级路径
+→ 产出 4 场景模板视频 → 用例**意外通过**。
+
+**定位过程（记录以便复用）**：对「前序文件」二分 —— 68 个前序文件中前 34 个可复现 XPASS；
+再二分到 17 个；再二分到 8 个；8 个拆半（前 4 / 后 4）**都不触发**（说明是组合触发）；
+改试「前 4 + f015」触发、「demo_skill_memory + f015」不触发；最终逐一验证
+`[test_db_core_d2 | test_demo_credential_single_source | test_e2e_p0_acceptance] + test_f015_extension + test_video_feedback`
+**三者皆复现** → 锁定 `test_f015_extension.py` 为必要的那一半。
+
+**修复**：把 `db.llm_provider` 的 sys.modules 借用纳入既有的 `_ORIG_SUB` 登记/还原机制
+（与它已对 milvus/pg/redis 的处理一致）—— 模块级用例只依赖局部变量 `LLMProvider`，
+无需长期占用该模块名。
+
+**验证**：复现组合（`test_db_core_d2 + test_f015_extension + test_video_feedback`）由
+**2 xpassed → 2 xfailed**；`test_f015_extension` 自身 16 passed 无回归。
+**全量最终：923 passed / 221 skipped / 3 xfailed / 0 xpassed / 0 failed**
+（修复前为 2 failed；中间态为 2 xpassed）—— 顺序依赖现象已彻底消除，而非仅掩盖红灯。
 
 **附带发现（更严重）**：`agents/quality_gate.py` 的 M-3 委托再导出**漏了
 `UNIFORM_REVIEW_W` 与 `_normalize_review_weights`**，导致

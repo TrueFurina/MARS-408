@@ -41,6 +41,16 @@ for _sub in ("db.milvus_client", "db.pg_client", "db.redis_client"):
     _stub_sub(_sub, types.ModuleType(_sub))
 
 # ── 独立加载 db.llm_provider（绕过 db/__init__.py 重型依赖链，仅加载轻量 config/utils/shared）──
+# ⚠️ 2026-09-27 修复：这里必须像上面的重子模块一样**登记并还原** sys.modules 条目。
+# 原实现只写不还原，注释自称「零污染」——实测是错的：它会在 sys.modules 里留下
+# **另一份 llm_provider 模块对象**，于是 LLMProvider 类身份分裂成两个类：
+#   - conftest 的 autouse mock_llm 打桩打在「原始类」上；
+#   - 业务代码 `from db.llm_provider import LLMProvider` 拿到的却是「副本类」（未打桩）
+#     → LLM 调用走真实实现并失败 → 触发降级路径。
+# 后果实证：单跑 test_video_feedback 时 2 个视频用例稳定 xfail；只要本模块先被导入，
+# 它们就变 XPASS（配合 xfail(strict=True) 时表现为 CI 必红）。
+# 已用二分法定位到本文件，并用 [test_db_core_d2 + 本文件 + test_video_feedback] 复现验证。
+_ORIG_SUB.setdefault("db.llm_provider", sys.modules.get("db.llm_provider"))
 _LP_PATH = os.path.join(_PY_SERVER, "db", "llm_provider.py")
 _spec = importlib.util.spec_from_file_location("db.llm_provider", _LP_PATH)
 llm_provider = importlib.util.module_from_spec(_spec)
@@ -50,7 +60,9 @@ _spec.loader.exec_module(llm_provider)
 LLMProvider = llm_provider.LLMProvider
 ANTI_INJECTION_INSTRUCTION = llm_provider.ANTI_INJECTION_INSTRUCTION
 
-# ── 还原重型子模块桩（父包 db 始终真实，llm_provider 已以 db.llm_provider 名缓存，零污染）──
+# ── 还原重型子模块桩与 llm_provider 借用的模块名 ──
+# 本模块随后的用例只用上面的局部变量 LLMProvider / ANTI_INJECTION_INSTRUCTION，
+# 不再需要 sys.modules 里的条目，故一并还原，避免类身份分裂污染后续测试文件。
 for _n, _orig in _ORIG_SUB.items():
     if _orig is None:
         sys.modules.pop(_n, None)
