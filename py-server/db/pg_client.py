@@ -4,17 +4,23 @@
 #
 # 无 PostgreSQL 时自动降级到本地 `data/pg_fallback.db`，
 # 使 GOMARL 动态权重等特性在开发环境也可真实运行。
+#
+# M-5 修复（2026-09-27）：SQLite 回退路径的连接与锁改由 `db.core` 按「DB 文件」
+# 统一发放，与其它 store 共用同一套登记机制。修复前 `connect()` 每调用一次就
+# 新建一个 `sqlite3.connect` + 一把新的 `threading.Lock`，而 ability_store /
+# career_store / seed 脚本都会各自重复调用 connect()——同一份 pg_fallback.db
+# 被多个连接 + 多把互不知情的锁同时写，正是 db/core.py 要根除的 D2 缺陷。
 # ============================================================
 
 import json
 import logging
 import os
-import sqlite3
 import struct
 import threading
 from typing import Optional
 
 from config import get_pg_config
+from db.core import close_conn_for, get_conn_for, get_lock_for
 
 logger = logging.getLogger("netlearn.pg")
 
@@ -97,14 +103,15 @@ class PgClient:
             except Exception as e:
                 logger.warning(f"PostgreSQL 连接失败，降级到 SQLite: {e}")
 
-        # SQLite 本地回退
+        # SQLite 本地回退：连接与锁均由 db.core 按文件发放（M-5）。
+        # 多次 connect() 返回同一连接 + 同一把锁，不再每调用一次新建一套。
         try:
             os.makedirs(_FALLBACK_DIR, exist_ok=True)
-            self._conn = sqlite3.connect(_FALLBACK_DB, check_same_thread=False)
-            self._conn.row_factory = sqlite3.Row
+            # 先取锁：下面的 init 回调在建连接时就地执行并需要这把锁。
+            self._lock = get_lock_for(_FALLBACK_DB)
+            self._conn = get_conn_for(_FALLBACK_DB, init=self._init_schema_sqlite)
             self._enabled = True
             self._is_fallback = True
-            self._init_schema_sqlite()
             logger.info(f"SQLite 本地回退已启用: {_FALLBACK_DB}")
             return True
         except Exception as e:
@@ -115,9 +122,14 @@ class PgClient:
     def disconnect(self):
         if self._conn:
             try:
-                self._conn.close()
+                if self._is_fallback:
+                    # 共享连接必须经 db.core 注销，否则注册表会继续发还已关闭的连接。
+                    close_conn_for(_FALLBACK_DB)
+                else:
+                    self._conn.close()
             except Exception:
                 pass
+            self._conn = None
             self._enabled = False
 
     @property
@@ -127,6 +139,29 @@ class PgClient:
     @property
     def is_fallback(self) -> bool:
         return self._is_fallback
+
+    # ── 合规访问器（SQLite 回退路径） ──
+    #
+    # M-5 配套：下游 store（ability_store 等）原先直接 `pg_client._conn` /
+    # `pg_client._lock` 越级取私有连接与锁做 SQL。此处提供受锁保护的公开入口，
+    # 下游不再触碰私有符号——与 M-2 对 user_store 的处理同构。
+
+    def sqlite_query_one(self, sql: str, params=()):
+        """SQLite 回退下在文件锁内取单行（无记录返回 None）。"""
+        if not self._is_fallback or self._conn is None:
+            raise RuntimeError("SQLite 回退未启用，无法执行查询")
+        with self._lock:
+            return self._conn.execute(sql, params).fetchone()
+
+    def sqlite_execute(self, sql: str, params=(), *, commit: bool = False):
+        """SQLite 回退下在文件锁内执行写操作。"""
+        if not self._is_fallback or self._conn is None:
+            raise RuntimeError("SQLite 回退未启用，无法执行写入")
+        with self._lock:
+            cur = self._conn.execute(sql, params)
+            if commit:
+                self._conn.commit()
+            return cur
 
     # ── 迁移执行（D6 迁移框架使用） ──
 
@@ -185,9 +220,15 @@ class PgClient:
                 CREATE INDEX IF NOT EXISTS idx_behavior_user ON student_behavior_events(user_id)
             """)
 
-    def _init_schema_sqlite(self):
+    def _init_schema_sqlite(self, conn=None):
+        """SQLite 回退库建表（幂等）。
+
+        ``conn`` 由 `db.core.get_conn_for` 在**新建连接时**作为 init 回调传入——
+        此时 ``self._conn`` 尚未赋值，故必须支持显式连接参数（否则会对 None 执行 SQL）。
+        """
+        target = conn if conn is not None else self._conn
         with self._lock:
-            self._conn.executescript("""
+            target.executescript("""
                 CREATE TABLE IF NOT EXISTS agent_performance (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     agent_name TEXT NOT NULL,
@@ -214,7 +255,7 @@ class PgClient:
                 );
                 CREATE INDEX IF NOT EXISTS idx_behavior_user ON student_behavior_events(user_id);
             """)
-            self._conn.commit()
+            target.commit()
 
     # ── Agent 表现 ──
 

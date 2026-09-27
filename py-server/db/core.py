@@ -7,6 +7,20 @@
 本模块把**唯一连接单例**与**唯一全局可重入锁**收归一处，两个 store 复用，
 从根上消除并发写冲突。
 
+## 库文件边界约定（M-5 守护）
+
+由本模块发放连接的 SQLite 库文件共三个，**按文件隔离、互不必需互斥**：
+
+| 库文件 | 归属 store | 说明 |
+| --- | --- | --- |
+| `data/netlearn_users.db` | `user_store` / `skill_store` / `memory_store` | 同一文件共享同一连接 + 同一把锁 |
+| `data/literacy.db` | `literacy_store` | 独立业务域，**与 users 库永不交叉** |
+| `data/pg_fallback.db` | `pg_client`（SQLite 回退路径） | PG 不可用时的回退库，**与上面两个库永不交叉** |
+
+约定：**任何 SQLite 连接都必须经 `get_conn_for` 发放**，不得在别处 `sqlite3.connect`；
+锁按文件自动隔离（不同文件互不互斥是正确的——需要互斥的是「写同一个文件」）。
+若未来出现跨库事务需求，必须先在此显式声明并引入跨文件锁序，禁止隐式扩展。
+
 行为零改动：连接参数（``check_same_thread=False``）、``row_factory``、WAL pragma
 与原 store 内定义完全一致；各 store 仍负责自己的 ``_init_schema``（幂等建表），
 避免本模块耦合具体表结构。
@@ -66,6 +80,22 @@ def get_conn_for(db_path: str, init=None) -> sqlite3.Connection:
             if init is not None:
                 init(conn)
         return conn
+
+
+def close_conn_for(db_path: str) -> None:
+    """关闭并注销该 DB 文件的连接（保留锁对象）。
+
+    调用于「显式断开」场景（如 `pg_client.disconnect()`）。必须经本函数注销，
+    否则注册表会继续发还一个已关闭的连接，后续请求全部失败。
+    关闭后再次 `get_conn_for` 会重建连接并重跑 ``init``（建表幂等）。
+    """
+    with _REGISTRY_LOCK:
+        conn = _conns.pop(db_path, None)
+    if conn is not None:
+        try:
+            conn.close()
+        except Exception:
+            pass
 
 
 def get_conn() -> sqlite3.Connection:

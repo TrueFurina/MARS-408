@@ -10,7 +10,7 @@
 | 场景 | 判定 | 理由 |
 |---|---|---|
 | **演示 / 答辩 / 评审**（单实例、可控路径、可复现） | ✅ **GO** | 前端构建绿、设计系统三门禁绿、部署件齐备（非 root + 健康检查 + 运维三文档）、安全红线 42 passed |
-| **真实生产上线**（多用户并发、长期演进、团队协作） | ❌ **NO-GO** | 架构分层 M-1/M-2/M-3 已修（2026-09-27），但 M-4 存储锁域三分裂仍存、覆盖率 52% < 54% 门禁、测试存在顺序依赖污染 |
+| **真实生产上线**（多用户并发、长期演进、团队协作） | ❌ **NO-GO** | 架构分层 M-1/M-2/M-3/M-5 已修（2026-09-27），但 M-4（上帝文件集中，见 §二 备注）未修、覆盖率 52% < 54% 门禁、测试存在顺序依赖污染 |
 
 ---
 
@@ -57,8 +57,12 @@ env -u PYTHONPATH -u PYTHONSTARTUP -u NODE_OPTIONS -u ELECTRON_RUN_AS_NODE \
 | M-1 | API 层自建 SQLite 连接 + 独立 Lock | `api/literacy_assessment.py:10,123-147` | 第三个独立锁域；存储实现无法统一替换 |
 | M-2 | ✅ **已修复** 运行中的 `api/*.py` 直连 `db.user_store` = 0（35 处改挂 `services/user_service.py`）；`db.*` 直连降至仅 `db/memory_store.py` 内部共享连接 | `api/*.py`→`services/user_service.py` | 业务规则重复实现风险收窄；替换存储现只需改 1 个 service 层 |
 | M-3 | 下层反向依赖上层 6 处，靠函数内延迟导入规避 | `db/user_store.py:822,959,989,1014`；`db/graph_db.py:75,281`；`engines/review_policy.py:494` | 依赖环仍在，import 顺序一变即启动期 ImportError |
+| M-5 | ✅ **已修复**（2026-09-27）SQLite 连接与锁全部由 `db/core.py` 按文件发放，`pg_fallback.db` 回退路径不再自建连接 | `py-server/db/pg_client.py:112-113`、`db/core.py`（新增 `close_conn_for`） | `connect()` 重复调用不再产生多连接 + 多把互不知情的锁写同一文件 |
 
-连带问题：存储锁域分裂为 3 个（`netlearn_users.db` 走 `db/core.py` 单连接+RLock ✓；`pg_fallback.db` 走 `db/pg_client.py:103`；`data/literacy.db` 走 API 层），并发写正确性依赖「三域永不交叉」这一**未写进代码的隐含约定**。
+> **备注（编号订正）**：M-4 的正题是**上帝文件集中**（`main.py` 882 行身兼 lifespan/限流/异常处理/路由注册等 4 职、`user_store.py` 1,281 行、 `seed_data.py` 1,527 行等），不是存储锁域；存储锁域是 **M-5**，已于本轮收敛。上一轮结论行把两者写反了，此处与 `architecture-review-2026-09-23.md` 一并订正。
+
+**连带问题（已收敛）**：存储锁域曾分裂为 3 个——`netlearn_users.db` 走 `db/core.py` 单连接+RLock ✓；`pg_fallback.db` 走 `db/pg_client.py:103` 自建连接 ✗；`data/literacy.db` 走 API 层 ✗（M-1 已下沉）。
+现在三者全部经 `db/core.py` 登记发放；「三库文件永不交叉、跨文件时互不互斥是正确行为」已写进 `db/core.py` 模块头，不再是未落代码的隐含约定。
 
 ---
 
@@ -122,10 +126,21 @@ env -u PYTHONPATH -u PYTHONSTARTUP -u NODE_OPTIONS -u ELECTRON_RUN_AS_NODE \
 
 **委托（delegation）而非复制**：所有原路径保留同名再导出，20+ 实验/测试脚本的既有 import 不受影响；每次改动后用 `is` 断言验证同一性（如 `agents.quality_gate.review_signals is engines.review_policy.review_signals` → True）。这与项目既有的「单一真值源 + 其余位置只做委托」纪律一致（`test_review_single_source` 守护）。
 
+### M-5：存储锁域统一（SQLite 连接/锁 100% 由 db/core.py 发放）
+
+**为什么这是真 bug 而不是洁癖**：`pg_client.connect()` 的 SQLite 回退分支原本每次被调都新建一套连接与锁，而调用方不止一个——`db/__init__.py:13`、`db/ability_store.py:54`、`db/career_store.py:172`、`seed_demo_data.py:146`，其中后三者是「未连接就 connect」，实跑路径下会重复进入该分支。
+
+- 修复：`connect()` 回退分支改用 `get_lock_for(_FALLBACK_DB)` + `get_conn_for(_FALLBACK_DB, init=self._init_schema_sqlite)`；`db/core.py` 新增 `close_conn_for(db_path)` 供 `disconnect()` 注销共享连接（否则注册表会把已关闭的连接继续发还）；`_init_schema_sqlite` 支持 `conn` 入参（init 回调执行时机早于 `self._conn` 赋值）。
+- 边界约定入代码：`db/core.py` 模块头新增库文件归属表（netlearn_users.db / literacy.db / pg_fallback.db）+「任何 SQLite 连接必须经 `get_conn_for`」硬约束。
+- 合规访问器：`pg_client.sqlite_query_one()` / `sqlite_execute()` 收口 `db/ability_store.py` 的 4 处 `pg_client._lock/_conn` 越级访问。
+
+**机验**：`cd py-server && python scripts/verify_core_lock_unification.py` → 14 项全 PASS（同连接/同锁、与 core 注册表同一对象、8×50 并发写零异常且 400 行全落库、disconnect 后可重连）。
+**变异验证**：回退为 `sqlite3.connect` 后立即 5 项 FAIL + `OperationalError`，证明该检查非空跑。
+
 ### M-2：API 层越级访问存储收敛到 services 层（实测 `api/*.py` 直连 `db.user_store` = 0）
 
 - 新增 `py-server/services/user_service.py`：显式重导出 `db.user_store` 全部 38 个公共函数 + 2 个新增合规访问器，配 `__all__`（ruff F401 不误报）。这是 `API → services → db` 正确分层的用户域入口。
-- API 层 35 处 `from db.user_store import ...`（含 `main.py` / `seed_demo_data.py`）全部改挂 `services.user_service`；运行中的 `api/*.py` 现已零 `db.user_store` 直连（仅 `db/memory_store.py` 保留内部共享连接调用，属 M-4 单连接设计）。
+- API 层 35 处 `from db.user_store import ...`（含 `main.py` / `seed_demo_data.py`）全部改挂 `services.user_service`；运行中的 `api/*.py` 现已零 `db.user_store` 直连（仅 `db/memory_store.py` 保留内部共享连接调用，属 M-5 单连接设计）。
 - 消除最严重越级：`daily_plan.reset_plan` 原 `from db.user_store import _get_conn, _lock, _now` + 裸 UPDATE → 改调 `db.user_store.reset_daily_plan(pid, user_id)`；`wrong_questions` 两处 `SELECT user_id` 所有权校验（裸 `_get_conn/_lock`）→ 改调 `get_wrong_question_owner(qid)`。两访问器在 `db` 层 `_lock` 内完成，API 不再触达存储锁。
 - `db/user_store.py` 仅**加法**：新增 `get_wrong_question_owner` / `reset_daily_plan` 两个函数，未删任何既有符号；tests 仍直连 `db.user_store`，不受影响。
 - 顺带修复本次纳入门禁扫描暴露的 4 个既有 F841 死变量（`assessment.py:profile` / `profile.py:provider` 保留 `_resolve()` 副作用 / `quiz.py:llm_updated` / `quiz.py:analysis` 保留 `error_analyzer.analyze` 调用）。

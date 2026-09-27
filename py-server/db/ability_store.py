@@ -88,8 +88,7 @@ def get_profile(user_id: str) -> Optional[dict]:
     )
     try:
         if pg_client.is_fallback:
-            with pg_client._lock:
-                row = pg_client._conn.execute(sql, (user_id,)).fetchone()
+            row = pg_client.sqlite_query_one(sql, (user_id,))
             if not row:
                 return None
             return {
@@ -145,9 +144,7 @@ def upsert_profile(user_id: str, *, professional=None, soft_skills=None,
             )
             params = (user_id, _dumps(p), _dumps(s), _dumps(k), _dumps(c))
         if pg_client.is_fallback:
-            with pg_client._lock:
-                pg_client._conn.execute(sql, params)
-                pg_client._conn.commit()
+            pg_client.sqlite_execute(sql, params, commit=True)
         else:
             with pg_client._conn.cursor() as cur2:
                 cur2.execute(sql, params)

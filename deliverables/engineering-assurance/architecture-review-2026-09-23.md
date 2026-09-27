@@ -5,7 +5,10 @@
 - **分支 / HEAD**：`career-literacy` @ `7b6b3b0`
 - **技术栈**：Vue 3 + TypeScript + Vite（前端）／ Python 3.13 + FastAPI + LangGraph + PyTorch(CPU) + SQLite/PostgreSQL + Milvus（后端）
 - **总体评分**：**6.5 / 10**
-- **结论**：⚠️ 可继续开发；**M-1 / M-2 / M-3 已于 2026-09-27 修复**，剩余 M-4（存储锁域三分裂）/ M-5（main.py 职责过载）待处理
+- **结论**：⚠️ 可继续开发；**M-1 / M-2 / M-3 / M-5（存储锁域统一）已于 2026-09-27 修复**，剩余 M-4（上帝文件集中：`main.py` 拆分 / `user_store` 拆域）待处理
+
+> 编号订正（2026-09-27）：上一轮维护结论行时误把「存储锁域三分裂」写成 M-4、「main.py 职责过载」写成 M-5，
+> 与本报告正文编号相反。正文为准：**M-4 = 上帝文件集中**（含 main.py 拆分建议），**M-5 = 并发写保护只覆盖 2/3 存储域**。
 
 ---
 
@@ -105,11 +108,26 @@ def _get_conn() -> sqlite3.Connection:
   2. `db/user_store.py` 拆出 `db/profile_store.py`（画像 + 答题历史）。
   3. `seed_data.py` 归入 `scripts/`（非运行时依赖）。
 
-### [M-5] 并发写保护只覆盖了 2/3 的存储域 — 🟠 Major
+### [M-5] 并发写保护只覆盖了 2/3 的存储域 — ✅ 已修复（2026-09-27，🟢 收敛）
 
 - **位置**：`py-server/db/core.py:29-45`（正确做法）vs `db/pg_client.py:103`、`api/literacy_assessment.py:135`
-- **问题**：`db/core.py` 的 D2 修复把 `user_store` + `skill_store`（+ `memory_store` 复用连接）收编为**单连接 + 全局 RLock**，这是对的；但 `pg_fallback.db`（`db/pg_client.py:103`，独立连接 + `self._lock`）与 `data/literacy.db`（见 M-1）仍是旧模式。三个锁域互不知情。
+- **问题（评审时）**：`db/core.py` 的 D2 修复把 `user_store` + `skill_store`（+ `memory_store` 复用连接）收编为**单连接 + 全局 RLock**，这是对的；但 `pg_fallback.db`（`db/pg_client.py:103`，独立连接 + `self._lock`）与 `data/literacy.db`（见 M-1）仍是旧模式。三个锁域互不知情。
 - **修复建议**：统一由 `db/core.py` 发放连接与锁；`pg_client` 的 SQLite 回落路径改走 `db.core.get_conn()`（或显式声明 `pg_fallback.db` 与其它库**永不交叉**，并在 `db/core.py` 头部注释里写清这个边界约定）。
+
+**✅ 修复记录（2026-09-27）**：两条建议都落地了。
+
+1. **连接与锁统一发放**：`pg_client.connect()` 的 SQLite 回退路径改为 `get_lock_for(_FALLBACK_DB)` + `get_conn_for(_FALLBACK_DB, init=self._init_schema_sqlite)`。
+   修复前该分支每次被调用都新建一套 `sqlite3.connect` + `threading.Lock`——而 `db/__init__.py:13`、`ability_store`、`career_store`、`seed_demo_data` 都会各自调用 `connect()`，
+   即**同一份 pg_fallback.db 被多个连接 + 多把互不知情的锁同时写**，正是 db/core.py 当初为 user_store/skill_store 根除的同款缺陷。现在重复 `connect()` 返回同一连接、同一把锁。
+   - 配套：`db/core.py` 新增 `close_conn_for(db_path)`（Shared→Registry 注销，否则注册表会发还已关闭的连接）；`pg_client.disconnect()` 在回退模式下改调它；`_init_schema_sqlite` 支持 `conn` 入参（init 回调在 `self._conn` 赋值之前执行）。
+2. **边界约定写入代码**：`db/core.py` 模块头新增「库文件边界约定」表，列明三个库文件（`netlearn_users.db` / `literacy.db` / `pg_fallback.db`）的归属 store、按文件隔离的语义、以及「任何 SQLite 连接都必须经 `get_conn_for` 发放」的硬约束。
+3. **合规访问器**：新增 `pg_client.sqlite_query_one()` / `sqlite_execute()`，`db/ability_store.py` 原先越级取 `pg_client._lock` / `pg_client._conn` 的 4 处私有访问已改用访问器（与 M-2 处理 user_store 同构）。
+
+**机验**：`py-server/scripts/verify_core_lock_unification.py`（绕开 `db/__init__` 的 numpy 依赖，stub 后直测 core+pg_client）。
+14 项断言全过：双 client `connect()` 后 `conn is conn`、`lock is lock` 且与 `db.core` 注册表同一对象；8 线程 × 50 次并发写零异常、400 行全部落库；`disconnect()` 正确注销且可重连写入。
+**变异验证**：把回退路径改回 `sqlite3.connect` 后，前 5 项断言立即 FAIL 并最终抛 `OperationalError: no such table`，证明该组检查有真实辨别力而非空跑。
+
+**残留（不阻塞）**：`db/career_store.py` 仍有 ~10 处 `pg_client._lock` / `pg_client._conn` 私有访问。因其持有的是 `self._lock`，而现在 `self._lock` 就是 `db.core` 的文件锁，故**并发正确性已随本次修复自动收敛**；剩余只是分层异味，归入下一轮（career_store 属并发会话职责域，需协调后再动）。
 
 ---
 
