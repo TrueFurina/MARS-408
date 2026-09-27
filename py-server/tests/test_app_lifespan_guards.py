@@ -349,3 +349,86 @@ class TestLifespanFullCycle:
         async with L.lifespan(app=None):
             pass
         assert seeded["called"] is True
+
+
+class TestInitAdminProductionFailFast:
+    """生产环境：管理员是唯一特权入口，创建失败即为「零管理员」，必须 fail-fast。"""
+
+    async def test_production_ensure_admin_failure_stops_startup(self, monkeypatch):
+        monkeypatch.setenv("NETLEARN_ENV", "production")
+        monkeypatch.setenv("ADMIN_PASSWORD", "z" * 20)
+        import services.user_service as us
+
+        def boom(*a, **k):
+            raise RuntimeError("db down")
+
+        monkeypatch.setattr(us, "ensure_admin", boom)
+        with pytest.raises(RuntimeError, match="零管理员"):
+            await L._init_admin()
+
+    async def test_development_ensure_admin_failure_still_degrades(self, monkeypatch):
+        """收紧生产口径的同时，不得顺带阻断本地调试（只读库等场景）。"""
+        monkeypatch.setenv("NETLEARN_ENV", "development")
+        monkeypatch.setenv("ADMIN_PASSWORD", "z" * 20)
+        import services.user_service as us
+
+        def boom(*a, **k):
+            raise RuntimeError("db down")
+
+        monkeypatch.setattr(us, "ensure_admin", boom)
+        await L._init_admin()
+
+
+class TestSingleWorkerGuardOrdering:
+    """ADR-007 守卫必须在**第一次写入之前**执行，不能「写完再拦」。
+
+    验证手段是哨兵异常而非扫描源码行号 —— 后者会像 09-28 那次一样，
+    随代码搬移而静默失效。
+    """
+
+    async def test_guard_precedes_vector_db_write(self, monkeypatch):
+        monkeypatch.setenv("UVICORN_WORKERS", "2")
+        monkeypatch.delenv("WEB_CONCURRENCY", raising=False)
+        monkeypatch.setattr(sys, "argv", ["main.py"])
+
+        import shared.auth as auth
+        monkeypatch.setattr(auth, "resolve_auth_secret", lambda: "s" * 40)
+
+        class VectorDbTouched(RuntimeError):
+            """哨兵：若守卫未在写入前拦下，向量库会先被触碰并抛出本异常。"""
+
+        def boom_db():
+            raise VectorDbTouched("向量库在单写者守卫之前被触碰")
+
+        monkeypatch.setattr(L.vector_db, "connect", boom_db)
+
+        with pytest.raises(RuntimeError, match="ADR-007"):
+            async with L.lifespan(app=None):
+                pass
+
+    async def test_guard_precedes_migrations_and_seed(self, monkeypatch):
+        """同理：PG/Redis/Admin/迁移/演示账户播种都不得先于守卫发生。"""
+        monkeypatch.setenv("UVICORN_WORKERS", "2")
+        monkeypatch.delenv("WEB_CONCURRENCY", raising=False)
+        monkeypatch.setattr(sys, "argv", ["main.py"])
+
+        import shared.auth as auth
+        monkeypatch.setattr(auth, "resolve_auth_secret", lambda: "s" * 40)
+        monkeypatch.setattr(L.vector_db, "connect", lambda: True)
+        monkeypatch.setattr(L.vector_db, "count", lambda name: 999)
+
+        touched = []
+
+        def marker(name):
+            async def _m():
+                touched.append(name)
+            return _m
+
+        for name in ("_init_pg", "_init_redis", "_init_admin",
+                     "_run_migrations", "_seed_demo_data"):
+            monkeypatch.setattr(L, name, marker(name))
+
+        with pytest.raises(RuntimeError, match="ADR-007"):
+            async with L.lifespan(app=None):
+                pass
+        assert touched == [], "单写者违规时不得发生任何初始化写入"

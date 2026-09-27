@@ -7,6 +7,7 @@
 """
 
 import json
+import time
 
 import pytest
 from fastapi import FastAPI, HTTPException
@@ -122,13 +123,66 @@ class TestRateLimit:
             _request("/api/chat/x", client=("2.2.2.2", 2)), _ok_call_next)
         assert [r1.status_code, r2.status_code] == [200, 200]
 
-    def test_client_ip_prefers_forwarded_header(self):
-        req = _request(headers={"x-forwarded-for": "8.8.8.8, 10.0.0.1"})
+    async def test_expired_buckets_are_reclaimed(self, monkeypatch):
+        """窗口过期且不再被访问的桶应被清扫回收（否则随来源 IP 多样性涨内存）。"""
+        monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
+        monkeypatch.setenv("RATE_LIMIT_ENABLED", "true")
+        monkeypatch.setenv("RATE_CHAT", "10")
+        monkeypatch.setattr(middleware, "RATE_LIMIT_WINDOW", 0.02)
+        monkeypatch.setattr(middleware, "RATE_SWEEP_INTERVAL", 0.0)
+        peer = ("5.5.5.5", 1)
+        await middleware.rate_limit_middleware(_request("/api/chat/x", client=peer), _ok_call_next)
+        key = (middleware._client_ip(_request("/api/chat/x", client=peer)), "chat")
+        assert key in middleware._rate_buckets
+        time.sleep(0.05)
+        # 由另一个来源的请求触发周期清扫
+        await middleware.rate_limit_middleware(
+            _request("/api/chat/y", client=("6.6.6.6", 1)), _ok_call_next
+        )
+        assert key not in middleware._rate_buckets, "过期桶应被回收"
+
+    async def test_active_bucket_survives_sweep(self, monkeypatch):
+        """清扫不得误伤窗口内仍活跃的桶。"""
+        monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
+        monkeypatch.setenv("RATE_LIMIT_ENABLED", "true")
+        monkeypatch.setenv("RATE_CHAT", "10")
+        monkeypatch.setattr(middleware, "RATE_SWEEP_INTERVAL", 0.0)
+        peer = ("7.7.7.7", 1)
+        key = (middleware._client_ip(_request("/api/chat/x", client=peer)), "chat")
+        for _ in range(3):
+            await middleware.rate_limit_middleware(
+                _request("/api/chat/x", client=peer), _ok_call_next)
+        assert key in middleware._rate_buckets, "活跃桶不应被清扫误删"
+        assert len(middleware._rate_buckets[key]) == 3
+
+    def test_client_ip_prefers_forwarded_header_from_trusted_proxy(self):
+        # 仅当直连对端是受信任反代时才采信 XFF（默认信任 loopback）
+        req = _request(headers={"x-forwarded-for": "8.8.8.8, 10.0.0.1"}, client=("127.0.0.1", 1234))
         assert middleware._client_ip(req) == "8.8.8.8"
 
-    def test_client_ip_falls_back_to_x_real_ip(self):
-        req = _request(headers={"x-real-ip": "7.7.7.7"})
+    def test_client_ip_ignores_spoofed_forwarded_header(self):
+        # 不可信来源伪造 XFF 不得改写计数 key —— 否则一条 header 就能换一个新桶绕过限流
+        req = _request(headers={"x-forwarded-for": "8.8.8.8"}, client=("9.9.9.9", 1234))
+        assert middleware._client_ip(req) == "9.9.9.9"
+
+    def test_client_ip_ignores_spoofed_x_real_ip(self):
+        req = _request(headers={"x-real-ip": "7.7.7.7"}, client=("9.9.9.9", 1234))
+        assert middleware._client_ip(req) == "9.9.9.9"
+
+    def test_client_ip_falls_back_to_x_real_ip_from_trusted_proxy(self):
+        req = _request(headers={"x-real-ip": "7.7.7.7"}, client=("127.0.0.1", 1234))
         assert middleware._client_ip(req) == "7.7.7.7"
+
+    def test_trusted_proxies_reads_env(self, monkeypatch):
+        monkeypatch.setenv("TRUSTED_PROXIES", "10.0.0.5, 10.0.0.6")
+        req = _request(headers={"x-forwarded-for": "8.8.8.8"}, client=("10.0.0.5", 1234))
+        assert middleware._client_ip(req) == "8.8.8.8"
+
+    def test_loopback_not_trusted_once_env_declares_proxies(self, monkeypatch):
+        # 显式声明 TRUSTED_PROXIES 后 loopback 不再默认可信（最小信任面）
+        monkeypatch.setenv("TRUSTED_PROXIES", "10.0.0.5")
+        req = _request(headers={"x-forwarded-for": "8.8.8.8"}, client=("127.0.0.1", 1234))
+        assert middleware._client_ip(req) == "127.0.0.1"
 
     def test_client_ip_falls_back_to_peer(self):
         assert middleware._client_ip(_request(client=("3.3.3.3", 9))) == "3.3.3.3"
