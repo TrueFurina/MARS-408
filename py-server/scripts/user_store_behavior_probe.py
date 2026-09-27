@@ -20,6 +20,7 @@ import re
 import shutil
 import sys
 import tempfile
+from datetime import datetime
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(_HERE))  # py-server 根
@@ -28,6 +29,34 @@ _TMP = tempfile.mkdtemp(prefix="userstore_probe_")
 os.environ["NETLEARN_USER_DB"] = os.path.join(_TMP, "probe_users.db")  # db.core 启动时读取
 
 import db.user_store as us  # noqa: E402
+
+
+# ── 冻结"今天"（2026-09-28 复盘修复）─────────────────────────────
+# 为什么必须冻结：探针此前用真实时钟，导致 get_or_create_daily_plan 的
+# plan_date、get_platform_stats.daily_quiz（近 7 日滚动窗口）每天都整体平移一天。
+# 表现是：基线是 09-27 采的，09-28 再跑必然 HAS FAILURE，且**没有任何行为语义差异**。
+# 这类假红灯比真回归更危险——它会诱使人去改本来正确的生产代码。
+# 做法：只在探针里把 datetime 换成固定时钟的子类（不碰生产代码、不加生产开关）。
+class _FrozenDatetime(datetime):
+    _FROZEN = datetime(2026, 9, 27, 10, 0, 0)  # 与基线采集日对齐
+
+    @classmethod
+    def now(cls, tz=None):
+        return cls._FROZEN.replace(tzinfo=tz) if tz else cls._FROZEN
+
+    @classmethod
+    def today(cls):
+        return cls._FROZEN
+
+
+# 替换时机必须在建库/任何写入之前（补丁对象是模块全局名，调用时解析即刻生效）
+us.datetime = _FrozenDatetime
+try:  # profile_store 自己也会取时间戳
+    import db.profile_store as _ps  # noqa: E402
+
+    _ps.datetime = _FrozenDatetime
+except Exception:  # noqa: BLE001  独立可导入性若变，也不该炸在这里
+    pass
 
 _TS_FIELDS = (
     "created_at", "updated_at", "timestamp", "last_wrong_at", "first_wrong_at",

@@ -1046,7 +1046,9 @@ def _generate_default_daily_tasks(user_id: str) -> list:
 
 def get_or_create_daily_plan(user_id: str, plan_date: str = None, target_exam_date: str = None, target_score: int = None) -> dict:
     """获取或创建指定日期的学习计划"""
-    from datetime import datetime
+    # 注：此处原有一行 `from datetime import datetime` 函数内重导入，
+    # 会遮蔽模块顶部的 datetime（第 14 行），令任何模块级打桩/冻结时钟失效
+    # （2026-09-28 冻结基线探针假失败的根因）。已在审查中移除，语义不变。
     conn = _get_conn()
     now = _now()
     if not plan_date:
