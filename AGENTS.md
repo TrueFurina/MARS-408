@@ -7,12 +7,25 @@
 
 ## 命令
 - 后端: `cd py-server && pip install -e . && python main.py`（:8002）
-- 测试: ⚠️ 全量 pytest 因 FastAPI 兼容问题全挂——必须分文件/分标记跑，见 `.agents/skills/test-gate/`
+- 测试: `cd py-server && env -u PYTHONPATH -u PYTHONSTARTUP -u NODE_OPTIONS -u ELECTRON_RUN_AS_NODE .venv/Scripts/python.exe -m pytest tests/ -q --basetemp=.pytest_tmp --no-cov -p no:cacheprovider --continue-on-collection-errors`
+  - 2026-09-27 实测全量 **923 passed / 221 skipped / 3 xfailed / 0 failed**（旧文档"全量全挂"的说法已过时）。
+  - 前两个 `env -u` 是必需的：WorkBuddy shell 的注入会污染 pytest 子进程；`--continue-on-collection-errors` 用于跳过 torch c10.dll 的本机环境错误。
 - E5 模型恢复: `python scripts/fetch_e5_model.py`（模型不入库，会话重置后执行）
+- 机验（改动结构后跑）: `py-server/scripts/verify_{app_wiring,core_lock_unification,seed_data_split,user_store_split}.py`
 
 ## 禁区
 - 分支同步方向唯一：main → career-literacy，禁止反向
 - 竞赛口径数字必须对齐代码真值；E5 模型文件不入库
+- 永禁 `git add -A`（junction 会导致把未删文件误记为删除）；永禁 `git stash/merge/pull/gc/prune`
+- `*/crypto_platform/py-server/**`（188 文件嵌套副本）**未经用户确认不得移动或删除**
+- 提交时必须逐文件显式 `git add`，且 add 后先看 `git status`（暂存为空时密钥扫描会退化成全仓扫描并误报）
+
+## 当前状态（2026-09-27 架构评审收口，接手前先读）
+- 架构评审 M-1~M-5 全部修复并机验；全项目结构已落定：
+  `py-server/app/`（装配层，main.py 只剩 85 行组装）、`py-server/seed/`（408 四科语料包，`seed_data.py` 变 38 行委托层）、`db/profile_store.py`（画像域）。
+- **兼容层是"动态委托"（PEP 562 `__getattr__`），不是静态重导出** —— 改成静态会让打桩监控失效。改前读文件头注释。
+- **唯一未达标项 = 覆盖率 52.32% < 门禁 54%**（拉低项：`shared/url_guard.py` 等零覆盖文件）。
+- 详细交接见 `deliverables/engineering-assurance/交接说明-2026-09-27.md`（含红线、可复现命令、踩坑表）。
 
 ## 项目级 skill（触发时读）
 - `.agents/skills/project-context/` `.agents/skills/arch-rules/` `.agents/skills/test-gate/` `.agents/skills/debug-playbook/`

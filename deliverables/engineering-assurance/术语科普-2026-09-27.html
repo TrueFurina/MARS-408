@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>技术黑话科普 · MARS-408 项目对话术语整理</title>
+<style>
+  :root{
+    --ink:#2C2C2A; --ink2:#5F5E5A; --ink3:#888780;
+    --line:#E4E2DB; --bg:#FAF9F6; --card:#FFFFFF;
+    --purple:#534AB7; --purple-d:#26215C; --purple-l:#EEEDFE;
+    --teal:#0F6E56; --teal-l:#E1F5EE;
+    --coral:#993C1D; --coral-l:#FAECE7;
+    --amber:#854F0B; --amber-l:#FAEEDA;
+    --blue:#185FA5; --blue-l:#E6F1FB;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;
+       font-size:15px;line-height:1.75;}
+  .wrap{max-width:880px;margin:0 auto;padding:48px 28px 80px;}
+  h1{font-size:28px;font-weight:600;margin:0 0 10px;letter-spacing:.2px}
+  .sub{color:var(--ink2);font-size:15px;margin:0 0 28px}
+  h2{font-size:20px;font-weight:600;margin:52px 0 6px;padding-top:18px;border-top:1px solid var(--line)}
+  h2 .num{color:var(--purple);font-weight:500;margin-right:8px}
+  h3{font-size:16px;font-weight:600;margin:26px 0 8px}
+  p{margin:10px 0}
+  .lead{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--purple);
+        padding:14px 18px;border-radius:8px;margin:18px 0}
+  table{width:100%;border-collapse:collapse;margin:14px 0;background:var(--card);
+        border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:#F4F2EC;font-weight:600;font-size:13.5px;color:var(--ink2)}
+  tr:last-child td{border-bottom:none}
+  code{font-family:ui-monospace,Consolas,monospace;font-size:13px;
+       background:#F1EFE8;padding:1.5px 6px;border-radius:5px;color:var(--purple-d)}
+  .term{font-weight:600;color:var(--purple-d);white-space:nowrap}
+  .plain{color:var(--ink)}
+  .why{color:var(--ink2);font-size:13.5px}
+  .tag{display:inline-block;font-size:11.5px;padding:1px 8px;border-radius:20px;
+       border:1px solid currentColor;margin-left:6px;vertical-align:1px}
+  .t-arch{color:var(--purple)} .t-ver{color:var(--teal)} .t-py{color:var(--blue)}
+  .t-test{color:var(--amber)} .t-gov{color:var(--coral)} .t-db{color:var(--ink2)}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .card h4{margin:0 0 6px;font-size:14.5px;font-weight:600}
+  .card p{margin:4px 0;font-size:13.5px;color:var(--ink2)}
+  .good{border-left:3px solid var(--teal)} .bad{border-left:3px solid var(--coral)}
+  .warn{border-left:3px solid var(--amber)} .info{border-left:3px solid var(--blue)}
+  .links{list-style:none;padding:0;margin:12px 0}
+  .links li{background:var(--card);border:1px solid var(--line);border-radius:10px;
+            padding:12px 16px;margin-bottom:10px}
+  .links a{color:var(--blue);text-decoration:none;font-weight:600;word-break:break-all}
+  .links a:hover{text-decoration:underline}
+  .links .desc{color:var(--ink2);font-size:13.5px;margin-top:4px}
+  .verified{color:var(--teal);font-size:11.5px;border:1px solid var(--teal);
+            border-radius:20px;padding:1px 7px;margin-left:8px}
+  .anchor-nav{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0 8px}
+  .anchor-nav a{font-size:13px;color:var(--purple);text-decoration:none;
+                border:1px solid var(--purple-l);background:var(--purple-l);
+                padding:4px 12px;border-radius:20px}
+  .foot{margin-top:56px;padding-top:18px;border-top:1px solid var(--line);
+        color:var(--ink3);font-size:13px}
+  ul.plain-list{margin:8px 0 8px 20px;padding:0}
+  ul.plain-list li{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>技术黑话科普</h1>
+<p class="sub">把最近几轮对话里的术语，逐条翻译成大白话，并附上可查的官方出处。<br>
+写作时间 2026-09-27 ｜ 对应提交范围 <code>972a196 … f204713</code></p>
+
+<div class="lead">
+<strong>怎么读这份资料：</strong>先看第 0 节的「一句话版本」。想搞清楚某个词直接搜第 1 节表格。
+第 2 节讲三个最容易误解的机制。第 3 节是网上资料出处（<span class="verified">已核验</span> 表示本次实际检索确认过）。
+第 4 节把今天的真实事件和术语对上号，看完你就知道我当时在干什么。
+</div>
+
+<div class="anchor-nav">
+  <a href="#s0">0 · 一句话版本</a>
+  <a href="#s1">1 · 术语对照</a>
+  <a href="#s2">2 · 三个关键机制</a>
+  <a href="#s3">3 · 网上资料</a>
+  <a href="#s4">4 · 今天的事对上号</a>
+</div>
+
+<h2 id="s0"><span class="num">0</span>一句话版本：这几轮我到底在干嘛</h2>
+<p>你给我的项目代码，长期积累出三类隐患：<strong>结构太乱</strong>（一个文件干六件事）、
+<strong>偷偷越权</strong>（谁都能直接抓数据库）、<strong>测试不可信</strong>（绿灯不代表没问题）。
+我做的四件事，每一件都必须能<strong>被证明</strong>，而不是我说"改好了"就算数：</p>
+<ul class="plain-list">
+  <li><strong>拆大文件</strong> —— 让每个文件只干一件事（对应术语：上帝文件、装配层、分层）。</li>
+  <li><strong>堵越权</strong> —— 让所有读写都必须经过规定的门口（对应：委托、单一真值源）。</li>
+  <li><strong>证明没改坏</strong> —— 拆之前先冻一份"存档"，拆完逐项对账（对应：基线快照、差分）。</li>
+  <li><strong>证明检查真有用</strong> —— 故意把代码改错，看检查能不能抓住（对应：变异验证）。</li>
+</ul>
+<p class="why">第 3、4 条是我这几轮花时间最多的地方。原因很现实：<em>拆文件这类改动最大的风险不是报错，而是悄悄出错还能跑过去</em>。</p>
+
+<h2 id="s1"><span class="num">1</span>术语对照表（按六类分）</h2>
+
+<h3>1.1 架构评审类 <span class="tag t-arch">评估结构问题</span></h3>
+<table>
+<tr><th style="width:150px">术语</th><th>大白话</th><th style="width:34%">为什么会出现</th></tr>
+<tr><td class="term">M-1 ~ M-5</td><td class="plain">评审报告里给问题编的号，方便点名（如"M-2 已修"）</td><td class="why">没有编号，说"那个存储的问题"就说不清是哪个</td></tr>
+<tr><td class="term">Major / Minor</td><td class="plain">严重程度分级：Major 影响正确性和可维护性，Minor 是整洁度</td><td class="why">决定先修哪个，不是所有问题都等值</td></tr>
+<tr><td class="term">上帝文件</td><td class="plain">一个文件承担太多职责，谁都不敢动</td><td class="why"><code>main.py</code> 原本 882 行同时管启动、限流、报错、路由</td></tr>
+<tr><td class="term">装配层</td><td class="plain">只负责"把零件装起来"的最外层文件</td><td class="why">装配代码最容易变，应该让它薄到一眼看完</td></tr>
+<tr><td class="term">分层（API → services → db）</td><td class="plain">规定"谁能直接碰谁"：接口层不许直接抓数据库</td><td class="why">否则同一个业务规则会在 27 个文件里各写一遍</td></tr>
+<tr><td class="term">单一真值源</td><td class="plain">同一件事只允许在一个地方定义，其他地方只能引用</td><td class="why">防止"改了一处、漏了另一处"的数字漂移</td></tr>
+<tr><td class="term">越级访问</td><td class="plain">不该碰底层的地方直接去抓底层连接、锁</td><td class="why">像前台直接进金库开保险箱，出事没人管得住</td></tr>
+</table>
+
+<h3>1.2 验证方法类 <span class="tag t-ver">证明"真的没改坏"</span></h3>
+<table>
+<tr><th style="width:150px">术语</th><th>大白话</th><th style="width:34%">为什么会出现</th></tr>
+<tr><td class="term">基线快照</td><td class="plain">动手之前，先把现状存一份"指纹存档"</td><td class="why">没有存档，改完就无从对比"是不是真的一样"</td></tr>
+<tr><td class="term">差分比对</td><td class="plain">改完之后，逐个项目和存档对账</td><td class="why">只统计"条目数对不对"抓不到细节（实测 1892 条变 1885 条时节点数完全没变）</td></tr>
+<tr><td class="term">行为探针</td><td class="plain">跑一段固定操作序列，把每步结果记下来当存档</td><td class="why">函数不能靠"指纹"比（见 2.1）</td></tr>
+<tr><td class="term">机验脚本 / 守门脚本</td><td class="plain">一条命令跑完，全自动判定对错的小程序</td><td class="why">让结论可复现，不依赖"我记得"</td></tr>
+<tr><td class="term">变异验证</td><td class="plain">故意把代码改坏，看检查报不报警</td><td class="why">不报错就说明检查是摆设（见 2.3）</td></tr>
+<tr><td class="term">静默失败 / 响亮失败</td><td class="plain">静默＝不报错但结果错了；响亮＝直接崩</td><td class="why">静默失败危险得多，所以变异要挑"安静地变错"</td></tr>
+<tr><td class="term">AST 比对</td><td class="plain">不看文本长相，直接比较"代码结构"是否一致</td><td class="why">比较列表有没有漏项、顺序有没有变</td></tr>
+</table>
+
+<h3>1.3 Python 导入与对象类 <span class="tag t-py">今天事故的主因</span></h3>
+<table>
+<tr><th style="width:150px">术语</th><th>大白话</th><th style="width:34%">为什么会出现</th></tr>
+<tr><td class="term">模块（module）</td><td class="plain">一个 .py 文件在内存里的"化身"，全局只有一份</td><td class="why">这个"只有一份"的假设今天被打破了</td></tr>
+<tr><td class="term">sys.modules</td><td class="plain">Python 的"已加载模块登记处"，按名字缓存</td><td class="why">谁改了这个登记处，谁就改变了所有人的认知</td></tr>
+<tr><td class="term">类身份分裂</td><td class="plain">同一个文件被加载两次 → 内存里出现两个"同名类"，互相不认识</td><td class="why">今天测试变红的真凶（见 2.2）</td></tr>
+<tr><td class="term">PEP 562 / <code>__getattr__</code></td><td class="plain">让模块支持"用到时才去查"的动态属性</td><td class="why">我用它实现"动态委托"（见 2.1）</td></tr>
+<tr><td class="term">动态委托门面</td><td class="plain">自己不存东西，每次被问就转给真正的负责人</td><td class="why">避免拿到过期副本</td></tr>
+<tr><td class="term">monkeypatch</td><td class="plain">测试期间临时替换某个函数/属性，用完自动还原</td><td class="why">测试隔离的基础手段</td></tr>
+<tr><td class="term">快照式绑定</td><td class="plain"><code>from 模块 import 函数</code> 会把"当时的那个函数"钉在你手上</td><td class="why">之后再替换原件，你手上还是旧的（见 2.1）</td></tr>
+</table>
+
+<h3>1.4 测试框架语义类 <span class="tag t-test">为什么"绿灯"会骗人</span></h3>
+<table>
+<tr><th style="width:150px">术语</th><th>大白话</th><th style="width:34%">为什么会出现</th></tr>
+<tr><td class="term">xfail</td><td class="plain">"我预期它会失败"的标记</td><td class="why">功能没做完/依赖外部服务时的常规做法</td></tr>
+<tr><td class="term">XPASS</td><td class="plain">标了"预期失败"，结果它<strong>通过</strong>了</td><td class="why">关键陷阱，见 2.2</td></tr>
+<tr><td class="term"><code>strict=True</code></td><td class="plain">"如果它意外通过，就判整个测试失败"</td><td class="why">本意是提醒"该更新标记了"，结果造成 CI 必红</td></tr>
+<tr><td class="term">xpassed / xfailed / skipped</td><td class="plain">意外通过 / 如预期失败 / 跳过，三种都不算真失败</td><td class="why">读结果时要分清这三个数字</td></tr>
+<tr><td class="term">collection error</td><td class="plain">测试还没开始跑，光"收集名单"就炸了</td><td class="why">今天另一个真问题：一个文件 import 失败 → 36 个用例从未跑过</td></tr>
+<tr><td class="term">顺序依赖</td><td class="plain">单独跑和一起跑，结果不一样</td><td class="why">说明测试之间互相污染</td></tr>
+</table>
+
+<h3>1.5 工程治理类 <span class="tag t-gov">防止"我自己觉得没问题"</span></h3>
+<table>
+<tr><th style="width:150px">术语</th><th>大白话</th><th style="width:34%">为什么会出现</th></tr>
+<tr><td class="term">门禁 / pre-commit 钩子</td><td class="plain">提交代码时自动跑的检查，不合格直接拒绝提交</td><td class="why">本项目有 6 道：密钥扫描、诚实口径、数字口径、结构、ruff、测试文件</td></tr>
+<tr><td class="term">fail-closed</td><td class="plain">拿不准时"拒绝"而不是"放行"</td><td class="why">安全类检查的正确姿势</td></tr>
+<tr><td class="term">白名单豁免</td><td class="plain">给特定文件/规则开例外，其余照查</td><td class="why">教学语料里的 AES 知识点被误判成密钥 → 只豁免那一条规则</td></tr>
+<tr><td class="term">覆盖率门槛</td><td class="plain">"被测试跑到的代码比例"低于某个数就判失败</td><td class="why">项目设 54%，实际 52.32%（唯一的 NO-GO 阻塞）</td></tr>
+<tr><td class="term">CI 红灯</td><td class="plain">持续集成流水线里的失败状态</td><td class="why">红灯 = 这次改动不能合并</td></tr>
+</table>
+
+<h3>1.6 存储与并发类 <span class="tag t-db">数据别写坏</span></h3>
+<table>
+<tr><th style="width:150px">术语</th><th>大白话</th><th style="width:34%">为什么会出现</th></tr>
+<tr><td class="term">连接（connection）</td><td class="plain">通往数据库的一条通道</td><td class="why">开太多会互相打架</td></tr>
+<tr><td class="term">锁 / RLock</td><td class="plain">同一时间只允许一个人写的"排队规矩"；RLock 允许自己重复进</td><td class="why">防止两个请求同时写同一行导致损坏</td></tr>
+<tr><td class="term">锁域</td><td class="plain">"这把锁负责哪个范围"</td><td class="why">以前三个数据库文件各有一把互不知情的锁</td></tr>
+<tr><td class="term">WAL</td><td class="plain">SQLite 的一种日志模式，读写可以并行，更抗崩</td><td class="why">连接参数统一时一并确认</td></tr>
+<tr><td class="term">幂等建表</td><td class="plain">"建表"这句话执行一百次，效果和执行一次一样</td><td class="why">每次启动都建表而不出错</td></tr>
+<tr><td class="term">越级取连接</td><td class="plain">绕过规定的封装，直接抓底层连接跑自己的 SQL</td><td class="why">拆域时的主要清理对象</td></tr>
+</table>
+
+<h2 id="s2"><span class="num">2</span>三个最容易误解的机制</h2>
+
+<h3>2.1 "委托"和"复制"长得像，行为完全不同</h3>
+<div class="cards">
+  <div class="card bad">
+    <h4>静态导入 = 复制一份引用</h4>
+    <p><code>from a import f</code> 会把"此刻的 f"钉在手上。</p>
+    <p>之后别人替换了 a 里的 f，你手上仍然是旧的。</p>
+    <p><strong>危险点：不报错。</strong>补丁静默失效，你以为在测降级路径，实际在走真实逻辑。</p>
+  </div>
+  <div class="card good">
+    <h4>动态委托 = 每次重新问</h4>
+    <p>模块里不存东西，访问时才 <code>return getattr(真身, name)</code>。</p>
+    <p>别人一换，你立刻跟上。</p>
+    <p><strong>这就是 PEP 562 模块级 <code>__getattr__</code> 的用途。</strong></p>
+  </div>
+</div>
+<p class="why">这不是洁癖：今天这个问题真实发生了 —— <code>services/user_service</code> 当初是静态重导出，
+导致一个"数据库故障降级"的测试永远测不到真实分支（它的断言一直失败得很稳定，我一度以为是它写错了）。</p>
+
+<h3>2.2 同一个文件被加载两次 = 两个类</h3>
+<p>Python 用 <code>sys.modules</code> 这个"登记处"保证一个模块只有一份。但如果有人用
+<code>importlib.util.spec_from_file_location</code> <strong>另外加载一份</strong>并塞进登记处，就会出现两个同名类。</p>
+<ul class="plain-list">
+  <li>测试框架给<strong>原件</strong>打补丁 → 业务代码拿到<strong>副本</strong>，没被打补丁 → 走了真实逻辑。</li>
+  <li>两个类互相不认：<code>isinstance</code> 判断为假、<code>try/except</code> 捕不到异常。</li>
+  <li>这不是我瞎猜，Python 官方 PEP 499 明确列了这些后果（见第 3 节）。</li>
+</ul>
+
+<h3>2.3 为什么"检查通过"不够，还要"故意改坏"</h3>
+<p>假设我写了一个检查脚本，它打印"全部通过"。这有两种可能：<strong>代码真的没问题</strong>，
+或者<strong>检查本身写错了、什么都没查</strong>。两者输出一模一样。</p>
+<p>破解办法只有一个：<strong>故意把代码改错一次，看检查会不会报警。</strong>会报警 → 检查有效；不报警 → 检查是摆设。
+这在软件工程里有正式名字：变异测试 / mutation testing（1971 年提出，专门用来评估"测试到底有没有用"）。</p>
+
+<h2 id="s3"><span class="num">3</span>网上资料清单</h2>
+
+<h3>3.1 Python 对象与导入机制</h3>
+<ul class="links">
+  <li>
+    <a href="https://peps.python.org/pep-0562/" target="_blank">PEP 562 – Module __getattr__ and __dir__</a>
+    <span class="verified">已核验</span>
+    <div class="desc">我用的"动态委托"就是这一条提案。官方文档，短、有例子。想搞懂 <code>__getattr__</code> 为什么能解决"拿到过期副本"，看这个。</div>
+  </li>
+  <li>
+    <a href="https://docs.python.org/3/reference/datamodel.html" target="_blank">Python 语言参考 · Data model（模块 __getattr__ 一节）</a>
+    <span class="verified">已核验</span>
+    <div class="desc">权威定义：模块级 <code>__getattr__</code> 只在"正常查找找不到"时才被调用。解释了很多"为什么我这样写没生效"。</div>
+  </li>
+  <li>
+    <a href="https://peps.python.org/pep-0499/" target="_blank">PEP 499 – 两个模块实例带来的混乱</a>
+    <span class="verified">已核验</span>
+    <div class="desc"><strong>今天事故的官方背书。</strong>它逐条列出"同一模块存在两个实例"的后果：注册表分裂、哨兵值失效、类重复定义导致 <code>isinstance</code>/<code>except</code> 失灵。</div>
+  </li>
+  <li>
+    <a href="https://pyconuk.net/learn/importlib-dynamic-imports" target="_blank">Python's importlib: Dynamic Imports and Module Reloading（PyCon UK）</a>
+    <span class="verified">已核验</span>
+    <div class="desc">讲清 <code>sys.modules</code> 缓存、<code>reload()</code> 为什么"改了文件也不生效" —— 和我们的类身份分裂是同一类问题的不同侧面。</div>
+  </li>
+</ul>
+
+<h3>3.2 测试框架语义（pytest）</h3>
+<ul class="links">
+  <li>
+    <a href="https://docs.pytest.org/en/stable/how-to/skipping.html" target="_blank">pytest 官方 · skip 与 xfail</a>
+    <span class="verified">已核验</span>
+    <div class="desc">XPASS 的官方定义，以及 <code>strict=True</code> 的含义："意外通过就判整个测试失败"。读懂这一节，今天那块红灯逻辑你就完全明白了。</div>
+  </li>
+  <li>
+    <a href="https://pytest.cn/en/stable/how-to/skipping.html" target="_blank">pytest 中文文档 · skip 与 xfail</a>
+    <span class="verified">已核验</span>
+    <div class="desc">同上，中文镜像，读起来更省力。</div>
+  </li>
+  <li>
+    <a href="https://pytest.cn/en/stable/reference.html" target="_blank">pytest 中文文档 · API 参考（xfail 的 strict 参数）</a>
+    <span class="verified">已核验</span>
+    <div class="desc">原文说明：<code>strict=False</code> 时 xfail/xpass 都不让整个测试失败；<code>strict=True</code> 时意外通过会让测试失败。</div>
+  </li>
+</ul>
+
+<h3>3.3 测试有效性（变异测试）</h3>
+<ul class="links">
+  <li>
+    <a href="https://mutationtesting.uni.lu/theory.php" target="_blank">Mutation Testing Theory（卢森堡大学 变异测试研究目录）</a>
+    <span class="verified">已核验</span>
+    <div class="desc">学术侧的定义：变异体（mutant）、被杀死（killed）、存活（survived）、变异得分。想要严谨表述就引这里。</div>
+  </li>
+  <li>
+    <a href="https://en.wikipedia.org/wiki/Mutation_testing" target="_blank">Wikipedia · Mutation testing</a>
+    <span class="verified">已核验</span>
+    <div class="desc">历史与全貌最全，含"测试的测试（test of the tests）"这一说法的由来。</div>
+  </li>
+  <li>
+    <a href="https://softengbook.org/articles/mutation-testing" target="_blank">Mutation Testing: A Practical Overview（实践向）</a>
+    <span class="verified">已核验</span>
+    <div class="desc">偏工程视角，有具体例子（<code>a == b</code> 改成 <code>a != b</code> 却没测试报警）。想动手试就从这个开始。</div>
+  </li>
+</ul>
+
+<h3>3.4 覆盖率与质量门禁</h3>
+<ul class="links">
+  <li>
+    <a href="https://pydevtools.com/handbook/how-to/how-to-measure-code-coverage-with-pytest-cov" target="_blank">How to Measure Code Coverage with pytest-cov</a>
+    <span class="verified">已核验</span>
+    <div class="desc">解释本项目覆盖率门槛怎么来的：<code>fail_under = 80</code> 这类配置一旦低于阈值，pytest 直接以非零码退出，从而让 CI 失败。</div>
+  </li>
+  <li>
+    <a href="https://qaskills.sh/blog/pytest-coverage-pytest-cov-guide-2026" target="_blank">pytest-cov 完整指南（阈值设定经验）</a>
+    <span class="verified">已核验</span>
+    <div class="desc">讲几条实用经验：门槛应设在"比现状略低"然后逐步抬高；不要设 100%；不要为了数字写无断言的测试。跟本项目 54% 门槛的处境直接相关。</div>
+  </li>
+  <li>
+    <a href="https://coverage.readthedocs.io/" target="_blank">coverage.py 官方文档</a>
+    <div class="desc">底层工具本身（pytest-cov 只是它的插件）。要查具体配置项（exclude、branch、parallel）来这里。</div>
+  </li>
+</ul>
+
+<h3>3.5 顺带相关的官方入口</h3>
+<ul class="links">
+  <li>
+    <a href="https://pre-commit.com/" target="_blank">pre-commit 官方站</a>
+    <div class="desc">"提交前自动跑检查"这套机制的框架。本项目 6 道门禁就是挂在这一套钩子上。</div>
+  </li>
+  <li>
+    <a href="https://sqlite.org/wal.html" target="_blank">SQLite · Write-Ahead Logging（WAL）</a>
+    <div class="desc">理解"为什么连接参数要统一、为什么并发写要排队"的原始说明。</div>
+  </li>
+  <li>
+    <a href="https://www.starlette.io/middleware/" target="_blank">Starlette · Middleware</a>
+    <div class="desc">FastAPI 底层框架。说明中间件的"洋葱式"包装顺序 —— 这就是我强调"注册顺序不能乱"的依据。</div>
+  </li>
+</ul>
+
+<h2 id="s4"><span class="num">4</span>把今天真实发生的事，对回术语</h2>
+<table>
+<tr><th style="width:38%">我当时的说法</th><th>实际发生的事</th></tr>
+<tr>
+  <td class="term">M-2 收敛 / 委托再导出</td>
+  <td class="plain">把 35 处"接口层直接抓数据库"改成统一走一个中间模块。问题：这个中间模块当初是<strong>静态复制</strong>（2.1 的左栏），于是埋了雷。</td>
+</tr>
+<tr>
+  <td class="term">M-4 ① / 上帝文件拆分</td>
+  <td class="plain"><code>main.py</code> 882 行 → 85 行；把启动、中间件、报错、路由搬到 <code>app/</code> 下各自一个文件。</td>
+</tr>
+<tr>
+  <td class="term">机验 30 项 / 变异验证</td>
+  <td class="plain">写脚本确认 7 个安全响应头、限流、请求体限制都还在；然后<strong>故意把中间件那一行注释掉</strong> → 9 项立刻报错，证明检查有效。</td>
+</tr>
+<tr>
+  <td class="term">基线快照 / 差分 42 步零差异</td>
+  <td class="plain">拆存储模块前，先跑 42 步"建用户→存画像→做错题→排复习计划"并存下结果；拆完再跑一遍逐项比对，完全一致。</td>
+</tr>
+<tr>
+  <td class="term">FAILED [XPASS(strict)]</td>
+  <td class="plain">两个"等待真实大模型"的视频用例，本来预期失败；前序测试污染后它们<strong>意外通过</strong>，而标记写着"意外通过就算失败" → 于是红了。（2.2）</td>
+</tr>
+<tr>
+  <td class="term">二分定位 68 → 34 → 17 → 8</td>
+  <td class="plain">逐个排查"排在它前面的测试文件"，每轮砍一半，最后锁定到 <code>test_f015_extension.py</code>。</td>
+</tr>
+<tr>
+  <td class="term">类身份分裂（真根因）</td>
+  <td class="plain">该文件为了绕开重依赖，<strong>另外加载了一份大模型客户端模块</strong>并登记进 <code>sys.modules</code> 且没还原 → 测试的补丁打在原件、业务拿到副本 → 走了真实调用并失败 → 触发降级 → 视频"生成成功" → 用例意外通过。</td>
+</tr>
+<tr>
+  <td class="term">collection 阶段 ImportError</td>
+  <td class="plain">另一个文件里，我上一轮漏了两个符号的转发，导致测试"还没开始跑"就中断 —— 那 36 个用例其实<strong>从来没被执行过</strong>。</td>
+</tr>
+<tr>
+  <td class="term">0 failed / 3 xfailed / 0 xpassed</td>
+  <td class="plain">最终状态：真正失败 0 个；"如预期失败" 3 个（两个视频用例回来了 + 原有 1 个）；"意外通过" 0 个 —— 说明污染被根治，不是被掩盖。</td>
+</tr>
+</table>
+
+<div class="lead" style="border-left-color:var(--coral)">
+<strong>一句话总结今天的教训：</strong>"单跑绿、全量红"这句话里，
+<strong>红的原因可能恰恰是"它通过了"</strong>。而真凶是一个看着人畜无害的测试隔离技巧
+（另外加载一份模块），它带来的后果 —— <em>补丁打在原件、业务用着副本</em> —— 属于最难发现的一类 bug：
+不报错、不算失败、甚至"一切正常"。
+</div>
+
+<div class="foot">
+本文件位于 <code>deliverables/engineering-assurance/术语科普-2026-09-27.html</code>，可直接用浏览器打开或打印。<br>
+配套的一手机验脚本：<code>py-server/scripts/verify_app_wiring.py</code>（组装层）、
+<code>verify_core_lock_unification.py</code>（存储锁）、
+<code>verify_seed_data_split.py</code>（语料拆分）、
+<code>verify_user_store_split.py</code>（存储拆域）。
+评审结论见同目录 <code>architecture-review-2026-09-23.md</code> 与 <code>production-readiness-2026-09-27.md</code>。
+</div>
+
+</div>
+</body>
+</html>
