@@ -64,6 +64,22 @@ def _temp_sessions(monkeypatch, tmp_path):
 
 
 @pytest.fixture(autouse=True)
+def _isolate_video_cache(monkeypatch, tmp_path):
+    """把教学视频的磁盘脚本缓存重定向到临时目录，消除测试间的跨批次污染。
+
+    services/video_generator.py 的 _CACHE_DIR 指向共享的 ``data/video_cache``，
+    TTL 24 小时 —— 也就是说**一次运行的产物会被下一次运行读到**（甚至跨天）。
+    实测后果：test_video_feedback 的两个视频用例在「单跑」时脚本生成为空、
+    端点返回 status=error（xfail）；在「全量跑」时命中前序测试写入的缓存脚本，
+    成功产出 4 场景 → 被 xfail(strict=True) 判为 XPASS → FAILED（CI 必然红）。
+    隔离后每个用例的缓存独立，单跑与全量行为一致。
+    """
+    import services.video_generator as _vg
+    monkeypatch.setattr(_vg, "_CACHE_DIR", str(tmp_path / "video_cache"))
+    yield
+
+
+@pytest.fixture(autouse=True)
 def mock_llm(monkeypatch):
     """注入离线 Mock LLM，使所有依赖 LLM 的端点在测试环境确定性跑通。
 
