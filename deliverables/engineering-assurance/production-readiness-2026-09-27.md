@@ -10,7 +10,7 @@
 | 场景 | 判定 | 理由 |
 |---|---|---|
 | **演示 / 答辩 / 评审**（单实例、可控路径、可复现） | ✅ **GO** | 前端构建绿、设计系统三门禁绿、部署件齐备（非 root + 健康检查 + 运维三文档）、安全红线 42 passed |
-| **真实生产上线**（多用户并发、长期演进、团队协作） | ❌ **NO-GO** | 架构分层 M-1/M-2/M-3/M-5 已修、**M-4 ①③ 已落地**（2026-09-27），但 M-4 ②（`db/user_store.py` 1,330 行拆域）未做、覆盖率 52% < 54% 门禁、测试存在顺序依赖污染 |
+| **真实生产上线**（多用户并发、长期演进、团队协作） | ❌ **NO-GO** | 架构分层 **M-1 / M-2 / M-3 / M-4 / M-5 全部已修**（2026-09-27），但覆盖率 52% < 54% 门禁、测试存在顺序依赖污染（二者均非架构分层问题） |
 
 ---
 
@@ -136,6 +136,29 @@ env -u PYTHONPATH -u PYTHONSTARTUP -u NODE_OPTIONS -u ELECTRON_RUN_AS_NODE \
 
 **机验**：`cd py-server && python scripts/verify_core_lock_unification.py` → 14 项全 PASS（同连接/同锁、与 core 注册表同一对象、8×50 并发写零异常且 400 行全落库、disconnect 后可重连）。
 **变异验证**：回退为 `sqlite3.connect` 后立即 5 项 FAIL + `OperationalError`，证明该检查非空跑。
+
+### M-4 ②：db/user_store.py 拆出 db/profile_store.py（2026-09-27，M-4 至此全部收口）
+
+- 画像域（user_profiles / user_quiz_history / user_conversations / profile_snapshots
+  四张表、8 个函数）迁入 `db/profile_store.py`（224 行），`user_store.py` 1,330 → 1,232 行。
+- 兼容层用 **PEP 562 `__getattr__` 动态委托**而非显式 import：①静态 import 会绑定对象快照，
+  令对 profile_store 的 monkeypatch 静默失效（M-2 在 services/user_service 踩过同款）；
+  ②只用到 get_profile 却要 import 8 个符号会命中 ruff F401，本项目不用 noqa 压制。
+  既有 20+ 处 `from db.user_store import get_profile` 照常可用。
+- **无循环依赖**：profile_store 只依赖 db.core（同连接同锁，符合 M-5 边界约定），不 import user_store；
+  机验断言「import db.profile_store 不会拉起 db.user_store」。建表幂等（IF NOT EXISTS），
+  单独使用即可建表并读写。
+- **机验**：`python scripts/verify_user_store_split.py` 11 项全 PASS。核心是**行为差分**：
+  拆分前用 `scripts/user_store_behavior_probe.py` 在临时库跑 42 步固定调用序列并冻结基线，
+  拆分后逐键对账 → **42 步零差异**（含 `list_all_users` 内部回调 `get_profile` 这条最易断的链）。
+  **为什么不用 repr 快照**：user_store 的符号绝大多数是函数，repr 含内存地址会淹没真差异。
+  **变异验证（静默型）**：把 get_profile 返回改成 {} → 差分立即 FAIL。
+- **回归**：178 passed / 61 skipped（api_consistency + career_p0 + wave_a_security +
+  e2e_p0_acceptance + api_contract_comprehensive + config_observability + literacy_assessment）。
+
+> 至此 M-4 三条建议全部落地：① main.py 882→85、② user_store 1330→1232、③ seed_data 1527→38。
+> 清单中余下的 `api/chat.py` 1,187 / `db/skill_store.py` 1,148 / `engines/review_policy.py` 1,001
+> 不在 M-4 定义的修复建议内，属下一轮候选。
 
 ### M-4 ③：seed_data.py 1,527 行按科目拆成 seed/ 包（2026-09-27，**未**按原建议归入 scripts/）
 

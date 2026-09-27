@@ -93,7 +93,7 @@ def _get_conn() -> sqlite3.Connection:
   - `kg_dag.GROUP_PREREQS` 等常量 → 迁 `db/kg_prereqs.py` 或 `shared/kg_consts.py`
   迁移后删除全部函数内延迟导入。
 
-### [M-4] 上帝文件集中，单点认知负荷过高 — 🟡 部分修复（2026-09-27）
+### [M-4] 上帝文件集中，单点认知负荷过高 — ✅ 已修复（2026-09-27，三条建议全部落地）
 
 - **位置**：
   - `py-server/seed_data.py` 1,527 行
@@ -167,8 +167,38 @@ KG 643 节点/639 边、group 覆盖 1-26、chunks 1892 / questions 230 / 27 个
 `CO_SEED_KNOWLEDGE_CHUNKS` 27→20、语料 1892→1885，**但 KG 节点数、group 覆盖、试题数全部不变** ——
 粗粒度断言完全发现不了，只有逐符号差分能抓到。这正是本次必须冻结基线快照的原因。
 
-**② db/user_store.py 拆域（1,330 行）— 🟡 未做**：触及 30+ 模块的 import，改动面最大，
-建议单独开工，并配合「先冻结符号快照 + 拆后差分」的同一套方法。
+**② db/user_store.py（1,330 行）拆出 db/profile_store.py（画像域）— 已落地。**
+
+| 位置 | 职责 | 行数 |
+| --- | --- | --- |
+| `db/user_store.py` | 账户 / 作业 / 学习资源 / 错题复习 / 每日计划 | 1,232（原 1,330） |
+| `db/profile_store.py` | 画像 + 答题历史 + 会话 + 画像快照（4 张表、8 个函数） | 224 |
+
+- **为什么用 `__getattr__` 动态委托而不是显式 import**：显式 `from db.profile_store import x`
+  会①在本模块绑定对象快照，令对 profile_store 的 monkeypatch 静默失效（M-2 在
+  `services/user_service` 踩过同款），②只用得到 `get_profile` 却要 import 8 个符号 → 命中
+  ruff F401，而本项目明确不用 noqa 压制。动态转发同时解决两点，且既有 20+ 处
+  `from db.user_store import get_profile` 照常可用。
+- **无循环依赖**：`profile_store` 只依赖 `db.core`（同一连接、同一把锁，符合 M-5 的边界约定），
+  **不** import `user_store`；机验断言 `import db.profile_store` 不会拉起 `db.user_store`。
+- **建表幂等**：profile 域的 4 张表由 `profile_store._init_schema` 用 `CREATE TABLE IF NOT EXISTS`
+  自建，`user_store._init_schema` 仍建全库表，两边重复执行无副作用 —— 机验覆盖了
+  "profile_store 单独使用即可建表并读写"。
+
+**机验**：`cd py-server && python scripts/verify_user_store_split.py` → 11 项全 PASS。
+核心是**行为差分**：拆分前用 `scripts/user_store_behavior_probe.py` 在临时库上跑 42 步固定调用序列
+（账户 / 画像 / 错题复习 / 每日计划 / 资源 / 作业全覆盖，含 `list_all_users` 内部回调 `get_profile`
+这条最易断的链），冻结为 `scripts/user_store_baseline_probe.json`；拆分后重跑逐键对账，
+**42 步零差异**。
+**为什么不用符号 repr 快照**（seed/ 那次的做法）：user_store 的符号绝大多数是**函数**，
+`repr(func)` 含内存地址，搬运后必然不同，会淹没真差异 —— 函数要证的是行为不变。
+**变异验证（静默型）**：把 `get_profile` 的返回改成 `{}` → 差分立即 FAIL 于 `get_profile` 与
+"独立建表读写"两项。
+另查三项只看代码看不出来的：委托动态性（patch 后跟随）、无循环依赖、公共符号集合与拆分前一致。
+
+至此 M-4 三条建议全部落地，`main.py` / `seed_data.py` / `user_store.py` 三个上帝文件均已收敛。
+（清单里余下的 `api/chat.py` 1,187 行、`db/skill_store.py` 1,148 行、`engines/review_policy.py`
+1,001 行不在 M-4 定义的修复建议内，属下一轮候选。）
 
 ### [M-5] 并发写保护只覆盖了 2/3 的存储域 — ✅ 已修复（2026-09-27，🟢 收敛）
 

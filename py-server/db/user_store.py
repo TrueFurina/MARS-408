@@ -312,95 +312,36 @@ def set_password(username: str, password: str) -> bool:
 
 # ── 每用户画像 ──
 
-def save_profile(user_id: str, profile: dict):
-    conn = _get_conn()
-    with _lock:
-        conn.execute(
-            "INSERT INTO user_profiles (user_id, profile_json, updated_at) VALUES (?,?,?) "
-            "ON CONFLICT(user_id) DO UPDATE SET profile_json=excluded.profile_json, updated_at=excluded.updated_at",
-            (user_id, json.dumps(profile, ensure_ascii=False), _now()),
-        )
-        conn.commit()
+# ── 画像域（M-4 ② 已迁出至 db/profile_store.py）──
+# 这里用 PEP 562 动态委托而不是 `from db.profile_store import x`：
+#   1) 静态 import 会在本模块绑定一份对象快照 —— M-2 在 services/user_service
+#      踩过：此后对 profile_store 的 monkeypatch / 打桩全部静默失效；
+#   2) 显式 import 8 个符号但本模块只用得到 get_profile，会命中 ruff F401，
+#      而用 noqa 压制是本项目明确不做的事。
+# 动态转发同时解决两点：既有 `from db.user_store import get_profile` 照常可用，
+# 且解析发生在访问时（穿透到真值源）。
+_DELEGATED_TO_PROFILE_STORE = frozenset({
+    "save_profile",
+    "get_profile",
+    "append_quiz_history",
+    "get_quiz_history",
+    "save_conversations",
+    "get_conversations",
+    "save_profile_snapshot",
+    "get_profile_snapshots",
+})
 
 
-def get_profile(user_id: str) -> Optional[dict]:
-    with _lock:
-        conn = _get_conn()
-        row = conn.execute("SELECT profile_json FROM user_profiles WHERE user_id=?", (user_id,)).fetchone()
-        if not row:
-            return None
-        try:
-            return json.loads(row["profile_json"])
-        except Exception:
-            return None
+def __getattr__(name: str):
+    """把画像域符号动态委托到 db.profile_store（单一真值源）。"""
+    if name in _DELEGATED_TO_PROFILE_STORE:
+        from db import profile_store
+        return getattr(profile_store, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
-# ── 每用户答题历史 ──
-
-def append_quiz_history(user_id: str, records: list[dict]):
-    if not records:
-        return
-    conn = _get_conn()
-    now = _now()
-    rows = [
-        (user_id, r.get("subject", ""), 1 if r.get("correct") else 0, r.get("difficulty", "medium"), r.get("timestamp") or now)
-        for r in records
-    ]
-    with _lock:
-        conn.executemany(
-            "INSERT INTO user_quiz_history (user_id, subject, correct, difficulty, timestamp) VALUES (?,?,?,?,?)",
-            rows,
-        )
-        conn.commit()
-
-
-def get_quiz_history(user_id: str) -> list[dict]:
-    with _lock:
-        conn = _get_conn()
-        rows = conn.execute(
-            "SELECT subject, correct, difficulty, timestamp FROM user_quiz_history WHERE user_id=? ORDER BY id", (user_id,)
-        ).fetchall()
-        return [
-            {"subject": r["subject"], "correct": bool(r["correct"]), "difficulty": r["difficulty"], "timestamp": r["timestamp"]}
-            for r in rows
-        ]
-
-
-# ── 每用户对话 ──
-
-def save_conversations(user_id: str, conversations: list[dict]):
-    if not conversations:
-        return
-    conn = _get_conn()
-    now = _now()
-    with _lock:
-        for c in conversations:
-            conn.execute(
-                "INSERT INTO user_conversations (user_id, conv_id, title, messages_json, updated_at) VALUES (?,?,?,?,?) "
-                "ON CONFLICT(user_id, conv_id) DO UPDATE SET title=excluded.title, messages_json=excluded.messages_json, updated_at=excluded.updated_at",
-                (user_id, c.get("id"), c.get("title", ""), json.dumps(c.get("messages", []), ensure_ascii=False), now),
-            )
-        conn.commit()
-
-
-def get_conversations(user_id: str) -> list[dict]:
-    with _lock:
-        conn = _get_conn()
-        rows = conn.execute(
-            "SELECT conv_id, title, messages_json, updated_at FROM user_conversations WHERE user_id=?", (user_id,)
-        ).fetchall()
-        out = []
-        for r in rows:
-            try:
-                msgs = json.loads(r["messages_json"])
-            except Exception:
-                msgs = []
-            out.append({"id": r["conv_id"], "title": r["title"], "messages": msgs, "updated_at": r["updated_at"]})
-        return out
-
-
-# ── 管理员聚合 ──
-
+def __dir__():
+    return sorted(set(globals()) | _DELEGATED_TO_PROFILE_STORE)
 def list_all_users() -> list[dict]:
     """返回所有用户及其画像/答题/对话统计（供管理员看板）— 批量查询优化"""
     with _lock:
@@ -526,45 +467,6 @@ def get_platform_stats() -> dict:
 
 
 # ── 画像快照（历史对比） ──
-
-
-def save_profile_snapshot(user_id: str, profile: dict) -> int:
-    """保存当前画像快照"""
-    import json
-    with _lock:
-        conn = _get_conn()
-        now = _now()
-        cursor = conn.execute(
-            "INSERT INTO profile_snapshots (user_id, snapshot_json, created_at) VALUES (?, ?, ?)",
-            (user_id, json.dumps(profile, ensure_ascii=False), now),
-        )
-        conn.commit()
-        return cursor.lastrowid or 0
-
-
-def get_profile_snapshots(user_id: str, limit: int = 10) -> list[dict]:
-    """获取画像快照历史"""
-    import json
-    with _lock:
-        rows = _get_conn().execute(
-            "SELECT id, snapshot_json, created_at FROM profile_snapshots WHERE user_id=? ORDER BY created_at DESC LIMIT ?",
-            (user_id, limit),
-        ).fetchall()
-    results = []
-    for r in rows:
-        try:
-            snapshot = json.loads(r["snapshot_json"])
-        except (json.JSONDecodeError, TypeError):
-            snapshot = {}
-        results.append({
-            "id": r["id"],
-            "snapshot": snapshot,
-            "created_at": r["created_at"],
-        })
-    return results
-
-
-# ── 班级作业（快照 + 提交） ──
 
 
 def create_assignment(

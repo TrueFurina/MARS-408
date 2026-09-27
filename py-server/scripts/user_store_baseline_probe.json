@@ -1,0 +1,744 @@
+{
+ "add_wrong_question": {
+  "ok": true,
+  "value": {
+   "attribution": {},
+   "chapter": "",
+   "correct_answer": "",
+   "error_type": "concept",
+   "first_wrong_at": "<TS>",
+   "id": 1,
+   "knowledge_point": "",
+   "last_wrong_at": "<TS>",
+   "mastered": false,
+   "next_review_at": "<TS>",
+   "question": {
+    "id": "q1",
+    "text": "probe?"
+   },
+   "question_id": "q1",
+   "review_history": [],
+   "review_stage": 0,
+   "subject": "",
+   "wrong_answer": "B",
+   "wrong_count": 1
+  }
+ },
+ "append_quiz_history": {
+  "ok": true,
+  "value": null
+ },
+ "authenticate_after_set_password": {
+  "ok": true,
+  "value": true
+ },
+ "authenticate_bad_pwd": {
+  "ok": true,
+  "value": null
+ },
+ "authenticate_ok": {
+  "ok": true,
+  "value": {
+   "created_at": "<TS>",
+   "display_name": "Probe User",
+   "id": "<UID>",
+   "role": "student",
+   "username": "probe_u1"
+  }
+ },
+ "constants": {
+  "ok": true,
+  "value": {
+   "MIN_PASSWORD_LENGTH": 8,
+   "PBKDF2_ITERATIONS": 600000,
+   "public_symbols": [
+    "MIN_PASSWORD_LENGTH",
+    "Optional",
+    "PBKDF2_ITERATIONS",
+    "add_wrong_question",
+    "append_quiz_history",
+    "authenticate",
+    "compute_initial_review",
+    "create_assignment",
+    "create_user",
+    "datetime",
+    "delete_learning_resource",
+    "delete_wrong_question",
+    "ensure_admin",
+    "get_assignment",
+    "get_conversations",
+    "get_db_conn",
+    "get_due_reviews",
+    "get_error_profile",
+    "get_learning_resource",
+    "get_or_create_daily_plan",
+    "get_platform_stats",
+    "get_profile",
+    "get_profile_snapshots",
+    "get_quiz_history",
+    "get_submission",
+    "get_user_by_id",
+    "get_user_by_username",
+    "get_wrong_question",
+    "get_wrong_question_owner",
+    "get_wrong_question_stats",
+    "hashlib",
+    "hmac",
+    "is_due",
+    "json",
+    "list_all_users",
+    "list_assignments",
+    "list_daily_plans",
+    "list_learning_resources",
+    "list_wrong_questions",
+    "logger",
+    "logging",
+    "mark_wrong_question_mastered",
+    "record_review",
+    "register_learning_resource",
+    "reset_daily_plan",
+    "save_conversations",
+    "save_profile",
+    "save_profile_snapshot",
+    "schedule_after_review",
+    "secrets",
+    "set_password",
+    "sqlite3",
+    "submit_assignment",
+    "timedelta",
+    "update_daily_plan_task"
+   ]
+  }
+ },
+ "create_assignment": {
+  "ok": true,
+  "value": {
+   "chapter": "ch1",
+   "created_at": "<TS>",
+   "created_by": "<UID>",
+   "deadline": "<TS>",
+   "id": 1,
+   "knowledge_points": [],
+   "quiz_snapshot": [],
+   "stats": {
+    "avg_score": 0.0,
+    "pass_rate": 0.0,
+    "student_count": 1,
+    "submission_rate": 0.0,
+    "submitted_count": 0
+   },
+   "subject": "ds",
+   "title": "probe assignment"
+  }
+ },
+ "create_user": {
+  "ok": true,
+  "value": {
+   "created_at": "<TS>",
+   "display_name": "Probe User",
+   "id": "<UID>",
+   "role": "student",
+   "username": "probe_u1"
+  }
+ },
+ "delete_learning_resource": {
+  "ok": true,
+  "value": true
+ },
+ "delete_wrong_question": {
+  "ok": true,
+  "value": true
+ },
+ "ensure_admin": {
+  "ok": true,
+  "value": null
+ },
+ "get_assignment": {
+  "ok": true,
+  "value": {
+   "chapter": "ch1",
+   "created_at": "<TS>",
+   "created_by": "<UID>",
+   "deadline": "<TS>",
+   "id": 1,
+   "knowledge_points": [],
+   "quiz_snapshot": [],
+   "stats": {
+    "avg_score": 0.0,
+    "pass_rate": 0.0,
+    "student_count": 1,
+    "submission_rate": 0.0,
+    "submitted_count": 0
+   },
+   "subject": "ds",
+   "title": "probe assignment"
+  }
+ },
+ "get_conversations": {
+  "ok": true,
+  "value": [
+   {
+    "id": "c1",
+    "messages": [],
+    "title": "t",
+    "updated_at": "<TS>"
+   }
+  ]
+ },
+ "get_due_reviews": {
+  "ok": true,
+  "value": 0
+ },
+ "get_error_profile": {
+  "ok": true,
+  "value": {
+   "attribution_source": {
+    "llm": 0,
+    "rule_fallback": 0
+   },
+   "error_type_distribution": [
+    {
+     "count": 1,
+     "label": "概念混淆",
+     "type": "concept"
+    }
+   ],
+   "top_knowledge_points": [],
+   "total": 1
+  }
+ },
+ "get_learning_resource": {
+  "ok": true,
+  "value": {
+   "content": {
+    "body": "x"
+   },
+   "created_at": "<TS>",
+   "id": 1,
+   "owner_user_id": "<UID>",
+   "quality_score": null,
+   "resource_type": "reading_material",
+   "status": "active",
+   "title": "probe title",
+   "version": 1,
+   "visibility": "private"
+  }
+ },
+ "get_or_create_daily_plan": {
+  "ok": true,
+  "value": {
+   "completed_tasks": 0,
+   "completion_rate": 0.0,
+   "created_at": "<TS>",
+   "id": 1,
+   "plan_date": "2026-09-27",
+   "target_exam_date": "",
+   "target_score": 0,
+   "tasks": [
+    {
+     "chapter": "",
+     "completed": false,
+     "estimated_minutes": 30,
+     "id": "review_wrong",
+     "progress": 0,
+     "subject": "综合",
+     "title": "复习昨日错题",
+     "type": "wrong_review"
+    },
+    {
+     "chapter": "",
+     "completed": false,
+     "estimated_minutes": 60,
+     "id": "ds_chapter",
+     "progress": 0,
+     "subject": "数据结构",
+     "title": "数据结构知识点学习",
+     "type": "study"
+    },
+    {
+     "chapter": "",
+     "completed": false,
+     "estimated_minutes": 60,
+     "id": "co_chapter",
+     "progress": 0,
+     "subject": "计算机组成原理",
+     "title": "计算机组成原理知识点学习",
+     "type": "study"
+    },
+    {
+     "chapter": "",
+     "completed": false,
+     "estimated_minutes": 60,
+     "id": "os_chapter",
+     "progress": 0,
+     "subject": "操作系统",
+     "title": "操作系统知识点学习",
+     "type": "study"
+    },
+    {
+     "chapter": "",
+     "completed": false,
+     "estimated_minutes": 60,
+     "id": "cn_chapter",
+     "progress": 0,
+     "subject": "计算机网络",
+     "title": "计算机网络知识点学习",
+     "type": "study"
+    },
+    {
+     "chapter": "",
+     "completed": false,
+     "estimated_minutes": 90,
+     "id": "practice",
+     "progress": 0,
+     "subject": "综合",
+     "title": "对应章节习题练习",
+     "type": "practice"
+    },
+    {
+     "chapter": "",
+     "completed": false,
+     "estimated_minutes": 30,
+     "id": "summary",
+     "progress": 0,
+     "subject": "综合",
+     "title": "今日知识点总结+笔记整理",
+     "type": "summary"
+    }
+   ],
+   "total_tasks": 7,
+   "updated_at": "<TS>"
+  }
+ },
+ "get_platform_stats": {
+  "ok": true,
+  "value": {
+   "active_users": 1,
+   "admin_count": 1,
+   "by_subject": {
+    "ds": {
+     "accuracy": 1.0,
+     "correct": 1,
+     "total": 1
+    }
+   },
+   "correct_quiz": 1,
+   "daily_quiz": [
+    {
+     "count": 0,
+     "date": "2026-09-21"
+    },
+    {
+     "count": 0,
+     "date": "2026-09-22"
+    },
+    {
+     "count": 0,
+     "date": "2026-09-23"
+    },
+    {
+     "count": 0,
+     "date": "2026-09-24"
+    },
+    {
+     "count": 0,
+     "date": "2026-09-25"
+    },
+    {
+     "count": 0,
+     "date": "2026-09-26"
+    },
+    {
+     "count": 1,
+     "date": "2026-09-27"
+    }
+   ],
+   "overall_accuracy": 1.0,
+   "student_count": 1,
+   "total_quiz": 1,
+   "user_count": 2
+  }
+ },
+ "get_profile": {
+  "ok": true,
+  "value": {
+   "dim": {
+    "konwledge": 0.4
+   },
+   "note": "probe"
+  }
+ },
+ "get_profile_snapshots": {
+  "ok": true,
+  "value": [
+   {
+    "created_at": "<TS>",
+    "id": 1,
+    "snapshot": {
+     "dim": {
+      "a": 1
+     }
+    }
+   }
+  ]
+ },
+ "get_quiz_history": {
+  "ok": true,
+  "value": [
+   {
+    "correct": true,
+    "difficulty": "easy",
+    "subject": "ds",
+    "timestamp": "<TS>"
+   }
+  ]
+ },
+ "get_submission": {
+  "ok": true,
+  "value": {
+   "answers": [
+    {
+     "a": "A",
+     "q": 1
+    }
+   ],
+   "assignment_id": 1,
+   "id": 1,
+   "score": 88.0,
+   "submitted_at": "<TS>",
+   "user_id": "<UID>"
+  }
+ },
+ "get_user_by_id": {
+  "ok": true,
+  "value": {
+   "created_at": "<TS>",
+   "display_name": "Probe User",
+   "id": "<UID>",
+   "role": "student",
+   "username": "probe_u1"
+  }
+ },
+ "get_user_by_username": {
+  "ok": true,
+  "value": true
+ },
+ "get_wrong_question": {
+  "ok": true,
+  "value": {
+   "attribution": {},
+   "chapter": "",
+   "correct_answer": "",
+   "error_type": "concept",
+   "first_wrong_at": "<TS>",
+   "id": 1,
+   "knowledge_point": "",
+   "last_wrong_at": "<TS>",
+   "mastered": false,
+   "next_review_at": "<TS>",
+   "question": {
+    "id": "q1",
+    "text": "probe?"
+   },
+   "question_id": "q1",
+   "review_history": [],
+   "review_stage": 0,
+   "subject": "",
+   "wrong_answer": "B",
+   "wrong_count": 1
+  }
+ },
+ "get_wrong_question_owner": {
+  "ok": true,
+  "value": "<UID>"
+ },
+ "get_wrong_question_stats": {
+  "ok": true,
+  "value": {
+   "error_type_distribution": [
+    {
+     "count": 1,
+     "type": "concept"
+    }
+   ],
+   "mastered": 0,
+   "mastery_rate": 0.0,
+   "subject_distribution": [
+    {
+     "count": 1,
+     "mastered": 0,
+     "subject": ""
+    }
+   ],
+   "total": 1,
+   "unmastered": 1
+  }
+ },
+ "list_all_users": {
+  "ok": true,
+  "value": [
+   {
+    "by_subject": {
+     "ds": {
+      "accuracy": 1.0,
+      "correct": 1,
+      "total": 1
+     }
+    },
+    "conversation_count": 1,
+    "created_at": "<TS>",
+    "display_name": "Probe User",
+    "id": "<UID>",
+    "profile": {
+     "dim": {
+      "konwledge": 0.4
+     },
+     "note": "probe"
+    },
+    "quiz_accuracy": 1.0,
+    "quiz_correct": 1,
+    "quiz_total": 1,
+    "role": "student",
+    "username": "probe_u1"
+   },
+   {
+    "by_subject": {},
+    "conversation_count": 0,
+    "created_at": "<TS>",
+    "display_name": "系统管理员",
+    "id": "<UID>",
+    "profile": {},
+    "quiz_accuracy": 0.0,
+    "quiz_correct": 0,
+    "quiz_total": 0,
+    "role": "admin",
+    "username": "probe_admin"
+   }
+  ]
+ },
+ "list_assignments": {
+  "ok": true,
+  "value": [
+   {
+    "chapter": "ch1",
+    "created_at": "<TS>",
+    "created_by": "<UID>",
+    "deadline": "<TS>",
+    "id": 1,
+    "knowledge_points": [],
+    "quiz_snapshot": [],
+    "stats": {
+     "avg_score": 0.0,
+     "pass_rate": 0.0,
+     "student_count": 1,
+     "submission_rate": 0.0,
+     "submitted_count": 0
+    },
+    "subject": "ds",
+    "title": "probe assignment"
+   }
+  ]
+ },
+ "list_daily_plans": {
+  "ok": true,
+  "value": [
+   {
+    "completed_tasks": 0,
+    "completion_rate": 0.0,
+    "id": 1,
+    "plan_date": "2026-09-27",
+    "target_exam_date": "",
+    "target_score": 0,
+    "tasks": [
+     {
+      "chapter": "",
+      "completed": false,
+      "estimated_minutes": 30,
+      "id": "review_wrong",
+      "progress": 0,
+      "subject": "综合",
+      "title": "复习昨日错题",
+      "type": "wrong_review"
+     },
+     {
+      "chapter": "",
+      "completed": false,
+      "estimated_minutes": 60,
+      "id": "ds_chapter",
+      "progress": 0,
+      "subject": "数据结构",
+      "title": "数据结构知识点学习",
+      "type": "study"
+     },
+     {
+      "chapter": "",
+      "completed": false,
+      "estimated_minutes": 60,
+      "id": "co_chapter",
+      "progress": 0,
+      "subject": "计算机组成原理",
+      "title": "计算机组成原理知识点学习",
+      "type": "study"
+     },
+     {
+      "chapter": "",
+      "completed": false,
+      "estimated_minutes": 60,
+      "id": "os_chapter",
+      "progress": 0,
+      "subject": "操作系统",
+      "title": "操作系统知识点学习",
+      "type": "study"
+     },
+     {
+      "chapter": "",
+      "completed": false,
+      "estimated_minutes": 60,
+      "id": "cn_chapter",
+      "progress": 0,
+      "subject": "计算机网络",
+      "title": "计算机网络知识点学习",
+      "type": "study"
+     },
+     {
+      "chapter": "",
+      "completed": false,
+      "estimated_minutes": 90,
+      "id": "practice",
+      "progress": 0,
+      "subject": "综合",
+      "title": "对应章节习题练习",
+      "type": "practice"
+     },
+     {
+      "chapter": "",
+      "completed": false,
+      "estimated_minutes": 30,
+      "id": "summary",
+      "progress": 0,
+      "subject": "综合",
+      "title": "今日知识点总结+笔记整理",
+      "type": "summary"
+     }
+    ],
+    "total_tasks": 7
+   }
+  ]
+ },
+ "list_learning_resources": {
+  "ok": true,
+  "value": [
+   {
+    "content": {
+     "body": "x"
+    },
+    "created_at": "<TS>",
+    "id": 1,
+    "owner_user_id": "<UID>",
+    "quality_score": null,
+    "resource_type": "reading_material",
+    "status": "active",
+    "title": "probe title",
+    "version": 1,
+    "visibility": "private"
+   }
+  ]
+ },
+ "list_wrong_questions": {
+  "ok": true,
+  "value": {
+   "items": [
+    {
+     "attribution": {},
+     "chapter": "",
+     "correct_answer": "",
+     "error_type": "concept",
+     "first_wrong_at": "<TS>",
+     "id": 1,
+     "knowledge_point": "",
+     "last_wrong_at": "<TS>",
+     "mastered": false,
+     "next_review_at": "<TS>",
+     "question": {
+      "id": "q1",
+      "text": "probe?"
+     },
+     "question_id": "q1",
+     "review_history": [
+      {
+       "at": "<TS>",
+       "recalled": true,
+       "stage_after": 1
+      }
+     ],
+     "review_stage": 1,
+     "subject": "",
+     "wrong_answer": "B",
+     "wrong_count": 1
+    }
+   ],
+   "page": 1,
+   "page_size": 20,
+   "total": 1
+  }
+ },
+ "mark_wrong_question_mastered": {
+  "ok": true,
+  "value": true
+ },
+ "record_review": {
+  "ok": true,
+  "value": true
+ },
+ "register_learning_resource": {
+  "ok": true,
+  "value": {
+   "content": {
+    "body": "x"
+   },
+   "created_at": "<TS>",
+   "id": 1,
+   "owner_user_id": "<UID>",
+   "quality_score": null,
+   "resource_type": "reading_material",
+   "status": "active",
+   "title": "probe title",
+   "version": 1,
+   "visibility": "private"
+  }
+ },
+ "reset_daily_plan": {
+  "ok": true,
+  "value": true
+ },
+ "save_conversations": {
+  "ok": true,
+  "value": null
+ },
+ "save_profile": {
+  "ok": true,
+  "value": null
+ },
+ "save_profile_snapshot": {
+  "ok": true,
+  "value": true
+ },
+ "set_password": {
+  "ok": true,
+  "value": true
+ },
+ "submit_assignment": {
+  "ok": true,
+  "value": {
+   "assignment_id": 1,
+   "id": 1,
+   "score": 88.0,
+   "submitted_at": "<TS>",
+   "user_id": "<UID>"
+  }
+ },
+ "update_daily_plan_task": {
+  "ok": true,
+  "value": null
+ }
+}
