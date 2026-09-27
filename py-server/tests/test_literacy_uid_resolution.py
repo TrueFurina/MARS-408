@@ -13,7 +13,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-# 与同目录其他 literacy 测试一致的测试库隔离（本文件全程 mock _get_conn，不会真正落盘）
+# 与同目录其他 literacy 测试一致的测试库隔离（本文件全程 mock db.literacy_store._get_conn，不会真正落盘）
+# M-1 后存储已下沉至 db 层：mock 目标由 api.literacy_assessment._get_conn 改为 db.literacy_store._get_conn
 os.environ.setdefault(
     "NETLEARN_LITERACY_DB",
     os.path.join(os.path.dirname(__file__), "_test_literacy_uid.db"),
@@ -67,8 +68,8 @@ async def test_submit_literacy_uses_body_uid_not_demo_token():
         phase="pre",
         answers=[{"qid": q["id"], "option_index": 0} for q in QUESTION_BANK],
     )
-    with patch("api.literacy_assessment._get_conn", return_value=fake_conn), patch(
-        "api.literacy_assessment._lock", fake_lock
+    with patch("db.literacy_store._get_conn", return_value=fake_conn), patch(
+        "db.literacy_store._lock", fake_lock
     ):
         await submit_literacy(req, "Bearer demo")  # token=demo 不应覆盖 body
 
@@ -94,8 +95,8 @@ async def test_submit_literacy_uses_token_uid_when_body_empty():
         phase="post",
         answers=[{"qid": q["id"], "option_index": 1} for q in QUESTION_BANK],
     )
-    with patch("api.literacy_assessment._get_conn", return_value=fake_conn), patch(
-        "api.literacy_assessment._lock", fake_lock
+    with patch("db.literacy_store._get_conn", return_value=fake_conn), patch(
+        "db.literacy_store._lock", fake_lock
     ), patch("shared.auth.verify_token", return_value={"sub": "tok-user"}):
         await submit_literacy(req, "Bearer tok-abc")
 
