@@ -236,7 +236,7 @@ footer a:hover{color:var(--orange2)}
 
     <p>职业素养——技术判断的边界、对证据的尊重、在被追问时守住结论的能力——很难靠一次性讲授形成。「芒得很职」把这套训练放进一个可以多轮运行的对抗环境：学生在真实技术语境中完成任务、接受质疑、被要求举证，系统记录全过程并给出可回看的评价依据。</p>
 
-    <p>平台基于 MARS-408 多智能体底座，由 <strong>11</strong> 个职责分离的 LangGraph 节点协同驱动，覆盖问题受理、学情诊断、路径规划、生成、评核与质量把关的完整链路；前端 <strong>45</strong> 个视图把诊断、实训、复盘与证据回看组织成一条连贯的教学动线，后端以 Python FastAPI 提供约 <strong>240</strong> 个 API 端点。</p>
+    <p>平台基于 MARS-408 多智能体底座，由 <strong>11</strong> 个职责分离的 LangGraph 节点协同驱动，覆盖问题受理、学情诊断、路径规划、生成、评核与质量把关的完整链路；前端 <strong>约 45</strong> 个视图把诊断、实训、复盘与证据回看组织成一条连贯的教学动线，后端以 Python FastAPI 提供约 <strong>240</strong> 个 API 端点。</p>
 
     <p>我们的工程原则只有一条：<strong>每一个对外宣称的能力，都必须能被一组可复跑的脚本与一份留存的实验结果文件追溯到源头。</strong>本页所有数字均标注了出处与口径；没有达到显著性的结论，我们同样标注出来。</p>
 
@@ -395,6 +395,7 @@ footer a:hover{color:var(--orange2)}
       <span class="tag">边界声明</span>
       需要明确边界：以上均为<strong>离线工程指标</strong>，本项目尚未提供真实课堂环境下的教学增益证据，任何「提升学习效果」的表述都不被本站采用。
     </div>
+    <p class="src-note">口径说明：FrugalRAG 与 NeuralMixer 的对比数据来自 <span class="mono">py-server/experiments/results/benchmark_2026-09-18.json</span>（28 查询标准口径）；回归测试数字来自 pytest 全量报告。架构类计数（节点 / 视图 / API / 向量 / 知识图谱）为当前代码实测或近似值，随代码演进可能变动，不单独作为实验结论。</p>
   </div>
 </section>
 
