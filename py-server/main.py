@@ -37,7 +37,7 @@ app = FastAPI(
     title="MARS-408 — 基于 GOMARL 与 FrugalRAG 的 408 考研个性化学习系统",
     description="MARS-408 408 考研个性化学习多智能体系统。\n\n"
                 "## 核心架构\n"
-                "- 13 个智能体 / 10 节点 LangGraph 多智能体流水线（含 evidence_check 证据校验 + quality_gate 产物验收闸门）\n"
+                "- 13 个智能体 / 11 节点 LangGraph 多智能体流水线（含 evidence_check 证据校验 + quality_gate 产物验收闸门）\n"
                 "- GOMARL 共识引擎（NeuralMixer 神经网络加权融合）\n"
                 "- FrugalRAG 检索增强生成（E5 + BM25 + 个性化重排）\n"
                 "- 7 种学习资源并行生成\n\n"
