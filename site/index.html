@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MARS-408 · 考研多智能体个性化学习系统</title>
-<meta name="description" content="MARS-408：10-Agent LangGraph 流水线 + FrugalRAG 省油检索 + GoMARL 共识反幻觉的 408 考研多智能体个性化学习系统。2026 福建高校火山杯参赛作品。">
+<title>芒得很职 · 职业素养对抗实训平台（技术底座 MARS-408）</title>
+<meta name="description" content="芒得很职：基于 MARS-408 多智能体底座的职业素养对抗实训平台，11 个 LangGraph 节点、45 个前端视图、约 240 个 API 端点，所有宣称均可追溯到可复跑脚本与留存实验结果文件。">
 <style>
 :root{
   --bg:#07090f;--bg2:#0d1117;--panel:rgba(255,255,255,.035);
@@ -13,12 +13,16 @@
   --grad:linear-gradient(90deg,#ff7a18,#ffb347 45%,#4d9fff);
 }
 *{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth;scroll-padding-top:84px}
 body{background:var(--bg);color:var(--fg);font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;line-height:1.75;overflow-x:hidden}
 ::selection{background:rgba(255,122,24,.35)}
 a{color:var(--blue);text-decoration:none}
 a:hover{text-decoration:underline}
 .wrap{max-width:1120px;margin:0 auto;padding:0 28px}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.86em;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:5px;padding:1px 5px;word-break:break-all}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9em}
+pre{background:#0b0f17;color:#e8ecf2;border:1px solid var(--border);border-radius:12px;padding:16px 18px;overflow-x:auto;font-size:.84rem;line-height:1.7;margin:14px 0}
+pre code{background:none;border:none;padding:0;color:inherit;word-break:normal;white-space:pre}
 
 /* ---------- 背景光晕 ---------- */
 body::before{content:"";position:fixed;inset:0;z-index:-2;background:
@@ -32,8 +36,18 @@ body::after{content:"";position:fixed;inset:0;z-index:-1;opacity:.5;pointer-even
   -webkit-mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,#000 30%,transparent 75%);
   mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,#000 30%,transparent 75%)}
 
+/* ---------- 吸顶导航 ---------- */
+.topbar{position:sticky;top:0;z-index:50;background:rgba(7,9,15,.82);border-bottom:1px solid var(--border);backdrop-filter:blur(10px)}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:60px;flex-wrap:wrap;padding-top:8px;padding-bottom:8px}
+.brand{font-size:15px;font-weight:800;color:var(--fg);white-space:nowrap}
+.brand span{display:block;font-size:12px;font-weight:500;color:var(--dim);letter-spacing:.02em}
+.topbar nav ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:2px}
+.topbar nav a{display:inline-block;padding:6px 10px;border-radius:6px;font-size:13px;color:var(--dim);white-space:nowrap}
+.topbar nav a:hover{background:rgba(255,122,24,.1);color:var(--orange2);text-decoration:none}
+.topbar nav .num{color:var(--orange2);font-variant-numeric:tabular-nums;margin-right:5px}
+
 /* ---------- Hero ---------- */
-.hero{min-height:92vh;display:flex;align-items:center;padding:90px 0 60px;position:relative}
+.hero{min-height:90vh;display:flex;align-items:center;padding:80px 0 60px;position:relative}
 .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:56px;align-items:center}
 .pill{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,122,24,.45);background:rgba(255,122,24,.08);
   border-radius:999px;padding:6px 18px;font-size:.86rem;color:var(--orange2);margin-bottom:26px;backdrop-filter:blur(6px)}
@@ -54,7 +68,7 @@ h1{font-size:clamp(2.2rem,5.2vw,3.6rem);line-height:1.18;font-weight:800;letter-
 .hero-visual{position:relative}
 .node-graph{background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:26px;backdrop-filter:blur(10px)}
 .node-graph .title{font-size:.8rem;color:var(--dim);letter-spacing:.12em;margin-bottom:16px;text-transform:uppercase}
-.flow-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.flow-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
 .node{border:1px solid var(--border);background:rgba(255,255,255,.05);border-radius:10px;padding:8px 13px;font-size:.82rem;white-space:nowrap;color:var(--dim)}
 .node.hot{border-color:rgba(255,122,24,.6);color:var(--orange2);background:rgba(255,122,24,.1);box-shadow:0 0 18px rgba(255,122,24,.18)}
 .node.cool{border-color:rgba(77,159,255,.5);color:var(--blue);background:rgba(77,159,255,.09)}
@@ -66,22 +80,28 @@ h1{font-size:clamp(2.2rem,5.2vw,3.6rem);line-height:1.18;font-weight:800;letter-
 .mini .k{font-size:.72rem;color:var(--dim);margin-top:2px}
 
 /* ---------- 通用 section ---------- */
-section{padding:96px 0}
+main section{padding:84px 0;border-bottom:1px solid var(--border)}
+main section:last-of-type{border-bottom:none}
 .sec-tag{display:inline-block;font-size:.8rem;letter-spacing:.18em;text-transform:uppercase;color:var(--orange2);margin-bottom:12px}
 h2{font-size:clamp(1.6rem,3.4vw,2.3rem);font-weight:800;letter-spacing:-.02em;margin-bottom:14px}
-.sec-sub{color:var(--dim);max-width:640px;margin-bottom:44px}
+.subtitle{color:var(--dim);font-size:1.05rem;max-width:680px;margin-bottom:40px}
+p{margin:0 0 15px}
+p:last-child{margin-bottom:0}
+h3{font-size:1.12rem;margin:30px 0 10px;font-weight:700;color:var(--fg)}
+strong{font-weight:700;color:var(--fg)}
 
-/* ---------- 痛点 ---------- */
-.pain-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px}
-.card{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:28px;backdrop-filter:blur(10px);transition:transform .25s,border-color .25s,box-shadow .25s}
+/* ---------- 卡片 / 数据条 ---------- */
+.card{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:28px;backdrop-filter:blur(10px);transition:transform .25s,border-color .25s,box-shadow .25s;margin:18px 0}
 .card:hover{transform:translateY(-4px);border-color:rgba(255,122,24,.35);box-shadow:0 16px 40px rgba(0,0,0,.4)}
-.card .ico{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;margin-bottom:16px;background:rgba(255,122,24,.12);border:1px solid rgba(255,122,24,.3)}
-.card h3{font-size:1.08rem;margin-bottom:8px}
-.card p{color:var(--dim);font-size:.93rem}
+.card-title{font-size:.8rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--orange2);margin:0 0 18px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin:24px 0}
+.stat{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px 16px;backdrop-filter:blur(8px)}
+.stat b{display:block;font-size:1.8rem;font-weight:800;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;font-variant-numeric:tabular-nums}
+.stat span{display:block;font-size:.82rem;color:var(--dim);margin-top:4px}
 
 /* ---------- 流水线 ---------- */
 .pipeline-wrap{background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:34px;backdrop-filter:blur(10px);overflow-x:auto}
-.pl-row{display:flex;align-items:center;gap:6px;min-width:900px;flex-wrap:nowrap}
+.pl-row{display:flex;align-items:center;gap:6px;min-width:760px;flex-wrap:nowrap}
 .pl-node{flex:0 0 auto;text-align:center;padding:12px 14px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,.04);min-width:104px}
 .pl-node .nm{font-size:.85rem;font-weight:600}
 .pl-node .rl{font-size:.7rem;color:var(--dim);margin-top:3px}
@@ -89,29 +109,36 @@ h2{font-size:clamp(1.6rem,3.4vw,2.3rem);font-weight:800;letter-spacing:-.02em;ma
 .pl-node.g2{border-color:rgba(61,220,132,.55);background:rgba(61,220,132,.07)}
 .pl-node.g3{border-color:rgba(77,159,255,.55);background:rgba(77,159,255,.08)}
 .pl-arrow{flex:0 0 auto;color:rgba(255,255,255,.28);font-size:.85rem}
-.gate-labels{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
-.gate-chip{font-size:.78rem;color:var(--dim);border:1px solid var(--border);border-radius:999px;padding:4px 14px}
-.gate-chip b{color:var(--fg)}
 
-/* ---------- 指标 ---------- */
-.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px}
-.metric{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:28px 20px;text-align:center;backdrop-filter:blur(10px);transition:transform .25s,border-color .25s}
-.metric:hover{transform:translateY(-4px);border-color:rgba(77,159,255,.4)}
-.metric .v{font-size:2.3rem;font-weight:800;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
-.metric .k{color:var(--dim);font-size:.88rem;margin-top:6px}
-.src-note{margin-top:24px;color:var(--dim);font-size:.82rem;border-left:2px solid rgba(255,122,24,.4);padding-left:14px}
+/* ---------- note / warn（文字边框效果） ---------- */
+.note,.warn{border-radius:12px;padding:16px 18px;margin:18px 0;font-size:.92rem;line-height:1.85;border:1px solid var(--border)}
+.note{background:rgba(61,220,132,.06);border-left:4px solid var(--green)}
+.warn{background:rgba(255,179,71,.06);border-left:4px solid var(--orange2)}
+.note .tag,.warn .tag{display:inline-block;font-size:.8rem;font-weight:800;margin-right:8px}
+.note .tag{color:var(--green)}
+.warn .tag{color:var(--orange2)}
 
-/* ---------- Token 成本 ---------- */
-.tok-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
-.tok{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:26px;backdrop-filter:blur(10px)}
-.tok .big{font-size:1.5rem;font-weight:800;color:var(--orange2)}
-.tok p{color:var(--dim);font-size:.9rem;margin-top:8px}
-.tok.hl{border-color:rgba(255,122,24,.45);background:linear-gradient(160deg,rgba(255,122,24,.1),rgba(255,122,24,.03))}
+/* ---------- 指标 / 证据 ---------- */
+.metrics{list-style:none;margin:12px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+.metrics li{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:.9rem;color:var(--dim)}
+.metrics li b{font-variant-numeric:tabular-nums;color:var(--fg)}
+.src-note{margin-top:24px;color:var(--dim);font-size:.82rem;border-left:2px solid rgba(255,122,24,.4);padding-left:14px;line-height:1.8}
 
-/* ---------- CTA 尾部 ---------- */
+/* ---------- figure（图片内嵌图文卡） ---------- */
+figure{margin:26px 0;background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:14px;backdrop-filter:blur(8px)}
+figure img{display:block;width:100%;height:auto;border-radius:8px;border:1px solid var(--border);background:#fff}
+figcaption{font-size:.84rem;color:var(--dim);line-height:1.7;padding-top:12px}
+
+/* ---------- 步骤 ---------- */
+ol.steps{margin:16px 0 0;padding-left:22px}
+ol.steps li{margin-bottom:12px;font-size:.95rem;color:var(--dim)}
+ol.steps li::marker{font-weight:800;color:var(--orange2)}
+ol.steps li strong{color:var(--fg)}
+
+/* ---------- 尾部 CTA ---------- */
 .final-cta{padding:110px 0;text-align:center;position:relative}
 .final-cta h2{font-size:clamp(1.9rem,4vw,2.8rem)}
-.final-cta p{color:var(--dim);margin:16px auto 36px;max-width:520px}
+.final-cta p{color:var(--dim);margin:16px auto 36px;max-width:560px}
 footer{border-top:1px solid var(--border);padding:34px 0;color:var(--dim);font-size:.86rem;text-align:center}
 footer a{color:var(--dim)}
 footer a:hover{color:var(--orange2)}
@@ -123,144 +150,312 @@ footer a:hover{color:var(--orange2)}
 /* ---------- 响应式 ---------- */
 @media(max-width:900px){
   .hero-grid{grid-template-columns:1fr;gap:40px}
-  .hero{min-height:auto;padding:70px 0 40px}
-  section{padding:70px 0}
+  .hero{min-height:auto;padding:64px 0 40px}
+  main section{padding:64px 0}
+}
+@media(max-width:640px){
+  .wrap{padding:0 16px}
+  h2{font-size:1.5rem}
+  .subtitle{font-size:1rem}
+  .topbar .wrap{justify-content:flex-start}
+  .stat b{font-size:1.5rem}
 }
 </style>
 </head>
 <body>
 
+<!-- ============ 吸顶导航 ============ -->
+<header class="topbar">
+  <div class="wrap">
+    <div class="brand">芒得很职<span>职业素养对抗实训平台 · 技术底座 MARS-408</span></div>
+    <nav aria-label="章节导航">
+      <ul>
+        <li><a href="#about"><span class="num">01 ·</span>ABOUT</a></li>
+        <li><a href="#architecture"><span class="num">02 ·</span>ARCHITECTURE</a></li>
+        <li><a href="#innovation"><span class="num">03 ·</span>INNOVATION</a></li>
+        <li><a href="#evidence"><span class="num">04 ·</span>EVIDENCE</a></li>
+        <li><a href="#access"><span class="num">05 ·</span>ACCESS</a></li>
+        <li><a href="#notice"><span class="num">06 ·</span>NOTICE</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
 <!-- ============ HERO ============ -->
 <header class="hero">
   <div class="wrap hero-grid">
     <div>
-      <span class="pill"><span class="dot"></span>2026 福建高校「火山杯」Agent 创新大赛 · 参赛作品</span>
-      <h1><span class="grad-text">MARS-408</span><br>考研多智能体<br>个性化学习系统</h1>
-      <p class="sub">覆盖数据结构 / 计算机组成 / 操作系统 / 计算机网络四科。
-        一条 <b>10 个 Agent</b> 组成的教学流水线——多候选生成、共识仲裁、证据核查、质量闸门，
-        配 <b>FrugalRAG 省油检索</b>与 <b>GoMARL 神经混音器</b>：答案更可信，检索成本只有全量 RAG 的约 <b>1/50</b>。</p>
+      <span class="pill"><span class="dot"></span>2026 中国国际大学生创新大赛 · 高教主赛道创意组 参赛作品</span>
+      <h1><span class="grad-text">芒得很职</span><br>职业素养<br>对抗实训平台</h1>
+      <p class="sub">职业素养——技术判断的边界、对证据的尊重、在被追问时守住结论的能力——很难靠一次性讲授形成。
+        平台基于 <b>MARS-408 多智能体技术底座</b>，把训练放进一个可多轮运行的对抗环境：学生在真实技术语境中完成任务、接受质疑、被要求举证。</p>
       <div class="cta">
         <a class="btn primary" href="https://github.com/TrueFurina/MARS-408">GitHub 仓库 →</a>
-        <a class="btn ghost" href="#data">查看实测数据</a>
+        <a class="btn ghost" href="#architecture">查看技术架构</a>
       </div>
     </div>
     <div class="hero-visual">
       <div class="node-graph">
-        <div class="title">10-Agent LangGraph Pipeline</div>
+        <div class="title">11-Node LangGraph Pipeline</div>
         <div class="flow-row">
+          <span class="node">triage</span><span class="arrow">→</span>
           <span class="node">coordinator</span><span class="arrow">→</span>
-          <span class="node">diagnostician</span><span class="arrow">→</span>
-          <span class="node hot">generator×N</span><span class="arrow">→</span>
-          <span class="node">assessor</span>
-        </div>
-        <div class="flow-row">
-          <span class="node">critic</span><span class="arrow">→</span>
-          <span class="node cool">consensus</span><span class="arrow">→</span>
-          <span class="node cool">evidence_check</span><span class="arrow">→</span>
-          <span class="node grn">quality_gate</span>
-        </div>
-        <div class="flow-row">
+          <span class="node hot">diagnostician</span><span class="arrow">→</span>
           <span class="node">planner</span><span class="arrow">→</span>
-          <span class="node grn">path_planner</span><span class="arrow">→</span>
-          <span class="node" style="border-style:dashed">学生画像反馈 ↺</span>
+          <span class="node cool">retriever</span>
+        </div>
+        <div class="flow-row">
+          <span class="node hot">generator×N</span><span class="arrow">→</span>
+          <span class="node">assessor</span><span class="arrow">→</span>
+          <span class="node">critic</span><span class="arrow">→</span>
+          <span class="node cool">consensus</span>
+        </div>
+        <div class="flow-row">
+          <span class="node cool">evidence_check</span><span class="arrow">→</span>
+          <span class="node grn">quality_gate</span><span class="arrow">→</span>
+          <span class="node grn">path_planner</span>
         </div>
         <div class="stat-strip">
-          <div class="mini"><div class="v">10</div><div class="k">Agent 节点</div></div>
-          <div class="mini"><div class="v">3</div><div class="k">出口闸门</div></div>
-          <div class="mini"><div class="v">70</div><div class="k">降级点</div></div>
+          <div class="mini"><div class="v">11</div><div class="k">编排节点</div></div>
+          <div class="mini"><div class="v">45</div><div class="k">前端视图</div></div>
+          <div class="mini"><div class="v">240</div><div class="k">API 端点(约)</div></div>
         </div>
       </div>
     </div>
   </div>
 </header>
 
-<!-- ============ 痛点 ============ -->
-<section id="pain">
+<main>
+
+<!-- ============ 01 · ABOUT ============ -->
+<section id="about">
   <div class="wrap">
-    <span class="sec-tag">Pain Points</span>
-    <h2>为什么需要一条流水线</h2>
-    <p class="sec-sub">通用大模型直接答 408，四个致命问题一个都躲不开。</p>
-    <div class="pain-grid">
-      <div class="card reveal"><div class="ico">🌀</div><h3>大模型答疑幻觉</h3><p>一本正经地编造：混淆协议、记错复杂度。考生无法辨别，被带偏的代价是整年备考方向。</p></div>
-      <div class="card reveal"><div class="ico">🧭</div><h3>学习路径千人一方</h3><p>四科交叉考点多——Cache×操作系统、TCP×安全。所有人推同一套计划，错题本沦为摘抄本。</p></div>
-      <div class="card reveal"><div class="ico">💸</div><h3>检索成本被忽视</h3><p>常规 RAG 把全库 chunk 塞进上下文，单轮动辄上万 tokens，成本最终转嫁给用户的会员费。</p></div>
-      <div class="card reveal"><div class="ico">🚪</div><h3>AI 答疑无闸门</h3><p>单模型直出没有第二双眼睛把关；多数多智能体方案缺共识仲裁与证据核查，错误随轮数累积。</p></div>
+    <span class="sec-tag">01 · About</span>
+    <h2>让职业素养训练，从「讲授」走向「对抗」</h2>
+    <p class="subtitle">计算机类学生缺的不是一门课，而是一个可以反复较真的对手</p>
+
+    <p>职业素养——技术判断的边界、对证据的尊重、在被追问时守住结论的能力——很难靠一次性讲授形成。「芒得很职」把这套训练放进一个可以多轮运行的对抗环境：学生在真实技术语境中完成任务、接受质疑、被要求举证，系统记录全过程并给出可回看的评价依据。</p>
+
+    <p>平台基于 MARS-408 多智能体底座，由 <strong>11</strong> 个职责分离的 LangGraph 节点协同驱动，覆盖问题受理、学情诊断、路径规划、生成、评核与质量把关的完整链路；前端 <strong>45</strong> 个视图把诊断、实训、复盘与证据回看组织成一条连贯的教学动线，后端以 Python FastAPI 提供约 <strong>240</strong> 个 API 端点。</p>
+
+    <p>我们的工程原则只有一条：<strong>每一个对外宣称的能力，都必须能被一组可复跑的脚本与一份留存的实验结果文件追溯到源头。</strong>本页所有数字均标注了出处与口径；没有达到显著性的结论，我们同样标注出来。</p>
+
+    <div class="stats reveal">
+      <div class="stat"><b>11</b><span>LangGraph 编排节点</span></div>
+      <div class="stat"><b>45</b><span>前端教学视图</span></div>
+      <div class="stat"><b>240</b><span>后端 API 端点（约）</span></div>
     </div>
+
+    <figure class="reveal">
+      <img src="assets/mangde_home.png" alt="芒得很职平台首页界面截图" loading="lazy">
+      <figcaption>平台首页：诊断、实训、复盘与证据回看被组织为一条连贯的教学动线。</figcaption>
+    </figure>
   </div>
 </section>
 
-<!-- ============ 方案 ============ -->
-<section id="solution">
+<!-- ============ 02 · ARCHITECTURE ============ -->
+<section id="architecture">
   <div class="wrap">
-    <span class="sec-tag">Solution</span>
-    <h2>解决方案：十条流水线，三道闸门</h2>
-    <p class="sec-sub">每条答案必须过证据核查、质量闸门、共识仲裁三关才出口——从机制上压幻觉，而不是靠提示词求它别编。</p>
+    <span class="sec-tag">02 · Architecture</span>
+    <h2>一条可审计的智能体流水线</h2>
+    <p class="subtitle">11 个节点，每一步都留下证据</p>
+
+    <p>后端采用 Python FastAPI，由 LangGraph 编排 11 个职责单一、状态显式传递的节点：<strong>triage</strong>（问题受理与分级）、<strong>coordinator</strong>（任务协调）、<strong>diagnostician</strong>（学情诊断）、<strong>planner</strong>（方案编排）、<strong>retriever</strong>（检索取证）、<strong>generator_cluster</strong>（多方案并行生成）、<strong>assessor</strong>（评分）、<strong>critic</strong>（批判性复核）、<strong>evidence_check</strong>（证据一致性校验）、<strong>quality_gate</strong>（质量闸）、<strong>path_planner</strong>（学习路径规划）。节点之间不隐藏上下文，任何一次生成都能回溯到它引用的检索结果与评判记录。</p>
+
     <div class="pipeline-wrap reveal">
       <div class="pl-row">
-        <div class="pl-node"><div class="nm">coordinator</div><div class="rl">调度</div></div><span class="pl-arrow">→</span>
+        <div class="pl-node"><div class="nm">triage</div><div class="rl">问题受理与分级</div></div><span class="pl-arrow">→</span>
+        <div class="pl-node"><div class="nm">coordinator</div><div class="rl">任务协调</div></div><span class="pl-arrow">→</span>
         <div class="pl-node"><div class="nm">diagnostician</div><div class="rl">学情诊断</div></div><span class="pl-arrow">→</span>
-        <div class="pl-node g1"><div class="nm">generator ×N</div><div class="rl">多候选并行</div></div><span class="pl-arrow">→</span>
-        <div class="pl-node"><div class="nm">assessor</div><div class="rl">候选打分</div></div><span class="pl-arrow">→</span>
-        <div class="pl-node"><div class="nm">critic</div><div class="rl">批判复审</div></div><span class="pl-arrow">→</span>
+        <div class="pl-node"><div class="nm">planner</div><div class="rl">方案编排</div></div><span class="pl-arrow">→</span>
+        <div class="pl-node g3"><div class="nm">retriever</div><div class="rl">检索取证</div></div><span class="pl-arrow">→</span>
+        <div class="pl-node g1"><div class="nm">generator×N</div><div class="rl">多方案并行生成</div></div>
+      </div>
+      <div class="pl-row">
+        <div class="pl-node"><div class="nm">assessor</div><div class="rl">候选评分</div></div><span class="pl-arrow">→</span>
+        <div class="pl-node"><div class="nm">critic</div><div class="rl">批判性复核</div></div><span class="pl-arrow">→</span>
         <div class="pl-node g3"><div class="nm">consensus</div><div class="rl">共识仲裁</div></div><span class="pl-arrow">→</span>
-        <div class="pl-node g3"><div class="nm">evidence_check</div><div class="rl">证据核查</div></div><span class="pl-arrow">→</span>
-        <div class="pl-node g2"><div class="nm">quality_gate</div><div class="rl">质量闸门</div></div><span class="pl-arrow">→</span>
-        <div class="pl-node"><div class="nm">planner</div><div class="rl">学习规划</div></div><span class="pl-arrow">→</span>
-        <div class="pl-node g2"><div class="nm">path_planner</div><div class="rl">路径规划</div></div>
-      </div>
-      <div class="gate-labels">
-        <span class="gate-chip"><b>反幻觉</b> — 国密矛盾对误报 0，正确事实零误杀</span>
-        <span class="gate-chip"><b>不中断</b> — LLM 断供时规则兜底，来源显式标注</span>
-        <span class="gate-chip"><b>可解释</b> — 混音器权重与离线最优匹配 48/48</span>
+        <div class="pl-node g3"><div class="nm">evidence_check</div><div class="rl">证据一致性校验</div></div><span class="pl-arrow">→</span>
+        <div class="pl-node g2"><div class="nm">quality_gate</div><div class="rl">质量闸</div></div><span class="pl-arrow">→</span>
+        <div class="pl-node g2"><div class="nm">path_planner</div><div class="rl">学习路径规划</div></div>
       </div>
     </div>
-    <div class="pain-grid" style="margin-top:22px">
-      <div class="card reveal"><div class="ico">⛽</div><h3>FrugalRAG 省油检索</h3><p>先主题过滤再精排。28 题基准实测：单查询检索上下文仅 <b style="color:var(--fg)">173.46 tokens</b>（全量 RAG 的约 1/50–1/80），Recall@5=0.786。</p></div>
-      <div class="card reveal"><div class="ico">🎛️</div><h3>GoMARL 神经混音器</h3><p>多候选答案谁说了算？按学情画像动态加权。90 次观测：判题准确率 <b style="color:var(--fg)">83.33%</b>（基线 76.67%），判决 8.84ms。</p></div>
-      <div class="card reveal"><div class="ico">🛟</div><h3>三级降级容灾</h3><p>全链路 70 个降级点：LLM 断供时规则兜底、显式标注答案来源（llm / rule_fallback），服务不中断且不伪装。</p></div>
-      <div class="card reveal"><div class="ico">🧪</div><h3>全量测试保障</h3><p>后端 pytest 全量 839 passed；career 专项 42 项全绿；前端完整 build 通过——每个数字都有落盘证据。</p></div>
+
+    <p>知识与检索层由三部分构成：本地部署的 <strong>E5-base-v2（768 维）</strong>嵌入模型负责向量化，知识库共 <strong>2122 个向量</strong>；知识图谱承载 <strong>86 个节点、82 条先修依赖边</strong>，用于约束推荐顺序与诊断归因；大模型通道采用 <strong>DeepSeek 主通道 + 讯飞 Spark generalv3.5 兜底</strong>的双路设计，主通道不可用时自动降级，保证实训过程不中断。</p>
+
+    <div class="stats reveal">
+      <div class="stat"><b>2122</b><span>知识库向量条目</span></div>
+      <div class="stat"><b>768</b><span>嵌入向量维度（E5-base-v2）</span></div>
+      <div class="stat"><b>86 / 82</b><span>知识图谱节点 / 先修依赖边</span></div>
+    </div>
+
+    <figure class="reveal">
+      <img src="assets/mars408_integrated_arch.png" alt="MARS-408 集成后总体架构图" loading="lazy">
+      <figcaption>总体架构：技术底座 MARS-408 集成后的分层结构。</figcaption>
+    </figure>
+
+    <figure class="reveal">
+      <img src="assets/mangde_arch2.png" alt="芒得很职智能体流水线界面截图" loading="lazy">
+      <figcaption>流水线视图：11 个节点的状态显式传递与证据留痕。</figcaption>
+    </figure>
+
+    <figure class="reveal">
+      <img src="assets/mangde_kg.png" alt="知识图谱界面截图" loading="lazy">
+      <figcaption>知识图谱：86 个节点与 82 条先修依赖边，用于约束推荐顺序与诊断归因。</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============ 03 · INNOVATION ============ -->
+<section id="innovation">
+  <div class="wrap">
+    <span class="sec-tag">03 · Innovation</span>
+    <h2>把「有用没用」变成可计算的量</h2>
+    <p class="subtitle">三项技术要点，以及我们对结果的一一标注</p>
+
+    <h3>（一）面向质量的检索策略（FrugalRAG）</h3>
+    <p>我们在 28 条查询的标准口径下，把该策略与全量检索做对照，三个检索质量指标同时提升：Recall@5 <strong>+7.14 pp</strong>、Precision@5 <strong>+15.71 pp</strong>、MRR <strong>+12.38 pp</strong>。需要如实说明：这是一项<strong>质量组件，不是成本组件</strong>——在同一口径下它的 token 消耗上升 11.99%、单次延迟为 574.36 ms（全量检索 2.70 ms，约 213 倍）。我们对外<strong>不宣称降本或提速</strong>，只宣称检索质量提升，并把它定位为「以可接受的开销换取可被核查的答案依据」。</p>
+
+    <div class="warn reveal">
+      <span class="tag">诚实披露</span>
+      token 消耗上升 11.99%，单次延迟 574.36 ms（全量检索 2.70 ms，约 213 倍）。本站点<strong>不宣称降本或提速</strong>。
+    </div>
+
+    <h3>（二）三元评审权重的解析式求解</h3>
+    <p>评分环节的权重组合不依赖拟合，而是<strong>解析式求解</strong>：capture 100%、零训练。这意味着权重决策是可推导、可复算的，而不是一次黑箱调参的产物。</p>
+
+    <h3>（三）共识组件 NeuralMixer：一个负结果</h3>
+    <p>我们在 96 条样本构成的权威评测上比较了训练权重（<strong>80.2%</strong>）与规则基线（<strong>82.3%</strong>），结论是<strong>持平</strong>。早期 30 题小样本曾给出更乐观的差异，已被更大样本否定，该数字不再使用。把这件事写进项目主页，是因为工程可信度来自如实报告。</p>
+
+    <div class="note reveal">
+      <span class="tag">负结果</span>
+      训练权重 80.2% 与规则基线 82.3% <strong>持平</strong>，未观察到显著优势。
+    </div>
+
+    <figure class="reveal">
+      <img src="assets/mangde_standard2.png" alt="三元评审标准界面截图" loading="lazy">
+      <figcaption>三元评审：权重由解析式求解得到，capture 100%、零训练，可推导可复算。</figcaption>
+    </figure>
+
+    <h3>（四）职业素养对抗实训</h3>
+    <p>当前的对抗实训模块是 <strong>v1 规则原型</strong>；与 MAPPO 等强化学习策略相关的结论来自<strong>合成环境</strong>，<strong>不构成</strong>真实教学场景下的效果证明。</p>
+
+    <div class="warn reveal">
+      <span class="tag">能力边界</span>
+      对抗实训模块为 <strong>v1 规则原型</strong>；MAPPO / 强化学习相关结论来自<strong>合成环境</strong>，不构成真实教学场景下的效果证明。
     </div>
   </div>
 </section>
 
-<!-- ============ 数据 ============ -->
-<section id="data">
+<!-- ============ 04 · EVIDENCE ============ -->
+<section id="evidence">
   <div class="wrap">
-    <span class="sec-tag">Benchmark</span>
-    <h2>实测数据</h2>
-    <p class="sec-sub">2026-08-17 基准：28 题 / 2,083 知识库 chunks / 随机种子 20260719。全部有落盘证据，无估算包装。</p>
-    <div class="metrics">
-      <div class="metric reveal"><span class="v">173.46</span><div class="k">检索上下文 tokens/查询<br>（中位 171.5）</div></div>
-      <div class="metric reveal"><span class="v">0.786</span><div class="k">Recall@5<br>MRR = 0.698</div></div>
-      <div class="metric reveal"><span class="v">83.33%</span><div class="k">神经混音器判题准确率<br>基线 76.67%</div></div>
-      <div class="metric reveal"><span class="v">108.2ms</span><div class="k">检索平均时延<br>混音器判决 8.84ms</div></div>
-      <div class="metric reveal"><span class="v">839</span><div class="k">后端测试通过数<br>pytest 全量</div></div>
-      <div class="metric reveal"><span class="v">70</span><div class="k">降级点<br>三级容灾</div></div>
+    <span class="sec-tag">04 · Evidence</span>
+    <h2>可复跑的证据</h2>
+    <p class="subtitle">28 条查询、96 条样本、917 条通过用例</p>
+
+    <p>工程可信度不靠形容词。本页列出三组可直接复现的实测记录。<strong>检索对照实验</strong>：28 条查询，Recall@5 <strong>+7.14 pp</strong>、Precision@5 <strong>+15.71 pp</strong>、MRR <strong>+12.38 pp</strong>，结果文件 <code>py-server/experiments/results/benchmark_2026-09-18.json</code>，伴随 token 消耗<strong>上升 11.99%</strong>（未降反增）与单次延迟 <strong>574.36 ms</strong> 的诚实披露。<strong>共识评测</strong>：96 条样本下训练权重 <strong>80.2%</strong> 与规则基线 <strong>82.3%</strong> 持平，结论为「未观察到显著优势」。<strong>回归测试</strong>：<strong>917</strong> 条用例通过、<strong>207</strong> 条跳过（跳过项一般为依赖外部服务或需本地模型的用例，不计入通过率分母）。</p>
+
+    <div class="card reveal">
+      <p class="card-title">检索对照实验（28 条查询标准口径）</p>
+      <ul class="metrics">
+        <li>Recall@5　<b>+7.14 pp</b></li>
+        <li>Precision@5　<b>+15.71 pp</b></li>
+        <li>MRR　<b>+12.38 pp</b></li>
+        <li>token 消耗　<b>+11.99%（未降反增）</b></li>
+        <li>单次延迟　<b>574.36 ms</b>（全量检索 2.70 ms，约 213 倍）</li>
+        <li>结果文件　<span class="mono">py-server/experiments/results/benchmark_2026-09-18.json</span></li>
+      </ul>
     </div>
-    <p class="src-note">证据出处：py-server/experiments/results/benchmark_2026-08-17.json（experiment1：28 题检索评测；experiment2：90 观测混音器对照实验）。tokens 口径：检索上下文为落盘实测；月度总耗为配置推算——遵守「无落盘不出数字」。</p>
+
+    <div class="card reveal">
+      <p class="card-title">共识评测（96 条样本）</p>
+      <ul class="metrics">
+        <li>训练权重（NeuralMixer）　<b>80.2%</b></li>
+        <li>规则基线　<b>82.3%</b></li>
+        <li>结论　<b>持平</b>，未观察到显著优势</li>
+      </ul>
+    </div>
+
+    <div class="card reveal">
+      <p class="card-title">回归测试</p>
+      <ul class="metrics">
+        <li>通过用例　<b>917</b> 条</li>
+        <li>跳过用例　<b>207</b> 条</li>
+        <li>口径　跳过项一般为依赖外部服务或需本地模型的用例，不计入通过率分母</li>
+      </ul>
+    </div>
+
+    <figure class="reveal">
+      <img src="assets/fig_mixer.png" alt="NeuralMixer 共识组件评测结果图（96 条样本）" loading="lazy">
+      <figcaption>共识组件评测（96 条样本）：训练权重 80.2% 与规则基线 82.3% <strong>持平</strong>。此图为负结果留档。</figcaption>
+    </figure>
+
+    <div class="note reveal">
+      <span class="tag">边界声明</span>
+      需要明确边界：以上均为<strong>离线工程指标</strong>，本项目尚未提供真实课堂环境下的教学增益证据，任何「提升学习效果」的表述都不被本站采用。
+    </div>
   </div>
 </section>
 
-<!-- ============ Token 成本 ============ -->
-<section id="tokens">
+<!-- ============ 05 · ACCESS ============ -->
+<section id="access">
   <div class="wrap">
-    <span class="sec-tag">Cost</span>
-    <h2>Token 成本（月度消耗）</h2>
-    <p class="sec-sub">单轮检索实测 173 tokens，全链路 4,000–6,000；按试点规模推算月度总耗与成本对比。</p>
-    <div class="tok-grid">
-      <div class="tok reveal"><div class="big">173</div><p><b style="color:var(--fg)">FrugalRAG 单查询检索</b>（实测均值）；常规全量 RAG 约需 8,000–15,000，为它的 50–80 倍。</p></div>
-      <div class="tok reveal"><div class="big">4,000–6,000</div><p><b style="color:var(--fg)">单轮答疑全链路</b>：检索 173 + 多候选生成约 2,500 + 审核共识核查约 1,200 + 对话历史输入约 1,000–2,000。</p></div>
-      <div class="tok reveal"><div class="big">1.8亿–2.7亿</div><p><b style="color:var(--fg)">试点月度总量</b>（估算）：100 名学生 × 日均 15 轮 × 30 天，中位约 2.2 亿 tokens/月。</p></div>
-      <div class="tok hl reveal"><div class="big">1/50</div><p><b style="color:var(--fg)">成本侧核心卖点</b>：同等服务质量下，全量 RAG 月度成本将翻数倍——省油检索直接决定产品定价空间。</p></div>
-    </div>
+    <span class="sec-tag">05 · Access</span>
+    <h2>获取与运行</h2>
+    <p class="subtitle">源码运行，无需安装包</p>
+
+    <p>芒得很职当前以源码形式提供，<strong>安装包正在制作中</strong>——完成后会提供下载安装、开箱即用的方式，无需准备任何开发环境。在此之前，仓库内已附带<strong>一键启动绿色包</strong>（<span class="mono">deploy/</span>），它会先做前置自检再拉起服务，你可以用它在本地完整运行全部功能。</p>
+
+    <p><strong>步骤：</strong></p>
+    <ol class="steps">
+      <li><strong>准备环境</strong>：安装 Python 3.12 或更高版本；Node.js 可选，缺失时可直接使用仓库中预构建的前端产物 <code>dist/</code>。</li>
+      <li><strong>获取源码</strong>：<code>git clone https://github.com/TrueFurina/MARS-408.git &amp;&amp; cd MARS-408</code></li>
+      <li><strong>一次性准备</strong>：在 <code>py-server/</code> 下执行 <code>uv sync --frozen</code> 创建虚拟环境（依据 <code>uv.lock</code>）；若本地缺少 E5 embedding 模型，再执行 <code>python ../scripts/fetch_e5_model.py</code>。这两步只在首次运行前需要。</li>
+      <li><strong>一键启动</strong>：Windows 执行 <code>deploy\start_windows.bat</code>；Linux / macOS / WSL / Git Bash 执行 <code>bash deploy/start_linux.sh</code>。脚本会依次自检 Python 版本、虚拟环境、模型与 8002 端口占用，任一项不满足即明确报错并停下，不会替你杀掉别人的进程。</li>
+      <li><strong>等待初始化</strong>：脚本轮询健康端点 <code>/api/status</code>，最长等待 60 秒（首次启动需加载 embedding 模型，约 30 秒）。</li>
+      <li><strong>开始使用</strong>：浏览器访问 <code>http://127.0.0.1:8002</code>；交互式接口文档位于 <code>http://127.0.0.1:8002/docs</code>。</li>
+      <li><strong>停止服务</strong>：Linux / macOS 执行 <code>pkill -f "uvicorn main:app"</code>；Windows 直接关闭启动窗口。</li>
+    </ol>
+
+    <pre><code>git clone https://github.com/TrueFurina/MARS-408.git &amp;&amp; cd MARS-408
+# 一次性准备（虚拟环境 + embedding 模型）
+cd py-server &amp;&amp; uv sync --frozen
+python ../scripts/fetch_e5_model.py   # 仅当 py-server/models/e5-base-v2 缺失时
+cd ..
+# Windows
+deploy\start_windows.bat
+# Linux / macOS / WSL / Git Bash
+bash deploy/start_linux.sh</code></pre>
   </div>
 </section>
+
+<!-- ============ 06 · NOTICE ============ -->
+<section id="notice">
+  <div class="wrap">
+    <span class="sec-tag">06 · Notice</span>
+    <h2>授权与合规声明</h2>
+    <p class="subtitle">我们对每一句宣称负责</p>
+
+    <p>本站点为芒得很职的产品说明页，内容以代码仓库为准。</p>
+
+    <p><strong>口径约束</strong>：本站所有量化结论均以指定的实验结果文件与测试报告为准；未经验证的口头或历史数字一律不使用。「芒得很职」为产品名，<strong>MARS-408 为本产品的技术底座代号</strong>，不单独指代产品。</p>
+
+    <p><strong>能力边界</strong>：职业素养对抗实训模块为 v1 规则原型；MAPPO / 强化学习相关结论来自合成环境，不代表真实教学增益；本产品未提供任何用于高利害决策的评价结论。</p>
+
+    <p><strong>第三方组件</strong>：大模型通道使用 DeepSeek 与讯飞 Spark generalv3.5 的在线服务，嵌入模型 E5-base-v2 为本地部署；各组件的商标与服务条款归各自权利人所有。</p>
+
+    <p><strong>反馈渠道</strong>：发现数据口径不一致或页面错误，请在 GitHub Issues 提交。</p>
+  </div>
+</section>
+
+</main>
 
 <!-- ============ 尾部 CTA ============ -->
 <div class="final-cta">
   <div class="wrap reveal">
-    <h2>让 408 备考，<span class="grad-text">有据可查</span></h2>
-    <p>每条答案过三道闸门、每个分数有证据链、每个数字有落盘——这就是 MARS-408。</p>
+    <h2>让职业素养训练，<span class="grad-text">有据可查</span></h2>
+    <p>每个结论过证据核查、每个数字有落盘、每个边界有声明——这就是芒得很职。</p>
     <div class="cta" style="justify-content:center">
       <a class="btn primary" href="https://github.com/TrueFurina/MARS-408">GitHub 仓库 →</a>
       <a class="btn ghost" href="https://github.com/TrueFurina/MARS-408/blob/main/README.md">参赛 README</a>
@@ -270,9 +465,9 @@ footer a:hover{color:var(--orange2)}
 
 <footer>
   <div class="wrap">
-    MARS-408 · 2026 闽都×火山杯 Agent 创新大赛参赛作品 ·
+    芒得很职 · 2026 中国国际大学生创新大赛 高教主赛道创意组 参赛作品 ·
     <a href="https://github.com/TrueFurina/MARS-408">github.com/TrueFurina/MARS-408</a><br>
-    10-Agent LangGraph Pipeline · FrugalRAG (E5/BM25) · GoMARL Consensus · Vue 3 + TypeScript + FastAPI
+    11-Node LangGraph Pipeline · E5-base-v2 (768d) · GoMARL Consensus · Vue 3 + TypeScript + FastAPI
   </div>
 </footer>
 
