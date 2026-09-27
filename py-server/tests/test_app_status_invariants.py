@@ -1,0 +1,85 @@
+# -*- coding: utf-8 -*-
+"""app/status.py 与 app/routers.py 的三条长期不变量（2026-09-28 审查新增）
+
+这三条的共同点：**违反时不报错，只会悄悄出错**，所以必须写成断言。
+
+1. 健康探针自身永不抛异常 —— 若 vector_db 一挂探针先 500，编排系统会误判实例
+   死亡并反复重启（故障放大器）。
+2. 对外宣称的画像维度必须等于唯一真值源 —— 曾是硬编码 8，而本分支权威定义是
+   career_state.DIMENSIONS 的 6 维（旧版 408 学情画像遗留），属口径漂移。
+3. api/__init__.py 导出的 router 必须全部登记到 ALL_ROUTERS 且仅一次 —— 漏登记
+   接口会静默消失，重复登记则让「注册顺序即匹配顺序」的约定失效。
+"""
+
+import pytest
+
+from app import status as status_mod
+from app.routers import ALL_ROUTERS
+
+
+class _BoomVectorDb:
+    """替身：模拟向量存储完全不可用。"""
+
+    _milvus_connected = False
+    embedding_fallback_count = 0
+
+    def count(self, *args, **kwargs):
+        raise RuntimeError("simulated vector store outage")
+
+
+@pytest.mark.asyncio
+async def test_health_probe_reports_degraded_instead_of_raising(monkeypatch):
+    """向量库探测抛异常时，健康端点必须降级返回而非 500。
+
+    健康端点是故障时的生命线：它若最先崩掉，上层编排拿到的就不是
+    「降级」而是「实例不可用」，从而触发本可避免的重启循环。
+    """
+    monkeypatch.setattr(status_mod, "vector_db", _BoomVectorDb())
+
+    payload = await status_mod.status()  # 不得抛出
+
+    assert payload["status"] == "degraded"
+    assert any("健康探测失败" in r for r in payload["degraded_reasons"]), payload[
+        "degraded_reasons"
+    ]
+    # 探针失败也必须给出完整结构，便于运维直接读健康面
+    assert payload["health"]["vector_db"]["collection_size"] == 0
+
+
+def test_profile_dimensions_uses_single_source_of_truth():
+    """对外宣称的画像维度数必须派生自唯一真值源，且该源可达。"""
+    from agents.career_state import DIMENSIONS
+
+    derived = status_mod._profile_dimension_count()
+
+    # -1 表示真值源读取失败，宁可让本测试红，也不许对外报一个未经源证的数字
+    assert derived != -1, "读取画像维度真值源失败，禁止对外宣称占位数字"
+    assert derived == len(DIMENSIONS)
+    # 下限保护：真值源若被改坏（清空/去重丢失），上面那条等式会因 0==0 而放行
+    assert DIMENSIONS and len(set(DIMENSIONS)) == len(DIMENSIONS) >= 6, DIMENSIONS
+    # 维度 key 与展示名必须一一对应，否则前端会渲染出空标签
+    from agents.career_state import DIMENSION_LABELS
+
+    assert set(DIMENSION_LABELS) == set(DIMENSIONS)
+
+
+def test_every_exported_router_is_registered_exactly_once():
+    """导出的 router 必须全部登记，且每个仅登记一次。
+
+    新增 router 需要在两处同步（api/__init__.py 导出 + ALL_ROUTERS 登记），
+    漏登记不会报任何错，只是接口静默不存在 —— 只能靠这条不变量发现。
+    """
+    import api
+
+    exported = {name: getattr(api, name) for name in dir(api) if name.endswith("_router")}
+    assert exported, "api/__init__.py 未导出任何 *_router，疑似导入方式变更"
+
+    registered_ids = [id(r) for r in ALL_ROUTERS]
+    missing = sorted(n for n, obj in exported.items() if id(obj) not in set(registered_ids))
+    duplicated = sorted(
+        n for n, obj in exported.items() if registered_ids.count(id(obj)) > 1
+    )
+
+    assert not missing, f"以下 router 已导出但未登记，其接口将静默不存在: {missing}"
+    assert not duplicated, f"以下 router 被重复登记，路由匹配顺序约定失效: {duplicated}"
+    assert len(ALL_ROUTERS) == len(set(registered_ids)), "ALL_ROUTERS 存在重复条目"
