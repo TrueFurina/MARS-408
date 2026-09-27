@@ -51,8 +51,15 @@ ALLOWLIST_PATTERNS = [
 # 为什么不做「文件级整体豁免」：那会让该目录完全脱离密钥扫描，将来真写进去
 # 的凭据也扫不到。这里只豁免这一条低精度规则，generic/连接串/JWT/私钥等规则
 # 对 seed/ 依然生效。
+#
+# 追加（2026-09-28 实锤误报）：py-server/openapi.json 是接口快照，其中
+# `"$ref": "#/components/schemas/<长名字>"` 的 `/components/schemas/XXX` 段
+# 本身就是一个 40+ 字符的 [0-9a-zA-Z/+] 串（`/` 属于该字符类），于是每条长
+# schema 的 $ref 都被判成 AWS 密钥。影响不只是噪点：pre-commit 只扫描暂存文件，
+# 意味着该快照一旦被拦，今后**任何一次更新都提交不进去**（事实上已被冻结）。
+# 同样只豁免这一条低精度规则；generic/连接串/JWT/私钥四类规则对它依然生效。
 RULE_PATH_EXEMPT = {
-    'AWS Secret Access Key (base64)': ['py-server/seed/'],
+    'AWS Secret Access Key (base64)': ['py-server/seed/', 'py-server/openapi.json'],
 }
 
 
