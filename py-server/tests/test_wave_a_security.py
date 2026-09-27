@@ -220,14 +220,29 @@ class TestResolveAuthSecret:
 
 
 # ============================================================
-# 5) CORS — 静态复查（不启动 app，仅校验 main.py 配置片段）
+# 5) CORS — 静态复查（不启动 app，仅校验配置源码片段）
 # ============================================================
+# M-4 拆分（2026-09-27）：CORS 配置从 main.py 移入 app/middleware.py，
+# 新的单一真值源是 app/middleware.py。这里保留对 main.py 的兼容回退，
+# 使「先合测试」与「先合实现」两种顺序下本用例都为绿（可安全 bisect）。
+
+_CORS_SOURCE_CANDIDATES = ("app/middleware.py", "main.py")
+
+
+def _read_cors_sources() -> str:
+    chunks = []
+    for rel in _CORS_SOURCE_CANDIDATES:
+        path = os.path.join(_PY_SERVER, rel)
+        if os.path.isfile(path):
+            with open(path, "r", encoding="utf-8") as f:
+                chunks.append(f.read())
+    assert chunks, f"CORS 配置源码缺失：{_CORS_SOURCE_CANDIDATES} 均不存在"
+    return "\n".join(chunks)
+
 
 class TestCORSStaticReview:
     def test_dev_uses_origin_regex_not_wildcard(self):
-        main_path = os.path.join(_PY_SERVER, "main.py")
-        with open(main_path, "r", encoding="utf-8") as f:
-            content = f.read()
+        content = _read_cors_sources()
         # dev 分支使用 allow_origin_regex 放行 loopback / LAN
         assert "allow_origin_regex" in content
         assert "localhost" in content
