@@ -183,7 +183,7 @@ async def lifespan(app: FastAPI):
             logger.warning(f"Redis 未启用: {e}")
 
     async def _init_admin():
-        from db.user_store import ensure_admin
+        from services.user_service import ensure_admin
         env = os.environ.get("NETLEARN_ENV", "development").lower()
         admin_pwd = os.environ.get("ADMIN_PASSWORD", "")
         if not admin_pwd:
@@ -233,7 +233,7 @@ async def lifespan(app: FastAPI):
     try:
         env = os.environ.get("NETLEARN_ENV", "development").lower()
         if env not in ("production", "prod"):
-            from db.user_store import authenticate
+            from services.user_service import authenticate
             from seed_demo_data import DEMO_PASSWORD, DEMO_USERNAME, seed_demo_data
             if authenticate(DEMO_USERNAME, DEMO_PASSWORD) is None:
                 seed_demo_data()
@@ -798,7 +798,7 @@ async def status():
 async def competition_status():
     """返回赛题5项功能 + 2项加分项的实现状态"""
     count = vector_db.count("netlearn_kb")
-    from db.user_store import get_db_conn
+    from services.user_service import get_db_conn
     user_count = 0
     try:
         conn = get_db_conn()

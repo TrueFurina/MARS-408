@@ -178,7 +178,7 @@ async def start_diagnostic(user: dict = Depends(get_current_user)):
 @router.post("/submit", response_model=DiagnosticSubmitResponse)
 async def submit_diagnostic(req: DiagnosticSubmitRequest, user: dict = Depends(get_current_user)):
     """提交诊断答案并生成画像和推荐"""
-    from db.user_store import save_profile
+    from services.user_service import save_profile
 
     # L1/L2/L3 三层学情记忆联动（低侵入：诊断结果写入 L2 语义记忆）
     try:

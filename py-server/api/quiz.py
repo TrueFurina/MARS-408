@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from models import QuizSubmitRequest, QuizSubmitResponse
 from shared.auth import get_current_user
 from shared.ratelimit import require_llm_quota
-from db.user_store import save_profile, get_profile, add_wrong_question
+from services.user_service import save_profile, get_profile, add_wrong_question
 from db.llm_provider import LLMProvider
 from engines.quiz_engine import STEP_QUESTIONS, error_analyzer, weak_point_tracker, StepResult
 
@@ -133,7 +133,6 @@ async def quiz_submit(req: QuizSubmitRequest, user: dict = Depends(get_current_u
         logger.debug(f"错题本自动入库失败(忽略): {e}")
 
     # LLM 驱动的画像智能更新（补充启发式规则的不足）
-    llm_updated = False
     try:
         from prompts import QUIZ_PROFILE_UPDATE_PROMPT
         llm = LLMProvider()
@@ -149,7 +148,6 @@ async def quiz_submit(req: QuizSubmitRequest, user: dict = Depends(get_current_u
                 merged = {**updated_profile, **llm_profile}
                 save_profile(user["user_id"], merged)
                 updated_profile = merged
-                llm_updated = True
     except Exception as e:
         logger.warning(f"LLM画像更新失败（非阻塞）: {e}")
 
@@ -283,7 +281,7 @@ async def submit_step_answer(question_id: str, req: StepAnswerRequest, user: dic
         all_results = [step_result]  # 简化：只记录当前步骤
         for i in range(req.step_index):
             all_results.append(StepResult(step_index=i, step_name=q.steps[i].step_name, correct=True))
-        analysis = error_analyzer.analyze(all_results)
+        error_analyzer.analyze(all_results)
         weak_point_tracker.record_error(q, all_results, user["user_id"])
 
     return StepAnswerResponse(
@@ -338,7 +336,7 @@ async def get_weak_points(subject: str = "", user: dict = Depends(get_current_us
 @router.get("/history")
 async def get_quiz_history(user: dict = Depends(get_current_user)):
     """获取答题历史记录"""
-    from db.user_store import get_quiz_history as _get_history
+    from services.user_service import get_quiz_history as _get_history
     records = _get_history(user["user_id"])
     total = len(records)
     correct = sum(1 for r in records if r.get("correct"))

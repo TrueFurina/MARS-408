@@ -7,7 +7,7 @@
 import logging
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
-from db.user_store import get_quiz_history
+from services.user_service import get_quiz_history
 from shared.auth import get_current_user
 
 logger = logging.getLogger("netlearn.review")
@@ -213,7 +213,7 @@ async def get_review_questions(subject: str, user: dict = Depends(get_current_us
 @router.post("/retry")
 async def retry_wrong_question(data: dict, user: dict = Depends(get_current_user)):
     """错题重做提交"""
-    from db.user_store import append_quiz_history
+    from services.user_service import append_quiz_history
 
     question_id = data.get("question_id")
     user_answer = data.get("answer", "")

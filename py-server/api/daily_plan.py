@@ -7,10 +7,11 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, HTTPException, Depends, Query
 from pydantic import BaseModel
 from typing import Optional
-from db.user_store import (
+from services.user_service import (
     get_or_create_daily_plan,
     update_daily_plan_task,
     list_daily_plans,
+    reset_daily_plan,
 )
 from shared.auth import get_current_user
 
@@ -81,25 +82,7 @@ async def update_task(
 @router.post("/{pid}/reset")
 async def reset_plan(pid: int, user: dict = Depends(get_current_user)):
     """重置某日计划为未开始状态（所有任务 progress=0, completed=False）"""
-    from db.user_store import _get_conn, _lock, _now
-    import json as _json
-    conn = _get_conn()
-    now = _now()
-    with _lock:
-        row = conn.execute("SELECT * FROM user_daily_plans WHERE id=? AND user_id=?", (pid, user["user_id"])).fetchone()
-        if not row:
-            raise HTTPException(status_code=404, detail="计划不存在")
-        try:
-            tasks = _json.loads(row["tasks_json"])
-        except Exception:
-            tasks = []
-        for t in tasks:
-            t["progress"] = 0
-            t["completed"] = False
-        conn.execute(
-            "UPDATE user_daily_plans SET tasks_json=?, completed_tasks=0, updated_at=? WHERE id=?",
-            (_json.dumps(tasks, ensure_ascii=False), now, pid)
-        )
-        conn.commit()
-    plan = get_or_create_daily_plan(user["user_id"], plan_date=row["plan_date"])
+    plan = reset_daily_plan(pid, user["user_id"])
+    if plan is None:
+        raise HTTPException(status_code=404, detail="计划不存在")
     return plan

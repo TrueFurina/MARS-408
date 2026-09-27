@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 
 from shared.auth import create_token, get_current_user
 from shared.errors import ValidationError, ResourceNotFoundError
-from db.user_store import create_user, authenticate, get_user_by_id
+from services.user_service import create_user, authenticate, get_user_by_id
 from db.redis_client import redis_client
 from shared.audit import log_event
 
@@ -72,7 +72,7 @@ async def login(req: LoginRequest, request: Request):
     # 检查是否需要入学测评
     diagnostic_required = False
     try:
-        from db.user_store import get_profile
+        from services.user_service import get_profile
         profile = get_profile(user["id"])
         if not profile or not profile.get("diagnostic_completed"):
             diagnostic_required = True

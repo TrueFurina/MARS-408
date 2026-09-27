@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
 from shared.auth import get_current_user
-from db.user_store import (
+from services.user_service import (
     save_profile, get_profile,
     append_quiz_history, get_quiz_history,
     save_conversations, get_conversations,

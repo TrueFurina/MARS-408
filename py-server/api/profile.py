@@ -29,7 +29,7 @@ async def profile_build(req: ProfileBuildRequest, user: dict = Depends(require_l
 
     llm = LLMProvider()
     try:
-        provider = llm._resolve()
+        llm._resolve()
     except LLMUnavailable:
         raise HTTPException(status_code=503, detail="LLM API 未配置")
 
@@ -112,7 +112,7 @@ class ProfileUpdateRequest(BaseModel):
 @router.post("/update")
 async def profile_update(req: ProfileUpdateRequest, user: dict = Depends(get_current_user)):
     """更新学生画像目标设置"""
-    from db.user_store import get_profile, save_profile
+    from services.user_service import get_profile, save_profile
     user_id = user.get("user_id")
     if not user_id:
         raise HTTPException(status_code=401, detail="用户未认证")

@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from shared.auth import require_admin
-from db.user_store import create_user
+from services.user_service import create_user
 
 logger = logging.getLogger("netlearn.admin_users_api")
 
@@ -89,7 +89,7 @@ async def list_users_endpoint(admin: dict = Depends(require_admin)) -> dict:
     注：GET /api/admin/users 已由 api/admin.py 提供（含学习统计），
     此处提供精简版列表并置于 /list 子路径，避免与既有路由冲突。
     """
-    from db.user_store import list_all_users
+    from services.user_service import list_all_users
 
     users = list_all_users()
     return {

@@ -30,7 +30,7 @@ class ResourceIdRequest(BaseModel):
 @router.post("/register")
 async def register_resource(req: RegisterResourceRequest, user: dict = Depends(get_current_user)):
     """登记可复用资源（内容哈希相同则幂等返回已有资源）"""
-    from db.user_store import register_learning_resource
+    from services.user_service import register_learning_resource
 
     if not req.content:
         raise HTTPException(status_code=422, detail="资源内容不能为空")
@@ -61,7 +61,7 @@ async def register_resource(req: RegisterResourceRequest, user: dict = Depends(g
 @router.get("/list")
 async def list_resources(user: dict = Depends(get_current_user)):
     """列出当前用户的可复用资源（直接打开，也可重新生成）"""
-    from db.user_store import list_learning_resources
+    from services.user_service import list_learning_resources
 
     resources = list_learning_resources(user.get("user_id", ""))
     return {"status": "ok", "resources": resources, "total": len(resources)}
@@ -70,7 +70,7 @@ async def list_resources(user: dict = Depends(get_current_user)):
 @router.get("/{resource_id}")
 async def get_resource(resource_id: int, user: dict = Depends(get_current_user)):
     """获取单个资源（仅本人私有资源）"""
-    from db.user_store import get_learning_resource
+    from services.user_service import get_learning_resource
 
     resource = get_learning_resource(resource_id)
     if not resource:
@@ -83,7 +83,7 @@ async def get_resource(resource_id: int, user: dict = Depends(get_current_user))
 @router.post("/delete")
 async def delete_resource(req: ResourceIdRequest, user: dict = Depends(get_current_user)):
     """软删除用户私有资源"""
-    from db.user_store import delete_learning_resource
+    from services.user_service import delete_learning_resource
 
     deleted = delete_learning_resource(req.resource_id, user.get("user_id", ""))
     if not deleted:

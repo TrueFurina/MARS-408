@@ -7,7 +7,7 @@ import logging
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from shared.auth import get_current_user
-from db.user_store import get_quiz_history, get_profile
+from services.user_service import get_quiz_history, get_profile
 
 logger = logging.getLogger("netlearn.achievement")
 router = APIRouter(prefix="/achievement", tags=["achievement"])
@@ -255,7 +255,7 @@ async def record_event(req: RecordRequest, user: dict = Depends(get_current_user
     # 保存
     profile["ach_stats"] = saved_stats
     profile["achievements"] = saved_achievements
-    from db.user_store import save_profile
+    from services.user_service import save_profile
     save_profile(user_id, profile)
 
     return {"status": "ok"}

@@ -5,7 +5,7 @@
 # ============================================================
 
 import logging
-from db.user_store import create_user, save_profile, append_quiz_history, save_conversations
+from services.user_service import create_user, save_profile, append_quiz_history, save_conversations
 from db.pg_client import pg_client
 
 logger = logging.getLogger("netlearn.seed_demo")
@@ -125,7 +125,7 @@ def seed_demo_data():
         logger.info(f"演示用户已创建: {DEMO_USERNAME} (id={user_id})")
     except ValueError:
         # 用户已存在，查回 user_id
-        from db.user_store import authenticate
+        from services.user_service import authenticate
         u = authenticate(DEMO_USERNAME, DEMO_PASSWORD)
         if not u:
             logger.warning("演示用户存在但无法认证")

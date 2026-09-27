@@ -13,7 +13,7 @@ from db.llm_provider import LLMProvider
 from models import AssessmentRequest, AssessmentResponse
 from shared.auth import get_current_user
 from shared.ratelimit import require_llm_quota
-from db.user_store import save_profile, get_profile
+from services.user_service import save_profile, get_profile
 
 logger = logging.getLogger("netlearn.assessment")
 
@@ -206,7 +206,6 @@ async def get_assessment_recommendations(
     user: dict = Depends(require_llm_quota),
 ):
     """基于画像生成个性化学习推荐（兼容 /api/assessment/recommendations 路径）"""
-    profile = body.get("profile", {})
     quiz_history = body.get("quiz_history", [])
 
     weak_topics = []
@@ -360,7 +359,7 @@ async def save_profile_snapshot_api(
     Returns:
         {"status": "ok", "snapshot_id": int}
     """
-    from db.user_store import save_profile_snapshot
+    from services.user_service import save_profile_snapshot
     snapshot_id = save_profile_snapshot(user["user_id"], profile)
     return {"status": "ok", "snapshot_id": snapshot_id}
 
@@ -381,7 +380,7 @@ async def get_profile_snapshots_api(
     Returns:
         {"status": "ok", "snapshots": [{id, snapshot, created_at}]}
     """
-    from db.user_store import get_profile_snapshots
+    from services.user_service import get_profile_snapshots
     limit = min(limit, 50)
     snapshots = get_profile_snapshots(user["user_id"], limit=limit)
     return {"status": "ok", "snapshots": snapshots}

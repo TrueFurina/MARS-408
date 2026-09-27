@@ -6,9 +6,10 @@ import logging
 from fastapi import APIRouter, HTTPException, Depends, Query
 from pydantic import BaseModel
 from typing import Optional
-from db.user_store import (
+from services.user_service import (
     add_wrong_question,
     get_wrong_question,
+    get_wrong_question_owner,
     list_wrong_questions,
     mark_wrong_question_mastered,
     delete_wrong_question,
@@ -67,16 +68,9 @@ async def get_wrong_question_detail(qid: int, user: dict = Depends(get_current_u
     item = get_wrong_question(qid)
     if not item:
         raise HTTPException(status_code=404, detail="错题不存在")
-    # 权限校验：只能查看自己的错题
-    # 注意：get_wrong_question 不校验 user_id，需要通过列表接口间接校验
-    # 此处简单校验：检查该题是否属于当前用户
-    from db.user_store import _get_conn, _lock
-    conn = _get_conn()
-    with _lock:
-        row = conn.execute(
-            "SELECT user_id FROM user_wrong_questions WHERE id=?", (qid,)
-        ).fetchone()
-    if not row or row["user_id"] != user["user_id"]:
+    # 权限校验：只能查看自己的错题（M-2 改用合规访问器，消除越级锁访问）
+    owner = get_wrong_question_owner(qid)
+    if not owner or owner != user["user_id"]:
         raise HTTPException(status_code=404, detail="错题不存在")
     return item
 
@@ -121,13 +115,9 @@ class ReviewRecallRequest(BaseModel):
 @router.post("/{qid}/review")
 async def review_wrong_question(qid: int, req: ReviewRecallRequest, user: dict = Depends(get_current_user)):
     """记录一次复习回忆结果，按遗忘曲线推进排程；返回更新后的错题。"""
-    from db.user_store import _get_conn, _lock
-    conn = _get_conn()
-    with _lock:
-        row = conn.execute(
-            "SELECT user_id FROM user_wrong_questions WHERE id=?", (qid,)
-        ).fetchone()
-    if not row or row["user_id"] != user["user_id"]:
+    # 权限校验：只能操作自己的错题（M-2 改用合规访问器，消除越级锁访问）
+    owner = get_wrong_question_owner(qid)
+    if not owner or owner != user["user_id"]:
         raise HTTPException(status_code=404, detail="错题不存在或无权操作")
     updated = record_review(qid, req.recalled)
     if not updated:

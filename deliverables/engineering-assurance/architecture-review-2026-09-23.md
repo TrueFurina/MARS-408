@@ -5,7 +5,7 @@
 - **分支 / HEAD**：`career-literacy` @ `7b6b3b0`
 - **技术栈**：Vue 3 + TypeScript + Vite（前端）／ Python 3.13 + FastAPI + LangGraph + PyTorch(CPU) + SQLite/PostgreSQL + Milvus（后端）
 - **总体评分**：**6.5 / 10**
-- **结论**：⚠️ 可继续开发，但**上线前需修 M-1 / M-2 / M-3**
+- **结论**：⚠️ 可继续开发；**M-1 / M-2 / M-3 已于 2026-09-27 修复**，剩余 M-4（存储锁域三分裂）/ M-5（main.py 职责过载）待处理
 
 ---
 
@@ -65,14 +65,16 @@ def _get_conn() -> sqlite3.Connection:
 ```
 接口层只调用 `db.literacy_store.*`，删除 `api/literacy_assessment.py` 中的 `sqlite3`/`threading`/`_conn`/`_lock`。
 
-### [M-2] services 层被架空，业务逻辑沉积在 API 层 — 🟠 Major
+### [M-2] services 层被架空，业务逻辑沉积在 API 层 — ✅ 已修复（2026-09-27，🟢 收敛）
 
 - **位置**：`py-server/api/*.py`（44 个模块）
-- **问题**：44 个 api 模块中 **27 个直接 `import db.*`**（其中 `db.user_store` 被 import **35 次**），仅 14 个走 `services.*`。API 层 20,870 行 vs services 层 5,614 行——比例失衡是「业务逻辑下沉失败」的量化证据。后果：同一业务规则在多端点重复实现；无法对业务做单测（必须起 HTTP）；替换存储/加缓存要改 27 个文件。
+- **问题（评审时）**：44 个 api 模块中 **27 个直接 `import db.*`**（其中 `db.user_store` 被 import **35 次**），仅 14 个走 `services.*`。API 层 20,870 行 vs services 层 5,614 行——比例失衡是「业务逻辑下沉失败」的量化证据。后果：同一业务规则在多端点重复实现；无法对业务做单测（必须起 HTTP）；替换存储/加缓存要改 27 个文件。
 - **修复建议**：按领域收敛，先抽最高频的两个：
   1. 用户域 → `services/user_service.py`（收敛 `db.user_store` 的 35 处直连）
   2. 职业素养域 → 已有 `services/career_service.py`，把 `api/career_training.py`、`api/literacy_assessment.py` 中的存储调用迁入
-  接口层只做：参数校验 → 调 service → 组装响应。
+接口层只做：参数校验 → 调 service → 组装响应。
+
+**✅ 修复记录（2026-09-27）**：新建 `py-server/services/user_service.py` 作为用户域 service 入口，显式重导出 `db.user_store` 全部公共函数（配 `__all__`）；API 层 35 处 `from db.user_store import ...` 全部改挂 `services.user_service`（含 `main.py` / `seed_demo_data.py`）。3 处越级拿原始锁/连接的站点改用合规访问器——`daily_plan.reset_plan` 改调 `db.user_store.reset_daily_plan(pid, user_id)`，`wrong_questions` 两处所有权校验改调 `get_wrong_question_owner(qid)`（在 `_lock` 内完成，消除 `_get_conn/_lock/_now` 越级）。`db/user_store.py` 仅新增 2 个函数，未删任何既有符号，tests 仍直连 `db.user_store` 不受影响。
 
 ### [M-3] 反向依赖（下层 import 上层），循环依赖仅被"绕过"未消除 — 🟠 Major
 

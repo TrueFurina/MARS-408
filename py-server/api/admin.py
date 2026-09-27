@@ -7,7 +7,7 @@ import logging
 from fastapi import APIRouter, Depends
 
 from shared.auth import require_admin
-from db.user_store import list_all_users, get_platform_stats
+from services.user_service import list_all_users, get_platform_stats
 
 logger = logging.getLogger("netlearn.admin_api")
 router = APIRouter(prefix="/admin", tags=["admin"])

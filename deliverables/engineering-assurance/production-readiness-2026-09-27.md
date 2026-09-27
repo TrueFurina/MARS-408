@@ -10,7 +10,7 @@
 | 场景 | 判定 | 理由 |
 |---|---|---|
 | **演示 / 答辩 / 评审**（单实例、可控路径、可复现） | ✅ **GO** | 前端构建绿、设计系统三门禁绿、部署件齐备（非 root + 健康检查 + 运维三文档）、安全红线 42 passed |
-| **真实生产上线**（多用户并发、长期演进、团队协作） | ❌ **NO-GO** | 架构分层 3 项未修（M-1/M-2/M-3）、存储锁域三分裂、覆盖率 52% < 54% 门禁、测试存在顺序依赖污染 |
+| **真实生产上线**（多用户并发、长期演进、团队协作） | ❌ **NO-GO** | 架构分层 M-1/M-2/M-3 已修（2026-09-27），但 M-4 存储锁域三分裂仍存、覆盖率 52% < 54% 门禁、测试存在顺序依赖污染 |
 
 ---
 
@@ -55,7 +55,7 @@ env -u PYTHONPATH -u PYTHONSTARTUP -u NODE_OPTIONS -u ELECTRON_RUN_AS_NODE \
 | # | 问题 | 位置 | 后果 |
 |---|---|---|---|
 | M-1 | API 层自建 SQLite 连接 + 独立 Lock | `api/literacy_assessment.py:10,123-147` | 第三个独立锁域；存储实现无法统一替换 |
-| M-2 | 27/44 个 api 模块直连 `db.*`（`db.user_store` 被 import 35 次），仅 14 个走 services | `api/*.py` | 业务规则重复实现、无法单测、替换存储要改 27 个文件 |
+| M-2 | ✅ **已修复** 运行中的 `api/*.py` 直连 `db.user_store` = 0（35 处改挂 `services/user_service.py`）；`db.*` 直连降至仅 `db/memory_store.py` 内部共享连接 | `api/*.py`→`services/user_service.py` | 业务规则重复实现风险收窄；替换存储现只需改 1 个 service 层 |
 | M-3 | 下层反向依赖上层 6 处，靠函数内延迟导入规避 | `db/user_store.py:822,959,989,1014`；`db/graph_db.py:75,281`；`engines/review_policy.py:494` | 依赖环仍在，import 顺序一变即启动期 ImportError |
 
 连带问题：存储锁域分裂为 3 个（`netlearn_users.db` 走 `db/core.py` 单连接+RLock ✓；`pg_fallback.db` 走 `db/pg_client.py:103`；`data/literacy.db` 走 API 层），并发写正确性依赖「三域永不交叉」这一**未写进代码的隐含约定**。
@@ -97,7 +97,7 @@ env -u PYTHONPATH -u PYTHONSTARTUP -u NODE_OPTIONS -u ELECTRON_RUN_AS_NODE \
 1. **M-1**（约 1h）：新建 `db/literacy_store.py`，复用 `db/core.py` 的连接与锁；删除 `api/literacy_assessment.py` 里的 `sqlite3`/`threading`/`_conn`/`_lock`。 — ✅ **已实施**
 2. **M-3**（约 2h）：`review_scheduler` 四个纯函数下沉 `shared/`；`kg_dag` 下沉；删除全部延迟导入。 — ✅ **已实施**
 3. **顺序依赖污染**（约 1h 定位）：先跑 `pytest tests/test_video_feedback.py <候选污染文件>` 二分，定位后加 fixture 隔离或 `autouse` 重置。 — ⏸ 未做
-4. **M-2**（约 1 天）：抽 `services/user_service.py` 收敛 35 处 `db.user_store` 直连（可迭代推进，不必一次做完）。 — ⏸ 未做
+4. **M-2**（约 1 天）：抽 `services/user_service.py` 收敛 35 处 `db.user_store` 直连（可迭代推进，不必一次做完）。 — ✅ **已实施**
 
 ---
 
@@ -121,3 +121,11 @@ env -u PYTHONPATH -u PYTHONSTARTUP -u NODE_OPTIONS -u ELECTRON_RUN_AS_NODE \
 | `CATFISH_MAX_CONTINUE` | `shared/career_consts.py` | `agents/career_state.py` 转委托导出 |
 
 **委托（delegation）而非复制**：所有原路径保留同名再导出，20+ 实验/测试脚本的既有 import 不受影响；每次改动后用 `is` 断言验证同一性（如 `agents.quality_gate.review_signals is engines.review_policy.review_signals` → True）。这与项目既有的「单一真值源 + 其余位置只做委托」纪律一致（`test_review_single_source` 守护）。
+
+### M-2：API 层越级访问存储收敛到 services 层（实测 `api/*.py` 直连 `db.user_store` = 0）
+
+- 新增 `py-server/services/user_service.py`：显式重导出 `db.user_store` 全部 38 个公共函数 + 2 个新增合规访问器，配 `__all__`（ruff F401 不误报）。这是 `API → services → db` 正确分层的用户域入口。
+- API 层 35 处 `from db.user_store import ...`（含 `main.py` / `seed_demo_data.py`）全部改挂 `services.user_service`；运行中的 `api/*.py` 现已零 `db.user_store` 直连（仅 `db/memory_store.py` 保留内部共享连接调用，属 M-4 单连接设计）。
+- 消除最严重越级：`daily_plan.reset_plan` 原 `from db.user_store import _get_conn, _lock, _now` + 裸 UPDATE → 改调 `db.user_store.reset_daily_plan(pid, user_id)`；`wrong_questions` 两处 `SELECT user_id` 所有权校验（裸 `_get_conn/_lock`）→ 改调 `get_wrong_question_owner(qid)`。两访问器在 `db` 层 `_lock` 内完成，API 不再触达存储锁。
+- `db/user_store.py` 仅**加法**：新增 `get_wrong_question_owner` / `reset_daily_plan` 两个函数，未删任何既有符号；tests 仍直连 `db.user_store`，不受影响。
+- 顺带修复本次纳入门禁扫描暴露的 4 个既有 F841 死变量（`assessment.py:profile` / `profile.py:provider` 保留 `_resolve()` 副作用 / `quiz.py:llm_updated` / `quiz.py:analysis` 保留 `error_analyzer.analyze` 调用）。

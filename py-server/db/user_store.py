@@ -864,6 +864,19 @@ def add_wrong_question(user_id: str, question: dict, wrong_answer: str, error_ty
     return get_wrong_question(wid)
 
 
+def get_wrong_question_owner(qid: int) -> Optional[str]:
+    """返回错题归属的 user_id；不存在返回 None。
+
+    M-2 合规访问器：替代 API 层越级访问 ``_get_conn/_lock`` 做所有权校验。
+    """
+    conn = _get_conn()
+    with _lock:
+        row = conn.execute(
+            "SELECT user_id FROM user_wrong_questions WHERE id=?", (qid,)
+        ).fetchone()
+    return row["user_id"] if row else None
+
+
 def get_wrong_question(qid: int) -> Optional[dict]:
     """获取单条错题详情"""
     conn = _get_conn()
@@ -1285,3 +1298,33 @@ def list_daily_plans(user_id: str, start_date: str = None, end_date: str = None,
             "target_score": row["target_score"],
         })
     return result
+
+
+def reset_daily_plan(pid: int, user_id: str) -> Optional[dict]:
+    """将某日计划重置为未开始（所有任务 progress=0, completed=False）。
+
+    M-2 合规访问器：替代 API 层越级访问 ``_get_conn/_lock/_now`` 做原始 UPDATE。
+    返回刷新后的计划；pid 不存在或不属于 user_id 时返回 None。
+    """
+    conn = _get_conn()
+    now = _now()
+    with _lock:
+        row = conn.execute(
+            "SELECT plan_date FROM user_daily_plans WHERE id=? AND user_id=?",
+            (pid, user_id),
+        ).fetchone()
+        if not row:
+            return None
+        try:
+            tasks = json.loads(row["tasks_json"])
+        except Exception:
+            tasks = []
+        for t in tasks:
+            t["progress"] = 0
+            t["completed"] = False
+        conn.execute(
+            "UPDATE user_daily_plans SET tasks_json=?, completed_tasks=0, updated_at=? WHERE id=?",
+            (json.dumps(tasks, ensure_ascii=False), now, pid),
+        )
+        conn.commit()
+    return get_or_create_daily_plan(user_id, plan_date=row["plan_date"])

@@ -19,7 +19,7 @@ router = APIRouter(prefix="/teacher", tags=["teacher"])
 @cached(ttl=120)
 async def get_students_overview(user: dict = Depends(require_teacher_or_demo_open)):
     """获取所有学生概览（教师仪表板）— 基于真实用户与答题历史聚合"""
-    from db.user_store import list_all_users, get_quiz_history
+    from services.user_service import list_all_users, get_quiz_history
     from datetime import datetime
 
     users = list_all_users()
@@ -59,7 +59,7 @@ async def get_students_overview(user: dict = Depends(require_teacher_or_demo_ope
 @router.get("/students/{student_id}/detail")
 async def get_student_detail(student_id: str, user: dict = Depends(require_teacher_or_demo_open)):
     """获取单个学生详细学习数据 — 基于真实画像/答题历史/记忆聚合（循环15-P0）"""
-    from db.user_store import get_profile, get_quiz_history
+    from services.user_service import get_profile, get_quiz_history
     from services import memory_service as mem_svc
 
     profile = get_profile(student_id) or {}
@@ -138,7 +138,7 @@ async def get_knowledge_base_stats(user: dict = Depends(require_teacher_or_demo_
 @cached(ttl=120)
 async def get_class_performance(user: dict = Depends(require_teacher_or_demo_open)):
     """班级整体学习表现分析 — 基于真实答题记录聚合"""
-    from db.user_store import list_all_users
+    from services.user_service import list_all_users
     from collections import Counter, defaultdict
 
     users = list_all_users()
@@ -199,7 +199,7 @@ async def get_class_performance(user: dict = Depends(require_teacher_or_demo_ope
 
     # 近 7 天答题活跃趋势
     from datetime import datetime, timedelta
-    from db.user_store import get_quiz_history
+    from services.user_service import get_quiz_history
     today = datetime.now()
     day_active = Counter()
     for u in students:
@@ -241,7 +241,7 @@ class AssignmentCreateRequest(BaseModel):
 @router.get("/assignments")
 async def list_assignments_api(user: dict = Depends(require_teacher_or_demo_open)):
     """列出全部作业（含提交率/平均分/通过率统计）"""
-    from db.user_store import list_assignments
+    from services.user_service import list_assignments
     assignments = list_assignments()
     return {"status": "ok", "assignments": assignments, "total": len(assignments)}
 
@@ -249,7 +249,7 @@ async def list_assignments_api(user: dict = Depends(require_teacher_or_demo_open
 @router.post("/assignments")
 async def create_assignment_api(req: AssignmentCreateRequest, user: dict = Depends(require_teacher_or_demo_open)):
     """发布作业：保存测验 JSON 快照（不受题库后续编辑影响）"""
-    from db.user_store import create_assignment
+    from services.user_service import create_assignment
     assignment = create_assignment(
         title=req.title,
         quiz_snapshot=req.quiz_snapshot,
@@ -265,7 +265,7 @@ async def create_assignment_api(req: AssignmentCreateRequest, user: dict = Depen
 @router.get("/assignments/{assignment_id}")
 async def get_assignment_api(assignment_id: int, user: dict = Depends(require_teacher_or_demo_open)):
     """获取单个作业详情（教师视角，含快照与统计）"""
-    from db.user_store import get_assignment
+    from services.user_service import get_assignment
     assignment = get_assignment(assignment_id)
     if not assignment:
         raise HTTPException(status_code=404, detail="作业不存在")
@@ -284,7 +284,7 @@ async def submit_assignment_api(
     user: dict = Depends(get_current_user),
 ):
     """学生提交作业（同作业同用户只保留最新一次提交）"""
-    from db.user_store import submit_assignment, get_assignment
+    from services.user_service import submit_assignment, get_assignment
     assignment = get_assignment(assignment_id)
     if not assignment:
         raise HTTPException(status_code=404, detail="作业不存在")
@@ -300,7 +300,7 @@ async def submit_assignment_api(
 @router.get("/assignments/{assignment_id}/my-submission")
 async def get_my_submission_api(assignment_id: int, user: dict = Depends(get_current_user)):
     """查询当前用户在指定作业的提交记录（未提交返回 null）"""
-    from db.user_store import get_submission
+    from services.user_service import get_submission
     submission = get_submission(assignment_id, user.get("user_id", ""))
     return {"status": "ok", "submission": submission}
 
