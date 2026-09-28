@@ -177,3 +177,29 @@ def require_teacher_or_demo_open(
         )
         return user
     raise HTTPException(status_code=403, detail="需要教师或管理员权限")
+
+
+def require_self_or_teacher(user_id: str, user: dict = Depends(get_current_user)) -> dict:
+    """FastAPI dependency: 「自有数据」端点权限控制（本人 / 教师 / 管理员）。
+
+    用于形如 `GET /xxx/{user_id}` 的**个人数据**端点：
+    - 调用者身份（token sub）等于路径 `user_id` → 放行（本人读自己的数据）；
+    - 角色为 admin / teacher → 放行（教师查学生，教学场景必需）；
+    - 其余 → 403。
+
+    **刻意不接入 `NETLEARN_DEMO_TEACHER_OPEN` 演示放宽**：该放宽是为了让 demo 学生账号
+    预览教师仪表板；而本依赖守护的是「按 user_id 逐条读取的个人数据」，一旦放宽，
+    演示环境里任何持 demo 账号者即可枚举学号读取任意学生数据（等于把 IDOR 原样放回）。
+    本人自查场景不依赖该开关（token sub 与目标 user_id 相等即通过），故无需放宽。
+
+    `user_id` 由 FastAPI 从同名路径参数自动注入，调用方不必显式传参。
+    """
+    if user.get("user_id") == user_id:
+        return user
+    if user.get("role") in ("admin", "teacher"):
+        return user
+    logger.warning(
+        "越权读取被拒绝：用户 %s (role=%s) 请求 user_id=%s 的个人数据",
+        user.get("user_id"), user.get("role", "student"), user_id,
+    )
+    raise HTTPException(status_code=403, detail="仅可查看本人的数据")

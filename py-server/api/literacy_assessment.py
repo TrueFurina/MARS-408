@@ -2,16 +2,26 @@
 # API — 职业素养测评（对照实验载体模块）
 # 六维软素养行为题：前后测（pre/post）+ 维度分档计分 + 班级聚合
 # 口径：软素养行为题无标准答案，采用维度分档计分（非对错制）
+#
+# 鉴权口径（2026-09-28 收紧，此前三个端点零鉴权）：
+#   /questions     公开——只读题库、不含任何学生数据
+#   /submit        需登录（get_current_user）——须持有有效凭据方可写入测评记录
+#   /report/{uid}  本人 / 教师 / 管理员（require_self_or_teacher）
+#   /class-report  教师 / 管理员（require_teacher_or_demo_open）
+# 背景：`user_id` 即「学号后 4 位」，此前未登录即可枚举读取任意学生报告、
+#       拉取全班姓名+逐人明细、并以任意学生身份覆盖其前后测记录。
+#       该模块是对照实验的原始数据入口，数据可读可改会直接动摇研究结论。
 # ============================================================
 
 import json
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel
 
 from db.literacy_store import get_class_attempts, get_user_attempts, save_attempt
+from shared.auth import get_current_user, require_self_or_teacher, require_teacher_or_demo_open
 
 logger = logging.getLogger("netlearn.literacy")
 
@@ -137,7 +147,11 @@ class LiteracyClassReportRequest(BaseModel):
 # ------------------------------------------------------------
 @router.get("/questions")
 async def get_questions():
-    """获取素养测评题库（学生端答题页）。"""
+    """获取素养测评题库（学生端答题页）。
+
+    **刻意保持公开**：纯只读题库，不含任何学生数据，也不产生写入；
+    学生答题页必须在拿到题目之前可用。其余三个端点均已要求凭据。
+    """
     return {"total": len(QUESTION_BANK), "dimensions": DIMENSIONS,
             "questions": [{"id": q["id"], "dim": q["dim"], "type": q["type"],
                            "stem": q["stem"], "options": q["options"]} for q in QUESTION_BANK]}
@@ -149,6 +163,11 @@ def _resolve_submitter_uid(req: LiteracySubmitRequest, authorization: Optional[s
     优先级：请求体 user_id（课堂实验编号=学号后4位）→ Bearer token sub → demo 兜底。
     请求体必须优先：全班共用 demo 账号登录时 token sub 一律是 demo，若 token 优先会再次
     互相覆盖（并发试测实锤过一次）。
+
+    注意：本函数**只负责「记到谁名下」，不负责「谁有权提交」**——权限由调用方的
+    `get_current_user` 依赖闸门承担。两者刻意分离：身份归属规则是课堂流程约束，
+    鉴权是安全约束，混在一起会让两者互相污染。因闸门已保证 token 有效，
+    HTTP 路径下 demo 兜底分支实际不可达，保留是为了维持直接调用（单测）的语义。
     """
     uid = req.user_id.strip()
     if not uid and authorization and authorization.startswith("Bearer "):
@@ -166,12 +185,18 @@ def _resolve_submitter_uid(req: LiteracySubmitRequest, authorization: Optional[s
 async def submit_literacy(
     req: LiteracySubmitRequest,
     authorization: Optional[str] = Header(default=None),
+    _user: dict = Depends(get_current_user),
 ):
     """提交素养测评：分档计分 → 六维得分 → 落库（pre/post 各一次）。
 
     user_id 解析顺序：请求体 user_id（课堂实验编号=学号后4位）→ Bearer token → demo 兜底。
     实验编号必须优先：全班共用 demo 账号登录时 token 一律是 demo，
     若 token 优先会再次互相覆盖（并发试测实锤过一次）。
+
+    `_user` 不参与计算，仅作 FastAPI 鉴权闸门：无有效凭据一律 401。
+    它拦住的是「匿名第三方以任意学号写入/覆盖研究原始数据」；
+    拦截不到「已登录的 demo 账号替他人提交」——那是全班共用账号的固有代价，
+    要根治需为每名学生发独立账号（已记录为后续项，不在本次改动范围）。
     """
     uid = _resolve_submitter_uid(req, authorization)
     if req.phase not in ("pre", "post"):
@@ -205,8 +230,18 @@ async def submit_literacy(
 
 
 @router.get("/report/{user_id}")
-async def get_report(user_id: str):
-    """个人素养报告：pre/post 六维对比（前后测差值）。"""
+async def get_report(
+    user_id: str,
+    _actor: dict = Depends(require_self_or_teacher),
+):
+    """个人素养报告：pre/post 六维对比（前后测差值）。
+
+    权限：**本人 / 教师 / 管理员** —— `require_self_or_teacher` 直接从同名路径参数
+    注入 `user_id`，因此「本人」判定用的是 token sub 与路径的一致性。
+
+    收紧前该端点零鉴权：`user_id` 即「学号后 4 位」，仅需 10^4 次枚举即可
+    未登录读取任意学生的六维测评报告（IDOR）。
+    """
     rows = get_user_attempts(user_id)
     by_phase = {r["phase"]: r for r in rows}
     if not by_phase:
@@ -228,8 +263,19 @@ async def get_report(user_id: str):
 
 
 @router.post("/class-report")
-async def get_class_report(req: LiteracyClassReportRequest):
-    """教师端班级六维聚合：全班 pre/post 均值 + 逐人明细。"""
+async def get_class_report(
+    req: LiteracyClassReportRequest,
+    _teacher: dict = Depends(require_teacher_or_demo_open),
+):
+    """教师端班级六维聚合：全班 pre/post 均值 + 逐人明细。
+
+    权限：**教师 / 管理员**（`require_teacher_or_demo_open`，与 `api/teacher.py` 的
+    教师端点同口径）。收紧前该端点零鉴权：只需填一个班级名，即可拿到
+    **全班学生 user_id + user_name + 逐人各维度分数明细**。
+
+    演示环境如需让 demo 学生账号预览，按既有约定设 `NETLEARN_DEMO_TEACHER_OPEN=1`
+    （每次放宽写 `[DEMO-RELAX]` 审计日志）；生产环境严禁设置。
+    """
     rows = get_class_attempts(req.class_name)
     if not rows:
         raise HTTPException(status_code=404, detail="该班级暂无测评记录")
