@@ -476,7 +476,7 @@ agentOutputs.value = {}
     //   {type:'error', field:'pipeline_error', content:'...'}
     //   data: [DONE]
 const stageMap: Record<string, number> = {
-      coordinator: 1, diagnostician: 1, planner: 1, retriever: 1,
+      triage: 1, coordinator: 1, diagnostician: 1, planner: 1, retriever: 1,
       generator_cluster: 2, assessor: 3, critic: 4, evidence_check: 5, quality_gate: 5, path_planner: 5,
     }
     const contentAgentMap: Record<string, string> = {
@@ -514,8 +514,10 @@ const stageMap: Record<string, number> = {
           if (evt.type === 'node_done') {
             const nodeName = (evt.field || '') as string
             if (stageMap[nodeName]) {
-              pipelineStage.value = stageMap[nodeName] as number
-              progressPct.value = stageProgress[pipelineStage.value] || progressPct.value
+              const st = stageMap[nodeName] as number
+              pipelineStage.value = st
+              // 进度单调不回退：quality_gate 回环重试时不让进度条从 100% 倒退
+              progressPct.value = Math.max(progressPct.value, stageProgress[st] ?? 0)
             }
             const step = agentSteps[pipelineStage.value - 1]
             currentAgent.value = (step && step.name) || nodeName
@@ -778,7 +780,7 @@ function parseWeakPoints(wpStr: string): string[] {
         <!-- 仅开发环境：演练流水线与监测面板，不调用大模型 -->
         <template v-if="isDev">
           <button class="rag-btn rv-drill" @click="runDrill(false)" :disabled="loading"
-            title="演练：模拟 7 个节点推进并注入一次失败，不调用大模型">演练</button>
+            title="演练：模拟 5 个节点推进并注入一次失败，不调用大模型">演练</button>
           <button class="rag-btn rv-drill" @click="runDrill(true)" :disabled="loading"
             title="演练停滞：只提交不推进，用于观察 15 秒后的停滞告警条">演练停滞</button>
         </template>
