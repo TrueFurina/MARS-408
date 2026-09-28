@@ -1,7 +1,7 @@
 {
   "schema": "kg408/v1",
   "provenance": {
-    "source_path": "E:/Program/MARL/SAGE/pdf/03_408知识图谱骨架.html",
+    "source_path": "data/kg408/inputs/03_408知识图谱骨架.html",
     "source_sha256": "a127702b519d54670517bf35a8b1c2ae0d2c917c4ec464d4e5e98246defcdee5",
     "source_bytes": 9995,
     "source_mtime_utc": "2026-09-20T15:42:37Z",
@@ -14,9 +14,9 @@
     "generator": "scripts/build_kg408.py",
     "generator_version": "1.0.0",
     "parser_rule_version": "kg408-parse-r1",
-    "command": "python scripts/build_kg408.py --source E:/Program/MARL/SAGE/pdf/03_408知识图谱骨架.html --out-dir data/kg408",
+    "command": "python scripts/build_kg408.py --source data/kg408/inputs/03_408知识图谱骨架.html --out-dir data/kg408",
     "generated_at_utc": "2026-09-20T15:42:37Z",
-    "generated_at_utc_basis": "source_file_mtime_utc__deterministic"
+    "generated_at_utc_basis": "source_pin__deterministic"
   },
   "stats": {
     "nodes_total": 136,

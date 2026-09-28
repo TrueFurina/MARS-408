@@ -3,9 +3,9 @@
 # ============================================================
 # build_kg408.py — 408 知识图谱骨架「单一真源」生成器
 #
-# 用法（在 py-server 目录下）：
+# 用法（在 py-server 目录下；源骨架已入库于 data/kg408/inputs/）：
 #   python scripts/build_kg408.py \
-#       --source "E:/Program/MARL/SAGE/pdf/03_408知识图谱骨架.html" \
+#       --source "data/kg408/inputs/03_408知识图谱骨架.html" \
 #       --out-dir data/kg408
 #
 # 设计约束（架构设计 §3 / §8）：
@@ -62,9 +62,17 @@ GENERATOR_VERSION = "1.0.0"
 PARSER_RULE_VERSION = "kg408-parse-r1"
 SCHEMA_VERSION = "kg408/v1"
 
-DEFAULT_SOURCE = "E:/Program/MARL/SAGE/pdf/03_408知识图谱骨架.html"
+# 源骨架：**相对 py-server 根**的可移植路径（PR#22 CI 修复）。
+# 源文件已字节原样入库于 data/kg408/inputs/（见 .gitattributes 的 `-text` 规则），
+# 解析时统一按 _ROOT 展开（_resolve_source），不再依赖 CWD 或本机绝对路径。
+DEFAULT_SOURCE = "data/kg408/inputs/03_408知识图谱骨架.html"
 DEFAULT_OUT_DIR = "data/kg408"
 DEFAULT_DOC_OUT = "deliverables/408-kg/kg408-stats.md"
+# 源骨架冻结 pin（入库，相对 py-server 根）：记录源 sha256 / 字节数 / mtime(UTC)。
+# 构建时**优先读 pin** 取 mtime —— 因为 **git 不保留 mtime**：若取现场文件 mtime，
+# 新克隆的 mtime = 检出时刻，generated_at_utc 随之改变 → 「任意克隆逐字节可复现」
+# 不成立。pin 缺失时才回退现场 mtime，并如实标注 basis。
+DEFAULT_SOURCE_PIN = "data/kg408/kg408_source_pin.json"
 
 KP_SPLIT_RE = re.compile(r"[、,，;；]")
 SUBJ_CODE_RE = re.compile(r"[（(](DS|CO|OS|CN)[）)]")
@@ -480,6 +488,7 @@ class Kg408Builder:
         chapter_map_sha256: str = "",
         manual_nodes_path: str = "",
         manual_nodes_sha256: str = "",
+        generated_at_utc_basis: str = "source_file_mtime_utc__deterministic",
     ) -> None:
         self._parser = HtmlSkeletonParser(html)
         self._alias_entries = alias_entries
@@ -501,7 +510,7 @@ class Kg408Builder:
             parser_rule_version=PARSER_RULE_VERSION,
             command=command,
             generated_at_utc=source_mtime_utc,
-            generated_at_utc_basis="source_file_mtime_utc__deterministic",
+            generated_at_utc_basis=generated_at_utc_basis,
         )
         self._resolver: Optional[NameResolver] = None
         self._counter = {"prereq": 0, "cross": 0}
@@ -1031,9 +1040,30 @@ def _load_json(path: Path, default: Any) -> Any:
         return json.load(f)
 
 
+def _resolve_source(arg_source: str) -> Path:
+    """把 --source 解析为绝对路径：相对路径一律相对 py-server 根（_ROOT）。
+
+    这样 DEFAULT_SOURCE 可用可移植的相对路径，且不依赖调用时的 CWD。
+    """
+    p = Path(arg_source)
+    return p if p.is_absolute() else (_ROOT / p)
+
+
+def _portable_source_path(src: Path) -> str:
+    """入库 provenance 用的源路径：仓库内一律给「相对 _ROOT 的 posix 路径」。
+
+    目标：入库的 source_path **不含盘符/绝对路径**，任意克隆一致。
+    源在仓库外时（仅调试）才退回 posix 绝对路径。
+    """
+    try:
+        return src.resolve().relative_to(_ROOT.resolve()).as_posix()
+    except ValueError:
+        return str(src).replace("\\", "/")
+
+
 def run_build(args: argparse.Namespace) -> Kg408:
     """执行一次完整构建（不写 docs 产物时可复用）。"""
-    src = Path(args.source)
+    src = _resolve_source(args.source)
     if not src.exists():
         raise SystemExit(f"[build_kg408] 源文件不存在: {src}")
     html = src.read_text(encoding="utf-8")
@@ -1066,13 +1096,38 @@ def run_build(args: argparse.Namespace) -> Kg408:
     command = args.command or (
         f"python scripts/build_kg408.py --source {args.source} --out-dir {args.out_dir}"
     )
+
+    # 源骨架身份：**优先读冻结 pin** 的 mtime（使任意克隆逐字节可复现；
+    # git 不保留 mtime），并 fail-closed 断言现场源 sha == pin sha
+    # （有人改了源却不更新 pin 必须报错，不能静默漂移）。
+    src_sha = _sha256_of(src)
+    pin_path = _resolve_source(args.source_pin)
+    pin = _load_json(pin_path, None)
+    if isinstance(pin, dict) and pin.get("source_sha256"):
+        pin_sha = str(pin["source_sha256"])
+        if src_sha != pin_sha:
+            raise SystemExit(
+                "[build_kg408] 源骨架与冻结 pin 不符（改了源却没更新 pin，拒绝生成）：\n"
+                f"  pin  sha256 : {pin_sha}\n  现场 sha256 : {src_sha}\n"
+                f"  如确认源已复核，请手工更新 {pin_path}"
+            )
+        source_mtime_utc = str(
+            pin.get("source_mtime_utc") or _utc_iso(src.stat().st_mtime)
+        )
+        generated_at_utc_basis = "source_pin__deterministic"
+    else:
+        # pin 缺失：回退现场 mtime，并**如实标注**（该模式下「任意克隆可复现」不成立）
+        source_mtime_utc = _utc_iso(src.stat().st_mtime)
+        generated_at_utc_basis = "source_file_mtime_utc__deterministic"
+
     builder = Kg408Builder(
         html=html,
-        source_path=str(src).replace("\\", "/"),
-        source_sha256=_sha256_of(src),
+        source_path=_portable_source_path(src),
+        source_sha256=src_sha,
         source_bytes=src.stat().st_size,
-        source_mtime_utc=_utc_iso(src.stat().st_mtime),
+        source_mtime_utc=source_mtime_utc,
         command=command,
+        generated_at_utc_basis=generated_at_utc_basis,
         alias_entries=list(alias_doc.get("entries", []) or []),
         chapter_map=cmap_doc,
         manual_nodes=list(manual_doc.get("nodes", []) or []),
@@ -1109,8 +1164,12 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap = argparse.ArgumentParser(
         description="构建 408 知识图谱骨架单一真源 data/kg408/kg408.json"
     )
-    ap.add_argument("--source", default=DEFAULT_SOURCE, help="源骨架 HTML 路径")
+    ap.add_argument("--source", default=DEFAULT_SOURCE, help="源骨架 HTML 路径（相对 py-server 根）")
     ap.add_argument("--out-dir", default=DEFAULT_OUT_DIR, help="输出目录")
+    ap.add_argument(
+        "--source-pin", default=DEFAULT_SOURCE_PIN,
+        help="源骨架冻结 pin（相对 py-server 根）：优先取其 mtime/sha，使任意克隆逐字节可复现",
+    )
     ap.add_argument("--alias", default="", help="别名表路径（默认 <out-dir>/kg408_alias.json）")
     ap.add_argument(
         "--chapter-map", default="", help="章映射表路径（默认 <out-dir>/kg408_chapter_map.json）"

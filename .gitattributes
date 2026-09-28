@@ -8,3 +8,8 @@
 # 用 eol=lf 固定这些路径的检出行为，使「可复现」在任意平台/任意克隆成立。
 py-server/data/kg408/** text eol=lf
 deliverables/408-kg/** text eol=lf
+
+# 源骨架是 CRLF 原始件，必须字节原样入库：-text 关闭行尾归一
+# （更具体且靠后的规则胜出；否则上面 `** text eol=lf` 会把 347 个 CRLF 归一成 LF，
+#  source sha256 立刻不符，provenance 锚点与冻结 pin 全崩。）
+py-server/data/kg408/inputs/** -text

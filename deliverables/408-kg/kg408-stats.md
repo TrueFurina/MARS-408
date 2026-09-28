@@ -9,7 +9,7 @@
 
 | 项 | 值 |
 |---|---|
-| 源骨架文件 | `E:/Program/MARL/SAGE/pdf/03_408知识图谱骨架.html` |
+| 源骨架文件 | `data/kg408/inputs/03_408知识图谱骨架.html` |
 | 源骨架 sha256 | `a127702b519d54670517bf35a8b1c2ae0d2c917c4ec464d4e5e98246defcdee5` |
 | 源骨架字节数 | 9995 |
 | 源骨架 mtime (UTC) | 2026-09-20T15:42:37Z |
@@ -21,9 +21,9 @@
 | 人工补充节点表 sha256 | `767effe393b1d6b170a64ffd43ccfc8b17ecc8843055af923eb19fe84c8e2dc0` |
 | 生成脚本 | `scripts/build_kg408.py` (v1.0.0) |
 | 解析规则版本 | `kg408-parse-r1` |
-| 生成命令 | `python scripts/build_kg408.py --source E:/Program/MARL/SAGE/pdf/03_408知识图谱骨架.html --out-dir data/kg408` |
+| 生成命令 | `python scripts/build_kg408.py --source data/kg408/inputs/03_408知识图谱骨架.html --out-dir data/kg408` |
 | generated_at_utc | 2026-09-20T15:42:37Z |
-| generated_at_utc 口径 | `source_file_mtime_utc__deterministic` |
+| generated_at_utc 口径 | `source_pin__deterministic` |
 
 > **全部产物刻意不含墙钟时刻**：`generated_at_utc` 取**源骨架 mtime(UTC)**，因此本文件、`kg408.json`、`unresolved.json`、`kg408_stats.json` 连跑两次**逐字节一致**（`git diff` 为空）。构建时刻不属于「结论」，不进入产物；如确需，看本次构建的 stdout 输出或 `kg408.json` 的 git 提交时间。
 

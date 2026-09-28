@@ -58,9 +58,14 @@ from services.kg408 import (  # noqa: E402
     build_stats,
 )
 
-DEFAULT_SOURCE = "E:/Program/MARL/SAGE/pdf/03_408知识图谱骨架.html"
+# 源骨架：**相对 py-server 根**的可移植路径（PR#22 CI 修复）。源已字节原样入库于
+# data/kg408/inputs/；解析时统一按 _ROOT 展开，不再依赖 CWD 或本机绝对路径。
+DEFAULT_SOURCE = "data/kg408/inputs/03_408知识图谱骨架.html"
 DEFAULT_OUT_DIR = "data/kg408"
 DEFAULT_DOC = "deliverables/408-kg/kg408-stats.md"
+# 源骨架冻结 pin（相对 py-server 根）：校验其 sha 必须等于 provenance.source_sha256，
+# 防止「改 pin 绕过」→ 见 assert_provenance_anchors（fail-closed）。
+DEFAULT_SOURCE_PIN = "data/kg408/kg408_source_pin.json"
 
 # 文档中被断言的标签 → JSON 真值取值路径（stats 中的 key）
 # QA M5/M6/M8/M12 修复：补上 §3 分科构成、§4 resolution 分布、
@@ -401,6 +406,8 @@ def assert_provenance_anchors(kg: Kg408, source: str, out_dir: Path) -> List[str
     """
     errs: List[str] = []
     src = Path(source)
+    if not src.is_absolute():
+        src = _ROOT / src
     if src.exists():
         real = _sha256_file(src)
         if kg.provenance.source_sha256 != real:
@@ -410,6 +417,30 @@ def assert_provenance_anchors(kg: Kg408, source: str, out_dir: Path) -> List[str
             )
     else:
         errs.append(f"源骨架不存在，无法校验 source_sha256 锚点: {src}")
+
+    # ── 源骨架冻结 pin：sha 必须等于 provenance.source_sha256（fail-closed）──
+    # 防「改 pin 绕过」：pin 是入库的第二锚点，必须与 provenance 自洽。
+    pin_path = _ROOT / DEFAULT_SOURCE_PIN
+    pin: Any = None
+    if pin_path.exists():
+        try:
+            with pin_path.open("r", encoding="utf-8") as f:
+                pin = json.load(f)
+        except (OSError, ValueError):
+            pin = None
+    if not isinstance(pin, dict) or not pin.get("source_sha256"):
+        errs.append(
+            f"源骨架冻结 pin 缺失或无法解析: {pin_path}"
+            "（只允许人工维护；缺失无法保证『任意克隆逐字节可复现』）"
+        )
+    else:
+        pin_sha = str(pin.get("source_sha256"))
+        if pin_sha != kg.provenance.source_sha256:
+            errs.append(
+                f"pin.source_sha256 与 provenance.source_sha256 不符："
+                f"pin={pin_sha}，provenance={kg.provenance.source_sha256}"
+                "（改 pin 或改 provenance 都必须人工复核后同步）"
+            )
 
     # ── 冻结清单：缺失即失败（fail-closed，避免删掉清单就绕过漂移检测）──
     frozen = _load_frozen_manifest(out_dir)

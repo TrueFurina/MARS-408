@@ -1,0 +1,348 @@
+<!DOCTYPE html><html><head><meta charset='utf-8'><title>03_408知识图谱骨架</title><style>
+@page { size: A4; margin: 18mm 16mm 18mm 16mm; }
+* { box-sizing: border-box; }
+body {
+  font-family: "Microsoft YaHei", "sagecjk", sans-serif;
+  font-size: 10.5pt; line-height: 1.68; color: #1a1a1a; margin: 0;
+}
+h1 { font-size: 19pt; color: #0f2b46; margin: 0 0 6pt 0; line-height: 1.3;
+     border-bottom: 2.5pt solid #1a4d7a; padding-bottom: 6pt; }
+h2 { font-size: 14.5pt; color: #14456e; margin: 16pt 0 6pt 0;
+     border-left: 4pt solid #1a4d7a; padding-left: 7pt; line-height: 1.35; }
+h3 { font-size: 12pt; color: #1a4d7a; margin: 12pt 0 4pt 0; }
+h4 { font-size: 11pt; color: #2c5f8d; margin: 10pt 0 3pt 0; }
+p { margin: 5pt 0; text-align: justify; }
+ul, ol { margin: 5pt 0 5pt 0; padding-left: 18pt; }
+li { margin: 2pt 0; }
+blockquote {
+  margin: 7pt 0; padding: 6pt 10pt; background: #f2f6fa;
+  border-left: 3pt solid #6f9ec4; color: #29455f; font-size: 10pt;
+}
+blockquote p { margin: 3pt 0; }
+/* IMPORTANT: inline code and pre MUST resolve to our CJK subset, because the
+   renderer's default monospace (Nimbus Mono PS) has NO CJK glyphs: a single
+   Chinese char inside `...` makes PyMuPDF embed its 3.4 MB Droid fallback.
+   We keep the monospace *look* via colour/background only. */
+code, pre, kbd, samp, tt {
+  font-family: "sagecjk", "Microsoft YaHei", monospace;
+  font-size: 9.4pt;
+}
+code {
+  background: #f0f2f4; padding: 1pt 3pt; border-radius: 2pt; color: #9c2a1f;
+}
+pre {
+  background: #f7f8fa; border: 0.6pt solid #d5dbe1; border-left: 3pt solid #6f9ec4;
+  padding: 7pt 9pt; margin: 7pt 0; overflow-wrap: break-word;
+  white-space: pre-wrap; font-size: 8.8pt; line-height: 1.44;
+}
+pre code { background: none; color: #1f2933; padding: 0; font-size: 8.8pt; }
+/* Tables use bold header cells; make sure bold resolves to a declared face
+   rather than a synthesised one the renderer would source elsewhere. */
+table {
+  border-collapse: collapse; width: 100%; margin: 8pt 0; font-size: 8.8pt;
+}
+th {
+  background: #1a4d7a; color: #ffffff; font-weight: normal;
+  border: 0.6pt solid #14456e; padding: 4pt 5pt; text-align: left;
+}
+td { border: 0.6pt solid #c9d4de; padding: 4pt 5pt; vertical-align: top; }
+tr:nth-child(even) td { background: #f6f9fc; }
+hr { border: none; border-top: 1.2pt solid #c9d4de; margin: 12pt 0; }
+a { color: #1a4d7a; text-decoration: none; }
+strong { color: #0f2b46; font-weight: normal; text-decoration: underline; }
+em { font-style: normal; text-decoration: underline; }
+</style></head><body><h1 id="sage-408-bayesg">SAGE · 计算机 408 知识图谱骨架（BayesG 图结构来源）</h1>
+<blockquote>
+<p>用途：为 BayesG 自我图推断提供「知识点节点 + 先修边」的图结构；也是题库标签体系的骨架。<br />
+层级：<strong>科目 → 章 → 考点</strong>。节点=考点，边=先修/关联关系。</p>
+</blockquote>
+<hr />
+<h2 id="1">1. 四科考点骨架（三级：科目/章/考点）</h2>
+<h3 id="ds">数据结构（DS）</h3>
+<table>
+<thead>
+<tr>
+<th>章</th>
+<th>核心考点（=图节点）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>绪论</td>
+<td>时间复杂度、空间复杂度</td>
+</tr>
+<tr>
+<td>线性表</td>
+<td>顺序表、单链表、双链表、循环链表</td>
+</tr>
+<tr>
+<td>栈与队列</td>
+<td>栈、队列、循环队列、栈的应用（表达式/括号匹配）</td>
+</tr>
+<tr>
+<td>串</td>
+<td>串匹配、KMP、next 数组</td>
+</tr>
+<tr>
+<td>树与二叉树</td>
+<td>二叉树、遍历（前中后层）、线索二叉树、哈夫曼树、并查集</td>
+</tr>
+<tr>
+<td>图</td>
+<td>存储（邻接矩阵/表）、BFS/DFS、最小生成树、最短路径（Dijkstra/Floyd）、拓扑排序、关键路径</td>
+</tr>
+<tr>
+<td>查找</td>
+<td>顺序/折半、二叉排序树、平衡二叉树、B 树/B+ 树、散列</td>
+</tr>
+<tr>
+<td>排序</td>
+<td>插入/希尔、冒泡/快排、选择/堆、归并、基数、外部排序</td>
+</tr>
+</tbody>
+</table>
+<h3 id="co">计算机组成原理（CO）</h3>
+<table>
+<thead>
+<tr>
+<th>章</th>
+<th>核心考点（=图节点）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>系统概述</td>
+<td>冯诺依曼结构、性能指标（CPI/MIPS）</td>
+</tr>
+<tr>
+<td>数据表示与运算</td>
+<td>进制转换、定点数、浮点数（IEEE754）、校验码、ALU</td>
+</tr>
+<tr>
+<td>存储系统</td>
+<td>存储层次、Cache（映射/替换）、主存、虚拟存储</td>
+</tr>
+<tr>
+<td>指令系统</td>
+<td>寻址方式、CISC/RISC、指令格式</td>
+</tr>
+<tr>
+<td>中央处理器</td>
+<td>数据通路、控制器、指令流水线（冲突/冒险）、中断</td>
+</tr>
+<tr>
+<td>总线</td>
+<td>总线仲裁、总线定时</td>
+</tr>
+<tr>
+<td>输入输出</td>
+<td>IO 方式（查询/中断/DMA）、中断处理</td>
+</tr>
+</tbody>
+</table>
+<h3 id="os">操作系统（OS）</h3>
+<table>
+<thead>
+<tr>
+<th>章</th>
+<th>核心考点（=图节点）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>概述</td>
+<td>发展、并发/共享、内核态用户态、系统调用</td>
+</tr>
+<tr>
+<td>进程管理</td>
+<td>进程/线程、调度算法、同步互斥（PV/管程）、死锁</td>
+</tr>
+<tr>
+<td>内存管理</td>
+<td>连续分配、分页、分段、虚拟内存、页面置换（FIFO/LRU/OPT）</td>
+</tr>
+<tr>
+<td>文件管理</td>
+<td>文件系统、目录、磁盘结构、空闲空间管理</td>
+</tr>
+<tr>
+<td>输入输出</td>
+<td>设备管理、缓冲、SPOOLing</td>
+</tr>
+</tbody>
+</table>
+<h3 id="cn">计算机网络（CN）</h3>
+<table>
+<thead>
+<tr>
+<th>章</th>
+<th>核心考点（=图节点）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>体系结构</td>
+<td>OSI、TCP/IP、性能指标（时延/带宽）</td>
+</tr>
+<tr>
+<td>物理层</td>
+<td>通信基础、编码调制、交换方式</td>
+</tr>
+<tr>
+<td>数据链路层</td>
+<td>成帧、差错控制、流量控制、CSMA/CD、局域网、交换机</td>
+</tr>
+<tr>
+<td>网络层</td>
+<td>IPv4、子网划分、路由算法、路由协议、IPv6、IP 多播</td>
+</tr>
+<tr>
+<td>传输层</td>
+<td>UDP、TCP（连接管理）、可靠传输、流量控制、拥塞控制</td>
+</tr>
+<tr>
+<td>应用层</td>
+<td>DNS、FTP、电子邮件、HTTP/HTTPS、万维网</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2-prerequisite-edges">2. 先修边（同科内 prerequisite edges）——引导「该从哪个前置补起」</h2>
+<table>
+<thead>
+<tr>
+<th>目标考点</th>
+<th>先修考点（出题时优先回退）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>图的遍历 BFS/DFS</td>
+<td>树的遍历</td>
+</tr>
+<tr>
+<td>最短路径 Dijkstra</td>
+<td>图存储、BFS</td>
+</tr>
+<tr>
+<td>归并/快排</td>
+<td>递归、分治</td>
+</tr>
+<tr>
+<td>平衡二叉树</td>
+<td>二叉排序树、二叉树遍历</td>
+</tr>
+<tr>
+<td>B 树</td>
+<td>二叉排序树、查找</td>
+</tr>
+<tr>
+<td>指令流水线</td>
+<td>指令系统、CPU 数据通路</td>
+</tr>
+<tr>
+<td>Cache</td>
+<td>存储层次、主存</td>
+</tr>
+<tr>
+<td>虚拟存储</td>
+<td>分页、Cache</td>
+</tr>
+<tr>
+<td>死锁</td>
+<td>进程同步互斥、资源分配</td>
+</tr>
+<tr>
+<td>页面置换 LRU</td>
+<td>分页、队列/栈</td>
+</tr>
+<tr>
+<td>TCP 可靠传输</td>
+<td>数据链路层差错/流量控制</td>
+</tr>
+<tr>
+<td>TCP 拥塞控制</td>
+<td>流量控制、滑动窗口</td>
+</tr>
+<tr>
+<td>路由协议</td>
+<td>路由算法（Dijkstra/距离向量）</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-cross-subject-association-edges">3. 跨科关联边（cross-subject association edges）——「四科联动」卖点</h2>
+<table>
+<thead>
+<tr>
+<th>关联</th>
+<th>DS</th>
+<th>CO</th>
+<th>OS</th>
+<th>CN</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>最短路径算法</td>
+<td>图-Dijkstra</td>
+<td>—</td>
+<td>—</td>
+<td>网络层-路由算法（同源）</td>
+</tr>
+<tr>
+<td>滑动窗口</td>
+<td>队列</td>
+<td>—</td>
+<td>—</td>
+<td>传输层-流量控制</td>
+</tr>
+<tr>
+<td>散列/相联查找</td>
+<td>查找-散列</td>
+<td>Cache-映射</td>
+<td>页面-快表 TLB</td>
+<td>内容寻址</td>
+</tr>
+<tr>
+<td>磁盘调度「电梯算法」</td>
+<td>排序</td>
+<td>输入输出</td>
+<td>文件-磁盘调度</td>
+<td>—</td>
+</tr>
+<tr>
+<td>页面置换 LRU</td>
+<td>队列/栈</td>
+<td>—</td>
+<td>内存-页面置换</td>
+<td>—</td>
+</tr>
+<tr>
+<td>中断/系统调用</td>
+<td>—</td>
+<td>CPU-中断</td>
+<td>概述-系统调用/内核态</td>
+<td>—</td>
+</tr>
+<tr>
+<td>排序与流水线</td>
+<td>排序</td>
+<td>CPU-流水线</td>
+<td>调度</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>跨科边是 BayesG ego-graph 的「关联边」来源，让系统在「补一个知识点」时能顺带点亮「同源跨科知识点」，这是 TuringMate 等产品已点出但未形式化的「四科联动」能力，SAGE 用图结构把它变成可计算、可测量（跨科命中率）。</p>
+</blockquote>
+<hr />
+<h2 id="4">4. 图结构落地要点（给实现）</h2>
+<ul>
+<li><strong>节点</strong>：上述「考点」为叶子节点，向上挂「章」「科目」两级父节点（便于按学科分层出题）。</li>
+<li><strong>边</strong>：① 先修边（同科，有向，指向前置）② 关联边（跨科，无向/双向，权重=关联强度）。</li>
+<li><strong>ego-graph</strong>：以「当前题目命中的考点」为 ego 中心，取 1~2 跳邻域，作为「候选引导知识点」。</li>
+<li><strong>聚焦掩码</strong>：BayesG 在 ego-graph 上采样「下一步该引导/出题的知识点」，稀疏性保证聚焦。</li>
+<li><strong>冷启动</strong>：先用王道/教材章节目录 + 真题考点标签初始化图，再随学生错题数据增补边（错题共现 → 新增关联边）。</li>
+</ul></body></html>

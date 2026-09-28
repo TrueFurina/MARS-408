@@ -1,0 +1,8 @@
+{
+  "schema": "kg408/source-pin/v1",
+  "source_path": "data/kg408/inputs/03_408知识图谱骨架.html",
+  "source_sha256": "a127702b519d54670517bf35a8b1c2ae0d2c917c4ec464d4e5e98246defcdee5",
+  "source_bytes": 9995,
+  "source_mtime_utc": "2026-09-20T15:42:37Z",
+  "note": "冻结的源骨架身份：git 不保留 mtime，故构建时优先读本 pin 取 mtime/sha，使任意克隆逐字节可复现。只允许人工更新；更新前必须复核源文件 sha256，否则 build 会 fail-closed 拒绝生成。"
+}
