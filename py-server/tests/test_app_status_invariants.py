@@ -11,6 +11,8 @@
    接口会静默消失，重复登记则让「注册顺序即匹配顺序」的约定失效。
 4. 对外 OpenAPI 描述宣称的 LangGraph 节点数必须等于图中真实节点数 —— 该描述
    直接出现在 /docs 与 openapi.json 上（对外契约），数字写错不会报任何错。
+5. 对外 OpenAPI 描述宣称的认证覆盖率必须等于从真实路由表重算的值 —— 同属对外契约，
+   且历史包袱更重：97.8% 是 2026-07-10 一次性快照，此后路由一直变动而无人重算。
 """
 
 import pytest
@@ -108,4 +110,48 @@ def test_openapi_description_langgraph_node_count_matches_graph():
     assert m, f"OpenAPI 描述未声明 LangGraph 节点数，对外口径失锚: {desc[:80]!r}"
     assert int(m.group(1)) == real, (
         f"对外宣称 {m.group(1)} 节点，而 agents/graph.py 真值为 {real} 节点"
+    )
+
+
+def test_openapi_description_auth_coverage_matches_recomputation():
+    """对外 OpenAPI 描述宣称的认证覆盖率必须等于从真实路由表重算的值。
+
+    该 description 会原样出现在 /docs 与 openapi.json（对外契约），写错不报任何错。
+
+    2026-09-28 审查实测：对外长期宣称「97.8%」，实测仅 93.42%（227/243）。
+    97.8% 的唯一出处是 2026-07-10 的一次性审计快照（87/89），此后路由一直在变
+    而无人重算 —— 对外数字比真实值高。收紧 literacy 三个数据端点后重算为
+    94.65%（230/243）。
+
+    **真值算法的唯一来源是 scripts/verify_auth_coverage.py**：本测试直接复用它，
+    不在此另写第二套判定逻辑 —— 否则两套口径迟早会再次分叉。
+    """
+    import importlib.util
+    import os
+    import re
+
+    from main import app
+
+    script = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "scripts",
+        "verify_auth_coverage.py",
+    )
+    spec = importlib.util.spec_from_file_location("_verify_auth_coverage", script)
+    cov = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cov)
+
+    protected, public = cov.collect()
+    total = len(protected) + len(public)
+    assert total, "未采集到任何 /api 端点，覆盖率判定口径可能已失效"
+    measured = round(len(protected) / total * 100, 2)
+
+    desc = app.description or ""
+    m = re.search(r"(\d+(?:\.\d+)?)\s*%\s*API\s*认证覆盖率", desc)
+    assert m, f"OpenAPI 描述未按「X% API 认证覆盖率」声明覆盖率，对外口径失锚: {desc[-150:]!r}"
+
+    claimed = round(float(m.group(1)), 2)
+    assert claimed == measured, (
+        f"对外宣称认证覆盖率 {claimed}%，而从真实路由表重算为 {measured}%"
+        f"（{len(protected)}/{total}）—— 请跑 scripts/verify_auth_coverage.py 复核并同步文案"
     )
