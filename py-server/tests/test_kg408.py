@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import contextlib
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -44,7 +45,9 @@ from services.kg408 import (  # noqa: E402
 
 DATA_DIR = _ROOT / "data" / "kg408"
 KG_PATH = DATA_DIR / "kg408.json"
-SOURCE_HTML = Path("E:/Program/MARL/SAGE/pdf/03_408知识图谱骨架.html")
+# 源骨架已**字节原样入库**（PR#22 CI 修复）：用仓库内路径，CI runner 也能拿到
+# （原先写死仓库外绝对路径 → CI 上不存在 → 相关用例被 skip 或 verify 转红）。
+SOURCE_HTML = DATA_DIR / "inputs" / "03_408知识图谱骨架.html"
 
 needs_artifacts = pytest.mark.skipif(
     not KG_PATH.exists(), reason="kg408.json 未生成，先跑 scripts/build_kg408.py"
@@ -931,3 +934,54 @@ def test_verify_catches_forged_manual_node_despite_rebuild() -> None:
             p.write_bytes(b)
         _build_exit()
     assert _verify_exit() == 0, "还原后必须恢复为绿"
+
+
+# ============================================================
+# PR#22 CI 修复：源骨架「可移植 + 时间戳取冻结 pin」的守护
+# ============================================================
+@needs_artifacts
+def test_verify_stays_green_when_source_mtime_changes() -> None:
+    """源骨架 mtime 被改后 verify 仍须绿。
+
+    证明 `generated_at_utc` 取自**冻结 pin**（data/kg408/kg408_source_pin.json），
+    不依赖本机文件 mtime —— 否则 git 不保留 mtime，新克隆的字节会不同，
+    「逐字节可复现」在 CI 上不成立。
+    """
+    if not SOURCE_HTML.exists():
+        pytest.skip(f"源骨架缺失: {SOURCE_HTML}")
+    assert _verify_exit() == 0, "前置：正常态必须为绿"
+    st = SOURCE_HTML.stat()
+    try:
+        os.utime(SOURCE_HTML, (st.st_atime, st.st_mtime + 123456.0))
+        assert _verify_exit() == 0, "源骨架 mtime 改变后 verify 不应转红（时间戳应来自 pin）"
+    finally:
+        os.utime(SOURCE_HTML, (st.st_atime, st.st_mtime))
+    assert _verify_exit() == 0, "还原 mtime 后必须恢复为绿"
+
+
+@needs_artifacts
+def test_tampered_source_pin_is_rejected() -> None:
+    """篡改源骨架 pin 的 sha 必须被 verify 拦下（fail-closed）。
+
+    防「改 pin 绕过」：pin 是入库的第二锚点，其 sha 必须等于 provenance.source_sha256。
+    """
+    pin_path = DATA_DIR / "kg408_source_pin.json"
+    if not pin_path.exists():
+        pytest.skip(f"源骨架 pin 缺失: {pin_path}")
+    assert _verify_exit() == 0, "前置：正常态必须为绿"
+    tampered = (
+        json.dumps(
+            {
+                "schema": "kg408/source-pin/v1",
+                "source_path": "data/kg408/inputs/03_408知识图谱骨架.html",
+                "source_sha256": "0" * 64,
+                "source_mtime_utc": "2026-09-20T15:42:37Z",
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+        + "\n"
+    ).encode("utf-8")
+    with _tamper(pin_path, tampered):
+        assert _verify_exit() == 1, "篡改 pin 后 verify 必须转红（fail-closed）"
+    assert _verify_exit() == 0, "还原 pin 后必须恢复为绿"
