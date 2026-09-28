@@ -8,22 +8,22 @@ const techHighlights = [
     category: ' 多智能体协同架构',
     items: [
       { title: '11 节点 LangGraph StateGraph', desc: 'Triage → Coordinator → Diagnostician → Planner → Retriever → Generator(7并行) → Assessor → Critic → EvidenceCheck → QualityGate → PathPlanner 全链路编排', tag: '45% 评分权重' },
-      { title: '改进 GoMARL 共识机制', desc: '加权投票 + Kappa 一致性置信度，7 Agent 交叉验证，Kappa ≥ 0.85', tag: '创新价值' },
-      { title: '教学规则引擎嵌入', desc: '408 知识点依赖规则（533 行）约束调度逻辑，分组奖赏函数加入掌握度指标', tag: '场景优化' },
+      { title: '改进 GoMARL 共识机制', desc: '加权投票 + 7 Agent 交叉验证', tag: '创新价值' },
+      { title: '教学规则引擎嵌入', desc: '408 知识点依赖关系约束调度逻辑，分组奖赏函数加入掌握度指标', tag: '场景优化' },
     ],
   },
   {
     category: ' 轻量化检索增强（FrugalRAG）',
     items: [
       { title: 'E5 稠密检索 + BM25 稀疏检索', desc: '双路召回 + 余弦阈值过滤 + 个性化重排', tag: '核心指标' },
-      { title: 'SFT 检索策略 + GRPO 停止决策', desc: '监督微调学习最优查询生成，强化学习决定何时停止检索，仅需 500 条标注样本', tag: '技术创新' },
+      { title: 'SFT 检索策略 + GRPO 停止决策', desc: '监督微调学习最优查询生成，强化学习决定何时停止检索', tag: '技术创新' },
       { title: '查询重写 + 结果融合', desc: '检索不足时自动重写查询，BM25 + 向量相似度加权排序', tag: '鲁棒性' },
     ],
   },
   {
     category: ' 8 维动态学生画像',
     items: [
-      { title: '对话式构建', desc: '自然语言对话自动抽取 8 维特征（知识基础/认知风格/薄弱点/进度/准确率/活跃度/时间/目标）', tag: '赛题功能①' },
+      { title: '对话式构建', desc: '自然语言对话自动抽取 8 维特征（知识基础/学习风格/学习目标/学习进度/专注方向/每日时长/难度偏好/知识扎实度）', tag: '赛题功能①' },
       { title: '随学随新', desc: '每次答题后自动更新画像，评估结果回写薄弱点，驱动路径动态调整', tag: '实时更新' },
       { title: '画像驱动推荐', desc: '基于画像生成个性化推荐（5 维度：知识/薄弱点/风格/进度/技能）', tag: '智能推荐' },
     ],
@@ -55,7 +55,7 @@ const techHighlights = [
   {
     category: ' AI Skills 创新创作平台',
     items: [
-      { title: '用户自定义教学技能', desc: '自定义 System Prompt/LLM 通道/温度/知识库，8 个预设模板快速开始', tag: '独创功能' },
+      { title: '用户自定义教学技能', desc: '自定义 System Prompt/LLM 通道/温度/知识库，21 个预设模板快速开始', tag: '独创功能' },
       { title: '技能市场 + 收藏', desc: '搜索/分类/排序/Tab 切换，收藏/评价/使用量统计，完整的技能生态', tag: '平台化' },
       { title: 'Prompt Studio 实时测试', desc: '可视化 Prompt 编辑器 + 变量插入 + 实时 LLM 测试，所见即所得', tag: '开发工具' },
     ],
@@ -82,7 +82,7 @@ const items = [
   { key: 'profile', title: '学情画像详情页', scene: '应用内 · 学情画像', desc: '8 维能力画像 + 雷达图 + 薄弱点 + 学习建议，a11y 加固版。', file: 'MARS-408-profile-final.html', icon: icons.user },
   { key: 'agent-collab', title: '智能体协作可视化', scene: '架构可视化 · 单页', desc: '7 智能体节点图 + GOMARL 共识 + FrugalRAG 闭环 + 协作追踪。', file: 'MARS-408-agent-collab.html', icon: icons.agent },
   { key: 'knowledge-graph', title: '知识图谱可视化', scene: '架构可视化 · 单页', desc: '408 四科 32 节点图谱 + 推荐学习路径 + 知识点详情。', file: 'MARS-408-knowledge-graph.html', icon: icons.knowledge },
-  { key: 'architecture', title: '系统架构总览', scene: '架构可视化 · 手绘', desc: '10 节点 LangGraph + FastAPI + FrugalRAG/GOMARL 全链路，悬停任意组件高亮其连接。', file: 'MARS-408-architecture.html', icon: icons.path },
+  { key: 'architecture', title: '系统架构总览', scene: '架构可视化 · 手绘', desc: '11 节点 LangGraph + FastAPI + FrugalRAG/GOMARL 全链路，悬停任意组件高亮其连接。', file: 'MARS-408-architecture.html', icon: icons.path },
   { key: 'portal', title: '展示总入口（门户）', scene: '统一门户 · 一键进入', desc: '聚合上述原型的导航门户，玻璃态卡片直达各页面，离线双击即开。', file: 'index.html', icon: icons.menu },
 ]
 
@@ -163,8 +163,8 @@ function openNew() { window.open(iframeSrc.value, '_blank', 'noopener') }
             <span class="ts-label">测试用例</span>
           </div>
           <div class="tech-stat">
-            <span class="ts-value">100%</span>
-            <span class="ts-label">测试通过率</span>
+            <span class="ts-value">0</span>
+            <span class="ts-label">失败用例</span>
           </div>
         </div>
       </div>

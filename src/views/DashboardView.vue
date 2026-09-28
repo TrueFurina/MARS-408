@@ -186,7 +186,7 @@ const bonusPortals = [
 // 评审入口 — 引导评委看技术亮点
 const judgePortals = [
   { key: 'engine', icon: icons.engine, title: '算法引擎可视化', desc: 'FrugalRAG节俭检索 + GoMARL共识引擎 + Agent辩论协议 — 核心技术对比表', route: '/engine', color: 'rgba(124, 106, 242, 0.12)', accent: 'var(--accent)', tag: ' 评审推荐' },
-  { key: 'resource', icon: icons.agent, title: '多智能体资源生成', desc: '10节点LangGraph StateGraph + SSE实时流 + 7种个性化资源', route: '/resource', color: 'rgba(59, 130, 246, 0.12)', accent: 'var(--accent-blue)', tag: '核心功能' },
+  { key: 'resource', icon: icons.agent, title: '多智能体资源生成', desc: '11 节点 LangGraph StateGraph + SSE实时流 + 7种个性化资源', route: '/resource', color: 'rgba(59, 130, 246, 0.12)', accent: 'var(--accent-blue)', tag: '核心功能' },
   { key: 'knowledge', icon: icons.knowledge, title: '408四科知识图谱', desc: '487知识点节点 + Canvas力导向图 + 四科分组聚合', route: '/knowledge', color: 'rgba(6, 182, 212, 0.12)', accent: 'var(--accent-cyan)', tag: '核心功能' },
 ]
 
