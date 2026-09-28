@@ -6,6 +6,9 @@
 
 规则来源：西湖论剑 CTF-Agent 诚实口径扫描器
 核心原则：平台 accepted=0 时，任何"解出数递增/真实解出 flag/自主X/X"均为假水位
+
+此外本文件还承载 **MARS-408 对外口径红线**（见下方 _EXTERNAL_REDLINE_PATTERNS）：
+对**已被实测证伪/无据**的对外宣称做 fail-closed 拦截，防止它们从归档快照回流。
 """
 import re
 import sys
@@ -28,6 +31,48 @@ FORBIDDEN_PATTERNS = (
 
 # 引号包裹的内容是「提及」非「使用」，剥离后再匹配
 _QUOTE_RE = re.compile("「[^」]*」|『[^』]*』|\"[^\"]*\"|'[^']*'")
+
+
+# ============================================================================
+# MARS-408 对外口径红线：已被实测证伪 / 无证据支撑的宣称，命中即 fail-closed。
+#
+# 出处与判定依据：deliverables/engineering-assurance/metrics-integrity-audit-2026-08-29.md
+#   - 「检索成本降低 45%」：实测 token −0.14%（基本持平）、延迟 −3.59%（略降）→ 证伪
+#   - 「仅需 500 条标注样本」：FrugalRAG 原文只给**低资源场景**概念论证，无 500/200 这类数字
+#   - 「GOMARL 升 15%」：同批被判 🔴
+#
+# 为什么要落成机器拦截：这些宣称删掉后**反复回流**。2026-09-28 又在活动代码
+# src/views/ShowcaseView.vue 里发现了「检索成本降低 45%」（7 月已删、8 月核过零残留），
+# 而两份归档快照里至今仍原样写着它。只靠人工记忆挡不住。
+#
+# 作用域：**仅活动代码**。豁免三类路径（这些地方出现红线是"记录/定义"，不是"使用"）：
+#   ① deliverables/ submission/ —— 归档快照与治理文档（把红线当反面清单引用）；
+#   ② .workbuddy/ —— 内部记忆，记载"哪些数字被禁"；
+#   ③ **规则定义文件自身**（scripts/pre-commit/ 下的钩子）—— 它必须把红线写成注释与正则字面量，
+#      否则无从匹配。本文件自己加规则时就被自己拦下来过一次（每组规则都免不了这个自指），
+#      故对规则目录整体豁免。
+# ============================================================================
+_EXTERNAL_REDLINE_PATTERNS = (
+    re.compile(r"检索成本降低\s*45\s*%"),
+    re.compile(r"检索成本\s*降低\s*45"),
+    re.compile(r"成本降\s*45\s*%"),
+    re.compile(r"成本降低\s*45\s*%"),
+    re.compile(r"仅需\s*500\s*条"),
+    re.compile(r"500\s*条标注样本"),
+    re.compile(r"(?:GOMARL|GoMARL)\s*升\s*15\s*%"),
+)
+
+# 上述三类豁免：归档/记忆根目录 + 规则定义目录
+_REDLINE_SKIP_ROOTS = ("deliverables", "submission", ".workbuddy")
+_REDLINE_SKIP_DIR_HINTS = ("pre-commit",)
+
+
+def _path_redline_exempt(path: str) -> bool:
+    """该文件是否豁免对外红线检查（其中的红线出现是有意记录或规则定义，不得判为违规）。"""
+    parts = Path(path).parts
+    if set(parts) & set(_REDLINE_SKIP_ROOTS):
+        return True
+    return bool(set(parts) & set(_REDLINE_SKIP_DIR_HINTS))
 
 
 # 排除目录
@@ -60,6 +105,15 @@ def scan_text(text: str, path: str = "") -> list:
                     re.compile(r"真实解出[^。\n]*flag")):
             if pat.search(stripped):
                 hits.append(f"{path}:{idx}: 假水位正则 {pat.pattern!r}")
+
+        # ⚠️ 对外红线必须匹配**原始行**，不能用 stripped（引号剥离后的文本）：
+        #    展示页正是把该宣称写在 JS 单引号字符串里（desc: '...检索成本降低 45%'），
+        #    一旦走剥离，整条 JS 串会被当成"引用"抹掉 —— 拦截等于虚设。
+        #    宁可承担少量误报，也不要让红线漏过去。
+        if not _path_redline_exempt(path):
+            for pat in _EXTERNAL_REDLINE_PATTERNS:
+                if pat.search(line):
+                    hits.append(f"{path}:{idx}: 已证伪的对外红线 {pat.pattern!r}")
     return hits
 
 
