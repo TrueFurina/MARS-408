@@ -1280,3 +1280,97 @@ def test_verification_report_review_status_matches_frozen_manifest() -> None:
         if status != "approved_by_discipline_owner" and "approved_by_discipline_owner" in row:
             bad.append(f"{name} 并未获批准，报告却标注为已批准")
     assert not bad, "报告 §4.1 的 review_status 与冻结清单不符：\n  " + "\n  ".join(bad)
+
+
+# ------------------------------------------------------------
+# 元守护：本组报告守护自身不得被静默移出 CI 默认档
+#
+# CI 默认档由 py-server/pyproject.toml 的 addopts 标记表达式过滤：
+#   -m "not system and not requires_milvus and not slow"
+# 若给下面任一条守护挂上这三个标记之一，它会**静默退出 CI**：报告此后
+# 可以在无人察觉的情况下漂移，而 CI 依旧全绿——典型的假绿（silent green）。
+# 故本测试锁死「守护的注册状态」本身，而不只锁报告内容。
+# 依据：e168f95 的 CI 工件 pytest-report.xml 实测 5 条守护均在默认档执行且 PASS，
+# 说明当前注册正确；此测试防止该状态被后续编辑破坏。
+# ------------------------------------------------------------
+_REPORT_GUARD_TESTS = (
+    "test_verification_report_hashes_match_artifacts",
+    "test_verification_report_anchors_point_at_named_symbols",
+    "test_verification_report_provenance_is_truthful",
+    "test_verification_report_key_numbers_match_artifacts",
+    "test_verification_report_review_status_matches_frozen_manifest",
+)
+_CI_EXCLUDED_MARKERS = frozenset({"system", "requires_milvus", "slow"})
+
+
+def _pytest_marks_on(node) -> set:
+    """从 AST 节点提取 ``pytest.mark.<name>`` 中的 ``<name>`` 集合。
+
+    只认完整三元形态 ``pytest.mark.X``（``X`` 可带调用括号）；``@needs_artifacts``
+    在本模块里是模块级变量（值为 ``pytest.mark.skipif(...)``），形态为裸 ``Name``，
+    故不会被误判成排除标记。
+    """
+    import ast
+
+    if isinstance(node, ast.Call):
+        return _pytest_marks_on(node.func)
+    found = set()
+    if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Attribute):
+        inner = node.value
+        if (
+            inner.attr == "mark"
+            and isinstance(inner.value, ast.Name)
+            and inner.value.id == "pytest"
+        ):
+            found.add(node.attr)
+    return found
+
+
+def test_report_guards_cannot_be_silently_dropped_from_ci() -> None:
+    """守护必须留在 CI 默认档：既不挂排除标记，也不被 addopts 忽略 / 取消选择。"""
+    import ast
+
+    tree = ast.parse(Path(__file__).read_text(encoding="utf-8"))
+
+    funcs = {}
+    module_marks = set()
+    for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            funcs[node.name] = node
+        elif isinstance(node, ast.Assign):
+            for tgt in node.targets:
+                if isinstance(tgt, ast.Name) and tgt.id == "pytestmark":
+                    elts = (
+                        node.value.elts
+                        if isinstance(node.value, (ast.List, ast.Tuple))
+                        else [node.value]
+                    )
+                    for elt in elts:
+                        module_marks |= _pytest_marks_on(elt)
+
+    problems = []
+    for name in _REPORT_GUARD_TESTS:
+        fn = funcs.get(name)
+        if fn is None:
+            problems.append(f"{name} 已不在本模块中（守护被删除或改名，等于失效）")
+            continue
+        marks = set(module_marks)
+        for dec in fn.decorator_list:
+            marks |= _pytest_marks_on(dec)
+        bad = sorted(marks & _CI_EXCLUDED_MARKERS)
+        if bad:
+            problems.append(f"{name} 挂了 CI 排除标记 {bad} ⇒ 会静默退出 CI 默认档")
+
+    pyproject = Path(__file__).resolve().parent.parent / "pyproject.toml"
+    assert pyproject.exists(), f"找不到 {pyproject}，无法校验 CI 过滤口径"
+    for line in pyproject.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if stripped.startswith("#"):
+            continue
+        if "test_kg408" in stripped and ("--ignore" in stripped or "--deselect" in stripped):
+            problems.append(f"pyproject.toml 把本文件排除出默认档：{stripped}")
+
+    assert not problems, (
+        "报告守护可能已静默退出 CI 默认档（守护会变成摆设，报告可无声漂移）：\n  "
+        + "\n  ".join(problems)
+    )
