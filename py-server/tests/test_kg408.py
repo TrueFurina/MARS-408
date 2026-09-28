@@ -985,3 +985,129 @@ def test_tampered_source_pin_is_rejected() -> None:
     with _tamper(pin_path, tampered):
         assert _verify_exit() == 1, "篡改 pin 后 verify 必须转红（fail-closed）"
     assert _verify_exit() == 0, "还原 pin 后必须恢复为绿"
+
+
+# ============================================================
+# 验证报告本身的守护：防止「正式交付件」里的 sha256 / 锚点静默漂移
+# ------------------------------------------------------------
+# 背景：deliverables/408-kg/验证报告-kg408.md 自称「正式交付件（供中期材料引用）」，
+# 但它的 sha256 表与 file:line 锚点原先**只靠人工维护**。实测在 PR #22 的可移植化
+# 修复过程中，11 处 sha256 已有 6 处、8 处锚点已全部失效，而无人察觉 —— 正是
+# 「文档与实现背离」的典型。这里把「报告里的数字/位置必须等于磁盘事实」写成可执行约束。
+#
+# 报告内路径有四种写法（历史原因，已在报告 §7 顶部声明），本模块统一解析：
+#   1) 仓库根相对    deliverables/408-kg/kg408-stats.md
+#   2) py-server 相对 services/kg408.py、tests/test_kg408.py
+#   3) 脚本省略 scripts/ 前缀  verify_kg408.py → py-server/scripts/verify_kg408.py
+#   4) 数据目录裸名  kg408_alias.json → py-server/data/kg408/kg408_alias.json
+# ============================================================
+REPO_ROOT = _ROOT.parent
+REPORT_PATH = REPO_ROOT / "deliverables" / "408-kg" / "验证报告-kg408.md"
+
+
+def _report_text() -> str:
+    """读验证报告正文；报告缺失则跳过（报告存在时本组断言必须真跑）。"""
+    if not REPORT_PATH.exists():
+        pytest.skip(f"验证报告不存在: {REPORT_PATH}")
+    return REPORT_PATH.read_text(encoding="utf-8")
+
+
+def _resolve_reported_path(raw: str) -> Path:
+    """把报告里写的路径解析成真实文件（见文件顶部四种写法的说明）。"""
+    p = Path(raw)
+    if p.is_absolute():
+        return p
+    for cand in (
+        REPO_ROOT / p,
+        _ROOT / p,
+        _ROOT / "scripts" / p.name,
+        DATA_DIR / p.name,
+    ):
+        if cand.exists():
+            return cand
+    return REPO_ROOT / p
+
+
+def _kg408_artifact_files() -> list:
+    """kg408 全部产物 + 交付物；用作「报告里不得出现失效哈希」的白名单。"""
+    files = [p for p in sorted(DATA_DIR.rglob("*")) if p.is_file()]
+    deliv = REPO_ROOT / "deliverables" / "408-kg"
+    files += [p for p in sorted(deliv.glob("*")) if p.is_file()]
+    return files
+
+
+def test_verification_report_hashes_match_artifacts() -> None:
+    """报告内每一处 sha256 必须等于磁盘实际哈希（表格行 + 全文白名单双重校验）。"""
+    import re
+
+    text = _report_text()
+
+    # (1) 表格行 ``| [序号 |] `路径` | `sha256` |`` → 逐条与磁盘比对
+    row_re = re.compile(
+        r"^\|\s*(?:\d+\s*\|\s*)?`([^`]+)`\s*\|\s*`([0-9a-f]{64})`\s*\|",
+        re.MULTILINE,
+    )
+    rows = row_re.findall(text)
+    assert rows, "报告里未解析到任何 sha256 表格行（文档格式或本解析器可能已变）"
+    for raw, want in rows:
+        path = _resolve_reported_path(raw)
+        assert path.exists(), f"报告引用的文件不存在：{raw}"
+        got = _sha256(path)
+        assert got == want, (
+            f"{raw} 的 sha256 与报告不符：报告 {want[:12]}… 实际 {got[:12]}…"
+            "（产物已变 ⇒ 必须同步更新报告，不得留旧值）"
+        )
+
+    # (2) 全文出现的每个 64 位十六进制（含散落在正文/引用块里的）都必须是当前真哈希
+    allowed = {_sha256(p) for p in _kg408_artifact_files()}
+    for hexd in sorted(set(re.findall(r"(?<![0-9a-f])[0-9a-f]{64}(?![0-9a-f])", text))):
+        assert hexd in allowed, (
+            f"报告里出现已失效的 sha256：{hexd[:12]}…（不属于任何当前产物/交付物）"
+        )
+
+
+def test_verification_report_anchors_point_at_named_symbols() -> None:
+    """报告内每一处 `` `file:N` `symbol` `` 锚点，第 N 行必须真的含那个符号。"""
+    import re
+
+    text = _report_text()
+    anchor_re = re.compile(r"`([\w./\-]+\.(?:py|md|json)):(\d+)`\s*`([A-Za-z_]\w*)`")
+    anchors = anchor_re.findall(text)
+    assert len(anchors) >= 20, f"解析到的锚点只有 {len(anchors)} 个，解析器可能已失效"
+
+    bad = []
+    for raw, lineno, symbol in anchors:
+        path = _resolve_reported_path(raw)
+        if not path.exists():
+            bad.append(f"{raw}:{lineno} → 文件不存在")
+            continue
+        lines = path.read_text(encoding="utf-8").splitlines()
+        n = int(lineno)
+        if n < 1 or n > len(lines):
+            bad.append(f"{raw}:{n} → 越界（该文件共 {len(lines)} 行）")
+            continue
+        if symbol not in lines[n - 1]:
+            bad.append(f"{raw}:{n} 不含 `{symbol}`（该行实为：{lines[n - 1].strip()[:70]}）")
+    assert not bad, "报告锚点已失效（代码移动后必须同步更新报告 §7）：\n  " + "\n  ".join(bad)
+
+
+def test_verification_report_provenance_is_truthful() -> None:
+    """报告不得残留失真自述与失选用例数，且必须记录源骨架 pin 这一第二锚点。"""
+    import re
+
+    text = _report_text()
+
+    for lie in ("未 commit", "未commit", "d21cd72"):
+        assert lie not in text, f"报告仍残留失真自述：{lie!r}（提交状态类事实必须如实）"
+
+    pin = DATA_DIR / "kg408_source_pin.json"
+    assert pin.exists(), f"源骨架 pin 缺失: {pin}"
+    assert _sha256(pin) in text, "报告未记录源骨架 pin 的冻结 sha（第二锚点不可缺记录）"
+
+    # 报告 §1 声明的 TESTS 用例数必须等于测试文件里实际的 test 函数数
+    # （本文件无参数化，故「用例数 == def test_ 个数」成立）
+    m = re.search(r"\*\*`(\d+) passed`\*\*", text)
+    assert m, "报告 §1 未找到「N passed」声明"
+    declared = int(m.group(1))
+    actual = len(re.findall(r"(?m)^def test_", Path(__file__).read_text(encoding="utf-8")))
+    assert declared == actual, f"报告声明 {declared} 个用例，测试文件实际 {actual} 个（须同步更新 §1）"
