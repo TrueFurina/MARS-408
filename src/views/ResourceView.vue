@@ -61,10 +61,9 @@ function startMonitor() {
   lastEventAt.value = Date.now()
   pushEvent('已提交生成请求', 'info')
 }
-function stopMonitor() {
-  // 停滞时钟已下沉到 StallChip / StallBanner 子组件（按挂载生命周期自行 tick 与释放），
-  // 此处无需再清定时器；保留函数与调用点以兼容既有的「停止监测」语义。
-}
+// 注：停滞时钟（nowTs）已下沉到 StallChip / StallBanner 子组件，由组件挂载生命周期自行
+// tick 与释放；`stalled` 另受 `loading` 约束，故生成/演练结束时 loading 置 false 即自然停判，
+// 不再需要对应的 stopMonitor。
 
 // ── 演练（仅 dev）：不调用任何大模型，走完全相同的 UI 通路，用于验证流水线与监测面板 ──
 const isDev = import.meta.env.DEV
@@ -102,11 +101,10 @@ function runDrill(withStall = false) {
       pipelineStage.value = agentSteps[agentSteps.length - 1]!.stage + 1
       pushEvent('演练结束', 'done')
       loading.value = false
-      stopMonitor()
     }
   }, 900)
 }
-onUnmounted(() => { stopMonitor(); stopDrill() })
+onUnmounted(() => stopDrill())
 
 const doneNodes = computed(() => eventLog.value.filter(e => e.kind === 'done').length)
 const lastEventLabel = computed(() =>
@@ -616,7 +614,6 @@ const stageMap: Record<string, number> = {
     if (result.value && result.value.status === 'ok') saveToHistory(result.value)
   } finally {
     loading.value = false
-    stopMonitor()
     pushEvent(agentErrorList.value.length ? '生成结束（部分 Agent 失败）' : '生成结束', 'done')
   }
 }
