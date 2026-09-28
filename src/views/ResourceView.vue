@@ -87,7 +87,7 @@ function runDrill(withStall = false) {
   let i = 0
   drillTimer = window.setInterval(() => {
     if (i < agentSteps.length) {
-      const s = agentSteps[i]
+      const s = agentSteps[i]!
       pipelineStage.value = s.stage
       currentAgent.value = s.name
       if (i === 3) {
@@ -99,7 +99,7 @@ function runDrill(withStall = false) {
       i += 1
     } else {
       stopDrill()
-      pipelineStage.value = agentSteps[agentSteps.length - 1].stage + 1
+      pipelineStage.value = agentSteps[agentSteps.length - 1]!.stage + 1
       pushEvent('演练结束', 'done')
       loading.value = false
       stopMonitor()
