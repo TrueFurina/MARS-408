@@ -78,6 +78,7 @@ function runDrill(withStall = false) {
   result.value = null
   agentErrors.value = {}
   pipelineStage.value = 0
+  progressPct.value = 0
   currentAgent.value = '演练'
   loading.value = true
   startMonitor()
@@ -88,6 +89,7 @@ function runDrill(withStall = false) {
     if (i < agentSteps.length) {
       const s = agentSteps[i]!
       pipelineStage.value = s.stage
+      progressPct.value = stageProgress[s.stage] ?? progressPct.value
       currentAgent.value = s.name
       if (i === 3) {
         agentErrors.value[s.name] = '演练注入的失败'
@@ -425,6 +427,11 @@ const agentSteps = [
   { name: '审阅 Agent', icon: icons.search, desc: '检查内容准确性', stage: 5 },
 ]
 
+// 各阶段对应的进度百分比（单一真值：真实生成与演练共用，避免两处各写一份导致日后漂移）
+const stageProgress: Record<number, number> = {
+  1: 15, 2: 50, 3: 70, 4: 85, 5: 100,
+}
+
 // 资源卡顶部 tab（图标 + 文案，禁裸 emoji）
 const resourceTabs = [
   { key: 'doc', icon: 'document', label: '讲解' },
@@ -484,9 +491,6 @@ const stageMap: Record<string, number> = {
       extension: '拓展 Agent', critic: '审阅 Agent',
       mindmap: '思维导图 Agent', code_practice: '代码实操 Agent',
       ppt_outline: 'PPT Agent', video_script: '视频脚本 Agent',
-    }
-    const stageProgress: Record<number, number> = {
-      1: 15, 2: 50, 3: 70, 4: 85, 5: 100,
     }
 
     while (true) {
