@@ -202,6 +202,7 @@ async function loadMemoryOverview() {
       <SkillCard
         v-for="skill in displayItems"
         :key="skill.id"
+        v-memo="[skill]"
         :skill="skill"
         @click="goSkill"
       />

@@ -802,6 +802,7 @@ function parseWeakPoints(wpStr: string): string[] {
         <div
           v-for="item in resourceHistory"
           :key="item.id"
+          v-memo="[item, selectedHistory]"
           class="history-item"
           :class="{ active: selectedHistory === item.id }"
           @click="loadFromHistory(item)"
@@ -827,6 +828,7 @@ function parseWeakPoints(wpStr: string): string[] {
         <div
           v-for="item in poolResources"
           :key="item.id"
+          v-memo="[item, selectedHistory]"
           class="history-item"
           :class="{ active: selectedHistory === item.id }"
           @click="openPoolResource(item)"
