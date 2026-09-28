@@ -1295,11 +1295,15 @@ def test_verification_report_review_status_matches_frozen_manifest() -> None:
 # ------------------------------------------------------------
 _REPORT_GUARD_TESTS = (
     "test_verification_report_hashes_match_artifacts",
+    "test_verification_report_hash_attribution_is_line_bound",
     "test_verification_report_anchors_point_at_named_symbols",
     "test_verification_report_provenance_is_truthful",
     "test_verification_report_key_numbers_match_artifacts",
     "test_verification_report_review_status_matches_frozen_manifest",
 )
+# 命名约定：报告守护一律以该前缀命名。上表是**登记表**，测试会把它与
+# 「按前缀自动发现」的集合对账——新加一条守护却忘了登记，同样报红。
+_REPORT_GUARD_PREFIX = "test_verification_report_"
 _CI_EXCLUDED_MARKERS = frozenset({"system", "requires_milvus", "slow"})
 
 
@@ -1361,6 +1365,20 @@ def test_report_guards_cannot_be_silently_dropped_from_ci() -> None:
         if bad:
             problems.append(f"{name} 挂了 CI 排除标记 {bad} ⇒ 会静默退出 CI 默认档")
 
+    derived = sorted(n for n in funcs if n.startswith(_REPORT_GUARD_PREFIX))
+    only_derived = sorted(set(derived) - set(_REPORT_GUARD_TESTS))
+    only_registered = sorted(set(_REPORT_GUARD_TESTS) - set(derived))
+    if only_derived:
+        problems.append(
+            "以下报告守护未登记进 _REPORT_GUARD_TESTS，本元守护覆盖不到它"
+            "（挂个排除标记即可静默退出 CI）：" + "、".join(only_derived)
+        )
+    if only_registered:
+        problems.append(
+            "_REPORT_GUARD_TESTS 登记了并不存在的测试（改名后忘了同步登记表）："
+            + "、".join(only_registered)
+        )
+
     pyproject = Path(__file__).resolve().parent.parent / "pyproject.toml"
     assert pyproject.exists(), f"找不到 {pyproject}，无法校验 CI 过滤口径"
     for line in pyproject.read_text(encoding="utf-8").splitlines():
@@ -1374,3 +1392,44 @@ def test_report_guards_cannot_be_silently_dropped_from_ci() -> None:
         "报告守护可能已静默退出 CI 默认档（守护会变成摆设，报告可无声漂移）：\n  "
         + "\n  ".join(problems)
     )
+
+
+def test_verification_report_hash_attribution_is_line_bound() -> None:
+    """正文里散落的 sha256 必须**归属同行路径**，而不能只是「这个哈希是真的」。
+
+    成员校验（哈希 ∈ 当前产物集合）管不住**错误归因**：把 A 的真实哈希贴到 B 的名字
+    旁边，它依旧是一个"真哈希"，前一条守护照样通过。此处把归属也钉成机检——
+    同一行内可解析为真实文件的路径 token 中，至少有一个的实际哈希须等于该行的每个哈希。
+
+    同行没有任何可解析路径时跳过（如「哈希见上表」）：那种行仍受成员校验与完整性基线约束。
+    """
+    import re
+
+    text = _report_text()
+    hex_re = re.compile(r"(?<![0-9a-f])[0-9a-f]{64}(?![0-9a-f])")
+    tok_re = re.compile(r"`([^`\n]+)`")
+
+    bad = []
+    for lineno, line in enumerate(text.split("\n"), 1):
+        hashes = set(hex_re.findall(line))
+        if not hashes:
+            continue
+        cands = []
+        for tok in tok_re.findall(line):
+            if not tok or tok in hashes:
+                continue
+            p = _resolve_reported_path(tok)
+            if p.is_file():
+                cands.append((tok, _sha256(p)))
+        if not cands:
+            continue
+        known = {s for _, s in cands}
+        for h in sorted(hashes):
+            if h not in known:
+                named = "、".join(f"`{t}`" for t, _ in cands)
+                bad.append(
+                    f"第 {lineno} 行：sha256 {h[:12]}… 与同行路径 {named} 的实际哈希"
+                    "均不匹配（真哈希被贴到了错的文件名下 ⇒ 归属失真）"
+                )
+
+    assert not bad, "\n  ".join(["报告里的 sha256 归属与同行路径不符："] + bad)
