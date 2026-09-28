@@ -58,6 +58,19 @@ ALLOWLIST_PATTERNS = [
 # schema 的 $ref 都被判成 AWS 密钥。影响不只是噪点：pre-commit 只扫描暂存文件，
 # 意味着该快照一旦被拦，今后**任何一次更新都提交不进去**（事实上已被冻结）。
 # 同样只豁免这一条低精度规则；generic/连接串/JWT/私钥四类规则对它依然生效。
+#
+# 追加（2026-09-29 实锤误报）：kg408 的溯源指纹 —— py-server/data/kg408/kg408.json 的
+# `source_sha256` / `alias_sha256` / `chapter_map_sha256` / `manual_nodes_sha256` ——
+# 是 64 位十六进制摘要，被 `[0-9a-zA-Z/+]{40}`（AWS Secret Access Key 形态）低精度规则
+# 命中（恰 4 条）。这些是**溯源指纹，不是凭据**，与上面两类误报同源。
+# 本次不改路径豁免，而是在 is_allowed() 加「令牌级」十六进制摘要豁免：fullmatch 只放行
+# **整串纯十六进制且 ≥32 位**的匹配串（md5/sha1/sha256 摘要）。
+# 为什么令牌级豁免是安全的：generic-api-key / JWT / 连接串 / 私钥 / GitHub 几条规则的
+# 匹配串**必带关键词或结构前缀**（如 `gh[pousr]_`、`eyJ`、`AKIA`、`://`、`-----BEGIN`），
+# 纯十六进制串 fullmatch 到不了，故这些规则不受影响，也**不会**整行跳过其它规则。
+# 剩余风险（如实写明）：若某 AWS Secret Access Key 恰好是纯十六进制形态，会被放行；
+# 但 AWS secret 使用 base64 字母表，40 位恰好全部落在十六进制字符集内的概率量级约 2⁻⁸⁰，
+# 可忽略。
 RULE_PATH_EXEMPT = {
     'AWS Secret Access Key (base64)': ['py-server/seed/', 'py-server/openapi.json'],
 }
@@ -69,7 +82,15 @@ def compile_patterns():
     return secret_res, allow_res
 
 
+# 纯十六进制摘要（md5/sha1/sha256 等）：整串均为 [0-9a-fA-F] 且 ≥32 位，属哈希指纹，非密钥。
+# 仅在 is_allowed() 做令牌级豁免（fullmatch），不整行放行。
+HEX_DIGEST = re.compile(r'[0-9a-fA-F]{32,}')
+
+
 def is_allowed(text: str, allow_res) -> bool:
+    # 纯十六进制摘要是哈希指纹，非密钥（kg408 产物的 *_sha256 字段，2026-09-29 实锤误报）
+    if HEX_DIGEST.fullmatch(text):
+        return True
     return any(r.search(text) for r in allow_res)
 
 
