@@ -24,7 +24,8 @@ documents/项目全面审查与架构剖析_2026-07-10.md 的一次性审计快�
 ------------------------------------------------
   /api 端点总数 243 / 受保护 230 / 公开 13 → **认证覆盖率 94.65%**
   当日收紧 literacy 三个数据端点（submit / report / class-report）后，
-  受保护数由 227 增至 230；未登记公开端点由 12 降至 9。
+  受保护数由 227 增至 230；未登记公开端点由 12 降至 8
+  （12→9 由收紧上述三端点所致；9→8 由把已核验的 /api/literacy/questions 登记进白名单所致）。
   对外文案（py-server/main.py 的 OpenAPI description、src/views/ShowcaseView.vue、
   tools/generate_demo_ppt.py）已同步为该实测值，并在 main.py 中加了断言锁死，
   防止再次出现「对外数字与代码真值脱钩」。
