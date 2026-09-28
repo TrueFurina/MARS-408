@@ -1036,6 +1036,22 @@ def _kg408_artifact_files() -> list:
     return files
 
 
+def _required_hashed_files() -> list:
+    """必须被报告记录 sha256 的工件全集（完整性基线）。
+
+    报告自身**除外**：文件无法自指其内容哈希；报告的准确性由本组守护测试保证。
+    """
+    files = [p for p in sorted(DATA_DIR.glob("*.json")) if p.is_file()]
+    files += [p for p in sorted((DATA_DIR / "inputs").glob("*")) if p.is_file()]
+    deliv = REPO_ROOT / "deliverables" / "408-kg"
+    files += [
+        p
+        for p in sorted(deliv.glob("*.md"))
+        if p.is_file() and p.resolve() != REPORT_PATH.resolve()
+    ]
+    return files
+
+
 def test_verification_report_hashes_match_artifacts() -> None:
     """报告内每一处 sha256 必须等于磁盘实际哈希（表格行 + 全文白名单双重校验）。"""
     import re
@@ -1065,13 +1081,23 @@ def test_verification_report_hashes_match_artifacts() -> None:
             f"报告里出现已失效的 sha256：{hexd[:12]}…（不属于任何当前产物/交付物）"
         )
 
+    # (3) 完整性：应记录的工件一个都不能漏
+    # 前两条只管「报告里写的哈希是否失真」，管不住「漏写」——源骨架的 sha256 就曾
+    # 整份报告一次都没出现过，而它正是全部产物的 provenance 根。
+    missing = [
+        str(p.relative_to(REPO_ROOT))
+        for p in _required_hashed_files()
+        if _sha256(p) not in text
+    ]
+    assert not missing, "报告漏记了以下工件的 sha256：\n  " + "\n  ".join(missing)
+
 
 def test_verification_report_anchors_point_at_named_symbols() -> None:
     """报告内每一处 `` `file:N` `symbol` `` 锚点，第 N 行必须真的含那个符号。"""
     import re
 
     text = _report_text()
-    anchor_re = re.compile(r"`([\w./\-]+\.(?:py|md|json)):(\d+)`\s*`([A-Za-z_]\w*)`")
+    anchor_re = re.compile(r"`([\w./\-]+\.(?:py|md|json)):(\d+)`\s*`([^`]+)`")
     anchors = anchor_re.findall(text)
     assert len(anchors) >= 20, f"解析到的锚点只有 {len(anchors)} 个，解析器可能已失效"
 
@@ -1086,8 +1112,8 @@ def test_verification_report_anchors_point_at_named_symbols() -> None:
         if n < 1 or n > len(lines):
             bad.append(f"{raw}:{n} → 越界（该文件共 {len(lines)} 行）")
             continue
-        if symbol not in lines[n - 1]:
-            bad.append(f"{raw}:{n} 不含 `{symbol}`（该行实为：{lines[n - 1].strip()[:70]}）")
+        if not _symbol_anchored_on_line(lines[n - 1], symbol):
+            bad.append(f"{raw}:{n} 未以有效形态承载 `{symbol}`（该行实为：{lines[n - 1].strip()[:70]}）")
     assert not bad, "报告锚点已失效（代码移动后必须同步更新报告 §7）：\n  " + "\n  ".join(bad)
 
 
@@ -1111,3 +1137,146 @@ def test_verification_report_provenance_is_truthful() -> None:
     declared = int(m.group(1))
     actual = len(re.findall(r"(?m)^def test_", Path(__file__).read_text(encoding="utf-8")))
     assert declared == actual, f"报告声明 {declared} 个用例，测试文件实际 {actual} 个（须同步更新 §1）"
+
+
+# ------------------------------------------------------------
+# 第二轮加固（针对独立 QA 复核出的逃逸面，见报告 §7.2 末尾）
+# ------------------------------------------------------------
+def _symbol_anchored_on_line(line: str, symbol: str) -> bool:
+    """该行是否以「有效形态」承载该符号。
+
+    只用 `symbol in line` 做子串匹配太弱：攻击者把锚点符号换成**同行碰巧出现的其它词**
+    即可蒙混过关（实测：把 `FROZEN_MANIFEST_NAME` 换成 `json`，而该行恰好含
+    `"kg408_inputs_frozen.json"`）。因此要求出现下列形态之一：
+    定义 / 顶层赋值（含带注解）/ 字典键 / 引号包裹的键或 CLI 旗标。
+    """
+    import re
+
+    s = re.escape(symbol)
+    forms = (
+        rf"\b(?:def|class)\s+{s}\b",  # def xxx / class xxx
+        rf"^\s*{s}\s*[:=]",  # xxx = … / xxx: … =
+        rf"[\"']{s}[\"']\s*[:=]",  # "xxx": …  （dict / JSON 键）
+        rf"[\"']{s}[\"']",  # "xxx"      （键、CLI 旗标等）
+    )
+    return any(re.search(p, line) for p in forms)
+
+
+def _kg408_stats() -> dict:
+    """kg408_stats.json 的 stats 段（机器生成的真值）。"""
+    return json.loads((DATA_DIR / "kg408_stats.json").read_text(encoding="utf-8"))["stats"]
+
+
+def _kp_coverage() -> dict:
+    """kp_chunk_coverage.json 的 coverage 段（机器生成的真值）。"""
+    return json.loads((DATA_DIR / "kp_chunk_coverage.json").read_text(encoding="utf-8"))["coverage"]
+
+
+def _report_section(text: str, heading: str) -> str:
+    """取报告里某 `## ` 小节（到下一个 `## ` 为止）；小节缺失即报错。"""
+    start = text.find(heading)
+    assert start >= 0, f"报告缺少小节：{heading}"
+    nxt = text.find("\n## ", start + len(heading))
+    return text[start:] if nxt < 0 else text[start:nxt]
+
+
+def _report_table_rows(section: str) -> dict:
+    """把小节里的 markdown 表格解析成 {首列文本: 整行原文}。"""
+    rows: dict = {}
+    for line in section.splitlines():
+        if not line.startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if len(cells) < 2 or set(cells[0]) <= set("-: "):
+            continue
+        rows.setdefault(cells[0], line)
+    return rows
+
+
+def _row_has(row: str, value: str) -> bool:
+    """该行是否含该数值（数字边界匹配，避免 '46' 命中 '1684' 这类偶然子串）。"""
+    import re
+
+    return re.search(rf"(?<![\d.]){re.escape(value)}(?!\d)", row) is not None
+
+
+def _verification_report_numbers_match_artifacts_impl() -> None:
+    """实现体：供下面两个断言复用同一份真值装载。"""
+    text = _report_text()
+    s = _kg408_stats()
+    cov = _kp_coverage()
+    kp = cov["kp_level"]
+    ch = cov["chapter_level"]
+
+    rows = _report_table_rows(_report_section(text, "## 2."))
+    expect = {
+        "节点合计": [s["nodes_total"], s["nodes_from_source"], s["nodes_manual_supplement"]],
+        "层级": [s["nodes_subject"], s["nodes_chapter"], s["nodes_knowledge_point"]],
+        "边": [s["edges_total"], s["edges_prerequisite"], s["edges_association"]],
+        "未解析": [s["unresolved_total"]],
+        "依赖人工别名表的边": [f'{s["edges_depending_on_alias"]}/{s["edges_total"]}'],
+        "先修声明": [
+            s["source_prereq_declarations"],
+            s["source_prereq_declarations_resolved"],
+            f'{s["prereq_success_pct"]}%',
+        ],
+        "KB 对齐": [
+            cov["chunks_total"],
+            cov["chunks_knowledge_point"],
+            ch["bound"],
+            ch["bound_pct"],
+            ch["chapter_coverage_pct"],
+            kp["kp_coverage_pct"],
+            f'{kp["kp_covered"]}/{kp["kp_total"]}',
+            kp["bound"],
+        ],
+    }
+    missing = []
+    for label, values in expect.items():
+        row = next((ln for k, ln in rows.items() if label in k), None)
+        if row is None:
+            missing.append(f"§2 缺少「{label}」行")
+            continue
+        for v in values:
+            if not _row_has(row, str(v)):
+                missing.append(f"§2「{label}」行缺少数值 {v}（该行：{row.strip()[:80]}）")
+    assert not missing, "报告 §2 数字与产物真值不符：\n  " + "\n  ".join(missing)
+
+    # §3 防伪证变异表：基准行必须 exit 0，每条 GAP 变异行必须 exit 1
+    rows3 = _report_table_rows(_report_section(text, "## 3."))
+    base = [ln for k, ln in rows3.items() if "基准" in k]
+    assert base and "**0**" in base[0], "§3 基准行的 VERIFY_EXIT 必须为 0"
+    gaps = [ln for k, ln in rows3.items() if "GAP-" in k]
+    assert len(gaps) >= 4, f"§3 的 GAP 变异行少于 4 条（实际 {len(gaps)}）"
+    bad_gap = [ln for ln in gaps if "**1**" not in ln]
+    assert not bad_gap, "§3 有条目声称变异未被拦（VERIFY_EXIT 不是 1）：\n  " + "\n  ".join(bad_gap)
+
+
+@needs_artifacts
+def test_verification_report_key_numbers_match_artifacts() -> None:
+    """报告 §2 结论数字与 §3 变异 exit 码必须等于从产物重算的真值。"""
+    _verification_report_numbers_match_artifacts_impl()
+
+
+@needs_artifacts
+def test_verification_report_review_status_matches_frozen_manifest() -> None:
+    """报告 §4.1 的 review_status 必须逐表等于冻结清单的实际标注，禁虚标「已批准」。"""
+    text = _report_text()
+    entries = json.loads(
+        (DATA_DIR / "kg408_inputs_frozen.json").read_text(encoding="utf-8")
+    )["entries"]
+    assert entries, "冻结清单没有 entries"
+    rows = _report_table_rows(_report_section(text, "## 4."))
+
+    bad = []
+    for name, meta in sorted(entries.items()):
+        row = rows.get(f"`{name}`")
+        if row is None:
+            bad.append(f"§4.1 缺少输入表 {name} 的行")
+            continue
+        status = str(meta["review_status"])
+        if status not in row:
+            bad.append(f"{name} 的 review_status 应如实标注为 {status}，报告该行未出现该值")
+        if status != "approved_by_discipline_owner" and "approved_by_discipline_owner" in row:
+            bad.append(f"{name} 并未获批准，报告却标注为已批准")
+    assert not bad, "报告 §4.1 的 review_status 与冻结清单不符：\n  " + "\n  ".join(bad)
