@@ -65,7 +65,48 @@ function startMonitor() {
 function stopMonitor() {
   if (monTimer !== null) { window.clearInterval(monTimer); monTimer = null }
 }
-onUnmounted(stopMonitor)
+
+// ── 演练（仅 dev）：不调用任何大模型，走完全相同的 UI 通路，用于验证流水线与监测面板 ──
+const isDev = import.meta.env.DEV
+let drillTimer: number | null = null
+function stopDrill() {
+  if (drillTimer !== null) { window.clearInterval(drillTimer); drillTimer = null }
+}
+/** withStall=true 时只提交不推进，用于观察 15s 后的停滞告警条 */
+function runDrill(withStall = false) {
+  if (loading.value) return
+  stopDrill()
+  result.value = null
+  agentErrors.value = {}
+  pipelineStage.value = 0
+  currentAgent.value = '演练'
+  loading.value = true
+  startMonitor()
+  pushEvent(withStall ? '演练开始（停滞场景，不调用大模型）' : '演练开始（不调用大模型）', 'info')
+  if (withStall) return
+  let i = 0
+  drillTimer = window.setInterval(() => {
+    if (i < agentSteps.length) {
+      const s = agentSteps[i]
+      pipelineStage.value = s.stage
+      currentAgent.value = s.name
+      if (i === 3) {
+        agentErrors.value[s.name] = '演练注入的失败'
+        pushEvent(`${s.name} 失败：演练注入`, 'error')
+      } else {
+        pushEvent(`${s.name} 完成`, 'done')
+      }
+      i += 1
+    } else {
+      stopDrill()
+      pipelineStage.value = agentSteps[agentSteps.length - 1].stage + 1
+      pushEvent('演练结束', 'done')
+      loading.value = false
+      stopMonitor()
+    }
+  }, 900)
+}
+onUnmounted(() => { stopMonitor(); stopDrill() })
 
 const stalled = computed(() =>
   loading.value && lastEventAt.value > 0 && nowTs.value - lastEventAt.value > 15000
@@ -741,6 +782,13 @@ function parseWeakPoints(wpStr: string): string[] {
         <button class="rag-btn" @click="generateResource" :disabled="!topic.trim() || loading">
           <span class="btn-ic" v-html="icons.rocket"></span>{{ loading ? '生成中...' : '生成资源' }}
         </button>
+        <!-- 仅开发环境：演练流水线与监测面板，不调用大模型 -->
+        <template v-if="isDev">
+          <button class="rag-btn rv-drill" @click="runDrill(false)" :disabled="loading"
+            title="演练：模拟 7 个节点推进并注入一次失败，不调用大模型">演练</button>
+          <button class="rag-btn rv-drill" @click="runDrill(true)" :disabled="loading"
+            title="演练停滞：只提交不推进，用于观察 15 秒后的停滞告警条">演练停滞</button>
+        </template>
       </div>
     </div>
 
@@ -1293,6 +1341,19 @@ function parseWeakPoints(wpStr: string): string[] {
 .rv-working { text-align: center; padding: var(--space-2) 0; font-size: var(--text-sm); color: var(--text-muted); }
 
 /* ── 实时监测面板（文章词 15）── */
+/* 演练按钮（仅 dev）：弱化到不抢主按钮，虚线表明是调试入口 */
+.rv-drill {
+  padding: 0.375rem 0.625rem;
+  font-size: var(--text-2xs);
+  color: var(--text-muted);
+  border: 1px dashed var(--border-color);
+  background: transparent;
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+.rv-drill:hover:not(:disabled) { color: var(--accent-primary); border-color: var(--accent-primary-20); }
+.rv-drill:disabled { opacity: 0.45; cursor: not-allowed; }
+
 .rv-monitor {
   margin-top: var(--space-3);
   padding: var(--space-3);
