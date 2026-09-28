@@ -18,11 +18,11 @@ ul { list-style: none; }
 button { cursor: pointer; font-family: inherit; border: none; background: none; padding: 0; }
 button:active { transform: scale(0.97); }
 input, textarea, select { font-family: inherit; outline: none; }
-input:focus, textarea:focus, select:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px var(--accent-primary-10); }
+input:focus, textarea:focus, select:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px var(--accent-primary-20); }
 
 /* 全局焦点可见（WCAG 2.4.7）— 键盘导航焦点环 */
 :focus-visible { outline: 2px solid var(--accent-primary); outline-offset: 2px; }
-input:focus-visible, textarea:focus-visible, select:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-primary-10); }
+input:focus-visible, textarea:focus-visible, select:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-primary-20); }
 
 /* ── 表单基础原语 ── */
 label { font-size: 0.8125rem; font-weight: 500; color: var(--text-secondary); }

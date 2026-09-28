@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useStudyStore } from '@/stores/studyStore'
 import { api } from '@/utils/api'
@@ -35,6 +35,46 @@ const gateResult = ref<GateResult | null>(null)
 const gateRejected = ref(false)
 // ── 单 Agent 错误收集（不阻断其他 Agent 输出）──
 const agentErrors = ref<Record<string, string>>({})
+// AI 原生界面（文章词 25）：失败必须「看得见 + 能继续」，故把单 Agent 失败提成显式清单
+const agentErrorList = computed(() =>
+  Object.entries(agentErrors.value).map(([agent, msg]) => ({ agent, msg }))
+)
+
+// ── 实时监测（文章词 15）：状态 / 告警 / 事件时间线分离，并给出「最后更新时间 + 中断提示」──
+type PipelineEvent = { t: string; label: string; kind: 'info' | 'done' | 'error' }
+const eventLog = ref<PipelineEvent[]>([])
+const lastEventAt = ref<number>(0)
+const nowTs = ref<number>(Date.now())
+let monTimer: number | null = null
+
+function pushEvent(label: string, kind: PipelineEvent['kind'] = 'info') {
+  eventLog.value.unshift({
+    t: new Date().toLocaleTimeString('zh-CN', { hour12: false }),
+    label,
+    kind,
+  })
+  if (eventLog.value.length > 40) eventLog.value.pop()
+  lastEventAt.value = Date.now()
+}
+function startMonitor() {
+  eventLog.value = []
+  lastEventAt.value = Date.now()
+  pushEvent('已提交生成请求', 'info')
+  if (monTimer === null) monTimer = window.setInterval(() => { nowTs.value = Date.now() }, 1000)
+}
+function stopMonitor() {
+  if (monTimer !== null) { window.clearInterval(monTimer); monTimer = null }
+}
+onUnmounted(stopMonitor)
+
+const stalled = computed(() =>
+  loading.value && lastEventAt.value > 0 && nowTs.value - lastEventAt.value > 15000
+)
+const stalledSec = computed(() => Math.max(0, Math.floor((nowTs.value - lastEventAt.value) / 1000)))
+const doneNodes = computed(() => eventLog.value.filter(e => e.kind === 'done').length)
+const lastEventLabel = computed(() =>
+  lastEventAt.value ? new Date(lastEventAt.value).toLocaleTimeString('zh-CN', { hour12: false }) : '—'
+)
 const selectedHistory = ref<string | null>(null)
 const showHistory = ref(true)  // 默认展开，方便查看历史
 // ── 可复用学习资源池（后端登记 + 展示） ──
@@ -368,6 +408,7 @@ async function generateResource() {
   if (!topic.value.trim() || loading.value) return
 
   loading.value = true
+  startMonitor()
   result.value = null
       pipelineStage.value = 0
       progressPct.value = 0
@@ -431,6 +472,7 @@ const stageMap: Record<string, number> = {
             // other agents may still be producing output
             const errField = (evt.field || 'pipeline') as string
             agentErrors.value[errField] = evt.content || 'Generation failed'
+            pushEvent(`${errField} 失败：${evt.content || 'Generation failed'}`, 'error')
             continue
           }
           // node_done：Agent 节点完成，更新进度
@@ -442,6 +484,7 @@ const stageMap: Record<string, number> = {
             }
             const step = agentSteps[pipelineStage.value - 1]
             currentAgent.value = (step && step.name) || nodeName
+            pushEvent(`${currentAgent.value || nodeName} 完成`, 'done')
           }
           // content：Agent 生成的具体内容
           if (evt.type === 'content' && evt.field && evt.content) {
@@ -536,6 +579,8 @@ const stageMap: Record<string, number> = {
     if (result.value && result.value.status === 'ok') saveToHistory(result.value)
   } finally {
     loading.value = false
+    stopMonitor()
+    pushEvent(agentErrorList.value.length ? '生成结束（部分 Agent 失败）' : '生成结束', 'done')
   }
 }
 
@@ -669,6 +714,10 @@ function parseWeakPoints(wpStr: string): string[] {
       <div class="section-desc">输入知识点，7个AI智能体协作为你生成7种个性化学习资源（讲解/题目/导图/拓展/PPT/代码实操/视频脚本）</div>
     </div>
 
+    <!-- AI 原生工作台（文章词 25）：左＝需求与历史，右＝任务状态与结果 -->
+    <div class="rv-workspace">
+      <div class="rv-col-side">
+
     <!-- L1/L2/L3 三层学情记忆薄弱点提示（低侵入联动） -->
     <div v-if="memoryOverview?.weak_points?.length" class="memory-mini-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-size:12px;">
       <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);"> 记忆薄弱点:</span>
@@ -740,6 +789,9 @@ function parseWeakPoints(wpStr: string): string[] {
       </div>
     </div>
 
+      </div><!-- /.rv-col-side -->
+
+      <div class="rv-col-main">
     <!-- 流水线进度 -->
     <div v-if="loading || pipelineStage > 0" class="card rv-card">
       <!-- 真实进度条（SSE 推送，赛题非功能4：生成进度追踪）-->
@@ -778,6 +830,24 @@ function parseWeakPoints(wpStr: string): string[] {
         <div v-if="idx < agentSteps.length - 1" class="agent-arrow">→</div>
         </template>
       </div>
+      <!-- 实时监测（文章词 15）：状态 / 告警 / 事件时间线分离 + 最后更新时间 + 中断提示 -->
+      <div class="rv-monitor">
+        <div class="rv-mon-status">
+          <span class="rv-mon-chip">节点完成 {{ doneNodes }}</span>
+          <span v-if="agentErrorList.length" class="rv-mon-chip is-error">异常 {{ agentErrorList.length }}</span>
+          <span v-if="stalled" class="rv-mon-chip is-warn">已 {{ stalledSec }}s 无进展</span>
+          <span class="rv-mon-time">最后更新 {{ lastEventLabel }}</span>
+        </div>
+        <div v-if="stalled" class="rv-mon-stall">
+          流水线已 {{ stalledSec }} 秒未推送新进展，可能是后端繁忙或连接中断。仍在等待中，可继续稍候或重新生成。
+        </div>
+        <ul v-if="eventLog.length" class="rv-mon-log">
+          <li v-for="(e, i) in eventLog.slice(0, 8)" :key="i" :class="'ev-' + e.kind">
+            <span class="ev-time">{{ e.t }}</span>
+            <span class="ev-label">{{ e.label }}</span>
+          </li>
+        </ul>
+      </div>
       <div v-if="loading" class="rv-working">
         {{ currentAgent }} 正在工作...
       </div>
@@ -790,6 +860,21 @@ function parseWeakPoints(wpStr: string): string[] {
 
 <!-- 生成结果 -->
     <div v-if="result" class="card rv-card" :style="{ borderTop: `3px solid ${tabAccent}` }">
+      <!-- 部分 Agent 失败：显式告知 + 重试入口（AI 原生界面：失败态必备） -->
+      <div v-if="agentErrorList.length > 0" class="rv-agent-error">
+        <div class="rv-ae-head">
+          <span class="rv-ae-icon">!</span>
+          <strong>{{ agentErrorList.length }} 个 Agent 未完成</strong>
+          <span class="rv-ae-hint">其余资源已正常生成，可单独重试整条流水线</span>
+        </div>
+        <div v-for="e in agentErrorList" :key="e.agent" class="rv-ae-row">
+          <code>{{ e.agent }}</code>
+          <span>{{ e.msg }}</span>
+        </div>
+        <button class="rag-btn rv-ae-retry" @click="generateResource" :disabled="loading">
+          <span class="btn-ic" v-html="icons.refresh"></span>{{ loading ? '重试中...' : '重新生成' }}
+        </button>
+      </div>
       <!-- 产物验收不通过横幅 -->
       <div v-if="gateRejected" class="gate-reject-banner">
         <span class="gate-reject-icon">!</span>
@@ -1046,6 +1131,9 @@ function parseWeakPoints(wpStr: string): string[] {
       </div>
     </div>
 
+      </div><!-- /.rv-col-main -->
+    </div><!-- /.rv-workspace -->
+
     <!-- 讯飞AI工坊：深度集成讯飞开放平台全部已开通能力（始终可见） -->
     <XfyunWorkshop :topic="topic" :result="result" />
     </ErrorBoundary>
@@ -1117,16 +1205,18 @@ function parseWeakPoints(wpStr: string): string[] {
 }
 .history-bar-header:hover { background: var(--bg-card-hover); }
 .history-toggle { font-size:var(--text-2xs); color: var(--text-muted); font-weight: var(--weight-regular); }
-.history-list { padding:var(--space-1) var(--space-2) var(--space-2); max-height:12.5rem; overflow-y: auto; }
+/* ── 高密度列表（文章词 14）：先收空白与行距，不缩小字号 ── */
+.history-list { padding:var(--space-1) var(--space-2) var(--space-2); max-height:14rem; overflow-y: auto; }
 .history-item {
-  display: flex; justify-content: space-between; align-items: center;
-  padding:0.375rem 0.625rem; border-radius:var(--radius-sm); cursor: pointer;
-  transition: var(--transition); font-size:var(--text-xs);
+  display: flex; justify-content: space-between; align-items: center; gap: var(--space-2);
+  padding:0.3125rem 0.5rem; border-radius:var(--radius-sm); cursor: pointer;
+  transition: var(--transition); font-size:var(--text-xs); line-height: 1.35;
 }
+.history-item + .history-item { border-top: 1px solid var(--border-light); }
 .history-item:hover { background: var(--bg-card-hover); }
 .history-item.active { background: var(--accent-primary-10); color: var(--accent-primary); }
-.history-topic { color: var(--text-primary); font-weight: var(--weight-medium); max-width:60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.history-meta { color: var(--text-muted); font-size:var(--text-2xs); }
+.history-topic { color: var(--text-primary); font-weight: var(--weight-medium); min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.history-meta { color: var(--text-muted); font-size:var(--text-2xs); text-align: right; flex-shrink: 0; font-variant-numeric: tabular-nums; }
 .history-clear {
   width:100%; margin-top:var(--space-1); padding:0.3125rem; border: none; border-radius:var(--radius-sm);
   background: transparent; color: var(--text-muted); font-size:var(--text-2xs); cursor: pointer;
@@ -1177,6 +1267,20 @@ function parseWeakPoints(wpStr: string): string[] {
 }
 
 /* ── Wave D：内联样式迁移（一致性）── */
+/* AI 原生工作台（文章词 25）：需求/历史与状态/结果并置，用户顺着任务往下走 */
+.rv-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 21rem) minmax(0, 1fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+.rv-col-side { position: sticky; top: var(--space-2); z-index: 1; }
+.rv-col-side .rv-card, .rv-col-main > .rv-card { margin-bottom: var(--space-4); }
+/* 窄屏回归单栏，避免两栏都被压扁 */
+@media (max-width: 1100px) {
+  .rv-workspace { grid-template-columns: 1fr; }
+  .rv-col-side { position: static; }
+}
 .rv-card { margin-bottom: var(--space-5); }
 .rv-gap { margin-bottom: var(--space-5); }
 .rv-mt { margin-top: var(--space-3); }
@@ -1187,6 +1291,45 @@ function parseWeakPoints(wpStr: string): string[] {
 .rv-progress-pct { font-weight: var(--weight-semibold); color: var(--accent-primary); }
 .rv-progress-track { height: 0.5rem; background: var(--bg-secondary); border-radius: var(--radius-full); overflow: hidden; }
 .rv-working { text-align: center; padding: var(--space-2) 0; font-size: var(--text-sm); color: var(--text-muted); }
+
+/* ── 实时监测面板（文章词 15）── */
+.rv-monitor {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+}
+.rv-mon-status { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.rv-mon-chip {
+  padding: 0.125rem 0.5rem; border-radius: var(--radius-full);
+  font-size: var(--text-2xs); font-weight: var(--weight-semibold);
+  background: color-mix(in srgb, var(--accent-primary) 14%, transparent);
+  color: var(--accent-primary);
+}
+.rv-mon-chip.is-error { background: color-mix(in srgb, var(--accent-danger) 16%, transparent); color: var(--accent-danger); }
+.rv-mon-chip.is-warn { background: color-mix(in srgb, var(--accent-warm) 18%, transparent); color: var(--accent-warm); }
+.rv-mon-time { margin-left: auto; font-size: var(--text-2xs); color: var(--text-muted); }
+.rv-mon-stall {
+  margin-top: var(--space-2); padding: 0.375rem 0.625rem;
+  border-radius: var(--radius-sm); font-size: var(--text-xs); line-height: 1.5;
+  background: color-mix(in srgb, var(--accent-warm) 10%, transparent);
+  color: var(--accent-warm);
+}
+.rv-mon-log {
+  margin-top: var(--space-2); padding: 0; list-style: none;
+  max-height: 9.5rem; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 0.125rem;
+}
+.rv-mon-log li {
+  display: flex; gap: var(--space-3);
+  padding: 0.1875rem 0.375rem; border-radius: var(--radius-sm);
+  font-size: var(--text-2xs); color: var(--text-secondary);
+}
+.ev-time { flex-shrink: 0; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.ev-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ev-done .ev-label { color: var(--accent-success); }
+.ev-error .ev-label { color: var(--accent-danger); }
 
 .rv-card-header { border-bottom: 1px solid var(--border-light); padding-bottom: var(--space-3); margin-bottom: var(--space-3); }
 .rv-tab-row { display: flex; gap: var(--space-2); flex-wrap: wrap; }
@@ -1210,6 +1353,28 @@ function parseWeakPoints(wpStr: string): string[] {
 
 .rv-warn-box { margin-top: var(--space-3); padding: var(--space-3); background: var(--accent-danger-10); border-radius: var(--radius-sm); }
 .rv-warn-item { font-size: var(--text-sm); color: var(--accent-danger); }
+
+/* 部分 Agent 失败横幅（显式失败态 + 重试） */
+.rv-agent-error {
+  display: flex; flex-direction: column; gap: var(--space-2);
+  padding: 0.75rem var(--space-4);
+  margin-bottom: var(--space-4);
+  background: color-mix(in srgb, var(--accent-warm) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-warm) 45%, transparent);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+}
+.rv-ae-head { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; color: var(--accent-warm); }
+.rv-ae-hint { font-size: var(--text-xs); color: var(--text-secondary); font-weight: var(--weight-regular); }
+.rv-ae-icon {
+  flex-shrink: 0; width: 1.125rem; height: 1.125rem; border-radius: 50%;
+  background: var(--accent-warm); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: var(--text-xs); font-weight: var(--weight-bold);
+}
+.rv-ae-row { display: flex; gap: var(--space-2); font-size: var(--text-xs); color: var(--text-secondary); line-height: 1.5; }
+.rv-ae-row code { color: var(--accent-warm); flex-shrink: 0; }
+.rv-ae-retry { align-self: flex-start; padding: 0.3125rem 0.75rem; font-size: var(--text-xs); }
 
 .rv-ok-box { margin-top: var(--space-3); padding: var(--space-3); background: var(--accent-success-10); border-radius: var(--radius-sm); color: var(--accent-success); font-size: var(--text-sm); }
 .rv-err-box { margin-top: var(--space-3); padding: var(--space-3); background: var(--accent-danger-10); border-radius: var(--radius-sm); color: var(--accent-danger); font-size: var(--text-sm); }

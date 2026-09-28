@@ -306,6 +306,53 @@ onMounted(async () => {
       </div>
     </section>
 
+    <!-- 今日速览 · Bento（设计升级 v11.1 · 关键词 01 便当盒网格） -->
+    <section v-if="stats" class="bento-wrap">
+      <div class="section-label"> 今日速览</div>
+      <div class="dash-bento">
+        <div class="bento-cell db-area-hero">
+          <div class="db-hero-eyebrow">距 2026 考研</div>
+          <div class="db-hero-count"><span class="db-hero-num">{{ daysToExam }}</span><span class="db-hero-unit">天</span></div>
+          <p class="db-hero-tip">{{ userName }}，今天也稳扎稳打。</p>
+        </div>
+        <div class="bento-cell db-area-kpi1">
+          <div class="db-kpi-val">{{ stats.studyTime }}<span class="db-kpi-unit">h</span></div>
+          <div class="db-kpi-label">今日学习时长</div>
+        </div>
+        <div class="bento-cell db-area-kpi2">
+          <div class="db-kpi-val">{{ stats.questionsDone }}</div>
+          <div class="db-kpi-label">今日完成题目</div>
+        </div>
+        <div class="bento-cell db-area-kpi3">
+          <div class="db-kpi-val">{{ stats.streak }}<span class="db-kpi-unit">天</span></div>
+          <div class="db-kpi-label">连续学习</div>
+        </div>
+        <div class="bento-cell db-area-mastery">
+          <RingProgress :value="stats.mastery" :size="74" :stroke="7" />
+          <div class="db-kpi-label">整体掌握率</div>
+        </div>
+        <div class="bento-cell db-area-subjects">
+          <div class="bento-cell-title">四科掌握度<span class="db-muted">真实练习均值</span></div>
+          <div class="db-subj-list">
+            <div v-for="m in subjectMastery" :key="m.key" class="db-subj-row">
+              <span class="db-subj-name">{{ m.name }}</span>
+              <span class="db-subj-val" :style="{ color: m.value === null ? 'var(--color-text-3)' : scoreColor(m.value) }">{{ m.value === null ? '累积中' : m.value + '%' }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="bento-cell db-area-recent">
+          <div class="bento-cell-title">最近练习</div>
+          <div v-if="sessions.length" class="db-recent-list">
+            <div v-for="s in sessions.slice(0, 3)" :key="s.id" class="db-recent-row">
+              <span class="db-recent-subj" :style="{ color: subjectColorMap[s.subject] || 'var(--accent)' }">{{ subjectLabel(s.subject) }}</span>
+              <span class="db-recent-score" :style="{ color: typeof s.score === 'number' ? scoreColor(s.score) : 'var(--color-text-3)' }">{{ typeof s.score === 'number' ? s.score + ' 分' : '—' }}</span>
+            </div>
+          </div>
+          <EmptyState v-else :icon="icons.sparkle" title="还没有练习记录" desc="去做几道题，速览就会亮起来" />
+        </div>
+      </div>
+    </section>
+
     <!-- 画像驱动推荐 -->
     <section v-if="recommendations.length" class="rec-section">
       <div class="section-label"> 画像驱动推荐</div>
@@ -364,7 +411,7 @@ onMounted(async () => {
           <div class="data-label-text">今日完成题目</div>
         </div>
         <div class="data-card mastery-card">
-          <RingProgress :value="stats.mastery" :size="88" :stroke="8" />
+          <RingProgress :value="stats.mastery" :size="116" :stroke="9" />
           <div class="data-caption">知识点整体掌握率</div>
         </div>
         <div class="data-card">
@@ -443,7 +490,10 @@ onMounted(async () => {
         <div v-for="(al, i) in alerts" :key="i" class="alert-item" :class="'alert-' + al.level" role="button" tabindex="0" @click="go(al.route)" @keydown.enter="go(al.route)" @keydown.space.prevent="go(al.route)">
           <div class="alert-dot" :class="'dot-' + al.level"></div>
           <div class="alert-body">
-            <div class="alert-topic">{{ al.topic }}</div>
+            <div class="alert-topic">
+              {{ al.topic }}
+              <span class="alert-level" :class="'lv-' + al.level">{{ al.level === 'danger' ? '高危' : '薄弱' }}</span>
+            </div>
             <div class="alert-action">{{ al.action }}</div>
           </div>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="alert-arrow"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -835,10 +885,33 @@ onMounted(async () => {
   letter-spacing:0.0312rem;
 }
 
+/* Bento Box Grid（文章词 01）：重要内容多占位，相关内容靠一起，先让人看见"今天怎么样" */
 .data-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap:var(--space-3);
+}
+.data-card:nth-child(1) { grid-column: span 2; }               /* 今日学习时长：小卡 */
+.data-card:nth-child(2) { grid-column: span 2; }               /* 今日完成题目：小卡 */
+.data-card:nth-child(3) { grid-column: span 2; grid-row: span 2; } /* 掌握率：主卡（跨 2 行） */
+.data-card:nth-child(4) { grid-column: span 4; }               /* 连续学习：通栏副卡 */
+
+/* 通栏副卡改横向排布，避免大卡里只有一个数字 */
+.data-card:nth-child(4) {
+  display: flex; align-items: center; justify-content: center; gap: var(--space-4); text-align: left;
+}
+.data-card:nth-child(4) .data-icon { margin-bottom: 0; }
+.data-card:nth-child(4) .data-label-text { margin-top: 0; }
+
+@media (max-width: 900px) {
+  .data-grid { grid-template-columns: repeat(2, 1fr); }
+  .data-card:nth-child(1), .data-card:nth-child(2) { grid-column: span 1; }
+  .data-card:nth-child(3) { grid-column: span 2; grid-row: span 1; }
+  .data-card:nth-child(4) { grid-column: span 2; }
+}
+@media (max-width: 480px) {
+  .data-grid { grid-template-columns: 1fr; }
+  .data-card:nth-child(n) { grid-column: span 1; }
 }
 
 .data-card {
@@ -884,7 +957,12 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   gap:var(--space-2);
+  /* Bento 主卡：给一点视觉权重，让人第一眼落在"掌握率" */
+  background: linear-gradient(180deg, var(--accent-primary-10), var(--bg-secondary) 55%);
+  border-color: var(--accent-primary-20);
 }
+.data-card.mastery-card .data-caption { font-size: var(--text-sm); color: var(--text-secondary); }
+.data-card.mastery-card:hover { border-color: var(--accent-primary); }
 .data-caption {
   font-size:var(--text-xs);
   color: var(--text-muted);
@@ -1155,7 +1233,14 @@ onMounted(async () => {
 .dot-danger { background: var(--state-danger); box-shadow: 0 0 6px var(--state-danger); }
 .dot-weak { background: var(--state-weak); box-shadow: 0 0 6px var(--state-weak); }
 .alert-body { flex: 1; min-width: 0; }
-.alert-topic { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.alert-topic { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-primary); display: flex; align-items: center; gap: var(--space-2); }
+/* 等级不只靠颜色传达（无障碍）：颜色圆点 + 文字标签并存 */
+.alert-level {
+  flex-shrink: 0; padding: 0 0.375rem; border-radius: var(--radius-full);
+  font-size: var(--text-2xs); font-weight: var(--weight-semibold); line-height: 1.25rem;
+}
+.alert-level.lv-danger { background: color-mix(in srgb, var(--state-danger) 18%, transparent); color: var(--state-danger); }
+.alert-level.lv-weak { background: color-mix(in srgb, var(--state-weak) 18%, transparent); color: var(--state-weak); }
 .alert-action { font-size: var(--text-xs); color: var(--text-secondary); margin-top: 0.125rem; }
 .alert-arrow { color: var(--text-muted); flex-shrink: 0; }
 .alert-item:hover .alert-arrow { color: var(--accent-primary); }
@@ -1206,5 +1291,55 @@ onMounted(async () => {
   .agent-grid { grid-template-columns: 1fr; }
   .heatmap-cells { grid-template-columns: repeat(4, 1fr); }
   .heatmap-subj-label { width: 3.5rem; font-size: var(--text-2xs); }
+}
+/* ── 今日速览 · Bento（设计升级 v11.1 · 关键词 01 便当盒网格）── */
+.bento-wrap{margin-top:var(--space-6)}
+.dash-bento{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  grid-auto-rows:152px;
+  gap:var(--space-4);
+  grid-template-areas:
+    "hero hero kpi1 kpi2"
+    "hero hero kpi3 mastery"
+    "subjects subjects recent recent";
+}
+.db-area-hero{grid-area:hero}
+.db-area-kpi1{grid-area:kpi1}
+.db-area-kpi2{grid-area:kpi2}
+.db-area-kpi3{grid-area:kpi3}
+.db-area-mastery{grid-area:mastery}
+.db-area-subjects{grid-area:subjects}
+.db-area-recent{grid-area:recent}
+.db-area-hero{
+  background:linear-gradient(135deg, rgba(var(--accent-rgb),.14), var(--glass-bg));
+  display:flex;flex-direction:column;justify-content:center;
+}
+.db-hero-eyebrow{font-size:var(--text-xs);font-weight:var(--weight-semibold);color:var(--color-text-2);letter-spacing:var(--tracking-caps)}
+.db-hero-count{display:flex;align-items:baseline;gap:var(--space-2);margin:var(--space-2) 0}
+.db-hero-num{font-size:var(--text-4xl);font-weight:var(--weight-bold);color:var(--color-text);line-height:1}
+.db-hero-unit{font-size:var(--text-lg);font-weight:var(--weight-semibold);color:var(--color-text-2)}
+.db-hero-tip{font-size:var(--text-sm);color:var(--color-text-2);margin:0}
+.db-kpi-val{font-size:var(--text-3xl);font-weight:var(--weight-bold);color:var(--color-text);line-height:1}
+.db-kpi-unit{font-size:var(--text-base);font-weight:var(--weight-semibold);color:var(--color-text-2);margin-left:2px}
+.db-kpi-label{font-size:var(--text-xs);color:var(--color-text-2);margin-top:var(--space-2)}
+.db-area-mastery{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--space-2)}
+.db-muted{font-size:var(--text-2xs);font-weight:var(--weight-medium);color:var(--color-text-3)}
+.db-subj-list{display:flex;flex-direction:column;gap:var(--space-2);margin-top:var(--space-2)}
+.db-subj-row{display:flex;align-items:center;justify-content:space-between;font-size:var(--text-sm)}
+.db-subj-name{color:var(--color-text-2)}
+.db-subj-val{font-weight:var(--weight-semibold);color:var(--color-text)}
+.db-recent-list{display:flex;flex-direction:column;gap:var(--space-2);margin-top:var(--space-2)}
+.db-recent-row{display:flex;align-items:center;justify-content:space-between;font-size:var(--text-sm)}
+.db-recent-subj{font-weight:var(--weight-medium)}
+.db-recent-score{font-weight:var(--weight-semibold)}
+@media (max-width:1024px){
+  .dash-bento{grid-template-columns:repeat(2,1fr);grid-auto-rows:auto;grid-template-areas:
+    "hero hero" "kpi1 kpi2" "kpi3 mastery" "subjects subjects" "recent recent"}
+  .db-area-hero{min-height:140px}
+}
+@media (max-width:640px){
+  .dash-bento{grid-template-columns:1fr;grid-template-areas:none}
+  .db-area-hero,.db-area-kpi1,.db-area-kpi2,.db-area-kpi3,.db-area-mastery,.db-area-subjects,.db-area-recent{grid-area:auto}
 }
 </style>
