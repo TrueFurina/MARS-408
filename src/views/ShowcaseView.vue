@@ -159,7 +159,7 @@ function openNew() { window.open(iframeSrc.value, '_blank', 'noopener') }
             <span class="ts-label">认证覆盖率</span>
           </div>
           <div class="tech-stat">
-            <span class="ts-value">1402</span>
+            <span class="ts-value">1404</span>
             <span class="ts-label">测试用例</span>
           </div>
           <div class="tech-stat">
