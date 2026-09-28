@@ -20,6 +20,16 @@ documents/项目全面审查与架构剖析_2026-07-10.md 的一次性审计快�
 - 公开：未挂上述依赖，且**必须**在 PUBLIC_ALLOWLIST 中显式登记理由；
   出现未登记的公开端点 → 退出码 1（防止新接口漏挂鉴权而无人发现）。
 
+现状（2026-09-28 重算，作为对外数字的唯一来源）
+------------------------------------------------
+  /api 端点总数 243 / 受保护 230 / 公开 13 → **认证覆盖率 94.65%**
+  当日收紧 literacy 三个数据端点（submit / report / class-report）后，
+  受保护数由 227 增至 230；未登记公开端点由 12 降至 9。
+  对外文案（py-server/main.py 的 OpenAPI description、src/views/ShowcaseView.vue、
+  tools/generate_demo_ppt.py）已同步为该实测值，并在 main.py 中加了断言锁死，
+  防止再次出现「对外数字与代码真值脱钩」。
+  注意：97.8% 曾是 2026-07-10 一次性审计快照（87/89），此后路由一直变动而无人重算。
+
 用法
 ----
   python scripts/verify_auth_coverage.py
@@ -49,11 +59,20 @@ AUTH_DEP_NAMES = {
 
 # 公开端点白名单：路径 → 公开理由。
 # 只允许「设计上必须公开」的端点；新增条目必须在审查中说明理由。
+#
+# 登记纪律（2026-09-28）：只登记**已逐一核验过实现**的端点。
+# 为了让退出码变 0 而把未核验的端点批量登记，等于把门禁调松 —— 那正是本脚本
+# 存在的意义所在。故 benchmark / experiments / cn-distinction 的 8 个端点
+# 继续保持「未登记、红灯」，逐项核验后再补理由。
 PUBLIC_ALLOWLIST = {
     "/api/auth/login": "登录入口，用户尚未持有凭据",
     "/api/auth/register": "注册入口，用户尚未持有凭据（另有速率限制）",
     "/api/status": "运维健康探针，供编排系统免凭据探活",
     "/api/status/competition": "运维状态面",
+    "/api/literacy/questions": (
+        "素养测评题库只读端点：不含任何学生数据、不产生写入；"
+        "学生答题页必须在取到题目时才可用（已核验实现，2026-09-28）"
+    ),
 }
 
 
@@ -109,7 +128,9 @@ def main_cli() -> int:
     print(f"  受鉴权保护: {len(protected)}")
     print(f"  设计上公开: {len(public)}")
     if total:
-        print(f"认证覆盖率: {len(protected) / total * 100:.1f}%")
+        # 保留两位小数并与 JSON 输出一致：两个表示法不同会让「对外数字」再生二义。
+        # 同时带上分数，使任何舍入都可被读者自行验算。
+        print(f"认证覆盖率: {len(protected) / total * 100:.2f}% ({len(protected)}/{total})")
     print("=" * 68)
     if public:
         print("\n[公开端点]")

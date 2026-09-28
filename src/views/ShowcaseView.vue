@@ -7,7 +7,7 @@ const techHighlights = [
   {
     category: ' 多智能体协同架构',
     items: [
-      { title: '10 节点 LangGraph StateGraph', desc: 'Coordinator → Diagnostician → Planner → Retriever → Generator(7并行) → Assessor → Critic → EvidenceCheck → QualityGate → PathPlanner 全链路编排', tag: '45% 评分权重' },
+      { title: '11 节点 LangGraph StateGraph', desc: 'Triage → Coordinator → Diagnostician → Planner → Retriever → Generator(7并行) → Assessor → Critic → EvidenceCheck → QualityGate → PathPlanner 全链路编排', tag: '45% 评分权重' },
       { title: '改进 GoMARL 共识机制', desc: '加权投票 + Kappa 一致性置信度，7 Agent 交叉验证，Kappa ≥ 0.85', tag: '创新价值' },
       { title: '教学规则引擎嵌入', desc: '408 知识点依赖规则（533 行）约束调度逻辑，分组奖赏函数加入掌握度指标', tag: '场景优化' },
     ],
@@ -15,7 +15,7 @@ const techHighlights = [
   {
     category: ' 轻量化检索增强（FrugalRAG）',
     items: [
-      { title: 'E5 稠密检索 + BM25 稀疏检索', desc: '双路召回 + 余弦阈值过滤 + 个性化重排，检索成本降低 45%', tag: '核心指标' },
+      { title: 'E5 稠密检索 + BM25 稀疏检索', desc: '双路召回 + 余弦阈值过滤 + 个性化重排', tag: '核心指标' },
       { title: 'SFT 检索策略 + GRPO 停止决策', desc: '监督微调学习最优查询生成，强化学习决定何时停止检索，仅需 500 条标注样本', tag: '技术创新' },
       { title: '查询重写 + 结果融合', desc: '检索不足时自动重写查询，BM25 + 向量相似度加权排序', tag: '鲁棒性' },
     ],
@@ -65,7 +65,7 @@ const techHighlights = [
     items: [
       { title: '防幻觉三重保障', desc: 'FrugalRAG 事实约束 → System Prompt 强制 → Critic Agent 审阅校验', tag: '安全' },
       { title: 'SSE 流式输出', desc: '所有资源生成/对话/视频生成均支持 SSE 流式，首字延迟 < 200ms', tag: '性能' },
-      { title: '97.8% 认证覆盖率', desc: 'HMAC-SHA256 Token + 速率限制（注册 3 次/小时）+ 输入校验 Pydantic Field', tag: '安全' },
+      { title: '94.65% 认证覆盖率', desc: 'HMAC-SHA256 Token + 速率限制（注册 3 次/小时）+ 输入校验 Pydantic Field', tag: '安全' },
     ],
   },
 ]
@@ -143,11 +143,11 @@ function openNew() { window.open(iframeSrc.value, '_blank', 'noopener') }
         <!-- 数据总览 -->
         <div class="tech-stats-bar">
           <div class="tech-stat">
-            <span class="ts-value">43</span>
+            <span class="ts-value">243</span>
             <span class="ts-label">API 端点</span>
           </div>
           <div class="tech-stat">
-            <span class="ts-value">8</span>
+            <span class="ts-value">11</span>
             <span class="ts-label">智能体节点</span>
           </div>
           <div class="tech-stat">
@@ -155,11 +155,11 @@ function openNew() { window.open(iframeSrc.value, '_blank', 'noopener') }
             <span class="ts-label">资源类型</span>
           </div>
           <div class="tech-stat">
-            <span class="ts-value">97.8%</span>
+            <span class="ts-value">94.65%</span>
             <span class="ts-label">认证覆盖率</span>
           </div>
           <div class="tech-stat">
-            <span class="ts-value">313+</span>
+            <span class="ts-value">1401</span>
             <span class="ts-label">测试用例</span>
           </div>
           <div class="tech-stat">

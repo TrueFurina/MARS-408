@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "MARS-408 — 基于 GOMARL 与 FrugalRAG 的 408 考研个性化学习系统",
-    "description": "MARS-408 408 考研个性化学习多智能体系统。\n\n## 核心架构\n- 13 个智能体 / 11 节点 LangGraph 多智能体流水线（含 evidence_check 证据校验 + quality_gate 产物验收闸门）\n- GOMARL 共识引擎（NeuralMixer 神经网络加权融合）\n- FrugalRAG 检索增强生成（E5 + BM25 + 个性化重排）\n- 7 种学习资源并行生成\n\n## 技术栈\n后端: FastAPI + LangGraph + PyTorch + Milvus\n前端: Vue 3 + TypeScript + Vite\nLLM: DeepSeek / 讯飞星火 X2 两通道（P0 不接 Qwen2.5）\n\n## 安全\n- 97.8% API 认证覆盖率\n- JWT HMAC-SHA256 Token\n- PBKDF2 密码哈希\n- DOMPurify XSS 防护\n- 安全响应头 (CSP/HSTS/X-Frame-Options)",
+    "description": "MARS-408 408 考研个性化学习多智能体系统。\n\n## 核心架构\n- 13 个智能体 / 11 节点 LangGraph 多智能体流水线（含 evidence_check 证据校验 + quality_gate 产物验收闸门）\n- GOMARL 共识引擎（NeuralMixer 神经网络加权融合）\n- FrugalRAG 检索增强生成（E5 + BM25 + 个性化重排）\n- 7 种学习资源并行生成\n\n## 技术栈\n后端: FastAPI + LangGraph + PyTorch + Milvus\n前端: Vue 3 + TypeScript + Vite\nLLM: DeepSeek / 讯飞星火 X2 两通道（P0 不接 Qwen2.5）\n\n## 安全\n- 94.65% API 认证覆盖率（230/243 个 /api 端点；scripts/verify_auth_coverage.py 可复现重算）\n- JWT HMAC-SHA256 Token\n- PBKDF2 密码哈希\n- DOMPurify XSS 防护\n- 安全响应头 (CSP/HSTS/X-Frame-Options)",
     "version": "2.0.0"
   },
   "paths": {
