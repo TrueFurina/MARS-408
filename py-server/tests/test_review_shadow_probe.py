@@ -12,7 +12,33 @@ import copy
 
 import pytest
 
-torch = pytest.importorskip("torch")  # 真训 PPO 路径需要 torch；缺失则跳过
+# 真训 PPO 路径需要 torch；不可用则整文件跳过。
+#
+# ⚠️ Windows 本机的「torch 不可用」是以 **OSError(WinError 1114 动态链接库初始化失败)**
+#    暴露的，而 **不是** ImportError；pytest.importorskip() 默认只捕获 ImportError，
+#    于是它会升级成「收集期 ERROR」——后果有二：
+#      ① 整轮 pytest 退出码恒为非 0，无法用退出码判定成败（历史上只能忽略本文件重跑）；
+#      ② 本文件 6 条用例在 Windows 收集 0 条、在 Linux 收集 6 条，
+#         「用例总数」这一对外数字变成**环境依赖**，本地无法复算权威值。
+#    这里显式把 OSError 一并纳入后才降级为 skip。
+#    注意边界：只放行 ImportError/OSError 两种「依赖缺失」信号，
+#    其它异常照常抛出，绝不把代码错误伪装成 skip（否则该用例会假绿）。
+try:
+    import torch
+
+    _TORCH_IMPORT_ERROR = None
+except (ImportError, OSError) as exc:  # noqa: E402  (Windows: DLL 加载失败是 OSError)
+    torch = None
+    _TORCH_IMPORT_ERROR = f"{type(exc).__name__}: {exc}"
+
+# 用 pytestmark 而非模块级 pytest.skip()：
+#   模块级 skip 只产出 **1 个 skipped item**，而 Linux 会收集 **6 个** —— 两边用例总数不一致，
+#   「对外用例总数」这类元统计依旧无法在本地复算。改成 pytestmark 后，6 条用例在任何环境下
+#   都被收集，Windows 上逐条 skip、Linux 上照常执行，总数恒定。
+pytestmark = pytest.mark.skipif(
+    _TORCH_IMPORT_ERROR is not None,
+    reason=f"torch 不可用（{_TORCH_IMPORT_ERROR}）：影子退化为规则等价，跳过本文件全部用例",
+)
 
 from engines.review_shadow_probe import (  # noqa: E402
     HEURISTIC_F2_THRESHOLD,
