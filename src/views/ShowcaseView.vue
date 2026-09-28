@@ -159,10 +159,6 @@ function openNew() { window.open(iframeSrc.value, '_blank', 'noopener') }
             <span class="ts-label">认证覆盖率</span>
           </div>
           <div class="tech-stat">
-            <span class="ts-value">1404</span>
-            <span class="ts-label">测试用例</span>
-          </div>
-          <div class="tech-stat">
             <span class="ts-value">0</span>
             <span class="ts-label">失败用例</span>
           </div>
@@ -224,7 +220,7 @@ function openNew() { window.open(iframeSrc.value, '_blank', 'noopener') }
 .tech-card-tag { font-size: 10px; padding: 2px var(--space-2); border-radius: 10px; background: rgba(var(--accent-rgb),0.12); color: var(--accent); font-weight: var(--weight-semibold); white-space: nowrap; }
 .tech-card-desc { font-size: var(--text-sm); color: var(--color-text-2); line-height: 1.5; }
 
-.tech-stats-bar { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-top: var(--space-8); padding: var(--space-5); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; }
+.tech-stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: var(--space-8); padding: var(--space-5); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; }
 .tech-stat { text-align: center; }
 .ts-value { display: block; font-size: var(--text-3xl); font-weight: 800; color: var(--accent); }
 .ts-label { display: block; font-size: var(--text-2xs); color: var(--color-text-3); margin-top: 2px; }
