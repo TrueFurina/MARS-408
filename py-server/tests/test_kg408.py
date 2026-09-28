@@ -1300,6 +1300,7 @@ _REPORT_GUARD_TESTS = (
     "test_verification_report_provenance_is_truthful",
     "test_verification_report_key_numbers_match_artifacts",
     "test_verification_report_review_status_matches_frozen_manifest",
+    "test_verification_report_repro_commands_are_portable",
 )
 # 命名约定：报告守护一律以该前缀命名。上表是**登记表**，测试会把它与
 # 「按前缀自动发现」的集合对账——新加一条守护却忘了登记，同样报红。
@@ -1433,3 +1434,65 @@ def test_verification_report_hash_attribution_is_line_bound() -> None:
                 )
 
     assert not bad, "\n  ".join(["报告里的 sha256 归属与同行路径不符："] + bad)
+
+
+# ------------------------------------------------------------
+# 报告 §6 的标题是「复现命令（照抄即可）」，§6.1 进一步断言「任意新克隆（含 CI runner）
+# 照抄上述命令即可复现」——两句都是**对外承诺**。若命令里写死了某台机器上的解释器
+# 位置，承诺即假：换台机器照抄就跑不通，交付件自己打自己的脸。
+# 故把「可移植」钉成机检，并同时锁住承诺句本身——删掉承诺不能让本守护空转。
+# ------------------------------------------------------------
+_LOCAL_PATH_FORMS = (
+    # 盘符式（C:/ 或 C:\ 之类）。前置否定用于避免把 https:// 里的 "s:/" 误判为盘符。
+    r"(?<![A-Za-z0-9])[A-Za-z]:[\\/]",
+    # 挂载式（/c/、/d/ 起头的绝对路径，Git Bash / MSYS 写法）。
+    r"(?<![\w./])/[a-e]/[A-Za-z_]",
+    # UNC 式（双反斜杠开头的主机共享路径）。
+    r"\\\\[A-Za-z0-9._-]+\\",
+)
+
+_REPRO_PORTABILITY_CLAIM = "照抄上述命令即可复现"
+
+
+def test_verification_report_repro_commands_are_portable() -> None:
+    """报告承诺「照抄即可复现」⇒ 其复现命令不得依赖机器专有位置。
+
+    只校验哈希 / 锚点 / 数字还不够：命令能不能在别人的机器（含 CI runner）上跑通，
+    同样是本报告对外的承诺。§6.1 明写「任意新克隆照抄上述命令即可复现」，
+    故 §6 的解释器变量必须是可移植写法，且全文不得出现机器专有路径。
+    """
+    import re
+
+    text = _report_text()
+
+    # 1) 承诺句必须在。否则删掉承诺即可让本守护空转（等于自废）。
+    assert _REPRO_PORTABILITY_CLAIM in text, (
+        "§6.1 的可移植性承诺句已不在报告中；若确要撤回该承诺，"
+        "应同时删除本守护，而不是让它变成空转的摆设"
+    )
+
+    # 2) §6 的复现命令块必须在，且解释器变量不得写成机器专有路径。
+    block = re.search(r"^## 6\..*?```bash\n(.*?)```", text, re.S | re.M)
+    assert block, "§6 的复现命令代码块不见了（本守护失去约束对象）"
+    body = block.group(1)
+    for var in ("PY", "PYT"):
+        assign = re.search(r"^%s=(\S+)(?:\s*#.*)?$" % var, body, re.M)
+        assert assign, "§6 代码块未设置 %s，命令不再是「照抄即可」的自洽形态" % var
+        value = assign.group(1)
+        assert not re.search(_LOCAL_PATH_FORMS[0], value), (
+            "§6 的 %s 被写成机器专有路径（%s）⇒ 换机器照抄即失败" % (var, value)
+        )
+
+    # 3) 全文（含 §6 命令与各处正文）不得出现机器专有路径的任一种写法。
+    bad = []
+    for lineno, line in enumerate(text.split("\n"), 1):
+        for form in _LOCAL_PATH_FORMS:
+            for m in re.finditer(form, line):
+                bad.append(
+                    "第 %d 行含机器专有路径片段 %r：%s"
+                    % (lineno, m.group(0), line.strip()[:90])
+                )
+
+    assert not bad, "\n  ".join(
+        ["报告承诺「照抄即可复现」，但存在机器专有路径："] + bad
+    )
