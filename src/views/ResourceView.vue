@@ -8,6 +8,8 @@ import { icons } from '@/components/icons'
 import { renderMarkdownSafe } from '@/utils/markdown'
 import { defineAsyncComponent } from 'vue'
 import ErrorBoundary from '@/components/ErrorBoundary.vue'
+import StallChip from '@/components/StallChip.vue'
+import StallBanner from '@/components/StallBanner.vue'
 import type { EvidenceReport, GateResult } from '@/utils/evidence'
 
 // 延迟加载重型组件，非首屏不加载
@@ -44,8 +46,6 @@ const agentErrorList = computed(() =>
 type PipelineEvent = { t: string; label: string; kind: 'info' | 'done' | 'error' }
 const eventLog = ref<PipelineEvent[]>([])
 const lastEventAt = ref<number>(0)
-const nowTs = ref<number>(Date.now())
-let monTimer: number | null = null
 
 function pushEvent(label: string, kind: PipelineEvent['kind'] = 'info') {
   eventLog.value.unshift({
@@ -60,10 +60,10 @@ function startMonitor() {
   eventLog.value = []
   lastEventAt.value = Date.now()
   pushEvent('已提交生成请求', 'info')
-  if (monTimer === null) monTimer = window.setInterval(() => { nowTs.value = Date.now() }, 1000)
 }
 function stopMonitor() {
-  if (monTimer !== null) { window.clearInterval(monTimer); monTimer = null }
+  // 停滞时钟已下沉到 StallChip / StallBanner 子组件（按挂载生命周期自行 tick 与释放），
+  // 此处无需再清定时器；保留函数与调用点以兼容既有的「停止监测」语义。
 }
 
 // ── 演练（仅 dev）：不调用任何大模型，走完全相同的 UI 通路，用于验证流水线与监测面板 ──
@@ -108,10 +108,6 @@ function runDrill(withStall = false) {
 }
 onUnmounted(() => { stopMonitor(); stopDrill() })
 
-const stalled = computed(() =>
-  loading.value && lastEventAt.value > 0 && nowTs.value - lastEventAt.value > 15000
-)
-const stalledSec = computed(() => Math.max(0, Math.floor((nowTs.value - lastEventAt.value) / 1000)))
 const doneNodes = computed(() => eventLog.value.filter(e => e.kind === 'done').length)
 const lastEventLabel = computed(() =>
   lastEventAt.value ? new Date(lastEventAt.value).toLocaleTimeString('zh-CN', { hour12: false }) : '—'
@@ -885,12 +881,10 @@ function parseWeakPoints(wpStr: string): string[] {
         <div class="rv-mon-status">
           <span class="rv-mon-chip">节点完成 {{ doneNodes }}</span>
           <span v-if="agentErrorList.length" class="rv-mon-chip is-error">异常 {{ agentErrorList.length }}</span>
-          <span v-if="stalled" class="rv-mon-chip is-warn">已 {{ stalledSec }}s 无进展</span>
+          <StallChip :loading="loading" :last-event-at="lastEventAt" />
           <span class="rv-mon-time">最后更新 {{ lastEventLabel }}</span>
         </div>
-        <div v-if="stalled" class="rv-mon-stall">
-          流水线已 {{ stalledSec }} 秒未推送新进展，可能是后端繁忙或连接中断。仍在等待中，可继续稍候或重新生成。
-        </div>
+        <StallBanner :loading="loading" :last-event-at="lastEventAt" />
         <ul v-if="eventLog.length" class="rv-mon-log">
           <li v-for="(e, i) in eventLog.slice(0, 8)" :key="i" :class="'ev-' + e.kind">
             <span class="ev-time">{{ e.t }}</span>
