@@ -326,7 +326,7 @@ function agentName(a: string) {
               {{ TYPE_LABEL[activeConflict.type] || activeConflict.type }}
             </span>
             <span class="ev-drawer-title">{{ agentName(activeConflict.agent_a) }} vs {{ agentName(activeConflict.agent_b) }}</span>
-            <button class="ev-close" @click="closeDrawer"></button>
+            <button class="ev-close" @click="closeDrawer" aria-label="关闭冲突证据详情"></button>
           </div>
 
           <div class="ev-drawer-desc">{{ activeConflict.description }}</div>

@@ -142,6 +142,7 @@ function onKeydown(e: KeyboardEvent) {
           :disabled="!inputText.trim() || loading || completed"
           @click="sendMessage"
           v-html="icons.send"
+          aria-label="发送消息"
         ></button>
       </div>
     </div>

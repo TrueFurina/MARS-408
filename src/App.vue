@@ -11,6 +11,7 @@ import DOMPurify from 'dompurify'
 import { useStudyStore } from '@/stores/studyStore'
 import { useAuthStore } from '@/stores/authStore'
 import { api } from '@/utils/api'
+import { schedulePrefetch, cancelPrefetch, prefetchRoute } from '@/utils/routePrefetch'
 import {
   NAV_GROUPS,
   BOTTOM_NAV_KEYS,
@@ -143,7 +144,15 @@ function toggleGroup(id: string) { collapsed.value[id] = !collapsed.value[id] }
 function isCollapsed(id: string) { return !!collapsed.value[id] }
 
 function goTo(routePath: string) {
+  // 点击是比悬停更强的意图信号：若悬停预取尚未触发（快速点击），这里立即补一次。
+  // 与 router.push 并行发起，不阻塞导航。
+  prefetchRoute(router, routePath)
   router.push(routePath)
+}
+
+// 悬停预取：延迟触发，快速划过侧栏不会批量拉取 chunk
+function hoverPrefetch(routePath: string) {
+  schedulePrefetch(router, routePath)
 }
 </script>
 
@@ -190,9 +199,17 @@ function goTo(routePath: string) {
               <div
                 class="nav-item"
                 :class="[item.subjectClass, { active: activeKey === item.key }]"
+                role="link"
+                tabindex="0"
+                :aria-current="activeKey === item.key ? 'page' : undefined"
                 @click="goTo(item.route)"
+                @keydown.enter.prevent="goTo(item.route)"
+                @keydown.space.prevent="goTo(item.route)"
+                @mouseenter="hoverPrefetch(item.route)"
+                @mouseleave="cancelPrefetch"
+                @focus="hoverPrefetch(item.route)"
               >
-                <span v-html="safeIcon(item.icon)"></span>
+                <span v-html="safeIcon(item.icon)" aria-hidden="true"></span>
                 <span>{{ item.name }}</span>
               </div>
               <!-- 归并后的子项：功能重叠页降一级，不再占据主导航 -->
@@ -201,9 +218,17 @@ function goTo(routePath: string) {
                 :key="child.key"
                 class="nav-item nav-subitem"
                 :class="{ active: activeKey === child.key }"
+                role="link"
+                tabindex="0"
+                :aria-current="activeKey === child.key ? 'page' : undefined"
                 @click="goTo(child.route)"
+                @keydown.enter.prevent="goTo(child.route)"
+                @keydown.space.prevent="goTo(child.route)"
+                @mouseenter="hoverPrefetch(child.route)"
+                @mouseleave="cancelPrefetch"
+                @focus="hoverPrefetch(child.route)"
               >
-                <span v-html="safeIcon(child.icon)"></span>
+                <span v-html="safeIcon(child.icon)" aria-hidden="true"></span>
                 <span>{{ child.name }}</span>
               </div>
             </template>
@@ -288,9 +313,17 @@ function goTo(routePath: string) {
             :key="item.key"
             class="bottom-nav-item"
             :class="{ active: activeKey === item.key }"
+            role="link"
+            tabindex="0"
+            :aria-current="activeKey === item.key ? 'page' : undefined"
             @click="goTo(item.route)"
+            @keydown.enter.prevent="goTo(item.route)"
+            @keydown.space.prevent="goTo(item.route)"
+            @mouseenter="hoverPrefetch(item.route)"
+            @mouseleave="cancelPrefetch"
+            @focus="hoverPrefetch(item.route)"
           >
-            <span v-html="safeIcon(item.icon)"></span>
+            <span v-html="safeIcon(item.icon)" aria-hidden="true"></span>
             <span>{{ item.name }}</span>
           </div>
         </div>

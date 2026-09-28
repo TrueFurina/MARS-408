@@ -312,7 +312,7 @@ watch(chatMessages, () => {
         <div class="chat-dialog">
           <div class="chat-dialog-header">
             <span class="chat-dialog-title">{{ skill?.icon }} {{ skill?.name }}</span>
-            <button class="chat-dialog-close" @click="closeChat" v-html="icons.close"></button>
+            <button class="chat-dialog-close" @click="closeChat" v-html="icons.close" aria-label="关闭对话"></button>
           </div>
           <div class="chat-dialog-body" ref="chatBodyRef">
             <div v-for="(msg, i) in chatMessages" :key="i" class="chat-msg" :class="msg.role">

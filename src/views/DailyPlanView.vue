@@ -232,8 +232,14 @@ onMounted(() => {
         <div class="task-list">
           <div v-for="task in plan.tasks" :key="task.id" class="task-card glass-card" :class="{ completed: task.completed }">
             <div class="task-left">
-              <button class="check-btn" :class="{ checked: task.completed }" @click="toggleTask(task)">
-                <span v-if="task.completed"></span>
+              <button
+                class="check-btn"
+                :class="{ checked: task.completed }"
+                @click="toggleTask(task)"
+                :aria-pressed="task.completed"
+                :aria-label="task.completed ? `标记未完成：${task.title}` : `标记完成：${task.title}`"
+              >
+                <span v-if="task.completed" aria-hidden="true"></span>
               </button>
             </div>
             <div class="task-body">

@@ -357,7 +357,7 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
                 {{ masteryLabel(selectedNode.mastery) }}
               </span>
             </div>
-            <button class="kg-detail-close" @click="closeDetail"></button>
+            <button class="kg-detail-close" @click="closeDetail" aria-label="关闭节点详情"></button>
           </div>
 
           <div class="kg-detail-tabs">

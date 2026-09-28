@@ -76,7 +76,7 @@ function selectChapter(i: number) {
     <Teleport to="body">
       <div v-if="showSelectionMenu" class="selection-menu" :style="{ left: menuPos.x + 'px', top: menuPos.y + 'px' }">
         <button class="selection-btn" @click="askAboutSelection"> 问选中</button>
-        <button class="selection-btn" @click="showSelectionMenu = false"></button>
+        <button class="selection-btn" @click="showSelectionMenu = false" aria-label="关闭选区操作菜单"></button>
       </div>
     </Teleport>
   </div>

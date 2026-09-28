@@ -1,6 +1,10 @@
 import { marked } from 'marked'
 import hljs from 'highlight.js/lib/core'
 import DOMPurify from 'dompurify'
+// 代码块主题样式：与 hljs 同源按需加载。
+// 曾放在 main.ts 顶层 → 让入口 chunk 静态依赖 highlight chunk，首屏白白预载 ~58KB。
+// 移到这里后，仅当某个懒加载视图引用本模块时才随该视图加载。
+import 'highlight.js/styles/atom-one-dark.css'
 
 // ── katex 延迟加载（仅当文本包含 LaTeX 公式时加载） ──
 let _katexLoaded = false
