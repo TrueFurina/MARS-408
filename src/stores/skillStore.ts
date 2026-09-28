@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, shallowRef } from 'vue'
 import { api, friendlyError } from '@/utils/api'
 
 export interface SkillItem {
@@ -61,11 +61,13 @@ export interface CreatorStats {
 
 export const useSkillStore = defineStore('skills', () => {
   // ── 状态 ──
-  const marketItems = ref<SkillItem[]>([])
+  // 三个列表型状态仅做整数组替换（marketItems.value = res.items），无就地改动元素，
+  // 用 shallowRef 避免对大数组逐元素建深度响应式代理的开销（INP/内存收益，行为不变）。
+  const marketItems = shallowRef<SkillItem[]>([])
   const marketTotal = ref(0)
-  const mySkills = ref<SkillItem[]>([])
+  const mySkills = shallowRef<SkillItem[]>([])
   const mySkillsTotal = ref(0)
-  const officialSkills = ref<SkillItem[]>([])
+  const officialSkills = shallowRef<SkillItem[]>([])
   const currentSkill = ref<SkillItem | null>(null)
   const templates = ref<SkillTemplate[]>([])
   const ratings = ref<SkillRatingItem[]>([])

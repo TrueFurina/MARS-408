@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue'
+import { debounce } from '@/utils/perf'
 
 const props = defineProps<{
   nodes: any[]
@@ -16,6 +17,9 @@ const emit = defineEmits<{
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const searchQuery = ref('')
+// 搜索输入防抖重绘：draw() 是全图 canvas 重绘（力导布局），逐字同步重绘会造成输入卡顿。
+// 延迟 120ms 收敛，highlight 仍由 filteredNodes computed 即时响应。
+const debouncedDraw = debounce(() => draw(), 120)
 const showDetail = ref(false)
 const selectedNode = ref<any>(null)
 const scale = ref(1)
@@ -255,7 +259,7 @@ function getMindmapStyle(index: number, total: number) {
 }
 
 onMounted(() => { initGraph(); startSimulation() })
-onUnmounted(() => { if (simTimer) cancelAnimationFrame(simTimer) })
+onUnmounted(() => { if (simTimer) cancelAnimationFrame(simTimer); debouncedDraw.cancel() })
 watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() })
 </script>
 
@@ -263,7 +267,7 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
   <div class="kg-wrapper">
     <!-- 搜索栏 -->
     <div v-if="showSearch" class="kg-search-bar">
-      <input v-model="searchQuery" class="kg-search-input" placeholder="搜索知识点..." @input="draw" />
+      <input v-model="searchQuery" class="kg-search-input" placeholder="搜索知识点..." @input="debouncedDraw" />
       <button class="kg-search-clear" v-if="searchQuery" @click="searchQuery = ''; nextTick(() => draw())"></button>
     </div>
 

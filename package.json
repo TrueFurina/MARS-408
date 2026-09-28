@@ -17,7 +17,8 @@
     "gate:evidence": "python tests/benchmark_evidence_gate.py && python scripts/scan_stale_calibration.py",
     "gate:calibration": "python scripts/scan_stale_calibration.py",
     "gate:a11y": "python scripts/a11y_scan.py",
-    "verify": "npm run type-check && npm run test && npm run gate:evidence && npm run gate:a11y",
+    "gate:perf": "python scripts/perf_scan.py",
+    "verify": "npm run type-check && npm run test && npm run gate:evidence && npm run gate:a11y && npm run gate:perf",
     "types:generate": "openapi-typescript py-server/openapi.json -o src/types/api.generated.ts"
   },
   "dependencies": {
