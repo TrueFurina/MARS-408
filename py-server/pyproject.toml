@@ -73,7 +73,23 @@ omit = ["tests/*", "*/__pycache__/*", "*/migrations/*"]
 [tool.coverage.report]
 # 门槛 = 实测全量覆盖(55.68%) 下浮 ~2pp，锁定当前覆盖、阻断显著退化。
 # 80 为愿景目标，待 D8（补 Top5 模块单测）按 ratchet 逐步抬升；每次抬升须以新增测试支撑、不得凭空上调。
-fail_under = 54
+#
+# ⚠️ 覆盖率的适用范围（2026-09-29 修复）：
+# fail_under 是 coverage 的**全局**配置，对「每一次 pytest 调用」都生效 —— 包括只跑
+# 窄 marker 子集的 job。而 CI 里有两个 job 恰恰只跑子集：
+#     backend-system:  pytest -m system --timeout=180 -q
+#     backend-milvus:  pytest -m requires_milvus -q
+# 这两个 job 的用例全部通过、退出码本应为 0，却因「total of 23 < fail-under=54」被判失败：
+# 只跑系统测试/Milvus 测试时，绝大部分源码根本不被执行，覆盖率必然远低于全量口径。
+# 即：**覆盖率是对全量集校准的指标，不能拿它去卡子集 job**（本地复现：
+# `pytest -m import_queue -q` → 16 passed，随后 Coverage failure: total of 24 < 54）。
+#
+# 修法：把门槛从 report 段移出，改由「跑全量集的那些命令」显式传入 --cov-fail-under。
+# coverage 支持在 [tool.coverage.report] 里**不设** fail_under，仅由命令行参数决定，
+# 这样窄 marker job 不再被误伤，而全量 job 的门槛强度不变（值仍是 54，未放松）。
+# 注意：addopts 里的 --cov=. 负责「收集」；「是否卡门槛」由各自 job 决定。
+# 已保留 fail_under=54 的语义位置说明，实际值见 .github/workflows/ci.yml 的各 job。
+# 若将来新增「跑全量集」的 job，必须显式带 --cov-fail-under=54，否则门槛会静默消失。
 show_missing = true
 skip_covered = false
 
