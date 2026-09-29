@@ -162,8 +162,18 @@ def test_openapi_description_auth_coverage_matches_recomputation():
     app = main_mod.app
 
     # 路由表与描述取自同一 app 实例，再断言总量：把「采集塌陷」与「口径失效」区分开。
+    #
+    # ⚠️ 不能用 `r.path` 直接取：app.routes 里混有 Route / Mount，且不同
+    # starlette/fastapi 版本还会出现不保证 .path 的类型（CI 实测：
+    # `AttributeError: '_IncludedRouter' object has no attribute 'path'`）。
+    # 官方一致的判据是 isinstance(APIRoute) —— 与 verify_auth_coverage.collect()
+    # 完全同口径，避免本测试另立第二套判定逻辑。
+    from fastapi.routing import APIRoute
+
     api_paths = [
-        r.path for r in app.routes if r.path.startswith("/api")
+        r.path
+        for r in app.routes
+        if isinstance(r, APIRoute) and r.path.startswith("/api")
     ]
     assert total, (
         "collect() 未采集到任何 /api 端点，但 app.routes 里有 "
