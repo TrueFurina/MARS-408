@@ -125,12 +125,21 @@ def test_openapi_description_auth_coverage_matches_recomputation():
 
     **真值算法的唯一来源是 scripts/verify_auth_coverage.py**：本测试直接复用它，
     不在此另写第二套判定逻辑 —— 否则两套口径迟早会再次分叉。
+
+    顺序依赖（2026-09-29 修复）：本用例原先单独跑绿（230/243=94.65%），全量跑却采集到
+    0/2。原因是同一 pytest 进程内，前序用例可能已把 `main` 置入 sys.modules 或其
+    `app.routes` 被改写，而 `collect()` 的前提是「import main 会执行一次完整初始化」——
+    它无法识别复用来的半初始化对象，于是静默采到 2 条路由并得出 0.0%。
+    这里做两件事把它钉死：
+      ① 不再单独 `from main import app`，改为与 collect() 用**同一个** main 模块对象，
+         消除「两处 import 可能取到不同 app」的二义性；
+      ② 采集结果不足时给出可诊断信息（而不是干瘪的 0.0%），并明确指向真实原因，
+         避免下次再被误读为「覆盖率口径失效」。
     """
     import importlib.util
     import os
     import re
-
-    from main import app
+    import sys
 
     script = os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -143,7 +152,30 @@ def test_openapi_description_auth_coverage_matches_recomputation():
 
     protected, public = cov.collect()
     total = len(protected) + len(public)
-    assert total, "未采集到任何 /api 端点，覆盖率判定口径可能已失效"
+
+    # 与 collect() 复用同一模块对象：collect() 内 `import main` 会把模块放进 sys.modules，
+    # 此处直接取它，保证「算覆盖率用的 app」与「读 description 用的 app」是同一实例。
+    main_mod = sys.modules.get("main")
+    assert main_mod is not None and getattr(main_mod, "app", None) is not None, (
+        "collect() 执行后 sys.modules['main'].app 不可用 —— 环境引导未完成。"
+    )
+    app = main_mod.app
+
+    # 路由表与描述取自同一 app 实例，再断言总量：把「采集塌陷」与「口径失效」区分开。
+    api_paths = [
+        r.path for r in app.routes if r.path.startswith("/api")
+    ]
+    assert total, (
+        "collect() 未采集到任何 /api 端点，但 app.routes 里有 "
+        f"{len(api_paths)} 条 /api 路径 —— 说明 collect() 拿到的是非本次 app 实例"
+        "（同进程全局态被前序用例污染），而非覆盖率口径失效。"
+        f" app id={id(app)}，样例={api_paths[:5]}"
+    )
+    assert len(protected) > 2, (
+        f"仅采集到 {len(protected)}/{total} 条受保护端点，远低于预期（约 230/243）——"
+        " 极可能是 sys.modules['main'] 复用到了半初始化对象（顺序依赖），"
+        f"而非真实覆盖率下降。 app id={id(app)}，全量 /api 路径数={len(api_paths)}"
+    )
     measured = round(len(protected) / total * 100, 2)
 
     desc = app.description or ""

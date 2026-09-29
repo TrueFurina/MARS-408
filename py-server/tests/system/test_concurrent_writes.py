@@ -80,10 +80,35 @@ def _write_log_config(path):
 
 
 def _admin_token():
-    os.environ["AUTH_SECRET"] = AUTH_SECRET
-    from shared.auth import create_token
+    """签发 admin token，密钥必须与 uvicorn 子进程**严格一致**。
 
-    return create_token("admin", "admin")
+    坑（D15 次生陷阱，2026-09-29 实证）：仅 `os.environ["AUTH_SECRET"] = ...` 是不够的。
+    shared.auth.resolve_auth_secret() 把密钥缓存在**模块级** `_SECRET`：
+
+        def resolve_auth_secret() -> str:
+            global _SECRET
+            if _SECRET is not None:
+                return _SECRET        # 首次解析后永久复用
+
+    若本进程此前已解析过（任何更早导入 main / shared.auth 的用例都会触发，且无 env 时
+    会生成**随机**密钥），此后即使设了 AUTH_SECRET，拿到的仍是那个随机密钥 →
+    本进程用随机密钥签名，而 uvicorn 子进程经 --env-file 拿到真密钥验签 →
+    `bad signature` → HTTP 401 "Invalid or expired credentials"。
+    CI 报错逐字吻合，且表现为「单独跑绿、全量跑红」的顺序依赖。
+
+    修法：签发前把缓存重置为 None，再用显式 env 值重新解析，使本进程与子进程
+    必然使用同一密钥。不要改成「只改 env 不重置缓存」——那正是本坑的成因。
+    """
+    os.environ["AUTH_SECRET"] = AUTH_SECRET
+    import shared.auth as _auth
+
+    _auth._SECRET = None  # 强制丢弃可能来自随机生成的旧缓存
+    resolved = _auth.resolve_auth_secret()
+    assert resolved == AUTH_SECRET, (
+        "本进程解析出的 AUTH_SECRET 与注入子进程的不一致，token 必然被 401 拒绝："
+        f"resolved={resolved!r} expected={AUTH_SECRET!r}"
+    )
+    return _auth.create_token("admin", "admin")
 
 
 def _dump_proc_output(proc, base):

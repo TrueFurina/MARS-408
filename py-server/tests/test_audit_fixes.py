@@ -650,7 +650,17 @@ class TestP1_1_DepsCleanupMigration:
         )
 
     def test_agents_imports_migrated(self):
-        """agents.py should import from db.llm_provider, db.milvus_client, utils.safety."""
+        """agents.py 应完成 deps 迁移，并接到统一内容安全出口。
+
+        第三个断言原为 `from utils.safety import filter_sensitive`。该写法在本用例
+        写就之后被有意取代：agents.py 改走 shared.content_safety.audit_output
+        （P1-7 统一输出内容安全审核），而 audit_output 内部**本身就包裹**
+        filter_sensitive + 讯飞合规（见 shared/content_safety.py:4-16）。
+        即安全能力未削弱，只是收敛到单一出口 —— agents.py 现全文 9 处在用 audit_output。
+
+        filter_sensitive 仍是有效 API，但仅由更底层的 api/chat.py 直接使用
+        （chat.py:15）。此处断言统一出口，避免把已迁移的调用点再绑回旧 API。
+        """
         content = _read_file(AGENTS_PY_PATH)
         assert "from db.llm_provider import LLMProvider" in content, (
             "agents.py should import LLMProvider from db.llm_provider."
@@ -658,8 +668,14 @@ class TestP1_1_DepsCleanupMigration:
         assert "from db.milvus_client import vector_db" in content, (
             "agents.py should import vector_db from db.milvus_client."
         )
-        assert "from utils.safety import filter_sensitive" in content, (
-            "agents.py should import filter_sensitive from utils.safety."
+        # P1-7 迁移后：agents.py 的安全出口是 shared.content_safety.audit_output。
+        # 断言「导入 + 实际使用」两者，避免只留一个未使用的 import 也算通过。
+        assert "from shared.content_safety import audit_output" in content, (
+            "agents.py 应导入统一内容安全出口 shared.content_safety.audit_output"
+            "（P1-7；该函数内部已包裹 filter_sensitive + 讯飞合规）。"
+        )
+        assert "audit_output(" in content, (
+            "agents.py 导入了 audit_output 但从未调用 —— 安全审核未真正接入。"
         )
 
     def test_learning_imports_migrated(self):

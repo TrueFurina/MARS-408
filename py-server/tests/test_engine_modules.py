@@ -149,12 +149,43 @@ class TestHeuristicStopDecision:
         assert decision.should_stop is True
 
     def test_update_threshold_ewma(self):
-        """EWMA 动态阈值更新"""
-        old_threshold = self.stop._base_thresholds.get("simple", 0.6)
-        self.stop.update_threshold("simple", 0.9, True)
-        # After update, base_thresholds should reflect EWMA change
-        assert isinstance(self.stop._base_thresholds, dict)
-        assert "simple" in self.stop._base_thresholds
+        """EWMA 动态阈值更新 —— 真实校验自适应方向与 EWMA 步长。
+
+        原用例只断言 `isinstance(_base_thresholds, dict)` 与 `"simple" in ...`，
+        这两条与是否发生更新无关（恒真），等于没测；同时残留一个未被使用的
+        `old_threshold`（ruff F841），暴露出「本想比较新旧值但断言漏写」。
+
+        实现语义（engines/frugal_rag_stop.py:163-184）：更新的是 **_threshold_ewma**
+        （不是 _base_thresholds），且
+          - was_good=True 且 coverage < 当前阈值 → adjustment=-0.02（阈值下调）
+          - was_good=False 且 coverage >= 当前阈值 → adjustment=+0.03（阈值上调）
+          - 其余情况 adjustment=0（不变）
+        步长为 EWMA：new = old + alpha*(old + adj - old) = old + alpha*adj，
+        并 clamp 到 [0.4, 0.9]。
+        这里按方向性断言（不写死具体数值），既真实验证行为，又不对 alpha 取值过度耦合。
+        """
+        key = "simple"
+        start = self.stop._threshold_ewma.get(key)
+        assert start is not None, f"_threshold_ewma 缺少 {key} 档"
+
+        # 场景 A：好答案但覆盖率远低于阈值 → 阈值应下调（或触底 clamp 后不高于原值）
+        self.stop.update_threshold(key, final_coverage=0.0, was_good=True)
+        after_lower = self.stop._threshold_ewma[key]
+        assert after_lower <= start, (
+            f"好答案+低覆盖应下调阈值，实际 {start} → {after_lower}"
+        )
+
+        # 场景 B：差答案但覆盖率达标 → 阈值应上调（或触顶 clamp 后不低于原值）
+        self.stop.update_threshold(key, final_coverage=1.0, was_good=False)
+        after_raise = self.stop._threshold_ewma[key]
+        assert after_raise >= after_lower, (
+            f"差答案+达标应上调阈值，实际 {after_lower} → {after_raise}"
+        )
+
+        # clamp 边界
+        assert 0.4 <= self.stop._threshold_ewma[key] <= 0.9, (
+            f"阈值越界（应 clamp 到 [0.4, 0.9]）：{self.stop._threshold_ewma[key]}"
+        )
 
     def test_get_stats(self):
         """统计信息返回"""
@@ -331,8 +362,13 @@ class TestNeuralGroupMixer:
 
     def setup_method(self):
         from engines.gomarl_mixer import NeuralGroupMixer
-        with patch("engines.gomarl_mixer.LLMProvider"), \
-             patch("engines.gomarl_mixer.redis_client"), \
+        # 注：不再 patch engines.gomarl_mixer.LLMProvider。
+        # gomarl_mixer 是纯数值/神经融合器（NeuralGroupMixer），全文不引用 LLM ——
+        # 它的两条外部依赖只有 redis_client / pg_client（见模块 85-86 行导入）。
+        # 对不存在的属性做 patch 会让 unittest.mock 抛 AttributeError，使以下用例
+        # 在 setup 阶段就 ERROR。需要 LLM 的引擎才导入 LLMProvider，对照组：
+        #   engines/frugal_rag_stop.py:27  /  engines/gomarl_conflict.py:24
+        with patch("engines.gomarl_mixer.redis_client"), \
              patch("engines.gomarl_mixer.pg_client"):
             self.mixer = NeuralGroupMixer()
 
@@ -390,8 +426,8 @@ class TestNeuralGroupMixer:
     async def test_mix_fallback_no_torch(self):
         """PyTorch不可用时降级为加权平均"""
         from engines.gomarl_mixer import NeuralGroupMixer
-        with patch("engines.gomarl_mixer.LLMProvider"), \
-             patch("engines.gomarl_mixer.redis_client"), \
+        # 同上：mixer 无 LLM 依赖，patch LLMProvider 会 AttributeError
+        with patch("engines.gomarl_mixer.redis_client"), \
              patch("engines.gomarl_mixer.pg_client"):
             mixer = NeuralGroupMixer()
             mixer.use_neural = False  # 强制规则模式

@@ -135,36 +135,71 @@ class TestT2_APIHealthCheck:
     """Verify /api/status endpoint returns correct health information."""
 
     def test_status_returns_ok(self):
-        """GET /api/status should return status=ok."""
+        """GET /api/status 的 status 语义正确。
+
+        原断言写死 `data["status"] == "ok"`，但 /api/status 的契约是：
+        status 仅当所有「已配置启用」的核心能力都实际可用时为 "ok"，任一回落/失败
+        即 "degraded"（见 app/status.py:24 与 :85-88）。CI 环境本就没有 LLM 凭证，
+        该端点会如实登记 `llm: 未配置任何可用供应商凭证` → degraded 是**正确行为**。
+        故写死 "ok" 是一个环境相关的不可满足断言。
+
+        改为校验语义不变量：
+          - status 属于合法取值域
+          - 若为 "ok" → degraded_reasons 必须为空
+          - 若为 "degraded" → degraded_reasons 必须非空（否则是无声降级，应当报错）
+        """
         resp = client.get("/api/status")
         assert resp.status_code == 200
         data = resp.json()
-        assert data["status"] == "ok", f"Expected status='ok', got {data['status']}"
+        assert data["status"] in ("ok", "degraded"), (
+            f"Unexpected status value: {data['status']!r}"
+        )
+        reasons = data.get("degraded_reasons")
+        assert isinstance(reasons, list), "degraded_reasons 必须是列表"
+        if data["status"] == "ok":
+            assert reasons == [], f"status=ok 但存在降级原因：{reasons}"
+        else:
+            assert reasons, (
+                "status=degraded 但 degraded_reasons 为空 —— 无声降级，"
+                "无法定位原因，属契约违反"
+            )
 
     def test_status_has_vector_db_field(self):
-        """Health check should report vector_db type."""
+        """Health check should report vector_db mode under health.vector_db。
+
+        响应结构已升级为嵌套（app/status.py:93-99）：
+            {"status":..., "degraded_reasons":[...],
+             "health": {"vector_db": {"mode":..., "milvus_configured":...,
+                                      "milvus_connected":..., "collection_size":...}, ...}}
+        原断言读顶层扁平字段 data["vector_db"]，是升级前的旧结构。
+        """
         resp = client.get("/api/status")
         data = resp.json()
-        assert "vector_db" in data, "Missing 'vector_db' field in status response"
-        assert data["vector_db"] in ("milvus", "inmemory"), (
-            f"Unexpected vector_db value: {data['vector_db']}"
+        assert "health" in data, "Missing 'health' block in status response"
+        vdb = data["health"].get("vector_db")
+        assert vdb is not None, "Missing 'health.vector_db' in status response"
+        assert vdb["mode"] in ("milvus", "inmemory"), (
+            f"Unexpected vector_db mode: {vdb['mode']}"
         )
 
     def test_status_has_collection_size(self, ensure_kb):
-        """Health check should report collection_size >= 80."""
+        """Health check should report health.vector_db.collection_size >= 80."""
         resp = client.get("/api/status")
         data = resp.json()
-        assert "collection_size" in data
-        assert data["collection_size"] >= 80, (
-            f"Collection size too small: {data['collection_size']} (expected >=80)"
+        vdb = data["health"]["vector_db"]
+        assert "collection_size" in vdb
+        assert vdb["collection_size"] >= 80, (
+            f"Collection size too small: {vdb['collection_size']} (expected >=80)"
         )
 
     def test_status_has_llm_fields(self):
-        """Health check should include llm_provider and llm_available."""
+        """Health check should include health.llm.provider and health.llm.available。"""
         resp = client.get("/api/status")
         data = resp.json()
-        assert "llm_provider" in data
-        assert "llm_available" in data
+        llm = data["health"].get("llm")
+        assert llm is not None, "Missing 'health.llm' in status response"
+        assert "provider" in llm, "Missing 'health.llm.provider'"
+        assert "available" in llm, "Missing 'health.llm.available'"
 
 
 # ============================================================
