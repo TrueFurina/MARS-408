@@ -126,15 +126,25 @@ def test_openapi_description_auth_coverage_matches_recomputation():
     **真值算法的唯一来源是 scripts/verify_auth_coverage.py**：本测试直接复用它，
     不在此另写第二套判定逻辑 —— 否则两套口径迟早会再次分叉。
 
-    顺序依赖（2026-09-29 修复）：本用例原先单独跑绿（230/243=94.65%），全量跑却采集到
-    0/2。原因是同一 pytest 进程内，前序用例可能已把 `main` 置入 sys.modules 或其
-    `app.routes` 被改写，而 `collect()` 的前提是「import main 会执行一次完整初始化」——
-    它无法识别复用来的半初始化对象，于是静默采到 2 条路由并得出 0.0%。
-    这里做两件事把它钉死：
-      ① 不再单独 `from main import app`，改为与 collect() 用**同一个** main 模块对象，
-         消除「两处 import 可能取到不同 app」的二义性；
-      ② 采集结果不足时给出可诊断信息（而不是干瘪的 0.0%），并明确指向真实原因，
-         避免下次再被误读为「覆盖率口径失效」。
+    ── 2026-09-29 CI 失败的真实根因（更正此前一次误判）────────────────────
+    现象：CI 报「宣称 94.65%，重算为 0.0%（0/2）」，本地单独跑却是 230/243=94.65%。
+    我最初误判为「pytest 顺序依赖/sys.modules 污染」（该判断**是错的**，见下）。
+
+    实证后的真因是 **fastapi 版本不兼容**：
+      - 本地 fastapi 0.136.3：include_router 把子路由**拍平**进 app.routes，条目是 APIRoute。
+      - CI fastapi 0.141.1：include_router 只在 app.routes 放一个 **_IncludedRouter 包装对象**，
+        实测类型分布 `{'Route':4, '_IncludedRouter':1, 'APIRoute':2}`，真实子路由藏在其中。
+      于是「只按 APIRoute 平铺枚举」的旧写法只数到直接装饰器挂的 2 条
+      （/api/status、/api/status/competition），include_router 挂的 228 条全被漏掉
+      → 覆盖率被算成 0/2。**不是路由表变了，是枚举方式在新版快速失效。**
+
+    验证方式（可复现）：在真实 0.141.1 下构造同构 app（含 include_router + 直接装饰器），
+      老写法命中 2 条（复现 CI 的「2」），改用官方展开器 fastapi.routing.iter_route_contexts
+      后命中 4 条且与 openapi schema 完全一致。修法已落在 verify_auth_coverage.py。
+
+    本测试据此增加一个**独立来源交叉核对**（OpenAPI schema），用于长期防同类回归：
+    它不依赖任何路由枚举实现细节，一旦将来 fastapi 再改路由组织方式导致 collect()
+    漏采，这里会立刻报错并指明是「枚举失效」而非「覆盖率真的下降」。
     """
     import importlib.util
     import os
@@ -161,31 +171,27 @@ def test_openapi_description_auth_coverage_matches_recomputation():
     )
     app = main_mod.app
 
-    # 路由表与描述取自同一 app 实例，再断言总量：把「采集塌陷」与「口径失效」区分开。
-    #
-    # ⚠️ 不能用 `r.path` 直接取：app.routes 里混有 Route / Mount，且不同
-    # starlette/fastapi 版本还会出现不保证 .path 的类型（CI 实测：
-    # `AttributeError: '_IncludedRouter' object has no attribute 'path'`）。
-    # 官方一致的判据是 isinstance(APIRoute) —— 与 verify_auth_coverage.collect()
-    # 完全同口径，避免本测试另立第二套判定逻辑。
-    from fastapi.routing import APIRoute
+    # ── 独立来源交叉核对：OpenAPI schema ──
+    # schema 由 fastapi 自己从路由表生成，不经过 collect() 的枚举实现；
+    # 它天然包含 include_router 挂上的路由（且带完整 prefix），故适合做「漏采」探测器。
+    # 与 collect() 的关系：collect() 统计所有 /api APIRoute（含 include_in_schema=False），
+    # schema 只含 include_in_schema=True 的子集 → 正确时必有 schema ⊆ collect。
+    # 实测（本地 0.136.3）：collect 243 条 / schema 226 条，schema 是 collect 的真子集。
+    schema = app.openapi() or {}
+    schema_api_paths = {
+        p for p in (schema.get("paths") or {}) if p.startswith("/api")
+    }
+    collected_paths = {i["path"] for i in (protected + public)}
+    missing = schema_api_paths - collected_paths
+    assert not missing, (
+        f"collect() 漏采了 {len(missing)} 条 OpenAPI 已登记的路由（样例 "
+        f"{sorted(missing)[:5]}）—— 典型的「路由枚举方式失效」而非覆盖率下降："
+        " 多因 fastapi 版本变更后 include_router 的路由不再平铺在 app.routes 里。"
+        " 请检查 scripts/verify_auth_coverage.py::_iter_api_route_entries 的版本适配分支。"
+        f" （实测 collect={len(collected_paths)} 条 / schema={len(schema_api_paths)} 条）"
+    )
+    assert total, "未采集到任何 /api 端点，覆盖率判定口径可能已失效"
 
-    api_paths = [
-        r.path
-        for r in app.routes
-        if isinstance(r, APIRoute) and r.path.startswith("/api")
-    ]
-    assert total, (
-        "collect() 未采集到任何 /api 端点，但 app.routes 里有 "
-        f"{len(api_paths)} 条 /api 路径 —— 说明 collect() 拿到的是非本次 app 实例"
-        "（同进程全局态被前序用例污染），而非覆盖率口径失效。"
-        f" app id={id(app)}，样例={api_paths[:5]}"
-    )
-    assert len(protected) > 2, (
-        f"仅采集到 {len(protected)}/{total} 条受保护端点，远低于预期（约 230/243）——"
-        " 极可能是 sys.modules['main'] 复用到了半初始化对象（顺序依赖），"
-        f"而非真实覆盖率下降。 app id={id(app)}，全量 /api 路径数={len(api_paths)}"
-    )
     measured = round(len(protected) / total * 100, 2)
 
     desc = app.description or ""
