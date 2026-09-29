@@ -41,7 +41,7 @@
 | 向量检索 | ✅ 已实现 | E5 已本地化（`models/e5-base-v2` 437MB / 768 维），`frugal_rag` 走真实向量检索，`_degraded` 关闭（2026-09-13 验证） |
 | 共识与冲突消解引擎 | ✅ 规则原型 + 三评审门禁 | M2 已实施：批评者结构化输出 + 共识证据门禁 + 置信度（tests/test_m2_review_gate.py 9 用例）；GoMARL 加权共识权重仍为规则设定 |
 | Triage 分级路由（M1） | ✅ 已实现 | 零 LLM 成本分类器 + low 短路快路径，tests/test_triage.py 18 用例通过 |
-| LLM 通道 | ⚠️ 与文档有别 | 实际为 **DeepSeek 主 + 讯飞星火 generalv3.5**；星火 X2 未授权（`11200`） |
+| LLM 通道 | ⚠️ 与文档有别 | 实际为 **DeepSeek 主 + 讯飞星火 X2（spark-x）**；`4.0Ultra`/`max`(generalv3.5)/`pro128k` 未授权（`11200`） |
 | FrugalRAG SFT + GRPO 真训 | ⏳ 规划中 | 后续真版目标 |
 | 批评者证据门禁（M2） | ✅ 已实现 | critic 结构化 JSON + valid 证据标记 + filtered_issues 追溯 + 低置信人工复核 |
 | E5 向量检索恢复 | ✅ 已实现 | E5 已本地化（`models/e5-base-v2`），向量检索主路径已启用（2026-09-13 验证） |
@@ -81,7 +81,7 @@
 
 - 前端 Vue 3 + TypeScript，**45 个页面（45 views）**，多端多角色（学生 / 教师看板）
 - 后端 FastAPI + LangGraph，**约 240 个 API 端点**（openapi.json 实测 223 路径 / 240 操作，43 路由模块），**917 项测试通过 / 207 跳过**（全量回归 0 失败）
-- **双通道大模型自动容灾**：DeepSeek（主）→ 讯飞星火 generalv3.5（兜底）
+- **双通道大模型自动容灾**：DeepSeek（主）→ 讯飞星火 X2（兜底）
 - Milvus / PostgreSQL / Redis 缺失时逐级自动降级，单机即可完整运行
 
 ---
@@ -218,7 +218,7 @@ npm install && npm run dev                   # :5173，代理 /api → 8002
 | 后端 | FastAPI + LangGraph · 约 240 个 API 端点（openapi.json 实测 223 路径 / 240 操作）· 11 Agent 节点 |
 | 代码量 | 后端 414 个 Python 文件 / 约 10.2 万行 · 前端 93 文件 / 约 2.8 万行 |
 | 测试 | 917 项测试通过 / 207 跳过（全量回归 0 失败） |
-| LLM | DeepSeek（主）+ 讯飞星火 generalv3.5（兜底）双通道自动容灾 |
+| LLM | DeepSeek（主）+ 讯飞星火 X2（兜底）双通道自动容灾 |
 | 检索 | 向量检索主路径 · 约 2122 条条目 · E5 已本地化启用（768 维） |
 | 容灾 | Milvus / PG / Redis 逐级降级 · 单机可完整运行 |
 | 数据 | 约 2100 条知识分片与练习题 · 26 知识群组 |
