@@ -99,17 +99,59 @@ def _is_protected(route) -> bool:
     )
 
 
+def _iter_api_route_entries(app):
+    """跨 fastapi 版本枚举 /api 路由条目（元素兼容 APIRoute 与 RouteContext）。
+
+    为什么必须做版本适配（2026-09-29 实锤，含 fastapi 0.141.1 对照实验）：
+
+      旧版本（本地 0.136.3）：include_router 会把子路由**拍平**进 app.routes，
+        每个条目就是 APIRoute，`isinstance(r, APIRoute)` 能数全。
+      新版本（CI 解析到的 0.141.1）：include_router 只在 app.routes 里放一个
+        **_IncludedRouter 包装对象**，真实子路由藏在它内部 ——
+        实测 app.routes 类型分布 `{'Route': 4, '_IncludedRouter': 1, 'APIRoute': 2}`，
+        包装对象**既不是 APIRoute，也不保证有 .path 属性**。
+
+      后果：只按 APIRoute 平铺枚举时，include_router 挂上的业务路由被**整体漏掉**，
+      只剩直接装饰器挂的 2 条（/api/status、/api/status/competition）→ 覆盖率被算成
+      0.0%（0/2），而真实值是 94.65%（230/243）。这正是 CI 上
+      「对外宣称 94.65%，重算为 0.0%（0/2）」的根因 —— 不是路由表变了，
+      是**枚举方式在新版 fastapi 下失效**。
+
+      0.141.1 起官方提供展开器 `fastapi.routing.iter_route_contexts`：产出 RouteContext，
+        `.path` 已含 router prefix，`.methods` / `.dependant` 经 __getattr__ 透传底层路由，
+        故 `_is_protected()` 无需改动即可继续按依赖树判定鉴权。
+
+    兼容策略：有 iter_route_contexts 就用它（新版）；没有则回退到平铺分支（旧版）。
+    两条分支都**只认带 .path 的条目**，避免再对不保证该属性的对象取属性。
+    """
+    try:
+        from fastapi.routing import iter_route_contexts  # noqa: PLC0415
+    except ImportError:
+        iter_route_contexts = None
+
+    entries = []
+    if iter_route_contexts is not None:
+        candidates = iter_route_contexts(app.routes)
+    else:
+        candidates = app.routes
+
+    for route in candidates:
+        if iter_route_contexts is None and not isinstance(route, APIRoute):
+            continue  # 旧版：Mount / 文档路由不计入 API 面
+        path = getattr(route, "path", None)
+        if not isinstance(path, str) or not path.startswith("/api"):
+            continue
+        entries.append(route)
+    return entries
+
+
 def collect():
     import main  # noqa: PLC0415 —— 需先设好 sys.path，且 import 会执行环境引导
 
     protected, public = [], []
-    for route in main.app.routes:
-        if not isinstance(route, APIRoute):
-            continue  # Mount / 文档路由不计入 API 面
-        path = route.path
-        if not path.startswith("/api"):
-            continue
-        item = {"path": path, "methods": sorted(route.methods - {"HEAD", "OPTIONS"})}
+    for route in _iter_api_route_entries(main.app):
+        methods = getattr(route, "methods", None) or set()
+        item = {"path": route.path, "methods": sorted(methods - {"HEAD", "OPTIONS"})}
         (protected if _is_protected(route) else public).append(item)
     return protected, public
 
