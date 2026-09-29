@@ -39,6 +39,21 @@ ALLOWLIST_PATTERNS = [
     r'placeholder',
     r'xxxxxxxx',
     r'your[_-]?password',
+    # 测试夹具里的**测试专用**密钥（2026-09-29 实锤误报）。
+    #
+    # py-server/tests/system/test_concurrent_writes.py:37 定义
+    #   AUTH_SECRET = "test-secret-import-queue-system-0123456789"
+    # 它必须满足 shared/auth.py 的「≥32 字符」校验才能让被测应用起得来，故形态上
+    # 与真密钥难以区分 —— 但它是**测试内自造的、只在临时子进程环境里使用的**值，
+    # 不是任何环境的真实凭据（生产 AUTH_SECRET 由 secret manager 注入，不入库）。
+    #
+    # 注意匹配形态：命中它的是 'Potential Secret' 规则，传入的 matched 是 group(0)，
+    # 即 `SECRET = "test-secret-...`（不含变量名前缀、含结尾引号）。
+    # 豁免为什么是窄的：要求 matched 里出现自述式的 `test-secret-` 字面量。真实凭据
+    # 不可能长成 `test-secret-xxx` 这种自我声明是测试值的形式。
+    # 该模式不使文件脱离扫描 —— 其余规则、其余行照常生效（已逐条验证：JWT / ghp_ /
+    # sk- / AKIA / 连接串 / 私钥 等真实形态均不被本模式放行）。
+    r'test-secret-[a-z0-9\-]+',
 ]
 
 # 规则级路径豁免：仅对「低精度规则」在「特定目录」下豁免，其余规则照常生效。
