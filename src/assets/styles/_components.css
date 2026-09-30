@@ -305,3 +305,101 @@
 @media (prefers-reduced-motion:reduce){
   .stream-caret{animation:none;opacity:1}
 }
+
+/* ============================================================
+ * 设计升级 · 可复用原语（取自 30 关键词落地，v11.1）
+ * 来源：Pixso《AI 做 UI 总差点意思》30 设计关键词
+ * 落地：Bento Box Grid / AI-Native UI / Micro-interactions / Accessible
+ * 全部 token 化，零硬编码；只动 GPU 属性。
+ * ============================================================ */
+
+/* ── Bento Box Grid（便当盒网格 · 01）──
+   大小不一的卡片：重要信息多占位置，相关内容靠在一起。
+   用 grid-template-areas 表达主次，移动端退化为单列流。 */
+.bento-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  grid-auto-rows:172px;
+  gap:var(--space-4);
+  grid-template-areas:
+    "bento-hero  bento-hero  bento-kpi1  bento-kpi2"
+    "bento-hero  bento-hero  bento-kpi3  bento-kpi4"
+    "bento-todos bento-todos bento-weak  bento-weak"
+    "bento-agents bento-agents bento-recents bento-recents";
+}
+.bento-cell{
+  background:var(--glass-bg);
+  backdrop-filter:blur(var(--glass-blur));
+  -webkit-backdrop-filter:blur(var(--glass-blur));
+  border:1px solid var(--glass-border);
+  border-radius:var(--radius-lg);
+  padding:var(--space-5);
+  transition:var(--transition);
+  position:relative;
+  overflow:hidden;
+  min-width:0;
+}
+.bento-cell:hover{border-color:var(--color-border-focus);box-shadow:var(--shadow-card-hover)}
+.bento-hero{grid-area:bento-hero}
+.bento-kpi1{grid-area:bento-kpi1}.bento-kpi2{grid-area:bento-kpi2}
+.bento-kpi3{grid-area:bento-kpi3}.bento-kpi4{grid-area:bento-kpi4}
+.bento-todos{grid-area:bento-todos}
+.bento-weak{grid-area:bento-weak}
+.bento-agents{grid-area:bento-agents}
+.bento-recents{grid-area:bento-recents}
+.bento-cell-title{font-size:var(--text-sm);font-weight:var(--weight-semibold);color:var(--color-text-2);margin-bottom:var(--space-3);display:flex;align-items:center;justify-content:space-between;gap:var(--space-2)}
+@media (max-width:1024px){
+  .bento-grid{grid-template-columns:repeat(2,1fr);grid-auto-rows:auto;grid-template-areas:
+    "bento-hero bento-hero"
+    "bento-kpi1 bento-kpi2"
+    "bento-kpi3 bento-kpi4"
+    "bento-todos bento-todos"
+    "bento-weak bento-weak"
+    "bento-agents bento-agents"
+    "bento-recents bento-recents"}
+}
+@media (max-width:640px){
+  .bento-grid{grid-template-columns:1fr;grid-template-areas:none}
+  .bento-hero,.bento-kpi1,.bento-kpi2,.bento-kpi3,.bento-kpi4,
+  .bento-todos,.bento-weak,.bento-agents,.bento-recents{grid-area:auto}
+}
+
+/* ── 按钮微交互态（Micro-interactions · 27）──
+   在既有 .btn 基础上补「处理中 / 成功 / 失败」三态反馈，
+   让一次操作有清楚回应（不只是禁用）。 */
+.btn.is-loading{position:relative;color:transparent!important;pointer-events:none}
+.btn.is-loading::after{
+  content:'';position:absolute;inset:0;margin:auto;width:1.05rem;height:1.05rem;border-radius:50%;
+  border:2px solid rgba(255,255,255,.45);border-top-color:#fff;
+  animation:spin .7s linear infinite;
+}
+.btn.is-success{background:rgba(var(--success-rgb),.14);color:var(--color-success);border-color:var(--color-success-border)}
+.btn.is-error{background:rgba(var(--danger-rgb),.14);color:var(--color-danger);border-color:var(--color-danger-border)}
+@keyframes btn-spin{to{transform:rotate(360deg)}}
+.btn.is-loading::after{animation:btn-spin .7s linear infinite}
+
+/* ── 无障碍状态胶囊（Accessible & Ethical · 30）──
+   状态 = 图标 + 文字，绝不只靠颜色区分；焦点可见由全局 :focus-visible 兜底。 */
+.status-pill{display:inline-flex;align-items:center;gap:var(--space-1);padding:var(--space-1) var(--space-3);border-radius:var(--radius-full);font-size:var(--text-xs);font-weight:var(--weight-semibold);border:1px solid transparent}
+.status-pill svg{width:0.875rem;height:0.875rem}
+.status-pill.success{background:var(--color-success-bg);color:var(--color-success);border-color:var(--color-success-border)}
+.status-pill.warning{background:var(--color-warning-bg);color:var(--color-warning);border-color:var(--color-warning-border)}
+.status-pill.danger{background:var(--color-danger-bg);color:var(--color-danger);border-color:var(--color-danger-border)}
+.status-pill.info{background:var(--color-info-bg);color:var(--color-info);border-color:var(--color-info-border)}
+.status-pill.neutral{background:var(--color-surface-3);color:var(--color-text-2);border-color:var(--color-border)}
+
+/* ── 收藏/点赞 微交互三态（未收藏 → 处理中 → 已收藏 → 失败）── */
+.like-btn{display:inline-flex;align-items:center;gap:var(--space-1);padding:var(--space-2) var(--space-3);border-radius:var(--radius-full);border:1px solid var(--color-border);background:var(--color-surface-2);color:var(--color-text-2);font-size:var(--text-sm);font-weight:var(--weight-medium);cursor:pointer;transition:var(--transition)}
+.like-btn:hover{border-color:var(--color-border-focus);color:var(--color-text)}
+.like-btn.active{border-color:var(--color-danger-border);color:var(--color-danger);background:var(--color-danger-bg)}
+.like-btn.busy{opacity:.7;pointer-events:none}
+.like-btn.failed{border-color:var(--color-warning-border);color:var(--color-warning);background:var(--color-warning-bg)}
+
+/* ── 动效驱动：卡片内联展开（Motion-Driven · 28）──
+   只用 transform + opacity（GPU），不触 height/top/left。 */
+.motion-card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);overflow:hidden}
+.motion-card-trigger{display:flex;align-items:center;justify-content:space-between;padding:var(--space-4) var(--space-5);cursor:pointer;transition:var(--transition)}
+.motion-card-trigger:hover{background:var(--color-surface-hover)}
+.motion-card-detail{position:absolute;inset:0;background:var(--color-surface);padding:var(--space-5);opacity:0;transform:scale(.98);pointer-events:none;transition:var(--motion-transition)}
+.motion-card.open .motion-card-detail{opacity:1;transform:scale(1);pointer-events:auto}
+.motion-card.open .motion-card-summary{opacity:0}
