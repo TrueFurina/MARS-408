@@ -185,6 +185,13 @@ const router = createRouter({
       component: () => import('@/views/DesignSystemView.vue'),
     },
     {
+      // 设计升级预览：取自 30 关键词落地的可交互样片（公开，便于评审/演示直接预览）
+      path: '/design-upgrade',
+      name: 'design-upgrade',
+      meta: { public: true },
+      component: () => import('@/views/DesignUpgradeView.vue'),
+    },
+    {
       path: '/skills',
       name: 'skills',
       component: () => import('@/views/SkillMarketView.vue'),
