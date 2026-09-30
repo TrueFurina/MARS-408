@@ -126,7 +126,7 @@ function formatModuleName(name: string): string {
           <thead>
             <tr>
               <th class="diff-th-other">普通方案</th>
-              <th class="diff-th-ours">MARS-408 真版</th>
+              <th class="diff-th-ours">本平台真版</th>
               <th class="diff-th-tag"></th>
             </tr>
           </thead>

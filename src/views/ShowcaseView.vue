@@ -56,7 +56,7 @@ const techHighlights = [
     category: ' AI Skills 创新创作平台',
     items: [
       { title: '用户自定义教学技能', desc: '自定义 System Prompt/LLM 通道/温度/知识库，21 个预设模板快速开始', tag: '独创功能' },
-      { title: '技能市场 + 收藏', desc: '搜索/分类/排序/Tab 切换，收藏/评价/使用量统计，完整的技能生态', tag: '平台化' },
+      { title: '技能市场 + 收藏', desc: '搜索/分类/排序/Tab 切换，收藏/评价/使用量统计，完整的技能体系', tag: '平台化' },
       { title: 'Prompt Studio 实时测试', desc: '可视化 Prompt 编辑器 + 变量插入 + 实时 LLM 测试，所见即所得', tag: '开发工具' },
     ],
   },
@@ -101,7 +101,7 @@ function openNew() { window.open(iframeSrc.value, '_blank', 'noopener') }
     <aside class="showcase-rail">
       <div class="rail-head">
         <div class="rail-title">成果展示中心</div>
-        <div class="rail-sub">MARS-408 硬核技术全景</div>
+        <div class="rail-sub">408 考研 · 硬核技术全景</div>
       </div>
       <div class="rail-list">
         <button v-for="(it, i) in items" :key="it.key" class="rail-item" :class="{ active: selected === i }" @click="select(i)">
@@ -123,7 +123,7 @@ function openNew() { window.open(iframeSrc.value, '_blank', 'noopener') }
       <!-- 技术陈列模式 -->
       <div v-if="showTech" class="tech-showcase">
         <div class="tech-header">
-          <div class="tech-title"> MARS-408 硬核技术全景</div>
+          <div class="tech-title"> 408 考研 · 硬核技术全景</div>
           <div class="tech-sub">对标2026 福建高校「火山杯」Agent 创新大赛 · 国家级特等奖目标</div>
         </div>
 
