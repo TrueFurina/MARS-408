@@ -8,9 +8,9 @@ const router = useRouter()
 // ── 数据指标药丸 ──
 const metrics = [
   { value: '8', label: '协作 Agent', color: 'var(--accent-primary)' },
-  { value: '≥10', label: '资源类型', color: 'var(--accent-cyan)' },
-  { value: '1883', label: '知识 chunks', color: 'var(--accent-blue)' },
-  { value: '613', label: '图谱节点', color: 'var(--accent-pink)' },
+  { value: '7', label: '资源类型', color: 'var(--accent-cyan)' },
+  { value: '2122', label: '知识 chunks', color: 'var(--accent-blue)' },
+  { value: '86', label: '图谱节点', color: 'var(--accent-pink)' },
 ]
 
 // ── 三大创新亮点 ──
@@ -46,9 +46,9 @@ const innovations = [
     badge: '创新 03',
     title: '408 领域知识图谱',
     subtitle: 'Domain Knowledge Graph',
-    desc: '构建覆盖计算机考研 408 全科的知识图谱视图——26 大知识群组、2083 条知识向量，四科分色着色，支撑知识点关联浏览与个性化路径规划（v1 规则原型）。',
+    desc: '构建覆盖计算机考研 408 全科的知识图谱视图——26 大知识群组、2122 条知识向量，四科分色着色，支撑知识点关联浏览与个性化路径规划（v1 规则原型）。',
     stat: '26',
-    statLabel: '知识群组 / 2083 向量',
+    statLabel: '知识群组 / 2122 向量',
     accent: 'var(--accent-pink)',
     gradient: 'linear-gradient(135deg, color-mix(in srgb, var(--accent-pink) 12%, transparent), color-mix(in srgb, var(--accent-pink) 2%, transparent))',
     iconSvg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><line x1="12" y1="7" x2="5" y2="17"/><line x1="12" y1="7" x2="19" y2="17"/><line x1="5" y1="19" x2="19" y2="19"/></svg>`,
@@ -207,7 +207,7 @@ function goToSkills() {
     <section class="bottom-cta">
       <div class="bottom-cta-inner">
         <h2 class="bottom-title">让每一道错题，都成为成长的起点</h2>
-        <p class="bottom-desc">10 Agent 协作 · 10 项多模态能力 · 无限可扩展教学技能 · 26 大知识群组</p>
+        <p class="bottom-desc">8 Agent 协作 · 10 项多模态能力 · 无限可扩展教学技能 · 26 大知识群组</p>
         <button class="cta-primary cta-large" @click="enterSystem">
           <span>立即体验</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
@@ -217,7 +217,7 @@ function goToSkills() {
 
     <footer class="landing-footer">
       <span>芒得很职 · 基于大模型的个性化资源生成与学习多智能体系统</span>
-      <span class="footer-tech">Vue 3 + Vite + TypeScript · 玻璃态发光设计系统 v8</span>
+      <span class="footer-tech">Vue 3 + Vite + TypeScript · 玻璃态发光设计系统</span>
     </footer>
   </div>
 </template>

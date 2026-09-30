@@ -2,6 +2,8 @@
 
 > 本文件是 AI 编码代理生成 UI 时的**唯一设计规范**。任何新增/修改界面都必须遵循此处约定。
 > 设计令牌的**数值真值源**是 `src/assets/styles/_variables.css`（v10「砚 · Ink & Clay」）。本文件描述"怎么用"，不重复定义十六进制值；组件一律引用语义令牌（`--color-*` / `--subject-*` / `--space-*` / `--radius-*` / `--transition`），**禁止在组件里写死颜色或间距**。
+>
+> **版本说明**：令牌基底当前为 **v10「砚 · Ink & Clay」**；本文 §4 的「设计升级原语（Bento / 状态胶囊 / 微交互 / 动效 / 无障碍）」为 **v11.1**，二者是不同维度（令牌基底 vs 增量原语），**并存不冲突**。页面不再另写版本号，统一以本文件为准——此前 `DesignSystemView` 自写的 `v8` 无源可溯，已移除。
 
 ## 1. 视觉基调与氛围（Visual Theme）
 
@@ -11,7 +13,7 @@
 - **设计取向 = Linear 精度 × Stripe 渐变质感**：
   - 借用 **Linear** 的"暗原生 + 极细半透明白描边 + 单一紫罗兰强调 + 明度阶梯 + 签名字重"工程感；
   - 借用 **Stripe** 的"轻字重标题 + 大字号负字距收紧 + 双主题恒定品牌色 + 克制的渐变与聚焦环"craft。
-- **动效只动 GPU**：所有过渡只允许 `transform / opacity / background-color / border-color / color / box-shadow / filter`；**严禁** `transition: width/height/top/left/margin/padding/font-size`（进度条改用 `transform: scaleX()`）。
+- **动效只动 GPU**：所有过渡只允许 `transform / opacity / background-color / border-color / color / box-shadow / filter`；**严禁** `transition` 作用于 width / height / top / left / margin / padding / font-size 等布局属性（进度条改用 `transform: scaleX()`）。
 
 ## 2. 调色板与角色（Color Palette & Roles）
 
@@ -69,6 +71,18 @@
 
 ### 导航（Navigation）
 - 侧栏 220px（折叠 72px），顶栏 64px（移动端转顶+底栏）。导航项 `color: var(--color-text-2)`，Hover/Active → `var(--color-text)` 且左/下缘 `2px solid var(--color-accent)`。当前项可加 `var(--color-accent-subtle)` 淡底。
+
+### 设计升级原语（v11.1 · 取自《AI 做 UI 总差点意思》30 关键词）
+> 来源：Pixso《AI 做 UI 总差点意思？这 30 个设计关键词》。落地集中在 5 个关键词，全部走现有令牌、零硬编码、只动 GPU 属性。
+> 实现位置：`src/assets/styles/_components.css`（「设计升级 · 可复用原语 v11.1」块）；交互样片：`src/views/DesignUpgradeView.vue`（路由 `/design-upgrade`，公开）。
+
+- **便当盒网格（Bento Box Grid · 关键词 01）**：`.bento-grid` + `.bento-cell` + 区域类（`.bento-hero` / `.bento-kpi1~4` / `.bento-todos` / `.bento-weak` / `.bento-agents` / `.bento-recents`）。主卡 `bento-hero` 占 2×2，KPI 小卡 1×1，用 `grid-template-areas` 表达主次；1024px 退化为 2 列、640px 退化为单列流。用途：首页/总览的「主次更清楚」重排。**已落地（2026-09-28）**：`DashboardView.vue` 顶部新增「今日速览」区块（`hero 2×2` + 4 KPI + 四科掌握度 + 最近练习），复用了全局 `.bento-cell` 玻璃质感、配 Dashboard 专属作用域网格 `.dash-bento`（不改动 sample 那套写死的 areas）。
+- **AI 原生状态（AI-Native UI · 关键词 25）**：交互层用状态机 `idle → thinking → streaming → done / error`（见 `DesignUpgradeView.vue` 的 `AiState`）。`.ai-stage` 边框随状态换色（`--color-border-focus` / `rgba(var(--accent-rgb),.3)` / `--color-success-border` / `--color-danger-border`）；流式逐字用 `.stream-caret`（已存在）。失败提供「重试」入口，不让用户猜「点了之后发生了什么」。
+- **微交互（Micro-interactions · 关键词 27）**：
+  - 按钮三态 `.btn.is-loading`（内置 spinner，`color:transparent`）/ `.btn.is-success` / `.btn.is-error`，让一次操作有清楚回应。
+  - 收藏四态 `.like-btn`（`.idle`/`.busy`/`.active`/`.failed`），失败时保留重试入口。
+- **动效驱动（Motion-Driven · 关键词 28）**：`.motion-card` + `.motion-card-trigger` / `.motion-card-detail`，卡片内联展开只用 `transform`（scale）+ `opacity`（GPU），不触 `height`/`top`/`left`；详情浮层 `position:absolute; inset:0` 覆盖，解释「刚才的东西去了哪里」。
+- **无障碍状态（Accessible & Ethical Design · 关键词 30）**：`.status-pill` + 变体（`.success`/`.warning`/`.danger`/`.info`/`.neutral`）一律 **图标 + 文字** 双重表达，绝不只靠颜色区分色觉障碍用户；焦点环由全局 `:focus-visible` 兜底，减弱动效由 `prefers-reduced-motion` 兜底（已存在）。
 
 ## 5. 布局原则（Layout）
 
