@@ -51,7 +51,7 @@
 
 ## 4. 组件样式（Component Stylings）
 
-### 按钮（三档，足够覆盖 99% 场景）
+### 按钮（三档，覆盖绝大多数常见场景）
 - **Primary（实底渐变）**：`background: var(--gradient-primary); color: var(--color-text-on-accent);` 字号 `--text-base`，圆角 `--radius-md`，内边距 `var(--space-3) var(--space-5)`。Hover：`transform: translateY(-1px)` + `box-shadow: var(--shadow-3)`（只动 GPU）。**不要用纯色实底（如 `#533afd`）**——用令牌。
 - **Ghost / 次级**：`background: var(--color-surface-2); color: var(--color-text-2); border: 1px solid var(--color-border);` Hover：`background: var(--color-surface-hover); color: var(--color-text);`。
 - **Pill / 标签按钮**：圆角 `--radius-full`，`border: 1px solid var(--color-border)`，`color: var(--color-text-2)`，内边距 `var(--space-1) var(--space-3)`。
@@ -67,7 +67,7 @@
 
 ### 徽章 / 标签（Badge / Pill）
 - 状态：`background: var(--color-success-bg); color: var(--color-success); border: 1px solid var(--color-success-border);` 圆角 `--radius-2xs`/`--radius-full`。
-- 学科标签：用 `--subject-*` 作文字/描边色，背景用其 14% 淡底（`color-mix(in srgb, var(--subject-ds) 14%, transparent)` 或现成 `--color-accent-subtle` 思路）。
+- 学科标签：用 `--subject-*` 作文字/描边色，背景用其 12% 淡底（`color-mix(in srgb, var(--subject-ds) 12%, transparent)` 或现成 `--color-accent-subtle` 思路）。
 
 ### 导航（Navigation）
 - 侧栏 220px（折叠 72px），顶栏 64px（移动端转顶+底栏）。导航项 `color: var(--color-text-2)`，Hover/Active → `var(--color-text)` 且左/下缘 `2px solid var(--color-accent)`。当前项可加 `var(--color-accent-subtle)` 淡底。
@@ -135,6 +135,6 @@
 - **Hero**：`background: var(--color-canvas)`；标题 `font-size: var(--text-5xl); font-weight: var(--weight-semibold); letter-spacing: -0.025em; color: var(--color-text);`；副标 `font-size: var(--text-md); color: var(--color-text-2); line-height: var(--leading-relaxed);`。CTA 用 `.btn-primary` 范式（上），次级用 ghost。
 - **卡片**：`background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-6);`；标题 `font-size: var(--text-xl); font-weight: var(--weight-semibold); color: var(--color-text);`；正文 `font-size: var(--text-base); color: var(--color-text-2);`。Hover 加 `var(--shadow-card-hover)` + `background: var(--color-surface-hover)`。
 - **输入**：`background: var(--color-surface-2); border: 1px solid var(--color-border); border-radius: var(--radius-md); color: var(--color-text);`；`:focus` → `border-color: var(--color-border-focus); box-shadow: var(--focus-ring);`。
-- **学科标签**：`color: var(--subject-ds); border: 1px solid color-mix(in srgb, var(--subject-ds) 35%, transparent); background: color-mix(in srgb, var(--subject-ds) 14%, transparent); border-radius: var(--radius-full); padding: var(--space-1) var(--space-3); font-size: var(--text-xs);`
+- **学科标签**：`color: var(--subject-ds); border: 1px solid color-mix(in srgb, var(--subject-ds) 12%, transparent); background: color-mix(in srgb, var(--subject-ds) 12%, transparent); border-radius: var(--radius-full); padding: var(--space-1) var(--space-3); font-size: var(--text-xs);`
 
 > 记住：本文件是"味道"，`_variables.css` 是"数值"。改颜色/间距只动 `_variables.css`，不要在本文件或组件里硬编码。
