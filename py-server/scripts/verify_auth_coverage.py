@@ -99,8 +99,8 @@ def _is_protected(route) -> bool:
     )
 
 
-def _iter_api_route_entries(app):
-    """跨 fastapi 版本枚举 /api 路由条目（元素兼容 APIRoute 与 RouteContext）。
+def iter_route_entries(app, only_api: bool = False, endpoints_only: bool = False):
+    """跨 fastapi 版本枚举路由条目（元素兼容 APIRoute 与 RouteContext）。
 
     为什么必须做版本适配（2026-09-29 实锤，含 fastapi 0.141.1 对照实验）：
 
@@ -122,7 +122,13 @@ def _iter_api_route_entries(app):
         故 `_is_protected()` 无需改动即可继续按依赖树判定鉴权。
 
     兼容策略：有 iter_route_contexts 就用它（新版）；没有则回退到平铺分支（旧版）。
-    两条分支都**只认带 .path 的条目**，避免再对不保证该属性的对象取属性。
+    两条分支都**只认带 str 型 .path 的条目**，避免再对不保证该属性的对象取属性。
+
+    Args:
+        app: FastAPI 实例。
+        only_api: True 时只保留 path 以 "/api" 开头的条目。
+        endpoints_only: True 时只保留**端点**（有 .methods 的 Route/APIRoute），
+            排除 Mount 等非端点条目 —— 供「业务路由是否真的注册」这类计数使用。
     """
     try:
         from fastapi.routing import iter_route_contexts  # noqa: PLC0415
@@ -130,19 +136,25 @@ def _iter_api_route_entries(app):
         iter_route_contexts = None
 
     entries = []
-    if iter_route_contexts is not None:
-        candidates = iter_route_contexts(app.routes)
-    else:
-        candidates = app.routes
+    candidates = iter_route_contexts(app.routes) if iter_route_contexts else app.routes
 
     for route in candidates:
         if iter_route_contexts is None and not isinstance(route, APIRoute):
-            continue  # 旧版：Mount / 文档路由不计入 API 面
+            continue  # 旧版平铺分支：Mount / 文档路由不计入 API 面
         path = getattr(route, "path", None)
-        if not isinstance(path, str) or not path.startswith("/api"):
+        if not isinstance(path, str):
+            continue
+        if only_api and not path.startswith("/api"):
+            continue
+        if endpoints_only and not getattr(route, "methods", None):
             continue
         entries.append(route)
     return entries
+
+
+def _iter_api_route_entries(app):
+    """/api 路由条目（collect() 专用入口，语义见 iter_route_entries）。"""
+    return iter_route_entries(app, only_api=True)
 
 
 def collect():

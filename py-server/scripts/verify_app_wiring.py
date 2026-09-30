@@ -84,9 +84,23 @@ def main():
 
     app = main.app
     check("app 组装成功", app is not None)
-    check("路由数量 > 200（业务路由确实注册）", len(app.routes) > 200, f"routes={len(app.routes)}")
 
-    paths = {getattr(r, "path", "") for r in app.routes}
+    # 路由枚举走 verify_auth_coverage 的**跨 fastapi 版本**实现（单一真值源）：
+    # fastapi 0.141+ 起 include_router 不再把子路由拍平进 app.routes，而是放一个
+    # _IncludedRouter 包装对象（且它不保证有 .path）。直接 `for r in app.routes`
+    # 取属性会 AttributeError；用 len(app.routes) 计数则会**严重低估**（实测
+    # 0.141.1 下 app.routes 只剩 {'Route':4,'_IncludedRouter':1,'APIRoute':2}），
+    # 让下面这条「> 200」变成假红。故统一改用 iter_route_entries。
+    from verify_auth_coverage import iter_route_entries
+
+    route_entries = iter_route_entries(app)
+    check(
+        "路由数量 > 200（业务路由确实注册）",
+        len(route_entries) > 200,
+        f"routes={len(route_entries)}",
+    )
+
+    paths = {e.path for e in route_entries}
     for expected in ("/api/status", "/api/status/competition", "/metrics"):
         check(f"运维端点存在：{expected}", expected in paths)
 
