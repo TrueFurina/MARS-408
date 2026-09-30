@@ -53,6 +53,7 @@ const heatmapRows = computed(() => {
       return {
         level: Math.min(5, Math.max(1, Math.floor(score / 20) + 1)),
         seq: i + 1,
+        score,
         label: `第 ${i + 1} 次练习 · 得分 ${score}`,
       }
     })
@@ -192,6 +193,15 @@ const judgePortals = [
 
 function go(route: string) { router.push(route) }
 
+// Bento 层级（关键词 01）：协调 Agent 是任务分派中枢 → 占 2×2 主块；
+// 路径 Agent 是最终产出（MAPPO 选档）→ 跨 2 列；其余等大。
+// 只表达「结构主次」，不引入任何运行时状态（沿用 8-Agent 静态声明的证据纪律）。
+function agentSpan(i: number): string {
+  if (i === 0) return 'ag-span-hub'
+  if (i === agents.length - 1) return 'ag-span-wide'
+  return ''
+}
+
 onMounted(async () => {
   try {
     const [s, ses, t] = await Promise.all([
@@ -236,7 +246,7 @@ onMounted(async () => {
     </div>
 
     <!-- 空状态：后端未运行 -->
-    <EmptyState v-else-if="!stats && !sessions.length && !tasks.length" :icon="icons.dashboard" title="欢迎来到 MARS-408" description="启动后端服务后，这里将展示你的学习数据、最近学习记录和推荐任务。">
+    <EmptyState v-else-if="!stats && !sessions.length && !tasks.length" :icon="icons.dashboard" title="欢迎来到芒得很职" description="启动后端服务后，这里将展示你的学习数据、最近学习记录和推荐任务。">
       <template #action>
         <button class="hero-cta" @click="go('/profile/build')">开始构建学习画像</button>
         <button class="hero-cta secondary" @click="go('/chat')">进入智能对话</button>
@@ -396,32 +406,6 @@ onMounted(async () => {
       </div>
     </section>
 
-    <!-- 学习数据总览 -->
-    <section v-if="stats" class="data-section">
-      <div class="data-label">学习数据总览</div>
-      <div class="data-grid">
-        <div class="data-card">
-          <div class="data-icon" v-html="icons.book"></div>
-          <div class="data-value">{{ stats.studyTime }}h</div>
-          <div class="data-label-text">今日学习时长</div>
-        </div>
-        <div class="data-card">
-          <div class="data-icon" v-html="icons.pen"></div>
-          <div class="data-value">{{ stats.questionsDone }}</div>
-          <div class="data-label-text">今日完成题目</div>
-        </div>
-        <div class="data-card mastery-card">
-          <RingProgress :value="stats.mastery" :size="116" :stroke="9" />
-          <div class="data-caption">知识点整体掌握率</div>
-        </div>
-        <div class="data-card">
-          <div class="data-icon" v-html="icons.fire"></div>
-          <div class="data-value">{{ stats.streak }}天</div>
-          <div class="data-label-text">连续学习</div>
-        </div>
-      </div>
-    </section>
-
     <!-- 学科掌握度分布 -->
     <section v-if="stats" class="mastery-section">
       <div class="data-label">学科掌握度分布</div>
@@ -441,7 +425,7 @@ onMounted(async () => {
         <span class="tag-demo">静态结构 · 无运行时数据</span>
       </div>
       <div class="agent-grid">
-        <div v-for="ag in agents" :key="ag.role" class="agent-card">
+        <div v-for="(ag, i) in agents" :key="ag.role" class="agent-card" :class="agentSpan(i)">
           <div class="agent-info">
             <div class="agent-name" :style="{ color: ag.color }">{{ ag.name }} Agent</div>
             <div class="agent-role">{{ ag.role }}</div>
@@ -467,8 +451,10 @@ onMounted(async () => {
               class="heatmap-cell"
               :style="{ background: cell.level === 0 ? 'var(--chart-grid)' : `var(--seq-${cell.level})` }"
               :title="cell.label"
+              role="img"
+              :aria-label="row.name + ' · ' + cell.label"
             >
-              <span class="heatmap-cell-text" :style="{ color: cell.level >= 4 ? 'var(--color-text-invert)' : 'var(--color-text-2)' }">{{ cell.level === 0 ? '—' : cell.seq }}</span>
+              <span class="heatmap-cell-text" :style="{ color: cell.level >= 4 ? 'var(--color-text-invert)' : 'var(--color-text-2)' }">{{ cell.level === 0 ? '—' : cell.score }}</span>
             </div>
           </div>
         </div>
@@ -492,7 +478,7 @@ onMounted(async () => {
           <div class="alert-body">
             <div class="alert-topic">
               {{ al.topic }}
-              <span class="alert-level" :class="'lv-' + al.level">{{ al.level === 'danger' ? '高危' : '薄弱' }}</span>
+              <span class="status-pill" :class="al.level === 'danger' ? 'danger' : 'warning'"><span v-html="al.level === 'danger' ? icons.warning : icons.info"></span>{{ al.level === 'danger' ? '高危' : '薄弱' }}</span>
             </div>
             <div class="alert-action">{{ al.action }}</div>
           </div>
@@ -871,12 +857,9 @@ onMounted(async () => {
 .bonus-card:hover svg:last-child { opacity: 1; }
 
 /* ── Data ── */
-.data-section {
-  padding:var(--space-6) var(--space-8);
-  max-width:75rem;
-  margin:0 auto;
-}
-
+/* 注：原「学习数据总览」区块（.data-section / .data-grid / .data-card 系列）已于 2026-09-29
+   被顶部 Bento「今日速览」取代——两者展示完全相同的 4 个指标，一页重复属设计硬伤。
+   区块与其专用样式已一并移除（非误删）。`.data-label` 仍被其余区块共用，保留。 */
 .data-label {
   font-size:var(--text-xs);
   color: var(--text-muted);
@@ -885,89 +868,6 @@ onMounted(async () => {
   letter-spacing:0.0312rem;
 }
 
-/* Bento Box Grid（文章词 01）：重要内容多占位，相关内容靠一起，先让人看见"今天怎么样" */
-.data-grid {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap:var(--space-3);
-}
-.data-card:nth-child(1) { grid-column: span 2; }               /* 今日学习时长：小卡 */
-.data-card:nth-child(2) { grid-column: span 2; }               /* 今日完成题目：小卡 */
-.data-card:nth-child(3) { grid-column: span 2; grid-row: span 2; } /* 掌握率：主卡（跨 2 行） */
-.data-card:nth-child(4) { grid-column: span 4; }               /* 连续学习：通栏副卡 */
-
-/* 通栏副卡改横向排布，避免大卡里只有一个数字 */
-.data-card:nth-child(4) {
-  display: flex; align-items: center; justify-content: center; gap: var(--space-4); text-align: left;
-}
-.data-card:nth-child(4) .data-icon { margin-bottom: 0; }
-.data-card:nth-child(4) .data-label-text { margin-top: 0; }
-
-@media (max-width: 900px) {
-  .data-grid { grid-template-columns: repeat(2, 1fr); }
-  .data-card:nth-child(1), .data-card:nth-child(2) { grid-column: span 1; }
-  .data-card:nth-child(3) { grid-column: span 2; grid-row: span 1; }
-  .data-card:nth-child(4) { grid-column: span 2; }
-}
-@media (max-width: 480px) {
-  .data-grid { grid-template-columns: 1fr; }
-  .data-card:nth-child(n) { grid-column: span 1; }
-}
-
-.data-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius:var(--radius-md);
-  padding:var(--space-4);
-  text-align: center;
-  transition: var(--transition);
-}
-
-.data-card:hover {
-  border-color: var(--color-glass-border);
-}
-
-.data-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom:var(--space-2);
-  color: var(--accent-primary);
-}
-
-.data-icon svg { width:1.25rem; height:1.25rem; }
-
-.data-value {
-  font-size:var(--text-3xl);
-  font-weight: 800;
-  color: var(--text-primary);
-  letter-spacing:-0.0312rem;
-}
-
-.data-label-text {
-  font-size:var(--text-xs);
-  color: var(--text-muted);
-  margin-top:var(--space-1);
-}
-
-/* ── Mastery rings ── */
-.data-card.mastery-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap:var(--space-2);
-  /* Bento 主卡：给一点视觉权重，让人第一眼落在"掌握率" */
-  background: linear-gradient(180deg, var(--accent-primary-10), var(--bg-secondary) 55%);
-  border-color: var(--accent-primary-20);
-}
-.data-card.mastery-card .data-caption { font-size: var(--text-sm); color: var(--text-secondary); }
-.data-card.mastery-card:hover { border-color: var(--accent-primary); }
-.data-caption {
-  font-size:var(--text-xs);
-  color: var(--text-muted);
-  font-weight: var(--weight-medium);
-}
 .mastery-section {
   padding:0 var(--space-8) var(--space-6);
   max-width:75rem;
@@ -1261,7 +1161,6 @@ onMounted(async () => {
 /* ── Responsive ── */
 @media (max-width: 1024px) {
   .portals-grid { grid-template-columns: repeat(2, 1fr); }
-  .data-grid { grid-template-columns: repeat(2, 1fr); }
   .recent-grid { grid-template-columns: 1fr; }
   .agent-grid { grid-template-columns: repeat(2, 1fr); }
 }
@@ -1277,8 +1176,6 @@ onMounted(async () => {
   .portal-card { padding:var(--space-5) var(--space-4); }
   .bonus-section { padding:var(--space-3) var(--space-5); }
   .bonus-row { flex-direction: column; }
-  .data-section { padding:var(--space-4) var(--space-5); }
-  .data-grid { grid-template-columns: repeat(2, 1fr); }
   .recent-section { padding:var(--space-3) var(--space-5) var(--space-5); }
 }
 
@@ -1287,7 +1184,6 @@ onMounted(async () => {
   .hero-title { font-size:var(--text-3xl); }
   .hero-stats-row { flex-wrap: wrap; gap:var(--space-3); }
   .hero-stat-divider { display: none; }
-  .data-grid { grid-template-columns: 1fr 1fr; }
   .agent-grid { grid-template-columns: 1fr; }
   .heatmap-cells { grid-template-columns: repeat(4, 1fr); }
   .heatmap-subj-label { width: 3.5rem; font-size: var(--text-2xs); }
@@ -1341,5 +1237,56 @@ onMounted(async () => {
 @media (max-width:640px){
   .dash-bento{grid-template-columns:1fr;grid-template-areas:none}
   .db-area-hero,.db-area-kpi1,.db-area-kpi2,.db-area-kpi3,.db-area-mastery,.db-area-subjects,.db-area-recent{grid-area:auto}
+}
+
+/* ── 多智能体协作架构：Bento 层级（关键词 01）──
+   协调=分派中枢占 2×2 主块，路径=最终产出跨 2 列，其余等大。 */
+.ag-span-hub{grid-column:span 2;grid-row:span 2}
+.ag-span-wide{grid-column:span 2}
+.ag-span-hub .agent-name{font-size:var(--text-lg)}
+@media (max-width:1024px){
+  .ag-span-hub{grid-row:span 1}
+}
+@media (max-width:640px){
+  .ag-span-hub,.ag-span-wide{grid-column:span 1;grid-row:span 1}
+}
+
+/* ── 微交互（关键词 27）：可点击项给出「按下」反馈 ──
+   只用 transform（GPU），不改变布局尺寸。 */
+.alert-item:active{transform:scale(.995)}
+.subject-quick-card:active{transform:scale(.985)}
+@media (prefers-reduced-motion:reduce){
+  .alert-item:active,.subject-quick-card:active{transform:none}
+}
+
+/* ── Motion-Driven 入场揭示（设计升级 v11.1 · 关键词 09/28 滚动揭示）──
+   仅动 transform + opacity（GPU，不触发重排）；尊重系统「减弱动效」。 */
+@keyframes dash-reveal-up{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:none}
+}
+/* 区块级：柔和淡入上移，让首页「活」起来 */
+.hero-content,
+.rec-section,.judge-section,.mastery-section,.agent-status-section,
+.heatmap-section,.alert-section,.recent-section,.bonus-section{
+  opacity:0;
+  animation:dash-reveal-up var(--duration-slow) var(--ease-out) .08s forwards;
+}
+/* 今日速览七格错峰（替代容器整体动画，逐格浮现更显层次） */
+.dash-bento .bento-cell{
+  opacity:0;
+  animation:dash-reveal-up var(--duration-slow) var(--ease-out) forwards;
+}
+.dash-bento .bento-cell:nth-child(1){animation-delay:.06s}
+.dash-bento .bento-cell:nth-child(2){animation-delay:.10s}
+.dash-bento .bento-cell:nth-child(3){animation-delay:.14s}
+.dash-bento .bento-cell:nth-child(4){animation-delay:.18s}
+.dash-bento .bento-cell:nth-child(5){animation-delay:.22s}
+.dash-bento .bento-cell:nth-child(6){animation-delay:.26s}
+.dash-bento .bento-cell:nth-child(7){animation-delay:.30s}
+@media (prefers-reduced-motion:reduce){
+  .hero-content,.rec-section,.judge-section,.mastery-section,.agent-status-section,
+  .heatmap-section,.alert-section,.recent-section,.bonus-section,
+  .dash-bento .bento-cell{animation:none;opacity:1;transform:none}
 }
 </style>
