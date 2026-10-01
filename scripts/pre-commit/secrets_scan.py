@@ -86,8 +86,15 @@ ALLOWLIST_PATTERNS = [
 # 剩余风险（如实写明）：若某 AWS Secret Access Key 恰好是纯十六进制形态，会被放行；
 # 但 AWS secret 使用 base64 字母表，40 位恰好全部落在十六进制字符集内的概率量级约 2⁻⁸⁰，
 # 可忽略。
+# 追加（2026-10-02 实锤误报）：deliverables/ 是面向外的营销/计划/评估文档，其中常见
+# 40+ 字符的 [0-9a-zA-Z/+] 连续串 —— 例如 engineering-assurance 文档把智能体角色名以
+# `Teacher/QuizMaster/MindMap/Extension/Code`、节点名以 `triage/coordinator/
+# diagnostician/retriever` 这类路径式写法列举，必然命中该低精度规则，但并非密钥。
+# 处理与本仓库既有先例（py-server/seed/、py-server/openapi.json）完全一致：只豁免这一条
+# 低精度规则；generic-api-key / JWT / 连接串 / 私钥 / GitHub / Slack 等高精度规则对
+# deliverables/ 依然生效，真密钥不会漏检。
 RULE_PATH_EXEMPT = {
-    'AWS Secret Access Key (base64)': ['py-server/seed/', 'py-server/openapi.json'],
+    'AWS Secret Access Key (base64)': ['py-server/seed/', 'py-server/openapi.json', 'deliverables/'],
 }
 
 
