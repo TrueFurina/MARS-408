@@ -126,7 +126,7 @@ REACHABILITY = [
     ("POST", "/api/engine/frugal-rag-full", {"query": "TCP"}, False),
     ("POST", "/api/engine/gomarl-consensus",
      {"topic": "TCP", "proposals": ["a", "b"]}, False),
-    ("POST", "/api/engine/stop-decision/update", {"decision": "continue"}, False),
+    ("POST", "/api/engine/stop-decision/update", {"decision": "continue"}, True),
     ("POST", "/api/engine/conflict-check", {"proposals": ["a", "b"]}, False),
     ("POST", "/api/engine/teaching-rules/validate", {"rules": []}, False),
     ("POST", "/api/engine/teaching-rules/agent-assign", {"topic": "TCP"}, False),

@@ -556,7 +556,9 @@ class TestEngineAPIEndpoints:
         assert "total_conflicts" in data
 
     def test_stop_decision_update_endpoint(self):
-        """POST /api/engine/stop-decision/update"""
+        """POST /api/engine/stop-decision/update — 需管理员权限"""
+        from shared.auth import create_token
+        admin_headers = {"Authorization": f"Bearer {create_token('test_admin', role='admin')}"}
         response = self.client.post(
             "/api/engine/stop-decision/update",
             json={
@@ -564,6 +566,7 @@ class TestEngineAPIEndpoints:
                 "final_coverage": 0.9,
                 "was_good": True,
             },
+            headers=admin_headers,
         )
         assert response.status_code == 200
         data = response.json()
