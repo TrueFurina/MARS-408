@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import LangGraphFlow from '@/components/LangGraphFlow.vue'
 import { icons } from '@/components/icons'
 import EngineSection from '@/components/EngineSection.vue'
 import { useStudyStore } from '@/stores/studyStore'
@@ -12,38 +11,6 @@ const store = useStudyStore()
 const topic = ref('TCP三次握手')
 const loading = ref(false)
 const result = ref<any>(null)
-
-// ── LangGraph 流状态 ──
-const flowActive = ref(false)
-const flowCurrentNode = ref(-1)
-const flowCompleted = ref<number[]>([])
-const flowStepDetails = [
-  '分析学习目标与画像', '诊断知识薄弱点', '制定检索策略与路径',
-  '执行FrugalRAG多轮检索', '多Agent协同生成内容', 'GoMARL共识评估质量',
-  '审核冲突消解与一致性', '证据校验与防幻觉 grounding', '产物验收闸门质量把关',
-  '输出最终个性化路径',
-]
-const flowNodeLabels = [
-  '协调', '诊断', '规划', '检索', '生成', '评估', '审核', '证据校验', '产物验收', '路径规划',
-]
-
-async function animateFlow(durationMs = 2400) {
-  flowActive.value = true
-  flowCurrentNode.value = -1
-  flowCompleted.value = []
-  const totalNodes = 10
-  const stepDelay = durationMs / totalNodes
-  for (let i = 0; i < totalNodes; i++) {
-    if (!flowActive.value) break
-    flowCurrentNode.value = i
-    await new Promise(r => setTimeout(r, stepDelay * 0.5))
-    flowCompleted.value = [...flowCompleted.value, i]
-    if (i < totalNodes - 1) {
-      await new Promise(r => setTimeout(r, stepDelay * 0.5))
-    }
-  }
-  await new Promise(r => setTimeout(r, 200))
-}
 
 // ── Agent 样本数据 ──
 const sampleAgentResults = computed(() => [
@@ -69,8 +36,6 @@ async function runConsensus() {
   loading.value = true
   result.value = null
 
-  animateFlow(2400)
-
   try {
     result.value = await api.post<any>('/engine/gomarl-consensus', {
       agent_results: sampleAgentResults.value,
@@ -82,7 +47,6 @@ async function runConsensus() {
     result.value = { status: 'error', message: String(e) }
   } finally {
     loading.value = false
-    flowActive.value = false
   }
 }
 </script>
@@ -102,15 +66,7 @@ async function runConsensus() {
       </button>
     </div>
 
-    <!-- LangGraph 流式进度可视化 -->
-    <LangGraphFlow
-      v-if="loading || result?.status === 'ok'"
-      :current-node="flowCurrentNode"
-      :completed-nodes="flowCompleted"
-      :step-details="flowStepDetails"
-      :node-labels="flowNodeLabels"
-      :loading="loading"
-    />
+    <!-- LangGraph 流式进度可视化（已移除：本面板端点 /engine/gomarl-consensus 非 11 节点图，挂流程图属误导） -->
 
     <div class="gomarl-agents-preview">
       <div v-for="agent in sampleAgentResults" :key="agent.agent_name" class="gomarl-agent-preview-card glass-card">

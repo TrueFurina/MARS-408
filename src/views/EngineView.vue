@@ -12,33 +12,20 @@ import CompareProfilesPanel from '@/components/CompareProfilesPanel.vue'
 import EvidenceCheckPanel from '@/components/EvidenceCheckPanel.vue'
 import { capabilityComparison } from '@/data/capabilityComparison'
 import { icons } from '@/components/icons'
+import { ORCHESTRATION_NODES } from '@/composables/useOrchestrationFlow'
 
-// LangGraph 10 节点进度
+// LangGraph 11 节点进度（标签/描述单一真源来自 ORCHESTRATION_NODES）
 const flowActive = ref(false)
 const flowCurrentNode = ref(-1)
 const flowCompleted = ref<number[]>([])
-const flowStepDetails = [
-  '分析学习目标与画像',
-  '诊断知识薄弱点',
-  '制定检索策略与路径',
-  '执行FrugalRAG多轮检索',
-  '多Agent协同生成内容',
-  'GoMARL共识评估质量',
-  '审核冲突消解与一致性',
-  '证据校验与防幻觉 grounding',
-  '产物验收闸门质量把关',
-  '输出最终个性化路径',
-]
-const flowNodeLabels = [
-  '协调', '诊断', '规划', '检索',
-  '生成', '评估', '审核', '证据校验', '产物验收', '路径规划',
-]
+const flowStepDetails = ORCHESTRATION_NODES.map(n => n.description)
+const flowNodeLabels = ORCHESTRATION_NODES.map(n => n.label)
 
 async function animateFlow(durationMs: number = 2800) {
   flowActive.value = true
   flowCurrentNode.value = -1
   flowCompleted.value = []
-  const totalNodes = 10
+  const totalNodes = ORCHESTRATION_NODES.length // 11
   const stepDelay = durationMs / totalNodes
   for (let i = 0; i < totalNodes; i++) {
     if (!flowActive.value) break
@@ -49,8 +36,10 @@ async function animateFlow(durationMs: number = 2800) {
       await new Promise(r => setTimeout(r, stepDelay * 0.5))
     }
   }
-  // 最后微微停顿
+  // 最后微微停顿，然后收尾（loading 绑 flowActive，结束时置 false 让 active 态正确退场）
   await new Promise(r => setTimeout(r, 200))
+  flowActive.value = false
+  flowCurrentNode.value = -1
 }
 
 // ── 引擎状态 ──
@@ -196,10 +185,10 @@ function formatModuleName(name: string): string {
       <SectionHeader>
         <template #title>
           <span v-html="icons.agent" class="engine-icon-svg"></span>
-          LangGraph 10 节点协同流程
+          LangGraph 11 节点协同流程
           <span class="engine-tag">StateGraph 实时状态</span>
         </template>
-        <template #description>协调→诊断→规划→检索→生成→评估→审核→证据校验→产物验收→路径规划，每节点含动画spinner+完成checkmark</template>
+        <template #description>分级路由→协调→诊断→规划→检索→生成→评估反馈→质量校验→证据校验→产物验收→路径规划，每节点含动画spinner+完成checkmark</template>
       </SectionHeader>
 
       <LangGraphFlow
@@ -207,13 +196,13 @@ function formatModuleName(name: string): string {
         :completed-nodes="flowCompleted"
         :step-details="flowStepDetails"
         :node-labels="flowNodeLabels"
-        :loading="false"
+        :loading="flowActive"
       />
 
-      <!-- 演示按钮：手动触发可视化 -->
+      <!-- 演示按钮：手动触发可视化（模拟动画，非真实 SSE 流） -->
       <div class="demo-trigger-row">
-        <button class="demo-btn" @click="animateFlow(3500)">▶ 演示完整流转</button>
-        <span class="demo-hint">点击按钮查看 10 节点 LangGraph StateGraph 协同流程动画</span>
+        <button class="demo-btn" @click="animateFlow(3500)">▶ 演示完整流转（模拟）</button>
+        <span class="demo-hint">点击按钮查看 11 节点 LangGraph StateGraph 协同流程模拟动画（真实流请到「多智能体资源生成」页体验）</span>
       </div>
     </div>
 

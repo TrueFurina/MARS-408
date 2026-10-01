@@ -1,25 +1,38 @@
 <script setup lang="ts">
 /**
- * LangGraphFlow — 10 节点 LangGraph StateGraph 进度可视化
+ * LangGraphFlow — 11 节点 LangGraph StateGraph 进度可视化
  *
- * 节点流转：协调(coordinator) → 诊断(diagnostician) → 规划(planner)
- *          → 检索(retriever) → 生成(generator) → 评估(assessor)
- *          → 审核(reviewer) → 路径规划(path_planner)
+ * 节点流转（与后端 py-server/agents/graph.py 对齐）：
+ *   triage(分级路由) → coordinator(协调) → diagnostician(诊断) → planner(规划)
+ *   → retriever(检索) → generator_cluster(生成) → assessor(评估反馈)
+ *   → critic(质量校验) → evidence_check(证据校验) → quality_gate(产物验收)
+ *   → path_planner(路径规划)
  *
- * 每节点有 4 种状态：
+ * 每节点状态：
  *   pending   — 灰色圆圈，等待中
- *   active    — 发光脉冲 + Lottie-like spinner，正在执行
- *   completed — 绿色发光  checkmark，已完成
+ *   active    — 发光脉冲 + spinner，正在执行
+ *   completed — 发光 checkmark，已完成
+ *   retrying  — 琥珀呼吸环 + 重入角标（回环重试，加法扩展）
+ *   rejected  — 红色（产物验收拒绝）
  *   skipped   — （保留，暂未使用）
  *
  * Props:
- *   currentNode: number — 当前活跃节点索引 (-1 表示全部 pending, 0-9 表示第几个活跃)
+ *   currentNode: number — 当前活跃节点索引 (-1 表示全部 pending)
  *   completedNodes: number[] — 已完成节点索引数组
- *   stepDetails: string[] — 每步详细说明（可选）
- *   loading: boolean — 是否正在加载中
+ *   stepDetails: string[] — 每步详细说明（可选，覆盖默认描述）
+ *   loading: boolean — 是否正在加载中（决定 active 态）
+ *   nodeLabels: string[] — 节点标签（可选，覆盖默认）
+ *   nodeStates: Record<number,string> — 逐节点视觉态（retrying/rejected 由此外部注入，向后兼容）
+ *   retryCount: Record<number,number> — 回环重入计数（用于 ×N 角标）
+ *
+ * 节点元数据（label/icon/color/description）默认值来自 ORCHESTRATION_NODES 单一真源，
+ * 不再与 EngineView 等调用点各写一份，避免漂移。
  */
-import { computed, ref, watch } from 'vue'
+import { computed } from 'vue'
 import { icons } from '@/components/icons'
+import { ORCHESTRATION_NODES } from '@/composables/useOrchestrationFlow'
+
+type VisualState = 'pending' | 'active' | 'completed' | 'retrying' | 'rejected'
 
 const props = withDefaults(defineProps<{
   currentNode: number
@@ -27,55 +40,42 @@ const props = withDefaults(defineProps<{
   stepDetails?: string[]
   loading?: boolean
   nodeLabels?: string[]
+  nodeStates?: Record<number, string>
+  retryCount?: Record<number, number>
 }>(), {
   currentNode: -1,
   completedNodes: () => [],
   stepDetails: () => [],
   loading: false,
-  nodeLabels: () => [
-    '协调', '诊断', '规划', '检索',
-    '生成', '评估', '审核', '证据校验', '产物验收', '路径规划',
-  ],
+  nodeLabels: () => ORCHESTRATION_NODES.map(n => n.label),
+  nodeStates: () => ({}),
+  retryCount: () => ({}),
 })
 
-const nodeColors = [
-  'var(--agent-coord)',    // 协调
-  'var(--agent-diag)',     // 诊断
-  'var(--agent-plan)',     // 规划
-  'var(--agent-retrieve)', // 检索
-  'var(--agent-gen)',      // 生成
-  'var(--agent-eval)',     // 评估
-  'var(--agent-quality)',  // 审核
-  'var(--agent-evidence)', // 证据校验
-  'var(--agent-gate)',     // 产物验收
-  'var(--agent-path)',     // 路径规划
-]
+const nodeColors = ORCHESTRATION_NODES.map(n => n.color)
+const nodeIcons = ORCHESTRATION_NODES.map(n => n.icon)
 
-const nodeIcons: (keyof typeof icons)[] = [
-  'target', 'search', 'mapPin', 'book',
-  'robot', 'checkCircle', 'eye', 'scale', 'shield', 'path',
-]
+const defaultDescriptions = ORCHESTRATION_NODES.map(n => n.description)
+const nodeDescriptions = computed(() =>
+  props.stepDetails.length > 0 ? props.stepDetails : defaultDescriptions
+)
 
-const nodeDescriptions = computed(() => {
-  const defaults = [
-    '分析学习目标与画像',
-    '诊断知识薄弱点',
-    '制定检索策略',
-    '执行FrugalRAG检索',
-    '多Agent协同生成',
-    'GoMARL共识评估',
-    '审核质量与冲突',
-    '证据校验与防幻觉 grounding',
-    '产物验收闸门质量把关',
-    '输出最终学习路径',
-  ]
-  return props.stepDetails.length > 0 ? props.stepDetails : defaults
-})
-
-function nodeState(index: number): 'pending' | 'active' | 'completed' {
+function nodeState(index: number): VisualState {
+  // 外部注入的显式视觉态优先于 completedNodes 推导：回环回退时 composable 把下游节点置
+  // 'pending'，此处必须尊重，否则又落回 completedNodes.includes → 显示 completed，视觉回退失效。
+  // retrying 时该节点仍在 completedNodes 中，同样必须被外部态覆盖。
+  const ext = props.nodeStates?.[index]
+  if (ext && ['retrying', 'rejected', 'pending', 'active'].includes(ext)) {
+    return ext as VisualState
+  }
   if (props.completedNodes.includes(index)) return 'completed'
   if (props.currentNode === index && props.loading) return 'active'
   return 'pending'
+}
+
+/** 回环重入次数（0 = 未重入） */
+function retryTimes(index: number): number {
+  return props.retryCount?.[index] ?? 0
 }
 
 // ── 各状态的样式类 ──
@@ -102,7 +102,7 @@ function arrowClass(index: number): string {
         <span v-else v-html="icons.check" class="badge-icon"></span>
         {{ loading ? '执行中' : '就绪' }}
       </span>
-      <span class="flow-title">LangGraph 10 节点协同流程</span>
+      <span class="flow-title">LangGraph 11 节点协同流程</span>
       <span class="flow-subtitle">
         {{ loading
           ? `当前: ${nodeLabels[currentNode] || '初始化'}`
@@ -132,6 +132,13 @@ function arrowClass(index: number): string {
                 </circle>
               </svg>
             </span>
+            <!-- retrying: 回环重入（琥珀呼吸 + 重入角标） -->
+            <span v-else-if="nodeState(i) === 'retrying'" class="circle-retry">
+              <span class="retry-icon" v-html="icons.refresh"></span>
+              <span v-if="retryTimes(i) > 0" class="retry-count">×{{ retryTimes(i) + 1 }}</span>
+            </span>
+            <!-- rejected: 产物验收拒绝 -->
+            <span v-else-if="nodeState(i) === 'rejected'" class="circle-reject" v-html="icons.xCircle"></span>
             <!-- completed: checkmark -->
             <span v-else class="circle-check" v-html="icons.check"></span>
           </div>
@@ -248,6 +255,11 @@ function arrowClass(index: number): string {
   opacity: 1;
 }
 
+.flow-node--retrying,
+.flow-node--rejected {
+  opacity: 1;
+}
+
 .flow-node--completed::after {
   content: '';
   position: absolute;
@@ -295,6 +307,20 @@ function arrowClass(index: number): string {
   box-shadow: 0 0 8px var(--node-color);
 }
 
+/* retrying：回环重入，琥珀呼吸环（复用 --accent-warm） */
+.flow-circle--retrying {
+  background: var(--accent-warm);
+  border-color: var(--accent-warm);
+  animation: retry-pulse 1.5s ease-in-out infinite;
+}
+
+/* rejected：产物验收拒绝，红色 */
+.flow-circle--rejected {
+  background: var(--accent-danger);
+  border-color: var(--accent-danger);
+  box-shadow: 0 0 8px var(--accent-danger);
+}
+
 .circle-num {
   font-size:var(--text-lg);
   font-weight: 800;
@@ -318,6 +344,50 @@ function arrowClass(index: number): string {
   font-weight: 900;
   color: var(--color-text-on-accent);
   animation: check-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* retrying：刷新图标 + 重入角标 */
+.circle-retry {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-on-accent);
+}
+.retry-icon {
+  display: inline-flex;
+  animation: retry-spin 1.2s linear infinite;
+}
+.retry-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+.retry-count {
+  position: absolute;
+  top: -0.625rem;
+  right: -0.875rem;
+  min-width: 1.125rem;
+  height: 1.125rem;
+  padding: 0 0.25rem;
+  border-radius: var(--radius-full);
+  background: var(--accent-warm);
+  color: var(--color-text-on-accent);
+  font-size: 0.625rem;
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* rejected：红叉 */
+.circle-reject {
+  display: inline-flex;
+  color: var(--color-text-on-accent);
+}
+.circle-reject svg {
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
 .node-label {
@@ -399,6 +469,16 @@ function arrowClass(index: number): string {
 @keyframes node-pulse {
   0%, 100% { box-shadow: 0 0 12px var(--node-color); }
   50% { box-shadow: 0 0 28px var(--node-color), 0 0 40px color-mix(in srgb, var(--node-color) 40%, transparent); }
+}
+
+@keyframes retry-pulse {
+  0%, 100% { box-shadow: 0 0 12px var(--accent-warm); }
+  50% { box-shadow: 0 0 28px var(--accent-warm), 0 0 40px color-mix(in srgb, var(--accent-warm) 40%, transparent); }
+}
+
+@keyframes retry-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 @keyframes check-pop {

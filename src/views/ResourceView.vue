@@ -10,6 +10,8 @@ import { defineAsyncComponent } from 'vue'
 import ErrorBoundary from '@/components/ErrorBoundary.vue'
 import StallChip from '@/components/StallChip.vue'
 import StallBanner from '@/components/StallBanner.vue'
+import LangGraphFlow from '@/components/LangGraphFlow.vue'
+import { useOrchestrationFlow, ORCHESTRATION_NODES } from '@/composables/useOrchestrationFlow'
 import type { EvidenceReport, GateResult } from '@/utils/evidence'
 
 // 延迟加载重型组件，非首屏不加载
@@ -22,6 +24,11 @@ const EvidenceCheckPanel = defineAsyncComponent(() => import('@/components/Evide
 
 const store = useStudyStore()
 const route = useRoute()
+
+// 编排流单一真源：SSE node_done → 11 节点流程图状态（与既有进度条/监测逻辑并行）
+const flow = useOrchestrationFlow()
+const orchestrationLabels = ORCHESTRATION_NODES.map(n => n.label)
+const orchestrationDescriptions = ORCHESTRATION_NODES.map(n => n.description)
 
 const topic = ref('')
 const difficulty = ref('medium')
@@ -459,6 +466,7 @@ agentOutputs.value = {}
       gateResult.value = null
       gateRejected.value = false
       agentErrors.value = {}
+      flow.reset()
 
   try {
     const resp = await api.postStream('/agents/langgraph/stream', {
@@ -506,6 +514,8 @@ const stageMap: Record<string, number> = {
         if (payload === '[DONE]') continue
         try {
           const evt = JSON.parse(payload)
+          // 喂给编排流单一真源：驱动 11 节点流程图（幂等，只消费 node_done/gate_*/status）
+          flow.handleEvent(evt)
           if (evt.type === 'error') {
             // P1-10: single agent error collection, don't break SSE loop
             // other agents may still be producing output
@@ -857,6 +867,28 @@ function parseWeakPoints(wpStr: string): string[] {
             transition: 'transform 0.4s ease',
             borderRadius: 'var(--radius-full)',
           }"></div>
+        </div>
+      </div>
+      <!-- 编排态真相：11 节点 LangGraph 流程图（消费真实 node_done SSE，非假动画） -->
+      <LangGraphFlow
+        :current-node="flow.currentNode"
+        :completed-nodes="flow.completedNodes"
+        :node-labels="orchestrationLabels"
+        :step-details="orchestrationDescriptions"
+        :loading="loading"
+        :node-states="flow.nodeStates"
+        :retry-count="flow.retryCount"
+      />
+      <!-- 快路径提示：低风险请求短路，仅执行分级路由 -->
+      <div v-if="flow.fastPath" class="rv-fastpath">
+        <span class="rv-fastpath-icon" v-html="icons.compass"></span>
+        快速答疑：已命中低风险快路径，仅执行分级路由（未进入完整 11 节点流水线）
+      </div>
+      <!-- 回环时间线：quality_gate FIX → generator_cluster / critic → retriever 等 -->
+      <div v-if="flow.loopLog.length" class="rv-loop-log">
+        <div v-for="(l, i) in flow.loopLog" :key="i" class="rv-loop-item">
+          <span class="rv-loop-icon" v-html="icons.refresh"></span>
+          {{ l.from }} → 回退 {{ l.to }}（第 {{ l.n }} 次）
         </div>
       </div>
       <div class="agent-flow">
@@ -1338,6 +1370,40 @@ function parseWeakPoints(wpStr: string): string[] {
 .rv-progress-pct { font-weight: var(--weight-semibold); color: var(--accent-primary); }
 .rv-progress-track { height: 0.5rem; background: var(--bg-secondary); border-radius: var(--radius-full); overflow: hidden; }
 .rv-working { text-align: center; padding: var(--space-2) 0; font-size: var(--text-sm); color: var(--text-muted); }
+
+/* ── 编排流流程图（LangGraphFlow）配套：快路径 / 回环时间线 ── */
+.rv-fastpath {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
+  color: var(--accent-primary);
+  font-size: var(--text-xs);
+}
+.rv-fastpath-icon { display: inline-flex; flex-shrink: 0; }
+.rv-fastpath-icon svg { width: 1rem; height: 1rem; }
+
+.rv-loop-log {
+  margin-top: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.rv-loop-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--accent-warm) 10%, transparent);
+  color: var(--accent-warm);
+  font-size: var(--text-2xs);
+}
+.rv-loop-icon { display: inline-flex; flex-shrink: 0; }
+.rv-loop-icon svg { width: 0.875rem; height: 0.875rem; }
 
 /* ── 实时监测面板（文章词 15）── */
 /* 演练按钮（仅 dev）：弱化到不抢主按钮，虚线表明是调试入口 */

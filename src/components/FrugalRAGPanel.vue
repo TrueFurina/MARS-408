@@ -2,7 +2,6 @@
 import { ref } from 'vue'
 import { renderMarkdownSafe } from '@/utils/markdown'
 import { api } from '@/utils/api'
-import LangGraphFlow from '@/components/LangGraphFlow.vue'
 import ProfileInputPanel from '@/components/ProfileInputPanel.vue'
 import { icons } from '@/components/icons'
 import EngineSection from '@/components/EngineSection.vue'
@@ -32,38 +31,6 @@ const reviewStageOptions = [
 // ── 画像参数 ──
 const profileInputRef = ref<InstanceType<typeof ProfileInputPanel> | null>(null)
 
-// ── LangGraph 10 节点进度 ──
-const flowActive = ref(false)
-const flowCurrentNode = ref(-1)
-const flowCompleted = ref<number[]>([])
-const flowStepDetails = [
-  '分析学习目标与画像', '诊断知识薄弱点', '制定检索策略与路径',
-  '执行FrugalRAG多轮检索', '多Agent协同生成内容', 'GoMARL共识评估质量',
-  '审核冲突消解与一致性', '证据校验与防幻觉 grounding', '产物验收闸门质量把关',
-  '输出最终个性化路径',
-]
-const flowNodeLabels = [
-  '协调', '诊断', '规划', '检索', '生成', '评估', '审核', '证据校验', '产物验收', '路径规划',
-]
-
-async function animateFlow(durationMs = 2800) {
-  flowActive.value = true
-  flowCurrentNode.value = -1
-  flowCompleted.value = []
-  const totalNodes = 10
-  const stepDelay = durationMs / totalNodes
-  for (let i = 0; i < totalNodes; i++) {
-    if (!flowActive.value) break
-    flowCurrentNode.value = i
-    await new Promise(r => setTimeout(r, stepDelay * 0.5))
-    flowCompleted.value = [...flowCompleted.value, i]
-    if (i < totalNodes - 1) {
-      await new Promise(r => setTimeout(r, stepDelay * 0.5))
-    }
-  }
-  await new Promise(r => setTimeout(r, 200))
-}
-
 const trajectoryTypeIcon: Record<string, string> = {
   search_query: icons.search,
   observation: icons.eye,
@@ -83,8 +50,6 @@ async function runSearch() {
   startTime.value = Date.now()
   elapsedMs.value = 0
 
-  animateFlow(3000)
-
   try {
     result.value = await api.post<any>('/engine/frugal-rag-full', {
       question: question.value,
@@ -98,7 +63,6 @@ async function runSearch() {
     elapsedMs.value = Date.now() - startTime.value
   } finally {
     loading.value = false
-    flowActive.value = false
   }
 }
 </script>
@@ -125,16 +89,6 @@ async function runSearch() {
 
     <!-- 画像参数 -->
     <ProfileInputPanel ref="profileInputRef" />
-
-    <!-- LangGraph 10 节点流式进度可视化 -->
-    <LangGraphFlow
-      v-if="loading || result?.status === 'ok'"
-      :current-node="flowCurrentNode"
-      :completed-nodes="flowCompleted"
-      :step-details="flowStepDetails"
-      :node-labels="flowNodeLabels"
-      :loading="loading"
-    />
 
     <!-- 检索结果 -->
     <div v-if="result?.status === 'ok'" class="engine-result">
