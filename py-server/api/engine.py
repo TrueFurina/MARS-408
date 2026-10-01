@@ -13,7 +13,7 @@
 # ============================================================
 
 from fastapi import APIRouter, Depends
-from shared.auth import get_current_user
+from shared.auth import get_current_user, require_admin
 from shared.ratelimit import require_llm_quota
 from pydantic import BaseModel, field_validator
 
@@ -172,8 +172,12 @@ async def stop_decision_stats(user: dict = Depends(get_current_user)):
 
 
 @router.post("/stop-decision/update")
-async def stop_decision_update(req: StopDecisionUpdateRequest, user: dict = Depends(get_current_user)):
-    """更新启发式动态阈值（基于历史效果的 EWMA 自适应，非在线学习）"""
+async def stop_decision_update(req: StopDecisionUpdateRequest, user: dict = Depends(require_admin)):
+    """更新启发式动态阈值（基于历史效果的 EWMA 自适应，非在线学习）
+
+    安全：全局单例阈值，仅管理员可调，防止任意登录用户通过 HTTP 改写
+    影响所有用户的停止决策行为。
+    """
     from engines.frugal_rag_stop import stop_decision
     stop_decision.update_threshold(req.complexity, req.final_coverage, req.was_good)
     return {"status": "ok", "stats": stop_decision.get_stats()}

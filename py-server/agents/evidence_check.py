@@ -217,9 +217,17 @@ def _build_citations(state: AgentState, conflicts: list[dict], grounding: dict =
     for chunk in (state.get("retrieved_chunks") or []):
         if isinstance(chunk, dict):
             text = _chunk_text(chunk)[:200]
-            source = chunk.get("source") or chunk.get("chapter_name") or chunk.get("metadata", {}).get("chapter_name", "") if isinstance(chunk.get("metadata"), dict) else ""
-            if isinstance(chunk.get("metadata"), dict):
-                source = source or chunk["metadata"].get("chapter_name", "") or chunk["metadata"].get("source", "")
+            # 显式取值，避免 `or ... if cond else` 的三元优先级陷阱
+            metadata = chunk.get("metadata")
+            if isinstance(metadata, dict):
+                source = (
+                    chunk.get("source")
+                    or chunk.get("chapter_name")
+                    or metadata.get("chapter_name", "")
+                    or metadata.get("source", "")
+                )
+            else:
+                source = chunk.get("source") or chunk.get("chapter_name") or ""
         else:
             text = str(chunk)[:200]
             source = ""
