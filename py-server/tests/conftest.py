@@ -244,7 +244,13 @@ def client():
 #   `pytestmark = pytest.mark.segv_env` 声明，或为历史模块走 _SEGV_MODULES 兜底
 #   （见顶部 pytest_collection_modifyitems，已合并为一个入口）。
 # - 隔离测试（test_p0_incremental / test_teacher_role）设计为 `--noconftest` 运行，
-#   其覆盖率由单独的 `pytest tests/test_X.py --noconftest` 保证，不在完整套件下跑。
+#   不在完整套件下跑。
+#
+#   ⚠️ 这条约定由 CI 兜底，不要当成"口头保证"：在 .github/workflows/backend-test.yml
+#   里有专门的 step 执行 `pytest <这两个文件> -o addopts="" --noconftest`。
+#   2026-10-03 之前该约定**没有任何机器执行**，导致这两个文件共 35 个用例从未运行，
+#   而其中 test_teacher_role 恰好藏着一个真实缺陷（fixture 的隔离完全失效，
+#   写的是真实 netlearn_users.db，第二次运行必然 ValueError）得以长期不被发现。
 
 
 @pytest.fixture(autouse=True)

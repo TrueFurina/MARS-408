@@ -80,16 +80,40 @@ def test_require_teacher_rejects_student():
 # ============================================================
 
 @pytest.fixture
-def store(tmp_path):
-    USER_STORE_MOD._conn = None
-    USER_STORE_MOD._DB_PATH = str(tmp_path / "users.db")
+def store(tmp_path, monkeypatch):
+    """把 SQLite 连接重定向到 tmp —— 这一步必须是「真正生效」的隔离。
+
+    背景（历史失效写法）：D2 重构后连接由 ``db/core.py`` 统一发放，
+    ``user_store`` 不再持有 ``_conn`` / ``_DB_PATH``（二者在 user_store 内已零引用，
+    赋值只是给模块挂一个无人读取的属性）。因此原先
+
+        USER_STORE_MOD._conn = None
+        USER_STORE_MOD._DB_PATH = str(tmp_path / "users.db")
+
+    **完全没有隔离效果**：用例实际写的是真实的 ``data/netlearn_users.db``，
+    首次运行能过，第二次起必然 ``ValueError: 用户名已存在`` ——
+    这也是本文件长期只能靠 `--noconftest` 手工跑、无法进 CI 的原因。
+
+    正确做法遵循 ``db/core.py`` 顶部「任何 SQLite 连接都必须经 get_conn_for 发放」
+    的约定：重定向 core 的库路径 + 重置连接单例，并让 store 在新库上重新幂等建表。
+    """
+    import db.core as _core
+
+    tmp_db = str(tmp_path / "users.db")
+    monkeypatch.setenv("NETLEARN_USER_DB", tmp_db)
+    # DB_PATH 与 _conn 都是模块级单例，必须在 annotated(=同一模块对象) 上重置：
+    # get_conn() 命中非空的 _conn 会直接返回指向真实库的旧连接。
+    monkeypatch.setattr(_core, "DB_PATH", tmp_db)
+    monkeypatch.setattr(_core, "_conn", None)
+    USER_STORE_MOD._initialized = False  # 新库为空，需触发一次幂等建表
+
     yield USER_STORE_MOD
+
     try:
-        if USER_STORE_MOD._conn is not None:
-            USER_STORE_MOD._conn.close()
+        _core.close_conn_for(tmp_db)  # 注销注册表，避免后续复用到已关闭连接
     except Exception:
         pass
-    USER_STORE_MOD._conn = None
+    USER_STORE_MOD._initialized = False
 
 
 def test_create_and_readback_teacher(store):
