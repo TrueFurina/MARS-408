@@ -28,6 +28,17 @@ GATE_DIR = REPO_ROOT / "scripts" / "pre-commit"
 
 # 真源里对门禁脚本的引用（写全路径，故意不用 $变量 —— 那样机器就查不出来了）
 GATE_REF_RE = re.compile(r"scripts/pre-commit/([A-Za-z0-9_]+\.py)")
+# 目录下的「非门禁」脚本：有独立职责、不由 pre-commit.sh 挂载，故不参与门禁一致性检查。
+#
+# run_gates.py 是**编排器（调用方）**，不是一道门禁：它由 CI 或本机命令行直接执行，
+# 再反过来去调用那六道门禁。若要求它被 pre-commit.sh 挂载，会造成循环调用，
+# 语义上也说不通 —— 挂载关系是单向的（钩子 → 门禁），编排器在这一层之上。
+#
+# 之所以在这里显式列出而不是改成 `_run_gates.py`：它是给人用的 CLI 入口
+# （CI workflow 和本机复现命令里都会提到路径），下划线前缀会把它降级成私有模块，
+# 反而误导。命名 > 约定冲突时，让约定让路并把理由写在这里。
+ORCHESTRATORS = {"run_gates.py"}
+
 # 形如 [1/6] 的进度标签
 LABEL_RE = re.compile(r"\[(\d+)/(\d+)\]")
 # 真源身份标记：安装器 --check 与本测试都靠它确认「看的是同一份东西」
@@ -49,7 +60,23 @@ def _normalize(text: str) -> str:
 
 
 def _referenced_gates() -> set:
-    return set(GATE_REF_RE.findall(_canonical_text()))
+    """真源里**实际调用**的脚本。
+
+    只看非注释行：注释里提到某个脚本名，不等于挂载了它。
+    2026-10-03 实锤：pre-commit.sh 的说明性注释里写了 `scripts/pre-commit/run_gates.py`
+    这个完整路径（用于告诉维护者 CI 走的是编排器），被计入「已挂载」，
+    于是 `test_gate_labels_are_sequential_and_count_matches` 报
+    「标签自述 6 道、实际挂载 7 道」—— 守护是对的，判定的精度不够。
+
+    过滤后不影响守护强度：真正的调用行形如 `"$PY" scripts/pre-commit/secrets_scan.py`，
+    一律不带 `#` 前导，故漏检不到；反向的「脚本存在却没被挂载」同样照抓。
+    """
+    text = _canonical_text()
+    code_lines = [
+        ln for ln in text.splitlines()
+        if not ln.lstrip().startswith("#")
+    ]
+    return set(GATE_REF_RE.findall("\n".join(code_lines)))
 
 
 def _actual_gate_scripts() -> set:
@@ -57,7 +84,14 @@ def _actual_gate_scripts() -> set:
 
     以 `_` 开头的文件视为**内部辅助模块**（约定：不以 `_` 开头的才是独立门禁），
     不计入"必须被挂载"的集合，避免将来抽出公共工具时误报。
+
+    `run_gates.py` 同理要排除，但原因不同 —— 见 ORCHESTRATORS。
     """
+    return _raw_gate_scripts() - ORCHESTRATORS
+
+
+def _raw_gate_scripts() -> set:
+    """目录下的全部脚本（不以 `_` 开头的部分，`_` 开头者视为内部辅助模块）。"""
     return {
         p.name
         for p in GATE_DIR.glob("*.py")
