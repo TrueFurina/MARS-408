@@ -133,6 +133,21 @@ jobs:
           # slow 用例留给 nightly，不在 CI 默认/手动档跑。
           python -m pytest -q --tb=short -m "not slow" --timeout=180 --junitxml=pytest-report.xml
 
+      - name: "Run isolation tests (--noconftest)"
+        working-directory: py-server
+        run: |
+          set -euo pipefail
+          # tests/conftest.py 的 _ISOLATION_SKIP 让这两个文件在完整套件下**永远 skip**，
+          # 文件注释声明「其覆盖率由单独的 pytest <file> --noconftest 保证」——
+          # 但此前没有任何 CI job 执行这个约定，等于悬空：35 个用例从未运行过。
+          # 本 step 把这条口头约定固化成机器执行。
+          #
+          # 为何要 -o addopts=""：pyproject 的 addopts 含 -m 过滤器与 cov 选项，
+          # 在 --noconftest 下可能干扰收集；隔离测试自带标记，无需再过滤。
+          python -m pytest -q --tb=short -o addopts="" --noconftest \
+            tests/test_p0_incremental.py \
+            tests/test_teacher_role.py
+
       - name: Upload pytest junit report
         if: always()
         uses: actions/upload-artifact@v4

@@ -11,8 +11,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 from db import user_store as us
+# 库文件路径的唯一权威源是 db/core.py（D2 重构后由它统一发放连接）。
+# 历史写法 `us._DB_PATH` 在 user_store 内已零引用，取它会直接
+# AttributeError —— 本脚本因此长期一运行即崩，从未履行「清理测试数据」的职责。
+from db.core import DB_PATH
 
-DB_PATH = us._DB_PATH
 WAL = DB_PATH + "-wal"
 SHM = DB_PATH + "-shm"
 
