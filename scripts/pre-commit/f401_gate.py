@@ -99,7 +99,17 @@ def find_ruff():
 
 
 def main():
-    files = get_staged_py_files()
+    # 命令行显式传文件优先：全量模式下文件集可能很大，走 GATE_FILES 环境变量
+    # 会超出长度限制而被跳过，而本门禁是逐文件 lint，**可以分批**。
+    argv_files = [a for a in sys.argv[1:] if not a.startswith("-")]
+    if argv_files:
+        files = [
+            f for f in argv_files
+            if f.endswith(".py")
+            and os.path.commonpath([os.path.abspath(os.path.join(REPO_ROOT, f)), PY_SERVER]) == PY_SERVER
+        ]
+    else:
+        files = get_staged_py_files()
     if not files:
         print("[ruff_gate] 无可扫描的暂存 .py 文件，放行。")
         return 0

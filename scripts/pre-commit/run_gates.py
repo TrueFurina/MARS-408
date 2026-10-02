@@ -82,7 +82,57 @@ def resolve_files(mode: str, ref: str | None, added_only: bool = False) -> list[
     return [f.strip().replace("\\", "/") for f in out.splitlines() if f.strip()]
 
 
+def resolve_commits(mode: str, ref: str | None) -> list[str]:
+    """本次范围内的 commit 列表 —— 供「提交粒度」语义的门禁使用。
+
+    为什么需要：push 事件的 `before..HEAD` 可能跨越**多个 commit**。若把这些
+    commit 的文件合成一个集合，粒度就错了：原本分两次提交（先实现、后测试）
+    是合规的，合并视角下却变成"同集合含测试+实现"而被判违规。
+    2026-10-03 CI 首次运行即因此误伤（commit 19f1738 / d7e5817 恰是刻意拆开的）。
+    """
+    if mode != "diff" or not ref:
+        return []  # staged（尚未 commit）/ all（无范围）都没有 commit 概念
+    try:
+        out = _git("rev-list", f"{ref}..HEAD")
+        return [s.strip() for s in out.splitlines() if s.strip()]
+    except Exception:
+        return []
+
+
+def _run_per_commit(py: str, script: str, commits: list[str], extra: list[str]) -> tuple[int, list[str]]:
+    """逐个 commit 判定（而不是把整个范围当一个变更集）。"""
+    worst = 0
+    bad = []
+    for sha in commits:
+        try:
+            out = _git("show", "--name-only", "--format=", sha)
+        except Exception:
+            continue
+        cfiles = [f.strip().replace("\\", "/") for f in out.splitlines() if f.strip()]
+        if not cfiles:
+            continue
+        rc, _ = _run_with_injection(py, script, cfiles, extra)
+        if rc != 0:
+            worst = max(worst, rc)
+            bad.append(sha[:8])
+    note = f"{len(commits)} 个 commit 逐个判定"
+    if bad:
+        note += f"（触发于：{', '.join(bad)}）"
+    return worst, [note]
+
+
 def _chunks(files: list[str]):
+    """把文件集切成命令行放得下的批次。"""
+    cur: list[str] = []
+    cur_len = 0
+    for f in files:
+        if cur and (cur_len + len(f) + 1 > _MAX_ARGV_CHARS or len(cur) >= _MAX_ARGV_N):
+            yield cur
+            cur, cur_len = [], 0
+        cur.append(f)
+        cur_len += len(f) + 1
+    if cur:
+        yield cur
     """把文件集切成命令行放得下的批次。"""
     cur: list[str] = []
     cur_len = 0
@@ -202,12 +252,22 @@ def main() -> int:
     record("结构守卫", rc, f"新增 {len(added)} 文件" + ("；" + " ".join(notes) if notes else ""))
 
     say("=== [5/6] ruff 潜在缺陷 ===")
-    rc, notes = _run_with_injection(py, "f401_gate.py", files, [])
+    rc, notes = _run_over_files(py, "f401_gate.py", files)
     record("ruff 潜在缺陷", rc, " ".join(notes))
 
-    say("=== [6/6] 测试文件禁改 ===")
-    rc, notes = _run_with_injection(py, "test_file_guard.py", files, ["--staged"])
-    record("测试文件禁改", rc, " ".join(notes))
+    say("=== [6/6] 测试文件禁改（粒度=单次 commit） ===")
+    commits = resolve_commits(mode, args.diff)
+    if commits:
+        # push 事件可能跨多个 commit；必须逐个判，合并视角会造成误判（见 resolve_commits）
+        rc, notes = _run_per_commit(py, "test_file_guard.py", commits, ["--staged"])
+        record("测试文件禁改", rc, " ".join(notes))
+    elif mode == "all":
+        record("测试文件禁改", 0,
+               "⚠️ 跳过：本规则判定粒度是「单次变更」，全量模式下全树必然同时含"
+               "测试与实现、判则恒红，故此模式不适用。逐 commit 检查请用 --diff")
+    else:
+        rc, notes = _run_with_injection(py, "test_file_guard.py", files, ["--staged"])
+        record("测试文件禁改", rc, " ".join(notes))
 
     dt = time.time() - t0
 
