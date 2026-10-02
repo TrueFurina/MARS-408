@@ -90,6 +90,8 @@ from config import get_gomarl_config, get_embedding_config
 from db.llm_provider import LLMProvider
 from db.redis_client import redis_client
 from db.pg_client import pg_client
+# 量纲单一真源：本模块对外只产出「引擎层 1-10」（见 engines/score_scale.py）
+from engines.score_scale import EMPTY_SCORE, clamp_ten_point
 
 
 # ── 1. E5 编码器（Agent 输出 → 向量） ──
@@ -549,7 +551,8 @@ class NeuralGroupMixer:
 
         Returns:
         {
-            "consensus_score": float,      # 共识质量分数
+            "consensus_score": float,      # 共识质量分数，**引擎层量纲 1-10**
+                                           # （= 各 Agent 分数的加权平均；空输入时 0 为"无数据"哨兵）
             "weighted_scores": dict,       # 各 Agent 加权后分数
             "dynamic_weights": dict,       # 动态权重快照
             "groups": list,                # 当前分组
@@ -559,7 +562,8 @@ class NeuralGroupMixer:
         }
         """
         if not agent_results:
-            return {"consensus_score": 0, "weighted_scores": {}, "neural_used": False}
+            # 0 = 「无 Agent 可混合」哨兵（非 1-10 量纲内的有效分），见 engines/score_scale.py
+            return {"consensus_score": EMPTY_SCORE, "weighted_scores": {}, "neural_used": False}
 
         n = len(agent_results)
         agent_names = [r.get("agent_name", f"agent_{i}") for i, r in enumerate(agent_results)]
@@ -579,7 +583,9 @@ class NeuralGroupMixer:
         }
 
         # 4. 神经网络混合（如果可用）
-        consensus_score = float(np.mean(list(weighted_scores.values())))
+        # 规则兜底：加权平均，与神经网络路径**同量纲**（1-10），并同样钳制，避免
+        # 权重 >1 时越界（旧逻辑无 clamp，神经网络异常降级时静默漂移）。
+        consensus_score = clamp_ten_point(np.mean(list(weighted_scores.values())))
         sd_loss = 0.0
         neural_used = False
 
@@ -608,9 +614,10 @@ class NeuralGroupMixer:
                         )
                         cs_val = float(onnx_outputs[0])
                         sd_val = float(onnx_outputs[2]) if len(onnx_outputs) > 2 else 0.0
-                        # 共识分映射到 1-10 量纲（与 QualityScore.overall / quality_threshold=7 一致），
-                        # 不再钳制到 [0,1]（旧逻辑会把分数「拉满」成恒为 1.0，失去区分度）。
-                        consensus_score = max(0.0, min(10.0, float(cs_val) * 10.0))
+                        # 网络原生输出即 1-10（global_mixer 末层是 Linear，无激活；训练标签 =
+                        # 各 Agent 分数加权平均 ∈ [4.7,10]，见 train_mixer_real_v2.py:87-96）。
+                        # 禁止再 ×10：那会把 50-100 的预测 clamp 到上限，共识分恒为 10.0（失去区分度）。
+                        consensus_score = clamp_ten_point(cs_val)
                         sd_loss = sd_val
                         neural_used = True
                     else:
@@ -621,8 +628,8 @@ class NeuralGroupMixer:
                             agent_embs_t = _torch.from_numpy(embeddings)
 
                             cs, w1, sd = mixer(agent_scores_t, agent_embs_t)
-                            # 共识分映射到 1-10 量纲（与 QualityScore.overall / quality_threshold=7 一致）
-                            consensus_score = max(0.0, min(10.0, float(cs.item()) * 10.0))
+                            # 同 ONNX 路径：网络原生 1-10，直接钳制，不缩放
+                            consensus_score = clamp_ten_point(float(cs.item()))
                             sd_loss = float(sd.item())
                             neural_used = True
 

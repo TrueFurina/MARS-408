@@ -359,8 +359,10 @@ class TestNeuralGroupMixer:
     async def test_mix_with_mock_results(self):
         """共识混合 — 模拟Agent结果（使用实际Agent名称）
 
-        量纲约定：consensus_score 为 **10 分制**（与 QualityScore.overall /
-        quality_threshold=7 对齐），见 gomarl_mixer.mix() 中 `max(0, min(10, cs*10))`。
+        量纲约定：consensus_score 为 **引擎层 10 分制**（与 QualityScore.overall /
+        quality_threshold=7 对齐）；单一真源见 `engines/score_scale.py`。
+        ⚠️ 网络原生输出即 10 分制，**禁止再 ×10**：那会把 50-100 的预测钳到上限，
+        使共识分恒为 10.0（历史事故，回归守卫见 tests/test_score_scale_contract.py）。
         因此入参 score 也必须是 10 分制，断言区间为 [0, 10]。
 
         随机性：此处必须用固定种子的 np.random，不能用裸 randn —— 神经网络路径的
