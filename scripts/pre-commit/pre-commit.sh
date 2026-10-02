@@ -6,9 +6,17 @@
 #     python scripts/install_hooks.py            # 安装 / 更新
 #     python scripts/install_hooks.py --check    # 校验与实际安装的一致（drift → exit 1）
 #
-# 为什么要这样：钩子本体落在 .git/ 下**不受版本控制**，而 CI 也不跑这批门禁
-# （.github/workflows/ 内 grep 这 6 个脚本名零命中）——"新克隆 = 零门禁"。
-# 把真源入库 + 幂等安装器，门禁才能随仓库走，而不是只活在某一台机器上。
+# 为什么要这样：钩子本体落在 .git/ 下**不受版本控制**，本地提交才跑得到它，
+# 而它也能被 `git commit --no-verify` 一键绕过 —— "新克隆 = 零门禁"，
+# 且本地全绿不代表进仓库的那一份是全绿的。把真源入库 + 幂等安装器，
+# 门禁才能随仓库走，而不是只活在某一台机器上。
+#
+# □ CI 侧现已闭环（2026-10-03）：.github/workflows/gates.yml + 编排器 run_gates.py。
+#   注意 **CI 不能直接执行本脚本**：下面每一步都从 **git 暂存区** 取文件
+#   （--cached / staged_files），而 actions/checkout 之后工作区 == HEAD、暂存区恒为空，
+#   照搬会让六道门禁"一个文件没查"却全部返回 0 —— 挂六个永远绿的假闸门。
+#   CI 走 run_gates.py，由它把「文件集来源」换成 PR diff / 全量后再喂给同一批脚本。
+#   本机复现 CI 结论：python scripts/pre-commit/run_gates.py --diff origin/career-literacy
 #
 # 六道（任一失败即拦截，fail-closed）：
 #   [1] 密钥扫描     secrets_scan.py     仅扫本次暂存的 A/C/M 文件

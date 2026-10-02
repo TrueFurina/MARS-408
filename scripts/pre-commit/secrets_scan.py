@@ -39,6 +39,18 @@ ALLOWLIST_PATTERNS = [
     r'placeholder',
     r'xxxxxxxx',
     r'your[_-]?password',
+    # 占位符的宽形态（2026-10-03 实锤漏放行）：`.env.example` 里写的是带服务名的占位符
+    #   DEEPSEEK_API_KEY=your_deepseek_api_key_here
+    #   XFYUN_API_SECRET=your_xfyun_api_secret
+    # 而旧的 `your[_-]?api[_-]?key` 要求 your 与 api_key **紧邻**，中间夹了 `_deepseek_`
+    # 就不匹配了 —— 于是三个 .env.example 副本各自贡献 4~5 处假警报。
+    # 放宽到「your_ 开头 + 任意服务名 + api_key/secret/password/token」。
+    # 为什么仍然安全：要求 `your_` 这一自述式前缀，真实凭据不可能以 your_ 开头。
+    r'your[_-][a-z0-9_]*api[_-]?key',
+    r'your[_-][a-z0-9_]*(secret|password|token)',
+    # 文档里演示用的自述式密钥（SECURITY_AUDIT_REPORT.md 明写 change-me），
+    # 同理：真凭据不会自称 `change-me`。
+    r'change[_-]?me',
     # 测试夹具里的**测试专用**密钥（2026-09-29 实锤误报）。
     #
     # py-server/tests/system/test_concurrent_writes.py:37 定义
@@ -93,8 +105,26 @@ ALLOWLIST_PATTERNS = [
 # 处理与本仓库既有先例（py-server/seed/、py-server/openapi.json）完全一致：只豁免这一条
 # 低精度规则；generic-api-key / JWT / 连接串 / 私钥 / GitHub / Slack 等高精度规则对
 # deliverables/ 依然生效，真密钥不会漏检。
+# 追加（2026-10-03 实锤误报，与 deliverables/ 完全同款）：`docs/` `references/`
+# `submission/` 里的设计/审计报告习惯用**斜杠分隔的路径式罗列**来列模块名——
+#   agents/langgraph/review/assessment/xfyun/…        docs/architecture_audit_2026-07-23.md
+#   AssessmentView/KnowledgeView/ProfileView/…        docs/design-system/GRANULAR_AUDIT_…
+#   Chat/Resource/Dashboard/LearningPath/…            docs/reports/DESIGN_POLISH_v8_v9.md
+#   Teacher/QuizMaster/MindMap/Extension/Code         docs/职业素养对抗实训改造方案.md
+# 这类连续串必然被 `[0-9a-zA-Z/+]{40}` 命中（`/` 属于该字符类）。全树实测该规则
+# 贡献了 35 处假警报，占全部噪音的八成。
+# 活动代码里也有同类罗列（prompts.py 的学科枚举、middleware.py 的路径白名单），
+# 但**不能**按 `py-server/` 整体豁免（那会让主源码脱离该规则），故精确到文件。
+# 一律只豁免这一条低精度规则，generic/连接串/JWT/私钥/GitHub/Slack 照常生效。
 RULE_PATH_EXEMPT = {
-    'AWS Secret Access Key (base64)': ['py-server/seed/', 'py-server/openapi.json', 'deliverables/'],
+    'AWS Secret Access Key (base64)': [
+        'py-server/seed/', 'py-server/openapi.json', 'deliverables/',
+        # ── 2026-10-03 追加：斜杠分隔的模块名罗列 ──
+        'docs/', 'references/', 'submission/',
+        'py-server/app/middleware.py', 'py-server/prompts.py', 'py-server/prompts_career.py',
+        # HTML 标签白名单的斜杠列举：h1/h2/h3/section/table/thead/…（同上，同源同处置）
+        'scripts/md_to_html_light.py',
+    ],
 }
 
 
@@ -116,9 +146,37 @@ def is_allowed(text: str, allow_res) -> bool:
     return any(r.search(text) for r in allow_res)
 
 
+def looks_binary(filepath: Path) -> bool:
+    """按**内容**判定二进制（读前若干字节，含 NUL 即二进制）—— 与 git 自身的判定同源。
+
+    为什么需要这一层（2026-10-03 实锤）：本扫描器对二进制文件做 UTF-8
+    `errors='ignore'` 解码后照样跑正则，得到的只是乱码字节序列的偶然匹配，
+    不具任何语义。全树实测 322 处命中里 **275 处（85%）** 来自 binaries：
+        references/…/9活动图.ppt            260 处（OLE 复合文档）
+        py-server/models/career_mode_policy.pt  13 处（PyTorch pickle）
+        若干 .png                              ~2 处
+    这不只是"噪点"——它让全量模式信噪比低到不可读，而 pre-commit 只扫暂存文件，
+    所以这堆噪音在此之前从未暴露过。
+
+    为什么不按扩展名枚举：扩展名可被伪造，也枚举不完（.bin/.dat/.so/…）。
+    NUL 嗅探看的是内容本身；真正的**文本文件不会含 NUL 字节**，故不会误伤文本。
+
+    ⚠️ 取舍（如实记录）：跳过后，**嵌入在二进制内部的文本凭据将不被扫描**
+    （例如某个 .zip 内打包的 .py）。接受该取舍，理由是它换来全量模式从
+    "不可读"回到可用，且这类场景另有增量扫描（pre-commit/CI diff）兜底。
+    """
+    try:
+        with filepath.open('rb') as fh:
+            return b'\x00' in fh.read(8000)
+    except Exception:
+        return False
+
+
 def scan_file(filepath: Path) -> list:
     """扫描单文件，返回命中列表 [(行号, 类型, 匹配内容)]"""
     hits = []
+    if looks_binary(filepath):
+        return hits
     try:
         content = filepath.read_text(encoding='utf-8', errors='ignore')
     except Exception:

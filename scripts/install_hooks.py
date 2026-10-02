@@ -6,10 +6,13 @@
 --------------------------------------------------------------------------
 门禁本体在 `scripts/pre-commit/*.py` 里，但**触发它的钩子**必须落在
 `git rev-parse --git-path hooks`（默认 `.git/hooks/pre-commit`）——那个位置
-**不受版本控制**，且 CI 也没有跑这批门禁（`.github/workflows/` 内 grep 这些
-脚本名零命中）。于是：
+**不受版本控制**，且本地提交可被 `git commit --no-verify` 绕过。于是：
 
-    新克隆 = 没有任何门禁；口令类护栏只活在"当初手工建过钩子的那台机器"上。
+    新克隆 = 没有任何门禁；这批护栏只活在"当初手工建过钩子的那台机器"上。
+
+CI 侧自 2026-10-03 起由 `.github/workflows/gates.yml` + 编排器 `run_gates.py`
+闭环（CI 不执行 pre-commit.sh，而是由编排器把文件集来源换成 PR diff 后
+调用同一批脚本 —— 直接跑 pre-commit.sh 会因暂存区为空而全部假通过）。
 
 处置：把钩子内容变成入库真源 `scripts/pre-commit/pre-commit.sh`，
 本脚本负责「真源 → 实际安装位置」的幂等同步与一致性校验。

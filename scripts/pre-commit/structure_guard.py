@@ -63,14 +63,41 @@ def violations_for(path: str) -> str | None:
     return None
 
 
+def _injected_files() -> list | None:
+    """外部注入的文件集（CI / 编排器场景）。
+
+    为什么不能一路用 --all：本守卫的规则是"新增文件不许平铺在根目录"，
+    全树模式会把**历史上早已存在的散落文件**一起算成违规（本仓库根级确有
+    INSTALL.md / index.html / tsconfig.json 等），CI 一接就是永久红，
+    等于一次性挂上一笔还不清的历史债、只能靠 CI 全红倒逼清理——那不是门禁的本意。
+
+    故 CI 与本地保持**同一语义**：只判本次变更里新增的那几个文件。
+    全树模式（--all）保留，但定位为人工体检，不进 CI。
+    """
+    try:
+        from _gate_files import injected_files
+    except ImportError:  # 被 import 而非直接执行时，脚本目录不一定在 sys.path
+        import os
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        from _gate_files import injected_files
+    return injected_files()
+
+
 def main():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--all", action="store_true", help="检查全部已跟踪文件（默认只查新增）")
+    parser.add_argument("files", nargs="*", help="显式指定文件列表")
     args = parser.parse_args()
 
     try:
-        files = all_tracked_files() if args.all else staged_added_files()
+        injected = _injected_files()
+        if injected is not None:
+            files = injected
+        elif args.files:
+            files = list(args.files)
+        else:
+            files = all_tracked_files() if args.all else staged_added_files()
     except Exception as exc:
         # 自身 bug 不阻断提交（fail-open for self），但打印告警
         print(f"⚠️ structure_guard 自身异常，跳过检查: {exc}")

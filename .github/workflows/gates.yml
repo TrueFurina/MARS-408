@@ -1,0 +1,74 @@
+name: gates
+
+# 把 scripts/pre-commit/ 下的六道门禁搬上 CI。
+#
+# 为什么要这个 workflow
+# ---------------------------------------------------------------------------
+# 门禁本体在 scripts/pre-commit/*.py，触发点在 pre-commit.sh（装到 .git/hooks）。
+# 这条路**只覆盖本地提交**：.git/ 不受版本控制，新克隆 = 零门禁，且可以被
+# `--no-verify` 一键绕过。于是本地全绿不代表进仓库的那份是全绿的。
+#
+# 为什么不能直接复用 pre-commit.sh
+# ---------------------------------------------------------------------------
+# pre-commit.sh 每一步都从 **git 暂存区** 取文件（--cached / staged_files）。
+# actions/checkout 之后工作区 == HEAD，**暂存区永远为空** ——直接搬会拿到空列表，
+# 六道门禁"什么都没检查"却全部返回 0，等于在 CI 上挂六个永远绿的假闸门。
+#
+# 故由 run_gates.py 统一编排：它把「文件集从哪来」抽成唯一变量
+# （PR → 对比 base sha；无可用 base → 全量），六个脚本本身不动、语义不变。
+# 本机可用同一命令复现 CI 结论：
+#     python scripts/pre-commit/run_gates.py --diff origin/career-literacy
+
+on:
+  pull_request:
+  push:
+    branches: [career-literacy, main]
+
+permissions:
+  contents: read
+
+jobs:
+  pre-commit-gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # pull_request.base.sha / push.before 都要能被解析 → 必须拉全历史
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # 第 5 道（ruff 潜在缺陷）在找不到 ruff 时是 **fail-open**（放行）——
+      # 那是为不阻断本地提交而做的取舍；CI 上若不装，这道就是假绿。
+      - name: 安装 ruff（第 5 道门禁依赖）
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ruff
+          ruff --version
+
+      # 验证「新克隆也能恢复门禁」这条通路没坏：连装两次应幂等，随后 check 应通过。
+      # 这里刻意先安装再校验 —— 直接 --check 在干净 CI 上会红的
+      # （目标文件尚不存在，那是"没装"而非"装错了"）。
+      - name: 门禁安装器自检（幂等 + drift 校验）
+        run: |
+          python scripts/install_hooks.py
+          python scripts/install_hooks.py
+          python scripts/install_hooks.py --check --quiet
+
+      - name: 运行六道门禁
+        run: |
+          set -u
+          BASE="${{ github.event.pull_request.base.sha }}"
+          [ -n "$BASE" ] || BASE="${{ github.event.before }}"
+
+          # before 在首次推送时是全零 SHA；fetch 失败时也可能拿不到对象。
+          # 任一情况都退回全量模式（宁慢，不要靠空文件集刷出一排假绿）。
+          if [ -z "$BASE" ] || ! git cat-file -e "$BASE" 2>/dev/null; then
+            echo "ℹ️ 无可用 base commit → 全量模式"
+            python scripts/pre-commit/run_gates.py --all
+          else
+            echo "ℹ️ 对比 base $BASE"
+            python scripts/pre-commit/run_gates.py --diff "$BASE"
+          fi

@@ -27,19 +27,38 @@ PY_SERVER = os.path.join(REPO_ROOT, "py-server")
 SELECT = "F401,F811,F821,F822,F841"
 
 
-def get_staged_py_files():
-    """取已暂存（A/C/M）的 .py 文件，限定 py-server 范围。"""
+def _changed_files() -> list[str]:
+    """待检查文件来源：CI 注入优先，本地回退到暂存区。
+
+    CI 上 checkout 后暂存区为空，若只认 `--cached`，本门禁会一文件不查直接
+    通过——挂了个永远绿的假闸门。详见 pre-commit/_gate_files.py 的说明。
+    """
+    try:
+        from _gate_files import injected_files
+    except ImportError:  # 被 import 而非直接执行时，脚本目录不一定在 sys.path
+        import os
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        from _gate_files import injected_files
+
+    injected = injected_files()
+    if injected is not None:
+        return injected
     try:
         out = subprocess.check_output(
-            ["git", "diff", "--cached", "--name-only", "--diff-filter=ACM"],
+            ["git", "-c", "core.quotePath=false", "diff", "--cached",
+             "--name-only", "--diff-filter=ACM"],
             cwd=REPO_ROOT,
             text=True,
         )
     except subprocess.CalledProcessError:
         return []
+    return [f.strip() for f in out.splitlines() if f.strip()]
+
+
+def get_staged_py_files():
+    """取待检范围内的 .py 文件，限定 py-server 范围。"""
     files = []
-    for f in out.splitlines():
-        f = f.strip()
+    for f in _changed_files():
         if not f.endswith(".py"):
             continue
         # 仅 py-server 内文件（ruff 配置位置）

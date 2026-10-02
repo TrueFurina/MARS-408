@@ -32,6 +32,11 @@ FORBIDDEN_PATTERNS = (
 # 引号包裹的内容是「提及」非「使用」，剥离后再匹配
 _QUOTE_RE = re.compile("「[^」]*」|『[^』]*』|\"[^\"]*\"|'[^']*'")
 
+# scan_text 每处理一行都要剥离一次引号，若在函数体内现场 re.compile，
+# 每行一次构造 + 命中 re 内部缓存在大仓库（数万行）上是实打实的开销，
+# 且与上面同形态的正则会变成**两处定义**（改一处忘另一处就漂移）。
+# 故统一提为单一模块级常量，避免两处定义漂移。
+
 
 # ============================================================================
 # MARS-408 对外口径红线：已被实测证伪 / 无证据支撑的宣称，命中即 fail-closed。
@@ -129,17 +134,13 @@ def is_skipped(path: Path) -> bool:
 
 def scan_text(text: str, path: str = "") -> list:
     hits = []
+    exempt = _path_redline_exempt(path)
     for idx, line in enumerate(text.splitlines(), start=1):
-        stripped = re.sub(r"「[^」]*」|『[^』]*』|\"[^\"]*\"|'[^']*'", "", line)
-        for phrase in ("冲第一", "真实水位 89%", "真实水位 92%", "真实水位 100%",
-                       "自主 7/7", "将功补过", "解出数提升",
-                       "5→13", "13→15", "15→16", "16→26",
-                       "解出数 16", "解出数 26"):
+        stripped = _QUOTE_RE.sub("", line)
+        for phrase in FORBIDDEN_PHRASES:
             if phrase in stripped:
                 hits.append(f"{path}:{idx}: 假水位短语 {phrase!r}")
-        for pat in (re.compile(r"解出数\s*\d+\s*→\s*\d+"),
-                    re.compile(r"\+\d+\s*真实解出"),
-                    re.compile(r"真实解出[^。\n]*flag")):
+        for pat in FORBIDDEN_PATTERNS:
             if pat.search(stripped):
                 hits.append(f"{path}:{idx}: 假水位正则 {pat.pattern!r}")
 
@@ -165,21 +166,54 @@ def scan_file(filepath: Path) -> list:
 
 
 def get_staged_files() -> list:
+    """本次暂存的 A/C/M 文件（pre-commit 场景）。
+
+    ⚠️ 必须按**行**读取，不能用 `.strip().split()`：后者按空白拆词，而本仓库
+    确有带空格的路径（deliverables/MARS-408 考研…/…），会被拆成两个不存在的文件名
+    从而**静默漏扫**——这正是 pre-commit.sh 里已经修过的同款坑。
+    """
     import subprocess
     try:
         out = subprocess.check_output(
-            ["git", "diff", "--cached", "--name-only", "--diff-filter=ACM"],
+            ["git", "-c", "core.quotePath=false", "diff", "--cached",
+             "--name-only", "--diff-filter=ACM"],
             stderr=subprocess.DEVNULL, text=True
         )
-        return [Path(f) for f in out.strip().split() if f]
+        return [Path(f) for f in out.splitlines() if f.strip()]
     except Exception:
         return []
+
+
+def get_tracked_files() -> list:
+    """全部已跟踪文件（CI / 人工全量场景）。
+
+    为什么不 `Path('.').rglob('*')`：那样会遍历 node_modules / archive /
+    deliverables 等数万乃至十几万个文件，实测 **4 分 50 秒仍未跑完**，直接接 CI
+    必然超时，本地也无从人工触发全量体检。
+    `git ls-files` 只返回版本库内的文件（这些目录基本未被跟踪），实测 ~56 秒扫完，
+    且天然与「进仓库的东西」这一守护边界对齐：未跟踪文件本来也进不了 CI。
+    git 不可用（非仓库 / 未装 git）时退回全树扫描，宁慢勿漏。
+    """
+    import subprocess
+    try:
+        out = subprocess.check_output(
+            ["git", "-c", "core.quotePath=false", "ls-files"],
+            stderr=subprocess.DEVNULL, text=True
+        )
+        files = [Path(f) for f in out.splitlines() if f.strip()]
+        if files:
+            return files
+    except Exception:
+        pass
+    return [p for p in Path('.').rglob('*') if p.is_file()]
 
 
 def main():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--cached", action="store_true", help="扫描暂存区文件")
+    parser.add_argument("--all", action="store_true",
+                        help="扫描全部已跟踪文件（CI 全量模式；无参时亦为此行为）")
     parser.add_argument("files", nargs="*", help="指定文件列表")
     args = parser.parse_args()
 
@@ -188,7 +222,9 @@ def main():
     elif args.files:
         files = [Path(f) for f in args.files]
     else:
-        files = [p for p in Path('.').rglob('*') if p.is_file()]
+        # 无参 = 全量：走 git ls-files（见 get_tracked_files 注释），
+        # 不再用会拖垮 CI 的 rglob 全树。
+        files = get_tracked_files()
 
     all_hits = []
     for f in files:
