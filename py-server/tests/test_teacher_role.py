@@ -127,6 +127,41 @@ def test_create_and_readback_teacher(store):
 
 
 # ============================================================
+# 验证点 2b：delete_user 级联删除 + 幂等
+# 这是 2026-10-03 新增能力（供集成测试 teardown 清理真实库测试用户），
+# 必须有自动化覆盖，否则无护体测试任人回退。
+# ============================================================
+
+def test_delete_user_cascades_and_is_idempotent(store):
+    u = store.create_user("delme_x", "Password123", "Del Me")
+    uid = u["id"]
+
+    # 写两类子表数据，验证级联覆盖
+    store.save_profile(uid, {"dim": {"a": 0.5}, "note": "t"})
+    store.append_quiz_history(uid, [{"subject": "ds", "correct": 1, "difficulty": "easy"}])
+
+    conn = store._get_conn()
+    assert conn.execute(
+        "SELECT COUNT(*) FROM users WHERE id=?", (uid,)
+    ).fetchone()[0] == 1
+
+    # 删除后应连同子表一并消失
+    assert store.delete_user("delme_x") is True
+    assert conn.execute(
+        "SELECT COUNT(*) FROM users WHERE id=?", (uid,)
+    ).fetchone()[0] == 0
+    assert conn.execute(
+        "SELECT COUNT(*) FROM user_profiles WHERE user_id=?", (uid,)
+    ).fetchone()[0] == 0
+    assert conn.execute(
+        "SELECT COUNT(*) FROM user_quiz_history WHERE user_id=?", (uid,)
+    ).fetchone()[0] == 0
+
+    # 缺失用户幂等返回 False，且不报错
+    assert store.delete_user("nonexistent") is False
+
+
+# ============================================================
 # 验证点 3：角色校验（尽力运行时 import api.admin_users）
 # 若隔离导入成功：非法 role -> 400；合法 teacher + monkeypatch create_user -> 返回用户。
 # 若导入不安全（拉起重型链）：fixture 跳过，由静态确认替代（见报告）。
