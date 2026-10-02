@@ -292,6 +292,50 @@ def get_user_by_username(username: str) -> Optional[dict]:
     }
 
 
+def delete_user(username: str) -> bool:
+    """彻底删除用户及其全部关联数据（级联）。
+
+    覆盖 user_store 自有的 user_id / owner_user_id 关联表；memory_* / skill_*
+    等可能由其它 store 管理的表以 try 容错处理（表/列不存在时静默跳过，向前兼容）。
+    返回是否命中该用户并删除成功。用户名不存在返回 False（幂等安全）。
+    """
+    username = (username or "").strip()
+    if not username:
+        return False
+    conn = _get_conn()
+    with _lock:
+        row = conn.execute("SELECT id FROM users WHERE username=?", (username,)).fetchone()
+        if not row:
+            return False
+        uid = row["id"]
+        # (表, 关联列)：user_store 自有关联 + 可能存在的记忆/技能表（try 容错）
+        owned = [
+            ("user_profiles", "user_id"),
+            ("user_quiz_history", "user_id"),
+            ("user_conversations", "user_id"),
+            ("profile_snapshots", "user_id"),
+            ("assignment_submissions", "user_id"),
+            ("user_wrong_questions", "user_id"),
+            ("user_daily_plans", "user_id"),
+            ("learning_resources", "owner_user_id"),
+            ("memory_l1_working", "user_id"),
+            ("memory_l2_semantic", "user_id"),
+            ("memory_l3_episodic", "user_id"),
+            ("skill_ratings", "user_id"),
+            ("skill_usage_log", "user_id"),
+            ("skill_favorites", "user_id"),
+        ]
+        for tbl, col in owned:
+            try:
+                conn.execute(f"DELETE FROM {tbl} WHERE {col}=?", (uid,))
+            except Exception:
+                # 表/列不存在（模块边界或未来 schema 变更）时跳过，不影响主删除
+                pass
+        conn.execute("DELETE FROM users WHERE id=?", (uid,))
+        conn.commit()
+    return True
+
+
 def set_password(username: str, password: str) -> bool:
     """更新指定用户密码（管理员维护用）。返回是否命中并更新。"""
     if not password or len(password) < MIN_PASSWORD_LENGTH:
