@@ -24,6 +24,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from main import app  # noqa: E402
 
+from db import user_store as us  # noqa: E402
+
 client = TestClient(app)
 
 # ── 惰性 KB 灌库（幂等，失败仅告警）──
@@ -43,15 +45,21 @@ def _auth_headers(token: str) -> dict:
 
 
 @pytest.fixture(scope="module")
-def auth_token():
-    """注册一个一次性测试用户并返回 token（模块级，整文件复用）。"""
+def auth_token(request):
+    """注册一个一次性测试用户并返回 token（模块级，整文件复用）。
+
+    模块级 teardown：所有测试结束后清理该 testuser_ 用户，避免本地反复运行
+    时持续堆积（本文件无 segv_env，本地 Windows 也会执行）。
+    """
     username = f"testuser_{uuid.uuid4().hex[:10]}"
     r = client.post(
         "/api/auth/register",
         json={"username": username, "password": "pw_123456", "display_name": username},
     )
     assert r.status_code == 200, r.text
-    return r.json()["token"]
+    token = r.json()["token"]
+    request.addfinalizer(lambda: us.delete_user(username))
+    return token
 
 
 # ────────────────────────────────────────────────────────────
@@ -186,11 +194,14 @@ def test_endpoint_reachable(method, path, body, needs_auth, auth_token):
 # ────────────────────────────────────────────────────────────
 
 class TestAuthFlow:
-    def test_register_returns_token(self):
+    def test_register_returns_token(self, request):
+        username = f"af_{uuid.uuid4().hex[:8]}"
+        # af_ 用户由本测试经 /api/auth/register 写入真实库；finalizer 兜底清理，
+        # 避免本地反复运行时持续堆积。delete_user 幂等安全。
+        request.addfinalizer(lambda: us.delete_user(username))
         r = client.post(
             "/api/auth/register",
-            json={"username": f"af_{uuid.uuid4().hex[:8]}", "password": "pw_123456",
-                  "display_name": "af"},
+            json={"username": username, "password": "pw_123456", "display_name": "af"},
         )
         assert r.status_code == 200
         data = r.json()

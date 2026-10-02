@@ -22,6 +22,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from main import app  # noqa: E402
 
+from db import user_store as us  # noqa: E402
+
 client = TestClient(app)
 
 
@@ -29,16 +31,17 @@ client = TestClient(app)
 class TestLearningJourney:
     """端到端用户旅程：画像 → 路径 → 答题 → 评估。"""
 
-    def test_full_journey_state_transition(self):
+    def test_full_journey_state_transition(self, request):
         # ── 1. 注册并登录 ──
         username = f"journey_{uuid.uuid4().hex[:8]}"
+        # journey_ 用户由本测试经 /api/auth/register 写入真实库；用 finalizer 兜底清理，
+        # 避免本地反复运行（或临时去掉 segv_env 跳过）时持续堆积。delete_user 幂等安全。
+        request.addfinalizer(lambda: us.delete_user(username))
         reg = client.post(
             "/api/auth/register",
             json={"username": username, "password": "pw_123456", "display_name": username},
         )
         assert reg.status_code == 200
-        token = reg.json()["token"]
-        headers = {"Authorization": f"Bearer {token}"}
 
         # ── 2. 对话式画像构建（mock 返回结构化画像）──
         prof_resp = client.post(
