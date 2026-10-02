@@ -35,20 +35,26 @@ test = ["pytest>=8.0.0","pytest-asyncio>=0.23.0","pytest-timeout>=2.2.0","pytest
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+# INC-pytest / 2026-10-03 加固：tests/crypto_platform 是 vendored 的第三方项目副本，其内嵌套
+# py-server/tests/conftest.py 与根 tests/conftest.py 撞名（tests.conftest），
+# 导致收集阶段 ImportPathMismatchError **全盘中止**（不是少跑几条，是一条都跑不了）。
+# ⚠️ 该排除**必须放在 ini 的 norecursedirs，不能只放在 addopts**：
+#   `-o addopts=` 是本地调试/CI 分档的常用写法（本仓库 backend-test.yml 的隔离测试 step 就用它），
+#   一旦覆盖 addopts，写在其中的 --ignore 会**静默失效**，本机随即被该副本撞名炸掉整轮收集。
+#   norecursedirs 属独立 ini 选项，不受 -o addopts= 影响，故以它为准。
+# 含 pytest 默认清单（*.egg .* _darcs build CVS dist node_modules venv {arch}），勿只写新增项。
+norecursedirs = ["*.egg", ".*", "_darcs", "build", "CVS", "dist", "node_modules", "venv", "{arch}", "crypto_platform"]
 # wave-1 默认集：排除需真实向量/模型/慢速用例。各 CI 分档用自身 -m 覆盖本项。
 # Windows 默认 pytest 即以此过滤，避免触碰原生 torch/numpy（segv_env 已在 win32 自动 skip）。
 # T4：在 wave-1 默认排除（system/requires_milvus/slow）基础上追加全局超时；
 # --timeout-method=thread 对 asyncio 用例安全；Linux CI 默认档仍会跑 segv_env（不在此排除）。
-# INC-pytest: tests/crypto_platform 是 vendored 的第三方项目副本，其内嵌套
-# py-server/tests/conftest.py 与根 tests/conftest.py 撞名（tests.conftest），
-# 导致收集阶段 ImportPathMismatchError 全盘中止。显式忽略该副本。
 # D3（技术债 P0）：覆盖率门禁强制生效——每次 pytest 都收集覆盖率并按 [tool.coverage.report].fail_under 阻断退化。
 # 必须用单个 `--cov=.`（而非裸 `--cov` 或多 `--cov=<pkg>` 列表）：
 #   - 裸 `--cov`(无值) 会把紧跟的 `--cov-report=...` 误吞作 cov 目标值，触发 Windows
 #     numpy/torch "cannot load module more than once per process" 导入竞态（全量多文件收集必现）；
 #   - 多个 `--cov=<pkg>` 同样会在多文件收集时触发该竞态；
 #   - 单个 `--cov=.` 经实测全量 915 用例稳定运行，不触发竞态。故采用之。
-addopts = ["-m", "not system and not requires_milvus and not slow", "--ignore=tests/crypto_platform", "--cov=.", "--cov-report=term-missing"]
+addopts = ["-m", "not system and not requires_milvus and not slow", "--cov=.", "--cov-report=term-missing"]
 markers = [
     "import_queue: 导入队列单写者保证与任务生命周期测试 (ADR-007)",
     "unit: 单元测试（最快，纯逻辑，无进程/无网络）",

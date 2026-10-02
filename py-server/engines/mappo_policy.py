@@ -518,9 +518,6 @@ class MappoPolicy:
                 old_logs.append(old_log)
                 values.append(value)
 
-                action_str = {
-                    k: v for k, v in action_dict.items()
-                }
                 env_action = {
                     "difficulty": DIFFICULTIES[action_dict["difficulty"]],
                     "teaching_mode": TEACHING_MODES[action_dict["teaching_mode"]],
@@ -653,7 +650,7 @@ class MappoPolicy:
 
 # ── 全局单例（供 Mixer / 规则引擎灰度接入）──
 
-def get_mappo_policy() -> MappoPolicy:
+def get_mappo_policy() -> "MappoPolicy":
     """按 config 构造策略（读 gomarl.mappo_* 配置）。"""
     try:
         from config import get_gomarl_config
@@ -663,4 +660,20 @@ def get_mappo_policy() -> MappoPolicy:
     return MappoPolicy(cfg)
 
 
-mappo_policy = get_mappo_policy()
+# ⚠️ 关键：本模块**绝不在导入期构造单例**。原先的 `mappo_policy = get_mappo_policy()`
+# 会在模块被 import 时立即触发 torch 加载，与文件头"torch 延迟导入"的设计约束相悖——
+# 后果：任何 import 本模块的测试（如 test_career_policy → career_policy → mappo_policy）
+# 在 Windows 本地收集期就崩（SIGSEGV/access violation），segv_env 守卫形同虚设。
+# 改为惰性单例：首次访问 `mappo_policy` 属性时才构造（运行时、且仅 use_mappo_policy
+# 开启的路径会触达），导入期零副作用。coordinator / gomarl_mixer 的
+# `from engines.mappo_policy import mappo_policy` 写法无需改动即可继续工作。
+_mappo_policy_singleton = None
+
+
+def __getattr__(name: str):
+    if name == "mappo_policy":
+        global _mappo_policy_singleton
+        if _mappo_policy_singleton is None:
+            _mappo_policy_singleton = get_mappo_policy()
+        return _mappo_policy_singleton
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
