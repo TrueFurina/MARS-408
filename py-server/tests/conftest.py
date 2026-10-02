@@ -6,6 +6,21 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
 
+# ── Windows 本地 segv_env：import 期即加载 torch 的模块，在收集阶段直接排除 ──
+# test_review_shadow_probe / test_m3_mappo_policy / test_m4_marl_bench 在**模块导入期**就
+# 调用 `_ensure_torch()` 或 `import torch`，而 Windows 原生 torch 会触发 access violation
+# （segv_env）。标记级 `pytest.mark.skipif` 只在*用例*层生效，拦不住 import 期的崩溃——
+# 结果本地 pytest 整轮被 C 扩展崩溃打断（历史只能忽略本文件重跑）。
+# 故在 win32 直接从收集阶段排除这三份文件：CI/Linux 不受影响照常跑，本地则干净跳过
+# （效果与"标记 skip"一致——Windows 本就不跑 torch 用例，但不再打印崩溃堆栈）。
+collect_ignore = []
+if sys.platform == "win32":
+    collect_ignore = [
+        "test_review_shadow_probe.py",
+        "test_m3_mappo_policy.py",
+        "test_m4_marl_bench.py",
+    ]
+
 # ── 集合级自动跳过（requires_milvus + segv_env + isolation）──
 # 单一入口，同时处理三类隔离：
 #   1) requires_milvus：无真实 Milvus 服务端时跳过
