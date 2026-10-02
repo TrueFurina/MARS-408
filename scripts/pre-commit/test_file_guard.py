@@ -39,6 +39,25 @@ def staged_files() -> list:
     return [f.strip().replace("\\", "/") for f in out.splitlines() if f.strip()]
 
 
+def current_files() -> list:
+    """待检查文件集：CI 注入优先（否则会全绿假通过），本地回退到暂存区。
+
+    CI 上 checkout 后暂存区为空，若仍只认 `--cached`，本门禁会退化成
+    "什么都不检查然后返回 0"——假闸门比没有闸门更危险。
+    """
+    try:
+        from _gate_files import injected_files
+    except ImportError:  # 被 import 而非直接执行时，脚本目录不一定在 sys.path
+        import os
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        from _gate_files import injected_files
+
+    injected = injected_files()
+    if injected is not None:
+        return injected
+    return staged_files()
+
+
 def check(files: list) -> int:
     tests = [f for f in files if is_test(f)]
     impls = [f for f in files if (not is_test(f)) and IMPL_EXT.search(f)]
@@ -70,11 +89,11 @@ def main() -> int:
         if "git commit" not in cmd:
             return 0
         try:
-            return check(staged_files())
+            return check(current_files())
         except Exception:
             return 0  # 不在 git 仓库等场景 fail-open
     elif "--staged" in args:
-        return check(staged_files())
+        return check(current_files())
     else:
         print(__doc__, file=sys.stderr)
         return 2
