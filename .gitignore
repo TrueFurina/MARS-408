@@ -2,6 +2,7 @@
 dist-accept/
 dist-rem/
 dist-test/
+_dist_check/
 
 # Trash / temp
 _trash_*/
