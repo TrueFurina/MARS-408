@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-check_raw_values.py — MARS-408 设计系统 · 组件层裸值门禁（dependency-free）
+check_raw_values.py — 芒得很职 设计系统 · 组件层裸值门禁（dependency-free）
 
 目的：守护 SSOT 铁律「组件只引用语义令牌，禁止硬编码 hex/rgba」。
 权威源 `src/assets/styles/_variables.css` 允许定义原始色值；其余位置一律不得出现裸色值。

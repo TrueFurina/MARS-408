@@ -111,16 +111,16 @@
 
 ## 🔎 元凶会话指认（2026-09-15 01:41 取证）
 
-在 `C:\Users\Lenovo\.workbuddy\projects\e-Program-MARL-study-help-pro\` 下对同项目全部活跃会话做 `git clone / MARS-408.git / .git_partial` 命中统计，**唯一元凶**：
+在 `C:\Users\Lenovo\.workbuddy\projects\e-Program-MARL-study-help-pro\` 下对同项目全部活跃会话做 `git clone / 芒得很职.git / .git_partial` 命中统计，**唯一元凶**：
 
-| 会话 UUID | 最后写入 | `git clone` 命中 | `MARS-408.git` 命中 | `.git_partial` 命中 | cwd | 判定 |
+| 会话 UUID | 最后写入 | `git clone` 命中 | `芒得很职.git` 命中 | `.git_partial` 命中 | cwd | 判定 |
 |-----------|---------|-----------------|--------------------|--------------------|-----|------|
 | **`cebf1414-6abe-405b-a2e6-c681ca9b6c14`** | **01:25:05** | **46** | **183** | **8** | `e:\Program\MARL\study-help-pro` | 🔴 **元凶**（与 `.git` 最终 mtime 01:25 精确吻合） |
 | `d3b6c1b1-9313-464e-888c-35c4f9c0a8d5` | 01:33 | 0 | 0 | 0 | 同上 | 🟢 前端谋划线，无 clone（6×commit/2×stash） |
 | `b999d405-6adc-4211-85aa-28b3ad09b0ba` | 01:28 | 0 | 0 | 0 | 同上 | 🟡 前端谋划线，**6×`git reset --hard`**（无 clone，但同为高危） |
 | `0390d1f5-…`（本会话） | 01:41 | 0 | 0 | 0 | 同上 | 🟢 本团队（`teamName=engineering-continue-opt`） |
 
-- **元凶会话身份**：**非本团队**（meta 无 `teamName`），是标准独立会话；其首个用户消息为「**分析本项目**」，对话摘要显示其主题为「**MARS-408 设计系统 v8 优化**」。其自身推理链明确写着"`git clone --no-checkout --quiet https://github.com/TrueFurina/MARS-408.git` … 获得一个完整健康的 `.git`" 并讨论了把克隆的 `.git` 换进来。
+- **元凶会话身份**：**非本团队**（meta 无 `teamName`），是标准独立会话；其首个用户消息为「**分析本项目**」，对话摘要显示其主题为「**芒得很职 设计系统 v8 优化**」。其自身推理链明确写着"`git clone --no-checkout --quiet https://github.com/TrueFurina/MARS-408.git` … 获得一个完整健康的 `.git`" 并讨论了把克隆的 `.git` 换进来。
 - **注入身份不可用于区分**：该机全局 `~/.gitconfig` = 「糖露星霜•暖霞拾光 `<2468001320@qq.com>`」，且**所有**并行会话（含元凶与本团队）注入的 `USER.md` 均为同一份（"张敏杰/信安"）——故"哪个会话"只能靠 **UUID + 主题** 定位，不能靠 git 作者名。
 - **当前状态**：元凶会话最后写入 01:25，取证时 01:41（**16 分钟无写入**）→ 已停手/空闲，未再对本仓库动手。
 

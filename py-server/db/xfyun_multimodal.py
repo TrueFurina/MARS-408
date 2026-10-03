@@ -236,7 +236,7 @@ def _svg_fallback(prompt: str, topic: str) -> TTIResult:
     svg += f'''
   <!-- 底部水印 -->
   <text x="256" y="490" text-anchor="middle" fill="#a5b4fc"
-        font-size="11" font-family="sans-serif" opacity="0.6">MARS-408 AI 教学插图 · 讯飞星火</text>
+        font-size="11" font-family="sans-serif" opacity="0.6">芒得很职 AI 教学插图 · 讯飞星火</text>
 </svg>'''
 
     logger.info(f"SVG降级教学图生成: {title[:20]}")

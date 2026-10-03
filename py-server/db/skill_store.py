@@ -1121,7 +1121,7 @@ def seed_official_skills():
                 max_tokens=tmpl.default_config.get("max_tokens", 2048),
                 status=SkillStatus.PUBLISHED.value,
                 is_official=True,
-                creator_name="MARS-408 官方",
+                creator_name="芒得很职 官方",
                 tags=[tmpl.category],
                 created_at=now,
                 updated_at=now,

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""MARS-408 / study-help-pro — CI 安全门禁 AST 断言 (G2 / G5 / G7 / G9)。
+"""芒得很职 / study-help-pro — CI 安全门禁 AST 断言 (G2 / G5 / G7 / G9)。
 
 承载 deliverables/gstack/security-gate-checklist.md §1 中 type=c 的强化断言：
   G2  限流 fail-closed（prod 拒绝）

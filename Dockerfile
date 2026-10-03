@@ -1,5 +1,5 @@
 # ============================================================
-# Dockerfile — MARS-408 408 个性化学习系统
+# Dockerfile — 芒得很职 408 个性化学习系统
 # 多阶段构建：前端构建 → Python后端（含 Milvus 支持）
 # ============================================================
 
@@ -28,18 +28,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # 创建非 root 用户
-RUN groupadd -r mars408 && useradd -r -g mars408 -d /app -s /sbin/nologin mars408
+RUN groupadd -r mangdehenzhi && useradd -r -g mangdehenzhi -d /app -s /sbin/nologin mangdehenzhi
 
 WORKDIR /app
 
 # ── D7：镜像元数据标签（固定 VERSION，避免 latest）──
 ARG VERSION=1.0.0
 ARG BUILD_DATE
-LABEL org.opencontainers.image.title="MARS-408 个性化学习系统"
+LABEL org.opencontainers.image.title="芒得很职 个性化学习系统"
 LABEL org.opencontainers.image.version="$VERSION"
 LABEL org.opencontainers.image.created="$BUILD_DATE"
 LABEL org.opencontainers.image.description="408 考研 GOMARL + FrugalRAG 多智能体学习系统"
-LABEL maintainer="MARS-408 Team"
+LABEL maintainer="芒得很职 Team"
 
 # 复制并安装 Python 依赖（先复制作业文件，利用 Docker 层缓存）
 COPY py-server/pyproject.toml py-server/uv.lock ./
@@ -52,12 +52,12 @@ COPY py-server/ ./
 COPY --from=frontend-builder /app/frontend/dist ./static
 
 # 确保代码/依赖/静态资源属主为运行时非 root 用户
-RUN chown -R mars408:mars408 /app
+RUN chown -R mangdehenzhi:mangdehenzhi /app
 
 # F-014：显式创建运行时可写目录（含 bind mount 挂载点 vectordb_data / milvus_lite_data / data），
-# 并授权给运行时用户 mars408，避免挂载卷沿用宿主机 UID 导致无写权限。
+# 并授权给运行时用户 mangdehenzhi，避免挂载卷沿用宿主机 UID 导致无写权限。
 RUN mkdir -p /app/vectordb_data /app/milvus_lite_data /app/data /app/sessions /app/plots /app/assets /app/media \
-    && chown -R mars408:mars408 /app/vectordb_data /app/milvus_lite_data /app/data /app/sessions /app/plots /app/assets /app/media
+    && chown -R mangdehenzhi:mangdehenzhi /app/vectordb_data /app/milvus_lite_data /app/data /app/sessions /app/plots /app/assets /app/media
 
 # F-014：启动入口（已随 COPY py-server/ ./ 带入）——以 root 修复挂载卷属主，再用 gosu 切换非 root 运行
 RUN chmod +x /app/docker-entrypoint.sh

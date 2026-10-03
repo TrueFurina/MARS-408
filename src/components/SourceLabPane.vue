@@ -16,7 +16,7 @@ import {
 
 type LabMode = 'source' | 'experiment'
 
-const STORAGE_KEY = 'mars408_sourcelab_progress_v1'
+const STORAGE_KEY = 'mangdehenzhi_sourcelab_progress_v1'
 
 const exercises = SOURCE_LAB_EXERCISES
 const firstExercise = exercises[0]

@@ -24,13 +24,13 @@ check() { # check <描述> <测试命令...>
   fi
 }
 
-echo "== MARS-408 提交包封包核销检查 =="
+echo "== 芒得很职 提交包封包核销检查 =="
 
 # 1. 演示 PPT
-check "演示 PPT（01_演示PPT/MARS-408_软件杯演示.pptx）" test -f "archive/08013417_参赛快照/08013417介绍/01_演示PPT/MARS-408_软件杯演示.pptx"
+check "演示 PPT（01_演示PPT/芒得很职_软件杯演示.pptx）" test -f "archive/08013417_参赛快照/08013417介绍/01_演示PPT/芒得很职_软件杯演示.pptx"
 
 # 2. 可完整运行源码（submission/04_源码/ zip）
-check "源码 zip（submission/04_源码/MARS-408_source.zip）" test -f "submission/04_源码/MARS-408_source.zip"
+check "源码 zip（submission/04_源码/芒得很职_source.zip）" test -f "submission/04_源码/芒得很职_source.zip"
 
 # 3. 演示视频（03_演示视频/ 有 mp4；注意旧视频含 TTS 需重录）
 check "演示视频文件（03_演示视频/ 含 mp4）" bash -c 'ls "archive/08013417_参赛快照/08013417介绍/03_演示视频/"*.mp4 >/dev/null 2>&1'

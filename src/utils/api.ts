@@ -6,8 +6,8 @@
 const API_BASE = ''
 
 /** storage key 与 authStore.loadAuth/saveAuth 使用的保持完全一致（单一真值源） */
-const TOKEN_KEY = 'mars408_token'
-const USER_KEY = 'mars408_user'
+const TOKEN_KEY = 'mangdehenzhi_token'
+const USER_KEY = 'mangdehenzhi_user'
 
 function getToken(): string | null {
   try {

@@ -1,4 +1,4 @@
-# MARS-408 多智能体三评审集成与 MAPPO 策略层设计方案
+# 芒得很职 多智能体三评审集成与 MAPPO 策略层设计方案
 
 > 版本：v1.0 · 日期：2026-09-12
 > 定位：在既有 10 节点 LangGraph 流水线之上，落地「严格诚实 / 批评者 / 共识」三评审体系 + Triage 分级路由 + MAPPO 教学策略层。
@@ -10,7 +10,7 @@
 
 ### 1.1 背景
 
-本项目（MARS-408）已实现一条 10 节点多智能体流水线：
+本项目（芒得很职）已实现一条 10 节点多智能体流水线：
 
 ```
 coordinator → diagnostician → planner → retriever → generator_cluster(7角色)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-px -> rem 安全迁移脚本 (MARS-408 / MARS-408 设计系统)
+px -> rem 安全迁移脚本 (芒得很职 / 芒得很职 设计系统)
 - root font-size = 16px (浏览器默认, 未重置) -> px/16 = rem, 渲染尺寸不变
 - 只转换"尺寸类属性"的 px; 严格排除断点/阴影/hairline/动画/变量定义
 - 每个被改文件自动备份到 %TEMP%/pxrem_backup, 验证 OK 后可删

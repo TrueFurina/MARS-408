@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""MARS-408 火山杯演示 PPT 自动生成脚本
+"""芒得很职 火山杯演示 PPT 自动生成脚本
 
 用法:
     cd py-server
@@ -88,7 +88,7 @@ _bg(slide)
 _add_shape(slide, Inches(0), Inches(3.2), Inches(13.333), Inches(0.06), C_ACCENT)
 _add_shape(slide, Inches(0), Inches(5.8), Inches(13.333), Inches(0.04), C_ACCENT)
 _add_text(slide, Inches(1), Inches(1.5), Inches(11), Inches(1.2),
-          "MARS-408", font_size=60, color=C_ACCENT, bold=True, alignment=PP_ALIGN.CENTER)
+          "芒得很职", font_size=60, color=C_ACCENT, bold=True, alignment=PP_ALIGN.CENTER)
 _add_text(slide, Inches(1), Inches(2.5), Inches(11), Inches(0.6),
           "基于 GOMARL 与 FrugalRAG 的 408 考研个性化学习多智能体系统",
           font_size=24, color=C_WHITE, alignment=PP_ALIGN.CENTER)
@@ -146,7 +146,7 @@ _add_bullet_text(slide, Inches(0.8), Inches(2.2), Inches(5.5), Inches(3.5), [
 ])
 
 _add_text(slide, Inches(6.8), Inches(1.6), Inches(5.5), Inches(0.5),
-          "MARS-408 方案", font_size=22, color=C_ACCENT2, bold=True)
+          "芒得很职 方案", font_size=22, color=C_ACCENT2, bold=True)
 _add_bullet_text(slide, Inches(6.8), Inches(2.2), Inches(5.5), Inches(3.5), [
     "多智能体协同：13 个 Agent 各司其职",
     "GOMARL 共识：质量保障与冲突消解",
@@ -416,7 +416,7 @@ _add_text(slide, Inches(0.8), Inches(5.2), Inches(11), Inches(0.5),
           font_size=16, color=C_GRAY, alignment=PP_ALIGN.CENTER)
 
 # ── 保存 ──
-output_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "MARS-408_火山杯演示.pptx")
+output_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "芒得很职_火山杯演示.pptx")
 prs.save(output_path)
 print(f"✅ PPT 已保存: {output_path}")
 print(f"   共 {len(prs.slides)} 页幻灯片")

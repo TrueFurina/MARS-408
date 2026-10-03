@@ -914,7 +914,7 @@ class VectorDB:
                 FieldSchema(name="keywords", dtype=DataType.VARCHAR, max_length=512),
                 FieldSchema(name="embedding_status", dtype=DataType.VARCHAR, max_length=32),
             ]
-            schema = CollectionSchema(fields, description=f"MARS-408 KB: {coll_name}")
+            schema = CollectionSchema(fields, description=f"芒得很职 KB: {coll_name}")
             col = Collection(coll_name, schema)
             index_params = {"metric_type": "COSINE", "index_type": "HNSW", "params": {"M": 16, "efConstruction": 200}}
             col.create_index("embedding", index_params)

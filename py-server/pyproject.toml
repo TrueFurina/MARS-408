@@ -1,7 +1,7 @@
 [project]
-name = "mars-408-server"
+name = "mangdehenzhi-server"
 version = "0.1.0"
-description = "MARS-408 - 基于 GOMARL 与 FrugalRAG 的 408 考研个性化学习多智能体系统"
+description = "芒得很职 - 基于 GOMARL 与 FrugalRAG 的 408 考研个性化学习多智能体系统"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

@@ -1,13 +1,13 @@
 @echo off
 chcp 65001 >nul
-title MARS-408 事故恢复脚本 (Emergency Recover)
+title 芒得很职 事故恢复脚本 (Emergency Recover)
 setlocal EnableDelayedExpansion
 
 set ROOT=%~dp0
 set BACK=%ROOT%py-server
 
 echo ============================================================
-echo   MARS-408 事故恢复脚本
+echo   芒得很职 事故恢复脚本
 echo   1. 杀除孤儿前后端进程   2. 清临时物   3. 干净启动
 echo ============================================================
 echo.
@@ -42,7 +42,7 @@ if not exist "%BACK%\.venv\Scripts\python.exe" (
     pause & exit /b 1
 )
 cd /d "%BACK%"
-start "MARS-408-Backend" "%BACK%\.venv\Scripts\python.exe" main.py
+start "芒得很职-Backend" "%BACK%\.venv\Scripts\python.exe" main.py
 echo   后端启动中，等待 8 秒...
 timeout /t 8 /nobreak >nul
 
@@ -53,7 +53,7 @@ if not exist "%ROOT%node_modules" (
     echo   [ERROR] node_modules 不存在，先 npm install
     pause & exit /b 1
 )
-start "MARS-408-Frontend" npm run dev
+start "芒得很职-Frontend" npm run dev
 echo.
 echo ============================================================
 echo   恢复完成！
@@ -61,7 +61,7 @@ echo   前端: http://localhost:5173
 echo   后端: http://127.0.0.1:8002  (API 文档 /docs)
 echo ============================================================
 echo.
-echo 提示: 关闭标题为 MARS-408-Backend / MARS-408-Frontend 的窗口来停止
+echo 提示: 关闭标题为 芒得很职-Backend / 芒得很职-Frontend 的窗口来停止
 echo       如需一键停止，可再运行本脚本（会先清理旧实例）
 echo.
 pause

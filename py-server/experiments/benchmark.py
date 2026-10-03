@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # ============================================================
-# MARS-408 Benchmark — FrugalRAG vs 全量检索, NeuralMixer vs 加权投票
+# 芒得很职 Benchmark — FrugalRAG vs 全量检索, NeuralMixer vs 加权投票
 #
 # 实验1: FrugalRAG(查询重写+阈值融合+BM25+topk) vs 全量检索(无重写/无阈值)
 #   指标: 返回chunks数 / 估算token / 端到端延迟(ms) / Recall@k / MRR
@@ -782,7 +782,7 @@ def plot_fig_mixer(exp2: dict, out_path: Path):
 
 def main():
     print("=" * 70)
-    print("MARS-408 Benchmark")
+    print("芒得很职 Benchmark")
     print("=" * 70)
 
     # 中文字体（matplotlib 中文支持）
@@ -846,7 +846,7 @@ def main():
     json_path = results_dir / f"benchmark_{today}.json"
     output = {
         "meta": {
-            "benchmark": "MARS-408",
+            "benchmark": "芒得很职",
             "version": "1.0",
             "date": today,
             "top_k": TOP_K,

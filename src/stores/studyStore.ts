@@ -148,7 +148,7 @@ llm_assessed: boolean
 }
 
 // ── 对话管理 ──
-const _ns = (k: string) => `mars408_${k}`
+const _ns = (k: string) => `mangdehenzhi_${k}`
 
 function nextId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8)

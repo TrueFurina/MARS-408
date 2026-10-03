@@ -1,4 +1,4 @@
-# MARS-408 · 动效与交互规范（纯 CSS 方案）
+# 芒得很职 · 动效与交互规范（纯 CSS 方案）
 
 > 版本：v10「砚 · Ink & Clay」　日期：2026-09-12
 > 配套文件：`src/assets/styles/_variables.css`（令牌源）、`src/assets/styles/main.css`（全局基类）

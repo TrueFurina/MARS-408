@@ -18,7 +18,7 @@
  *
  * 【主题切换方式】
  *   由 src/App.vue 的 applyTheme() 写入：document.documentElement.dataset.theme
- *   → 'dark' | 'light'，并持久化到 localStorage['mars408-theme']。
+ *   → 'dark' | 'light'，并持久化到 localStorage['mangdehenzhi-theme']。
  *   - 默认（无 data-theme 属性 或 data-theme="dark"）→ 深色主题（下面第 2 节）
  *   - data-theme="light" → 浅色主题（下面第 3 节）
  *   组件**只引用语义层**（--color-* / --subject-*），绝不在组件里写死颜色。

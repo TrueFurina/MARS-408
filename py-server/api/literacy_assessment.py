@@ -28,7 +28,7 @@ logger = logging.getLogger("netlearn.literacy")
 router = APIRouter(prefix="/literacy", tags=["literacy-assessment"])
 
 # ------------------------------------------------------------
-# 六维素养定义（与 MARS-408 / miaoda 双轨统一口径）
+# 六维素养定义（与 芒得很职 / miaoda 双轨统一口径）
 # ------------------------------------------------------------
 DIMENSIONS = ["表达逻辑", "抗压应变", "方案拆解", "协作沟通", "技术汇报", "问题解决"]
 

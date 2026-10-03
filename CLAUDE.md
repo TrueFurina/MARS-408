@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 项目概要
 
 **双分支 · 双身份**（同一技术底座服务两个项目）：
-- **\main\ 分支 — MARS-408**：第十五届中国软件杯 A3 赛题参赛作品（出题企业：科大讯飞），基于 LangGraph 多智能体 + GOMARL 共识引擎 + FrugalRAG 检索的 408 考研个性化学习平台。国家级大创项目，结题中。
+- **\main\ 分支 — 芒得很职**：第十五届中国软件杯 A3 赛题参赛作品（出题企业：科大讯飞），基于 LangGraph 多智能体 + GOMARL 共识引擎 + FrugalRAG 检索的 408 考研个性化学习平台。国家级大创项目，结题中。
 - **\career-literacy\ 分支 — 芒得很职**：新一代多智能体赋能的计算机类学生职业素养对抗实训平台，第十六届三创赛参赛作品。基于 ECD（证据中心设计）的大模型多智能体对话式软素养评估，所有新增代码使用 \career_*\ 前缀，零侵入 408 代码。
 
 > 当前分支为 \career-literacy\，开发芒得很职。408 考研代码在 \main\ 分支，通过 \main → career-literacy\ 单向同步共享底座改进。芒得很职已完成 P0 后端（e5c6fb\）和 P1 学生端前端（ņ5f7b\），详见 \docs/职业素养对抗实训改造方案.md\。
@@ -91,7 +91,7 @@ triage → coordinator → diagnostician → planner → retriever
 
 - **Pinia Store**: `studyStore.ts` 是核心（对话/画像/科目/评估），`authStore.ts`（认证），`skillStore.ts`（技能市场），`achievementStore.ts`（成就）
 - **Vue Router**: 25+ 视图，`/chat`（对话学习）、`/dashboard`（仪表盘）、`/assessment`（评估）、`/knowledge-graph`（知识图谱）等
-- **API 客户端**: `src/utils/api.ts` 统一封装，Token 存 localStorage key=`mars408_token`，请求头 `Authorization: Bearer`
+- **API 客户端**: `src/utils/api.ts` 统一封装，Token 存 localStorage key=`mangdehenzhi_token`，请求头 `Authorization: Bearer`
 
 ### 数据层
 
@@ -175,8 +175,8 @@ uvicorn `--workers 1` 下 sync 阻塞会串行化所有请求：
 
 ### Git Remote 与分支矩阵
 
-本仓库已配置两个 remote：`origin`（GitHub `TrueFurina/MARS-408`）与 `mars408`（本地 `E:/Code/MARS-408` 副本）。分支矩阵：
-- `main` — **MARS-408** 考研系统，已冻结（末次提交 `8065295`，2026-09-04），用于大创结题；
+本仓库已配置两个 remote：`origin`（GitHub `TrueFurina/MARS-408`）与 `mangdehenzhi`（本地 `E:/Code/芒得很职` 副本）。分支矩阵：
+- `main` — **芒得很职** 考研系统，已冻结（末次提交 `8065295`，2026-09-04），用于大创结题；
 - `career-literacy` — **芒得很职** 三创赛作品，当前活跃开发分支（HEAD `90fd377`，2026-09-14），已跟踪 upstream `origin/career-literacy`。
 
 两条分支共享底座，`main → career-literacy` 单向同步；`career-literacy` 的提交可 `git push origin career-literacy`。

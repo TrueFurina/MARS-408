@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ---------------------------------------------------------------------------
-# MARS-408 / study-help-pro  一键启动绿色包 (Linux / macOS / WSL / Git Bash)
+# 芒得很职 / study-help-pro  一键启动绿色包 (Linux / macOS / WSL / Git Bash)
 #
 # 职责：前置自检 -> 后台拉起后端 (uvicorn main:app) -> 轮询健康检查 -> 打印访问信息
 # 红线：不修改任何既有文件、不 kill 任何不属于本次启动的进程。
@@ -44,7 +44,7 @@ die()  { err "$1"; exit "${2:-2}"; }
 mkdir -p "${LOG_DIR}"
 
 echo "===================================================================="
-echo " MARS-408 one-click launcher (backend)"
+echo " 芒得很职 one-click launcher (backend)"
 echo " repo   : ${REPO_ROOT}"
 echo " server : ${PY_SERVER_DIR}"
 echo " target : http://${HOST}:${PORT}${HEALTH_PATH}"

@@ -10,7 +10,7 @@ const loading = ref(true)
 const memoryOverview = ref<any>(null)
 
 // 达成通知：记录上次已解锁数，检测新增解锁弹 Toast
-const _PREV_KEY = 'mars408_ach_prev_unlocked'
+const _PREV_KEY = 'mangdehenzhi_ach_prev_unlocked'
 const newlyUnlocked = ref<string[]>([])
 
 function notifyNewAchievements() {

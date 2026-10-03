@@ -1,4 +1,4 @@
-# 功能与运行期 QA 质检报告 — MARS-408
+# 功能与运行期 QA 质检报告 — 芒得很职
 
 - **质检人**：严过关（Yan），QA 工程师
 - **维度**：功能与运行期 QA（仅检查与报告，未改动任何源码）
@@ -56,7 +56,7 @@
 
 - **Bug1 /showcase：PASS**
   - `/showcase` 返回 200 + Vue SPA（`id="app"`），不再是 307/404。
-  - 11 个 `/showcase/*.html` 静态文件**全部 200**（含 `index.html`、`MARS-408_dachuang_deck.html`、`MARS-408_dashboard.html`、`netlearn-architecture.html` 等）。
+  - 11 个 `/showcase/*.html` 静态文件**全部 200**（含 `index.html`、`芒得很职_dachuang_deck.html`、`芒得很职_dashboard.html`、`netlearn-architecture.html` 等）。
   - `py-server/main.py:601` 的 `spa_fallback` 仍含 `if response.status_code in (307, 404) and request.method == "GET" ...`（第 596–606 行），且明确排除 `/showcase/` 前缀以让 StaticFiles 直出静态文件。兜底逻辑完好。
 
 - **Bug2 /knowledge-base：PASS（7-22 改动未破坏兜底）**

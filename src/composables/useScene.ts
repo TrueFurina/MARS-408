@@ -5,7 +5,7 @@
  *   · kaoyan —— 场景A 专业能力训练（考研408）
  *   · career —— 场景B 职业素养实训（芒得很职主线）
  *
- * 当前场景由本 composable 统一持有，持久化到 localStorage['mars408_scene']，
+ * 当前场景由本 composable 统一持有，持久化到 localStorage['mangdehenzhi_scene']，
  * 供 App.vue 侧栏导航过滤（visibleGroups(role, scene)）与场景切换控件使用。
  *
  * 注意：navConfig 的 Scene 类型含 'common'（表示"两场景通用"），
@@ -14,7 +14,7 @@
 import { ref, computed } from 'vue'
 import type { Scene } from '@/router/navConfig'
 
-const STORAGE_KEY = 'mars408_scene'
+const STORAGE_KEY = 'mangdehenzhi_scene'
 
 /** 可切换的场景值（不含 common） */
 export const SELECTABLE_SCENES = ['kaoyan', 'career'] as const

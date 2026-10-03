@@ -13,7 +13,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SRC="$ROOT/py-server"
 DEST="$ROOT/archive/08013417_参赛快照/08013417作品/py-server/py-server"
 
-echo "== MARS-408 作品副本更新 =="
+echo "== 芒得很职 作品副本更新 =="
 echo "源目录:   $SRC"
 echo "目标目录: $DEST"
 

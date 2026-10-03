@@ -34,7 +34,7 @@ let loaded = false
 /** 本地缓存回退（后端未就绪时） */
 function fallbackFromCache(): AbilityProfile | null {
   try {
-    const raw = localStorage.getItem('mars408_profile')
+    const raw = localStorage.getItem('mangdehenzhi_profile')
     if (raw) return { professional: JSON.parse(raw), source: 'local-cache' }
   } catch { /* localStorage 不可用（隐私模式）时静默 */ }
   return null
@@ -59,7 +59,7 @@ async function load(force = false): Promise<void> {
 
 /** 本地缓存写入（各场景评估完成后可调用，作为离线回退源） */
 function cacheLocal(profile: Record<string, unknown>): void {
-  try { localStorage.setItem('mars408_profile', JSON.stringify(profile)) } catch { /* */ }
+  try { localStorage.setItem('mangdehenzhi_profile', JSON.stringify(profile)) } catch { /* */ }
 }
 
 export function useAbilityProfile() {

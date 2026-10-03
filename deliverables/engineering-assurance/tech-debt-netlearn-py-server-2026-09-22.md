@@ -8,7 +8,7 @@
 
 ## 📌 TL;DR（执行摘要）
 
-- **整体结论**：真实 `py-server`（分支 career-literacy，芒得很职 / 前身 MARS-408）代码"可用但偏重"。**安全底座扎实**——0 硬编码密钥、0 生产 `eval/exec`、0 命令注入（`shell=True`/子进程全列表式）、0 `pickle`/`yaml.load`/`verify=False`；工程纪律强（0 处 TODO/FIXME、0 大段注释代码、0 不可达分支）。但存在三类系统性风险：① **覆盖不保证**（无 `fail_under` 门禁、默认跑 22% 用例被跳过、legacy 模块零直接单测）；② **故障可见性差**（80 处静默吞错、关键能力静默降级）；③ **结构 / 文档漂移**（上帝模块、口径虚高 451 vs 242 端点）。
+- **整体结论**：真实 `py-server`（分支 career-literacy，芒得很职 / 前身 芒得很职）代码"可用但偏重"。**安全底座扎实**——0 硬编码密钥、0 生产 `eval/exec`、0 命令注入（`shell=True`/子进程全列表式）、0 `pickle`/`yaml.load`/`verify=False`；工程纪律强（0 处 TODO/FIXME、0 大段注释代码、0 不可达分支）。但存在三类系统性风险：① **覆盖不保证**（无 `fail_under` 门禁、默认跑 22% 用例被跳过、legacy 模块零直接单测）；② **故障可见性差**（80 处静默吞错、关键能力静默降级）；③ **结构 / 文档漂移**（上帝模块、口径虚高 451 vs 242 端点）。
 - **严重度分布**：🔴 严重 5 项 / 🟠 高 11 项 / 🟡 中 3 项（注：本仓库🔴均为技术债项，无 release 阻塞性交付缺陷）。
 - **阻塞 / 非阻塞**：无交付阻塞；🔴 为债务项，非 blocker。
 - **最高杠杆**：① 覆盖率门禁（`Priority=50`，低成本高收益）② 隔离 `crypto_platform` 嵌套副本（`Priority=40`，防误打包/误提交）应本周落地。
@@ -41,7 +41,7 @@
 | D5 | 能力静默降级：E5 嵌入失败时以**零向量占位**（`embedding_status=fallback_zero`），RAG 召回无声劣化；PG/Redis 静默 `enabled=False` | 🟠 | 4 | 5 | 3 | **27** | Archi |
 | D2 | 共享 SQLite 多连接并发写：`user_store` 与 `skill_store` 各自 `sqlite3.connect` 同一文件 + 各持独立 `RLock` → 并发写可触发 `database is locked` / WAL 损坏 | 🔴 | 5 | 4 | 3 | **27** | Archi |
 | D14 | 依赖浮动 + venv 软链脆弱：运行时依赖 `>=`（靠 `uv.lock` 锁定）；`.venv` 为 C: 软链（E: 空间不足），CI/构建环境脆弱 | 🟠 | 3 | 3 | 2 | **24** | Archi |
-| D16 | 产品名漂移：README 头条仍 "MARS-408 / 408 考研"，而当前分支产品为"芒得很职" | 🟠 | 3 | 3 | 2 | **24** | Docu/Archi |
+| D16 | 产品名漂移：README 头条仍 "芒得很职 / 408 考研"，而当前分支产品为"芒得很职" | 🟠 | 3 | 3 | 2 | **24** | Docu/Archi |
 | D9 | 永久/陈旧 skip·xfail 伪装缺口：默认跑 203/945(22%) 跳过；`xfail(strict=False)` 永久容忍已知缺口；2 处陈旧 xpass；9 处 respx 守卫；8 处 torch 守卫 | 🟠 | 3 | 4 | 3 | **21** | Tessa |
 | D11 | 未使用导入：175 处 / 92 文件 | 🟠 | 2 | 2 | 1 | **20** | Cody |
 | D8 | Legacy 408 agents/engines 无直接单测 + 活跃 services/db 模块零测试（`tts_service`/`pdf_page_mapping`/`redis_client`/`graph_db`…） | 🔴/🟡 | 4 | 5 | 4 | **18** | Tessa |

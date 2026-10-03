@@ -210,7 +210,7 @@ index ae6b7e9..42533d8 100644
      </div>
  
      <!-- 空状态：后端未运行 -->
--    <EmptyState v-else-if="!stats && !sessions.length && !tasks.length" :icon="icons.dashboard" title="欢迎来到 MARS-408" description="启动后端服务后，这里将展示你的学习数据、最近学习记录和推荐任务。">
+-    <EmptyState v-else-if="!stats && !sessions.length && !tasks.length" :icon="icons.dashboard" title="欢迎来到 芒得很职" description="启动后端服务后，这里将展示你的学习数据、最近学习记录和推荐任务。">
 +    <EmptyState v-else-if="!stats && !sessions.length && !tasks.length" :icon="icons.dashboard" title="欢迎来到芒得很职" description="启动后端服务后，这里将展示你的学习数据、最近学习记录和推荐任务。">
        <template #action>
          <button class="hero-cta" @click="go('/profile/build')">开始构建学习画像</button>
@@ -473,7 +473,7 @@ index 207407d..a349ea1 100644
      <!-- 顶栏 -->
      <div class="topbar">
        <div class="brandmark">
--        <span class="dot"></span>MARS-408 设计系统
+-        <span class="dot"></span>芒得很职 设计系统
 -        <span class="src-note">v8 · 应用内 Living Style Guide</span>
 +        <span class="dot"></span>芒得很职 设计系统
 +        <span class="src-note">应用内 Living Style Guide</span>
@@ -484,8 +484,8 @@ index 207407d..a349ea1 100644
        <!-- HERO -->
        <div class="hero-band">
          <h1>克制深色 · 玻璃态 · 学科分色</h1>
--        <p>MARS-408 前端设计系统 v8。语义化双主题 token，组件只引用 <code>--color-*</code> 语义层，<code>[data-theme="light"]</code> 覆盖即双主题。本页所有元素实时响应右上角主题切换，且与全局导航栏主题键（mars408-theme）完全一致。</p>
-+        <p>芒得很职 前端设计系统。语义化双主题 token，组件只引用 <code>--color-*</code> 语义层，<code>[data-theme="light"]</code> 覆盖即双主题。本页所有元素实时响应右上角主题切换，且与全局导航栏主题键（mars408-theme）完全一致。</p>
+-        <p>芒得很职 前端设计系统 v8。语义化双主题 token，组件只引用 <code>--color-*</code> 语义层，<code>[data-theme="light"]</code> 覆盖即双主题。本页所有元素实时响应右上角主题切换，且与全局导航栏主题键（mangdehenzhi-theme）完全一致。</p>
++        <p>芒得很职 前端设计系统。语义化双主题 token，组件只引用 <code>--color-*</code> 语义层，<code>[data-theme="light"]</code> 覆盖即双主题。本页所有元素实时响应右上角主题切换，且与全局导航栏主题键（mangdehenzhi-theme）完全一致。</p>
          <div class="glass-card">
            <div class="gc-k">GLASSMORPHISM</div>
            <div class="gc-v">backdrop-filter: blur(12px)</div>
@@ -493,7 +493,7 @@ index 207407d..a349ea1 100644
            <div v-for="r in typeScale" :key="r[0]" class="type-row">
              <div class="lvl">{{ r[0] }}</div>
              <div class="samp" :style="{ 'font-size': r[1], 'font-weight': r[2], 'line-height': r[3], 'letter-spacing': r[4] }">
--              MARS-408 个性化学习系统 <span style="font-size:12px;color:var(--color-text-3);font-weight:400;">— {{ r[5] }}</span>
+-              芒得很职 个性化学习系统 <span style="font-size:12px;color:var(--color-text-3);font-weight:400;">— {{ r[5] }}</span>
 +              芒得很职 个性化学习系统 <span style="font-size:12px;color:var(--color-text-3);font-weight:400;">— {{ r[5] }}</span>
              </div>
            </div>
@@ -502,10 +502,10 @@ index 207407d..a349ea1 100644
        </section>
  
        <footer>
--        MARS-408 设计系统 v8 · 单源真理 <code>DESIGN.md</code> 与 <code>src/assets/styles/_variables.css</code> · AI 可读，供 Cursor / Claude Code / Google Stitch 直接消费。<br/>
+-        芒得很职 设计系统 v8 · 单源真理 <code>DESIGN.md</code> 与 <code>src/assets/styles/_variables.css</code> · AI 可读，供 Cursor / Claude Code / Google Stitch 直接消费。<br/>
 +        芒得很职 设计系统 · 单源真理 <code>DESIGN.md</code> 与 <code>src/assets/styles/_variables.css</code> · AI 可读，供 Cursor / Claude Code / Google Stitch 直接消费。<br/>
 +        版本号以 <code>DESIGN.md</code> 为准，本页不复写（曾因页面另写一份而漂移成与文档不一致的旧号）。<br/>
-         本页为应用内正式路由页，所有 token 直接引用全局 <code>_variables.css</code>；切换右上角主题可见全部元素实时双主题渲染，且与全局导航主题键（mars408-theme）一致。
+         本页为应用内正式路由页，所有 token 直接引用全局 <code>_variables.css</code>；切换右上角主题可见全部元素实时双主题渲染，且与全局导航主题键（mangdehenzhi-theme）一致。
        </footer>
      </div>
 diff --git a/src/views/LandingView.vue b/src/views/LandingView.vue

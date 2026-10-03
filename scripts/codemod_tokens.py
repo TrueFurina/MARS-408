@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-MARS-408 · 设计令牌收敛 codemod（P1）
+芒得很职 · 设计令牌收敛 codemod（P1）
 
 目标
 ----

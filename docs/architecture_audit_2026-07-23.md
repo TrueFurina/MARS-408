@@ -81,9 +81,9 @@ main.py(入口/中间件/SPA挂载/生命周期)
 - **结论**：当前演示正确，架构上聚合位置可优化。
 
 ### 2.4 P0 重构（品牌/守卫/版本号）
-- **代码**：`App.vue` 品牌已改 "MARS-408"（`App.vue:168,218` 等多处）；`router/index.ts:206-232` 守卫改为 **meta 驱动**（`requiresRole`/`public`/`profileRequired`），`beforeEach` 无硬编码 path——比硬编码更优、可维护、可扩展。
+- **代码**：`App.vue` 品牌已改 "芒得很职"（`App.vue:168,218` 等多处）；`router/index.ts:206-232` 守卫改为 **meta 驱动**（`requiresRole`/`public`/`profileRequired`），`beforeEach` 无硬编码 path——比硬编码更优、可维护、可扩展。
 - **评价**：品牌与守卫达标。
-- **问题**：`package.json` `"version": "0.0.0"` **仍未修复**（声称"版本号修复"未落地；`name` 已品牌化为 `mars-408-agent`）。`activeKey` 仍有较长 if/else 链（`App.vue:133-150`）但属展示层，无关紧要。
+- **问题**：`package.json` `"version": "0.0.0"` **仍未修复**（声称"版本号修复"未落地；`name` 已品牌化为 `mangdehenzhi-agent`）。`activeKey` 仍有较长 if/else 链（`App.vue:133-150`）但属展示层，无关紧要。
 - **结论**：品牌与守卫达标，版本号遗漏（小项，见 5.P1）。
 
 ---

@@ -1,4 +1,4 @@
-"""MARS-408 50 并发记忆读取压测（循环14-P0）
+"""芒得很职 50 并发记忆读取压测（循环14-P0）
 
 验证 TTL 缓存带来的并发性能提升（技术方案声称 50 并发读 ↓75.6%）。
 用法: python scripts/bench_memory_concurrency.py

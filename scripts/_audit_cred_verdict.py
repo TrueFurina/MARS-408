@@ -21,7 +21,7 @@ COMMON = [
     "password", "Password", "passw0rd", "123456", "12345678", "123456789",
     "admin", "admin123", "demo", "demo123", "demo1234", "demo123456",
     "test", "test123", "test1234", "test123456", "testpass",
-    "netlearn", "netlearn123", "netlearn123456", "mars408", "mars-408",
+    "netlearn", "netlearn123", "netlearn123456", "mangdehenzhi", "mangdehenzhi",
     "changeme", "secret", "default", "example", "student", "student123",
     "demo-password", "demo_password", "123456abc", "abc123456", "a123456",
 ]

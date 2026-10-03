@@ -76,7 +76,7 @@ def _create_default_bg():
         gradient = np.vstack((gradient, gradient))
         ax.imshow(gradient, aspect="auto", cmap="viridis", alpha=0.15,
                   extent=[0, 16, 0, 9])
-        ax.text(8, 5.5, "MARS-408", fontsize=48, color="white",
+        ax.text(8, 5.5, "芒得很职", fontsize=48, color="white",
                 ha="center", va="center", fontweight="bold", alpha=0.3)
         ax.text(8, 4.2, "考研个性化学习系统", fontsize=20, color="white",
                 ha="center", va="center", alpha=0.2)
@@ -155,7 +155,7 @@ def generate_narrated_video(
 
         # 2. 写入临时文件
         task_id = uuid.uuid4().hex[:12]
-        tmp_dir = Path(tempfile.gettempdir()) / f"mars408_video_{task_id}"
+        tmp_dir = Path(tempfile.gettempdir()) / f"mangdehenzhi_video_{task_id}"
         os.makedirs(tmp_dir, exist_ok=True)
 
         audio_path = tmp_dir / "narration.wav"

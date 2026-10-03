@@ -1,6 +1,6 @@
 # 源码包
 
-按 `../00_提交清单.md` §三 的打包说明，将项目源码打包为 `MARS-408_source.zip` 放入本目录。
+按 `../00_提交清单.md` §三 的打包说明，将项目源码打包为 `芒得很职_source.zip` 放入本目录。
 
 ## 关键提醒
 - **排除** node_modules / .venv / dist / __pycache__ / .fixvenv / .fixcn / .lxmlfix / .git / *.log

@@ -35,7 +35,7 @@ EXCLUDE_PATH_SUBSTR = (
     "METRICS_CURRENT.md",     # SSOT 自身需列出已作废旧口径作参考
     "archive",                # 归档
     "engineering-assurance",  # 08-29 时点审计
-    "MARS-408",               # 大创/main 线材料 dump（513 文件）
+    "芒得很职",               # 大创/main 线材料 dump（513 文件）
     "闽江申报材料归档",          # 大创/main 线
     "平台现状摸底",             # 大创/main 线规划稿
     "gstack",

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # ============================================================
-# MARS-408 量化 Benchmark 脚本
+# 芒得很职 量化 Benchmark 脚本
 #
 # 两组对比实验：
 #   实验1：FrugalRAG 检索 vs 全量检索（延迟、召回Top-K、去噪率）
@@ -386,7 +386,7 @@ def summarize(results):
 def print_report(results, summary, mode):
     """打印可读的报告"""
     print("=" * 70)
-    print(f"  MARS-408 量化 Benchmark 报告  (模式: {mode})")
+    print(f"  芒得很职 量化 Benchmark 报告  (模式: {mode})")
     print("=" * 70)
 
     print("\n## 实验1：FrugalRAG 检索 vs 全量检索\n")
@@ -425,7 +425,7 @@ def print_report(results, summary, mode):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="MARS-408 量化 Benchmark")
+    parser = argparse.ArgumentParser(description="芒得很职 量化 Benchmark")
     parser.add_argument("--demo", action="store_true", help="演示模式（合成数据，无需依赖）")
     parser.add_argument("--output", default=str(Path(__file__).parent / "_demo" / "benchmark_results.demo.json"),
                         help="输出 JSON 文件路径（默认落到 _demo/ 并带 .demo.json 后缀，明确标记合成数据）")

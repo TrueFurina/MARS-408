@@ -47,13 +47,13 @@ const spacing: [string, number][] = [
   ['--space-4', 16], ['--space-5', 20], ['--space-6', 24], ['--space-8', 32],
 ]
 
-// ── 主题切换：与 App.vue 完全一致（persist 到 mars408-theme，data-theme 挂 documentElement）──
+// ── 主题切换：与 App.vue 完全一致（persist 到 mangdehenzhi-theme，data-theme 挂 documentElement）──
 const theme = ref<'dark' | 'light'>((document.documentElement.dataset.theme as 'dark' | 'light') || 'dark')
 const themeLabel = computed(() => (theme.value === 'dark' ? '切换到浅色' : '切换到深色'))
 function applyTheme(t: 'dark' | 'light') {
   document.documentElement.dataset.theme = t
   theme.value = t
-  try { localStorage.setItem('mars408-theme', t) } catch {}
+  try { localStorage.setItem('mangdehenzhi-theme', t) } catch {}
 }
 function toggleTheme() {
   applyTheme(theme.value === 'dark' ? 'light' : 'dark')
@@ -93,7 +93,7 @@ function chipStyle(tok: string) {
       <!-- HERO -->
       <div class="hero-band">
         <h1>克制深色 · 玻璃态 · 学科分色</h1>
-        <p>芒得很职 前端设计系统。语义化双主题 token，组件只引用 <code>--color-*</code> 语义层，<code>[data-theme="light"]</code> 覆盖即双主题。本页所有元素实时响应右上角主题切换，且与全局导航栏主题键（mars408-theme）完全一致。</p>
+        <p>芒得很职 前端设计系统。语义化双主题 token，组件只引用 <code>--color-*</code> 语义层，<code>[data-theme="light"]</code> 覆盖即双主题。本页所有元素实时响应右上角主题切换，且与全局导航栏主题键（mangdehenzhi-theme）完全一致。</p>
         <div class="glass-card">
           <div class="gc-k">GLASSMORPHISM</div>
           <div class="gc-v">backdrop-filter: blur(12px)</div>
@@ -289,7 +289,7 @@ function chipStyle(tok: string) {
       <footer>
         芒得很职 设计系统 · 单源真理 <code>DESIGN.md</code> 与 <code>src/assets/styles/_variables.css</code> · AI 可读，供 Cursor / Claude Code / Google Stitch 直接消费。<br/>
         版本号以 <code>DESIGN.md</code> 为准，本页不复写（曾因页面另写一份而漂移成与文档不一致的旧号）。<br/>
-        本页为应用内正式路由页，所有 token 直接引用全局 <code>_variables.css</code>；切换右上角主题可见全部元素实时双主题渲染，且与全局导航主题键（mars408-theme）一致。
+        本页为应用内正式路由页，所有 token 直接引用全局 <code>_variables.css</code>；切换右上角主题可见全部元素实时双主题渲染，且与全局导航主题键（mangdehenzhi-theme）一致。
       </footer>
     </div>
 

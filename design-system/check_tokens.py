@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-check_tokens.py — MARS-408 设计系统 · 单一真相源(SSOT)漂移检测器
+check_tokens.py — 芒得很职 设计系统 · 单一真相源(SSOT)漂移检测器
 
 权威源(canonical): src/assets/styles/_variables.css 的 :root 块（解析 var() 链后的值）
 消费者(consumers):  public/showcase/*.html 的内联 :root  +  design-system/showcase.html

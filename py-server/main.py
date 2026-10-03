@@ -1,5 +1,5 @@
 # ============================================================
-# MARS-408 — 基于 GOMARL 与 FrugalRAG 的 408 考研个性化学习系统
+# 芒得很职 — 基于 GOMARL 与 FrugalRAG 的 408 考研个性化学习系统
 # FastAPI 主入口 —— 只做「组装」，不含任何业务逻辑
 #
 # M-4 拆分（2026-09-27，原 882 行 → 组装层）：
@@ -34,8 +34,8 @@ from app.lifespan import _seed_vector_db, lifespan  # noqa: F401
 logger = logging.getLogger("netlearn")
 
 app = FastAPI(
-    title="MARS-408 — 基于 GOMARL 与 FrugalRAG 的 408 考研个性化学习系统",
-    description="MARS-408 408 考研个性化学习多智能体系统。\n\n"
+    title="芒得很职 — 基于 GOMARL 与 FrugalRAG 的 408 考研个性化学习系统",
+    description="芒得很职 408 考研个性化学习多智能体系统。\n\n"
                 "## 核心架构\n"
                 "- 13 个智能体 / 11 节点 LangGraph 多智能体流水线（含 evidence_check 证据校验 + quality_gate 产物验收闸门）\n"
                 "- GOMARL 共识引擎（NeuralMixer 神经网络加权融合）\n"

@@ -1,4 +1,4 @@
-# MARS-408 DESIGN.md — 设计系统规范 (v10)
+# 芒得很职 DESIGN.md — 设计系统规范 (v10)
 
 > **版本：v11「砚 · Ink & Violet」** ｜ 权威真相源：`src/assets/styles/_variables.css`（唯一可改处）
 > 生成基线：以 `_variables.css` 的 `:root` / `[data-theme="light"]` 为唯一输入机械对齐 ｜ 更新：2026-09-14
@@ -286,7 +286,7 @@
 - **Touch Targets**：可点击元素最小 **44×44px**（移动端不低于 40px）。
 - **折叠策略**：桌面侧栏 → 平板图标栏 → 移动顶栏汉堡 + 底栏 5 项 tab；对话历史桌面内联 → 移动全屏滑出(`100vw`)。
 - **Font Scaling**：字号用 `rem`，支持浏览器 200% 缩放不破版；移动端 `--text-4xl` 等大字号逐级下调。
-- **主题跟随**：`[data-theme="light"]` 仅覆盖语义层；初始化 `localStorage['mars408-theme'] > matchMedia(prefers-color-scheme) > dark`（由 `App.vue` 的 `applyTheme()` 写入 `document.documentElement.dataset.theme`）。
+- **主题跟随**：`[data-theme="light"]` 仅覆盖语义层；初始化 `localStorage['mangdehenzhi-theme'] > matchMedia(prefers-color-scheme) > dark`（由 `App.vue` 的 `applyTheme()` 写入 `document.documentElement.dataset.theme`）。
 - **降级**：`prefers-reduced-motion` → `--motion-scale: 0`；`pointer: coarse` → `0.7`；`prefers-reduced-transparency` → 玻璃退化为实色 + `blur(0)`。
 
 ---
@@ -294,7 +294,7 @@
 ## 9. Agent Prompt Guide
 
 ### Quick Reference
-MARS-408 设计系统 = **v11「砚 · Ink & Violet」**：克制深色 + **紫罗兰强调色 `#7c6af2` / 深紫 `#6b5cdb`** + 408 四科分色（数据结构 `#A98CDD` / 计网 `#6E9BD9` / 计组 `#4FA9B8` / 操作系统 `#DE85AC`）+ 零霓虹中性投影。**唯一真相源**：`src/assets/styles/_variables.css` 的 `:root` 语义变量。组件只引用变量，双主题（`:root` dark / `[data-theme="light"]`）自动适配。标准按钮 `.btn`，卡片 `.card`/`.glass-card`，标签 `.tag-*`，模态 `.panel-overlay` + `.profile-panel`。
+芒得很职 设计系统 = **v11「砚 · Ink & Violet」**：克制深色 + **紫罗兰强调色 `#7c6af2` / 深紫 `#6b5cdb`** + 408 四科分色（数据结构 `#A98CDD` / 计网 `#6E9BD9` / 计组 `#4FA9B8` / 操作系统 `#DE85AC`）+ 零霓虹中性投影。**唯一真相源**：`src/assets/styles/_variables.css` 的 `:root` 语义变量。组件只引用变量，双主题（`:root` dark / `[data-theme="light"]`）自动适配。标准按钮 `.btn`，卡片 `.card`/`.glass-card`，标签 `.tag-*`，模态 `.panel-overlay` + `.profile-panel`。
 
 ### Component Prompts（可直接复制给 AI 代理）
 ```

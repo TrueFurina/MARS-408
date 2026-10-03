@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# MARS-408 全自动质检脚本（供 24h 巡检 automation 调用，亦可手动运行）
+# 芒得很职 全自动质检脚本（供 24h 巡检 automation 调用，亦可手动运行）
 # 用法: bash scripts/auto_qa.sh
 # 输出: 追加结构化报告到 docs/reports/qa-24h-log.md
 set +e
@@ -16,7 +16,7 @@ ok=0; warn=0; fail=0
 line() { printf '%s\n' "$1" >> "$REPORT"; }
 
 mkdir -p docs/reports
-[ -f "$REPORT" ] || echo "# MARS-408 24h 自动质检日志" > "$REPORT"
+[ -f "$REPORT" ] || echo "# 芒得很职 24h 自动质检日志" > "$REPORT"
 
 line ""
 line "## 🔎 巡检 $TS"

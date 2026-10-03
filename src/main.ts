@@ -1,3 +1,6 @@
+// 必须置于所有 import 之前：品牌更名后迁移旧 localStorage 键（mars408_* → mangdehenzhi_*），
+// 保证在任何 store 读取 localStorage 之前执行，避免老用户丢失登录态/主题/成就。
+import './utils/migrateLegacyKeys'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'

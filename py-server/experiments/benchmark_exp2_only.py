@@ -28,7 +28,7 @@ from benchmark import (
 
 def main():
     print("=" * 70)
-    print("MARS-408 Benchmark — 实验2 only (NeuralMixer vs 加权投票)")
+    print("芒得很职 Benchmark — 实验2 only (NeuralMixer vs 加权投票)")
     print("=" * 70)
     print(f"题目数: {len(QUESTIONS)}, 每题 3 轮 trial, 共 {len(QUESTIONS)*3} 观测")
     print(f"权重文件: models/neural_mixer_trained.pt")
@@ -68,7 +68,7 @@ def main():
     json_path = results_dir / f"benchmark_exp2_reproduce_{today}.json"
     output = {
         "meta": {
-            "benchmark": "MARS-408 exp2 only",
+            "benchmark": "芒得很职 exp2 only",
             "date": today,
             "random_seed": RANDOM_SEED,
             "n_questions": len(QUESTIONS),

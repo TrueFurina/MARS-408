@@ -1,4 +1,4 @@
-"""MARS-408 前后端守护启动器（DETACHED_PROCESS，脱离 bash 会话存活）
+"""芒得很职 前后端守护启动器（DETACHED_PROCESS，脱离 bash 会话存活）
 
 用法: python scripts/launch_detached.py
 用 CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS 标志启动后端+前端，

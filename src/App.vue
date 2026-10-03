@@ -75,7 +75,7 @@ async function checkBackend() {
 onMounted(() => {
   // 初始化主题（localStorage > 系统偏好 > 默认深色）
   let saved: string | null = null
-  try { saved = localStorage.getItem('mars408-theme') } catch {}
+  try { saved = localStorage.getItem('mangdehenzhi-theme') } catch {}
   if (saved !== 'light' && saved !== 'dark') {
     saved = (typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: light)').matches) ? 'light' : 'dark'
   }
@@ -103,7 +103,7 @@ const moonIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 function applyTheme(t: 'dark' | 'light') {
   document.documentElement.dataset.theme = t
   theme.value = t
-  try { localStorage.setItem('mars408-theme', t) } catch {}
+  try { localStorage.setItem('mangdehenzhi-theme', t) } catch {}
   // 同步移动端浏览器栏配色（theme-color 跟随双主题，取值同 --color-canvas）
   const meta = document.querySelector('meta[name="theme-color"]')
   if (meta) meta.setAttribute('content', t === 'dark' ? '#0E1217' : '#F5F6F7')

@@ -1,4 +1,4 @@
-# 待完成任务派发清单 — MARS-408/study-help-pro @ career-literacy
+# 待完成任务派发清单 — 芒得很职/study-help-pro @ career-literacy
 
 **日期**：2026-09-15
 **生成者**：工程保障团队主理人（team-lead）
@@ -71,7 +71,7 @@
 
 ## 📋 精简派发 prompt（一段话版 · 可直接粘贴给其它 agent）
 
-> MARS-408/study-help-pro @ `career-literacy`：4 项工程保障修复（F-02/F-03/F-08/F-10）已落到工作树但**未提交**（git 单会话约束）。请在一个**独占 git** 的会话里执行：(1) 核对 4 处改动确实在位 —— `py-server/engines/agent_debate.py:168` 的 `decide_review_weight(feats, use_mappo=True, consensus=c)` 及 `:165-167` 注释、`py-server/api/sandbox.py:42` `_run_blocking_proc` 与 `:230` `await asyncio.to_thread`、`CLAUDE.md:198` 现述「9 条注入模式」、`docs/` 下 4 文件（CTO-深度验收:147 / 攻坚令:282 / 验收记录:70 / 派单回执:47）③ 钩子的「合成环境：真实特征提取管线 + 合成上下文采样，非真实 trace；真实增益待 P5 试点」限定词；(2) 跑 `pytest py-server/tests/test_review_single_source.py py-server/tests/test_review_weight_protocol.py -q` 与 `python -c "import ast; ast.parse(open('py-server/api/sandbox.py').read())"` 验证；(3) 确认无其它会话占用 git 后，**单 commit** 提交这 4 个文件（建议 message 注明 F-02/F-03/F-08/F-10），报告 commit hash。**严禁并行 git 会话**，提交前先 `git status` 确认工作树只有这 4 处预期改动、无他人混入。
+> 芒得很职/study-help-pro @ `career-literacy`：4 项工程保障修复（F-02/F-03/F-08/F-10）已落到工作树但**未提交**（git 单会话约束）。请在一个**独占 git** 的会话里执行：(1) 核对 4 处改动确实在位 —— `py-server/engines/agent_debate.py:168` 的 `decide_review_weight(feats, use_mappo=True, consensus=c)` 及 `:165-167` 注释、`py-server/api/sandbox.py:42` `_run_blocking_proc` 与 `:230` `await asyncio.to_thread`、`CLAUDE.md:198` 现述「9 条注入模式」、`docs/` 下 4 文件（CTO-深度验收:147 / 攻坚令:282 / 验收记录:70 / 派单回执:47）③ 钩子的「合成环境：真实特征提取管线 + 合成上下文采样，非真实 trace；真实增益待 P5 试点」限定词；(2) 跑 `pytest py-server/tests/test_review_single_source.py py-server/tests/test_review_weight_protocol.py -q` 与 `python -c "import ast; ast.parse(open('py-server/api/sandbox.py').read())"` 验证；(3) 确认无其它会话占用 git 后，**单 commit** 提交这 4 个文件（建议 message 注明 F-02/F-03/F-08/F-10），报告 commit hash。**严禁并行 git 会话**，提交前先 `git status` 确认工作树只有这 4 处预期改动、无他人混入。
 
 ### 派发时附带的验收红线（给执行 agent）
 - F-02：`grep -n "decide_review_weight" py-server/engines/agent_debate.py` 须见 `consensus=c` 或显式注释。

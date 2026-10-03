@@ -72,17 +72,17 @@ const techHighlights = [
 
 // ── 品牌级设计原型 ──
 // 已移除 5 个不可用/与 Vue 系统脱节的独立 HTML 原型：
-//   - 火山杯路演落地页 (MARS-408_huoshan_landing.html)
-//   - 火山杯答辩 Deck (MARS-408_dachuang_deck.html)
-//   - 产品官网 / 品牌站 (MARS-408_official_site.html)
-//   - 学习系统 Dashboard (MARS-408_dashboard.html)
-//   - 产品闭环 Product Loop (MARS-408_product_loop.html)
+//   - 火山杯路演落地页 (芒得很职_huoshan_landing.html)
+//   - 火山杯答辩 Deck (芒得很职_dachuang_deck.html)
+//   - 产品官网 / 品牌站 (芒得很职_official_site.html)
+//   - 学习系统 Dashboard (芒得很职_dashboard.html)
+//   - 产品闭环 Product Loop (芒得很职_product_loop.html)
 const items = [
-  { key: 'landing-v2', title: '路演落地页 v2 · 7 智能体对齐', scene: '路演 / 答辩 · 单页滚动', desc: '对齐大创申报书 7 智能体命名的最新路演落地页，评委入口首选。', file: 'MARS-408-landing-final-v2.html', icon: icons.rocket },
-  { key: 'profile', title: '学情画像详情页', scene: '应用内 · 学情画像', desc: '8 维能力画像 + 雷达图 + 薄弱点 + 学习建议，a11y 加固版。', file: 'MARS-408-profile-final.html', icon: icons.user },
-  { key: 'agent-collab', title: '智能体协作可视化', scene: '架构可视化 · 单页', desc: '7 智能体节点图 + GOMARL 共识 + FrugalRAG 闭环 + 协作追踪。', file: 'MARS-408-agent-collab.html', icon: icons.agent },
-  { key: 'knowledge-graph', title: '知识图谱可视化', scene: '架构可视化 · 单页', desc: '408 四科 32 节点图谱 + 推荐学习路径 + 知识点详情。', file: 'MARS-408-knowledge-graph.html', icon: icons.knowledge },
-  { key: 'architecture', title: '系统架构总览', scene: '架构可视化 · 手绘', desc: '11 节点 LangGraph + FastAPI + FrugalRAG/GOMARL 全链路，悬停任意组件高亮其连接。', file: 'MARS-408-architecture.html', icon: icons.path },
+  { key: 'landing-v2', title: '路演落地页 v2 · 7 智能体对齐', scene: '路演 / 答辩 · 单页滚动', desc: '对齐大创申报书 7 智能体命名的最新路演落地页，评委入口首选。', file: '芒得很职-landing-final-v2.html', icon: icons.rocket },
+  { key: 'profile', title: '学情画像详情页', scene: '应用内 · 学情画像', desc: '8 维能力画像 + 雷达图 + 薄弱点 + 学习建议，a11y 加固版。', file: '芒得很职-profile-final.html', icon: icons.user },
+  { key: 'agent-collab', title: '智能体协作可视化', scene: '架构可视化 · 单页', desc: '7 智能体节点图 + GOMARL 共识 + FrugalRAG 闭环 + 协作追踪。', file: '芒得很职-agent-collab.html', icon: icons.agent },
+  { key: 'knowledge-graph', title: '知识图谱可视化', scene: '架构可视化 · 单页', desc: '408 四科 32 节点图谱 + 推荐学习路径 + 知识点详情。', file: '芒得很职-knowledge-graph.html', icon: icons.knowledge },
+  { key: 'architecture', title: '系统架构总览', scene: '架构可视化 · 手绘', desc: '11 节点 LangGraph + FastAPI + FrugalRAG/GOMARL 全链路，悬停任意组件高亮其连接。', file: '芒得很职-architecture.html', icon: icons.path },
   { key: 'portal', title: '展示总入口（门户）', scene: '统一门户 · 一键进入', desc: '聚合上述原型的导航门户，玻璃态卡片直达各页面，离线双击即开。', file: 'index.html', icon: icons.menu },
 ]
 

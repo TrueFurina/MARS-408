@@ -1,4 +1,4 @@
-# ADR Index — MARS-408 / study-help-pro
+# ADR Index — 芒得很职 / study-help-pro
 
 > 维护者：架构师（architect）｜本索引为架构决策记录（ADR）的唯一入口。
 > 原则：**事实**（如 9 节点图、evidence_check 节点）进 `docs/architecture/overview.md`，**决策**（选型/约束/策略）才进 ADR，避免 ADR 膨胀。

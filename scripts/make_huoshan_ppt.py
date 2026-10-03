@@ -87,7 +87,7 @@ def header(slide, title, subtitle=None, page=None):
         text(slide, Inches(12.45), Inches(7.05), Inches(0.7), Inches(0.35),
              [(str(page), {"size": 10, "color": GRAY})], align=PP_ALIGN.RIGHT)
     text(slide, Inches(0.45), Inches(7.05), Inches(6), Inches(0.35),
-         [("MARS-408 · 2026 福建高校「火山杯」Agent 创新大赛", {"size": 9, "color": GRAY})])
+         [("芒得很职 · 2026 福建高校「火山杯」Agent 创新大赛", {"size": 9, "color": GRAY})])
 
 def bullet_block(slide, x, y, w, h, items, size=15, gap=8):
     tb = slide.shapes.add_textbox(x, y, w, h)
@@ -166,7 +166,7 @@ rect(s, 0, Inches(4.9), SW, Pt(3), CYAN)
 text(s, Inches(0.9), Inches(1.7), Inches(11.5), Inches(0.5),
      [("2026 福建高校「火山杯」Agent 创新大赛", {"size": 18, "color": CYAN, "bold": True})])
 text(s, Inches(0.9), Inches(2.35), Inches(11.5), Inches(1.5),
-     [("MARS-408", {"size": 54, "bold": True, "color": WHITE})])
+     [("芒得很职", {"size": 54, "bold": True, "color": WHITE})])
 text(s, Inches(0.9), Inches(3.5), Inches(11.5), Inches(0.8),
      [("考研多智能体个性化学习系统", {"size": 30, "bold": True, "color": WHITE})])
 text(s, Inches(0.9), Inches(4.35), Inches(11.5), Inches(0.5),
@@ -192,7 +192,7 @@ rect(s, Inches(0.55), Inches(4.35), Inches(0.06), Inches(2.1), CYAN)
 text(s, Inches(0.85), Inches(4.55), Inches(11.7), Inches(1.8),
      [("传统 AI 助手只能「一问一答」：", {"size": 15, "bold": True, "color": NAVY}),
       ("回答完就结束，没有诊断、没有规划、没有追踪，无法完成「诊断 → 规划 → 讲解 → 练习 → 复盘」的学习闭环。", {"size": 14, "color": DARK}),
-      ("\nMARS-408 的目标：让 AI 从「回答问题的工具」升级为「真正懂你的学习教练」。", {"size": 15, "bold": True, "color": ORANGE})], line_spacing=1.25)
+      ("\n芒得很职 的目标：让 AI 从「回答问题的工具」升级为「真正懂你的学习教练」。", {"size": 15, "bold": True, "color": ORANGE})], line_spacing=1.25)
 
 # ══════════════ 3 产品定位 ══════════════
 s = add_slide()
@@ -383,7 +383,7 @@ text(s, Inches(0.9), Inches(5.45), Inches(11.5), Inches(1.2),
      [("感谢 2026 福建高校「火山杯」Agent 创新大赛主办方与火山引擎技术支持。\n开源组件：LangGraph · FastAPI · Milvus · Vue 3 · E5 等（许可清单见 OPENSOURCE_LICENSES.md）",
        {"size": 13, "color": RGBColor(0xC9,0xDA,0xEC), "line_spacing": 1.4})])
 text(s, Inches(0.9), Inches(6.9), Inches(11.5), Inches(0.4),
-     [("MARS-408 · 让每一次学习都有迹可循", {"size": 14, "bold": True, "color": WHITE})])
+     [("芒得很职 · 让每一次学习都有迹可循", {"size": 14, "bold": True, "color": WHITE})])
 
 OUT = r"E:/Program/MARL/study-help-pro/deliverables/火山杯-演示PPT-最终版.pptx"
 prs.save(OUT)

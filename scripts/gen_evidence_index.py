@@ -476,7 +476,7 @@ def build_html(rows, concl, results_dir):
     p = []
     p.append("<!DOCTYPE html><html lang=\"zh-CN\"><head><meta charset=\"utf-8\">")
     p.append("<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">")
-    p.append("<title>真实证据索引 · MARS-408 / 芒得很职</title>")
+    p.append("<title>真实证据索引 · 芒得很职 / 芒得很职</title>")
     p.append(f"<style>{CSS}</style></head><body><div class=\"wrap\">")
     p.append("<h1>真实证据索引</h1>")
     p.append("<p class=\"lede\">平台<strong>所有结论的可溯源实证</strong>——本索引由真实实验产物程序化生成，"

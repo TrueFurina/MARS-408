@@ -1,7 +1,7 @@
 # ============================================================
 # eval_marl_algorithms.py — MARL 算法实测对比（M4 对比研究）
 #
-# 在 MARS-408 教学决策 MDP（动态学生环境）上对比四类算法：
+# 在 芒得很职 教学决策 MDP（动态学生环境）上对比四类算法：
 #   IQL / VDN / QMIX（DQN 家族，engines/marl_dqn.py）vs MAPPO（engines/mappo_policy.py）
 #
 # 多智能体建模：agent0=难度档位(4)，agent1=讲解方式(3)，agent2=评审强度(3)

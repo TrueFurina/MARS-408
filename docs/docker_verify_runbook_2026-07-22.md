@@ -1,4 +1,4 @@
-# Docker 一键可跑验证 Runbook · MARS-408（软件杯 A3）
+# Docker 一键可跑验证 Runbook · 芒得很职（软件杯 A3）
 
 > 日期：2026-07-22
 > 关联：`docs/optimization_backlog_2026-07-22.md` T-OPT-08、`EVALUATION_ENV.md`、`docker-compose.yml`、`Dockerfile`
@@ -14,7 +14,7 @@
 | `docker-entrypoint.sh` 存在且可执行 | ✅ 存在（`chmod +x` 已在 Dockerfile 执行） |
 | `package.json` 含 `build-only` 脚本 | ✅ `"build-only": "vite build"` |
 | 单进程约束 | ✅ ENTRYPOINT 用 `uv run python -m uvicorn main:app` 未加 `--workers N`（ADR-007 硬约束） |
-| 非 root | ✅ gosu 切换 mars408 用户运行 |
+| 非 root | ✅ gosu 切换 mangdehenzhi 用户运行 |
 | 开发模式自动播种 | ✅ `NETLEARN_ENV=development`（默认）自动生成密钥 + 播种 `demo/demo123456` |
 
 > 结论：构建链路完整、可验证可跑。真跑只剩「起容器 + 探活 + 一次真实对话」三步。

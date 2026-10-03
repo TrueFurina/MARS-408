@@ -272,8 +272,8 @@ router.beforeEach((to) => {
   let token: string | null = null
   let user: any = null
   try {
-    token = localStorage.getItem('mars408_token')
-    const u = localStorage.getItem('mars408_user')
+    token = localStorage.getItem('mangdehenzhi_token')
+    const u = localStorage.getItem('mangdehenzhi_user')
     if (u) user = JSON.parse(u)
   } catch { /* */ }
 

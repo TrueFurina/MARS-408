@@ -1,4 +1,4 @@
-# MARS-408 设计系统 · 单一真相源（SSOT）契约
+# 芒得很职 设计系统 · 单一真相源（SSOT）契约
 
 > 收口日期：2026-07-13 ｜ 主理人：画统筹（Hua）
 > 配套：`src/assets/styles/_variables.css`（权威源）· `check_tokens.py`（漂移门禁）· `audit-report.md`（Vue 应用侧已 10/10 清零）
@@ -7,7 +7,7 @@
 
 ## 0. 一句话结论
 
-**`_variables.css` 的 `:root` 块是 MARS-408 设计系统唯一的、可被修改的令牌真相源。**
+**`_variables.css` 的 `:root` 块是 芒得很职 设计系统唯一的、可被修改的令牌真相源。**
 其余一切（文档 / 原型 / 可视化 Style Guide）都是它的**消费者或派生物**，严禁成为独立真相源。
 
 ---
@@ -50,10 +50,10 @@ python design-system/check_tokens.py
 **收口现状（2026-07-13）**
 ```
 [canonical] _variables.css :root 解析到 113 个令牌
-[OK] public/showcase/MARS-408_dachuang_deck.html     (对齐 29 · 扩展 0)
-[OK] public/showcase/MARS-408_dashboard.html         (对齐 28 · 扩展 1)
-[OK] public/showcase/MARS-408_official_site.html     (对齐 30 · 扩展 1)
-[OK] public/showcase/MARS-408_softwarecup_landing.html(对齐 32 · 扩展 7)
+[OK] public/showcase/芒得很职_dachuang_deck.html     (对齐 29 · 扩展 0)
+[OK] public/showcase/芒得很职_dashboard.html         (对齐 28 · 扩展 1)
+[OK] public/showcase/芒得很职_official_site.html     (对齐 30 · 扩展 1)
+[OK] public/showcase/芒得很职_softwarecup_landing.html(对齐 32 · 扩展 7)
 [OK] design-system/showcase.html                     (对齐 70 · 扩展 7)
 === 零漂移 (ZERO DRIFT) ===
 ```

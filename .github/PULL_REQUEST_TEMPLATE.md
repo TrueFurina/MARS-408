@@ -1,5 +1,5 @@
 <!--
-  MARS-408 / study-help-pro PR 模板
+  芒得很职 / study-help-pro PR 模板
   配套：docs/代码审查标准.md · docs/代码审查流程.md
   审查者请按标准 §0 红线速查表与 §4 分级清单逐项核对。
 -->

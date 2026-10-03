@@ -149,7 +149,7 @@ async def competition_status():
 
     return {
         "competition": "2026 福建高校「火山杯」Agent 创新大赛",
-        "team": "MARS-408",
+        "team": "芒得很职",
         "functions": [
             {"id": "F1", "name": "对话式学习画像构建", "status": "✅ 已实现", "detail": "8维度画像，对话式构建，随学随新", "route": "/chat"},
             {"id": "F2", "name": "多智能体协同资源生成（核心）", "status": "✅ 已实现", "detail": "13个Agent协同，7种资源并行生成（讲解/习题/导图/拓展/PPT/代码/视频）", "route": "/resource"},

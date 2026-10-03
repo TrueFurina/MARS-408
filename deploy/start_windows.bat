@@ -2,7 +2,7 @@
 chcp 65001 >nul
 setlocal EnableExtensions
 rem ===================================================================
-rem  MARS-408 / study-help-pro  one-click launcher (Windows)
+rem  芒得很职 / study-help-pro  one-click launcher (Windows)
 rem
 rem  Duty : preflight checks -> start backend (uvicorn main:app) in the
 rem         background -> poll health -> print access info.
@@ -43,7 +43,7 @@ set "LOG_FILE=%LOG_DIR%\backend.log"
 if not exist "%LOG_DIR%" mkdir "%LOG_DIR%"
 
 echo ====================================================================
-echo  MARS-408 one-click launcher (backend)
+echo  芒得很职 one-click launcher (backend)
 echo  repo   : %REPO_ROOT%
 echo  server : %PY_SERVER_DIR%
 echo  target : http://%HOST%:%PORT%%HEALTH_PATH%
@@ -89,7 +89,7 @@ if exist "%LOG_FILE%" move /Y "%LOG_FILE%" "%LOG_FILE%.old" >nul
 cd /d "%PY_SERVER_DIR%"
 rem --workers 1 is mandatory: main.py enforces a single-writer lock on
 rem py-server\vectordb_data\.import_writer.lock and refuses to boot with >1 worker.
-start "MARS-408-Backend" /B cmd /c ""%PY%" -m uvicorn main:app --host %HOST% --port %PORT% --workers 1 > "%LOG_FILE%" 2>&1"
+start "芒得很职-Backend" /B cmd /c ""%PY%" -m uvicorn main:app --host %HOST% --port %PORT% --workers 1 > "%LOG_FILE%" 2>&1"
 echo [ OK  ] Backend process started in background.
 echo [INFO ]       waiting for readiness (timeout %STARTUP_TIMEOUT%s, first boot ~30s) ...
 

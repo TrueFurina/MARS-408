@@ -1,5 +1,5 @@
 # ============================================================
-# MARS-408 性能基准测试脚本
+# 芒得很职 性能基准测试脚本
 # 赛题要求：核心功能响应时间合理，多模态资源生成需流式/进度追踪
 # 运行：python -m scripts.benchmark
 # ============================================================
@@ -143,7 +143,7 @@ def test_data_structures():
     d = s.to_dict()
     t0 = time.perf_counter()
     for _ in range(100):
-        s2 = Skill.from_dict(d)
+        Skill.from_dict(d)
     t1 = time.perf_counter()
     record("Skill.from_dict() × 100", True, (t1 - t0) * 1000)
 
@@ -185,7 +185,7 @@ async def test_skill_agent():
 
     # 构造 Agent（不实际调用 LLM）
     t0 = time.perf_counter()
-    agent = SkillAgent(created.id)
+    SkillAgent(created.id)
     t1 = time.perf_counter()
     record("SkillAgent 构造", True, (t1 - t0) * 1000)
 
@@ -197,7 +197,7 @@ async def test_skill_agent():
 
 async def main():
     print("=" * 60)
-    print("  MARS-408 性能基准测试")
+    print("  芒得很职 性能基准测试")
     print(f"  时间: {RESULTS['timestamp']}")
     print("=" * 60)
 

@@ -7,7 +7,7 @@
 规则来源：西湖论剑 CTF-Agent 诚实口径扫描器
 核心原则：平台 accepted=0 时，任何"解出数递增/真实解出 flag/自主X/X"均为假水位
 
-此外本文件还承载 **MARS-408 对外口径红线**（见下方 _EXTERNAL_REDLINE_PATTERNS）：
+此外本文件还承载 **芒得很职 对外口径红线**（见下方 _EXTERNAL_REDLINE_PATTERNS）：
 对**已被实测证伪/无据**的对外宣称做 fail-closed 拦截，防止它们从归档快照回流。
 """
 import re
@@ -39,7 +39,7 @@ _QUOTE_RE = re.compile("「[^」]*」|『[^』]*』|\"[^\"]*\"|'[^']*'")
 
 
 # ============================================================================
-# MARS-408 对外口径红线：已被实测证伪 / 无证据支撑的宣称，命中即 fail-closed。
+# 芒得很职 对外口径红线：已被实测证伪 / 无证据支撑的宣称，命中即 fail-closed。
 #
 # 出处与判定依据：deliverables/engineering-assurance/metrics-integrity-audit-2026-08-29.md
 #   - 「检索成本降低 45%」：实测 token −0.14%（基本持平）、延迟 −3.59%（略降）→ 证伪
@@ -169,7 +169,7 @@ def get_staged_files() -> list:
     """本次暂存的 A/C/M 文件（pre-commit 场景）。
 
     ⚠️ 必须按**行**读取，不能用 `.strip().split()`：后者按空白拆词，而本仓库
-    确有带空格的路径（deliverables/MARS-408 考研…/…），会被拆成两个不存在的文件名
+    确有带空格的路径（deliverables/芒得很职 考研…/…），会被拆成两个不存在的文件名
     从而**静默漏扫**——这正是 pre-commit.sh 里已经修过的同款坑。
     """
     import subprocess

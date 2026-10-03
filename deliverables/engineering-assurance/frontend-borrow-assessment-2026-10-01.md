@@ -97,7 +97,7 @@
 #### 你项目现状
 
 - **只有 4 个 store**：`authStore / skillStore / studyStore / achievementStore`。`studyStore` 是一个 ~780 行的"上帝 store"，把认证委派、画像、科目、对话、SSE 流解析、题库、评估、知识图谱**全部塞在一起**。
-- 对话态持久化：localStorage 为主（`mars408_conversations_<uid>`，20 条上限 + 4MB 阈值瘦身），`PUT /user/conversations` 做后端兜底。**双写但没有冲突仲裁**（谁先写谁赢，无 version）。
+- 对话态持久化：localStorage 为主（`mangdehenzhi_conversations_<uid>`，20 条上限 + 4MB 阈值瘦身），`PUT /user/conversations` 做后端兜底。**双写但没有冲突仲裁**（谁先写谁赢，无 version）。
 - SSE 解析逻辑**内联在 `sendMessageStream` 里**（`data:` 行切分 + `JSON.parse` + 手写 reasonStart/toolCallStart 计时），无法复用，也无法单元测试。
 - 没有"编排态"这一层（编排进度要么是组件局部 `ref`，要么是假动画）。
 - 好消息：你项目已有 `@tanstack/vue-virtual`、`api.postStream`、Pinia 组合式 store、`shallowReactive`，地基齐全。

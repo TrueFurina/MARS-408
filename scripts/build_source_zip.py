@@ -1,4 +1,4 @@
-# 生成 submission/04_源码/MARS-408_source.zip
+# 生成 submission/04_源码/芒得很职_source.zip
 # 匹配 submission/04_源码/README.md 约定：
 #   排除 node_modules/.venv/dist/__pycache__/.fixvenv/.fixcn/.lxmlfix/.git/*.log/vectordb_data/.env
 #   包含 py-server(含 models/neural_mixer_trained.pt)/src/public/Dockerfile/docker-compose.yml/package.json/vite.config.ts/.env.example/README.md
@@ -6,7 +6,7 @@ import os, zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-OUT = ROOT / "submission" / "04_源码" / "MARS-408_source.zip"
+OUT = ROOT / "submission" / "04_源码" / "芒得很职_source.zip"
 
 EXCLUDE_DIRS = {
     ".venv", "__pycache__", ".pytest_cache", ".git",

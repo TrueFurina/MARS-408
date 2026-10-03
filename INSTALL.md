@@ -1,4 +1,4 @@
-# MARS-408 安装与运行说明
+# 芒得很职 安装与运行说明
 
 > 第十五届中国软件杯 A3 赛题参赛作品
 > 基于 GOMARL 与 FrugalRAG 的 408 考研个性化学习多智能体系统
@@ -21,7 +21,7 @@
 
 ### 方式 1：一键启动（Windows）
 
-1. 解压 `mars-408-portable.zip`
+1. 解压 `mangdehenzhi-portable.zip`
 2. 双击 **`start.bat`**（或右键 → 以管理员身份运行）
 3. 等待终端显示 `启动完成！请访问：http://localhost:8002`
 4. 打开浏览器访问 `http://localhost:8002`
@@ -165,7 +165,7 @@ A: 删除 `py-server/vectordb_data/` 目录后重启后端。
 | 材料 | 位置 |
 |------|------|
 | 项目源码 | 项目根目录完整代码 |
-| 演示 PPT | `MARS-408_软件杯演示.pptx` |
+| 演示 PPT | `芒得很职_软件杯演示.pptx` |
 | 演示视频 | 需自行录制（≤7 分钟） |
 | 开发说明书 | `documents/开发说明书.md` |
 | 测试说明书 | `documents/测试说明书.md` |

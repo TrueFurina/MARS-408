@@ -52,7 +52,7 @@ fi
 
 # 只扫本次暂存的 A/C/M 文件。
 # -z（NUL 分隔）经 xargs -0 传递：本仓库确有带空格的路径（如
-# deliverables/MARS-408 考研…/）。旧的 `$(git diff --cached --name-only …)` 未加引号，
+# deliverables/芒得很职 考研…/）。旧的 `$(git diff --cached --name-only …)` 未加引号，
 # 会在这种路径上把参数拆错、静默漏扫；更糟的是**没有暂存文件时它会退化成全树扫描**。
 scan_staged_secrets() {
     if command -v xargs >/dev/null 2>&1; then

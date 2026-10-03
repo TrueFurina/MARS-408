@@ -27,7 +27,7 @@
 | 5 | 408申报书：知识库 2083 chunk | 2083 | 🟢 可直接使用 | `benchmark_2026-07-19.json` meta.kb_chunks=2083；`benchmark.py:195` `store.count("netlearn_kb")=2083` 双向核实 | 直接使用 |
 | 6 | 408申报书：知识图谱 613 节点 | 613 | 🟢 可直接使用 | `06_GOMARL-FrugalRAG集成分析.md` §知识图谱规模 | 直接使用 |
 | 7 | 408申报书：端到端 16/16 PASS | 16/16 | 🟢 可直接使用 | `CLAUDE.md` / `量化创新实测报告` 多次记录 | 直接使用 |
-| 8 | MARS-408：API 路由 ~209-214 | 209-214 | 🟡 可用但需标注 | 路由数为统计区间值，会随迭代变化 | 写"200+"或具体测量时点 |
+| 8 | 芒得很职：API 路由 ~209-214 | 209-214 | 🟡 可用但需标注 | 路由数为统计区间值，会随迭代变化 | 写"200+"或具体测量时点 |
 | 9 | 知识库构建 1883 chunk（旧表述） | 1883 | 🟠 需改口径 | 与 #5 冲突（实测 2083） | 删除 / 改 2083 |
 | 10 | 知识图谱 201 chunk（旧表述） | 201 | 🔴 禁止使用 | 201 是早期**种子数据集**的 chunk 数（数据结构 32 + 计算机网络 48 + 计算机组成原理 27 + 操作系统 21 = 128…与 201 也不符），是过时数据 | 删除 / 改 2083 |
 | 11 | 408申报书：9-Agent（StateGraph 9 节点） | 11 | 🟡 可用但需标注 | `py-server/agents/graph.py` `create_agent_graph()` 实际 `add_node` **11 次**（triage 入口 + coordinator → diagnostician → planner → retriever → generator_cluster → assessor → critic → evidence_check → quality_gate → path_planner）；`evidence_check` 已包含（第 9 个节点）。文档历史版本 8/9/10 均不准确 | 统一为 11-Agent / 11 节点（含 triage 入口路由与 evidence_check、quality_gate） |

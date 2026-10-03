@@ -21,12 +21,12 @@ const testing = ref(false)
 const testResult = ref('')
 const statusMsg = ref('')
 const hasExistingKey = ref(false)
-const isDark = ref(localStorage.getItem('mars408_theme') !== 'light')
+const isDark = ref(localStorage.getItem('mangdehenzhi_theme') !== 'light')
 
 function toggleTheme() {
   isDark.value = !isDark.value
   document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : 'light')
-  localStorage.setItem('mars408_theme', isDark.value ? 'dark' : 'light')
+  localStorage.setItem('mangdehenzhi_theme', isDark.value ? 'dark' : 'light')
 }
 
 async function loadConfig() {

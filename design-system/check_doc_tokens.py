@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-check_doc_tokens.py — MARS-408 设计系统 · 文档漂移门禁（dependency-free）
+check_doc_tokens.py — 芒得很职 设计系统 · 文档漂移门禁（dependency-free）
 
 背景：本次事故的根因是「文档不被门禁守护 → 自由漂移」。check_tokens.py 只校验
 showcase HTML，check_raw_values.py 只校验代码。本脚本补最后一块：**prose 规范文档

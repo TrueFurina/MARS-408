@@ -45,7 +45,6 @@ def _model_files_present(model_dir: Path) -> bool:
     """判断模型目录是否已含有效 E5 文件（config.json + 权重 + tokenizer）。"""
     if not model_dir.is_dir():
         return False
-    required = ["config.json", "tokenizer.json", "model.safetensors"]
     safetensors = (model_dir / "model.safetensors").exists()
     bin_weights = (model_dir / "pytorch_model.bin").exists()
     has_weights = safetensors or bin_weights
@@ -149,7 +148,7 @@ def _verify() -> dict:
 
 
 def main():
-    ap = argparse.ArgumentParser(description="一键恢复 MARS-408 知识库 (E5 + 向量库)")
+    ap = argparse.ArgumentParser(description="一键恢复 芒得很职 知识库 (E5 + 向量库)")
     ap.add_argument("--force", action="store_true", help="强制重新下载 E5 模型")
     ap.add_argument("--skip-model", action="store_true", help="假定模型已在位，跳过模型检查/下载")
     args = ap.parse_args()

@@ -32,7 +32,7 @@
 - Task #7 图标映射依赖 `navConfig`，由产品评审落地后已可读。
 
 ### 🔍 产品评审（IA / 导航）
-- 产出 IA 评审文档 `deliverables/gstack/ia-redesign-MARS-408-2026-09-12.md`（173 行，已跟踪）。
+- 产出 IA 评审文档 `deliverables/gstack/ia-redesign-芒得很职-2026-09-12.md`（173 行，已跟踪）。
 - 导航收敛至 `src/router/navConfig.ts` 单一真值源；`App.vue`/`MoreMenu.vue` 早已由 baseline 派生（各 2 处引用）。
 - ⚠️ 其汇报夸大了「新建 navConfig」：实际 `navConfig.ts` 422 行本就在 baseline，未提交增量仅 `navConfig.ts(+1)` + `index.ts(+7)`。
 
@@ -45,7 +45,7 @@
 
 | # | 严重度 | 类别 | 位置 | 问题描述 | 结论 |
 |---|--------|------|------|---------|------|
-| 1 | 🟢 | 品牌化 | DashboardView / DesignSystemView / LandingView | MARS-408 → 芒得很职 品牌化 | 合法，门禁绿 |
+| 1 | 🟢 | 品牌化 | DashboardView / DesignSystemView / LandingView | 芒得很职 → 芒得很职 品牌化 | 合法，门禁绿 |
 | 2 | 🟢 | 口径校正 | LandingView/DesignSystemView | 虚高数字降到硬事实（KB 2122 / KG 86 / 资源类型 7 / 8 Agent） | 诚信正向 ✅ |
 | 3 | 🟢 | 口径校正 | capabilityComparison.ts | 删「平均减少30%」未证实表述→改「命中足够覆盖即停止」 | 诚信正向 ✅ |
 | 4 | 🟡 | 内容待确认 | capabilityComparison.ts | Qwen2.5 → Qwen3.8-Max（用户确认保留） | 已确认 |
@@ -77,7 +77,7 @@
 
 ## 📚 成员产出索引
 - gstack-designer：_components.css 令牌化 + Task #7 设计文档
-- gstack-product-reviewer：`deliverables/gstack/ia-redesign-MARS-408-2026-09-12.md` + navConfig 派生导航
+- gstack-product-reviewer：`deliverables/gstack/ia-redesign-芒得很职-2026-09-12.md` + navConfig 派生导航
 - general-purpose-1：EngineView/ShowcaseView 机械令牌化
 - 主理人核实报告：`deliverables/gstack/unattributed-diffs-2026-10-01.md`
 

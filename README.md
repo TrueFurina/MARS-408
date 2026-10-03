@@ -1,4 +1,4 @@
-# 芒得很职 — 基于 MARS-408 多智能体底座的职业素养对抗实训平台
+# 芒得很职 — 基于 芒得很职 多智能体底座的职业素养对抗实训平台
 
 [![CI](https://img.shields.io/badge/CI-passing-brightgreen)](https://github.com/TrueFurina/MARS-408/actions)
 [![Python](https://img.shields.io/badge/Python-3.12-blue)](https://www.python.org/)
@@ -7,9 +7,9 @@
 [![Vue](https://img.shields.io/badge/Vue-45%20views-42B883)](https://vuejs.org)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](https://github.com/TrueFurina/MARS-408)
 
-**芒得很职** is a next-generation, multi-agent empowered career-literacy adversarial training platform for computer-science students, built on the **MARS-408** multi-agent technical base: an 11-node LangGraph pipeline (triage → coordinator → diagnostician → planner → retriever → generator → assessor → critic → evidence_check → quality_gate → path_planner) delivers a full *diagnose → plan → teach → practice → review* loop, with SSE streaming, three-tier degradation (Redis/PostgreSQL/Milvus), E5 vector retrieval, and MAPPO-trained teaching policy. On top of this shared base, 芒得很职 adds a scenario-driven adversarial training loop (画像 → 对抗实训 → 证据评估 → 提升) with six-dimension ECD-aligned assessment.
+**芒得很职** is a next-generation, multi-agent empowered career-literacy adversarial training platform for computer-science students, built on the **芒得很职** multi-agent technical base: an 11-node LangGraph pipeline (triage → coordinator → diagnostician → planner → retriever → generator → assessor → critic → evidence_check → quality_gate → path_planner) delivers a full *diagnose → plan → teach → practice → review* loop, with SSE streaming, three-tier degradation (Redis/PostgreSQL/Milvus), E5 vector retrieval, and MAPPO-trained teaching policy. On top of this shared base, 芒得很职 adds a scenario-driven adversarial training loop (画像 → 对抗实训 → 证据评估 → 提升) with six-dimension ECD-aligned assessment.
 
-> 注：MARS-408 为多智能体个性化学习系统的**技术底座代号**；本仓库 `career-literacy` 分支以**芒得很职**为对外产品（计算机类学生职业素养对抗实训），复用同一套多智能体底座。本项目为真实可运行的代码工程。
+> 注：芒得很职 为多智能体个性化学习系统的**技术底座代号**；本仓库 `career-literacy` 分支以**芒得很职**为对外产品（计算机类学生职业素养对抗实训），复用同一套多智能体底座。本项目为真实可运行的代码工程。
 
 > **中国国际大学生创新大赛 · 高教主赛道·创意组 · 参赛作品**
 >
@@ -56,7 +56,7 @@
 
 ## 一、核心能力
 
-### 1. 11 节点多智能体流水线（LangGraph 编排，MARS-408 技术底座）
+### 1. 11 节点多智能体流水线（LangGraph 编排，芒得很职 技术底座）
 
 学情诊断 → 任务规划 → 知识检索 → 资源生成 → 评估反馈 → 质量校验 → 证据核查 → 产物验收 → 路径规划，多角色各司其职、协同闭环。与传统一问一答的 Chatbot 不同，系统能主动拆解学习任务、规划学习路径、多轮交互追问，并实时反馈进度。
 
@@ -113,7 +113,7 @@
 
 ---
 
-## 三、多智能体流水线（11 节点，MARS-408 技术底座）
+## 三、多智能体流水线（11 节点，芒得很职 技术底座）
 
 | 节点 | 职责 | 产出 |
 |------|------|------|
@@ -229,7 +229,7 @@ npm install && npm run dev                   # :5173，代理 /api → 8002
 
 - 演示视频：`submission/03_演示视频/`
 - 评测与回归脚本：`py-server/experiments/`（eval_gold / benchmark）
-- 核心架构图（MARS-408 多智能体底座）：`documents/MARS-408核心架构图.svg`
+- 核心架构图（芒得很职 多智能体底座）：`documents/芒得很职核心架构图.svg`
 - 项目体检报告：`diagnostics/项目体检报告-2026-09-02.md`（宣称与实测逐条核对）
 - 职业素养对抗实训方案：`docs/职业素养对抗实训改造方案.md`
 
@@ -243,4 +243,4 @@ npm install && npm run dev                   # :5173，代理 /api → 8002
 
 ---
 
-*本 README 数据口径与源码一致；第〇节「能力兑现状态」为权威口径，量化指标均可通过随源码提供的脚本复现。当前分支 `career-literacy` 以**芒得很职**为对外产品，MARS-408 为其多智能体技术底座。*
+*本 README 数据口径与源码一致；第〇节「能力兑现状态」为权威口径，量化指标均可通过随源码提供的脚本复现。当前分支 `career-literacy` 以**芒得很职**为对外产品，芒得很职 为其多智能体技术底座。*

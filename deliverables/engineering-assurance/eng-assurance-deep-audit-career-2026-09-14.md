@@ -35,7 +35,7 @@
 | 2 | 🔴 | 异步(声称不符) | `tts_service.py:238,244` → `api/tts.py:65` | MeloTTS 阻塞未修：`synthesize` 直接同步调 `melo_synthesize`（数秒级），未 `to_thread`；xfyun 分支已 `await`，melo 分支漏 | 改为 `await asyncio.to_thread(melo_synthesize, text, language)` | Cody F9 |
 | 3 | 🟠 | 可观测性 | `shared/metrics.py:117-131` | P2 `http_request_duration_seconds_p95/p99` 显式 gauge **未落地**（仅 `_bucket` 直方图）；Runbook `findstr p95` 无匹配 | 按 `DEMO_OBSERVABILITY.md §1` 补 p95/p99 gauge，或改盯盘读直方图 | Rex C11 |
 | 4 | 🟠 | 演示就绪 | `DEMO_RUNBOOK.md` / `DEMO_GONOGO.md` | 全文无 `/api/career` 冒烟步骤，无 career 功能级绿线；"演示 career 功能"流程上未被显式放行 | 加 career 冒烟：① `GET /api/career/scenarios` 列表 ② demo 账号 `POST /api/career/session/start` 建会话 ③ 教师端 `/api/career/classes` 角色校验 | Rex E17/E18 |
-| 5 | 🟠 | 文档事实错误 | `CLAUDE.md:161` | 仍写"branch `master`、无 upstream"——实为 `career-literacy` + `origin`/`mars408` 已配置且跟踪 upstream；两处均错，误导贡献者 | 改为 career-literacy + 已存在 origin/mars408 且跟踪 | Docu #6 |
+| 5 | 🟠 | 文档事实错误 | `CLAUDE.md:161` | 仍写"branch `master`、无 upstream"——实为 `career-literacy` + `origin`/`mangdehenzhi` 已配置且跟踪 upstream；两处均错，误导贡献者 | 改为 career-literacy + 已存在 origin/mangdehenzhi 且跟踪 | Docu #6 |
 | 6 | 🟠 | 架构治理 | `docs/adr/`（仅 008/009/010） | 本次新增 review/MAPPO/career 架构**未进 ADR 治理**；architect 起草的 ADR-011/015/017 未见落盘，仅存于 CTO 攻坚令/B-*.md 报告 | 立 ADR-011（review 权重）、ADR-015/017（career/catfish），ADR-007/008 提 Accepted | Archi #7 |
 | 7 | 🟡 | 接线偏差 | `agent_debate.py:164` | 插入点 A 解析式不可达：仅传 `use_mappo=True` 未传 evidence/consensus → `decide_review_weight` 解析式分支（需两者）被跳过，落到 RL 路径 | 文档明确"点A仅走 RL，解析式仅点B可达"；或确认辩论侧可补传 evidence/consensus | Cody F16 |
 | 8 | 🟡 | 正确性 | `frugal_rag.py:640` | `clear_cache` 用 `redis_client._client.keys(...)`：访问私有 `_client` + KEYS 阻塞型反模式 | 改用 `scan_iter` 并经公开封装，勿碰 `_client` | Cody F17 |

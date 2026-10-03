@@ -279,7 +279,7 @@ async function generateNarratedVideo() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `mars408_${topic.value || 'lecture'}.mp4`
+    a.download = `mangdehenzhi_${topic.value || 'lecture'}.mp4`
     a.click()
     URL.revokeObjectURL(a.href)
   } catch (e) {
@@ -310,7 +310,7 @@ async function generateTeachingVideo() {
 }
 
 // ── 生成历史 localStorage ──
-const HISTORY_KEY = 'mars408_resource_history'
+const HISTORY_KEY = 'mangdehenzhi_resource_history'
 interface ResourceHistoryItem {
   id: string
   topic: string

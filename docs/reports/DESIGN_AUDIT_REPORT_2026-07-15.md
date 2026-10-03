@@ -1,4 +1,4 @@
-# MARS-408 设计系统审计报告（2026-07-15）
+# 芒得很职 设计系统审计报告（2026-07-15）
 
 > 审计对象：`src/**/*.vue`（53 组件/视图）+ `src/assets/styles/main.css` + `_variables.css`
 > 基准：`DESIGN_SYSTEM_v2.md`（本仓库设计系统规范单一真相源）

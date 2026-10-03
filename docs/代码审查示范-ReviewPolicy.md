@@ -1,7 +1,7 @@
 # 代码审查示范报告 · `review_policy.py` + `db/embedder.py`
 
 > **审查依据**：本项目《代码审查标准.md》红线速查表（§0）、反模式黑名单（§3）、分级清单（§4）；《代码审查流程.md》角色与门禁。
-> **审查对象**：MARS-408 火山杯作品（`main` 分支）的核心红线锚点模块
+> **审查对象**：芒得很职 火山杯作品（`main` 分支）的核心红线锚点模块
 > - `py-server/engines/review_policy.py`（993 行）—— ADR-017 评审单一真值源
 > - `py-server/db/embedder.py`（275 行）—— embedding 硬约束
 > **审查人**：火眼眼（代码审查专家）

@@ -8,7 +8,7 @@
 
 ## 背景
 
-study-help-pro（分支 `career-literacy`，对外产品名「芒得很职」，技术底座代号 MARS-408）后端为 FastAPI + LangGraph 的 **11 节点**管线。有人提出：新出的 Jev（TypeSafe AI 的 System One 决策模型）很快又省 token，是否可替代或补充当初为「省」而选的检索组件 FrugalRAG。评估确认这是**类别错误**——Jev 不做检索、不生成任何文本，三原语仅输出类型化判断（Choice / Score / Noul），且**仅托管 API**；用 Jev 替换 FrugalRAG 等于取消检索层。
+study-help-pro（分支 `career-literacy`，对外产品名「芒得很职」，技术底座代号 芒得很职）后端为 FastAPI + LangGraph 的 **11 节点**管线。有人提出：新出的 Jev（TypeSafe AI 的 System One 决策模型）很快又省 token，是否可替代或补充当初为「省」而选的检索组件 FrugalRAG。评估确认这是**类别错误**——Jev 不做检索、不生成任何文本，三原语仅输出类型化判断（Choice / Score / Noul），且**仅托管 API**；用 Jev 替换 FrugalRAG 等于取消检索层。
 
 评估同时暴露一个更根本的叙事错误：**FrugalRAG 从未降本**。现行口径 token/查询 185.75 对全量检索 165.86，实为 **−11.99%（未降反增）**；延迟 574.36 ms 对 2.70 ms，约 **213×**。其真实收益在检索质量：Recall@5 **+7.14 pp**、Precision@5 **+15.71 pp**、MRR **+12.38 pp**。旧口径 token −0.14%（`benchmark_2026-08-17.json`）与现行不一致；`metrics-integrity-audit-2026-08-29.md` 已把申报书「检索成本降低 45%」列为 🔴 禁止使用。Jev 侧：$0.042/百万输入 token、输出免费、70–500 ms、官方自评 4-workflow ≈ 67.8%、独立 108-claim 测试 96.3%、ECE 0.07；试点一轮 30 题×3 = 90 次判断 ≈ 9 万 token ≈ **$0.0038**，成本不构成决策理由。
 

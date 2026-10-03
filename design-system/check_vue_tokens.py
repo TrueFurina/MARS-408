@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-MARS-408 · Vue 侧设计令牌漂移门禁
+芒得很职 · Vue 侧设计令牌漂移门禁
 
 背景
 ----

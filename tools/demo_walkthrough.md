@@ -1,4 +1,4 @@
-# MARS-408 软件杯演示走查清单（S4）
+# 芒得很职 软件杯演示走查清单（S4）
 
 > 用途：录制演示视频前，按本清单确定性地走一遍系统，避免随机、避免翻车。
 > 前置：运行 `start_demo.bat`（Windows）/ `start_demo.sh`（Linux），浏览器打开 http://localhost:5173。

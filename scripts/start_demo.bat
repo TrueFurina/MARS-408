@@ -1,6 +1,6 @@
 @echo off
 REM ============================================================
-REM MARS-408 one-click demo launcher (Windows)
+REM 芒得很职 one-click demo launcher (Windows)
 REM Starts backend (uvicorn, workers=1) + frontend (vite),
 REM waits for backend health, then opens the browser.
 REM
@@ -21,7 +21,7 @@ if not exist "%VENV%" (
     echo [ERR] venv not found at %VENV%. Run: cd py-server && python -m venv .venv && .venv\Scripts\pip install -r requirements.txt
     goto end
 )
-start "MARS-408-backend" cmd /k "cd /d %BACKEND% && %VENV% -m uvicorn main:app --host 127.0.0.1 --port 8002 --workers 1"
+start "芒得很职-backend" cmd /k "cd /d %BACKEND% && %VENV% -m uvicorn main:app --host 127.0.0.1 --port 8002 --workers 1"
 
 REM --- 2) wait for backend health (cold start ~30s) ---
 echo Waiting for backend health at %BACKEND_URL%/api/status ...
@@ -40,7 +40,7 @@ echo Backend is UP.
 
 :frontend
 REM --- 3) start frontend in its own window ---
-start "MARS-408-frontend" cmd /k "cd /d %ROOT% && npm run dev"
+start "芒得很职-frontend" cmd /k "cd /d %ROOT% && npm run dev"
 
 REM --- 4) wait a moment, then open browser ---
 timeout /t 6 >nul

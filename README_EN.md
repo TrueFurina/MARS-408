@@ -1,4 +1,4 @@
-# Mangdehenzhi (芒得很职) — Career-Literacy Adversarial Training Platform on the MARS-408 Multi-Agent Base
+# Mangdehenzhi (芒得很职) — Career-Literacy Adversarial Training Platform on the 芒得很职 Multi-Agent Base
 
 > 📖 English README (this page) · [中文 README](README.md)
 
@@ -9,7 +9,7 @@
 >
 > Repository: https://github.com/TrueFurina/MARS-408
 >
-> Agent roster (MARS-408 base): `triage` → `coordinator` → `diagnostician` → `planner` → `retriever` → `generator_cluster`
+> Agent roster (芒得很职 base): `triage` → `coordinator` → `diagnostician` → `planner` → `retriever` → `generator_cluster`
 > (which fans out to 7 roles: lecturer / quiz / mind-map / slides / code / video / extension)
 > → `assessor` → `critic` → `evidence_check` → `quality_gate` → `path_planner`;
 > on top of this base, 芒得很职 adds `career_nodes` adversarial loop with six-dimension ECD assessment.
@@ -22,7 +22,7 @@ A career-literacy coaching system driven by an 11-node multi-agent pipeline that
 
 ## 1. Highlights
 
-### 1. 11-Node Multi-Agent Pipeline (LangGraph, MARS-408 technical base)
+### 1. 11-Node Multi-Agent Pipeline (LangGraph, 芒得很职 technical base)
 
 Learning-state diagnosis → task planning → knowledge retrieval → resource generation → assessment
 → quality audit → evidence verification → artifact acceptance → path planning. Agents own distinct
@@ -87,7 +87,7 @@ chain fails, the system **degrades to BM25-only** so demos and usage never break
 
 ---
 
-## 3. The 11-Node Agent Pipeline (MARS-408 technical base)
+## 3. The 11-Node Agent Pipeline (芒得很职 technical base)
 
 | Node | Responsibility | Output |
 |------|----------------|--------|
@@ -199,7 +199,7 @@ core features still run.
 
 - Demo videos: `submission/03_演示视频/`
 - Evaluation and regression scripts: `py-server/experiments/` (`eval_gold.py`, benchmarks)
-- Core architecture diagram (MARS-408 multi-agent base): `documents/MARS-408核心架构图.svg`
+- Core architecture diagram (芒得很职 multi-agent base): `documents/芒得很职核心架构图.svg`
 - Career-literacy transformation plan: `docs/职业素养对抗实训改造方案.md`
 
 ---
@@ -219,4 +219,4 @@ Key module map: `py-server/agents/graph.py` (multi-agent pipeline),
 
 *This English README mirrors the Chinese README's data; every quantitative metric is reproducible via
 the scripts shipped with the source. On the `career-literacy` branch, **芒得很职 (Mangdehenzhi)** is the
-external product name and MARS-408 is its multi-agent technical base.*
+external product name and 芒得很职 is its multi-agent technical base.*

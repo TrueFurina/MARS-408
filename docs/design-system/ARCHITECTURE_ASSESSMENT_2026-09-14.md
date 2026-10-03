@@ -1,4 +1,4 @@
-# MARS-408 设计系统架构评估与优化路线图
+# 芒得很职 设计系统架构评估与优化路线图
 
 > 评估角色：设计系统架构师（DesignMdArchitect）｜日期：2026-09-14
 > 范围：`src/assets/styles/**`（令牌 / 全局 CSS）+ `docs/**` 设计文档 + `design-system/**` 治理资产 + CI 门禁

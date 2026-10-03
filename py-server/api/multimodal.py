@@ -459,7 +459,7 @@ async def generate_narrated_video_endpoint(
     return FileResponse(
         path=video_path,
         media_type="video/mp4",
-        filename=f"mars408_narrated_{req.language}.mp4",
+        filename=f"mangdehenzhi_narrated_{req.language}.mp4",
     )
 
 
@@ -630,7 +630,7 @@ async def _generate_study_notes(req) -> dict:
     user_prompt = f"【学习主题】{req.topic}\n【难度】{getattr(req, 'difficulty', 'medium')}\n【学生画像】基础:{profile.get('knowledge_base','beginner')}\n请生成结构化学习笔记，包含：核心概念、关键公式/代码、典型例题、常见错误。"
     try:
         content = await llm.text_completion(STUDY_NOTES_AGENT_PROMPT, user_prompt, max_tokens=2500)
-    except Exception as e:
+    except Exception:
         content = f"## {req.topic} 学习笔记\n\n### 核心概念\n\n### 关键要点\n\n### 例题"
     return {"resource_type": "study_notes", "topic": req.topic, "content": content, "format": "markdown"}
 
@@ -642,7 +642,7 @@ async def _generate_interactive_model(req) -> dict:
     user_prompt = f"【学习主题】{req.topic}\n请生成一个可交互的HTML教学模型，包含可视化交互控件，用于演示核心概念。"
     try:
         content = await llm.text_completion(INTERACTIVE_MODEL_AGENT_PROMPT, user_prompt, max_tokens=2000)
-    except Exception as e:
+    except Exception:
         content = f"<div style='padding:20px;background:#1a1a2e;color:#fff;border-radius:8px;'><h3>{req.topic}</h3><p>可交互模型生成中...</p></div>"
     return {"resource_type": "interactive_model", "topic": req.topic, "html": content, "format": "html"}
 
@@ -655,7 +655,7 @@ async def _generate_video_recommend(req) -> dict:
     from prompts import VIDEO_RECOMMEND_AGENT_PROMPT
     try:
         content = await llm.text_completion(VIDEO_RECOMMEND_AGENT_PROMPT, user_prompt, max_tokens=1500)
-    except Exception as e:
+    except Exception:
         content = f"## 推荐视频资源\n\n1. {req.topic} 精讲\n2. {req.topic} 实战\n\n（推荐基于当前学习进度）"
     return {"resource_type": "video_recommend", "topic": req.topic, "content": content, "format": "markdown"}
 

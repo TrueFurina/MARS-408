@@ -75,7 +75,7 @@ def table(rows, widths=None, size=11, header=True):
 # ═══ 封面 ═══
 para("", space_after=30)
 para("2026 福建高校「火山杯」Agent 创新大赛", size=14, color=GRAY, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=20)
-para("MARS-408", size=34, bold=True, color=NAVY, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=8)
+para("芒得很职", size=34, bold=True, color=NAVY, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=8)
 para("考研多智能体个性化学习系统", size=22, bold=True, color=NAVY, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=24)
 para("让 AI 从「回答问题」到「真正懂你」—— 10 节点多智能体流水线驱动的考研学习教练", size=13, color=GRAY, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=30)
 para("赛道方向：未来学习中心（个性化学习规划 / 知识图谱 / 学习效果追踪）", size=12, color=GRAY, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=10)
@@ -84,7 +84,7 @@ doc.add_page_break()
 
 # ═══ 一、作品概述 ═══
 h1("一、作品概述")
-para("MARS-408 是一个面向 408 计算机考研（数据结构、计算机组成原理、操作系统、计算机网络）的多智能体个性化学习系统。"
+para("芒得很职 是一个面向 408 计算机考研（数据结构、计算机组成原理、操作系统、计算机网络）的多智能体个性化学习系统。"
      "系统由 10 个各司其职的 AI Agent（协调、学情诊断、路径规划、知识检索、资源生成、出题评估、质量校验、证据核查、产物验收等）协同工作，"
      "针对每位学生的知识图谱与薄弱点，自动生成个性化学习路径与专属练习，完成「诊断 → 规划 → 讲解 → 练习 → 复盘」的完整学习闭环，"
      "让 AI 从「回答问题的工具」升级为「真正懂你的学习教练」。")
@@ -97,7 +97,7 @@ para("408 计算机考研是百万级考研大军中竞争最激烈的赛道之�
 bullet("资料海量：教材、题库、网课、笔记信息过载，「该学什么」全靠个人感觉；")
 bullet("无人诊断：学没学会、错在哪、下一步学什么，没有客观依据，薄弱点靠猜；")
 bullet("学练割裂：刷题与讲解脱节，错题无人讲解，讲解后无人出题验证。")
-para("传统 AI 助手只能「一问一答」——回答完就结束，没有诊断、没有规划、没有追踪。MARS-408 的切入点是：以多智能体协作完成学习闭环，做真正懂你的个性化学习教练。")
+para("传统 AI 助手只能「一问一答」——回答完就结束，没有诊断、没有规划、没有追踪。芒得很职 的切入点是：以多智能体协作完成学习闭环，做真正懂你的个性化学习教练。")
 
 # ═══ 三、核心创新 ═══
 h1("三、核心创新")
@@ -182,6 +182,6 @@ para("本项目为真实可运行的代码工程（Vue 3 + TypeScript 前端 / F
 para("")
 para("本材料数据口径与源码一致；量化指标均可通过随源码提供的脚本复现。", size=11, color=GRAY)
 
-OUT = r"E:/Program/MARL/study-help-pro/submission/02_配套文档/作品详细介绍-MARS-408-最终版.docx"
+OUT = r"E:/Program/MARL/study-help-pro/submission/02_配套文档/作品详细介绍-芒得很职-最终版.docx"
 doc.save(OUT)
 print("saved:", OUT)

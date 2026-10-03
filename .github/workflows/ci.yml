@@ -1,4 +1,4 @@
-name: CI Security Gate (MARS-408 / study-help-pro)
+name: CI Security Gate (芒得很职 / study-help-pro)
 
 # 固化已修复的安全缺陷，防 regression。任一阻塞门禁失败即阻断 PR 合并。
 on:
@@ -318,7 +318,7 @@ jobs:
   # 供人工分级。
   #
   # ⚠️ 死锁陷阱（实测 pip-audit 2.10.1 源码，此前本 job 必然 100% 失败）：
-  #   上一步 `pip install -e .` 把本项目 mars-408-server 装成可编辑安装。
+  #   上一步 `pip install -e .` 把本项目 mangdehenzhi-server 装成可编辑安装。
   #   - `--skip-editable` 会把它变成 SkippedDependency(
   #       skip_reason="distribution marked as editable")；
   #   - 而 `--strict`(-S) 的定义是「依赖收集在任何依赖上失败则整个审计失败」，
