@@ -19,9 +19,10 @@
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(42rem 32rem at 10% 6%, rgba(var(--accent-rgb), 0.12), transparent 60%),
-    radial-gradient(38rem 30rem at 92% 94%, rgba(var(--subject-co-rgb), 0.10), transparent 60%),
-    radial-gradient(32rem 26rem at 72% 16%, rgba(var(--info-rgb), 0.07), transparent 60%);
+    radial-gradient(46rem 34rem at 8% 4%, rgba(var(--accent-rgb), 0.18), transparent 62%),
+    radial-gradient(30rem 24rem at 22% 10%, rgba(var(--accent-rgb), 0.10), transparent 60%),
+    radial-gradient(38rem 30rem at 92% 94%, rgba(var(--subject-co-rgb), 0.11), transparent 60%),
+    radial-gradient(32rem 26rem at 72% 16%, rgba(var(--info-rgb), 0.08), transparent 60%);
   animation: ambient-drift 20s ease-in-out infinite alternate;
 }
 

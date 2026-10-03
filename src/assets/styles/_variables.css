@@ -1,6 +1,6 @@
 /* ============================================================================
  * 芒得很职 — 设计令牌 · 单一真相源 (SSOT)
- * 版本：v10 「砚 · Ink & Clay」
+ * 版本：v11 「砚 · Ink & Clay · Ambient」
  * ----------------------------------------------------------------------------
  * 【设计哲学】
  *   1. 阅读优先：这是单次 1–3 小时的高强度学习工具，正文字色用 #E6E9ED 而非纯白，
@@ -9,7 +9,9 @@
  *      （canvas → surface-1 → surface-2 → surface-3），靠间距与字重分组，不靠装饰。
  *   3. 克制用色：全站只有 1 个强调色（陶土 Clay）。四科分色是"数据色"不是"装饰色"，
  *      只出现在学科标签、图表与掌握度上。语义色（成功/警告/危险/信息）只表达状态。
- *   4. 零霓虹：删除所有彩色发光（glow）令牌，改用中性投影 + 1px 描边表达高度。
+ *   4. 无霓虹、有柔光（v11 起）：禁止多色/高饱和的霓虹 box-shadow；但**允许品牌紫的
+ *      柔光（ambient glow）**——背景径向环境光 + 关键交互态（卡片/主按钮/头像/问候）
+ *      的单色紫柔光晕。柔光只取自 --accent-rgb、透明度 ≤ 0.36，与中性投影并用。
  *   5. 动效只动 GPU：所有过渡只允许 transform / opacity / filter / clip-path
  *      以及色彩类属性（background-color / border-color / color / box-shadow）；
  *      严禁过渡 width / height / top / left / margin / padding / font-size。
@@ -418,6 +420,13 @@
   --glow-secondary:      var(--shadow-2);
   --glow-success:        var(--shadow-2);
 
+  /* ── 2.11a 品牌紫柔光（v11 Ambient）──
+     只用于关键交互态 + 背景环境光；单色（--accent-rgb）、低饱和、透明度 ≤ 0.36。
+     用法：先中性投影定高度，再柔光晕染品牌色（顺序：shadow → glow）。 */
+  --glow-accent-soft:   0 0 18px rgba(var(--accent-rgb), 0.22);
+  --glow-accent-bloom:  0 6px 28px rgba(var(--accent-rgb), 0.28), 0 0 0 1px rgba(var(--accent-rgb), 0.22);
+  --glow-accent-strong: 0 10px 40px rgba(var(--accent-rgb), 0.36), 0 0 0 1px rgba(var(--accent-rgb), 0.28);
+
   /* ── 2.12 渐变（低对比、无彩色光污染）── */
   /* 主渐变 = 实底色（承载白字），由 --color-accent-solid → 其按下态 */
   --gradient-primary: linear-gradient(135deg, #8b7bf5 0%, #6b5cdb 100%);
@@ -581,6 +590,11 @@
   --shadow-card-hover: 0 8px 24px rgba(16, 20, 26, 0.11), 0 0 0 1px rgba(16, 20, 26, 0.07);
   --shadow-glow:       0 4px 16px rgba(16, 20, 26, 0.10), 0 0 0 1px rgba(var(--accent-rgb), 0.22);
   --shadow-edge:       14px 0 36px -18px rgba(16, 20, 26, 0.16);
+
+  /* ── 3.11a 品牌紫柔光 · 浅色覆盖（更淡，避免白底泛紫）── */
+  --glow-accent-soft:   0 0 16px rgba(var(--accent-rgb), 0.12);
+  --glow-accent-bloom:  0 6px 22px rgba(var(--accent-rgb), 0.16), 0 0 0 1px rgba(var(--accent-rgb), 0.14);
+  --glow-accent-strong: 0 10px 30px rgba(var(--accent-rgb), 0.22), 0 0 0 1px rgba(var(--accent-rgb), 0.18);
 
   /* ── 3.12 渐变 · 浅色覆盖 ── */
   --gradient-primary: linear-gradient(135deg, #7c6af2 0%, #6b5cdb 100%);
