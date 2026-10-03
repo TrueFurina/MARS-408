@@ -45,7 +45,7 @@ class TestVideoGeneration:
         assert data["duration_sec"] > 0
         # HTML 幻灯片内容
         assert "<svg" in data.get("html", "")
-        assert "NetLearn" in data.get("html", "")
+        assert "MARS-408" in data.get("html", "")
 
     # 同上：strict=True 会把「降级路径导致意外通过」判为失败，故改 strict=False。
     @pytest.mark.xfail(strict=False, reason="生成式教学视频/缓存需真实多模态 LLM 产出（scenes/duration/svg 内容）；当前 mock LLM 下走 video_generator 降级路径产出模板视频，故实际为 xpass；接入真实模型且产出有效内容时转绿并去掉本标记")
@@ -91,7 +91,7 @@ class TestVideoGeneration:
         scenes = parse_storyboard(script)
         svg = generate_scene_svg(scenes[0], "TCP三次握手")
         assert "<svg" in svg
-        assert "NetLearn" in svg
+        assert "MARS-408" in svg
 
     def test_video_template_types(self):
         """所有场景模板类型均可渲染"""
