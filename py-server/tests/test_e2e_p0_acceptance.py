@@ -2,7 +2,7 @@
 # E2E Functional Tests — P0 Acceptance Criteria
 # ============================================================
 # Author: QA (严过关)
-# Purpose: End-to-end functional verification for MARS-408
+# Purpose: End-to-end functional verification for 芒得很职
 # Coverage: T1-T9 P0 acceptance criteria
 # ============================================================
 

@@ -17,7 +17,7 @@ describe('getAuthHeaders Token 注入', () => {
   })
 
   it('有 token 时注入 Authorization Bearer', () => {
-    mockLocalStorage({ mars408_token: 'tok-123' })
+    mockLocalStorage({ mangdehenzhi_token: 'tok-123' })
     const headers = getAuthHeaders()
     expect(headers['Authorization']).toBe('Bearer tok-123')
   })

@@ -39,7 +39,7 @@ class TestVideoGeneration:
         assert data["duration_sec"] > 0
         # HTML 幻灯片内容
         assert "<svg" in data.get("html", "")
-        assert "MARS-408" in data.get("html", "")
+        assert "芒得很职" in data.get("html", "")
 
     @pytest.mark.xfail(reason="需要真实 LLM 连接，在 CI 中可能超时")
     def test_generate_video_with_cache(self):
@@ -84,7 +84,7 @@ class TestVideoGeneration:
         scenes = parse_storyboard(script)
         svg = generate_scene_svg(scenes[0], "TCP三次握手")
         assert "<svg" in svg
-        assert "MARS-408" in svg
+        assert "芒得很职" in svg
 
     def test_video_template_types(self):
         """所有场景模板类型均可渲染"""
