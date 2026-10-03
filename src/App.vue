@@ -104,6 +104,9 @@ function applyTheme(t: 'dark' | 'light') {
   document.documentElement.dataset.theme = t
   theme.value = t
   try { localStorage.setItem('mars408-theme', t) } catch {}
+  // 同步移动端浏览器栏配色（theme-color 跟随双主题，取值同 --color-canvas）
+  const meta = document.querySelector('meta[name="theme-color"]')
+  if (meta) meta.setAttribute('content', t === 'dark' ? '#0E1217' : '#F5F6F7')
 }
 function toggleTheme() {
   applyTheme(theme.value === 'dark' ? 'light' : 'dark')

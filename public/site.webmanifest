@@ -1,0 +1,33 @@
+{
+  "name": "芒得很职 — 多智能体赋能职业素养对抗实训平台",
+  "short_name": "芒得很职",
+  "description": "新一代多智能体赋能的计算机类学生职业素养对抗实训平台",
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0E1217",
+  "theme_color": "#0E1217",
+  "icons": [
+    {
+      "src": "/brand/mangxiaocheng-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/mangxiaocheng-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/mangxiaocheng-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
