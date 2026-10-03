@@ -42,6 +42,7 @@ EXCLUDE_PATH_SUBSTR = (
     "product-strategy",
     "mangde_online_screenshots",
     "待办交接",                # 交接单 §4 旧列对比属有意
+    "ADR-019-jev-tech-selection.md",  # 口径纠正 ADR：第 13 行需列出旧口径（−0.14%）证明"旧与现行不一致"，属有意引用（同 METRICS_CURRENT.md 性质）
 )
 
 # 已作废的旧 benchmark 口径（出现即漂移）
