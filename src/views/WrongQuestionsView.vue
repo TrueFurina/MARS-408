@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { api, friendlyError } from '@/utils/api'
+import { renderMarkdownSafe } from '@/utils/markdown'
 import ReviewView from '@/views/ReviewView.vue'
 import QuizHistoryView from '@/views/QuizHistoryView.vue'
 
@@ -249,7 +250,7 @@ watch(() => route.query.tab, syncTabFromRoute)
             <span v-if="q.mastered" class="q-badge mastered-badge"> 已掌握</span>
             <span v-else class="q-badge unmastered-badge"> 未掌握</span>
           </div>
-          <div class="q-text" v-html="getQuestionText(q)"></div>
+          <div class="q-text" v-html="renderMarkdownSafe(getQuestionText(q))"></div>
           <div v-if="getQuestionOptions(q).length" class="q-options">
             <div v-for="(opt, i) in getQuestionOptions(q)" :key="i" class="q-opt"
                  :class="{ 'opt-correct': opt.includes(q.correct_answer) || (typeof q.correct_answer === 'number' && i === q.correct_answer) }">
