@@ -14,6 +14,8 @@ from config import get_gomarl_config
 from db.llm_provider import LLMProvider
 from db.redis_client import redis_client
 from db.pg_client import pg_client
+# 量纲单一真源（引擎层 1-10 / 门禁层 0-100 / 证据 payload 0-1）：engines/score_scale.py
+from engines.score_scale import EMPTY_SCORE, clamp_ten_point, ten_point_to_unit
 
 logger = logging.getLogger("netlearn.gomarl")
 
@@ -42,7 +44,7 @@ class QualityScore:
 class ConsensusResult:
     """GOMARL 共识结果"""
     status: str           # "passed" | "flagged" | "regenerate" | "manual_review"
-    overall_score: float
+    overall_score: float  # 共识总分，**引擎层量纲 1-10**（= mixer 共识分，见 engines/score_scale.py）
     agent_scores: list[QualityScore]
     merged_content: str
     flagged_issues: list[str]
@@ -165,9 +167,10 @@ class GOMARLConsensus:
         mixer_result = await self._neural_mix(results, scores, student_profile, topic)
         neural_consensus_score = mixer_result.get("consensus_score", avg_score)
 
-        # Step 3.5: 共识置信度（M2，0-1）：平均质量分 + 冲突惩罚
+        # Step 3.5: 共识置信度（M2，0-1）：平均质量分（引擎层 1-10 → 0-1，走单一真源换算）+ 冲突惩罚
+        # 该字段是**门禁/证据侧 0-1**量纲；门禁再 ×100 归一到 0-100（quality_gate.review_signals）
         confidence = round(
-            max(0.1, min(1.0, avg_score / 10.0 - min(len(flagged_issues) * 0.05, 0.4))),
+            max(0.1, min(1.0, ten_point_to_unit(avg_score) - min(len(flagged_issues) * 0.05, 0.4))),
             3,
         )
 
@@ -524,7 +527,13 @@ class GOMARLConsensus:
         "改进传统多数投票为加权投票" + NeuralMixer 神经网络
         """
         if not self._use_neural:
-            return {"consensus_score": 0, "dynamic_weights": self._get_dynamic_weights()}
+            # 关闭神经网络 ≠ 共识分归零：返回到质量分均值（同为引擎层 1-10 量纲）。
+            # 旧实现返回 0，会被门禁层当成「共识极差」（0-100 层的 0 分）而误伤判定。
+            mean_score = sum(s.overall for s in scores) / len(scores) if scores else 0.0
+            return {
+                "consensus_score": clamp_ten_point(mean_score) if scores else EMPTY_SCORE,
+                "dynamic_weights": self._get_dynamic_weights(),
+            }
 
         try:
             from engines.gomarl_mixer import neural_mixer

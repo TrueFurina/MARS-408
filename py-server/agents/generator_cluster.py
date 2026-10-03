@@ -22,6 +22,7 @@ from agents.state import AgentState
 from db.llm_provider import LLMProvider
 from engines.frugal_rag import format_retrieval_for_llm
 from engines.gomarl import GOMARLConsensus, AgentResult
+from engines.score_scale import ten_point_to_hundred
 from prompts import (
     TEACHER_PROMPT, QUIZMASTER_PROMPT,
     EXTENSION_AGENT_PROMPT,
@@ -195,7 +196,10 @@ async def generator_cluster_node(state: AgentState) -> AgentState:
 
     state["consensus"] = {
         "status": consensus_result.status,
-        "overall_score": consensus_result.overall_score,
+        # ⚠️ 唯一跨界点：引擎层共识分 1-10 → 门禁/RL 信号层 0-100（见 engines/score_scale.py）。
+        # 门禁 review_signals 与 RL 环境（review_env_calibrated 虚构 overall_score ∈ [40,95]）
+        # 都把本字段当 0-100 用；历史上这里缺失换算，导致共识通道量级只有 1/10。
+        "overall_score": ten_point_to_hundred(consensus_result.overall_score),
         "flagged_issues": consensus_result.flagged_issues,
         "regenerate_agents": consensus_result.regenerate_agents,
         "merged_content": consensus_result.merged_content,

@@ -102,6 +102,27 @@ coordinator → diagnostician → planner → retriever
 
 ## 关键约束与约定
 
+### 量纲约定（score scales，2026-10-02 确立，单一真源 `py-server/engines/score_scale.py`）
+
+「分数」在三层各有不同量纲，**跨层赋值必须显式调用换算函数，禁止裸赋值**：
+
+| 层 | 量纲 | 典型字段 | 换算 |
+|---|---|---|---|
+| 引擎层（模型原生） | **1-10** | `QualityScore.overall`、`ConsensusResult.overall_score`、`NeuralGroupMixer.mix()["consensus_score"]`、配置 `quality_threshold=7` | 源头，不换算 |
+| 门禁 / RL 信号层 | **0-100** | `consensus.overall_score`（唯一跨界点 `agents/generator_cluster.py`）、`evidence_report.consistency_score`、`quality_gate.review_signals` 三通道、阈值 60/40 | 1-10 **×10**（`ten_point_to_hundred`） |
+| 证据链 payload 层 | **0-1** | `EvidenceChain/EvidenceCard.consensus_score`、`ChainNode.credibility`（pydantic `le=1.0`） | 1-10 **÷10**（`ten_point_to_unit` / `EvidenceChain.set_consensus_from_ten_point`） |
+
+**对外 API 例外（勿误判）**：`POST /api/engine/gomarl-consensus` 直接透传 mixer 的
+`consensus_score`（`api/engine.py`），即**引擎层 1-10** —— 前端 `GOMARLPanel.vue`
+「共识质量分数」显示的就是这一层，看到 0~10 的小数是正确的，不是 bug。
+
+两条历史事故教训（勿重蹈）：
+1. `gomarl_mixer.mix()` 曾对网络原生 1-10 输出再 `×10` → 被 clamp 成恒 `10.0`（面板「共识质量分数」永远 10.00，区分度归零）。
+2. `consensus.overall_score` 曾以 1-10 裸写入 0-100 的门禁层/RL 环境 → 生产区间 [1,10] 与 RL 虚构区间 [40,95] **交集为空**，该通道在 sim2real 上失效。
+   （同类前例：一致性分 0-100 → 0-1 时阈值 60/75 未同步，精准率恒为 0。）
+
+契约由 `py-server/tests/test_score_scale_contract.py` 机器守卫（含源码级「唯一跨界点」断言）。
+
 ### ADR-007：导入队列单写者
 
 `services/import_worker.py` 在进程内串行处理知识库导入。**硬约束：uvicorn 必须 `--workers 1`**，多进程会重新引入多写者 (last-writer-wins)。`main.py:250-255` 有启动期检查。
