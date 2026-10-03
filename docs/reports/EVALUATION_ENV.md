@@ -1,13 +1,13 @@
 # 评测环境说明
 
 > ⚠️ **评委评测请优先阅读本文件。**
-> 本文件说明 NetLearn 系统的评测/CI 运行环境要求与注意事项。
+> 本文件说明 MARS-408 系统的评测/CI 运行环境要求与注意事项。
 
 ---
 
 ## 一、为什么需要特定的评测环境
 
-NetLearn 后端依赖 `torch`（NeuralMixer 神经网络推理）和 `numpy`（向量计算）。
+MARS-408 后端依赖 `torch`（NeuralMixer 神经网络推理）和 `numpy`（向量计算）。
 在 **Windows 原生环境**下，`torch` 和 `numpy` 的某些版本组合可能触发 **SIGSEGV（段错误）**，
 导致进程崩溃（尤其在 `sentence-transformers` 加载 E5 模型或 `torch.matmul` 矩阵运算时）。
 

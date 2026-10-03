@@ -1,7 +1,7 @@
 #Requires -Version 5.0
 <#
 .SYNOPSIS
-  NetLearn 后端进程守护脚本（省赛 Demo 专用）
+  MARS-408 后端进程守护脚本（省赛 Demo 专用）
 .DESCRIPTION
   包裹 uvicorn (python main.py) 进程，崩溃后自动重启。
   解决 ADR-013 指出的 30s 冷启动风险：进程崩溃后 watchdog 自动拉起，
@@ -28,7 +28,7 @@ $RestartCount = 0
 $StartTime = Get-Date
 
 Write-Host "============================================" -ForegroundColor Cyan
-Write-Host "  NetLearn 后端进程守护 (Demo Watchdog)" -ForegroundColor Cyan
+Write-Host "  MARS-408 后端进程守护 (Demo Watchdog)" -ForegroundColor Cyan
 Write-Host "  项目根目录: $ProjectRoot" -ForegroundColor Gray
 Write-Host "  Python: $Python" -ForegroundColor Gray
 Write-Host "  最大重启次数: $MaxRestarts" -ForegroundColor Gray

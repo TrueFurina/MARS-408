@@ -43,7 +43,7 @@ tr = title.add_run("大创交付件口径校验备忘录")
 tr.bold = True; tr.font.size = Pt(16)
 sub = doc.add_paragraph()
 sub.alignment = WD_ALIGN_PARAGRAPH.CENTER
-sr = sub.add_run("NetLearn / MARS-408 · 闽江大学大学生创新创业训练计划 · 防口径漂移证据页")
+sr = sub.add_run("MARS-408 / MARS-408 · 闽江大学大学生创新创业训练计划 · 防口径漂移证据页")
 sr.font.size = Pt(10); sr.italic = True
 datep = doc.add_paragraph()
 datep.alignment = WD_ALIGN_PARAGRAPH.CENTER

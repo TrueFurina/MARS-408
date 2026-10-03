@@ -181,7 +181,6 @@ def generate_scene_svg(scene: dict, topic: str, theme: str = "dark") -> str:
     scene_id = scene["scene_id"]
     title = scene.get("title", f"场景{scene_id}")
     visual_desc = scene.get("visual_desc", "")
-    narration = scene.get("narration", "")
     template_type = scene.get("template_type", "flowchart")
 
     # 从视觉描述中提取关键信息
@@ -232,7 +231,7 @@ def generate_scene_svg(scene: dict, topic: str, theme: str = "dark") -> str:
     svg += _render_template_content(template_type, lines, scene_id, accent, cyan, green, warm, pink, text_color, sub_color)
 
     # 底部水印
-    svg += f'''  <text x="640" y="660" text-anchor="middle" fill="rgba(255,255,255,0.15)" font-size="14" font-family="sans-serif">NetLearn · 408 考研智能学习系统</text>
+    svg += f'''  <text x="640" y="660" text-anchor="middle" fill="rgba(255,255,255,0.15)" font-size="14" font-family="sans-serif">MARS-408 考研智能学习系统</text>
   <text x="640" y="690" text-anchor="middle" fill="rgba(255,255,255,0.1)" font-size="12" font-family="sans-serif">{_escape_svg(topic)}</text>
 </svg>'''
     return svg
@@ -273,7 +272,6 @@ def _render_flowchart(lines, scene_id, accent, cyan, green, text_color, sub_colo
   <rect x="{x}" y="{y}" width="{box_w}" height="{box_h}" rx="10" fill="rgba(255,255,255,0.04)" stroke="{color}" stroke-width="2"/>
   <text x="{x + box_w//2}" y="{y + box_h//2 + 6}" text-anchor="middle" fill="{text_color}" font-size="15" font-weight="500" font-family="sans-serif">{_escape_svg(node_text[:20])}</text>'''
         if i < len(nodes) - 1:
-            arrow_x = x + box_w + 10
             svg += f'''
   <line x1="{x + box_w}" y1="{y + box_h//2}" x2="{x + box_w + 40}" y2="{y + box_h//2}" stroke="{color}" stroke-width="2" stroke-dasharray="4,3"/>
   <polygon points="{x + box_w + 40},{y + box_h//2 - 6} {x + box_w + 40},{y + box_h//2 + 6} {x + box_w + 48},{y + box_h//2}" fill="{color}"/>'''

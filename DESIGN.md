@@ -1,4 +1,4 @@
-# DESIGN.md — 芒得很职 / NetLearn 前端设计语言
+# DESIGN.md — 芒得很职 / MARS-408 前端设计语言
 
 > 本文件是 AI 编码代理生成 UI 时的**唯一设计规范**。任何新增/修改界面都必须遵循此处约定。
 > 设计令牌的**数值真值源**是 `src/assets/styles/_variables.css`（v10「砚 · Ink & Clay」）。本文件描述"怎么用"，不重复定义十六进制值；组件一律引用语义令牌（`--color-*` / `--subject-*` / `--space-*` / `--radius-*` / `--transition`），**禁止在组件里写死颜色或间距**。

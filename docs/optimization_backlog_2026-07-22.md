@@ -1,4 +1,4 @@
-# NetLearn / MARS-408 — 全维度深度优化清单（T-OPT）
+# MARS-408 / MARS-408 — 全维度深度优化清单（T-OPT）
 
 > 主理人：齐活林（Qi）｜团队：software-a3-opt
 > 日期：2026-07-22

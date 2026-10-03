@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-NetLearn 讯飞 10 能力真探脚本
+MARS-408 讯飞 10 能力真探脚本
 ===========================
 对运行中的后端逐一实测 10 项讯飞能力，确认「可联通且产出预期响应」
 （不仅是 /api/xfyun/status 的 configured 标志）。
