@@ -7,7 +7,7 @@ set "FPORT=5173"
 set "VENV_PY=py-server\.venv\Scripts\python.exe"
 
 echo ============================================================
-echo   NetLearn 一键启动  (后端 :%BPORT%  +  前端 :%FPORT%)
+echo   MARS-408 一键启动  (后端 :%BPORT%  +  前端 :%FPORT%)
 echo ============================================================
 
 REM ---------- 1) 清理端口占用（含可能复活的 server_proxy.py）----------
@@ -22,12 +22,12 @@ if not exist "%VENV_PY%" (
   pause
   exit /b 1
 )
-start "NetLearn-Backend" cmd /k "cd /d %~dp0py-server && %VENV_PY% -m uvicorn main:app --host 127.0.0.1 --port %BPORT%"
+start "MARS-408-Backend" cmd /k "cd /d %~dp0py-server && %VENV_PY% -m uvicorn main:app --host 127.0.0.1 --port %BPORT%"
 
 REM ---------- 3) 启动前端 ----------
 echo [3/4] 启动前端 vite :%FPORT% ...
 where npm >nul 2>&1 || (echo   错误: 未找到 npm，请先安装 Node.js & pause & exit /b 1)
-start "NetLearn-Frontend" cmd /k "cd /d %~dp0 && npm run dev"
+start "MARS-408-Frontend" cmd /k "cd /d %~dp0 && npm run dev"
 
 REM ---------- 4) 等待后端就绪 ----------
 echo [4/4] 等待后端就绪（最多 ~90s）...
@@ -37,7 +37,7 @@ curl.exe -s -o nul --max-time 3 "http://127.0.0.1:%BPORT%/api/knowledge/stats" >
 if not errorlevel 1 goto backend_ok
 set /a tries+=1
 if %tries% geq 45 (
-  echo   后端启动超时，请查看 "NetLearn-Backend" 窗口日志
+  echo   后端启动超时，请查看 "MARS-408-Backend" 窗口日志
   goto end
 )
 timeout /t 2 >nul

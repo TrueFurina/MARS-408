@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# NetLearn 一键启动 (Git Bash / WSL 不适用，仅 Windows Git Bash)
+# MARS-408 一键启动 (Git Bash / WSL 不适用，仅 Windows Git Bash)
 # 用法: 在仓库根目录执行  ./start_netlearn.sh
 set -u
 cd "$(dirname "$0")"
@@ -8,7 +8,7 @@ BPORT=8002
 FPORT=5173
 VENV_PY="py-server/.venv/Scripts/python.exe"
 
-echo "=== NetLearn 一键启动 (后端 :$BPORT  +  前端 :$FPORT) ==="
+echo "=== MARS-408 一键启动 (后端 :$BPORT  +  前端 :$FPORT) ==="
 
 # 1) 清理端口占用（含可能复活的 server_proxy.py）
 echo "[1/4] 停止旧实例 / 端口占用..."
