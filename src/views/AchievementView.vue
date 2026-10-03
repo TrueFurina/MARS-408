@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useAchievementStore } from '@/stores/achievementStore'
 import { api } from '@/utils/api'
+import { toast } from '@/utils/toast'
 
 const achStore = useAchievementStore()
 const loading = ref(true)
@@ -25,15 +26,7 @@ function notifyNewAchievements() {
       .map(a => a.name)
     if (newly.length) {
       newlyUnlocked.value = newly
-      // 使用全局 Toast（window.__toast 由 ToastNotification 组件挂载）
-      const t = (window as any).__toast
-      if (t?.success) {
-        t.success(` 成就解锁: ${newly.join('、')}`)
-      } else {
-        window.dispatchEvent(new CustomEvent('netlearn-toast', {
-          detail: { type: 'success', message: ` 成就解锁: ${newly.join('、')}` },
-        }))
-      }
+      toast('success', ` 成就解锁: ${newly.join('、')}`)
     }
   }
   localStorage.setItem(_PREV_KEY, String(now))

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { api, friendlyError } from '@/utils/api'
+import { toast } from '@/utils/toast'
 
 interface DailyTask {
   id: string
@@ -51,12 +52,6 @@ function formatDisplayDate(dateStr: string) {
     if (diff === 1) return '明天'
     return `${d.getMonth() + 1}月${d.getDate()}日`
   } catch { return dateStr }
-}
-
-function toast(type: string, msg: string) {
-  const t = (window as any).__toast
-  if (t?.[type]) t[type](msg)
-  else window.dispatchEvent(new CustomEvent('netlearn-toast', { detail: { type, message: msg } }))
 }
 
 function taskIcon(type: string) {

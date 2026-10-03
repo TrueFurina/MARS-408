@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { api, friendlyError } from '@/utils/api'
 import { renderMarkdownSafe } from '@/utils/markdown'
+import { toast } from '@/utils/toast'
 import ReviewView from '@/views/ReviewView.vue'
 import QuizHistoryView from '@/views/QuizHistoryView.vue'
 
@@ -77,12 +78,6 @@ const subjectOptions = computed(() => {
 })
 
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize)))
-
-function toast(type: string, msg: string) {
-  const t = (window as any).__toast
-  if (t?.[type]) t[type](msg)
-  else window.dispatchEvent(new CustomEvent('netlearn-toast', { detail: { type, message: msg } }))
-}
 
 function subjectName(s: string) {
   if (s.startsWith('ds_')) return '数据结构'
