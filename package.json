@@ -18,6 +18,7 @@
     "gate:calibration": "python scripts/scan_stale_calibration.py",
     "gate:a11y": "python scripts/a11y_scan.py",
     "gate:perf": "python scripts/perf_scan.py",
+    "gate:xss": "python scripts/xss_scan.py",
     "verify": "node scripts/verify_all.mjs",
     "types:generate": "openapi-typescript py-server/openapi.json -o src/types/api.generated.ts"
   },
