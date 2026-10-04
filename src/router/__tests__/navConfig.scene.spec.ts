@@ -8,7 +8,7 @@
  *   4. 向后兼容：不传 scene 时不过滤（等价 F0 之前的行为）
  */
 import { describe, it, expect } from 'vitest'
-import { NAV_GROUPS, visibleGroups, flattenItems, type Scene } from '@/router/navConfig'
+import { NAV_GROUPS, visibleGroups, flattenItems, BOTTOM_NAV_KEYS_BY_SCENE, kaoyanPathPrefixes, type Scene } from '@/router/navConfig'
 
 const ROLES = ['student', 'teacher', 'admin'] as const
 
@@ -63,5 +63,28 @@ describe('navConfig 场景化导航（F0 门禁）', () => {
     expect(ids).toContain('lab')
     expect(ids).toContain('me')
     expect(ids).toContain('staff')
+  })
+
+  it('移动端底部导航按场景取 key，且各 key 在对应场景可见（App.vue 接线契约）', () => {
+    for (const scene of ['kaoyan', 'career'] as const) {
+      const visible = new Set(keysOf('student', scene))
+      for (const k of BOTTOM_NAV_KEYS_BY_SCENE[scene]) {
+        expect(visible.has(k)).toBe(true)
+      }
+    }
+    // career 底部导航不得混入 kaoyan 专属项（回归：此前未按场景过滤）
+    const careerKeys = BOTTOM_NAV_KEYS_BY_SCENE.career
+    expect(careerKeys).toContain('career-training')
+    expect(careerKeys).not.toContain('chat')
+    expect(careerKeys).not.toContain('wrong-questions')
+  })
+
+  it('kaoyanPathPrefixes 从 NAV_GROUPS 派生且覆盖今日总览新落点（URL→场景同步契约）', () => {
+    const prefixes = kaoyanPathPrefixes()
+    // 今日总览落点已从 / 迁至 /kaoyan（门户接入），同步逻辑必须覆盖它
+    expect(prefixes).toContain('/kaoyan')
+    expect(prefixes).not.toContain('/')
+    // career 专属路由不得进入 kaoyan 前缀清单
+    expect(prefixes.every((p) => !p.startsWith('/career'))).toBe(true)
   })
 })
