@@ -19,6 +19,7 @@ const STEPS = [
   ['可访问性扫描', 'gate:a11y'],
   ['性能反模式扫描', 'gate:perf'],
   ['v-html 净化（防 XSS）', 'gate:xss'],
+  ['品牌一致性', 'gate:brand'],
 ]
 
 const LINE = '='.repeat(64)
