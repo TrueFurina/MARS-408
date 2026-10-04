@@ -72,8 +72,8 @@ const techHighlights = [
 
 // ── 品牌级设计原型 ──
 // 已移除 5 个不可用/与 Vue 系统脱节的独立 HTML 原型：
-//   - 软件杯路演落地页 (芒得很职_softwarecup_landing.html)
-//   - 软件杯答辩 Deck (芒得很职_dachuang_deck.html)
+//   - 软件竞赛路演落地页 (芒得很职_softwarecup_landing.html)
+//   - 软件竞赛答辩 Deck (芒得很职_dachuang_deck.html)
 //   - 产品官网 / 品牌站 (芒得很职_official_site.html)
 //   - 学习系统 Dashboard (芒得很职_dashboard.html)
 //   - 产品闭环 Product Loop (芒得很职_product_loop.html)
@@ -124,7 +124,7 @@ function openNew() { window.open(iframeSrc.value, '_blank', 'noopener') }
       <div v-if="showTech" class="tech-showcase">
         <div class="tech-header">
           <div class="tech-title"> 芒得很职 硬核技术全景</div>
-          <div class="tech-sub">对标第十五届中国软件杯 A3 赛题 · 国家级特等奖目标</div>
+          <div class="tech-sub">对标A3 赛题 · 国家级特等奖目标</div>
         </div>
 
         <div v-for="section in techHighlights" :key="section.category" class="tech-section">

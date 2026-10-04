@@ -27,7 +27,7 @@ check() { # check <描述> <测试命令...>
 echo "== 芒得很职 提交包封包核销检查 =="
 
 # 1. 演示 PPT
-check "演示 PPT（01_演示PPT/芒得很职_软件杯演示.pptx）" test -f "archive/08013417_参赛快照/08013417介绍/01_演示PPT/芒得很职_软件杯演示.pptx"
+check "演示 PPT（01_演示PPT/芒得很职_软件竞赛演示.pptx）" test -f "archive/08013417_参赛快照/08013417介绍/01_演示PPT/芒得很职_软件竞赛演示.pptx"
 
 # 2. 可完整运行源码（submission/04_源码/ zip）
 check "源码 zip（submission/04_源码/芒得很职_source.zip）" test -f "submission/04_源码/芒得很职_source.zip"

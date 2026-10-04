@@ -212,7 +212,7 @@ def classify_request(user_request: str, topic: str = "", course: str = "",
 | Triage 误判（high 判成 low 漏评审） | 安全默认：拿不准一律 high；关键词白名单持续扩充；low 仅限寒暄/超短问题 |
 | 结构化解析失败破坏流水线 | 全部 try/except 降级到现有关键词判定，维持 fail-open |
 | MAPPO 训练奖励难收敛 | 先以规则为基线做对比；奖励函数拆分为可解释子项（正确率/参与度/成本）；可先做离线训练 + 在线推理 |
-| 与既有 feature flag（lite/real）冲突 | 新能力默认 False，按 `algorithm.version` 灰度开启，保护软件杯稳定 |
+| 与既有 feature flag（lite/real）冲突 | 新能力默认 False，按 `algorithm.version` 灰度开启，保护软件竞赛稳定 |
 
 ---
 

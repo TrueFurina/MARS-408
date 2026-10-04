@@ -1,4 +1,4 @@
-# Docker 一键可跑验证 Runbook · 芒得很职（软件杯 A3）
+# Docker 一键可跑验证 Runbook · 芒得很职（A3）
 
 > 日期：2026-07-22
 > 关联：`docs/optimization_backlog_2026-07-22.md` T-OPT-08、`EVALUATION_ENV.md`、`docker-compose.yml`、`Dockerfile`

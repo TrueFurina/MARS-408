@@ -9,9 +9,9 @@
 
 **芒得很职** is a multi-agent personalized learning system for China's Postgraduate CS Entrance Exam ("408"): an 11-node LangGraph pipeline (triage → coordinator → diagnostician → planner → retriever → generator → assessor → critic → evidence_check → quality_gate → path_planner) delivers a full *diagnose → plan → teach → practice → review* loop, with SSE streaming, three-tier degradation (Redis/PostgreSQL/Milvus), E5 vector retrieval, and MAPPO-trained teaching policy.
 
-> 注：芒得很职 为本系统的技术底座代号（多智能体个性化学习系统）。本项目为真实可运行的代码工程，参加 2026 福建高校「火山杯」Agent 创新大赛。
+> 注：芒得很职 为本系统的技术底座代号（多智能体个性化学习系统）。本项目为真实可运行的代码工程，参加 2026 作品路演。
 
-> **2026 福建高校「火山杯」Agent 创新大赛 · 参赛作品**
+> **2026 作品路演 · 参赛作品**
 >
 > 覆盖 408 计算机考研四科：数据结构 / 计算机组成原理 / 操作系统 / 计算机网络
 >
@@ -21,7 +21,7 @@
 
 **让 AI 从"回答问题"到"真正懂你"** —— 一个由 11 节点多智能体流水线驱动的考研个性化学习教练，完成"诊断 → 规划 → 讲解 → 练习 → 复盘"的完整学习闭环。
 
-> 本项目源于国家级大学生创新创业训练计划，本次以 芒得很职 系统参赛 2026 福建高校「火山杯」Agent 创新大赛。
+> 本项目源于国家级大学生创新创业训练计划，本次以 芒得很职 系统参赛 2026 作品路演。
 
 ---
 
@@ -229,7 +229,7 @@ npm install && npm run dev                   # :5173，代理 /api → 8002
 
 ## 十、开发工具合规声明
 
-本项目为真实可运行的代码工程（Vue 3 + TypeScript 前端 / FastAPI + LangGraph 后端），采用 **Trae**（字节跳动 AI IDE）作为开发工具完成核心模块的开发与迭代；代码仓库可在 Trae 中直接打开、构建并运行，满足 2026 福建高校「火山杯」Agent 创新大赛"基于 Trae 开发"的工具要求。
+本项目为真实可运行的代码工程（Vue 3 + TypeScript 前端 / FastAPI + LangGraph 后端），采用 **Trae**（字节跳动 AI IDE）作为开发工具完成核心模块的开发与迭代；代码仓库可在 Trae 中直接打开、构建并运行，满足 2026 作品路演"基于 Trae 开发"的工具要求。
 
 关键模块清单：`py-server/agents/graph.py`（多智能体流水线）、`py-server/engines/frugal_rag.py`（检索引擎）、`py-server/engines/gomarl.py`（共识引擎）、`src/`（前端页面）。
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""火山杯《作品详细介绍》docx 生成 — 数字口径与 README_火山杯-最终版.md 一致（2026-08-28 定稿）"""
+"""旧赛事《作品详细介绍》docx 生成 — 数字口径与 README_旧赛事-最终版.md 一致（2026-08-28 定稿）"""
 from docx import Document
 from docx.shared import Pt, RGBColor, Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -74,7 +74,7 @@ def table(rows, widths=None, size=11, header=True):
 
 # ═══ 封面 ═══
 para("", space_after=30)
-para("2026 福建高校「火山杯」Agent 创新大赛", size=14, color=GRAY, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=20)
+para("2026 作品路演", size=14, color=GRAY, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=20)
 para("芒得很职", size=34, bold=True, color=NAVY, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=8)
 para("考研多智能体个性化学习系统", size=22, bold=True, color=NAVY, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=24)
 para("让 AI 从「回答问题」到「真正懂你」—— 10 节点多智能体流水线驱动的考研学习教练", size=13, color=GRAY, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=30)
@@ -175,7 +175,7 @@ para("赛道定位：精准命中「未来学习中心」的三大关键词—�
 # ═══ 七、开发工具合规声明 ═══
 h1("七、开发工具合规声明")
 para("本项目为真实可运行的代码工程（Vue 3 + TypeScript 前端 / FastAPI + LangGraph 后端），采用 Trae（字节跳动 AI IDE）"
-     "作为开发工具完成核心模块的开发与迭代；代码仓库可在 Trae 中直接打开、构建并运行，满足 2026 福建高校「火山杯」"
+     "作为开发工具完成核心模块的开发与迭代；代码仓库可在 Trae 中直接打开、构建并运行，满足 2026 福建高校「旧赛事」"
      "Agent 创新大赛「基于 Trae 开发」的工具要求。关键模块：py-server/agents/graph.py（多智能体流水线）、"
      "py-server/engines/frugal_rag.py（检索引擎）、py-server/engines/gomarl.py（共识引擎）、src/（前端页面）。")
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""火山杯演示 PPT 生成脚本 — 数字口径与 README_火山杯-最终版.md 一致（2026-08-28 定稿）"""
+"""作品演示 PPT 生成脚本 — 数字口径与 README_旧赛事-最终版.md 一致（2026-08-28 定稿）"""
 from pptx import Presentation
 from pptx.util import Inches, Pt, Emu
 from pptx.dml.color import RGBColor
@@ -87,7 +87,7 @@ def header(slide, title, subtitle=None, page=None):
         text(slide, Inches(12.45), Inches(7.05), Inches(0.7), Inches(0.35),
              [(str(page), {"size": 10, "color": GRAY})], align=PP_ALIGN.RIGHT)
     text(slide, Inches(0.45), Inches(7.05), Inches(6), Inches(0.35),
-         [("芒得很职 · 2026 福建高校「火山杯」Agent 创新大赛", {"size": 9, "color": GRAY})])
+         [("芒得很职 · 2026 作品路演", {"size": 9, "color": GRAY})])
 
 def bullet_block(slide, x, y, w, h, items, size=15, gap=8):
     tb = slide.shapes.add_textbox(x, y, w, h)
@@ -164,7 +164,7 @@ s = add_slide()
 rect(s, 0, 0, SW, SH, NAVY)
 rect(s, 0, Inches(4.9), SW, Pt(3), CYAN)
 text(s, Inches(0.9), Inches(1.7), Inches(11.5), Inches(0.5),
-     [("2026 福建高校「火山杯」Agent 创新大赛", {"size": 18, "color": CYAN, "bold": True})])
+     [("2026 作品路演", {"size": 18, "color": CYAN, "bold": True})])
 text(s, Inches(0.9), Inches(2.35), Inches(11.5), Inches(1.5),
      [("芒得很职", {"size": 54, "bold": True, "color": WHITE})])
 text(s, Inches(0.9), Inches(3.5), Inches(11.5), Inches(0.8),
@@ -380,11 +380,11 @@ rect(s, 0, Inches(4.5), SW, Pt(2), CYAN)
 text(s, Inches(0.9), Inches(4.85), Inches(11.5), Inches(0.5),
      [("致谢", {"size": 20, "bold": True, "color": CYAN})])
 text(s, Inches(0.9), Inches(5.45), Inches(11.5), Inches(1.2),
-     [("感谢 2026 福建高校「火山杯」Agent 创新大赛主办方与火山引擎技术支持。\n开源组件：LangGraph · FastAPI · Milvus · Vue 3 · E5 等（许可清单见 OPENSOURCE_LICENSES.md）",
+     [("感谢 2026 作品路演主办方与火山引擎技术支持。\n开源组件：LangGraph · FastAPI · Milvus · Vue 3 · E5 等（许可清单见 OPENSOURCE_LICENSES.md）",
        {"size": 13, "color": RGBColor(0xC9,0xDA,0xEC), "line_spacing": 1.4})])
 text(s, Inches(0.9), Inches(6.9), Inches(11.5), Inches(0.4),
      [("芒得很职 · 让每一次学习都有迹可循", {"size": 14, "bold": True, "color": WHITE})])
 
-OUT = r"E:/Program/MARL/study-help-pro/deliverables/火山杯-演示PPT-最终版.pptx"
+OUT = r"E:/Program/MARL/study-help-pro/deliverables/作品演示PPT-最终版.pptx"
 prs.save(OUT)
 print("saved:", OUT, "| slides:", len(prs.slides.__iter__.__self__._sldIdLst))

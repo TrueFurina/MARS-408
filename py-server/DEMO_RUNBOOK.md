@@ -28,7 +28,7 @@ guardian.bat
 - [ ] ✅/❌ **状态绿**：`GET /api/status` 返回 `status=ok`、`collection_size>0`、`llm_available=true`
 - [ ] ✅/❌ **功能就绪**：`GET /api/status/competition` 五项功能 + 加分项就绪
 
-### career 功能冒烟（三创赛演示线，`/api/career/*`）
+### career 功能冒烟（创新创业竞赛演示线，`/api/career/*`）
 - [ ] ✅/❌ **① 启动 career 服务**：`import career_training_router` 无异常；`GET /api/career/scenarios` 返回场景列表（HTTP 200，非空）
 - [ ] ✅/❌ **② 调一次 career 训练/评审端点返回 200**：用 demo 学生账号
   `POST /api/career/session/start` 建会话 → 200；

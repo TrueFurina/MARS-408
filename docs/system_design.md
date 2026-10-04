@@ -2,7 +2,7 @@
 
 > 架构师：高见远（software-architect）
 > 日期：2026-07-19
-> 范围：将「中国软件杯 A3 竞争力审计」P0/P1 清单转为可执行代码与文档（跳过演示视频）
+> 范围：将「中国A3 竞争力审计」P0/P1 清单转为可执行代码与文档（跳过演示视频）
 > 基线：所有结论附真实文件路径/行号；benchmark 实测数据来自 `py-server/experiments/results/benchmark_2026-07-19.json`（已跑通）
 
 ---
@@ -51,7 +51,7 @@ benchmark 已跑通，**实测数据直接证伪「成本降 45% / 准确率升 
 | 字段 | 内容 |
 |------|------|
 | 类型 | 文档 |
-| 涉及文件 | `py-server/experiments/results/benchmark_2026-07-19.json`(读)、`documents/R6-文档诚实化改写清单-执行版.md`(更新定稿)、`documents/技术方案说明书-特等奖版.md`、`documents/答辩PPT大纲-特等奖版.md`、`documents/演示视频脚本-特等奖版.md`、`documents/申报书内容.txt`、`documents/基于改进GoMARL与FrugalRAG的408考研个性化学习多智能体系统研究报告.md`、`documents/软件杯赛题合规清单.md`、`documents/双线路线图.md`、`documents/产品需求文档PRD.md`、`submission/02_配套文档/*`(同步)、`deliverables/audit_tech_architecture_2026-07-19.md`(附录补实测) |
+| 涉及文件 | `py-server/experiments/results/benchmark_2026-07-19.json`(读)、`documents/R6-文档诚实化改写清单-执行版.md`(更新定稿)、`documents/技术方案说明书-特等奖版.md`、`documents/答辩PPT大纲-特等奖版.md`、`documents/演示视频脚本-特等奖版.md`、`documents/申报书内容.txt`、`documents/基于改进GoMARL与FrugalRAG的408考研个性化学习多智能体系统研究报告.md`、`documents/软件竞赛赛题合规清单.md`、`documents/双线路线图.md`、`documents/产品需求文档PRD.md`、`submission/02_配套文档/*`(同步)、`deliverables/audit_tech_architecture_2026-07-19.md`(附录补实测) |
 | 实现步骤 | 1) 复核 `compute_recall_at_k`（`experiments/benchmark.py:94-102`）统计口径，若确认 bug 则修复并重跑 `python experiments/benchmark.py` 生成新 results；2) 据 `benchmark_2026-07-19.json` 的 summary.deltas 定稿诚实文案：检索「token 持平/延迟略增/Recall@5 与 MRR 提升」、GOMARL「NeuralMixer 共识更稳但准确率未超加权投票（合成弱标注，初步 benchmark）」；3) 按 `R6-文档诚实化改写清单` 序号 8/9/13 等，将 45%/13%/15%/Kappa≥0.85 全部替换为实测或「以实测为准」；4) grep 全仓 `45%\|13%\|15%\|Kappa.*0.85` 确认无遗漏，同步 `submission/02_配套文档/`；5) 新增 `documents/量化创新实测报告-2026-07-19.md`（实验设置/数据/图/诚实结论）。 |
 | 依赖任务 | 无（benchmark 已跑通） |
 | 优先级 | P0 |

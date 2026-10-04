@@ -1,7 +1,7 @@
 #Requires -Version 5.0
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host "  芒得很职 — 408考研个性化学习系统" -ForegroundColor Cyan
-Write-Host "  第十五届中国软件杯 A3 赛题参赛作品" -ForegroundColor Cyan
+Write-Host "  A3 赛题参赛作品" -ForegroundColor Cyan
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host ""
 

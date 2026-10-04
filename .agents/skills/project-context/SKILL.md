@@ -5,8 +5,8 @@ description: study-help-pro / 芒得很职 项目上下文入口——双分支�
 # 项目上下文 — study-help-pro（芒得很职 / 芒得很职）
 
 ## 项目是什么（双分支 · 双身份，同一技术底座）
-- `main` 分支 — **芒得很职**：中国软件杯 A3 赛题（科大讯飞），LangGraph 多智能体 + GOMARL 共识 + FrugalRAG 的 408 考研个性化学习平台
-- `career-literacy` 分支 — **芒得很职**：三创赛作品，ECD 软素养对抗实训平台，新代码一律 `career_*` 前缀，零侵入 408
+- `main` 分支 — **芒得很职**：A3 赛题（科大讯飞），LangGraph 多智能体 + GOMARL 共识 + FrugalRAG 的 408 考研个性化学习平台
+- `career-literacy` 分支 — **芒得很职**：创新创业竞赛作品，ECD 软素养对抗实训平台，新代码一律 `career_*` 前缀，零侵入 408
 - 同步方向：`main → career-literacy` 单向，禁止反向
 
 ## 真值文件

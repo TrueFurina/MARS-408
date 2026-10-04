@@ -37,7 +37,7 @@ function toggleMode() { mode.value = isRegister.value ? 'login' : 'register'; er
     <div class="login-card">
       <!-- 顶部品牌 -->
       <div class="brand">
-        <div class="brand-badge">第十五届中国软件杯 A3 赛道</div>
+        <div class="brand-badge">第十五届中国A3 赛道</div>
         <div class="brand-logo"><span class="logo-m">MARS</span><span class="logo-a">-408</span></div>
         <div class="brand-title">多智能体个性化学习系统</div>
         <div class="brand-desc">基于改进 GOMARL 与 FrugalRAG 的计算机 408 考研学习平台</div>

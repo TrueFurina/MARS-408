@@ -177,7 +177,7 @@ uvicorn `--workers 1` 下 sync 阻塞会串行化所有请求：
 
 本仓库已配置两个 remote：`origin`（GitHub `TrueFurina/MARS-408`）与 `mangdehenzhi`（本地 `E:/Code/芒得很职` 副本）。分支矩阵：
 - `main` — **芒得很职** 考研系统，已冻结（末次提交 `8065295`，2026-09-04），用于大创结题；
-- `career-literacy` — **芒得很职** 三创赛作品，当前活跃开发分支（HEAD `90fd377`，2026-09-14），已跟踪 upstream `origin/career-literacy`。
+- `career-literacy` — **芒得很职** 创新创业竞赛作品，当前活跃开发分支（HEAD `90fd377`，2026-09-14），已跟踪 upstream `origin/career-literacy`。
 
 两条分支共享底座，`main → career-literacy` 单向同步；`career-literacy` 的提交可 `git push origin career-literacy`。
 

@@ -648,7 +648,7 @@ async def competition_status():
         logger.warning("competition_status 读取用户总数失败，返回 0: %s", e)
 
     return {
-        "competition": "2026 福建高校「火山杯」Agent 创新大赛",
+        "competition": "2026 作品路演",
         "team": "芒得很职",
         "functions": [
             {"id": "F1", "name": "对话式学习画像构建", "status": "✅ 已实现", "detail": "8维度画像，对话式构建，随学随新", "route": "/chat"},
