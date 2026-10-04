@@ -15,7 +15,8 @@ import numpy as np
 import pytest
 
 from engines.gomarl_conflict import ConsistencyChecker
-from engines.gomarl_mixer import neural_mixer
+import engines.gomarl_mixer as mixer_mod
+from engines.gomarl_mixer import NeuralGroupMixer, neural_mixer
 
 pytestmark = pytest.mark.unit
 
@@ -122,6 +123,50 @@ class TestCheckIntegration:
 # ── C3：接线（mix() 返回 agent_embeddings） ──
 
 class TestMixerWiring:
+    def test_torch_trained_weights_take_priority_over_onnx(self, monkeypatch):
+        """PyTorch 可用时必须先加载训练权重，不得探测 ONNX 均匀权重兜底。"""
+        calls: list[str] = []
+
+        class _FakeMixerNet:
+            def __init__(self, n_agents: int, embed_dim: int, hidden_dim: int):
+                self.n_agents = n_agents
+                self.embed_dim = embed_dim
+                self.hidden_dim = hidden_dim
+                self.group = [list(range(n_agents))]
+
+            def eval(self):
+                return self
+
+        def _fake_ensure_torch():
+            calls.append("torch")
+            monkeypatch.setattr(mixer_mod, "_TORCH_AVAILABLE", True)
+            return object(), object(), object()
+
+        def _fake_ensure_onnx():
+            calls.append("onnx")
+            monkeypatch.setattr(mixer_mod, "_ONNX_AVAILABLE", True)
+            return True
+
+        monkeypatch.setattr(mixer_mod, "_TORCH_AVAILABLE", None)
+        monkeypatch.setattr(mixer_mod, "_ONNX_AVAILABLE", False)
+        monkeypatch.setattr(mixer_mod, "GroupMixerNet", _FakeMixerNet)
+        monkeypatch.setattr(mixer_mod, "_ensure_torch", _fake_ensure_torch)
+        monkeypatch.setattr(mixer_mod, "_ensure_onnx", _fake_ensure_onnx)
+
+        mixer = NeuralGroupMixer()
+        monkeypatch.setattr(mixer, "use_neural", True)
+        monkeypatch.setattr(mixer, "_probe_trained_embed_dim", lambda: 8)
+        monkeypatch.setattr(mixer, "_load_trained_weights", lambda: (1, 1))
+
+        initialized = mixer._init_mixer(2)
+
+        assert isinstance(initialized, _FakeMixerNet)
+        assert calls and calls[0] == "torch"
+        assert "onnx" not in calls
+        assert mixer.get_stats()["mixer_neural_mode"] == "torch"
+        assert mixer.get_stats()["mixer_trained_loaded"] is True
+        assert mixer.get_stats()["mixer_embed_dim"] == 8
+
     def test_mix_returns_agent_embeddings(self, monkeypatch):
         fake = np.ones((2, 8), dtype=np.float32)
         monkeypatch.setattr(neural_mixer.encoder, "encode_batch", lambda texts: fake)

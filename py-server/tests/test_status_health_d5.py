@@ -18,6 +18,14 @@ def test_status_shape_and_keys(client):
 
     assert body["status"] in ("ok", "degraded")
     assert isinstance(body["degraded_reasons"], list)
+    assert body["mixer_neural_mode"] in {
+        "not_initialized",
+        "torch",
+        "onnx_uniform_fallback",
+        "rule",
+    }
+    assert isinstance(body["mixer_trained_loaded"], bool)
+    assert body["mixer_embed_dim"] is None or isinstance(body["mixer_embed_dim"], int)
     assert "health" in body
 
     health = body["health"]
