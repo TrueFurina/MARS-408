@@ -355,8 +355,28 @@ export const NAV_GROUPS: NavGroup[] = [
   },
 ]
 
-/** 移动端底部导航的 key（从 NAV_GROUPS 中按 key 选取，避免二次硬编码） */
+/** 移动端底部导航的 key（kaoyan 场景 = 学习主路径，向后兼容导出） */
 export const BOTTOM_NAV_KEYS = ['chat', 'practice', 'learning-path', 'wrong-questions', 'profile']
+
+/**
+ * 移动端底部导航按场景取 key：
+ *   · kaoyan  —— 学习主路径 5 项（现状不变）
+ *   · career  —— 对抗实训 / 平台首页（回双场景门户）/ 学习画像
+ * 各 key 必须在对应场景的 visibleGroups 中可见（navConfig.scene.spec 锁定）。
+ */
+export const BOTTOM_NAV_KEYS_BY_SCENE: Record<'kaoyan' | 'career', string[]> = {
+  kaoyan: BOTTOM_NAV_KEYS,
+  career: ['career-training', 'platform-home', 'profile'],
+}
+
+/**
+ * kaoyan 场景专属路径前缀（从 NAV_GROUPS 派生，勿手写）。
+ * 用途：App.vue 把 URL 同步到场景状态——直链 / 刷新 / 兜底跳转进入
+ * kaoyan 页面时，侧栏与底部导航必须与页面同场景（否则导航错位）。
+ */
+export function kaoyanPathPrefixes(): string[] {
+  return NAV_GROUPS.filter((g) => g.scene === 'kaoyan').flatMap((g) => g.items.map((i) => i.route))
+}
 
 /** 场景匹配：缺省 / common 视为通用（始终显示）；scene 未指定时不过滤（向后兼容） */
 function visibleForScene(entry: { scene?: Scene }, scene?: Scene): boolean {

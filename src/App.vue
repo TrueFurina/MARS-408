@@ -14,13 +14,15 @@ import { api } from '@/utils/api'
 import { schedulePrefetch, cancelPrefetch, prefetchRoute } from '@/utils/routePrefetch'
 import {
   NAV_GROUPS,
-  BOTTOM_NAV_KEYS,
+  BOTTOM_NAV_KEYS_BY_SCENE,
   visibleGroups,
   flattenItems,
   resolveActiveKey,
   resolveRole,
+  kaoyanPathPrefixes,
   type NavItem,
 } from '@/router/navConfig'
+import { useScene } from '@/composables/useScene'
 
 /** 防御性 SVG 净化 — 虽然 icons.ts 硬编码，但竞赛评审要求所有 v-html 做净化 */
 function safeIcon(html: string): string {
@@ -114,9 +116,30 @@ function toggleTheme() {
 
 // ── 导航：全部由 src/router/navConfig.ts 单一真值源派生 ────────────────
 // 此前侧栏 17 项 / 底部 5 项 / 更多菜单 14 项三处硬编码，新增页面极易漏改。
-const navGroups = computed(() => visibleGroups(currentRole.value))
+// 2026-10-04：接通双场景过滤（useScene 注释承诺的 visibleGroups(role, scene) 此前漏接，
+// 导致 career 用户侧栏/底部混排 408 专属分组）。
+const { scene, sceneFilter, setScene } = useScene()
+const navGroups = computed(() => visibleGroups(currentRole.value, sceneFilter.value))
+
+// URL → 场景状态同步：直链 / 刷新 / 兜底跳转进入某场景页面时，导航必须与页面同场景
+// （否则会出现"人在考研总览、底部导航却是 career 项"的错位）。前缀清单从 NAV_GROUPS 派生。
+const KAOYAN_PREFIXES = kaoyanPathPrefixes()
+watch(
+  () => route.path,
+  (p) => {
+    if (p.startsWith('/career')) {
+      if (scene.value !== 'career') setScene('career')
+      return
+    }
+    if (KAOYAN_PREFIXES.some((pre) => p === pre || p.startsWith(pre + '/')) && scene.value !== 'kaoyan') {
+      setScene('kaoyan')
+    }
+  },
+  { immediate: true },
+)
 const bottomNavItems = computed(() =>
-  BOTTOM_NAV_KEYS
+  // sceneFilter 运行时恒为 'kaoyan'|'career'（useScene.SELECTABLE_SCENES），类型层为兼容 Scene 含 'common'
+  BOTTOM_NAV_KEYS_BY_SCENE[sceneFilter.value as 'kaoyan' | 'career']
     .map((k) => flattenItems(navGroups.value).find((i) => i.key === k))
     .filter((i): i is NavItem => !!i),
 )
