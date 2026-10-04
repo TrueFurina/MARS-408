@@ -72,7 +72,7 @@ function enterScene(c: SceneCard) {
     <div class="ph-aura" aria-hidden="true"></div>
 
     <header class="ph-hero">
-      <span class="ph-track">国创赛 · 高教主赛道 · 创意组</span>
+      <span class="ph-track">一个平台 · 两个业务场景</span>
       <div class="ph-brand">
         <span class="ph-logo"><img class="brand-img" src="/brand/mangxiaocheng.png" alt="芒得很职" /></span>
         <h1 class="ph-title">芒得很职</h1>
