@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
-import { api } from '@/utils/api'
+import { api, hasAuthToken } from '@/utils/api'
 import { useAuthStore } from '@/stores/authStore'
 import { useAchievementStore } from '@/stores/achievementStore'
 
@@ -241,8 +241,10 @@ function saveProfile(profile: StudentProfile) {
   }
 
   loadProfile()
-  // 预加载科目列表（多处视图依赖 subjects）
-  fetchSubjects().catch(() => {})
+  // 预加载科目列表（多处视图依赖 subjects）。
+  // 仅在已登录时预取：未登录时该接口返回 401（后端要求鉴权），
+  // 既无意义，又会在登录页控制台留下错误噪音。
+  if (hasAuthToken()) fetchSubjects().catch(() => {})
 
   // ── 思考/Agent 模式 ──
   const thinkingMode = ref(false)

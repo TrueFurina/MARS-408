@@ -17,6 +17,14 @@ function getToken(): string | null {
   }
 }
 
+/**
+ * 当前是否已登录（本地存在 token）。
+ * 供「登录后才预取」等场景判断 —— 避免未登录时打鉴权接口产生 401 噪音。
+ */
+export function hasAuthToken(): boolean {
+  return !!getToken()
+}
+
 /** 获取带 Auth Token 的请求头（供裸 fetch 调用使用） */
 export function getAuthHeaders(): Record<string, string> {
   const token = getToken()
