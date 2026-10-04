@@ -4,8 +4,15 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
+      // 平台统一入口（双场景门户）：登录后首屏，选择「专业能力训练 / 职业素养实训」
       path: '/',
-      name: 'home',
+      name: 'platform-home',
+      component: () => import('@/views/PlatformHomeView.vue'),
+    },
+    {
+      // 场景A首页：考研408 总览（门户 kaoyan 卡片与侧栏「今日总览」的落点）
+      path: '/kaoyan',
+      name: 'kaoyan-home',
       component: () => import('@/views/DashboardView.vue'),
     },
     {
@@ -40,8 +47,9 @@ const router = createRouter({
       component: () => import('@/views/ExperimentEvidenceView.vue'),
     },
     {
+      // 旧首页别名：原「进站即考研 Dashboard」行为保留为 redirect（语义 = 考研总览）
       path: '/dashboard',
-      redirect: '/',
+      redirect: '/kaoyan',
     },
     {
       path: '/profile',

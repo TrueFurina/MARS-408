@@ -109,7 +109,7 @@ export const NAV_GROUPS: NavGroup[] = [
         key: 'dashboard',
         name: '今日总览',
         icon: icons.dashboard,
-        route: '/',
+        route: '/kaoyan',
       },
       {
         key: 'chat',
@@ -293,6 +293,13 @@ export const NAV_GROUPS: NavGroup[] = [
     title: '我的',
     icon: icons.user,
     items: [
+      {
+        // 双场景门户（统一入口）：登录后首屏，可随时回到场景选择
+        key: 'platform-home',
+        name: '平台首页',
+        icon: icons.compass,
+        route: '/',
+      },
       {
         key: 'profile',
         name: '学习画像',

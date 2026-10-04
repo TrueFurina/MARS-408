@@ -6,17 +6,13 @@
  *   · 专业能力训练（考研408）      —— 低年级，夯实专业功底
  *   · 职业素养实训（芒得很职主线）  —— 高年级，AI 对抗式软技能训练
  *
- * 本页设计意图是登录后的统一入口，替代"进站即考研 Dashboard"的行为。
- *
- * ── 当前状态（2026-10-04 裁决：暂不接入路由）────────────────────
- * 本组件未被任何路由/组件引用（备用素材，保留不删）。不启用的理由：
- *   1) 国创赛主线 = 职业素养线，评审首屏应直达核心功能，"双场景选择"稀释主线；
- *   2) 两个场景入口经侧栏均可达（/ 与 /career/training），可达性已解决；
- *   3) 启用需联动改动：路由表加 /kaoyan 与 /、navConfig 全部跳转、useScene 默认场景、
- *      侧栏结构 —— 回归面大，须整体规划后一次性做，禁止半接入。
- * 启用前提：产品明确"双场景首页"定位 + 完整回归（路由/守卫/埋点/实测全链路）。
- * 原注释"考研总览已移至 /kaoyan"与实际不符：现路由表无 /kaoyan，考研总览仍在 /。
- * ─────────────────────────────────────────────────────────────
+ * 本页是登录后的统一入口（2026-10-04 导师裁决正式接入）：
+ *   路由 `/` = 本页；考研总览移至 `/kaoyan`（旧 `/dashboard` redirect 兼容）；
+ *   侧栏「我的 · 平台首页」提供回入口；场景跳转真值 = useScene.SCENE_META。
+ * 体系定位（导师口径）：双场景都是同一个人才体系的组成部分——
+ *   专业能力（考研408）夯实功底 → 职业素养实训完成就业衔接，
+ *   与统一能力画像（useAbilityProfile）贯通两场景。
+ * 共用：单登录态（authStore）+ 统一能力画像（useAbilityProfile，F4 接入）。
  */
 import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -136,7 +132,7 @@ function enterScene(c: SceneCard) {
     <section class="ph-stats" aria-label="平台能力">
       <div class="ph-stat"><b>3</b><span>实训模式<br/>自学 / 对抗 / 导师</span></div>
       <div class="ph-stat"><b>6</b><span>维 ECD<br/>职业素养评估</span></div>
-      <div class="ph-stat"><b>41</b><span>前端视图<br/>已落地可用</span></div>
+      <div class="ph-stat"><b>46</b><span>前端视图<br/>已落地可用</span></div><!-- 口径：ls src/views/*.vue 实测 46（2026-10-04），勿手改 -->
       <div class="ph-stat"><b>40+</b><span>真实实验产物<br/>可复现证据</span></div>
     </section>
 

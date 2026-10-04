@@ -22,7 +22,7 @@ export type SelectableScene = (typeof SELECTABLE_SCENES)[number]
 
 /** 场景展示元数据（切换控件用） */
 export const SCENE_META: Record<SelectableScene, { label: string; sub: string; route: string }> = {
-  kaoyan: { label: '专业能力训练', sub: '考研408智能学习', route: '/' },
+  kaoyan: { label: '专业能力训练', sub: '考研408智能学习', route: '/kaoyan' },
   career: { label: '职业素养实训', sub: 'AI 对抗式能力训练', route: '/career/training' },
 }
 
