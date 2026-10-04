@@ -44,7 +44,7 @@ async function load(force = false): Promise<void> {
   if (loaded && !force) return
   loading.value = true
   try {
-    const res = await api.get<AbilityProfile>('/api/profile/ability')
+    const res = await api.get<AbilityProfile>('/profile/ability')
     data.value = { ...res, source: 'server' }
     degraded.value = false
   } catch {
