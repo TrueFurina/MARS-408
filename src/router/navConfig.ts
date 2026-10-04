@@ -109,7 +109,7 @@ export const NAV_GROUPS: NavGroup[] = [
         key: 'dashboard',
         name: '今日总览',
         icon: icons.dashboard,
-        route: '/kaoyan',
+        route: '/',
       },
       {
         key: 'chat',
