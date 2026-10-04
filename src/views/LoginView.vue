@@ -37,10 +37,10 @@ function toggleMode() { mode.value = isRegister.value ? 'login' : 'register'; er
     <div class="login-card">
       <!-- 顶部品牌 -->
       <div class="brand">
-        <div class="brand-badge">2026 福建高校「火山杯」Agent 创新大赛</div>
-        <div class="brand-logo"><span class="logo-m">MARS</span><span class="logo-a">-408</span></div>
-        <div class="brand-title">多智能体个性化学习系统</div>
-        <div class="brand-desc">基于改进 GOMARL 与 FrugalRAG 的计算机 408 考研学习平台</div>
+        <div class="brand-badge">一个平台 · 两个业务场景</div>
+        <div class="brand-logo"><span class="logo-m">芒得</span><span class="logo-a">很职</span></div>
+        <div class="brand-title">多智能体赋能职业素养对抗实训平台</div>
+        <div class="brand-desc">新一代多智能体赋能的计算机类学生职业素养对抗实训平台</div>
       </div>
 
       <!-- 登录/注册切换 -->
