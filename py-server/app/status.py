@@ -65,6 +65,24 @@ async def status():
         or cfg.get("xfyun", {}).get("app_id")
     )
 
+    # ── NeuralMixer（只读运行态，不在健康探针中触发重型模型初始化）──
+    mixer_status = {
+        "mixer_neural_mode": "not_initialized",
+        "mixer_trained_loaded": False,
+        "mixer_embed_dim": None,
+    }
+    try:
+        from engines.gomarl_mixer import neural_mixer
+
+        stats = neural_mixer.get_stats()
+        mixer_status = {
+            "mixer_neural_mode": stats.get("mixer_neural_mode", "not_initialized"),
+            "mixer_trained_loaded": bool(stats.get("mixer_trained_loaded", False)),
+            "mixer_embed_dim": stats.get("mixer_embed_dim"),
+        }
+    except Exception as e:  # noqa: BLE001 — 状态端点必须在 Mixer 未初始化/导入失败时可用
+        logger.warning("读取 NeuralMixer 运行状态失败，按未初始化上报: %s", e)
+
     # ── 计算总体状态（仅「意图启用却未达成」才计为降级）──
     degraded_reasons: list[str] = []
     if milvus_cfg_enabled and not milvus_connected:
@@ -90,6 +108,7 @@ async def status():
     return {
         "status": overall,
         "degraded_reasons": degraded_reasons,
+        **mixer_status,
         "health": {
             "vector_db": {
                 "mode": vector_db_mode,

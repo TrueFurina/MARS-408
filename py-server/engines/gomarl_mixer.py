@@ -78,7 +78,7 @@ def _ensure_torch():
         return _torch, _nn, _F
     except Exception:
         _TORCH_AVAILABLE = False
-        logger.warning("PyTorch 不可用，GoMARL NeuralMixer 降级为规则模式")
+        logger.warning("PyTorch 不可用，GoMARL NeuralMixer 将尝试 ONNX 兜底")
         return None, None, None
 
 from config import get_gomarl_config, get_embedding_config
@@ -244,7 +244,7 @@ def _define_group_mixer_net(torch, nn, F):
             # 权重直连：用 w1 生成每个 Agent 的注意力权重
             w1_attn_weights = self.w1_attn(w1).squeeze(-1)  # (n,)
             w1_attn_weights = F.softmax(w1_attn_weights, dim=0)
-            weighted_scores = (agent_scores * w1_attn_weights).sum()  # 标量
+            _weighted_scores = (agent_scores * w1_attn_weights).sum()  # 标量
 
             # 组内相似度 + 组间多样性损失
             sd_loss = torch.tensor(0.0, device=device)
@@ -287,9 +287,9 @@ def _define_group_mixer_net(torch, nn, F):
                 group_qs.append(q_group.view(1))
 
             if group_qs:
-                group_tot = torch.stack(group_qs).mean()
+                _group_tot = torch.stack(group_qs).mean()
             else:
-                group_tot = torch.tensor(0.0, device=device)
+                _group_tot = torch.tensor(0.0, device=device)
 
             # 最终共识：融合 ①权重直连分数 ②分组加权分数 ③注意力特征
             attn_pooled = attn_out.mean(dim=0, keepdim=True)  # (1, hidden_dim)
@@ -340,6 +340,9 @@ class NeuralGroupMixer:
         # use_neural 只看配置；实际 torch/onnx 可用性在 _init_mixer 中延迟探测
         # （__init__ 在模块加载时执行，此时 _TORCH_AVAILABLE 必为 None，若在此判定会永远 False）
         self.use_neural = bool(config.get("use_neural_mixer", True))
+        self._neural_mode = "not_initialized" if self.use_neural else "rule"
+        self._trained_loaded = False
+        self._active_embed_dim: Optional[int] = None
         # M3：MAPPO 教学策略层（权重来源灰度；默认关闭 → EWMA 规则，零影响）
         self._use_mappo = bool(config.get("use_mappo_policy", False))
 
@@ -406,34 +409,81 @@ class NeuralGroupMixer:
             return None
 
     def _init_mixer(self, n_agents: int):
-        """延迟初始化神经网络，并尝试加载 ONNX 或 PyTorch 模型"""
+        """延迟初始化神经网络，优先加载 PyTorch 训练权重，ONNX 仅作兜底。"""
         if not self.use_neural:
+            self._neural_mode = "rule"
+            self._trained_loaded = False
+            self._active_embed_dim = None
             return None
 
-        # 延迟探测 torch/onnx 可用性（__init__ 时不导入 torch 以避免 Windows 模块加载崩溃）
-        if not _TORCH_AVAILABLE and not _ONNX_AVAILABLE:
-            _ensure_onnx()
-            if not _ONNX_AVAILABLE:
-                _ensure_torch()
-        if not (_TORCH_AVAILABLE or _ONNX_AVAILABLE):
-            self.use_neural = False
-            logger.warning("NeuralMixer: torch 与 onnx 均不可用，降级为规则模式")
-            return None
+        # 训练产物 neural_mixer_trained.pt 比 ONNX 导出更新，必须优先尝试。
+        # 只有 PyTorch 完全不可用时才允许进入旧 ONNX 兜底路径。
+        _torch, _, _ = _ensure_torch()
+        if _torch is not None and GroupMixerNet is not None:
+            if self._mixer_net is None or self._mixer_net.n_agents != n_agents:
+                # 从训练权重探测 embed_dim，确保网络结构与 checkpoint 一致。
+                probed_dim = self._probe_trained_embed_dim()
+                if probed_dim is not None:
+                    if probed_dim != self._embed_dim:
+                        logger.info(
+                            f"NeuralMixer embed_dim 从训练权重探测为 {probed_dim}"
+                            f"（原默认 {self._embed_dim}），已自动校正以匹配训练权重"
+                        )
+                    embed_dim = probed_dim
+                else:
+                    embed_dim = get_embedding_config().get("dimension", self._embed_dim)
 
-        # 优先尝试 ONNX Runtime
-        if _ONNX_AVAILABLE:
+                self._mixer_net = GroupMixerNet(
+                    n_agents=n_agents,
+                    embed_dim=embed_dim,
+                    hidden_dim=self._hidden_dim,
+                )
+                matched, _ = self._load_trained_weights()
+                if matched <= 0:
+                    self._mixer_net = None
+                    self.use_neural = False
+                    self._neural_mode = "rule"
+                    self._trained_loaded = False
+                    self._active_embed_dim = None
+                    logger.warning(
+                        "NeuralMixer: PyTorch 训练权重加载失败，降级为规则模式"
+                    )
+                    logger.info(
+                        "NeuralMixer 初始化完成: mode=rule, trained_loaded=False"
+                    )
+                    return None
+                self._mixer_net.eval()
+
+            # 避免旧 ONNX 会话残留导致 mix() 误走 ONNX 分支。
+            self._onnx_session = None
+            self._neural_mode = "torch"
+            self._trained_loaded = True
+            self._active_embed_dim = int(self._mixer_net.embed_dim)
+            logger.info(
+                "NeuralMixer 初始化完成: mode=torch, trained_loaded=True"
+            )
+            return self._mixer_net
+
+        # PyTorch 不可用时才探测 ONNX。该旧模型无法支持动态组划分，
+        # get_w1_avg 只能返回均匀权重，因此必须显式暴露为 fallback。
+        if _ensure_onnx():
             try:
                 import onnxruntime as _ort
                 from pathlib import Path
+
                 onnx_path = Path(__file__).parent.parent / "models" / "neural_mixer.onnx"
                 if onnx_path.exists() and self._onnx_session is None:
                     self._onnx_session = _ort.InferenceSession(str(onnx_path))
                     logger.info(f"ONNX 模型加载成功: {onnx_path.name}")
-                    # 模拟 mixer 接口（返回一个轻量对象）
+
+                if self._onnx_session is not None:
                     class _OnnxMixerProxy:
+                        """旧 ONNX 模型适配器；动态分组权重仅能均匀兜底。"""
+
                         def __init__(self, session, n_agents):
                             self.session = session
                             self.n_agents = n_agents
+                            self.is_uniform_fallback = True
                             if n_agents >= 4:
                                 mid = n_agents // 2
                                 self.group = [list(range(mid)), list(range(mid, n_agents))]
@@ -441,44 +491,31 @@ class NeuralGroupMixer:
                                 self.group = [list(range(n_agents))]
 
                         def get_w1_avg(self, embeddings):
-                            """ONNX 不支持动态组划分，返回均匀权重"""
-                            na = self.n_agents
-                            return np.ones(na, dtype=np.float32) / na
+                            """返回显式标记的均匀权重兜底。"""
+                            return np.ones(self.n_agents, dtype=np.float32) / self.n_agents
 
                         def update_group(self, new_group):
                             self.group = new_group
 
+                    self._neural_mode = "onnx_uniform_fallback"
+                    self._trained_loaded = False
+                    self._active_embed_dim = self._embed_dim
+                    logger.warning("ONNX 兜底为均匀权重，非神经推理")
+                    logger.info(
+                        "NeuralMixer 初始化完成: "
+                        "mode=onnx_uniform_fallback, trained_loaded=False"
+                    )
                     return _OnnxMixerProxy(self._onnx_session, n_agents)
             except Exception as e:
-                logger.warning(f"ONNX 模型加载失败，回退 PyTorch: {e}")
+                logger.warning(f"ONNX 模型加载失败，降级为规则模式: {e}")
 
-        # 回退 PyTorch
-        _torch, _, _ = _ensure_torch()
-        if _torch is None or GroupMixerNet is None:
-            self.use_neural = False
-            return None
-        if self._mixer_net is None or self._mixer_net.n_agents != n_agents:
-            # 优先从训练权重探测 embed_dim，确保与训练时一致（否则形状不匹配会落回随机权重）
-            probed_dim = self._probe_trained_embed_dim()
-            if probed_dim is not None:
-                if probed_dim != self._embed_dim:
-                    logger.info(
-                        f"NeuralMixer embed_dim 从训练权重探测为 {probed_dim}"
-                        f"（原默认 {self._embed_dim}），已自动校正以匹配训练权重"
-                    )
-                embed_dim = probed_dim
-            else:
-                # 无训练权重时回退到嵌入配置（config.json embedding.dimension）
-                embed_dim = get_embedding_config().get("dimension", self._embed_dim)
-            self._mixer_net = GroupMixerNet(
-                n_agents=n_agents,
-                embed_dim=embed_dim,
-                hidden_dim=self._hidden_dim,
-            )
-            # 尝试加载训练后权重
-            self._load_trained_weights()
-            self._mixer_net.eval()  # 推理模式
-        return self._mixer_net
+        self.use_neural = False
+        self._neural_mode = "rule"
+        self._trained_loaded = False
+        self._active_embed_dim = None
+        logger.warning("NeuralMixer: torch 与 onnx 均不可用，降级为规则模式")
+        logger.info("NeuralMixer 初始化完成: mode=rule, trained_loaded=False")
+        return None
 
     def _load_trained_weights(self):
         """加载训练后的 NeuralMixer 权重
@@ -580,8 +617,8 @@ class NeuralGroupMixer:
             try:
                 mixer = self._init_mixer(n)
                 if mixer is not None:
-                    # ONNX Runtime 推理路径
-                    if self._onnx_session is not None:
+                    # ONNX Runtime 均匀权重兜底路径
+                    if self._neural_mode == "onnx_uniform_fallback":
                         scores_np = scores.reshape(1, -1) if len(scores.shape) == 1 else scores
                         emb_np = embeddings.reshape(1, n, -1) if len(embeddings.shape) == 2 else embeddings
                         # ONNX 模型要求 (batch, n_agents, embed_dim) 形状
@@ -810,6 +847,9 @@ class NeuralGroupMixer:
         """获取混合器统计"""
         return {
             "neural_enabled": self.use_neural,
+            "mixer_neural_mode": self._neural_mode,
+            "mixer_trained_loaded": self._trained_loaded,
+            "mixer_embed_dim": self._active_embed_dim,
             "torch_available": _TORCH_AVAILABLE is True,
             "onnx_available": _ONNX_AVAILABLE,
             "onnx_active": self._onnx_session is not None,
