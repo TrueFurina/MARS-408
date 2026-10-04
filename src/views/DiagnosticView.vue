@@ -55,7 +55,7 @@ async function submit() {
 }
 
 function goHome() {
-  router.push('/')
+  router.push('/kaoyan')
 }
 </script>
 

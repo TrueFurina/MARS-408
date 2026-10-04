@@ -50,7 +50,7 @@ async function sendMessage() {
       completed.value = true
       store.saveProfile(data.profile as StudentProfile)
       // 延迟后跳转到聊天页
-      setTimeout(() => router.push('/'), 1500)
+      setTimeout(() => router.push('/kaoyan'), 1500)
     }
   } catch (e: any) {
     const msg = e?.name === 'AbortError'

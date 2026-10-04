@@ -236,7 +236,7 @@ function removeConversation(id: string, e?: Event) {
 // 路由参数 → store
 watch(() => route.params.convId, (convId) => {
   if (convId && typeof convId === 'string') {
-    if (!store.switchToConversation(convId)) router.replace('/')
+    if (!store.switchToConversation(convId)) router.replace('/kaoyan')
   }
 })
 
@@ -341,7 +341,7 @@ function scrollToBottom() {
   }
 }
 
-function newConversation() { store.createConversation(); router.push('/') }
+function newConversation() { store.createConversation(); router.push('/chat') }
 
 function onScroll() {
   const el = messagesRef.value
@@ -405,7 +405,7 @@ function onCodeAction(e: MouseEvent) {
 onMounted(() => {
   const convId = route.params.convId
   if (convId && typeof convId === 'string') {
-    if (!store.switchToConversation(convId)) router.replace('/')
+    if (!store.switchToConversation(convId)) router.replace('/kaoyan')
   } else {
     // 有历史对话则恢复最新一条，否则才新建
     const existing = store.conversations
