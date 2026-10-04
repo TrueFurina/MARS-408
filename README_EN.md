@@ -2,7 +2,7 @@
 
 > 📖 English README (this page) · [中文 README](README.md)
 
-> Entry for **China International College Students' Innovation Competition (高教主赛道·创意组)** and the **16th "Three Creations" (三创赛) E-Commerce Challenge**.
+> Entry for **China International College Students' Innovation Competition (高教主赛道·创意组)**.
 > A next-generation, multi-agent empowered platform that trains computer-science students' career literacy through adversarial practice:
 > in high-pressure scenarios of *being questioned, challenged, and pushed*, students build expression, problem-solving logic, and resilience —
 > **and every score is traceable back to the exact words spoken.**

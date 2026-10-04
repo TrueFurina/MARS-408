@@ -3,7 +3,7 @@
 > 权威真值详见 CLAUDE.md（双分支双身份说明）与 .agents/skills/ 四件套；本文件是每会话最小事实卡。
 
 ## 这是什么
-双分支双身份共用底座：`main` 分支 = 芒得很职（软件杯 A3，408 考研学习平台）；`career-literacy` 分支（当前）= 芒得很职（三创赛，软素养实训平台），新代码一律 `career_*` 前缀零侵入 408。
+双分支双身份共用底座：`main` 分支 = 芒得很职（408 考研学习平台）；`career-literacy` 分支（当前）= 芒得很职（软素养对抗实训平台），新代码一律 `career_*` 前缀零侵入 408。
 
 ## 命令
 - 后端: `cd py-server && pip install -e . && python main.py`（:8002）
@@ -18,6 +18,7 @@
 - 竞赛口径数字必须对齐代码真值；E5 模型文件不入库
 - 永禁 `git add -A`（junction 会导致把未删文件误记为删除）；永禁 `git stash/merge/pull/gc/prune`
 - `*/crypto_platform/py-server/**`（188 文件嵌套副本）**未经用户确认不得移动或删除**
+- 品牌统一「芒得很职」：产品可见层（`src/`、`public/`、`index.html`、py-server 代码）禁出现旧品牌名与旧赛事名；机检 `npm run gate:brand`（历史文档/交付快照/冻结副本除外）
 - 提交时必须逐文件显式 `git add`，且 add 后先看 `git status`（暂存为空时密钥扫描会退化成全仓扫描并误报）
 
 ## 当前状态（2026-09-27 架构评审收口，接手前先读）
