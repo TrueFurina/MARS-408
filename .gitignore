@@ -3,6 +3,9 @@ dist-accept/
 dist-rem/
 dist-test/
 _dist_check/
+_dist_check*/
+# 真实浏览器实测产物（CDP 脚本 + 截图 + 临时 Chrome profile，不入库）
+_ux_*
 
 # Trash / temp
 _trash_*/
