@@ -5,6 +5,16 @@ import { icons } from '@/components/icons'
 // ── 技术亮点展示 ──
 const techHighlights = [
   {
+    category: ' 多智能体主线 · 三域闭环（平台技术底座）',
+    items: [
+      { title: 'LLM 决策 + MARL 执行 + 链上可信', desc: '同一条主线架构跨物理域验证：LangGraph 多智能体编排作决策层、MAPPO 多智能体强化学习作执行层、ECDSA 行为存证与 λ 激励作可信层；教学 MAPPO 正确率 0.963（合成教学环境，3-seed 对比 IQL/VDN/QMIX）。本平台是主线在人才培养场景的旗舰落地。', tag: '主线口径' },
+      { title: '空中域 · 无人机-骑手协同配送', desc: 'MAPPO 直训送达 38/600；诊断并修复 reward hacking（训练回报 1482 vs 评估 0 → 事件驱动奖励 2 万步 16.7%）；课程学习迁移与 C2 预注册对照的负结果均如实披露。', tag: 'AeroRider' },
+      { title: '链上域 · 行为存证与激励共识', desc: '智能体行为 ECDSA 上链 + 贡献度 λ 激励；IQL 主结局 +28.17%（n=71, p=0.0095；全程 +7.92% 同报）；6 类签名攻击 100% 拦截（300/300）。', tag: 'MARL-ECDSA' },
+      { title: '海上域 · 外部法规约束层', desc: 'COLREGs 局面 / CPA-TCPA 交互感知纯函数层（53 测试全绿、变异验证 14/14），作为规则约束层复用回主线，归档仓可溯源。', tag: '规则约束' },
+      { title: '多域延伸 · 教育 / 安全证据', desc: '教育域：学枢个性化学习平台 27 智能体、SAGE 引导式多智能体教学论文工作流；安全域：CTF 解题 Agent 57 个确定性 skill、离线回归 16/16。', tag: 'L1 决策层证据' },
+    ],
+  },
+  {
     category: ' 多智能体协同架构',
     items: [
       { title: '11 节点 LangGraph StateGraph', desc: 'Triage → Coordinator → Diagnostician → Planner → Retriever → Generator(7并行) → Assessor → Critic → EvidenceCheck → QualityGate → PathPlanner 全链路编排', tag: '45% 评分权重' },
