@@ -394,7 +394,8 @@ class TestNeuralGroupMixer:
         """共识混合 — 模拟Agent结果（使用实际Agent名称）
 
         量纲约定：consensus_score 为 **10 分制**（与 QualityScore.overall /
-        quality_threshold=7 对齐），见 gomarl_mixer.mix() 中 `max(0, min(10, cs*10))`。
+        quality_threshold=7 对齐）；训练目标 true_consensus 本身就是 0–10，
+        gomarl_mixer.mix() 只做 `max(0, min(10, cs))` 边界截断，不再重复 ×10。
         因此入参 score 也必须是 10 分制，断言区间为 [0, 10]。
 
         随机性：此处必须用固定种子的 np.random，不能用裸 randn —— 神经网络路径的

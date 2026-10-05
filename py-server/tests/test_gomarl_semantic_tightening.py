@@ -167,6 +167,76 @@ class TestMixerWiring:
         assert mixer.get_stats()["mixer_trained_loaded"] is True
         assert mixer.get_stats()["mixer_embed_dim"] == 8
 
+    def test_trained_mixer_preserves_score_band_discrimination(self, monkeypatch):
+        """n=6 训练模型对低/中/高分档必须保持严格区分，不能被截断为同一值。"""
+        torch, _, _ = mixer_mod._ensure_torch()
+        if torch is None:
+            pytest.skip("PyTorch 不可用，无法验证训练权重推理量纲")
+
+        rng = np.random.default_rng(20261005)
+        embeddings = rng.standard_normal((6, 768)).astype(np.float32)
+        embeddings /= np.linalg.norm(embeddings, axis=1, keepdims=True)
+        agent_names = [
+            "teacher",
+            "quizmaster",
+            "media_designer",
+            "extension",
+            "ppt_designer",
+            "code_practice",
+        ]
+
+        mixer = NeuralGroupMixer()
+        monkeypatch.setattr(mixer.encoder, "encode_batch", lambda texts: embeddings)
+        monkeypatch.setattr(
+            mixer,
+            "_compute_dynamic_weights",
+            lambda names, profile: {name: 1.0 for name in names},
+        )
+        monkeypatch.setattr(mixer_mod.pg_client, "log_agent_score", lambda *args: None)
+        monkeypatch.setattr(mixer_mod.redis_client, "cache_agent_weights", lambda weights: None)
+
+        async def _run_levels() -> list[float]:
+            outputs: list[float] = []
+            for level in (0.5, 5.0, 9.5):
+                agent_results = [
+                    {"agent_name": name, "content": f"固定内容-{index}", "score": level}
+                    for index, name in enumerate(agent_names)
+                ]
+                result = await mixer.mix(agent_results, {}, "量纲回归")
+                assert result["neural_used"] is True
+                outputs.append(result["consensus_score"])
+            return outputs
+
+        scores = asyncio.run(_run_levels())
+
+        assert scores[0] < scores[1] < scores[2], scores
+        assert any(score < 10.0 for score in scores), scores
+        assert len(set(scores)) > 1, scores
+        stats = mixer.get_stats()
+        assert stats["mixer_neural_mode"] == "torch"
+        assert stats["mixer_trained_loaded"] is True
+        assert stats["mixer_weights_complete"] is True
+        assert stats["mixer_weight_mismatch_layers"] == []
+
+    def test_n_agents_weight_shape_mismatch_is_observable(self, caplog):
+        """n≠6 的随机初始化层必须通过 WARNING 与 stats 显式暴露。"""
+        torch, _, _ = mixer_mod._ensure_torch()
+        if torch is None:
+            pytest.skip("PyTorch 不可用，无法验证 checkpoint 形状不匹配")
+
+        mixer = NeuralGroupMixer()
+        with caplog.at_level("WARNING", logger="netlearn.gomarl_mixer"):
+            initialized = mixer._init_mixer(5)
+
+        assert initialized is not None
+        stats = mixer.get_stats()
+        assert stats["mixer_trained_loaded"] is True
+        assert stats["mixer_weights_complete"] is False
+        assert "global_mixer.0.weight" in stats["mixer_weight_mismatch_layers"]
+        assert "current_n_agents=5" in caplog.text
+        assert "trained_n_agents=6" in caplog.text
+        assert "该层保持随机初始化" in caplog.text
+
     def test_mix_returns_agent_embeddings(self, monkeypatch):
         fake = np.ones((2, 8), dtype=np.float32)
         monkeypatch.setattr(neural_mixer.encoder, "encode_batch", lambda texts: fake)
