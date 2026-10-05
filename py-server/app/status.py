@@ -70,6 +70,10 @@ async def status():
         "mixer_neural_mode": "not_initialized",
         "mixer_trained_loaded": False,
         "mixer_embed_dim": None,
+        # 权重形状不匹配可观测：n≠6 时 global_mixer.0.weight 会保持随机初始化，
+        # 此时 mixer_neural_mode == "shape_mismatch_fallback" 且下面两项显式暴露原因。
+        "mixer_weights_complete": False,
+        "mixer_weight_mismatch_layers": [],
     }
     try:
         from engines.gomarl_mixer import neural_mixer
@@ -79,6 +83,10 @@ async def status():
             "mixer_neural_mode": stats.get("mixer_neural_mode", "not_initialized"),
             "mixer_trained_loaded": bool(stats.get("mixer_trained_loaded", False)),
             "mixer_embed_dim": stats.get("mixer_embed_dim"),
+            "mixer_weights_complete": bool(stats.get("mixer_weights_complete", False)),
+            "mixer_weight_mismatch_layers": list(
+                stats.get("mixer_weight_mismatch_layers") or []
+            ),
         }
     except Exception as e:  # noqa: BLE001 — 状态端点必须在 Mixer 未初始化/导入失败时可用
         logger.warning("读取 NeuralMixer 运行状态失败，按未初始化上报: %s", e)

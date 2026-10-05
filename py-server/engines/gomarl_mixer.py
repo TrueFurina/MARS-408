@@ -19,6 +19,17 @@ import numpy as np
 
 logger = logging.getLogger("netlearn.gomarl_mixer")
 
+# 神经模式取值（对外可观测，禁止新增第五种含糊取值）：
+#   "torch"                     —— PyTorch 训练权重完整加载，输出确为神经推理
+#   "onnx_uniform_fallback"     —— 旧 ONNX 模型，分组权重只能均匀兜底，非神经推理
+#   "shape_mismatch_fallback"   —— 权重形状不匹配（如 n≠6），部分层保持随机初始化，
+#                                  禁止把随机权重输出冒充神经推理，降级为规则模式加权
+#   "rule"                      —— torch/onnx 均不可用或权重完全不匹配，纯规则模式
+MODE_TORCH = "torch"
+MODE_ONNX_UNIFORM_FALLBACK = "onnx_uniform_fallback"
+MODE_SHAPE_MISMATCH_FALLBACK = "shape_mismatch_fallback"
+MODE_RULE = "rule"
+
 # Torch 延迟导入：Windows 上 torch 在某些环境下会触发 access violation，
 # 不能在模块级别导入（会导致 pytest 收集阶段崩溃）。
 # 改为运行时按需导入，失败则降级为规则模式。
@@ -345,6 +356,9 @@ class NeuralGroupMixer:
         self._active_embed_dim: Optional[int] = None
         self._weights_complete = False
         self._weight_mismatch_layers: list[str] = []
+        # 已确认形状不匹配、禁止走神经推理的 n_agents 集合。
+        # 用于避免同一 n 反复重建网络 + 反复打 WARNING（mix() 每轮都会调 _init_mixer）。
+        self._shape_mismatch_ns: set[int] = set()
         # M3：MAPPO 教学策略层（权重来源灰度；默认关闭 → EWMA 规则，零影响）
         self._use_mappo = bool(config.get("use_mappo_policy", False))
 
@@ -420,6 +434,15 @@ class NeuralGroupMixer:
             self._weight_mismatch_layers = []
             return None
 
+        # 已知形状不匹配的 n：直接走规则降级。
+        # 避免 mix() 每轮重建网络并重复刷 WARNING（该 n 的结论不会变）。
+        if n_agents in self._shape_mismatch_ns:
+            self._mixer_net = None
+            self._neural_mode = MODE_SHAPE_MISMATCH_FALLBACK
+            self._trained_loaded = False
+            self._active_embed_dim = None
+            return None
+
         # 训练产物 neural_mixer_trained.pt 比 ONNX 导出更新，必须优先尝试。
         # 只有 PyTorch 完全不可用时才允许进入旧 ONNX 兜底路径。
         _torch, _, _ = _ensure_torch()
@@ -442,7 +465,7 @@ class NeuralGroupMixer:
                     embed_dim=embed_dim,
                     hidden_dim=self._hidden_dim,
                 )
-                matched, _ = self._load_trained_weights()
+                matched, total = self._load_trained_weights()
                 if matched <= 0:
                     self._mixer_net = None
                     self.use_neural = False
@@ -458,6 +481,35 @@ class NeuralGroupMixer:
                         "NeuralMixer 初始化完成: mode=rule, trained_loaded=False"
                     )
                     return None
+
+                # ── 诚信红线：权重未完整加载 ⇒ 必有层保持随机初始化 ──
+                # 典型触发：训练 n=6，运行时 n≠6 → global_mixer.0.weight 形状不匹配，
+                # 该层不加载。此时网络输出 = 部分训练权重 + 部分随机权重，
+                # 与 ONNX「均匀权重冒充神经推理」同类错误，绝不允许标称 neural_used=True。
+                # → 丢弃该网络，走规则模式加权（mix() 中 weighted_scores 均值），
+                #   neural_used=False，模式显式为 shape_mismatch_fallback。
+                if not self._weights_complete or self._weight_mismatch_layers:
+                    self._shape_mismatch_ns.add(n_agents)
+                    self._mixer_net = None
+                    self._neural_mode = MODE_SHAPE_MISMATCH_FALLBACK
+                    self._trained_loaded = False
+                    self._active_embed_dim = None
+                    logger.warning(
+                        "NeuralMixer 权重未完整加载，禁止以随机初始化层冒充神经推理，"
+                        "降级为规则模式加权: current_n_agents=%s, "
+                        "matched_layers=%s/%s, mismatch_layers=%s, mode=%s",
+                        n_agents,
+                        matched,
+                        total,
+                        self._weight_mismatch_layers,
+                        MODE_SHAPE_MISMATCH_FALLBACK,
+                    )
+                    logger.info(
+                        "NeuralMixer 初始化完成: mode=%s, trained_loaded=False",
+                        MODE_SHAPE_MISMATCH_FALLBACK,
+                    )
+                    return None
+
                 self._mixer_net.eval()
 
             # 避免旧 ONNX 会话残留导致 mix() 误走 ONNX 分支。
@@ -664,6 +716,10 @@ class NeuralGroupMixer:
         if self.use_neural and n >= 2:
             try:
                 mixer = self._init_mixer(n)
+                # 双保险：只要模式是形状不匹配降级，就绝不把该网络用于推理
+                # （防止后续改动让 _init_mixer 重新返回不完整网络却忘了同步这里）。
+                if self._neural_mode == MODE_SHAPE_MISMATCH_FALLBACK:
+                    mixer = None
                 if mixer is not None:
                     # ONNX Runtime 均匀权重兜底路径
                     if self._neural_mode == "onnx_uniform_fallback":
@@ -731,6 +787,9 @@ class NeuralGroupMixer:
             "groups": self._get_current_groups(agent_names),
             "sd_loss": float(sd_loss),
             "neural_used": neural_used,
+            # 与 get_stats()["mixer_neural_mode"] 同源；调用方据此区分
+            # 真神经推理 / ONNX 均匀兜底 / 形状不匹配降级 / 规则模式。
+            "neural_mode": self._neural_mode,
             "agent_count": n,
             # 各 Agent 的 E5 向量（(n, 768) np.ndarray，与 agent_results 同序）：
             # 供 C3 语义级冲突检测消费；不含于 HTTP 响应，禁止 JSON 直出。
@@ -900,6 +959,8 @@ class NeuralGroupMixer:
             "mixer_embed_dim": self._active_embed_dim,
             "mixer_weights_complete": self._weights_complete,
             "mixer_weight_mismatch_layers": list(self._weight_mismatch_layers),
+            # 已判定为「形状不匹配、禁止神经推理」的 agent 数集合（如 n≠6）
+            "mixer_shape_mismatch_n_agents": sorted(self._shape_mismatch_ns),
             "torch_available": _TORCH_AVAILABLE is True,
             "onnx_available": _ONNX_AVAILABLE,
             "onnx_active": self._onnx_session is not None,
