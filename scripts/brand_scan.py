@@ -72,6 +72,7 @@ IDENTITY_SURFACE_FILES: list[tuple[str, str]] = [
     ("src/views/PlatformHomeView.vue", "门户首页"),
     ("index.html", "仓库根 index.html（SEO / og / title）"),
     ("py-server/main.py", "FastAPI OpenAPI 元数据（/docs 标题与描述，评委可见）"),
+    ("py-server/openapi.json", "OpenAPI 冻结快照（git 已跟踪、随包发出；防与 main.py 同源身份静默漂移）"),
 ]
 
 # 功能性 URL 白名单（仓名未更名前必须保留）
