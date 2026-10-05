@@ -17,7 +17,7 @@
 - 分支同步方向唯一：main → career-literacy，禁止反向
 - 竞赛口径数字必须对齐代码真值；E5 模型文件不入库
 - 永禁 `git add -A`（junction 会导致把未删文件误记为删除）；永禁 `git stash/merge/pull/gc/prune`
-- `*/crypto_platform/py-server/**`（188 文件嵌套副本）**未经用户确认不得移动或删除**
+- ~~`*/crypto_platform/py-server/**`（188 文件嵌套副本）未经用户确认不得移动或删除~~ → **已于 2026-10-05 经用户授权全量删除**（10 处 / 189 文件，核实 0 被 git 跟踪、0 代码引用、内容已漂移）。如再发现同类嵌套副本，先跑引用检查再处置
 - 品牌统一「芒得很职」：产品可见层（`src/`、`public/`、`index.html`、py-server 代码）禁出现旧品牌名与旧赛事名；机检 `npm run gate:brand`（历史文档/交付快照/冻结副本除外）
 - 提交时必须逐文件显式 `git add`，且 add 后先看 `git status`（暂存为空时密钥扫描会退化成全仓扫描并误报）
 
