@@ -133,7 +133,7 @@ function openNew() { window.open(iframeSrc.value, '_blank', 'noopener') }
       <!-- 技术陈列模式 -->
       <div v-if="showTech" class="tech-showcase">
         <div class="tech-header">
-          <div class="tech-title"> 408 考研 · 硬核技术全景</div>
+          <div class="tech-title"> 专业能力训练 + 职业素养实训 · 硬核技术全景</div>
           <div class="tech-sub">芒得很职 · 计算机类学生职业素养对抗实训平台技术全景</div>
         </div>
 
