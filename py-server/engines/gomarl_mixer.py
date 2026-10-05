@@ -343,6 +343,8 @@ class NeuralGroupMixer:
         self._neural_mode = "not_initialized" if self.use_neural else "rule"
         self._trained_loaded = False
         self._active_embed_dim: Optional[int] = None
+        self._weights_complete = False
+        self._weight_mismatch_layers: list[str] = []
         # M3：MAPPO 教学策略层（权重来源灰度；默认关闭 → EWMA 规则，零影响）
         self._use_mappo = bool(config.get("use_mappo_policy", False))
 
@@ -414,6 +416,8 @@ class NeuralGroupMixer:
             self._neural_mode = "rule"
             self._trained_loaded = False
             self._active_embed_dim = None
+            self._weights_complete = False
+            self._weight_mismatch_layers = []
             return None
 
         # 训练产物 neural_mixer_trained.pt 比 ONNX 导出更新，必须优先尝试。
@@ -445,6 +449,8 @@ class NeuralGroupMixer:
                     self._neural_mode = "rule"
                     self._trained_loaded = False
                     self._active_embed_dim = None
+                    self._weights_complete = False
+                    self._weight_mismatch_layers = []
                     logger.warning(
                         "NeuralMixer: PyTorch 训练权重加载失败，降级为规则模式"
                     )
@@ -500,6 +506,8 @@ class NeuralGroupMixer:
                     self._neural_mode = "onnx_uniform_fallback"
                     self._trained_loaded = False
                     self._active_embed_dim = self._embed_dim
+                    self._weights_complete = False
+                    self._weight_mismatch_layers = []
                     logger.warning("ONNX 兜底为均匀权重，非神经推理")
                     logger.info(
                         "NeuralMixer 初始化完成: "
@@ -513,6 +521,8 @@ class NeuralGroupMixer:
         self._neural_mode = "rule"
         self._trained_loaded = False
         self._active_embed_dim = None
+        self._weights_complete = False
+        self._weight_mismatch_layers = []
         logger.warning("NeuralMixer: torch 与 onnx 均不可用，降级为规则模式")
         logger.info("NeuralMixer 初始化完成: mode=rule, trained_loaded=False")
         return None
@@ -522,6 +532,8 @@ class NeuralGroupMixer:
 
         返回 (matched, total) 以便验证；并记录关键 shape 用于排查。
         """
+        self._weights_complete = False
+        self._weight_mismatch_layers = []
         if self._mixer_net is None:
             return 0, 0
         try:
@@ -534,8 +546,44 @@ class NeuralGroupMixer:
                 state_dict = _torch.load(weights_path, map_location="cpu", weights_only=True)
                 # 只加载形状匹配的参数（n_agents 可能不同）
                 model_dict = self._mixer_net.state_dict()
-                matched = {k: v for k, v in state_dict.items()
-                          if k in model_dict and v.shape == model_dict[k].shape}
+                shape_mismatches = {
+                    key: (tuple(value.shape), tuple(model_dict[key].shape))
+                    for key, value in state_dict.items()
+                    if key in model_dict and value.shape != model_dict[key].shape
+                }
+                missing_layers = [key for key in model_dict if key not in state_dict]
+                self._weight_mismatch_layers = sorted(
+                    set(shape_mismatches).union(missing_layers)
+                )
+
+                global_mixer_key = "global_mixer.0.weight"
+                if global_mixer_key in shape_mismatches:
+                    checkpoint_shape, model_shape = shape_mismatches[global_mixer_key]
+                    trained_n_agents = (
+                        checkpoint_shape[1] - self._hidden_dim
+                        if len(checkpoint_shape) == 2
+                        else "unknown"
+                    )
+                    logger.warning(
+                        "NeuralMixer 权重形状不匹配: layer=%s, "
+                        "current_n_agents=%s, trained_n_agents=%s, "
+                        "checkpoint_shape=%s, model_shape=%s; 该层保持随机初始化",
+                        global_mixer_key,
+                        self._mixer_net.n_agents,
+                        trained_n_agents,
+                        checkpoint_shape,
+                        model_shape,
+                    )
+
+                matched = {
+                    key: value
+                    for key, value in state_dict.items()
+                    if key in model_dict and value.shape == model_dict[key].shape
+                }
+                self._weights_complete = (
+                    len(matched) == len(model_dict)
+                    and not self._weight_mismatch_layers
+                )
                 if matched:
                     model_dict.update(matched)
                     self._mixer_net.load_state_dict(model_dict)
@@ -638,9 +686,9 @@ class NeuralGroupMixer:
                         )
                         cs_val = float(onnx_outputs[0])
                         sd_val = float(onnx_outputs[2]) if len(onnx_outputs) > 2 else 0.0
-                        # 共识分映射到 1-10 量纲（与 QualityScore.overall / quality_threshold=7 一致），
-                        # 不再钳制到 [0,1]（旧逻辑会把分数「拉满」成恒为 1.0，失去区分度）。
-                        consensus_score = max(0.0, min(10.0, float(cs_val) * 10.0))
+                        # 训练目标 true_consensus 本身就是 0–10 分制；仅做边界截断，
+                        # 禁止再次乘 10，否则真实 Agent 分数区间会被全部截成 10。
+                        consensus_score = max(0.0, min(10.0, float(cs_val)))
                         sd_loss = sd_val
                         neural_used = True
                     else:
@@ -651,8 +699,8 @@ class NeuralGroupMixer:
                             agent_embs_t = _torch.from_numpy(embeddings)
 
                             cs, w1, sd = mixer(agent_scores_t, agent_embs_t)
-                            # 共识分映射到 1-10 量纲（与 QualityScore.overall / quality_threshold=7 一致）
-                            consensus_score = max(0.0, min(10.0, float(cs.item()) * 10.0))
+                            # 训练目标 true_consensus 已是 0–10 分制，仅做边界截断。
+                            consensus_score = max(0.0, min(10.0, float(cs.item())))
                             sd_loss = float(sd.item())
                             neural_used = True
 
@@ -850,6 +898,8 @@ class NeuralGroupMixer:
             "mixer_neural_mode": self._neural_mode,
             "mixer_trained_loaded": self._trained_loaded,
             "mixer_embed_dim": self._active_embed_dim,
+            "mixer_weights_complete": self._weights_complete,
+            "mixer_weight_mismatch_layers": list(self._weight_mismatch_layers),
             "torch_available": _TORCH_AVAILABLE is True,
             "onnx_available": _ONNX_AVAILABLE,
             "onnx_active": self._onnx_session is not None,
