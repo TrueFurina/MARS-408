@@ -147,7 +147,7 @@ function chipStyle(tok: string) {
           <div v-for="r in typeScale" :key="r[0]" class="type-row">
             <div class="lvl">{{ r[0] }}</div>
             <div class="samp" :style="{ 'font-size': r[1], 'font-weight': r[2], 'line-height': r[3], 'letter-spacing': r[4] }">
-              芒得很职 个性化学习系统 <span style="font-size:12px;color:var(--color-text-3);font-weight:400;">— {{ r[5] }}</span>
+              芒得很职 职业素养对抗实训平台 <span style="font-size:12px;color:var(--color-text-3);font-weight:400;">— {{ r[5] }}</span>
             </div>
           </div>
         </div>

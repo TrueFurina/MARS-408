@@ -111,7 +111,7 @@ function openNew() { window.open(iframeSrc.value, '_blank', 'noopener') }
     <aside class="showcase-rail">
       <div class="rail-head">
         <div class="rail-title">成果展示中心</div>
-        <div class="rail-sub">408 考研 · 硬核技术全景</div>
+        <div class="rail-sub">专业能力训练 + 职业素养实训 · 硬核技术全景</div>
       </div>
       <div class="rail-list">
         <button v-for="(it, i) in items" :key="it.key" class="rail-item" :class="{ active: selected === i }" @click="select(i)">
@@ -134,7 +134,7 @@ function openNew() { window.open(iframeSrc.value, '_blank', 'noopener') }
       <div v-if="showTech" class="tech-showcase">
         <div class="tech-header">
           <div class="tech-title"> 408 考研 · 硬核技术全景</div>
-          <div class="tech-sub">芒得很职 · 新一代多智能体赋能平台的技术全景</div>
+          <div class="tech-sub">芒得很职 · 计算机类学生职业素养对抗实训平台技术全景</div>
         </div>
 
         <div v-for="section in techHighlights" :key="section.category" class="tech-section">

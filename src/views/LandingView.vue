@@ -87,6 +87,9 @@ function goToGraph() {
 function goToSkills() {
   router.push('/skill-platform')
 }
+function goToTraining() {
+  router.push('/career/training')
+}
 </script>
 
 <template>
@@ -108,6 +111,7 @@ function goToSkills() {
         <button class="nav-link" @click="enterSystem">进入系统</button>
         <button class="nav-link" @click="goToGraph">知识图谱</button>
         <button class="nav-link" @click="goToSkills">技能平台</button>
+        <button class="nav-link" @click="goToTraining">体验对抗实训</button>
       </div>
     </header>
 
@@ -115,15 +119,15 @@ function goToSkills() {
     <section class="hero">
       <div class="hero-badge">
         <span class="hero-badge-dot"></span>
-        国家级竞赛参赛作品 · 个性化学习多智能体系统
+        国家级竞赛参赛作品 · 职业素养对抗实训平台
       </div>
       <h1 class="hero-title">
         <span class="hero-title-line">芒得很职</span>
-        <span class="hero-title-sub">基于大模型的个性化资源生成与学习多智能体系统</span>
+        <span class="hero-title-sub">计算机类学生职业素养对抗实训平台</span>
       </h1>
       <p class="hero-desc">
         以 8 个协作 Agent 为核心引擎，深度融合讯飞星火 10 项多模态能力、用户自定义 AI 教学技能平台、
-        与覆盖 408 全科的领域知识图谱，为每一位考研学子构建「会自愈的个性化学习闭环」。
+        与覆盖 408 全科的领域知识图谱，同时支撑职业素养对抗实训与考研 408 的个性化学习路径——让计算机类学生既会做题，也说得清、扛得住、有证据。
       </p>
 
       <!-- 数据指标药丸 -->
