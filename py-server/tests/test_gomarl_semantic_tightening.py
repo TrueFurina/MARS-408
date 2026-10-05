@@ -156,7 +156,15 @@ class TestMixerWiring:
         mixer = NeuralGroupMixer()
         monkeypatch.setattr(mixer, "use_neural", True)
         monkeypatch.setattr(mixer, "_probe_trained_embed_dim", lambda: 8)
-        monkeypatch.setattr(mixer, "_load_trained_weights", lambda: (1, 1))
+
+        def _fake_load_trained_weights():
+            # 模拟「权重完整命中」：必须同时置位完成标记并清空不匹配层，
+            # 否则等于模拟一次失败加载，与 (1, 1) 的语义自相矛盾。
+            mixer._weights_complete = True
+            mixer._weight_mismatch_layers = []
+            return 1, 1
+
+        monkeypatch.setattr(mixer, "_load_trained_weights", _fake_load_trained_weights)
 
         initialized = mixer._init_mixer(2)
 
@@ -226,16 +234,54 @@ class TestMixerWiring:
 
         mixer = NeuralGroupMixer()
         with caplog.at_level("WARNING", logger="netlearn.gomarl_mixer"):
-            initialized = mixer._init_mixer(5)
+            mixer._init_mixer(5)
 
-        assert initialized is not None
-        stats = mixer.get_stats()
-        assert stats["mixer_trained_loaded"] is True
-        assert stats["mixer_weights_complete"] is False
-        assert "global_mixer.0.weight" in stats["mixer_weight_mismatch_layers"]
         assert "current_n_agents=5" in caplog.text
         assert "trained_n_agents=6" in caplog.text
         assert "该层保持随机初始化" in caplog.text
+
+    def test_n_agents_shape_mismatch_must_not_claim_neural(self, caplog):
+        """n≠6 ⇒ 权重不完整 ⇒ 不得返回网络、不得标称神经推理（诚信红线）。
+
+        与 ONNX「均匀权重冒充神经推理」同类：global_mixer.0.weight 形状不匹配时该层
+        保持随机初始化，此时任何输出都不得被标为 neural_used=True。
+        """
+        torch, _, _ = mixer_mod._ensure_torch()
+        if torch is None:
+            pytest.skip("PyTorch 不可用，无法验证 checkpoint 形状不匹配")
+
+        mixer = NeuralGroupMixer()
+        with caplog.at_level("WARNING", logger="netlearn.gomarl_mixer"):
+            initialized = mixer._init_mixer(5)
+
+        # 1) 不得返回任何可推理网络
+        assert initialized is None
+        stats = mixer.get_stats()
+        # 2) 模式必须可与 torch / onnx_uniform_fallback / rule 区分
+        assert stats["mixer_neural_mode"] == "shape_mismatch_fallback"
+        assert stats["mixer_neural_mode"] not in ("torch", "onnx_uniform_fallback", "rule")
+        # 3) 不得宣称训练权重已完整加载
+        assert stats["mixer_trained_loaded"] is False
+        assert stats["mixer_weights_complete"] is False
+        assert "global_mixer.0.weight" in stats["mixer_weight_mismatch_layers"]
+        assert 5 in stats["mixer_shape_mismatch_n_agents"]
+        assert "冒充神经推理" in caplog.text
+
+    def test_n_agents_six_still_uses_torch(self):
+        """回归对照：n=6 权重完整 ⇒ 仍必须走真神经推理，不得被降级逻辑误伤。"""
+        torch, _, _ = mixer_mod._ensure_torch()
+        if torch is None:
+            pytest.skip("PyTorch 不可用，无法验证 checkpoint 完整加载")
+
+        mixer = NeuralGroupMixer()
+        initialized = mixer._init_mixer(6)
+        assert initialized is not None
+        stats = mixer.get_stats()
+        assert stats["mixer_neural_mode"] == "torch"
+        assert stats["mixer_trained_loaded"] is True
+        assert stats["mixer_weights_complete"] is True
+        assert stats["mixer_weight_mismatch_layers"] == []
+        assert stats["mixer_shape_mismatch_n_agents"] == []
 
     def test_mix_returns_agent_embeddings(self, monkeypatch):
         fake = np.ones((2, 8), dtype=np.float32)

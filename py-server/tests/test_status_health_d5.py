@@ -22,10 +22,19 @@ def test_status_shape_and_keys(client):
         "not_initialized",
         "torch",
         "onnx_uniform_fallback",
+        # 权重形状不匹配（如 n≠6）⇒ 部分层随机初始化 ⇒ 降级规则模式，
+        # 严禁把随机权重输出标称神经推理，故必须与 "torch" 区分开。
+        "shape_mismatch_fallback",
         "rule",
     }
     assert isinstance(body["mixer_trained_loaded"], bool)
     assert body["mixer_embed_dim"] is None or isinstance(body["mixer_embed_dim"], int)
+    # 形状不匹配的原因必须与模式同源暴露，避免「降级了但看不出为什么」
+    assert isinstance(body["mixer_weights_complete"], bool)
+    assert isinstance(body["mixer_weight_mismatch_layers"], list)
+    if body["mixer_neural_mode"] == "shape_mismatch_fallback":
+        assert body["mixer_weights_complete"] is False
+        assert body["mixer_trained_loaded"] is False
     assert "health" in body
 
     health = body["health"]
