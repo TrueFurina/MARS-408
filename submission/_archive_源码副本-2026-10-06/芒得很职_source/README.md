@@ -1,5 +1,16 @@
 # 芒得很职：基于多智能体协同的 408 考研个性化学习系统
 
+> ⚠️ **归档说明（2026-10-06）**
+>
+> 本 README 属于**过期源码副本**（代码快照止于 2026-09-15，缺双场景门户等主线页面），
+> 已随该副本整体移入 `submission/_archive_源码副本-2026-10-06/`，**不作为交付面**。
+>
+> - 正式交付源码包：`submission/04_源码/芒得很职_source_国创赛-2026-10-06.zip`
+> - 正式口径以该zip 内README 与 `submission/00_提交清单.md` 为准。
+>
+> 下列文字为历史记录，其中「2026 作品路演」为旧赛事名、代码仓库地址含旧品牌串
+> `MARS-408`，**均已废弃、不再对外**。保留仅为追溯本项目演进，不作任何对外陈述依据。
+
 [![CI](https://img.shields.io/badge/CI-passing-brightgreen)](https://github.com/TrueFurina/MARS-408/actions)
 [![Python](https://img.shields.io/badge/Python-3.12-blue)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-Uvicorn-009688)](https://fastapi.tiangolo.com/)
@@ -74,8 +85,8 @@
 
 ### 4. 全链路工程化与容灾
 
-- 前端 Vue 3 + TypeScript，**38 个页面**，多端多角色（学生 / 教师看板）
-- 后端 FastAPI + LangGraph，**451 个 API 端点**（43 路由模块），**915 项测试通过 / 207 跳过**（全量回归 0 失败）
+- 前端 Vue 3 + TypeScript，**45 个页面**，多端多角色（学生 / 教师看板）
+- 后端 FastAPI + LangGraph，**244 个 API 操作（227 条路由路径）**，**默认测试集 1389 条：1178 通过 / 208 跳过 / 3 xfail / 0 失败**
 - **双通道大模型自动容灾**：DeepSeek（主）→ 讯飞星火 generalv3.5（兜底）
 - Milvus / PostgreSQL / Redis 缺失时逐级自动降级，单机即可完整运行
 
@@ -207,10 +218,10 @@ npm install && npm run dev                   # :5173，代理 /api → 8002
 
 | 维度 | 指标 |
 |------|------|
-| 前端 | Vue 3 + TypeScript · 45 个 views（82 个 .vue） · Vite 构建 |
-| 后端 | FastAPI + LangGraph · 451 个 API 端点 · 11 Agent 节点 |
+| 前端 | Vue 3 + TypeScript · 45 个 views（85 个 .vue） · Vite 构建 |
+| 后端 | FastAPI + LangGraph · 244 个 API 操作（227 条路由路径） · 11 Agent 节点 |
 | 代码量 | 后端 414 个 Python 文件 / 约 10.2 万行 · 前端 93 文件 / 约 2.8 万行 |
-| 测试 | 915 项测试通过 / 207 跳过（全量回归 0 失败） |
+| 测试 | 默认集 1389 条：1178 通过 / 208 跳过 / 3 xfail / 0 失败；CI p0 回归档 67 条；覆盖率 54.96%（门禁 ≥50%） |
 | LLM | DeepSeek（主）+ 讯飞星火 generalv3.5（兜底）双通道自动容灾 |
 | 检索 | 向量检索主路径 · 约 2122 条条目 · E5 已本地化启用（768 维） |
 | 容灾 | Milvus / PG / Redis 逐级降级 · 单机可完整运行 |
