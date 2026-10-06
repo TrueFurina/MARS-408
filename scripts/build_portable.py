@@ -38,7 +38,6 @@ ENV_EXAMPLE_PATH = "py-server/.env.example"
 EXCLUDES = {
     ".venv", "__pycache__", ".pytest_cache", ".git",
     "node_modules", "milvus_lite_data", "vectordb_data",
-    "plots", "sessions", "data", "iq_run_tmp",
     ".workbuddy", ".sessions", ".codebuddy",
     # 超 1GB 限制的大文件
     "教材",           # documents/教材/ 下的 PDF 教材 (~450MB)
@@ -46,7 +45,27 @@ EXCLUDES = {
     ".env",           # 真实凭证，精确匹配；不可写 .env*，否则会误伤 .env.example
     ".eggs",
     ".mypy_cache",
+    # 提交包自身：交付 zip 里绝不能再嵌套一份提交包（含旧赛事清单与旧文档）。
+    # 当前 build() 的打包目录白名单已不含 submission，此处属纵深防御：
+    # 日后有人把 submission/ 加进白名单时，本条仍能拦住嵌套。
+    "submission",
 }
+
+# 需要排除的【完整相对路径前缀】（运行期数据目录）。
+#
+# ⚠️ 不要再把 "data" / "sessions" / "plots" 放回 EXCLUDES 的分段裸名里。
+# 分段裸名匹配路径的【任意一段】，会连带删掉同名但属于源码的目录：
+# `src/data/`（seedTextbooks.ts / capabilityComparison.ts / sourceLabExercises.ts，
+# 被 SourceLabPane.vue、EngineView.vue、KnowledgeBaseView.vue 直接 import）
+# 曾因此被整体排除，交付包 1075 个文件全部通过 .env 安全自检，
+# 却一个 .vue 页面数据模块都没有 —— 「安全」自检掩盖了「缺料」缺陷，
+# 评委拿到包执行 vite build 才会报缺模块。故改为按完整前缀精确排除。
+EXCLUDE_PATH_PREFIXES = (
+    "py-server/data",       # 运行期数据 (~12MB)
+    "py-server/sessions",   # 运行期会话
+    "py-server/plots",      # 运行期图表输出
+    "py-server/iq_run_tmp",  # 一次性的 IQ 评测运行目录
+)
 
 # 需要排除的目录/文件名（按路径分段【通配符匹配】）
 # 注意：EXCLUDES 是精确匹配，通配符模式必须放在这里。
@@ -98,13 +117,18 @@ def should_exclude(path: Path, relative_path: str) -> bool:
     Returns:
         应排除时为 True，否则为 False。
     """
+    normalized = _norm(relative_path)
+    for prefix in EXCLUDE_PATH_PREFIXES:
+        if normalized == prefix or normalized.startswith(f"{prefix}/"):
+            return True
+
     for part in path.parts:
         if part in EXCLUDES:
             return True
         if any(fnmatch.fnmatch(part, pattern) for pattern in EXCLUDE_GLOBS):
             return True
 
-    if _norm(relative_path) in PT_WHITELIST:
+    if normalized in PT_WHITELIST:
         return False
 
     if path.suffix in EXCLUDE_EXTS:
@@ -138,6 +162,41 @@ def _add_tree(
         counters["files"] += 1
         if counters["files"] % 50 == 0:
             print(f"  已处理 {counters['files']} 个文件...")
+
+
+def _assert_frontend_source_present(archive: zipfile.ZipFile) -> None:
+    """校验前端源码（src/ 与 public/）确实进入了交付包。
+
+    交付物叫「源码包」。若只打后端 py-server 而漏掉 src/，包仍能通过
+    .env 安全自检——那正是 2026-10-06 之前的真实故障：1075 个文件全部通过
+    安全自检，却一个 .vue 都没有，交付出去等于交了个后端。
+
+    因此这里用【数量下限】而非仅判存在：即便日后src/ 被清空到只剩 index.ts，
+    也会因数量不达标而硬失败，不会又打出一个「安全但没有源码」的包。
+
+    Args:
+        archive: 仍在写入模式、尚未关闭的 ZIP 对象。
+
+    Raises:
+        PackageValidationError: 前端源码缺失或数量明显异常。
+    """
+    names = {
+        _norm(info.filename)
+        for info in archive.infolist()
+        if not info.is_dir()
+    }
+    frontend_minimums = {"src/": 50, "public/": 5}
+    insufficient = [
+        f"{prefix.rstrip('/')}={sum(1 for n in names if n.startswith(prefix))} 个"
+        f"（下限 {minimum}）"
+        for prefix, minimum in frontend_minimums.items()
+        if sum(1 for n in names if n.startswith(prefix)) < minimum
+    ]
+    if insufficient:
+        raise PackageValidationError(
+            "前端源码未进入交付包，交付物不能叫「源码包」: " + ", ".join(insufficient)
+        )
+    print("  PASS: 前端源码 src/ 与 public/ 已在包内")
 
 
 def validate_archive(archive_path: Path) -> None:
@@ -199,12 +258,42 @@ def validate_archive(archive_path: Path) -> None:
             "缺少提交清单声明的训练权重: " + ", ".join(missing_weights)
         )
 
+    nested_submission = sorted(
+        member for member in members
+        if member == "submission" or member.startswith("submission/")
+    )
+    if nested_submission:
+        failures.append(
+            "交付包内嵌套了提交包自身（含旧赛事清单，需立即排查）: "
+            + ", ".join(nested_submission[:5])
+        )
+
+    # src/data/ 曾因 EXCLUDES 裸名 "data" 被整体删掉，而 .env 自检完全测不出来。
+    # 这里显式点名必须存在的源码模块：被谁 import 就在代码里真实存在，删不得。
+    required_frontend_sources = (
+        "src/data/seedTextbooks.ts",
+        "src/data/capabilityComparison.ts",
+        "src/data/sourceLabExercises.ts",
+    )
+    missing_sources = [
+        relative_path
+        for relative_path in required_frontend_sources
+        if _source_path(relative_path).is_file() and relative_path not in members
+    ]
+    if missing_sources:
+        failures.append(
+            "前端源码模块缺失（多半是 EXCLUDES 误伤同名目录）: "
+            + ", ".join(missing_sources)
+        )
+
     if failures:
         raise PackageValidationError("；".join(failures))
 
     print("  PASS: 包内无任何名为 .env 的文件")
     print(f"  PASS: 包内保留配置模板 {ENV_EXAMPLE_PATH}")
     print("  PASS: 包内无 *.egg-info 和 .pytest_tmp* 残留")
+    print("  PASS: 包内无嵌套的 submission/ 提交包")
+    print("  PASS: 前端源码模块（src/data 等）完整在包内")
     retained_weights = sorted(PT_WHITELIST.intersection(members))
     if retained_weights:
         print("  PASS: 白名单训练权重已保留: " + ", ".join(retained_weights))
@@ -256,10 +345,22 @@ def build(output_zip: Path) -> None:
             "start.ps1",
             "INSTALL.md",
             "README.md",
+            "README_EN.md",
             ".env.example",
             "docker-compose.yml",
             "Dockerfile",
             "serve_spa.py",
+            "package.json",
+            "package-lock.json",
+            "vite.config.ts",
+            "vitest.config.ts",
+            "tsconfig.json",
+            "tsconfig.app.json",
+            "tsconfig.node.json",
+            "postcss.config.js",
+            "eslint.config.js",
+            "env.d.ts",
+            "index.html",
             "scripts/build_portable.py",
         )
         for relative_path in root_files:
@@ -270,12 +371,18 @@ def build(output_zip: Path) -> None:
                 counters["size"] += source_path.stat().st_size
                 counters["files"] += 1
 
-        for directory_name in ("py-server", "dist", "documents", "design-system"):
+        # src/ 与 public/ 是前端源码本体：缺了它们，交付包只剩后端，
+        # 「源码包」名不副实（2026-10-06 实测遗漏：1075 个文件里 src/public 各 0 个）。
+        # dist/ 是构建产物，一并保留，评委不装依赖也能直接看界面。
+        for directory_name in ("py-server", "src", "public", "dist", "documents", "design-system"):
             _add_tree(
                 archive,
                 PROJECT_ROOT / directory_name,
                 counters,
             )
+
+        # 打包后自检：前端源码必须真的在里面，且成规模。
+        _assert_frontend_source_present(archive)
 
         # models/ 在部分开发环境中是目录联接，Path.rglob 不会下钻；显式补入白名单。
         archived_paths = {_norm(name) for name in archive.namelist()}
