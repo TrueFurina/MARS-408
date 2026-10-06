@@ -1,5 +1,124 @@
 # -*- coding: utf-8 -*-
-"""作品演示 PPT 生成脚本 — 数字口径与 README_旧赛事-最终版.md 一致（2026-08-28 定稿）"""
+"""[已废弃 / DEPRECATED] 旧赛事（软件竞赛）作品演示 PPT 生成脚本。
+
+═══════════════════════════════════════════════════════════════════════════
+🚫 请勿运行本脚本生成交付件。
+═══════════════════════════════════════════════════════════════════════════
+
+**当前主线唯一使用的路演 PPT 生成器是：**
+
+    py-server/.venv/Scripts/python.exe deliverables/build_roadshow_pptx.py
+
+它输出到 `submission/01_演示PPT/作品演示PPT-最终版.pptx`（11 页，国创赛主线）。
+
+───────────────────────────────────────────────────────────────────────────
+为什么废弃
+───────────────────────────────────────────────────────────────────────────
+本脚本生成的是**软件竞赛阶段**的 12 页 408 考研老片，与当前
+「计算机类学生职业素养对抗实训平台」主线完全不符（实测旧片内
+「芒得很职」0 次、「国创赛」0 次、「职业素养」0 次，而旧串 MARS 13 次）。
+该产物已于 2026-10-06 归档至 `deliverables/_archive_2026-10-06/`。
+
+**护栏存在的原因**：本脚本末尾的 `OUT` 硬编码指向该归档路径。若不加拦截，
+任何人误跑一次就会把 408 老片**重新生成回 `deliverables/` 根目录**，
+绕过归档、形成静默复发——这正是团队一直在治的"静默复发"同一类问题。
+
+───────────────────────────────────────────────────────────────────────────
+护栏行为
+───────────────────────────────────────────────────────────────────────────
+1. 默认直接 `SystemExit(2)` 拒绝执行，并打印正确脚本指向；
+2. 仅当显式传入 `--force-legacy` 才允许运行（用于复现历史物料）；
+3. 即使加了 `--force-legacy`，若 `OUT` 落在任何 `_archive_*` 目录内，
+   仍然拒绝执行——归档区是只读的，不允许任何脚本往里写入。
+"""
+import sys
+from pathlib import Path
+
+# ── 护栏常量 ────────────────────────────────────────────────────────────────
+
+#: 本脚本硬编码的产物路径（旧 408 老片，已归档）
+LEGACY_OUT = Path(r"E:/Program/MARL/study-help-pro/deliverables/作品演示PPT-最终版.pptx")
+
+#: 当前主线唯一有效的生成器
+CURRENT_GENERATOR = "deliverables/build_roadshow_pptx.py"
+
+#: 允许写入的根目录（产物必须落在此根目录内）
+ALLOWED_ROOT = Path(r"E:/Program/MARL/study-help-pro/deliverables")
+
+
+def _refuse(reason: str) -> None:
+    """打印拒绝原因并以非零码退出。
+
+    注意：消息体用「列表 + join」拼装，**不用**相邻字符串隐式拼接——
+    Python 中隐式拼接在解析期完成、优先级高于 `*`，写成
+    `"=" * 75 + "\\n" "文本"` 会被解析成 `("=" * 75) + ("\\n文本\\n" * 75)`，
+    导致整条消息被重复 75 次。
+    """
+    sep = "=" * 75
+    lines = [
+        "",
+        sep,
+        "🚫 拒绝执行：scripts/make_roadshow_ppt.py 已被标记为【已废弃】",
+        sep,
+        f"原因：{reason}",
+        "",
+        "本脚本生成的是软件竞赛阶段的 12 页 408 考研老片，与当前主线不符。",
+        f"当前主线请改用：  py-server/.venv/Scripts/python.exe {CURRENT_GENERATOR}",
+        "  （输出到 submission/01_演示PPT/作品演示PPT-最终版.pptx，11 页国创赛主线）",
+        "",
+        "若确需复现历史物料（例如比对旧片内容），可显式加开关：",
+        "  py-server/.venv/Scripts/python.exe scripts/make_roadshow_ppt.py"
+        " --force-legacy --out-dir <非归档目录>",
+        "（归档目录 `_archive_*` 为只读，任何情况下都拒绝写入）",
+        sep,
+    ]
+    sys.stderr.write("\n".join(lines) + "\n")
+    raise SystemExit(2)
+
+
+def _guard(argv) -> Path:
+    """执行护栏校验，返回允许写入的目标目录。
+
+    Args:
+        argv: 命令行参数列表（sys.argv[1:]）。
+
+    Returns:
+        允许写入的目标输出目录。
+
+    Raises:
+        SystemExit: 未授权、参数非法，或目标落在归档目录内时退出（码 2）。
+    """
+    # 1) 默认拒绝：必须显式 --force-legacy
+    if "--force-legacy" not in argv:
+        _refuse("未检测到 --force-legacy 开关（默认拒绝执行，避免静默再生 408 老片）")
+
+    # 2) 解析目标目录：默认 deliverables/，允许 --out-dir 覆盖
+    out_dir = ALLOWED_ROOT
+    if "--out-dir" in argv:
+        idx = argv.index("--out-dir")
+        if idx + 1 >= len(argv):
+            _refuse("--out-dir 缺少参数值")
+        out_dir = Path(argv[idx + 1]).resolve()
+
+    # 3) 归档区只读：产物路径的任一层落在 _archive_* 下即拒绝
+    resolved = out_dir / LEGACY_OUT.name
+    for part in [resolved, *resolved.parents]:
+        if part.name.startswith("_archive"):
+            _refuse(f"目标路径落在归档目录内（{part}）——归档区只读，不允许写入")
+
+    # 4) 必须位于 deliverables/ 内，避免写到任意位置
+    try:
+        resolved.relative_to(ALLOWED_ROOT)
+    except ValueError:
+        _refuse(f"目标目录不在 {ALLOWED_ROOT} 内，拒绝写入仓库其它位置")
+
+    return out_dir
+
+
+# ── 护栏执行（在构建任何 PPT 内容之前拦截）────────────────────────────
+_ARGV = sys.argv[1:]
+_OUT_DIR = _guard(_ARGV)
+
 from pptx import Presentation
 from pptx.util import Inches, Pt, Emu
 from pptx.dml.color import RGBColor
@@ -385,6 +504,8 @@ text(s, Inches(0.9), Inches(5.45), Inches(11.5), Inches(1.2),
 text(s, Inches(0.9), Inches(6.9), Inches(11.5), Inches(0.4),
      [("芒得很职 · 让每一次学习都有迹可循", {"size": 14, "bold": True, "color": WHITE})])
 
-OUT = r"E:/Program/MARL/study-help-pro/deliverables/作品演示PPT-最终版.pptx"
+OUT = str(_OUT_DIR / LEGACY_OUT.name)
 prs.save(OUT)
 print("saved:", OUT, "| slides:", len(prs.slides.__iter__.__self__._sldIdLst))
+print("⚠️  注意：这是【旧赛事 408 老片】，仅用于历史物料复现，"
+      "不得作为交付件。当前主线请用 " + CURRENT_GENERATOR)
