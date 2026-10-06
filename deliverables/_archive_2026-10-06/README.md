@@ -17,14 +17,30 @@
 （芒得很职 / 国创赛·高教主赛道·创意组 / 244 operations / 227 paths /
 默认集 1389 → 1178 passed / 覆盖率 54.96% / 共识分 7.0446）。
 
-## ⚠️ 相关陷阱：`scripts/make_roadshow_ppt.py` 会重新生成 408 老片
+## ✅ 已加护栏：`scripts/make_roadshow_ppt.py` 现已拒绝静默再生
 
-该脚本（旧名，git 跟踪）末尾硬编码输出到**已归档的旧路径**：
+该脚本（旧赛事 PPT 生成器，git 跟踪，**按裁决保留不删**）已于 2026-10-06
+加装硬护栏，**不再是未设防的再生入口**：
 
-```python
-OUT = r"E:/Program/MARL/study-help-pro/deliverables/作品演示PPT-最终版.pptx"
-```
+- **文件头**已写明它是旧赛事生成器、当前主线唯一有效生成器是
+  `deliverables/build_roadshow_pptx.py`（输出到 `submission/01_演示PPT/`）；
+- **默认直接拒绝执行**（`SystemExit(2)`），并打印正确脚本指向；
+- 只有显式加 `--force-legacy` 才允许运行（用于复现历史物料）；
+- **归档区只读**：即使加了 `--force-legacy`，只要目标路径落在任何
+  `_archive*` 目录内，仍然拒绝执行——即本归档无法被脚本回写；
+- 目标若不在 `deliverables/` 内，同样拒绝。
 
-若有人运行它，会把 408 老片重新生成回 `deliverables/` 根目录，绕过本归档。
-**当前主线请只用 `deliverables/build_roadshow_pptx.py`。**
-（该脚本的去留待定，本轮未改动。）
+4 条拒绝路径均已实跑验证（默认执行 / 归档目录 / `--out-dir` 缺值 /
+仓库外路径），退出码均为 2。详见 commit `047bb68`。
+
+**当前主线只用**：`py-server/.venv/Scripts/python.exe deliverables/build_roadshow_pptx.py`
+
+## 注：本目录归档 pdf 未入库
+
+`submission/_archive_演示PPT-2026-10-06/作品演示PPT-最终版.pdf`
+（401,964 字节，2026-09-18）因 `.gitignore:179` 的全局 `*.pdf` 规则
+**未纳入 git 版本控制**——这是有意决策（pdf 体积大、二进制，且 git 里
+已有其历史版本），**不�� `git add -f`**。
+
+因此：该 pdf **仅存在于本地磁盘**，克隆仓库不会带上它。
+若需查阅历史 PDF，请回到本机工作副本，勿以「git log 里找不到」误判为归档丢失。
