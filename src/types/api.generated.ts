@@ -1146,6 +1146,9 @@ export interface paths {
         /**
          * Stop Decision Update
          * @description 更新启发式动态阈值（基于历史效果的 EWMA 自适应，非在线学习）
+         *
+         *     安全：全局单例阈值，仅管理员可调，防止任意登录用户通过 HTTP 改写
+         *     影响所有用户的停止决策行为。
          */
         post: operations["stop_decision_update_api_engine_stop_decision_update_post"];
         delete?: never;
@@ -4485,6 +4488,9 @@ export interface paths {
         /**
          * Get Questions
          * @description 获取素养测评题库（学生端答题页）。
+         *
+         *     **刻意保持公开**：纯只读题库，不含任何学生数据，也不产生写入；
+         *     学生答题页必须在拿到题目之前可用。其余三个端点均已要求凭据。
          */
         get: operations["get_questions_api_literacy_questions_get"];
         put?: never;
@@ -4508,8 +4514,14 @@ export interface paths {
          * Submit Literacy
          * @description 提交素养测评：分档计分 → 六维得分 → 落库（pre/post 各一次）。
          *
-         *     user_id 解析顺序：Bearer token（登录态）→ 请求体 user_id（课堂场景）→ demo 兜底。
-         *     此前硬编码 demo 导致同班学生互相覆盖（并发试测实锤，46 人课堂不可用）。
+         *     user_id 解析顺序：请求体 user_id（课堂实验编号=学号后4位）→ Bearer token → demo 兜底。
+         *     实验编号必须优先：全班共用 demo 账号登录时 token 一律是 demo，
+         *     若 token 优先会再次互相覆盖（并发试测实锤过一次）。
+         *
+         *     `_user` 不参与计算，仅作 FastAPI 鉴权闸门：无有效凭据一律 401。
+         *     它拦住的是「匿名第三方以任意学号写入/覆盖研究原始数据」；
+         *     拦截不到「已登录的 demo 账号替他人提交」——那是全班共用账号的固有代价，
+         *     要根治需为每名学生发独立账号（已记录为后续项，不在本次改动范围）。
          */
         post: operations["submit_literacy_api_literacy_submit_post"];
         delete?: never;
@@ -4528,6 +4540,12 @@ export interface paths {
         /**
          * Get Report
          * @description 个人素养报告：pre/post 六维对比（前后测差值）。
+         *
+         *     权限：**本人 / 教师 / 管理员** —— `require_self_or_teacher` 直接从同名路径参数
+         *     注入 `user_id`，因此「本人」判定用的是 token sub 与路径的一致性。
+         *
+         *     收紧前该端点零鉴权：`user_id` 即「学号后 4 位」，仅需 10^4 次枚举即可
+         *     未登录读取任意学生的六维测评报告（IDOR）。
          */
         get: operations["get_report_api_literacy_report__user_id__get"];
         put?: never;
@@ -4550,8 +4568,95 @@ export interface paths {
         /**
          * Get Class Report
          * @description 教师端班级六维聚合：全班 pre/post 均值 + 逐人明细。
+         *
+         *     权限：**教师 / 管理员**（`require_teacher_or_demo_open`，与 `api/teacher.py` 的
+         *     教师端点同口径）。收紧前该端点零鉴权：只需填一个班级名，即可拿到
+         *     **全班学生 user_id + user_name + 逐人各维度分数明细**。
+         *
+         *     演示环境如需让 demo 学生账号预览，按既有约定设 `NETLEARN_DEMO_TEACHER_OPEN=1`
+         *     （每次放宽写 `[DEMO-RELAX]` 审计日志）；生产环境严禁设置。
          */
         post: operations["get_class_report_api_literacy_class_report_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cn-distinction": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Pairs
+         * @description 列出全部计网易混淆概念对（含混淆点与关键辨析，不含自测题答案）。
+         */
+        get: operations["list_pairs_api_cn_distinction_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cn-distinction/{pid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Pair Detail
+         * @description 获取单个概念对的完整辨析（含关键辨析点，不含自测题答案）。
+         */
+        get: operations["get_pair_detail_api_cn_distinction__pid__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cn-distinction/quiz/random": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Random Quiz
+         * @description 随机抽取一道区分自测题（不含答案，需作答后判分）。
+         */
+        get: operations["random_quiz_api_cn_distinction_quiz_random_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cn-distinction/quiz/answer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Answer Quiz
+         * @description 对自测作答做确定性关键词判分（可复现，不依赖 LLM）。
+         */
+        post: operations["answer_quiz_api_cn_distinction_quiz_answer_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4565,7 +4670,15 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Status */
+        /**
+         * Status
+         * @description 系统健康探针（D5：停止硬编码 "ok"，显式化静默降级）。
+         *
+         *     - status: "ok" 仅当所有「已配置启用」的核心能力实际可用；任一意图启用却回落/失败 → "degraded"
+         *     - health: 各组件真实状态（vector_db / postgresql / redis / embedding / llm）
+         *     - degraded_reasons: 人类可读的降级原因列表（空列表表示全绿）
+         *     约定：未配置的组件（如开发环境未启用 Milvus）视为「不要求」，不计入降级。
+         */
         get: operations["status_api_status_get"];
         put?: never;
         post?: never;
@@ -4687,15 +4800,6 @@ export interface components {
             hallucination_warnings?: string[] | null;
             /** Error */
             error?: string | null;
-        };
-        /** AnswerRequest */
-        AnswerRequest: {
-            /**
-             * Answer
-             * @description 学生本轮口头/文字回答
-             * @default
-             */
-            answer: string;
         };
         /** AskRequest */
         AskRequest: {
@@ -6658,6 +6762,22 @@ export interface components {
              * @description 当前聚焦点
              */
             focus?: string | null;
+        };
+        /** AnswerRequest */
+        api__career_training__AnswerRequest: {
+            /**
+             * Answer
+             * @description 学生本轮口头/文字回答
+             * @default
+             */
+            answer: string;
+        };
+        /** AnswerRequest */
+        api__cn_distinction__AnswerRequest: {
+            /** Pair Id */
+            pair_id: string;
+            /** User Answer */
+            user_answer: string;
         };
         /** LearningPathRequest */
         api__knowledge_graph__LearningPathRequest: {
@@ -14047,7 +14167,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["AnswerRequest"];
+                "application/json": components["schemas"]["api__career_training__AnswerRequest"];
             };
         };
         responses: {
@@ -14611,7 +14731,9 @@ export interface operations {
     get_report_api_literacy_report__user_id__get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                authorization?: string | null;
+            };
             path: {
                 user_id: string;
             };
@@ -14642,13 +14764,119 @@ export interface operations {
     get_class_report_api_literacy_class_report_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                authorization?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
                 "application/json": components["schemas"]["LiteracyClassReportRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_pairs_api_cn_distinction_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_pair_detail_api_cn_distinction__pid__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    random_quiz_api_cn_distinction_quiz_random_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    answer_quiz_api_cn_distinction_quiz_answer_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["api__cn_distinction__AnswerRequest"];
             };
         };
         responses: {
