@@ -26,8 +26,11 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 CANONICAL = REPO_ROOT / "scripts" / "pre-commit" / "pre-commit.sh"
 GATE_DIR = REPO_ROOT / "scripts" / "pre-commit"
 
-# 真源里对门禁脚本的引用（写全路径，故意不用 $变量 —— 那样机器就查不出来了）
-GATE_REF_RE = re.compile(r"scripts/pre-commit/([A-Za-z0-9_]+\.py)")
+# 真源里对门禁脚本的引用。分两类：
+#   1) `scripts/pre-commit/<x>.py`  —— 门禁目录内的常驻门禁；
+#   2) `scripts/<x>.py`            —— 家在别处的共享门禁（见 SHARED_GATES）。
+# 只抓 basename 交给调用方判定，避免"路径写了全名反而查不出"的老问题。
+GATE_REF_RE = re.compile(r"scripts/(?:pre-commit/)?([A-Za-z0-9_]+\.py)")
 # 目录下的「非门禁」脚本：有独立职责、不由 pre-commit.sh 挂载，故不参与门禁一致性检查。
 #
 # run_gates.py 是**编排器（调用方）**，不是一道门禁：它由 CI 或本机命令行直接执行，
@@ -38,6 +41,18 @@ GATE_REF_RE = re.compile(r"scripts/pre-commit/([A-Za-z0-9_]+\.py)")
 # （CI workflow 和本机复现命令里都会提到路径），下划线前缀会把它降级成私有模块，
 # 反而误导。命名 > 约定冲突时，让约定让路并把理由写在这里。
 ORCHESTRATORS = {"run_gates.py"}
+
+# 门禁脚本中**不以门禁目录为家**的那一个：`scripts/verify_openapi_snapshot.py`。
+#
+# 它同样是 pre-commit 的一道路闸（必须计入"实际挂载道数"），但**不放在
+# `scripts/pre-commit/` 下**，因为它有三个调用方：钩子、CI 编排器、打包器。
+# 放在门禁目录里会让人误以为它只服务提交钩子，而实际上"包内快照是否与运行时
+# 一致"这件事，恰恰是它三份职责里最要紧的一份（2026-10-06 交付事故就是
+# 工作区已对齐、包内仍是旧的）。
+#
+# 与 ORCHESTRATORS 的区别：编排器是**不该**被钩子挂载的（会循环调用）；
+# 而本脚本是**应该**被挂载、只是家不在门禁目录。故单列，不并入 ORCHESTRATORS。
+SHARED_GATES = {"verify_openapi_snapshot.py"}
 
 # 形如 [1/6] 的进度标签
 LABEL_RE = re.compile(r"\[(\d+)/(\d+)\]")
@@ -60,13 +75,18 @@ def _normalize(text: str) -> str:
 
 
 def _referenced_gates() -> set:
-    """真源里**实际调用**的脚本。
+    """真源里**实际调用**的门禁脚本（basename 集合）。
 
     只看非注释行：注释里提到某个脚本名，不等于挂载了它。
     2026-10-03 实锤：pre-commit.sh 的说明性注释里写了 `scripts/pre-commit/run_gates.py`
     这个完整路径（用于告诉维护者 CI 走的是编排器），被计入「已挂载」，
     于是 `test_gate_labels_are_sequential_and_count_matches` 报
     「标签自述 6 道、实际挂载 7 道」—— 守护是对的，判定的精度不够。
+
+    同理，真源里也会提到 `scripts/install_hooks.py`、`scripts/build_portable.py`
+    这类**非门禁**脚本（前者是安装器、后者是打包器）。故命中后还要过一道
+    「是否确实是门禁」的白名单：门禁目录内的脚本，或 SHARED_GATES 里的共享门禁。
+    不加这道过滤会把安装器/打包器误计成门禁，标签分母跟着算错。
 
     过滤后不影响守护强度：真正的调用行形如 `"$PY" scripts/pre-commit/secrets_scan.py`，
     一律不带 `#` 前导，故漏检不到；反向的「脚本存在却没被挂载」同样照抓。
@@ -76,18 +96,21 @@ def _referenced_gates() -> set:
         ln for ln in text.splitlines()
         if not ln.lstrip().startswith("#")
     ]
-    return set(GATE_REF_RE.findall("\n".join(code_lines)))
+    referenced = set(GATE_REF_RE.findall("\n".join(code_lines)))
+    known = _raw_gate_scripts() | SHARED_GATES
+    # 非门禁脚本（安装器 / 打包器等）从命中集里剔除
+    return {name for name in referenced if name in known}
 
 
 def _actual_gate_scripts() -> set:
-    """目录下真实存在的门禁脚本。
+    """实际被挂载的门禁脚本集合（两类合并）。
 
-    以 `_` 开头的文件视为**内部辅助模块**（约定：不以 `_` 开头的才是独立门禁），
-    不计入"必须被挂载"的集合，避免将来抽出公共工具时误报。
-
-    `run_gates.py` 同理要排除，但原因不同 —— 见 ORCHESTRATORS。
+    * 门禁目录内、不以 `_` 开头的脚本（约定：`_` 开头者视为内部辅助模块）；
+    * 减去编排器 `run_gates.py`（见 ORCHESTRATORS：它由CI/命令行直接跑，
+      挂进钩子会循环调用）；
+    * 加上 SHARED_GATES（家不在门禁目录、但确实是门禁的脚本）。
     """
-    return _raw_gate_scripts() - ORCHESTRATORS
+    return _raw_gate_scripts() - ORCHESTRATORS | SHARED_GATES
 
 
 def _raw_gate_scripts() -> set:
