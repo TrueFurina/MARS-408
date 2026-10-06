@@ -300,6 +300,87 @@ def validate_archive(archive_path: Path) -> None:
     print("  打包后自检全部通过")
 
 
+OPENAPI_SNAPSHOT_MEMBER = "py-server/openapi.json"
+OPENAPI_VERIFY_SCRIPT = Path("scripts") / "verify_openapi_snapshot.py"
+
+
+def _venv_python() -> Path:
+    """返回项目 venv 解释器路径。
+
+    契约校验需要 fastapi/pydantic，只有 venv 齐备。找不到就明确报错，
+    而不是退到系统 python —— 后者会在 import 失败时给出误导性的错误信息。
+    """
+    for rel in (
+        Path("py-server") / ".venv" / "Scripts" / "python.exe",
+        Path("py-server") / ".venv" / "bin" / "python",
+    ):
+        candidate = PROJECT_ROOT / rel
+        if candidate.is_file():
+            return candidate
+    raise PackageValidationError(
+        "找不到 py-server/.venv 解释器，无法校验包内契约漂移（fail-closed）"
+    )
+
+
+def verify_packaged_openapi(archive_path: Path) -> None:
+    """校验**包内那份** openapi.json 与运行时真实能力一致（fail-closed）。
+
+    为什么必须校验包内、而不是只校验工作区
+    ------------------------------------------------------------------
+    2026-10-06 实锤事故：工作区快照已重生成对齐（227/244），但交付 zip 里的
+    那份仍是旧的 223/240 —— 修复停在仓库层，没到交付面。评委拿到的正是包内文件。
+
+    所以这里不看工作区，直接把 zip 成员抽出来喂给同一个校验脚本
+    （`verify_openapi_snapshot.py --snapshot`）。不一致 → 抛异常 → 上层删包exit 1，
+    把"改了没到包内"变成**打包失败**，而不是等人核对时才发现。
+
+    Args:
+        archive_path: 已生成的交付 ZIP 路径。
+
+    Raises:
+        PackageValidationError: 包内快照缺失，或与运行时存在漂移。
+    """
+    verifier = PROJECT_ROOT / OPENAPI_VERIFY_SCRIPT
+    if not verifier.is_file():
+        # 校验器本身缺失属于"闸门没装上"，绝不能当成通过。
+        raise PackageValidationError(
+            f"找不到契约校验脚本 {OPENAPI_VERIFY_SCRIPT}；"
+            "无法确认包内 openapi.json 是否与运行时一致（fail-closed）"
+        )
+
+    with tempfile.TemporaryDirectory(prefix="openapi_verify_") as tmpdir:
+        extracted = Path(tmpdir) / "openapi.json"
+        with zipfile.ZipFile(archive_path, "r") as archive:
+            try:
+                payload = archive.read(OPENAPI_SNAPSHOT_MEMBER)
+            except KeyError:
+                raise PackageValidationError(
+                    f"包内缺少 {OPENAPI_SNAPSHOT_MEMBER}；"
+                    "随包对外契约缺失，评委无法核对接口清单"
+                ) from None
+        extracted.write_bytes(payload)
+
+        result = subprocess.run(
+            [str(_venv_python()), str(verifier), "--snapshot", str(extracted)],
+            cwd=str(PROJECT_ROOT),
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout or "").strip()
+        raise PackageValidationError(
+            f"包内 {OPENAPI_SNAPSHOT_MEMBER} 与运行时真实能力不一致"
+            f"（校验 exit {result.returncode}）。"
+            "通常是改了路由/文案后忘了重生成快照，或忘了重打包。\n"
+            + detail
+        )
+
+    print(f"  PASS: 包内 {OPENAPI_SNAPSHOT_MEMBER} 与运行时一致（契约无漂移）")
+
+
 def build(output_zip: Path) -> None:
     """构建交付 ZIP，并在返回前完成安全自检。
 
@@ -397,6 +478,7 @@ def build(output_zip: Path) -> None:
     print("\n[4/5] 打包后安全自检...")
     try:
         validate_archive(output_zip)
+        verify_packaged_openapi(output_zip)
     except PackageValidationError:
         output_zip.unlink(missing_ok=True)
         raise

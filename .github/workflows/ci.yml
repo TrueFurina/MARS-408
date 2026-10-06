@@ -200,6 +200,14 @@ jobs:
         # 判据A：analytic 解析最优档在独立泛化集上的 capture 必须 ≥99%（实测 100.0%）。
         # 固化 experiments/accept_review.py 判据A 为可自动守护的 CI 门禁。
         run: pytest -m review_capture -q
+      - name: OpenAPI contract drift gate (snapshot == runtime, fail-closed)
+        # 随包发出的 py-server/openapi.json 必须与运行时真实能力一致。
+        # 2026-10-06 实锤事故：工作区快照已对齐(227/244)，但交付 zip 内那份
+        # 仍是旧的 223/240 —— 修复停在仓库层、没到交付面。故这道闸无条件跑，
+        # 且**不用条件触发**（与 pre-commit.sh 的按改动触发相反）：
+        # CI 是"PR 只改文档"场景下契约闸仍然执行的保证。
+        # exit 1 = 有漂移；exit 2 = 环境缺失（同样不放行，fail-closed）。
+        run: python ../scripts/verify_openapi_snapshot.py
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:
