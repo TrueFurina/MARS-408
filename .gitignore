@@ -149,6 +149,11 @@ node_modules/.tmp/
 # 误留的构建产物目录（非 dist，原规则未覆盖）
 build/
 dist-vuecheck/
+# 提交包内的源码 zip：构建产物，由 scripts/build_portable.py 一条命令复现，
+# 不入库（16MB+ 二进制，且每次重新打包都会让仓库膨胀一份）。
+# 交付用包落在磁盘上 submission/04_源码/ 下，评委拿的是磁盘文件，不依赖 git。
+# 影响范围已用 `git check-ignore -v` 核验：仓库内已跟踪 zip 数为 0，本规则不误伤任何需入库文件。
+submission/**/*.zip
 # 本地修复 / 虚拟环境临时目录
 .fixvenv/
 .lxmlfix/
