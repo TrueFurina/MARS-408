@@ -1,13 +1,37 @@
 # -*- coding: utf-8 -*-
 """Build the 芒得很职 国创赛 5-min roadshow PPT (.pptx) from the WS-B script.
-Local build via python-pptx (all cloud connectors are disconnected)."""
+
+源脚本：deliverables/芒得很职-国创赛路演PPT脚本-5分钟黄金路径.md（11 页，与本脚本 11 页一一对应）
+依赖：python-pptx。运行：
+    py-server/.venv/Scripts/python.exe deliverables/build_roadshow_pptx.py
+
+产物（两份同源，内容完全一致）：
+1. deliverables/芒得很职-国创赛路演PPT-5分钟黄金路径.pptx   —— 物料线留档
+2. submission/01_演示PPT/作品演示PPT-最终版.pptx            —— 对外提交件
+
+口径铁律（改动前务必核对 submission/00_提交清单.md）：
+- 测试：默认集 1389（1397 collected，addopts deselect 8）→ 1178 passed / 208 skipped / 3 xfailed / 0 failed；CI p0 档 67 条
+- 覆盖率 54.96%（门禁 --cov-fail-under=50）
+- API：244 operations / 227 paths（app.openapi() 运行时实测）；认证覆盖率 94.65%（230/243）
+- 共识分 mean 7.0446 / std 0.2857 —— 必须同时标 stratified 分布 / 96 样本 / seed 20261006 / n=6
+- 禁用：451/243 端点、35 路由、1133/915/923/1139/1177/1168、54.08%、6.8413、旧品牌名与旧赛事名
+"""
+import os
+
 from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN
 from pptx.enum.shapes import MSO_SHAPE
 
-OUT = r"E:/Program/MARL/study-help-pro/deliverables/芒得很职-国创赛路演PPT-5分钟黄金路径.pptx"
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_ROOT = os.path.dirname(_HERE)
+
+#: 产物路径（两份同源）
+OUT_PATHS = (
+    os.path.join(_HERE, "芒得很职-国创赛路演PPT-5分钟黄金路径.pptx"),
+    os.path.join(_ROOT, "submission", "01_演示PPT", "作品演示PPT-最终版.pptx"),
+)
 
 NAVY  = RGBColor(0x0F, 0x2A, 0x43)
 TEAL  = RGBColor(0x12, 0x9A, 0x9A)
@@ -66,7 +90,8 @@ def body(s, lines, top, left=0.7, width=11.9, height=5.4, size=18, color=DARK, g
 
 def footer(s, page):
     tb = s.shapes.add_textbox(Inches(0.6), Inches(7.05), Inches(9), Inches(0.35))
-    p = tb.text_frame.paragraphs[0]; p.text = "芒得很职 · 国创赛路演 · WS-B 物料线"
+    p = tb.text_frame.paragraphs[0]
+    p.text = "芒得很职 · 计算机类学生职业素养对抗实训平台 · 国创赛路演 · 闽江大学"
     p.font.size = Pt(10); p.font.color.rgb = GREY; p.font.name = FONT
     pn = s.shapes.add_textbox(Inches(12.2), Inches(7.05), Inches(0.9), Inches(0.35))
     pp = pn.text_frame.paragraphs[0]; pp.text = str(page)
@@ -88,7 +113,7 @@ p2 = tb2.text_frame.paragraphs[0]; p2.text = '让"软素养"从主观印象，�
 p2.font.size = Pt(24); p2.font.color.rgb = TEAL; p2.font.name = FONT; p2.alignment = PP_ALIGN.CENTER
 tb3 = s.shapes.add_textbox(Inches(1.0), Inches(6.2), Inches(11.3), Inches(0.8))
 p3 = tb3.text_frame.paragraphs[0]
-p3.text = "新一代多智能体赋能的计算机类学生职业素养对抗实训平台  |  国创赛·高教主赛道·创意组"
+p3.text = "闽江大学  |  新一代多智能体赋能的计算机类学生职业素养对抗实训平台  |  国创赛·高教主赛道·创意组"
 p3.font.size = Pt(15); p3.font.color.rgb = PALE; p3.font.name = FONT; p3.alignment = PP_ALIGN.CENTER
 notes(s, '面试官问你"抗压能力怎么样"，你只能说"还行"。芒得很职干的事，是把这场对话搬进 AI 多轮对抗，让每一轮交锋都变成一条带原话的证据，结束后给你一份 6 维能力报告。一句话：让软素养从主观印象，变成可考、可溯、可练的客观证据链。')
 
@@ -110,24 +135,26 @@ title(s, "产品定位：多智能体对抗实训")
 body(s, [
     '• 不是"刷题 / 背题"工具，而是企业真实场景的 AI 多轮对抗',
     '• 学生 vs AI 面试官多轮交锋，每一轮对话 = 一条可溯源证据',
-    '• 技术底座：自研多智能体系统 芒得很职',
+    '• 自研多智能体技术底座（已工程化落地）：',
     '    - 前端 Vue3 + 后端 FastAPI + 编排 LangGraph',
     '    - 三层记忆 + FrugalRAG + 证据核查 + 质量闸门',
 ], top=1.7)
 footer(s, 3)
-notes(s, '芒得很职不是又一个刷题软件。它把企业真实面试、需求评审、故障应急搬进 AI 多轮对抗：学生和 AI 面试官反复交锋，每一轮对话都自动挂上证据编号。底层是我们自研的多智能体系统 芒得很职——角色化编排、三层记忆、检索增强、证据核查加质量闸门，是一套工程化落地过的底座。')
+notes(s, '芒得很职不是又一个刷题软件。它把企业真实面试、需求评审、故障应急搬进 AI 多轮对抗：学生和 AI 面试官反复交锋，每一轮对话都自动挂上证据编号。底层是我们自研的多智能体技术底座——角色化编排、三层记忆、检索增强、证据核查加质量闸门，是一套工程化落地过的底座。')
 
 # ---------- Slide 4: Core loop ----------
 s = new_slide(LIGHT); band(s, TEAL)
 title(s, "核心闭环：6–8 轮对抗 → 6 维报告")
 body(s, [
     '• 选场景 → 2 问画像 → 6–8 轮对抗 → 6 维 ECD 评估 → 证据校验 → 提升路径 → 报告',
-    '• 后端：5 张实训数据表、6 个核心 API 端点（含越权 403 拦截）已落地',
+    '• 后端：5 张实训数据表 + 核心链路 API（含越权 403 拦截）已落地',
+    '    - 全站 API 规模：244 operations / 227 paths（app.openapi() 运行时实测）',
+    '    - 认证覆盖率 94.65%（230/243）',
     '• 前端：四步状态机 + SVG 六维雷达 + 证据链回放',
     '• 状态：上述 ✅ 均已代码级验证',
-], top=1.7)
+], top=1.55)
 footer(s, 4)
-notes(s, '完整闭环已经跑通：选场景、两问画像、6 到 8 轮对抗、按 6 维 ECD 软素养评估、证据一致性校验、最后给出提升路径和报告。后端五张数据表、六个核心接口、包括越权拦截都已在代码级验证；前端状态机、六维雷达和证据回放也都落地。这是演示里评委能直接看到的主路径。')
+notes(s, '完整闭环已经跑通：选场景、两问画像、6 到 8 轮对抗、按 6 维 ECD 软素养评估、证据一致性校验、最后给出提升路径和报告。后端五张数据表、核心链路接口、包括越权拦截都已在代码级验证；全站 API 规模是 244 个操作、227 条路径，这是运行时 openapi 实测出来的，不是估的；认证覆盖率 94.65%。前端状态机、六维雷达和证据回放也都落地。这是演示里评委能直接看到的主路径。')
 
 # ---------- Slide 5: ⭐ 鲶鱼加压 (highlight) ----------
 s = new_slide(AMBBG); band(s, AMBER)
@@ -158,12 +185,15 @@ s = new_slide(LIGHT); band(s, TEAL)
 title(s, "技术底座可信：工程化 + 防伪证体系")
 body(s, [
     '• 芒得很职 多智能体底座已获国家级大创立项背书',
+    '• 质量门禁可复现：默认测试集 1389 项 → 1178 passed / 208 skipped / 3 xfailed / 0 failed',
+    '    - CI p0 档 67 条；覆盖率 54.96%（门禁 --cov-fail-under=50）',
+    '• 共识引擎实测：mean 7.0446 / std 0.2857（stratified 分布 / 96 样本 / seed 20261006 / n=6）',
     '• 同源知识图谱防伪证流水线已于 2026-09-30 并入 main：136 节点 / 18 边',
-    '• 验证报告自带 8 条机检守护（哈希 / 逐行归属 / 锚点 / 复现命令可移植 + 元守护）',
-    '• 同一套"写下的结论必须可被机器复验"的工程纪律，同时保障考研线与职业线',
-], top=1.7)
+    '    - 验证报告自带 8 条机检守护（哈希 / 逐行归属 / 锚点 / 复现命令可移植 + 元守护）',
+    '• 含义：同一套"写下的结论必须可被机器复验"的工程纪律，同时保障考研线与职业线',
+], top=1.5)
 footer(s, 7)
-notes(s, '我们不是只有 demo。技术底座 芒得很职 已经拿到国家级大创立项，说明工程化能力是被认可的。更关键的是工程纪律：和芒得很职同源的考研线知识图谱防伪证流水线，刚在昨天并入主干——136 个节点、18 条边，验证报告自带 8 条机器检查守护，连"复现命令能不能在别人机器跑通"都有守护盯着。同一套"写下的结论必须能被机器复验"的纪律，同时保着两条产品线。这就是我们敢说"可信"的底气。')
+notes(s, '我们不是只有 demo。技术底座已经拿到国家级大创立项，说明工程化能力是被认可的。更关键的是工程纪律：默认测试集 1389 项，1178 通过、208 跳过、3 个预期失败、零失败，覆盖率 54.96%，卡在 50 的门槛上；共识引擎实测均分 7.04、标准差 0.29，96 个样本、固定随机种子、6 个智能体，评委可以自己复现。和底座同源的知识图谱防伪证流水线，136 个节点、18 条边，验证报告自带 8 条机器检查守护，连"复现命令能不能在别人机器跑通"都有守护盯着。同一套"写下的结论必须能被机器复验"的纪律，同时保着两条产品线。这就是我们敢说"可信"的底气。')
 
 # ---------- Slide 8: Innovation ----------
 s = new_slide(LIGHT); band(s, NAVY)
@@ -223,6 +253,8 @@ p3.text = "期待与各位评委和院校一起，把这件难而正确的事做
 p3.font.size = Pt(18); p3.font.color.rgb = PALE; p3.font.name = FONT; p3.alignment = PP_ALIGN.CENTER
 notes(s, '芒得很职要做的，是让计算机专业学生的软素养，第一次变成可考、可溯、可练的客观证据。我们不只是做了一个平台，更建立了一套"结论可被机器复验"的工程纪律。期待与各位评委和院校一起，把这件难而正确的事做下去。谢谢！')
 
-prs.save(OUT)
-print("SAVED:", OUT)
+for _out in OUT_PATHS:
+    os.makedirs(os.path.dirname(_out), exist_ok=True)
+    prs.save(_out)
+    print("SAVED:", _out)
 print("slides:", len(prs.slides._sldIdLst))
