@@ -75,7 +75,7 @@ const techHighlights = [
     items: [
       { title: '防幻觉三重保障', desc: 'FrugalRAG 事实约束 → System Prompt 强制 → Critic Agent 审阅校验', tag: '安全' },
       { title: 'SSE 流式输出', desc: '所有资源生成/对话/视频生成均支持 SSE 流式，首字延迟 < 200ms', tag: '性能' },
-      { title: '94.65% 认证覆盖率', desc: 'HMAC-SHA256 Token + 速率限制（注册 3 次/小时）+ 输入校验 Pydantic Field', tag: '安全' },
+      { title: '94.67% 认证覆盖率', desc: 'HMAC-SHA256 Token + 速率限制（注册 3 次/小时）+ 输入校验 Pydantic Field', tag: '安全' },
     ],
   },
 ]
@@ -153,7 +153,7 @@ function openNew() { window.open(iframeSrc.value, '_blank', 'noopener') }
         <!-- 数据总览 -->
         <div class="tech-stats-bar">
           <div class="tech-stat">
-            <span class="ts-value">243</span>
+            <span class="ts-value">244</span>
             <span class="ts-label">API 端点</span>
           </div>
           <div class="tech-stat">
@@ -165,7 +165,7 @@ function openNew() { window.open(iframeSrc.value, '_blank', 'noopener') }
             <span class="ts-label">资源类型</span>
           </div>
           <div class="tech-stat">
-            <span class="ts-value">94.65%</span>
+            <span class="ts-value">94.67%</span>
             <span class="ts-label">认证覆盖率</span>
           </div>
           <div class="tech-stat">

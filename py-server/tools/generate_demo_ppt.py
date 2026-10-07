@@ -165,7 +165,7 @@ _add_shape(slide, Inches(0.8), Inches(1.2), Inches(12), Inches(0.03), C_ACCENT)
 
 # 三层架构
 layers = [
-    ("API 层", "243 个路由端点  |  94.65% 认证覆盖率  |  安全响应头", C_ACCENT2, Inches(0.8)),
+    ("API 层", "244 个路由端点  |  94.67% 认证覆盖率  |  安全响应头", C_ACCENT2, Inches(0.8)),
     ("Agent 层", "11 节点 LangGraph 流水线  |  GOMARL 共识  |  FrugalRAG 检索", C_ACCENT, Inches(2.8)),
     ("数据层", "E5 向量库  |  PostgreSQL  |  Redis  |  Milvus 抽象层", C_ACCENT3, Inches(4.8)),
 ]
