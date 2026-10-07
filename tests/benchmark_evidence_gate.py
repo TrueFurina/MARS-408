@@ -47,6 +47,7 @@ def scan_src() -> None:
     if not SRC.is_dir():
         FAILS.append(f"src/ 目录不存在：{SRC}")
         return
+    scanned = 0  # 真正被读入并匹配过的前端源文件数
     for path in SRC.rglob("*"):
         if not path.is_file():
             continue
@@ -59,6 +60,7 @@ def scan_src() -> None:
             text = path.read_text(encoding="utf-8", errors="ignore")
         except OSError:
             continue
+        scanned += 1
         for pattern, reason in FORBIDDEN_PATTERNS:
             for m in re.finditer(pattern, text, re.IGNORECASE):
                 line_no = text[: m.start()].count("\n") + 1
@@ -67,6 +69,15 @@ def scan_src() -> None:
                 if line.startswith(("//", "*", "/*", "#", "<!--")):
                     continue
                 FAILS.append(f"{rel}:{line_no} {reason}")
+    # 零覆盖纪律（2026-10-08 补）：原实现不报扫描数，若 src/ 被改名/移位导致
+    # 匹配不到任何 .vue/.ts/.js，R1 会**在什么都没扫的情况下**让整个 job 保持绿。
+    # 本 job 的职责是"证明前端未引用 demo 数据"，无从证明时必须红，不得默认放行。
+    # （同口径先例：design-system/check_raw_values.py 的扫描计数、run_gates.py 的 record()。）
+    if scanned == 0:
+        FAILS.append(f"R1 零覆盖：src/ 下未扫描到任何 .vue/.ts/.js（{SRC}）—— "
+                     f"无法证明前端未引用 demo 数据，拒绝默认放行")
+        return
+    print(f"  [OK] R1 已扫描 {scanned} 个前端源文件（.vue/.ts/.js），未发现 demo 数据引用")
 
 
 def _load_backend_module():
@@ -253,7 +264,7 @@ def main() -> int:
             print(f"  [FAIL] {f}")
         print(f"\n门禁未通过：{len(FAILS)} 项命中红线。")
         return 1
-    print("门禁通过：src/ 未引用 demo 合成数据。")
+    print("门禁通过：R1/R2/R3 三项均通过（src/ 未引用 demo 数据 · 真产物存在且非 demo · 接口契约完整）。")
     return 0
 
 
