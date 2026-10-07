@@ -19,7 +19,17 @@ check_tokens.py — 芒得很职 设计系统 · 单一真相源(SSOT)漂移检�
 - CSS 十六进制简写：`#fff` == `#ffffff`（3 位展开为 6 位）
 - 渐变默认停靠位 0%/100% 视为冗余并剥离
 
-退出码: 0 = 零漂移； 1 = 发现漂移； 2 = 解析失败。
+退出码: 0 = 零漂移； 1 = 发现漂移； 2 = 解析失败/零覆盖（权威源缺失、或没有任何消费者被真正比对）。
+
+零覆盖纪律（2026-10-08 补）
+--------------------------------------------------------------------------
+原实现中，`CONSUMER_DIRS` 不存在即 `continue`，无 `:root` 的消费者也 `跳过`，
+随后 `total_drift == 0` → 打印「零漂移 (ZERO DRIFT) — **所有消费者**与 _variables.css 对齐」
+并 exit 0。实测复现（隔离树内不放任何 .html）：exit 0，且输出该结论 ——
+**「所有消费者」实际是 0 个消费者**。
+故：真正参与比对的消费者数为 0 时必须 fail-closed（exit 2），
+且结论行改为报出实际比对数量，使「比了几份」成为日志的一部分。
+（同口径先例：`scripts/pre-commit/run_gates.py` 的 `record()`。）
 """
 import os
 import re
@@ -89,6 +99,9 @@ def resolve_vars(tokens: dict) -> dict:
 
 def main() -> int:
     # ---- 1) 解析权威源 ----
+    if not os.path.exists(VARS_CSS):
+        print(f"[ERROR] 权威源不存在: {os.path.relpath(VARS_CSS, ROOT)}", file=sys.stderr)
+        return 2
     with open(VARS_CSS, "r", encoding="utf-8") as f:
         css = f.read()
     canonical_raw = parse_tokens(extract_root_block(css, ":root"))
@@ -100,21 +113,29 @@ def main() -> int:
 
     # ---- 2) 遍历消费者 ----
     consumers = []
+    missing_dirs = []
     for d in CONSUMER_DIRS:
         if not os.path.isdir(d):
+            missing_dirs.append(os.path.relpath(d, ROOT))
             continue
         for fn in sorted(os.listdir(d)):
             if fn.endswith(".html"):
                 consumers.append(os.path.join(d, fn))
+    if missing_dirs:
+        print(f"[warn] 消费者目录不存在，已跳过: {missing_dirs}\n")
 
     total_drift = 0
+    compared = 0   # 真正解析到 :root 并参与比对的消费者数
+    no_root = []
     for path in consumers:
         with open(path, "r", encoding="utf-8") as f:
             html = f.read()
         block = extract_root_block(html, ":root")
         if not block:
+            no_root.append(os.path.relpath(path, ROOT))
             print(f"  ! 跳过（无 :root）: {os.path.relpath(path, ROOT)}")
             continue
+        compared += 1
         cons = resolve_vars(parse_tokens(block))
 
         matched = 0
@@ -141,8 +162,15 @@ def main() -> int:
             print(f"  [OK]    {rel}  (对齐 {matched} · 扩展 {ext})")
 
     print()
+    if compared == 0:
+        print(f"[ERROR] 零覆盖: 未比对任何消费者"
+              f"（发现 {len(consumers)} 份 .html，其中 {len(no_root)} 份无 :root；"
+              f"缺失目录 {missing_dirs}）。\n"
+              f"        不能声称「所有消费者与 _variables.css 对齐」—— 那是 0 个消费者。\n"
+              f"        请检查 CONSUMER_DIRS 是否已失效（目录改名/移位）。", file=sys.stderr)
+        return 2
     if total_drift == 0:
-        print("=== 结论: 零漂移 (ZERO DRIFT) — 所有消费者与 _variables.css 对齐 ===")
+        print(f"=== 结论: 零漂移 (ZERO DRIFT) — {compared}/{len(consumers)} 个消费者与 _variables.css 对齐 ===")
         return 0
     else:
         print(f"=== 结论: 发现 {total_drift} 处漂移，需修复 ===")

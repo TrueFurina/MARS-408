@@ -20,7 +20,18 @@ check_raw_values.py — 芒得很职 设计系统 · 组件层裸值门禁（dep
   - `rgba(var(--…-rgb), α)` —— 走令牌的透明叠加
   - 单行内联注释 `/* token-exception */`（或 `raw-value-exception`）显式豁免
 
-退出码：0 = 无裸值；1 = 发现裸值。
+退出码：0 = 无裸值；1 = 发现裸值；2 = 环境/零覆盖错误（扫描根缺失，或 0 个样式对象被扫描）。
+
+零覆盖纪律（2026-10-08 补）
+--------------------------------------------------------------------------
+原实现既**不报告扫了多少文件**，也在零文件时照样打印
+「零裸值 (NO RAW VALUES) — 组件层全部引用语义令牌」并 exit 0。
+实测复现（隔离树内 src 下不放任何 .css/.vue）：exit 0 且输出该结论 ——
+**它是从「什么都没扫」推出「组件层全部合规」的**。
+这与本仓库反复出现的「零覆盖伪装成通过」是同一类失效，故：
+  · 显式报告扫描对象数（N 个 css + M 个 vue <style> 块）；
+  · 扫描对象为 0 时 fail-closed（exit 2），不输出任何合规结论。
+（同口径先例：`scripts/pre-commit/run_gates.py` 的 `record()`。）
 """
 import os
 import re
@@ -70,7 +81,16 @@ def vue_style_segments(vue_text: str):
 
 
 def main() -> int:
+    if not os.path.isdir(STYLE_DIR):
+        print(f"[ERROR] 样式目录不存在: {os.path.relpath(STYLE_DIR, ROOT)}", file=sys.stderr)
+        return 2
+    if not os.path.isdir(SRC_DIR):
+        print(f"[ERROR] 源码目录不存在: {os.path.relpath(SRC_DIR, ROOT)}", file=sys.stderr)
+        return 2
+
     violations = []
+    n_css = 0        # 被扫描的 .css 文件数
+    n_vue_blocks = 0  # 被扫描的 .vue <style> 非空块数
 
     # 1) 原生 CSS（排除 _variables.css）
     for fn in sorted(os.listdir(STYLE_DIR)):
@@ -79,6 +99,7 @@ def main() -> int:
         p = os.path.join(STYLE_DIR, fn)
         with open(p, "r", encoding="utf-8") as f:
             text = f.read()
+        n_css += 1
         for ln, snip in scan_text(text):
             violations.append((os.path.relpath(p, ROOT), ln, snip))
 
@@ -93,11 +114,21 @@ def main() -> int:
             for seg, start_line in vue_style_segments(text):
                 if not seg.strip():
                     continue
+                n_vue_blocks += 1
                 for ln, snip in scan_text(seg):
                     violations.append((os.path.relpath(p, ROOT), start_line + ln - 1, snip))
 
+    scanned = n_css + n_vue_blocks
+    print(f"[scan] 已扫描 {scanned} 个样式对象（{n_css} 个 .css 文件 + {n_vue_blocks} 个 .vue <style> 块）\n")
+
+    if scanned == 0:
+        print("[ERROR] 零覆盖: 没有任何样式对象被扫描 —— "
+              "不能声称「组件层全部引用语义令牌」（那是它无从得知的结论）。\n"
+              "        请检查 STYLE_DIR / SRC_DIR 是否已失效（目录改名/移位）。", file=sys.stderr)
+        return 2
+
     if not violations:
-        print("=== 结论: 零裸值 (NO RAW VALUES) — 组件层全部引用语义令牌 ===")
+        print(f"=== 结论: 零裸值 (NO RAW VALUES) — 已扫描的 {scanned} 个样式对象全部引用语义令牌 ===")
         return 0
 
     print(f"=== 发现 {len(violations)} 处组件层裸值（须改用 var/color-mix 令牌）===\n")
