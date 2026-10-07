@@ -115,6 +115,7 @@ async def build_scenario_script(scenario_seed: dict, difficulty: str) -> dict:
         "opening_question": scenario_seed.get("opening_question", "请先介绍一下你自己和你目前的方案。"),
         "probe_plan": scenario_seed.get("probe_tree", []),
         "dimension_weights": scenario_seed.get("dimension_weights", {}),
+        "bars_anchor": scenario_seed.get("bars_anchor", {}),
         "success_signals": [],
         "template_warnings": [],
     }
@@ -126,6 +127,8 @@ async def build_scenario_script(scenario_seed: dict, difficulty: str) -> dict:
         if isinstance(data, dict) and data.get("opening_question"):
             # 权重以种子为准，避免模型乱改
             data["dimension_weights"] = scenario_seed.get("dimension_weights", {})
+            # BARS 行为锚点以种子为准（评分量表依据），LLM 不得覆盖/编造
+            data["bars_anchor"] = scenario_seed.get("bars_anchor", {})
             return data
         logger.warning("情景脚本 JSON 解析失败，使用种子兜底")
     except Exception as e:
@@ -373,11 +376,9 @@ def _rule_based_assessment(turns: list[dict], script: dict) -> dict:
     dim_probed = {d: [] for d in DIMENSIONS}
     for t in turns:
         dens = float((t.get("evidence") or {}).get("density", 0.5))
-        hit_dim = False
         for h in (t.get("evidence") or {}).get("dimension_hits", []):
             if h.get("dimension") in DIMENSIONS:
                 dim_evidence[h["dimension"]].append((t.get("turn_index"), h.get("polarity"), dens, h.get("note", "")))
-                hit_dim = True
         pd = t.get("probe_dimension")
         ans_len = len((t.get("answer") or "").strip())
         if pd in DIMENSIONS and ans_len > 0:

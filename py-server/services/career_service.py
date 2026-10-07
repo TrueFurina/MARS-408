@@ -179,6 +179,17 @@ async def end_session(session_id: str, force: bool = False) -> dict:
 # ────────────────────────────────────────────────────────────
 # 终评：六维 ECD 评估 + 提升路径，落库
 # ────────────────────────────────────────────────────────────
+def _find_by_label(label: str) -> Optional[str]:
+    """按情景中文标签（type_label）反查 scenario_id；找不到返回 None。
+
+    用于 state 未携带 scenario_id 时仍能定位情景种子（取 BARS 锚点做真实溯源）。
+    """
+    if not label:
+        return None
+    for s in (nodes.list_scenarios() or []):
+        if s.get("type_label") == label:
+            return s.get("id")
+    return None
 async def _finish(state: dict) -> dict:
     sid = state["session_id"]
     turns = state.get("dialogue_turns", [])
@@ -188,6 +199,20 @@ async def _finish(state: dict) -> dict:
         script, state.get("scenario_label", ""), state.get("title", ""), turns,
     )
     improvement = await nodes.build_improvement_plan(assessment, state.get("scenario_label", ""))
+
+    # 真实溯源：从情景种子取 BARS 行为锚点（评分量表依据）与重点考察，绝不伪造检索来源。
+    # 本实训链路无 KB/向量库检索（career_nodes 全链路无 retrieve/FrugalRAG 调用），
+    # 故 chunk_ref 仅作为"情景 rubric 段落 id"，source_type 恒为 "rule"。
+    seed = nodes.get_scenario(
+        state.get("scenario_id") or _find_by_label(state.get("scenario_label", ""))
+    )
+    bars = (seed or {}).get("bars_anchor", {})
+    seed_focus = (seed or {}).get("focus_points", [])
+
+    # 逐轮学生原话映射（turn_index → 前 80 字），供溯源引用（取自真实 dialogue_turns）
+    answer_by_turn = {
+        t.get("turn_index"): (t.get("answer") or "")[:80] for t in turns
+    }
 
     # 证据链：维度 → 支撑轮次 + 原话引用 + 逐轮证据聚合（ECD Claim-Evidence 对齐）
     # 先从每轮 collect_evidence 的 dimension_hits 聚合该维度的所有证据 note
@@ -201,9 +226,23 @@ async def _finish(state: dict) -> dict:
                     "turn": t.get("turn_index"),
                     "polarity": h.get("polarity", "neutral"),
                     "note": h.get("note", ""),
+                    "answer_snippet": (t.get("answer") or "")[:80],
                 })
     evidence_chain = []
     for dim, item in (assessment.get("dimensions") or {}).items():
+        # 逐轮证据：优先用单轮 collect_evidence 的 dimension_hits（含原话 note），
+        # 规则兜底模式（无 LLM collect_evidence）下用六维评估的 evidence_turns 补全，
+        # 确保"学生第 N 轮说"真实可溯（全部取自 dialogue_turns，绝不编造）。
+        pte = list(per_dim_turn_evidence.get(dim, []))
+        seen_turns = {e.get("turn") for e in pte}
+        for ti in (item.get("evidence_turns") or []):
+            if ti not in seen_turns and ti in answer_by_turn:
+                pte.append({
+                    "turn": ti,
+                    "polarity": "neutral",
+                    "note": "",
+                    "answer_snippet": answer_by_turn[ti],
+                })
         evidence_chain.append({
             "dimension": dim,
             "label": DIMENSION_LABELS.get(dim, dim),
@@ -213,7 +252,13 @@ async def _finish(state: dict) -> dict:
             "evidence_turns": item.get("evidence_turns", []),
             "evidence_quotes": item.get("evidence_quotes", []),
             "rationale": item.get("rationale", ""),
-            "per_turn_evidence": per_dim_turn_evidence.get(dim, []),
+            "per_turn_evidence": pte,
+            "source_type": "rule",
+            "source_agent": "CAREER_ASSESS(ECD六维)",
+            "chunk_ref": f"scenario:{state.get('scenario_id', '?')}#BARS:{dim}",
+            "snippet": (item.get("evidence_quotes") or [""])[0],
+            "rubric_text": (bars.get(dim) or {}).get("5") or (bars.get(dim) or {}).get("3") or "",
+            "focus_points": seed_focus,
         })
 
     overall = assessment.get("overall")

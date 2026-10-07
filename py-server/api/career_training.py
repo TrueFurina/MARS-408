@@ -243,8 +243,10 @@ ul { margin: 4px 0; padding-left: 18px; }
 def _render_export_html(report: dict) -> str:
     """把 get_report() 的真实数据渲染为可打印的自包含 HTML 一页纸。
 
-    诚信约束：只渲染真实存在的字段；KB 原文溯源（chunk_ref）在当前实训链路未落库，
-    统一标注「溯源：待补全」，绝不编造 chunk 引用或来源 Agent。
+    诚信约束：只渲染真实存在的字段。本实训链路无 KB/向量库检索，故：
+    - 来源 Agent 取真实值（career_service 写入的 source_agent），不再"待补全"；
+    - 「KB 原文溯源」如实说明无教材库检索，绝不编造 chunk 引用；
+    - 新增「情景期望行为」行渲染该维度的 BARS rubric（真实评分量表），让判分依据可溯。
     """
     session_id = _esc(report.get("session_id", ""))
     title = _esc(report.get("title", "") or "（未命名实训）")
@@ -278,17 +280,24 @@ def _render_export_html(report: dict) -> str:
         else:
             rationale = f"「{label}」维度得分 {score_txt}/5（{level}）"
 
-        # 原话溯源：优先 evidence_quotes（学生原话片段），其次 per_turn_evidence 的 note
+        # 原话溯源：优先 evidence_quotes（学生原话片段），其次 per_turn_evidence 的
+        # answer_snippet（"学生第 N 轮说：『…』"），全部取自真实 dialogue_turns。
         quote_parts: list[str] = []
         for q in (item.get("evidence_quotes") or []):
             q = (q or "").strip()
             if q:
                 quote_parts.append(f'<span class="quote">「{_esc(q)}」</span>')
         for h in (item.get("per_turn_evidence") or []):
+            turn = h.get("turn")
             note = (h.get("note", "") or "").strip()
-            if note:
-                turn = h.get("turn")
-                pol = _esc(h.get("polarity", "") or "")
+            snippet = (h.get("answer_snippet", "") or "").strip()
+            pol = _esc(h.get("polarity", "") or "")
+            if snippet:
+                quote_parts.append(
+                    f'<span class="quote">「{_esc(snippet)}」'
+                    f'<small class="qmeta">学生第{_esc(turn)}轮说 · {pol}</small></span>'
+                )
+            elif note:
                 quote_parts.append(
                     f'<span class="quote">「{_esc(note)}」'
                     f'<small class="qmeta">第{_esc(turn)}轮·{pol}</small></span>'
@@ -299,6 +308,26 @@ def _render_export_html(report: dict) -> str:
         turns_ref = ""
         if ev_turns:
             turns_ref = " 引用自第 " + "、".join(_esc(str(t)) for t in ev_turns) + " 轮"
+
+        # 来源 Agent：真实填充（不再"待补全"）。没有 KB 检索，chunk_ref 仅作 rubric 段落 id。
+        src_agent = (item.get("source_agent", "") or "").strip()
+        if src_agent:
+            turns_label = "、".join(_esc(str(t)) for t in ev_turns)
+            src_note = f"证据取自学生第 {turns_label} 轮作答" if turns_label else "证据取自学生作答"
+            src_agent_html = (
+                f'<span class="src-agent">{_esc(src_agent)}</span>'
+                f'<small class="qmeta">{src_note}</small>'
+            )
+        else:
+            src_agent_html = '<span class="src-agent missing">待补全（证据取自学生本轮作答）</span>'
+
+        # 情景期望行为（BARS rubric）：真实评分量表依据，取自情景种子；缺失则诚实标注
+        rubric = (item.get("rubric_text", "") or "").strip()
+        rubric_html = (
+            f'<span class="kb-ref">{_esc(rubric)}</span>'
+            if rubric else
+            '<span class="kb-ref missing">（该维度未配置 BARS 锚点）</span>'
+        )
 
         claims.append(f"""
         <div class="claim">
@@ -311,8 +340,9 @@ def _render_export_html(report: dict) -> str:
           <div class="claim-body">{rationale}</div>
           <div class="trace">
             <div class="trace-row"><span class="tl">原话溯源</span>{''.join(quote_parts)}<span class="tref">{turns_ref}</span></div>
-            <div class="trace-row"><span class="tl">KB 原文溯源</span><span class="kb-ref missing">溯源：待补全</span></div>
-            <div class="trace-row"><span class="tl">来源 Agent</span><span class="src-agent missing">待补全（证据取自学生本轮作答）</span></div>
+            <div class="trace-row"><span class="tl">KB 原文溯源</span><span class="kb-ref missing">本实训为情景对抗、无教材库检索；评分依据见「情景期望行为」</span></div>
+            <div class="trace-row"><span class="tl">情景期望行为</span>{rubric_html}</div>
+            <div class="trace-row"><span class="tl">来源 Agent</span>{src_agent_html}</div>
           </div>
         </div>""")
     claims_html = "\n".join(claims) if claims else '<div class="muted">（暂无六维结论）</div>'
@@ -364,8 +394,9 @@ def _render_export_html(report: dict) -> str:
   <h1>职业素养对抗实训 · 证据链一页纸（可溯源）</h1>
   <div class="meta">会话：{session_id} ｜ 情景：{scenario_label} ｜ 状态：{status} ｜ 评估来源：{source_tag}</div>
   <div class="banner">
-    <b>诚信声明：</b>本页每一条结论均追溯至学生原始作答（原话溯源）。当前实训链路未落库「知识库原文溯源字段（chunk_ref）」，
-    故统一标注「<b>溯源：待补全</b>」，<b>绝不编造来源</b>；「来源 Agent」同理标注待补全。所有数字与引文均来自真实数据。
+    <b>诚信声明：</b>本页每条结论均追溯至「学生原话」+「情景期望行为（BARS rubric）」：前者取自真实作答轮次，
+    后者取自情景种子的静态评分量表，二者均为规则/评分驱动（source_type=rule），<b>未做任何 KB/向量库检索</b>。
+    故「KB 原文溯源」在此实训架构下不适用（无教材库），<b>未伪造任何 chunk 引用</b>；所有数字与引文均来自真实数据。
   </div>
 
   <div class="overall">综合得分：<b>{overall_txt}</b> / 5　<span class="src-tag">{source_tag}</span></div>
