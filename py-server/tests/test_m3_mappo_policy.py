@@ -41,11 +41,20 @@ class TestEncodeState:
 
 class TestComputeReward:
     def test_full_cost_higher_than_skip(self):
-        r_full = compute_reward(0.3, 0.6, 1.0, "full")
-        r_skip = compute_reward(0.3, 0.6, 1.0, "skip")
-        # full 完成度高但成本高；同条件下 skip 因成本低可能更高或接近，
-        # 关键是 full 的 token 成本系数更大
-        assert {"full": 3.0, "skip": 1.0}["full"] > {"full": 3.0, "skip": 1.0}["skip"]
+        """成本系数 full > spot > skip ⇒ 同条件下 reward 严格递减。
+
+        原实现为
+            assert {"full": 3.0, "skip": 1.0}["full"] > {"full": 3.0, "skip": 1.0}["skip"]
+        两侧都是字面量字典，等价于 `assert 3.0 > 1.0` —— 与 compute_reward 的返回值
+        无关，**恒真**；上面算出的 r_full / r_skip 从未被使用（ruff F841 是线索）。
+        改为对真实返回值断言，并覆盖两组输入以排除「碰巧成立」。
+
+        强度取值用引擎 _COST_FACTOR 的真实定义域 {full:3.0, spot:2.0, skip:1.0}；
+        注意**没有** "light" 键（传入会落到默认 2.0，与 spot 同值，不得使用）。
+        """
+        for da, part, comp in ((0.3, 0.6, 1.0), (0.9, 0.1, 1.0)):
+            r = {m: compute_reward(da, part, comp, m) for m in ("full", "spot", "skip")}
+            assert r["full"] < r["spot"] < r["skip"], (da, part, comp, r)
 
     def test_bounded(self):
         r = compute_reward(1.0, 1.0, 1.0, "full")
@@ -56,7 +65,7 @@ class TestTeachingEnv:
     def test_matching_difficulty_gives_higher_accuracy(self):
         """难度匹配（medium vs 0.5 水平）应比失配（basic vs 0.8）效果好。"""
         env_match = TeachingEnv(student_level=0.5, seed=1)
-        state = env_match.reset()
+        env_match.reset()  # 副作用：初始化 episode 状态；返回值此处不需要
         _, r_match, _ = env_match.step({"difficulty": "medium", "teaching_mode": "sequential",
                                         "review_intensity": "full"})
         env_bad = TeachingEnv(student_level=0.8, seed=1)

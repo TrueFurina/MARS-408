@@ -90,9 +90,17 @@ def test_read_memory_degrade_empty():
 def test_write_plugin_event_degrade_silent():
     """写事件降级静默：异常输入不抛异常（插件执行不被阻断）"""
     from services.memory_service import write_plugin_event
+    from db import memory_store as ms
     # 正常调用不抛异常即可（异常路径由内部 try/except 吞掉）
     write_plugin_event("u_plugin_degrade", "demo-plugin", "run")
-    assert True
+    # 原为 `assert True`（恒真，什么都不检验）。改为按 write_plugin_event 的
+    # docstring 契约回读校验：事件须落 L3，且 plugin_id / event_type 在**顶层**
+    # 可追踪（统一 schema 是 P2① 的核心承诺）。
+    eps = ms.get_episodes("u_plugin_degrade", "run")
+    assert len(eps) >= 1, "写事件后应能在 L3 按 event_type 查回"
+    ev = eps[0]["event"]
+    assert ev.get("plugin_id") == "demo-plugin", f"plugin_id 未落在事件顶层：{ev}"
+    assert ev.get("event_type") == "run", f"event_type 未落在事件顶层：{ev}"
 
 
 def test_plugin_write_invalidates_overview_cache():

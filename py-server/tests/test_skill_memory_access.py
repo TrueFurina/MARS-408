@@ -42,22 +42,61 @@ def test_skill_save_load_memory_access():
 
 
 def test_execute_read_no_writeback():
-    """memory_access=read：注入记忆但写回被阻止（无 skill_run 事件）"""
-    from engines.skill_plugin_runtime import SkillPluginRuntime
-    from db import memory_store as ms
+    """memory_access=read：注入记忆但写回被阻止（无 skill_run 事件）
+
+    原实现手工调用 ``_record_episode``（**绕过**权限判定）后断言
+    ``assert "read" not in ("write", "read_write")`` —— 两侧都是字面量，恒真，
+    完全没有触及被测的权限分支（skill_plugin_runtime.execute 内的
+    ``if use_memory and memory_access in ("write", "read_write")``）。
+
+    改为走真实 execute 路径，并以 ``read_write`` 作**反向对照**：
+    证明「无写回」来自权限判定，而不是写回链路整体失效。
+    """
     import asyncio
+    from db import memory_store as ms
+    from db.skill_store import create_skill, get_skill
+    from schemas.skills import Skill
+    from engines.skill_plugin_runtime import SkillPluginRuntime
+
+    sid = "perm_skill_read"
+    if get_skill(sid) is None:
+        create_skill(Skill(
+            id=sid,
+            name="只读权限技能",
+            description="P2② 只读权限测试",
+            system_prompt="你是一个测试技能。",
+            memory_access="read",
+        ))
 
     conn = ms._get_conn()
     conn.execute("DELETE FROM memory_l3_episodic")
     conn.commit()
 
-    runtime = SkillPluginRuntime("perm_skill_read")
-    # 模拟 execute 的写回分支：memory_access=read 时写回被权限阻止
-    asyncio.run(runtime._record_episode("u_perm_read", {"input_len": 5, "output_len": 10}))
+    runtime = SkillPluginRuntime(sid)
 
-    # _record_episode 本身写 skill_run；此处验证 execute 层校验由调用方控制——
-    # 直接验证权限判断逻辑：read 不在可写集合内
-    assert "read" not in ("write", "read_write")
+    # 正向：read 权限 → 不得回写
+    asyncio.run(runtime.execute(
+        user_input="只读执行",
+        user_id="u_perm_read",
+        session_id="s1",
+        use_memory=True,
+        memory_access="read",
+    ))
+    assert ms.get_episodes("u_perm_read", "skill_run") == [], (
+        "memory_access=read 时不得回写 skill_run 事件"
+    )
+
+    # 反向对照：read_write 权限 → 必须回写（否则上一条可能因写回链路失效而假过）
+    asyncio.run(runtime.execute(
+        user_input="可写执行",
+        user_id="u_perm_write",
+        session_id="s1",
+        use_memory=True,
+        memory_access="read_write",
+    ))
+    assert len(ms.get_episodes("u_perm_write", "skill_run")) >= 1, (
+        "memory_access=read_write 时应当回写 skill_run 事件（反向对照失败）"
+    )
 
 
 def test_writeback_permission_logic():

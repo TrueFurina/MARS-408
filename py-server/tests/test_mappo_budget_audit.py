@@ -60,7 +60,19 @@ def test_train_ppo_reports_deterministic_improvement():
     assert isinstance(res["det_return_before"], float)
     assert isinstance(res["det_return_after"], float)
     # 确定性回报必须与随机回报口径区分（同一字段名不得混用）
-    assert "det_return_after" != "mean_return_last_third" or True
+    # 原实现为 `assert "det_return_after" != "mean_return_last_third" or True` ——
+    # 两侧都是字符串字面量、且被 `or True` 兜底，恒真，不检验任何东西。
+    # 改为断言引擎里真正的不变式（review_policy.py:921-928 的注释即此意）：
+    # `improved_deterministic` 必须由确定性口径 det_return_* 推出，
+    # 与随机口径（mean_return_*）严格分离，不得混用。
+    assert "mean_return_last_third" in res, f"缺少随机（训练）口径字段：{sorted(res)}"
+    assert res["improved_deterministic"] == (
+        res["det_return_after"] > res["det_return_before"]
+    ), (
+        "improved_deterministic 必须由确定性口径 det_return_* 推出"
+        f"（det_before={res['det_return_before']}, det_after={res['det_return_after']},"
+        f" flagged={res['improved_deterministic']}）"
+    )
 
 
 def test_career_train_ppo_reports_effective_budget():

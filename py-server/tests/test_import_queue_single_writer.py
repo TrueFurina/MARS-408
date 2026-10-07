@@ -23,7 +23,10 @@
 #     “This event loop is already running”）。
 #
 # 保留 5 个用例的独特断言（LWW 无重复 / 线程池卸载 / 串行度=1 / Milvus 语义 / 去重 xfail）。
-# TC-12 保持 @pytest.mark.xfail(strict=False)（Gap B 已知缺口，不应改绿）。
+# TC-12 保持 @pytest.mark.xfail(strict=True)（Gap B 已知缺口，不应改绿）。
+# 注：strict=True 是有意的——Gap B 一旦被修好，该用例会 XPASS 并使门禁变红，
+#     强制开发者回来删掉这个标记（自清理），而不是让缺口被静默转绿后无人过问。
+#     （本行此前写作 strict=False，与 L263 的实际标记不符，2026-10-08 实测订正。）
 # 不改动 services/import_worker.py 等生产代码。
 # ============================================================
 
@@ -229,7 +232,8 @@ async def test_worker_job_tracking_under_milvus_like_backend(worker_and_loop, mo
 
     calls = {"insert": 0, "flush": 0}
     orig_insert = vector_db.insert
-    orig_flush = vector_db.flush
+    # 注：不保存 orig_flush —— _flush 的语义就是「Milvus flush 为 no-op，仅记录调用」，
+    # 刻意不调用原实现；还原由 monkeypatch.setattr 负责。
 
     def _insert(coll, chunks, save=True):
         calls["insert"] += 1
