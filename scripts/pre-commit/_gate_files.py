@@ -24,19 +24,47 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
-# 注入变更文件集的环境变量。分隔：**换行**（文件名含换行的极端情况不予考虑，
+# 注入变更文件集的两条通道。分隔均为**换行**（文件名含换行的极端情况不予考虑，
 # 而不能用空格/NUL——前者会拆错带空格的路径，后者在 env 里不便读写）。
+#
+# 通道 1（小文件集）：环境变量。Windows 的环境变量块上限约 32K，实测编排器
+#   在 20000 字符处设阈；本仓库一次"源码副本归档"提交含 852 个文件、路径拼起来
+#   达 132102 字符，直接顶穿。
+# 通道 2（大文件集）：临时文件。无长度限制，供编排器在 payload 超阈值时使用。
+#
+# 2019→2026-10-08：此前超限时编排器**静默放行**（`return 0`），即该门禁对超大
+# commit 完全不检查 —— 又一处「零覆盖伪装成通过」。现改为文件通道，判定真正执行。
 GATE_FILES_ENV = "GATE_FILES"
+GATE_FILES_FILE_ENV = "GATE_FILES_FILE"
+
+
+def _parse(raw: str) -> list[str]:
+    """把「换行分隔的路径文本」解析为 posix 形态的列表。"""
+    files = [f.strip().replace("\\", "/") for f in raw.splitlines()]
+    return [f for f in files if f]
 
 
 def injected_files() -> list[str] | None:
     """外部注入的变更文件集；未注入返回 None（调用方据此回退到暂存区）。
 
     返回的路径统一为 posix 形态（反斜杠转正斜杠），与各门禁的内部表示一致。
+    空字符串表示**确实没有待检文件**（返回 `[]`），与"未注入"（`None`）语义不同。
     """
+    fp = os.environ.get(GATE_FILES_FILE_ENV)
+    if fp:
+        # 读取失败**显式抛错**而非回退：编排器既然指定了文件通道，读不到就说明
+        # 注入链路坏了。此时静默退到"空集"会让门禁在零覆盖下返回通过。
+        try:
+            raw = Path(fp).read_text(encoding="utf-8")
+        except OSError as exc:
+            raise RuntimeError(
+                f"{GATE_FILES_FILE_ENV} 指向的文件无法读取：{fp}（{exc}）"
+            ) from exc
+        return _parse(raw)
+
     raw = os.environ.get(GATE_FILES_ENV)
     if raw is None:
         return None
-    files = [f.strip().replace("\\", "/") for f in raw.splitlines()]
-    return [f for f in files if f]
+    return _parse(raw)

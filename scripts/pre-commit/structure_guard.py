@@ -90,8 +90,14 @@ def main():
     parser.add_argument("files", nargs="*", help="显式指定文件列表")
     args = parser.parse_args()
 
+    # 注入通道（GATE_FILES / GATE_FILES_FILE）由编排器决定「本次要检查什么」，
+    # 是编排器→门禁的**确定性契约**：它坏了必须 fail-closed。
+    # 2026-10-08 修：此前整段（**含注入解析**）被下面的 try 包住、异常统一 return 0，
+    # 于是注入被损坏时本道会静默放行 —— 零覆盖假绿。
+    # 现在把注入解析移到 try 之外：解析失败直接向上抛（非 0 退出 = 拦截提交）。
+    injected = _injected_files()
+
     try:
-        injected = _injected_files()
         if injected is not None:
             files = injected
         elif args.files:
@@ -99,7 +105,8 @@ def main():
         else:
             files = all_tracked_files() if args.all else staged_added_files()
     except Exception as exc:
-        # 自身 bug 不阻断提交（fail-open for self），但打印告警
+        # 仅「本地取文件集」这一段保持 fail-open（git 不可用等场景不阻断本地提交），
+        # 但打印告警，不静默。
         print(f"⚠️ structure_guard 自身异常，跳过检查: {exc}")
         return 0
 

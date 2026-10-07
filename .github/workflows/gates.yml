@@ -64,10 +64,19 @@ jobs:
           [ -n "$BASE" ] || BASE="${{ github.event.before }}"
 
           # before 在首次推送时是全零 SHA；fetch 失败时也可能拿不到对象。
-          # 任一情况都退回全量模式（宁慢，不要靠空文件集刷出一排假绿）。
+          # 2026-10-08 改：此类情况**优先退到 HEAD~1**，而不是直接全量 ——
+          # 全量模式下有 3 道（结构守卫 / ruff 潜在缺陷 / 测试文件禁改）因其判定语义
+          # 只针对「本次新增」而不生效，等于让一半闸门在兜底路径上空转；
+          # HEAD~1 仍表达「本次推送的改动」，六道全部生效。
+          # 只有 HEAD~1 也不存在（分支仅 1 个 commit、或浅克隆）时才退到全量。
           if [ -z "$BASE" ] || ! git cat-file -e "$BASE" 2>/dev/null; then
-            echo "ℹ️ 无可用 base commit → 全量模式"
-            python scripts/pre-commit/run_gates.py --all
+            if git rev-parse --verify --quiet HEAD~1 >/dev/null; then
+              echo "ℹ️ 无可用 base commit → 退到 HEAD~1（保持六道全部生效）"
+              python scripts/pre-commit/run_gates.py --diff HEAD~1
+            else
+              echo "ℹ️ 无可用 base commit 且无 HEAD~1 → 全量模式（部分闸门将标记未生效）"
+              python scripts/pre-commit/run_gates.py --all
+            fi
           else
             echo "ℹ️ 对比 base $BASE"
             python scripts/pre-commit/run_gates.py --diff "$BASE"
