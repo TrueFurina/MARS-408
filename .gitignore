@@ -90,6 +90,22 @@ py-server/_*.py
 py-server/ocr_*.log
 py-server/check_*.txt
 
+# CI 产物：由 workflow 落盘到工作区后上传为 artifact，不应进 git
+#   coverage.xml            ← ci.yml backend-tests
+#   coverage.json           ← p0-regression.yml fast-unit（喂给 check_coverage_thresholds.py）
+#   pip-audit-report.json   ← ci.yml pip-audit-dep-cve
+py-server/coverage.xml
+py-server/coverage.json
+py-server/pip-audit-report.json
+
+# milvus-lite 本地产物（p0-regression.yml 的 requires-milvus job 在 py-server 下产生）
+#   milvus_lite_ci/       ← run_server 的 data_dir（每次 CI 新建，绝不应入库）
+#   milvus_lite.log       ← 服务端 stdout（启动失败时用于诊断）
+#   requires_milvus.log   ← 测试输出（step 内的防假绿断言读它）
+py-server/milvus_lite_ci/
+py-server/milvus_lite.log
+py-server/requires_milvus.log
+
 # 配置文件（含敏感信息）：忽略真实 config.json，但保留可提交的范本
 config.json
 py-server/config.json

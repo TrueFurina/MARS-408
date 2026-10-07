@@ -28,10 +28,12 @@ export default [
   },
   {
     // Node 运行时脚本（scripts/*.mjs 等）与顶层配置文件运行在 Node 环境，
-    // 需要 process/Buffer 等 Node 全局；仅对 scripts 与 *.config.* 开放，
+    // 需要 process/Buffer 等 Node 全局；覆盖 **/*.mjs/**/*.cjs 与 scripts/*.config.*，
     // 避免把 Node 全局泄漏给 src/ 下的浏览器端代码（否则误用不再被 no-undef 拦截）。
+    // 显式声明而不 import `globals` 包：后者目前只是 eslint 的传递依赖，
+    // 一旦写进 package.json 而未同步 package-lock.json，`npm ci` 会因两者不同步直接失败。
     name: 'app/node-scripts',
-    files: ['scripts/**/*.mjs', 'scripts/**/*.js', 'scripts/**/*.cjs', '*.config.js', '*.config.ts', '*.config.mjs'],
+    files: ['**/*.mjs', '**/*.cjs', 'scripts/**/*.js', '*.config.js', '*.config.ts', '*.config.mjs'],
     languageOptions: {
       globals: {
         process: 'readonly',
@@ -42,8 +44,17 @@ export default [
         require: 'readonly',
         module: 'writable',
         exports: 'writable',
+        global: 'readonly',
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        setImmediate: 'readonly',
+        clearImmediate: 'readonly',
+        URL: 'readonly',
+        URLSearchParams: 'readonly',
+        TextEncoder: 'readonly',
+        TextDecoder: 'readonly',
       },
     },
   },
