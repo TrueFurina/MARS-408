@@ -12637,6 +12637,63 @@
         }
       }
     },
+    "/api/career/session/{session_id}/export-report": {
+      "get": {
+        "tags": [
+          "career-training"
+        ],
+        "summary": "Export Report",
+        "description": "导出证据链一页纸（自包含 HTML，浏览器另存为 PDF 即得一页纸报告）。",
+        "operationId": "export_report_api_career_session__session_id__export_report_get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/career/sessions": {
       "get": {
         "tags": [

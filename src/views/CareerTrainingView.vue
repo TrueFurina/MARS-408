@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
-import { api, friendlyError } from '@/utils/api'
+import { api, friendlyError, getAuthHeaders } from '@/utils/api'
 
 /* ===================== 类型与常量 ===================== */
 type Step = 'select' | 'briefing' | 'battle' | 'report'
@@ -33,6 +33,8 @@ const assessment = ref<any>(null)
 const improvement = ref<any>(null)
 const evidenceChain = ref<any[]>([])
 const battleScroll = ref<HTMLElement | null>(null)
+const busyExport = ref(false)
+const exportError = ref('')
 
 const currentScenario = computed(() => scenarios.value.find(s => s.id === scenarioId.value))
 const turnsDone = computed(() => turns.value.filter(t => t.role === 'student').length)
@@ -119,6 +121,40 @@ async function finishEarly() {
 function restart() {
   step.value = 'select'; session.value = null; assessment.value = null
   improvement.value = null; evidenceChain.value = []; turns.value = []; answerInput.value = ''
+}
+
+/* 导出证据链「一页纸」：拉取自包含 HTML，新标签页打开（浏览器另存为 PDF） */
+async function exportEvidenceOnePager() {
+  const id = session.value?.session_id
+  if (!id || busyExport.value) return
+  busyExport.value = true
+  exportError.value = ''
+  try {
+    const resp = await fetch(`/api/career/session/${encodeURIComponent(id)}/export-report`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    })
+    if (!resp.ok) {
+      const text = await resp.text().catch(() => '')
+      throw new Error(`导出失败 (${resp.status}) ${text.slice(0, 200)}`)
+    }
+    const html = await resp.text()
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const win = window.open(url, '_blank')
+    if (!win) {
+      // 弹窗被拦截时降级为下载
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `evidence-${id}.html`
+      a.click()
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 60000)
+  } catch (e: any) {
+    exportError.value = friendlyError(e, '导出证据一页纸失败')
+  } finally {
+    busyExport.value = false
+  }
 }
 
 async function scrollBottom() {
@@ -328,7 +364,9 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
         </div>
       </details>
 
+      <div v-if="exportError" class="c-error">{{ exportError }}</div>
       <div class="report-actions">
+        <button class="ghost-btn" :disabled="busyExport" @click="exportEvidenceOnePager">导出证据一页纸</button>
         <button class="ghost-btn" @click="step = 'battle'">返回对抗</button>
         <button class="primary-btn" @click="restart">再来一场 →</button>
       </div>

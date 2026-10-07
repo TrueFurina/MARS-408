@@ -5,7 +5,9 @@
 # ============================================================
 
 import logging
-from fastapi import APIRouter, Depends, HTTPException
+from datetime import datetime, timezone
+
+from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel, Field
 from typing import Optional
 
@@ -143,6 +145,273 @@ async def report(session_id: str, user: dict = Depends(get_current_user)):
         return career_service.get_report(session_id)
     except KeyError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+# ────────────────────────────────────────────────────────────
+# 证据链「一页纸」导出（可溯源 · 浏览器另存为 PDF）
+# 复用 career_service.get_report；仅渲染真实存在的数据，缺失的 KB 原文溯源
+# 字段（chunk_ref）统一标注「溯源：待补全」，绝不编造来源。
+# ────────────────────────────────────────────────────────────
+_LEVEL_LABEL = {
+    "excellent": "优秀", "good": "良好", "average": "一般",
+    "weak": "薄弱", "insufficient": "证据不足",
+}
+_MODE_LABEL = {"normal": "常规", "escalating": "逐步加压", "catfish": "鲶鱼反诘"}
+
+
+def _credibility_label(confidence: float) -> str:
+    """由评估置信度（0-1，真实字段）映射可信度等级，绝不编造。"""
+    try:
+        c = float(confidence or 0)
+    except (TypeError, ValueError):
+        c = 0.0
+    if c >= 0.8:
+        return "高"
+    if c >= 0.5:
+        return "中"
+    return "低"
+
+
+def _esc(text) -> str:
+    """HTML 转义，避免学生作答内容破坏文档或造成注入。"""
+    return (
+        str(text)
+        .replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace('"', "&quot;")
+        .replace("'", "&#39;")
+    )
+
+
+_EXPORT_CSS = """<style>
+* { box-sizing: border-box; }
+body { font-family: "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+  color: #1a1a1a; margin: 0; padding: 16px 20px; font-size: 12px; line-height: 1.5; }
+@media print {
+  body { padding: 6px 10px; font-size: 11px; }
+  @page { margin: 9mm; }
+  .claim, .turn { page-break-inside: avoid; }
+}
+h1 { font-size: 17px; margin: 0 0 4px; }
+.meta { color: #555; font-size: 11px; margin-bottom: 6px; }
+.banner { background: #fff7e6; border: 1px solid #ffd591; border-radius: 6px;
+  padding: 6px 10px; font-size: 10.5px; color: #7a4b00; margin-bottom: 10px; }
+.overall { font-size: 13px; margin: 4px 0 8px; }
+.overall b { font-size: 22px; color: #1677ff; }
+.src-tag { font-size: 10px; padding: 1px 7px; border-radius: 9px; background: #f0f0f0; color: #666; }
+.section { margin-top: 10px; }
+.section > h2 { font-size: 13px; border-left: 3px solid #1677ff; padding-left: 6px; margin: 0 0 6px; }
+.claim { border: 1px solid #e8e8e8; border-radius: 6px; padding: 7px 10px; margin-bottom: 7px; }
+.claim-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.dim { font-weight: 700; font-size: 13px; }
+.score { font-weight: 700; color: #1677ff; }
+.score small { font-weight: 400; color: #888; }
+.level { font-size: 10px; padding: 1px 6px; border-radius: 8px; background: #f0f0f0; }
+.cred { font-size: 10px; color: #666; margin-left: auto; }
+.claim-body { margin: 4px 0; }
+.trace { border-top: 1px dashed #eee; padding-top: 4px; }
+.trace-row { display: flex; gap: 6px; align-items: baseline; margin: 2px 0; }
+.tl { flex: 0 0 66px; color: #1677ff; font-weight: 600; font-size: 10.5px; }
+.quote { display: inline-block; background: #f6f8ff; border-left: 2px solid #1677ff;
+  padding: 1px 6px; border-radius: 3px; margin: 1px 4px 1px 0; font-size: 11px; }
+.quote.missing, .kb-ref.missing, .src-agent.missing { background: #fff1f0;
+  border-color: #ffa39e; color: #cf1322; }
+.qmeta { color: #999; font-size: 9px; margin-left: 3px; }
+.kb-ref, .src-agent { display: inline-block; padding: 1px 6px; border-radius: 3px;
+  background: #f6ffed; border-left: 2px solid #52c41a; font-size: 11px; }
+.tref { color: #999; font-size: 10px; }
+.summary { background: #fafafa; border: 1px solid #eee; border-radius: 6px;
+  padding: 6px 10px; margin: 4px 0; font-size: 11.5px; }
+.sw { display: flex; gap: 12px; }
+.sw > div { flex: 1; border: 1px solid #e8e8e8; border-radius: 6px; padding: 6px 10px; }
+.sw-h { font-size: 10px; color: #888; margin-bottom: 3px; }
+ul { margin: 4px 0; padding-left: 18px; }
+.plan { display: flex; gap: 8px; padding: 3px 0; border-bottom: 1px dashed #eee; font-size: 11px; }
+.pd { flex: 0 0 70px; font-weight: 600; color: #1677ff; }
+.pdo { flex: 1; }
+.pf { flex: 0 0 92px; color: #666; text-align: right; }
+.plan-encourage { font-size: 11px; color: #666; margin: 6px 0 0; }
+.turn { border-bottom: 1px dashed #eee; padding: 3px 0; }
+.t-meta { color: #888; font-size: 10px; }
+.t-q, .t-a { font-size: 11px; }
+.muted { color: #999; }
+.footer { margin-top: 10px; border-top: 1px solid #eee; padding-top: 6px; color: #999; font-size: 10px; }
+</style>"""
+
+
+def _render_export_html(report: dict) -> str:
+    """把 get_report() 的真实数据渲染为可打印的自包含 HTML 一页纸。
+
+    诚信约束：只渲染真实存在的字段；KB 原文溯源（chunk_ref）在当前实训链路未落库，
+    统一标注「溯源：待补全」，绝不编造 chunk 引用或来源 Agent。
+    """
+    session_id = _esc(report.get("session_id", ""))
+    title = _esc(report.get("title", "") or "（未命名实训）")
+    scenario_label = _esc(report.get("scenario_label", ""))
+    status = _esc(report.get("status", ""))
+    assessment = report.get("assessment") or {}
+    overall = assessment.get("overall")
+    overall_txt = _esc(overall if overall is not None else "—")
+    summary = _esc(assessment.get("summary", "") or "（无）")
+    strength = _esc(assessment.get("strength", "") or "（无）")
+    weaknesses = assessment.get("weaknesses") or []
+    source_tag = "AI 评估" if assessment.get("assessment_source") == "llm" else "规则评估"
+    source_tag = _esc(source_tag)
+
+    # ── 六维结论与溯源 ──
+    claims = []
+    for item in (report.get("evidence_chain") or []):
+        label = _esc(item.get("label", "") or item.get("dimension", "") or "维度")
+        score = item.get("score")
+        score_txt = _esc(score if score is not None else "—")
+        level = _esc(_LEVEL_LABEL.get(item.get("level", ""), item.get("level", "") or "—"))
+        confidence = item.get("confidence", 0)
+        try:
+            conf_num = round(float(confidence or 0), 2)
+        except (TypeError, ValueError):
+            conf_num = 0.0
+
+        rationale = (item.get("rationale", "") or "").strip()
+        if rationale:
+            rationale = _esc(rationale)
+        else:
+            rationale = f"「{label}」维度得分 {score_txt}/5（{level}）"
+
+        # 原话溯源：优先 evidence_quotes（学生原话片段），其次 per_turn_evidence 的 note
+        quote_parts: list[str] = []
+        for q in (item.get("evidence_quotes") or []):
+            q = (q or "").strip()
+            if q:
+                quote_parts.append(f'<span class="quote">「{_esc(q)}」</span>')
+        for h in (item.get("per_turn_evidence") or []):
+            note = (h.get("note", "") or "").strip()
+            if note:
+                turn = h.get("turn")
+                pol = _esc(h.get("polarity", "") or "")
+                quote_parts.append(
+                    f'<span class="quote">「{_esc(note)}」'
+                    f'<small class="qmeta">第{_esc(turn)}轮·{pol}</small></span>'
+                )
+        if not quote_parts:
+            quote_parts.append('<span class="quote missing">溯源：待补全</span>')
+        ev_turns = item.get("evidence_turns") or []
+        turns_ref = ""
+        if ev_turns:
+            turns_ref = " 引用自第 " + "、".join(_esc(str(t)) for t in ev_turns) + " 轮"
+
+        claims.append(f"""
+        <div class="claim">
+          <div class="claim-head">
+            <span class="dim">{label}</span>
+            <span class="score">{score_txt}<small>/5</small></span>
+            <span class="level">{level}</span>
+            <span class="cred">可信度：{_credibility_label(confidence)}（{conf_num}）</span>
+          </div>
+          <div class="claim-body">{rationale}</div>
+          <div class="trace">
+            <div class="trace-row"><span class="tl">原话溯源</span>{''.join(quote_parts)}<span class="tref">{turns_ref}</span></div>
+            <div class="trace-row"><span class="tl">KB 原文溯源</span><span class="kb-ref missing">溯源：待补全</span></div>
+            <div class="trace-row"><span class="tl">来源 Agent</span><span class="src-agent missing">待补全（证据取自学生本轮作答）</span></div>
+          </div>
+        </div>""")
+    claims_html = "\n".join(claims) if claims else '<div class="muted">（暂无六维结论）</div>'
+
+    weak_html = "".join(f"<li>{_esc(w)}</li>" for w in weaknesses) or "<li>（无）</li>"
+
+    # ── 提升路径 ──
+    improvement = report.get("improvement") or {}
+    plan_parts = []
+    for a in (improvement.get("actions") or []):
+        dim = _esc(a.get("dimension", "") or "")
+        do = _esc(a.get("do", "") or "")
+        freq = _esc(a.get("frequency", "") or "")
+        plan_parts.append(
+            f'<div class="plan"><span class="pd">{dim}</span>'
+            f'<span class="pdo">{do}</span><span class="pf">{freq}</span></div>'
+        )
+    plan_html = "\n".join(plan_parts) if plan_parts else '<div class="muted">（暂无提升路径）</div>'
+    encourage = _esc(improvement.get("encouragement", "") or "")
+    encourage_html = f'<p class="plan-encourage">{encourage}</p>' if encourage else ""
+
+    # ── 完整对抗记录（可溯源头）──
+    replay = []
+    for t in (report.get("turns") or []):
+        ti = t.get("turn_index")
+        mode = _esc(_MODE_LABEL.get(t.get("mode", ""), t.get("mode", "") or ""))
+        dim = _esc(t.get("probe_dimension", "") or "")
+        q = _esc(t.get("question", "") or "")
+        a = _esc(t.get("answer", "") or "")
+        replay.append(f"""
+        <div class="turn">
+          <div class="t-meta">第{_esc(ti)}轮 · {mode} · {dim}</div>
+          <div class="t-q"><b>对手：</b>{q}</div>
+          <div class="t-a"><b>我：</b>{a}</div>
+        </div>""")
+    replay_html = "\n".join(replay) if replay else '<div class="muted">（无对话记录）</div>'
+
+    generated = _esc(datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"))
+
+    return f"""<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>证据链一页纸 · {title}</title>
+{_EXPORT_CSS}
+</head>
+<body>
+  <h1>职业素养对抗实训 · 证据链一页纸（可溯源）</h1>
+  <div class="meta">会话：{session_id} ｜ 情景：{scenario_label} ｜ 状态：{status} ｜ 评估来源：{source_tag}</div>
+  <div class="banner">
+    <b>诚信声明：</b>本页每一条结论均追溯至学生原始作答（原话溯源）。当前实训链路未落库「知识库原文溯源字段（chunk_ref）」，
+    故统一标注「<b>溯源：待补全</b>」，<b>绝不编造来源</b>；「来源 Agent」同理标注待补全。所有数字与引文均来自真实数据。
+  </div>
+
+  <div class="overall">综合得分：<b>{overall_txt}</b> / 5　<span class="src-tag">{source_tag}</span></div>
+
+  <div class="section">
+    <h2>一、六维结论与溯源</h2>
+    {claims_html}
+  </div>
+
+  <div class="section">
+    <h2>二、综合评估</h2>
+    <p class="summary">{summary}</p>
+    <div class="sw">
+      <div><div class="sw-h">最突出优点</div><div>{strength}</div></div>
+      <div><div class="sw-h">待改进</div><ul>{weak_html}</ul></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>三、针对性提升路径</h2>
+    {plan_html}
+    {encourage_html}
+  </div>
+
+  <div class="section">
+    <h2>四、完整对抗记录（可溯源头）</h2>
+    {replay_html}
+  </div>
+
+  <div class="footer">
+    生成时间：{generated}　·　本页由浏览器「另存为 PDF」即可作为一页纸证据报告。诚信优先：缺源必标，绝不杜撰。
+  </div>
+</body>
+</html>"""
+
+
+@router.get("/session/{session_id}/export-report")
+async def export_report(session_id: str, user: dict = Depends(get_current_user)):
+    """导出证据链一页纸（自包含 HTML，浏览器另存为 PDF 即得一页纸报告）。"""
+    _check_owner(session_id, user)
+    try:
+        report_data = career_service.get_report(session_id)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    html = _render_export_html(report_data)
+    return Response(content=html, media_type="text/html; charset=utf-8")
 
 
 # ── 我的实训历史 ──
