@@ -80,14 +80,25 @@ def _temp_sessions(monkeypatch, tmp_path):
 
 @pytest.fixture(autouse=True)
 def _isolate_video_cache(monkeypatch, tmp_path):
-    """把教学视频的磁盘脚本缓存重定向到临时目录，消除测试间的跨批次污染。
+    """把教学视频的磁盘脚本缓存重定向到临时目录（防御性隔离）。
 
-    services/video_generator.py 的 _CACHE_DIR 指向共享的 ``data/video_cache``，
-    TTL 24 小时 —— 也就是说**一次运行的产物会被下一次运行读到**（甚至跨天）。
-    实测后果：test_video_feedback 的两个视频用例在「单跑」时脚本生成为空、
-    端点返回 status=error（xfail）；在「全量跑」时命中前序测试写入的缓存脚本，
-    成功产出 4 场景 → 被 xfail(strict=True) 判为 XPASS → FAILED（CI 必然红）。
-    隔离后每个用例的缓存独立，单跑与全量行为一致。
+    事实订正（2026-10-08 实测）：
+    此前的注释称「全量跑时**命中前序测试写入的缓存脚本**，成功产出 4 场景 →
+    XPASS → FAILED」。该机制**不可能发生** ——
+    ``services/video_generator._cache_set`` 全仓**零调用点**
+    （``git log -S "_cache_set"`` 显示仅基线提交一次计数变化，即只有定义、从无调用），
+    且读取分支 ``if cached and cached == video_script: pass`` 本身也是空操作。
+    即：写入端从未接上，``data/video_cache/`` 恒为空，缓存路径整体不可达。
+
+    那两个用例此前的真实机制是：conftest 的 ``mock_llm`` 让 ``text_completion``
+    **成功返回** ``"mock llm response"``（17 字符），故 ``_fallback_video_script``
+    不触发；该 17 字符串进入 ``parse_storyboard`` → ``_parse_scenes_fallback``
+    因「长度 < 20 跳过」得 0 场景 → 端点 ``status="error"``。已由
+    ``test_video_feedback.storyboard_llm`` fixture 钉死 LLM 出参根治，两用例
+    现已确定性通过（不再 xfail）。
+
+    本 fixture 保留作防御：若日后把 ``_cache_set`` 接入，共享的
+    ``data/video_cache``（TTL 24h）会重新引入跨批次耦合，届时这里的重定向即生效。
     """
     import services.video_generator as _vg
     monkeypatch.setattr(_vg, "_CACHE_DIR", str(tmp_path / "video_cache"))
