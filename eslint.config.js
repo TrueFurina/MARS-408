@@ -27,6 +27,27 @@ export default [
     },
   },
   {
+    // Node 运行时脚本（scripts/*.mjs 等）与顶层配置文件运行在 Node 环境，
+    // 需要 process/Buffer 等 Node 全局；仅对 scripts 与 *.config.* 开放，
+    // 避免把 Node 全局泄漏给 src/ 下的浏览器端代码（否则误用不再被 no-undef 拦截）。
+    name: 'app/node-scripts',
+    files: ['scripts/**/*.mjs', 'scripts/**/*.js', 'scripts/**/*.cjs', '*.config.js', '*.config.ts', '*.config.mjs'],
+    languageOptions: {
+      globals: {
+        process: 'readonly',
+        console: 'readonly',
+        Buffer: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        require: 'readonly',
+        module: 'writable',
+        exports: 'writable',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+      },
+    },
+  },
+  {
     name: 'app/rules',
     rules: {
       // 与后端 API 契约宽松对接，项目大量使用 any，不阻断
