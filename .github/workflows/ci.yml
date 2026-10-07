@@ -337,7 +337,20 @@ jobs:
               raise AssertionError(f"Milvus 连接失败并静默回退（D14 防回退断言）：{last_err}")
           PY
       - name: Run Milvus integration tests
-        run: pytest -m requires_milvus -q
+        # 与 p0-regression.yml 的 requires-milvus job 保持**同一套防护**（原先此处只有
+        # 裸 `pytest -m requires_milvus -q`，缺两道）：
+        #  1) 空跑兜底：全部用例被 skip 时 pytest 返回 0，job 会「零覆盖地绿」。
+        #     故显式要求至少一条真的 passed。上方 startup guard 已断言 MILVUS_ENABLED
+        #     与 _milvus_connected，能挡住"静默回退 InMemory"，但挡不住"一条都没跑"。
+        #  2) --timeout：无超时保护时，卡住的用例会一直烧到 job 级超时（默认 6h）。
+        # pipefail 必须与 `| tee` 同用，否则管道退出码取 tee（恒 0），失败被吞。
+        run: |
+          set -euo pipefail
+          pytest -m requires_milvus --timeout=300 -q -rs | tee requires_milvus.log
+          if ! grep -qE "[0-9]+ passed" requires_milvus.log; then
+            echo "::error::requires_milvus 无任何用例实际通过（疑似全部 skip）—— 拒绝假绿"
+            exit 1
+          fi
 
   # ───────────────────────────────────────────────────────────────
   # 依赖 CVE 扫描（pip-audit）：发现已知漏洞即阻断
