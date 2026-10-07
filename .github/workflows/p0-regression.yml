@@ -195,6 +195,27 @@ jobs:
       - name: Install (.[test])
         working-directory: py-server
         run: pip install -e ".[test]"
-      - name: Slow tests
+      - name: Slow tests（nightly）
+        # 现状（2026-10-08 实测，非推测）：全仓 **0 处** `slow` 标记使用 ——
+        #   `grep -rn "mark.slow" py-server/tests` 无命中，`git log -S "mark.slow"` 亦为空
+        #   （历史上从未出现过）；pyproject 只声明了该 marker，并把它排除在默认 addopts 之外。
+        # 后果：`pytest -m slow` 收 **0 条**用例（全量 1407 全部 deselected）→ pytest
+        #   退出码 **5** = no tests collected → 本 job 每晚**必然变红**，而红的原因与代码
+        #   质量无关，纯属"分档被声明了却从未有过内容"。
+        # 处理：显式承认"当前无用例"这一**事实**并把 5 归零，同时打 warning 让它在每次
+        #   运行里可见（而不是悄悄绿）。**其余任何退出码原样透传** —— 一旦有用例被标 slow，
+        #   5 就不再出现，正常断言自动接管，失败照旧红。
+        # 这与"永远绿的假闸门"的区别：它不声称自己覆盖了什么，反而把"0 条"打进日志与
+        #   注解；真正决定它是否有意义的是 slow 用例是否存在。
+        # 备选方案（未采用）：直接删掉本 job。之所以不删，是因为 marker 已声明为
+        #   "nightly 运行"，留着可避免"将来有人标了 slow 却静默无人跑"的陷阱。
         working-directory: py-server
-        run: pytest -m slow --timeout=600 -q
+        run: |
+          set -uo pipefail
+          rc=0
+          pytest -m slow --timeout=600 -q || rc=$?
+          if [ "$rc" -eq 5 ]; then
+            echo "::warning::slow 分档当前 0 条用例（pytest exit 5 = no tests collected）；marker 已声明但全仓未使用。接入 slow 用例后本分支自然失效，失败将照常变红。"
+            exit 0
+          fi
+          exit "$rc"
