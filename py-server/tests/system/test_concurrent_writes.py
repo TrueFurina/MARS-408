@@ -11,6 +11,11 @@
 # 导入走真实 PDF 解析（PyMuPDF 已装），用 tests 内临时生成的 PDF 作 source。
 #
 # 这些测试起真实 uvicorn 子进程，CI 单独分档（--timeout=180），标记 @pytest.mark.system。
+#
+# 坑位（D16，2026-10-07 实测定位）：子进程 stdout 用 PIPE 时**必须**由 _drain_stdout
+# 后台读取。Windows 匿名管道默认缓冲仅约 4KB，而一次正常运行的日志量约 7KB，不读就会
+# 写满 → 子进程阻塞在 write → 服务端停摆 → 用例以 180s 超时失败（CI/Linux 管道 64KB，
+# 不触发）。详见 _drain_stdout 的 docstring。
 # ============================================================
 
 import os
@@ -111,23 +116,72 @@ def _admin_token():
     return _auth.create_token("admin", "admin")
 
 
+def _drain_stdout(proc):
+    """后台持续消费子进程 stdout，防止管道写满把服务端阻塞（Windows 特有陷阱）。
+
+    根因（2026-10-07 单变量对照实测定位）：本文件用 PIPE 接子进程输出却**从不读取**。
+    Windows 下 subprocess.PIPE 走 CreatePipe(..., 0)，匿名管道默认缓冲区仅约 4KB，
+    而一次正常运行的日志量实测约 7KB（对照组 stdout_bytes_read=6953）→ 管道写满后
+    子进程永久阻塞在 write 上 → 事件循环停摆 → 导入作业停在 processing、HTTP 轮询
+    挂死 → 整个用例以 pytest-timeout(180s) 失败，且输出全堵在管道里，看不到任何
+    服务端日志（与 _dump_proc_output 注释里「只剩一句启动超时」的现象同源）。
+
+    Linux 管道默认 64KB，实测日志量远低于上限，故该故障只在 Windows 本地出现，
+    CI / 生产不受影响 —— 这是「CI 全绿、本地 system 档全红」的唯一成因。
+    实测对照（其余条件完全相同，仅差「有无读取线程」）：
+      pipe-nodrain → 提交请求本身就 httpx.ReadTimeout，服务端已冻结；
+      pipe-drain   → 两个并发作业 1.5s 全部 succeeded，0 次慢轮询。
+
+    改用后台读取线程后：① 管道不再写满；② 输出完整留在内存，
+    _stop / _dump_proc_output 仍能拿到全部文本（tc14 依赖 out 里的 ADR-007 文案）。
+    """
+    buf: list[str] = []
+    proc._wb_stdout_buf = buf  # type: ignore[attr-defined]
+
+    def _reader():
+        try:
+            for line in proc.stdout:
+                buf.append(line)
+        except Exception:
+            pass
+
+    th = threading.Thread(target=_reader, name="uvicorn-stdout-drain", daemon=True)
+    th.start()
+    proc._wb_drain_thread = th  # type: ignore[attr-defined]
+
+
+def _drained_text(proc, timeout=10.0):
+    """取回 _drain_stdout 收集到的子进程输出（等读取线程收尾）。"""
+    th = getattr(proc, "_wb_drain_thread", None)
+    if th is not None:
+        try:
+            th.join(timeout=timeout)
+        except Exception:
+            pass
+    return "".join(getattr(proc, "_wb_stdout_buf", []) or [])
+
+
 def _dump_proc_output(proc, base):
     """启动超时时把 uvicorn 子进程的输出 dump 到 stdout。
 
-    子进程以 stdout=PIPE / stderr=STDOUT 启动，输出全堵在管道里，且失败断言
+    子进程以 stdout=PIPE / stderr=STDOUT 启动，输出原会全堵在管道里，且失败断言
     并不打印它 —— CI 日志里只剩一句「启动超时」，真正的异常栈永远看不到。
-    这里在超时后终止进程并回读管道，避免这类失败无法诊断。
+    这里在超时后终止进程，再从 _drain_stdout 的缓冲回读输出，避免这类失败无法诊断。
     """
     try:
         proc.terminate()
     except Exception:
         pass
     try:
-        out, _ = proc.communicate(timeout=15)
+        proc.wait(timeout=10)
     except Exception:
-        out = None
+        try:
+            proc.kill()
+            proc.wait(timeout=5)
+        except Exception:
+            pass
     print(f"\n===== uvicorn 启动失败 ({base}) 子进程输出 =====", flush=True)
-    print((out or "<无输出>")[-8000:], flush=True)
+    print((_drained_text(proc) or "<无输出>")[-8000:], flush=True)
     print("===== 子进程输出结束 =====\n", flush=True)
 
 
@@ -188,10 +242,13 @@ def _start(workers, env_file, port, run_dir, log_config=None, extra_env=None):
     ]
     if log_config:
         cmd += ["--log-config", str(log_config)]
-    return subprocess.Popen(
+    proc = subprocess.Popen(
         cmd, cwd=str(run_dir), env=env,
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
     )
+    # 必须立刻挂上读取线程：不读的 PIPE 在 Windows 上约 4KB 就写满并冻住服务端。
+    _drain_stdout(proc)
+    return proc
 
 
 def _stop(proc):
@@ -200,11 +257,14 @@ def _stop(proc):
     except Exception:
         proc.kill()
     try:
-        out, _ = proc.communicate(timeout=15)
+        proc.wait(timeout=15)
     except Exception:
         proc.kill()
-        out = ""
-    return out
+        try:
+            proc.wait(timeout=5)
+        except Exception:
+            pass
+    return _drained_text(proc)
 
 
 # 超时放宽：CIRunner 上首次请求会触发 embedding 模型加载（数秒~数十秒），
