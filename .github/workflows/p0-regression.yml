@@ -98,11 +98,30 @@ jobs:
         run: pytest -m "system and not p0_regression" --timeout=180 -q
 
   # ── 真实向量库：milvus-lite（in-process，无需 docker 服务） ──
+  #
+  # ⚠️ 本 job 曾长期「假绿」，2026-10-07 修复。两处独立缺陷叠加：
+  #   1) 启动命令写的 `from milvus_lite import MilvusServer` 在任何现代版本里
+  #      都不存在 —— 2.5.1 的 API 是 milvus_lite.server.Server，而 3.0（2026-05-13）
+  #      起整个引擎重写为纯 Python，只导出 MilvusLite / server_manager_instance。
+  #      于是该进程秒退；而轮询循环末尾没有 exit 1，step 照样返回 0 → 服务从未起来。
+  #   2) 本 job 未传 MILVUS_ENABLED，而 config.py 的 milvus.enabled 默认 False，
+  #      VectorDB.connect() 会直接走 InMemory 分支返回 False
+  #      → 4 个用例全部 pytest.skip() → pytest exit 0 → job 绿。
+  #    即：这道门禁从未真正执行过任何断言（比红更糟，它制造了安全感）。
+  #
+  # 修复后本地实测（milvus-lite 3.2.1 + pymilvus 2.6.17，Windows）：
+  #   服务 2s 监听 19530，4 个用例 20.3s 全过（4 passed）。
   requires-milvus:
     name: Requires Milvus (Linux, milvus-lite)
     needs: p0-regression-gate
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      MILVUS_HOST: 127.0.0.1
+      MILVUS_PORT: "19530"
+      # 必须显式开启：milvus.enabled 默认 False，不开则 connect() 直接
+      # 回退 InMemory 并返回 False，用例会以「需要真实 Milvus 服务端」为由全量 skip。
+      MILVUS_ENABLED: "true"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -110,23 +129,56 @@ jobs:
           python-version: "3.12"
       - name: Install (.[test]) + milvus-lite
         working-directory: py-server
-        run: pip install -e ".[test]" && pip install milvus-lite
+        # pin 到 3.x：纯 Python 引擎（约 115KB，替代旧版 55MB 且仅 linux/mac 的
+        # C++ 二进制），其 gRPC 服务默认端口恰为 19530（adapter.grpc.server.DEFAULT_PORT）。
+        run: pip install -e ".[test]" && pip install "milvus-lite>=3.2,<4"
       - name: Start milvus-lite in background
         working-directory: py-server
         run: |
-          nohup python -c "from milvus_lite import MilvusServer; s=MilvusServer(); s.set_base_dir('./milvus_lite_ci'); s.start()" > milvus_lite.log 2>&1 &
+          mkdir -p milvus_lite_ci
+          nohup python -c "
+          from milvus_lite.adapter.grpc.server import run_server
+          run_server(data_dir='./milvus_lite_ci', host='127.0.0.1', port=19530)
+          " > milvus_lite.log 2>&1 &
           for i in $(seq 1 30); do
             if python -c "import socket; s=socket.socket(); s.settimeout(1); s.connect(('127.0.0.1',19530)); s.close(); exit(0)" 2>/dev/null; then
-              echo "milvus-lite ready"; break
+              echo "milvus-lite ready after ~$((i*2))s"; exit 0
             fi
             sleep 2
           done
+          # fail-closed：起不来就必须红 —— 否则这道门禁又退化成假绿
+          echo "::error::milvus-lite 未在 60s 内监听 19530"
+          cat milvus_lite.log
+          exit 1
+      - name: "Milvus startup guard (fail-closed: 拒绝静默回退 InMemory)"
+        working-directory: py-server
+        # 与 ci.yml 的 backend-milvus 同款守卫：先真连一次再放行。
+        run: |
+          python - <<'PY'
+          from db.milvus_client import MILVUS_AVAILABLE, VectorDB
+          assert MILVUS_AVAILABLE, "pymilvus 未安装：MILVUS_AVAILABLE=False"
+          vdb = VectorDB()
+          try:
+              assert vdb.connect() and vdb._milvus_connected, \
+                  "连不上 milvus-lite（拒绝静默回退 InMemory）"
+              print("OK: milvus-lite 真实连接成功")
+          finally:
+              vdb.disconnect()
+          PY
       - name: Requires Milvus tests
         working-directory: py-server
-        env:
-          MILVUS_HOST: 127.0.0.1
-          MILVUS_PORT: "19530"
-        run: pytest -m requires_milvus --timeout=300 -q
+        # ⚠️ 必须 pipefail：`pytest | tee` 的退出码默认是 tee 的，pytest 失败会被
+        # 静默吞掉（tee 恒返回 0）。缺了它，"部分用例 failed" 场景下 job 照样绿 ——
+        # 与上面刚修掉的假绿是同一类病。backend-test.yml 亦统一用 set -euo pipefail。
+        run: |
+          set -euo pipefail
+          pytest -m requires_milvus --timeout=300 -q -rs | tee requires_milvus.log
+          # 第二重兜底（pipefail 管不到的场景）：全部 skip 时 pytest 返回 0，
+          # 门禁空转。故显式要求至少有一条用例真的 passed。
+          if ! grep -qE "[0-9]+ passed" requires_milvus.log; then
+            echo "::error::requires_milvus 无任何用例实际通过（疑似全部 skip）—— 拒绝假绿"
+            exit 1
+          fi
 
   # ── 慢速：仅 nightly (schedule) 触发 ──
   slow:

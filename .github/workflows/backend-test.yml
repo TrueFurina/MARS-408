@@ -16,8 +16,13 @@
 #   真实密钥或网络即可通过。
 #
 # 重用例档（workflow_dispatch 带 run_heavy=true）：
-#   覆盖 system / requires_milvus 等需外部依赖的用例（requires_milvus 在无
-#   Milvus 时仍会被 conftest 自动 skip），并加 --timeout=180 防止子进程挂死。
+#   覆盖 system 等需起子进程的用例，并加 --timeout=180 防止子进程挂死。
+#
+#   ⚠️ 本档**不含** requires_milvus。此前写 `-m "not slow"` 会把这 4 个用例一并纳入，
+#   而本 workflow 没有 docker service / milvus-lite 启动步骤，它们在无服务端时被
+#   conftest 静默 skip —— 档名声称覆盖、实则一条断言都没跑（2026-10-07 修）。
+#   requires_milvus 的唯一真值源是 p0-regression.yml 的 requires-milvus job
+#   （milvus-lite 3.x + fail-closed startup guard + 拒绝全 skip 兜底）。
 # =============================================================================
 
 name: Backend Test (Linux)
@@ -123,15 +128,17 @@ jobs:
           # 不加 -m：沿用 pyproject addopts 排除 system/requires_milvus/slow
           python -m pytest -q --tb=short --junitxml=pytest-report.xml
 
-      - name: "Run pytest (heavy: include system/requires_milvus, run_heavy=true)"
+      - name: "Run pytest (heavy: include system; requires_milvus 由 p0-regression.yml 覆盖)"
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.run_heavy == 'true' }}
         working-directory: py-server
         run: |
           set -euo pipefail
-          # 命令行 -m 覆盖 pyproject 的 addopts，纳入 system / requires_milvus；
-          # requires_milvus 在无 Milvus 时仍由 conftest 自动 skip。
+          # 命令行 -m 覆盖 pyproject 的 addopts，纳入 system 档（用例自起 uvicorn，
+          # 无需外部服务）。
+          # 显式排除 requires_milvus：本 workflow 无 Milvus 服务端，纳入只会全 skip
+          # 而返回 0（假绿）；其真值源见 p0-regression.yml 的 requires-milvus job。
           # slow 用例留给 nightly，不在 CI 默认/手动档跑。
-          python -m pytest -q --tb=short -m "not slow" --timeout=180 --junitxml=pytest-report.xml
+          python -m pytest -q --tb=short -m "not slow and not requires_milvus" --timeout=180 --junitxml=pytest-report.xml
 
       - name: "Run isolation tests (--noconftest)"
         working-directory: py-server
