@@ -165,28 +165,42 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Start Milvus standalone (docker run, real server)
-        # milvusdb/milvus 镜像的 entrypoint 为 `tini --`；作为 GitHub service container
-        # 启动时其默认 CMD 未被正确传递，tini 收不到要启动的程序，会打印 usage 并
-        # 立即退出（实测容器 1 秒后 unhealthy，作业 0 秒失败）。
-        # 故改为显式 `docker run ... milvus run standalone` + embedded etcd + 本地存储，
-        # 对齐仓库 docker-compose.yml 的 standalone 配置；用 healthz 探针等待就绪。
-        run: |
-          docker run -d --name milvus-standalone \
-            -p 19530:19530 -p 9091:9091 \
-            -e ETCD_USE_EMBED=true \
-            -e ETCD_DATA_DIR=/var/lib/milvus/etcd \
-            -e COMMON_STORAGETYPE=local \
-            milvusdb/milvus:v2.4.17 milvus run standalone
-          for i in $(seq 1 30); do
-            if curl -sf http://localhost:9091/healthz >/dev/null; then
-              echo "Milvus healthz OK after ~$((i*5))s"; break
-            fi
-            echo "waiting for Milvus... ($i/30)"; sleep 5
-          done
-          curl -sf http://localhost:9091/healthz || { echo "::error::Milvus 未在超时内就绪"; docker logs milvus-standalone; exit 1; }
+      # ── 本 job 刻意不依赖 Milvus（2026-10-07 移除遗留的 docker Milvus）──
+      # 移除前这里 `docker run milvusdb/milvus` + healthz 探针，但它是**死重量**，证据：
+      #   · 本 job 从不设置 MILVUS_ENABLED（全仓 MILVUS_* 仅出现在 backend-milvus job）；
+      #   · py-server/config.json 未入库（.gitignore:111），CI 只有已入库的
+      #     config.example.json，而 load_config 只在 CONFIG_PATH 存在时才合并文件，
+      #     故 CI 实取 config.py:95 的 DEFAULTS `milvus.enabled = False`；
+      #   · 因此 db/milvus_client.py:534 的 `MILVUS_AVAILABLE and enabled` 恒假，
+      #     VectorDB 全程走 InMemoryVectorStore；
+      #   · 三处 pytest 调用又都显式排除 requires_milvus（见下方各 step）。
+      # 即：那个容器**不被任何断言使用**，却只贡献「docker 拉取失败 / healthz 超时 →
+      # 整个 job 假红」的失败面。真实 Milvus 覆盖由 backend-milvus job 承担。
+      # 下方 guard step 把「本 job 不连 Milvus」从注释升级为 fail-closed 断言。
       - name: Install backend (editable, with test extras)
         run: pip install --upgrade pip && pip install -e ".[test]"
+      - name: Vector store contract guard (本 job 必须跑 InMemory，不连 Milvus)
+        # 目的：把「本 job 不依赖真实 Milvus」变成可执行断言，fail-closed。
+        # 若日后有人给本 job 注入 MILVUS_ENABLED=true，或改掉 config 默认值，这里先红，
+        # 而不是让上千条用例静默改跑另一条路径（即另一种形态的假绿）。
+        # 该 guard 无网络依赖、无原生扩展依赖，行为确定。
+        run: |
+          python - <<'PY'
+          from db.milvus_client import MILVUS_AVAILABLE, VectorDB
+          from config import get_milvus_config
+
+          cfg = get_milvus_config()
+          vdb = VectorDB()
+          vdb.connect()
+          assert vdb._milvus_connected is False, (
+              "backend-tests 不应连上真实 Milvus（该档由 backend-milvus job 覆盖）；"
+              f"实测 _milvus_connected={vdb._milvus_connected}, enabled={cfg.get('enabled')!r}"
+          )
+          print(
+              "OK: VectorDB 走 InMemoryVectorStore "
+              f"(MILVUS_AVAILABLE={MILVUS_AVAILABLE}, config.milvus.enabled={cfg.get('enabled')!r})"
+          )
+          PY
       - name: Run pytest (unit/integration/API, coverage xml)
         run: pytest -m "not system and not requires_milvus" --cov=. --cov-report=xml:coverage.xml --cov-fail-under=50 -q
       - name: ADR-007 single-writer gate (import_queue)
