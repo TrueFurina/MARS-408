@@ -76,24 +76,35 @@ jobs:
           echo "  PASS G8"
 
           echo "== G10: CORS/CSP 收紧 + 上传上限 =="
-          grep -n 'allow_methods=\["\*"\]' py-server/main.py \
-            && fail "G10 CORS allow_methods 不得为 ['*']"
-          grep -n 'allow_headers=\["\*"\]' py-server/main.py \
-            && fail "G10 CORS allow_headers 不得为 ['*']"
-          grep -n 'allow_origins=\["\*"\]' py-server/main.py \
-            && fail "G10 CORS allow_origins 不得为 ['*']"
-          grep -n "unsafe-eval" py-server/main.py \
+          # 承载位置：CORS/CSP 随 M-4 拆分（main.py 882 -> 86 行）迁至 app/middleware.py。
+          # 原门禁只 grep py-server/main.py，而该文件已无 CORS/CSP；那四条又都是
+          # 「有则失败」型断言 —— grep 在失效路径上恒不命中，于是恒不 fail。
+          # 实测（2026-10-08 变异验证）：把生产 middleware.py 的 CORS 改成
+          # allow_origins=["*"]，本门禁仍报 ALL SECURITY GATES PASSED（假绿）。
+          # 故改为「正向 fail-closed + 反向禁止」两段式，与 G7/G9 同口径。
+          G10_FILES="py-server/app/middleware.py py-server/main.py"
+          # ① 正向（fail-closed）：承载文件必须在位，且必须能看出「生产收紧 + 开发白名单」
+          test -f py-server/app/middleware.py \
+            || fail "G10 CORS/CSP 承载文件 py-server/app/middleware.py 不存在（门禁指向失效路径）"
+          grep -q "is_production" py-server/app/middleware.py \
+            || fail "G10 CORS 缺少生产分支收紧（is_production）"
+          grep -q "allow_origin_regex" py-server/app/middleware.py \
+            || fail "G10 CORS 缺少开发环境 origin regex 白名单"
+          # ② 反向（有则失败）：通配 / unsafe-eval 出现在任一承载文件即红。
+          #    覆盖赋值 `x["allow_origins"]=["*"]` 与 dict 字面量 `"allow_origins": ["*"]` 两种写法。
+          grep -nE '(allow_origins|allow_methods|allow_headers)[^=]*=[^=]*\[[[:space:]]*"\*"' $G10_FILES \
+            && fail "G10 CORS allow_origins/methods/headers 不得为通配 ['*']"
+          grep -nE '"(allow_origins|allow_methods|allow_headers)"[[:space:]]*:[[:space:]]*\[[[:space:]]*"\*"' $G10_FILES \
+            && fail "G10 CORS allow_origins/methods/headers 不得为通配 ['*']（dict 字面量写法）"
+          grep -n "unsafe-eval" $G10_FILES \
             && fail "G10 CSP 不得含 unsafe-eval"
           grep -q "MAX_UPLOAD_MB" py-server/api/knowledge.py \
             || fail "G10 knowledge.py 缺少 MAX_UPLOAD_MB 上传上限"
           echo "  PASS G10"
 
-          echo "== G11: SVG 注入转义 html.escape =="
-          grep -q "import html" py-server/db/xfyun_multimodal.py \
-            || fail "G11 缺少 import html"
-          grep -q "html.escape" py-server/db/xfyun_multimodal.py \
-            || fail "G11 缺少 html.escape 转义"
-          echo "  PASS G11"
+          # G11（SVG 注入转义）已迁移至下方 AST 断言承载，理由见 security_gate_assert.py
+          # 的 assert_g11_html_escape_called 文档：原 `grep -q "html.escape"` 的 `.` 未转义，
+          # 同形名 html_escape 可蒙混；且纯存在性使「注释掉调用」照样通过（均经实测复核）。
 
           echo "== G12: 确定性文档 ID（sha256，非 abs(hash())）=="
           grep -q "hashlib.sha256" py-server/api/knowledge.py \
@@ -103,10 +114,10 @@ jobs:
             && fail "G12 knowledge.py 不得出现 abs(hash( 非确定性 ID"
           echo "  PASS G12"
 
-          echo "== G2/G5/G7/G9: AST 断言（fail-closed 限流 / AUTH_SECRET fail-fast / demo 仅非生产 / workers>1 fail-fast）=="
+          echo "== G2/G5/G7/G9/G11: AST 断言（fail-closed 限流 / AUTH_SECRET fail-fast / demo 仅非生产 / workers>1 fail-fast / SVG 转义实际调用）=="
           python scripts/security_gate_assert.py \
-            || fail "G2/G5/G7/G9 AST 断言失败"
-          echo "  PASS G2/G5/G7/G9"
+            || fail "G2/G5/G7/G9/G11 AST 断言失败"
+          echo "  PASS G2/G5/G7/G9/G11"
 
           echo "ALL SECURITY GATES PASSED"
 
