@@ -167,8 +167,13 @@ def test_gray_on_same_contract(mappo_on):
     mode, triggered, cont = decide_adversary_mode(turns, "catfish", CATFISH_MAX_CONTINUE)
     assert mode in CAREER_ACTIONS
     assert isinstance(triggered, bool)
-    if mode == "catfish":
-        assert cont <= CATFISH_MAX_CONTINUE
+    # ⚠️ 上限断言必须**无条件**执行。
+    # 原写法 `if mode == "catfish": assert cont <= CATFISH_MAX_CONTINUE` —— 而本输入
+    # 实测 mode == "escalating"（灰度开启下 MAPPO 决策接管），条件恒假 ⇒ 这条断言
+    # **从未执行过**，即 docstring 宣称的「鲶鱼连压永不超限」在本用例里从未被验证。
+    # 证据（2026-10-08）：`pytest tests/test_career_policy.py --cov=tests` 后比对
+    # executed_lines，L171 不在已执行集合内（修复后复测已在集合内）。
+    assert cont <= CATFISH_MAX_CONTINUE
 
 
 def test_gray_on_discipline_zero_violation(mappo_on):
