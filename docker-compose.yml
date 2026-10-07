@@ -5,9 +5,7 @@
 #
 # 生产部署:  docker-compose --profile production up -d
 #   → production 模式：必须显式设置 AUTH_SECRET / ADMIN_PASSWORD 环境变量，否则 fail-fast 启动失败
-#   → 同时拉起 Milvus + Redis 完整服务栈
-
-version: "3.8"
+#   → 同时拉起 Milvus + Redis + PostgreSQL 完整服务栈
 
 services:
   # ── 应用服务（含前端 + 后端 API） ──
@@ -45,7 +43,7 @@ services:
       - PG_USER=${PG_USER:-postgres}
       - PG_PASSWORD=${PG_PASSWORD:-}
       - PG_DATABASE=${PG_DATABASE:-netlearn}
-      - PG_ENABLED=${PG_ENABLED:-false}
+      - PG_ENABLED=${PG_ENABLED:-true}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
@@ -70,6 +68,9 @@ services:
       - ./py-server/config.json:/app/config.json
       # ADR-007: 挂载教材目录供后台 import_worker 单写者扫描（只读）
       - ./documents:/app/documents:ro
+      # E5 / reranker 本地模型：宿主机 py-server/models 是指向冷存的 symlink，
+      # Docker 在宿主机侧解析真实目录；容器内 /app/models 与 CONFIG_DIR/models 对齐（只读）
+      - ./py-server/models:/app/models:ro
     restart: unless-stopped
     healthcheck:
       # D4：探活 /api/status（镜像已装 curl）；start_period 给冷启动留时间
@@ -111,6 +112,27 @@ services:
     profiles: ["production"]
     restart: unless-stopped
 
+  # ── PostgreSQL 关系库（生产部署；开发模式由 pg_client 优雅降级 SQLite） ──
+  postgresql:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${PG_USER:-postgres}
+      - POSTGRES_PASSWORD=${PG_PASSWORD:-}
+      - POSTGRES_DB=${PG_DATABASE:-netlearn}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    profiles: ["production"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER:-postgres} -d ${PG_DATABASE:-netlearn}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
 volumes:
   milvus_data:
   redis_data:
+  pg_data:
