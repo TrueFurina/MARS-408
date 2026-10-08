@@ -9,7 +9,8 @@ name: verify-structural
 #
 #   • `structural` job（PR / push 自动跑，阻塞合并）
 #       跑「无需外部基础设施」的 6 个 verify_* + brand_scan + scan_stale_calibration
-#       + check_hardcoded_paths（新增：防脚本里写死本机绝对路径，见下方注释）。
+#       + check_hardcoded_paths（防脚本里写死本机绝对路径）+ honesty_scan
+#       + verify_metrics（工程规模指标 SSOT 防漂移）。见下方注释。
 #       这些脚本只依赖 sqlite / numpy / fastapi / 内置语料，CI 标准 python 即可跑。
 #
 #   • `heavy` job（仅 workflow_dispatch 手动触发，不阻塞合并）
@@ -81,6 +82,11 @@ jobs:
           run_one "honesty_scan (对外口径红线)" "python scripts/pre-commit/honesty_scan.py --all" "."
           # benchmark 口径漂移扫描（活文档面）
           run_one "scan_stale_calibration" "python scripts/scan_stale_calibration.py" "."
+          # 工程规模指标 SSOT（views / .vue / 代码量 / API 路径与操作数）：
+          # 文档 docs/METRICS_CURRENT.md 的真值表 vs 实测重算，防"手抄数字"漂移。
+          # 背景：README 曾多次漂移（views 45→46、后端文件 414→374、API 约240→244、测试 917→1177）。
+          # 改动代码后请跑 `python scripts/verify_metrics.py --update` 同步文档。
+          run_one "verify_metrics (工程规模指标 SSOT)" "python scripts/verify_metrics.py" "."
           # 本机绝对路径扫描（静态、最便宜，故放最前）：
           # 防的是「脚本里写死开发机路径 ⇒ Linux runner 上 FileNotFoundError ⇒ job 红，
           # 而开发机因为该路径真的存在而全绿」。实测事故：run 37812723531，

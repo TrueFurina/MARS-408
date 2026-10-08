@@ -53,6 +53,36 @@
 | Token −0.14% | `benchmark_2026-07-19.json` | 被 09-18 的 −11.99% 取代 |
 | NeuralMixer 83.3% / κ 0.776 | `benchmark_2026-08-17.json` 复现前 | 被 09-18 的 88.89% / κ 0.8512 取代 |
 
+## 工程规模指标（视图 / 代码量 / API 规模）
+
+> 本节同样属**活文档真值**，由 `python scripts/verify_metrics.py` 机检：
+> 重算当前值与下表比对，任何一项不一致即 `exit 1`（已接入 CI）。
+> 改动代码后跑 `python scripts/verify_metrics.py --update` 同步。
+>
+> 此前 README 的这些数字多次漂移（views 45→46、后端文件 414→374、API 端点约240→244），
+> 根因是"手抄数字、无机检"。**引用前请先跑校验脚本，不要凭记忆抄数。**
+
+<!-- METRICS_TABLE_START -->
+| 指标 | 真值 | 口径（可复现） |
+| --- | --- | --- |
+| 前端 views（页面级组件） | 46 | `ls src/views/*.vue \| wc -l` |
+| 前端 .vue 总数 | 85 | `find src -name '*.vue' \| wc -l` |
+| 前端 .ts 总数 | 49 | `find src -name '*.ts' \| wc -l` |
+| 前端代码行数（.vue+.ts） | 50801 | `.vue` + `.ts` 全部行数（不含 node_modules/dist） |
+| 后端 Python 文件数 | 374 | `find py-server -name '*.py'`（不含 .venv） |
+| 后端代码行数 | 83499 | `.py` 全部行数（不含 .venv） |
+| API 路由模块数 | 43 | `ls py-server/api/*.py` 去 `__init__.py` |
+| API 路径数（/api） | 227 | `py-server/openapi.json` 中 `/api` 路径数 |
+| API 操作数（/api，method 级） | 244 | `py-server/openapi.json` 中 `/api` 操作数（method 级） |
+<!-- METRICS_TABLE_END -->
+
+> **测试数不在上表**：passed / skipped / xfail 需真正跑一遍 pytest，耗时且依赖环境，
+> 其真值以 CI 全量回归为准（见 `AGENTS.md` 复核记录）。当前为
+> **1177 passed / 227 skipped / 3 xfailed / 0 failed**。
+>
+> **认证覆盖率**同理由独立脚本产出：`py-server/scripts/verify_auth_coverage.py`
+> （当前 total=244 / protected=231 / public=13 / coverage=**94.67%** / unregistered=0）。
+
 ## 漂移防护
 
 - 活文档若再出现上表"旧值"，`npm run gate:calibration` 在 CI 中直接红，定位到文件:行。
