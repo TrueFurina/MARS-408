@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import pathlib
+import subprocess
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -33,8 +34,25 @@ def _skip(p: pathlib.Path) -> bool:
     return any(part in SKIP_DIR_PARTS for part in p.parts)
 
 
-def _files(base: pathlib.Path, pattern: str) -> list[pathlib.Path]:
-    return [p for p in base.rglob(pattern) if not _skip(p)]
+def _tracked(root: pathlib.Path) -> list[pathlib.Path]:
+    """只取 **git 跟踪** 的文件。
+
+    这是本脚本的关键口径决策：用 `rglob` 会把本地未跟踪 / 被 .gitignore 排除的文件
+    （本地生成脚本、缓存、旧归档残留）也数进来，导致「本机 374」而「CI 349」——
+    同一份文档在两个平台得出不同数字，门禁必然红、且真值被污染。
+    git ls-files 只认仓库内文件，Windows / Linux / CI 结果完全一致。
+    """
+    r = subprocess.run(
+        ["git", "ls-files", "-z"], cwd=root, capture_output=True
+    )
+    out: list[pathlib.Path] = []
+    for rel in r.stdout.decode("utf-8", "ignore").split("\0"):
+        if not rel:
+            continue
+        p = root / rel
+        if p.is_file() and not _skip(p):
+            out.append(p)
+    return out
 
 
 def _lines(paths: list[pathlib.Path]) -> int:
@@ -50,14 +68,20 @@ def _lines(paths: list[pathlib.Path]) -> int:
 
 def measure() -> dict[str, tuple[int, str]]:
     """返回 {指标键: (真值, 口径说明)}。口径即复现命令，写进文档供人核对。"""
+    tracked = _tracked(ROOT)
     src = ROOT / "src"
     py = ROOT / "py-server"
 
-    views = sorted((src / "views").glob("*.vue"))
-    vue = _files(src, "*.vue")
-    ts = _files(src, "*.ts")
-    pys = _files(py, "*.py")
-    api_mods = [p for p in (py / "api").glob("*.py") if p.name != "__init__.py"]
+    def under(base: pathlib.Path) -> list[pathlib.Path]:
+        return [p for p in tracked if base in p.parents]
+
+    src_files = under(src)
+    views = sorted(p for p in (src / "views").glob("*.vue") if p in set(src_files))
+    vue = [p for p in src_files if p.suffix == ".vue"]
+    ts = [p for p in src_files if p.suffix == ".ts"]
+    # 注意：必须按后缀过滤，否则会把 py-server 下所有跟踪文件（json/yaml/前端产物等）都算进来
+    pys = [p for p in under(py) if p.suffix == ".py"]
+    api_mods = [p for p in (py / "api").glob("*.py") if p.name != "__init__.py" and p in set(tracked)]
 
     import json
 
@@ -73,16 +97,16 @@ def measure() -> dict[str, tuple[int, str]]:
     api_paths = {p for p, _ in api_ops}
 
     return {
-        "frontend_views": (len(views), "`ls src/views/*.vue \\| wc -l`"),
-        "frontend_vue_total": (len(vue), "`find src -name '*.vue' \\| wc -l`"),
-        "frontend_ts_total": (len(ts), "`find src -name '*.ts' \\| wc -l`"),
+        "frontend_views": (len(views), "`git ls-files 'src/views/*.vue'` 计数"),
+        "frontend_vue_total": (len(vue), "`git ls-files 'src/**/*.vue'` 计数"),
+        "frontend_ts_total": (len(ts), "`git ls-files 'src/**/*.ts'` 计数"),
         "frontend_lines": (
             _lines(vue) + _lines(ts),
-            "`.vue` + `.ts` 全部行数（不含 node_modules/dist）",
+            "git 跟踪的 `.vue` + `.ts` 全部行数",
         ),
-        "backend_py": (len(pys), "`find py-server -name '*.py'`（不含 .venv）"),
-        "backend_lines": (_lines(pys), "`.py` 全部行数（不含 .venv）"),
-        "api_modules": (len(api_mods), "`ls py-server/api/*.py` 去 `__init__.py`"),
+        "backend_py": (len(pys), "`git ls-files 'py-server/**/*.py'` 计数"),
+        "backend_lines": (_lines(pys), "git 跟踪的 `.py` 全部行数"),
+        "api_modules": (len(api_mods), "`git ls-files 'py-server/api/*.py'` 去 `__init__.py`"),
         "api_paths": (len(api_paths), "`py-server/openapi.json` 中 `/api` 路径数"),
         "api_operations": (len(api_ops), "`py-server/openapi.json` 中 `/api` 操作数（method 级）"),
     }
