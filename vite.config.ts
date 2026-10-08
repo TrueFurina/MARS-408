@@ -5,9 +5,9 @@ import vue from '@vitejs/plugin-vue'
 
 // https://vite.dev/config/
 export default defineConfig({
-  // GitHub Pages 部署于 https://truefurina.github.io/MARS-408/（project page 子路径）。
-  // 本地 dev 访问 http://localhost:5173/MARS-408/；若改仓名需同步此 base 与 og:url/og:image。
-  base: '/MARS-408/',
+  // GitHub Pages 双层部署（deploy-pages.yml）：site/ 静态官网发 gh-pages 根，SPA 发 gh-pages/app/。
+  // 本地 dev 访问 http://localhost:5173/MARS-408/app/；官网 https://truefurina.github.io/MARS-408/（CTA 跳 app/）。
+  base: '/MARS-408/app/',
   plugins: [
     vue(),
   ],

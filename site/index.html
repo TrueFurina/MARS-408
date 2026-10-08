@@ -58,6 +58,15 @@ h1{font-size:clamp(2.2rem,5.2vw,3.6rem);line-height:1.18;font-weight:800;letter-
 .hero p.sub{color:var(--dim);font-size:1.12rem;margin-top:20px;max-width:560px}
 .hero p.sub b{color:var(--fg)}
 .cta{margin-top:34px;display:flex;gap:14px;flex-wrap:wrap}
+.cta-note{margin-top:12px;font-size:.86rem;color:var(--dim)}
+.cta-note a{color:var(--blue)}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.chip{display:inline-flex;align-items:center;padding:7px 14px;border:1px solid var(--border);border-radius:999px;background:var(--panel);font-size:.88rem;color:var(--fg)}
+.hero-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:30px}
+.hstat{border:1px solid var(--border);border-radius:12px;background:var(--panel);padding:14px 16px}
+.hstat b{display:block;font-size:1.55rem;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hstat span{font-size:.78rem;color:var(--dim)}
+@media (max-width:900px){.hero-stats{grid-template-columns:repeat(2,1fr)}}
 .btn{display:inline-flex;align-items:center;gap:8px;padding:13px 28px;border-radius:12px;font-weight:600;font-size:1rem;transition:transform .2s,box-shadow .2s}
 .btn.primary{background:linear-gradient(135deg,#ff7a18,#ff9a3d);color:#fff;box-shadow:0 8px 28px rgba(255,122,24,.35)}
 .btn.primary:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(255,122,24,.45);text-decoration:none}
@@ -189,9 +198,23 @@ footer a:hover{color:var(--orange2)}
       <h1><span class="grad-text">芒得很职</span><br>职业素养<br>对抗实训平台</h1>
       <p class="sub">职业素养——技术判断的边界、对证据的尊重、在被追问时守住结论的能力——很难靠一次性讲授形成。
         平台基于 <b>芒得很职 多智能体技术底座</b>，把训练放进一个可多轮运行的对抗环境：学生在真实技术语境中完成任务、接受质疑、被要求举证。</p>
+      <div class="chips" aria-label="平台特性">
+        <span class="chip">▸ 多轮对抗实训</span>
+        <span class="chip">▸ 全过程可审计</span>
+        <span class="chip">▸ 数字可溯源</span>
+        <span class="chip">▸ 负结果留档</span>
+        <span class="chip">▸ 边界显式声明</span>
+      </div>
       <div class="cta">
-        <a class="btn primary" href="https://github.com/TrueFurina/MARS-408">GitHub 仓库 →</a>
-        <a class="btn ghost" href="#architecture">查看技术架构</a>
+        <a class="btn primary" href="app/">在线体验前端 →</a>
+        <a class="btn ghost" href="https://github.com/TrueFurina/MARS-408">GitHub 仓库</a>
+      </div>
+      <p class="cta-note">在线为静态前端预览（无后端）；完整实训功能按 <a href="#access">05 · Access</a> 本地运行。</p>
+      <div class="hero-stats">
+        <div class="hstat"><b>11</b><span>LangGraph 编排节点</span></div>
+        <div class="hstat"><b>45</b><span>前端教学视图</span></div>
+        <div class="hstat"><b>240</b><span>API 端点（约）</span></div>
+        <div class="hstat"><b>1177</b><span>测试通过（2026-10-01 口径）</span></div>
       </div>
     </div>
     <div class="hero-visual">
@@ -352,9 +375,9 @@ footer a:hover{color:var(--orange2)}
   <div class="wrap">
     <span class="sec-tag">04 · Evidence</span>
     <h2>可复跑的证据</h2>
-    <p class="subtitle">28 条查询、96 条样本、917 条通过用例</p>
+    <p class="subtitle">28 条查询、96 条样本、1177 条通过用例</p>
 
-    <p>工程可信度不靠形容词。本页列出三组可直接复现的实测记录。<strong>检索对照实验</strong>：28 条查询，Recall@5 <strong>+7.14 pp</strong>、Precision@5 <strong>+15.71 pp</strong>、MRR <strong>+12.38 pp</strong>，结果文件 <code>py-server/experiments/results/benchmark_2026-09-18.json</code>，伴随 token 消耗<strong>上升 11.99%</strong>（未降反增）与单次延迟 <strong>574.36 ms</strong> 的诚实披露。<strong>共识评测</strong>：96 条样本下训练权重 <strong>80.2%</strong> 与规则基线 <strong>82.3%</strong> 持平，结论为「未观察到显著优势」。<strong>回归测试</strong>：<strong>917</strong> 条用例通过、<strong>207</strong> 条跳过（跳过项一般为依赖外部服务或需本地模型的用例，不计入通过率分母）。</p>
+    <p>工程可信度不靠形容词。本页列出三组可直接复现的实测记录。<strong>检索对照实验</strong>：28 条查询，Recall@5 <strong>+7.14 pp</strong>、Precision@5 <strong>+15.71 pp</strong>、MRR <strong>+12.38 pp</strong>，结果文件 <code>py-server/experiments/results/benchmark_2026-09-18.json</code>，伴随 token 消耗<strong>上升 11.99%</strong>（未降反增）与单次延迟 <strong>574.36 ms</strong> 的诚实披露。<strong>共识评测</strong>：96 条样本下训练权重 <strong>80.2%</strong> 与规则基线 <strong>82.3%</strong> 持平，结论为「未观察到显著优势」。<strong>回归测试</strong>：<strong>1177</strong> 条用例通过、<strong>227</strong> 条跳过、<strong>0</strong> 失败（2026-10-01 复核口径；跳过项一般为依赖外部服务或需本地模型的用例，不计入通过率分母）。</p>
 
     <div class="card reveal">
       <p class="card-title">检索对照实验（28 条查询标准口径）</p>
@@ -378,10 +401,11 @@ footer a:hover{color:var(--orange2)}
     </div>
 
     <div class="card reveal">
-      <p class="card-title">回归测试</p>
+      <p class="card-title">回归测试（2026-10-01 复核口径）</p>
       <ul class="metrics">
-        <li>通过用例　<b>917</b> 条</li>
-        <li>跳过用例　<b>207</b> 条</li>
+        <li>通过用例　<b>1177</b> 条</li>
+        <li>跳过用例　<b>227</b> 条</li>
+        <li>失败用例　<b>0</b> 条</li>
         <li>口径　跳过项一般为依赖外部服务或需本地模型的用例，不计入通过率分母</li>
       </ul>
     </div>
@@ -458,7 +482,8 @@ bash deploy/start_linux.sh</code></pre>
     <h2>让职业素养训练，<span class="grad-text">有据可查</span></h2>
     <p>每个结论过证据核查、每个数字有落盘、每个边界有声明——这就是芒得很职。</p>
     <div class="cta" style="justify-content:center">
-      <a class="btn primary" href="https://github.com/TrueFurina/MARS-408">GitHub 仓库 →</a>
+      <a class="btn primary" href="app/">在线体验前端 →</a>
+      <a class="btn ghost" href="https://github.com/TrueFurina/MARS-408">GitHub 仓库</a>
       <a class="btn ghost" href="https://github.com/TrueFurina/MARS-408/blob/main/README.md">参赛 README</a>
     </div>
   </div>

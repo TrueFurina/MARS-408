@@ -1,9 +1,10 @@
 name: Deploy to GitHub Pages
 
-# 把静态前端（vite build 产物）部署到 GitHub Pages：
-#   https://truefurina.github.io/MARS-408/
-# 该仓库 Pages 使用 legacy 模式（从 gh-pages 分支部署），故用 peaceiris
-# 推送 dist 到 gh-pages 分支，而非 actions/deploy-pages（GitHub Actions 模式）。
+# 双层部署（legacy Pages，gh-pages 分支）：
+#   官网落地页 site/            → https://truefurina.github.io/MARS-408/
+#   实训平台 SPA（vite build）  → https://truefurina.github.io/MARS-408/app/
+# SPA 的 vite base=/MARS-408/app/（见 vite.config.ts），官网 hero CTA 相对跳 app/。
+# 聚合到 staging 目录后一次性推 gh-pages：site 内容在根，dist 内容在 app/ 子目录。
 # 注意：GitHub Pages 仅承载静态前端；后端（py-server / FastAPI）不在此部署。
 on:
   push:
@@ -29,10 +30,20 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build-only
+      - name: 聚合部署目录（site/ → 根，dist/ → app/）
+        run: |
+          mkdir -p staging/app
+          cp -r site/. staging/
+          cp -r dist/. staging/app/
+          # SPA 深链接兜底：GitHub Pages 只认根级 404.html。
+          # dist/404.html（copy-spa-404 生成）的资产是绝对路径 /MARS-408/app/assets/...，
+          # 放在根不影响加载；使 /MARS-408/* 任意未匹配路径回退 SPA 壳。
+          cp dist/404.html staging/404.html
+          ls -la staging/ staging/app/ | head -20
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+          publish_dir: ./staging
           publish_branch: gh-pages
           force_orphan: true
