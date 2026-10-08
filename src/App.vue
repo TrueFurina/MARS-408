@@ -36,6 +36,8 @@ const authStore = useAuthStore()
 
 // 登录页判定
 const isLoginPage = computed(() => route.path === '/login')
+// 全屏无应用外壳（无侧边栏）：登录页 + 公开展示页（meta.public：/landing、/showcase、/design-upgrade）
+const isStandalonePage = computed(() => isLoginPage.value || (route.meta as any)?.public === true)
 const currentUser = computed(() => authStore.currentUser)
 const currentRole = computed(() => resolveRole(authStore.currentUser?.role))
 const roleLabel = computed(() =>
@@ -184,6 +186,9 @@ function hoverPrefetch(routePath: string) {
 
 <template>
   <div v-if="isLoginPage" class="login-screen">
+    <router-view />
+  </div>
+  <div v-else-if="isStandalonePage" class="standalone-screen">
     <router-view />
   </div>
   <div v-else class="app-layout">
@@ -445,6 +450,12 @@ function hoverPrefetch(routePath: string) {
 .history-btn.open .hamburger-line.bottom { transform: scaleX(0.6); }
 
 .login-screen {
+  min-height:100vh;
+  background: var(--color-canvas);
+}
+
+/* 公开展示页（/landing、/showcase、/design-upgrade）：全屏无侧边栏 */
+.standalone-screen {
   min-height:100vh;
   background: var(--color-canvas);
 }
