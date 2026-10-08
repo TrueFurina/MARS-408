@@ -78,6 +78,15 @@ def _iter_targets() -> list[str]:
     return out
 
 
+def _missing_roots() -> list[str]:
+    """SCAN_ROOTS 中在磁盘上不存在的条目。
+
+    `os.walk` 对不存在的目录**静默返回空**（不报错），所以某个扫描面被改名/搬走时，
+    本门禁会安静地少扫一块 —— 必须把这种"静默缩小覆盖"显式报出来。
+    """
+    return [r for r in SCAN_ROOTS if not os.path.exists(os.path.join(ROOT, r))]
+
+
 def _is_excluded(rel: str) -> bool:
     low = rel.lower()
     return any(s.lower() in low for s in EXCLUDE_PATH_SUBSTR)
@@ -86,6 +95,8 @@ def _is_excluded(rel: str) -> bool:
 def scan() -> int:
     hits = 0
     scanned = 0
+    for miss in _missing_roots():
+        print(f"  ⚠️ 扫描面不存在，已跳过（该面覆盖为 0）：{miss}", file=sys.stderr)
     for path in _iter_targets():
         rel = os.path.relpath(path, ROOT)
         if _is_excluded(rel):
@@ -102,6 +113,16 @@ def scan() -> int:
                     print(f"  ❌ {rel}:{i} 命中作废口径 [{m.group(0)}] → {snippet}")
                     hits += 1
     print(f"\n扫描活文档 {scanned} 个，命中作废口径 {hits} 处。")
+    # fail-closed：一个文件都没扫到时，"0 处命中"不构成"无漂移"证据 —— 必须报环境/零覆盖
+    # 错误（exit 2）而不是报绿（exit 0）。否则扫描面被改名/搬走时本门禁会静默变成空转。
+    # 这正是本项目已修 12 次的「零覆盖 → 肯定性结论」失效形态（同 check_tokens.py 系列）。
+    if scanned == 0:
+        print(
+            "[scan] 零覆盖：活文档面一个文件都没扫到 → 拒绝给出「无口径漂移」结论。"
+            f"请确认 SCAN_ROOTS 各条路径存在：{SCAN_ROOTS}",
+            file=sys.stderr,
+        )
+        return 2
     if hits:
         print("→ 这些数字已作废（见 docs/METRICS_CURRENT.md）。请更新为当前真值或加产物版本注明。")
     return 1 if hits else 0
