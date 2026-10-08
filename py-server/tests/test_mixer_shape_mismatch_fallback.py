@@ -70,12 +70,8 @@ def _build_mixer(monkeypatch, n: int) -> NeuralGroupMixer:
 
 
 class TestShapeMismatchForbidsNeuralClaim:
-    def test_n5_mix_must_not_claim_neural(self, monkeypatch):
+    def test_n5_mix_must_not_claim_neural(self, monkeypatch, trained_mixer_checkpoint):
         """n=5 触发形状不匹配 ⇒ neural_used=False 且 mode 为 shape_mismatch_fallback。"""
-        torch, _, _ = mixer_mod._ensure_torch()
-        if torch is None:
-            pytest.skip("PyTorch 不可用，无法验证 checkpoint 形状不匹配")
-
         mixer = _build_mixer(monkeypatch, 5)
         result = asyncio.run(mixer.mix(_make_results(5, 8.0), {}, "形状不匹配回归"))
 
@@ -89,55 +85,47 @@ class TestShapeMismatchForbidsNeuralClaim:
         assert stats["mixer_weights_complete"] is False
         assert "global_mixer.0.weight" in stats["mixer_weight_mismatch_layers"]
 
-    def test_n5_falls_back_to_rule_weighted_mean(self, monkeypatch):
+    def test_n5_falls_back_to_rule_weighted_mean(self, monkeypatch, trained_mixer_checkpoint):
         """降级后必须走规则模式加权（动态权重 × 评分 的均值），而非随机网络输出。"""
-        torch, _, _ = mixer_mod._ensure_torch()
-        if torch is None:
-            pytest.skip("PyTorch 不可用，无法验证 checkpoint 形状不匹配")
-
         mixer = _build_mixer(monkeypatch, 5)
         result = asyncio.run(mixer.mix(_make_results(5, 8.0), {}, "形状不匹配回归"))
 
         assert result["neural_used"] is False
+        # 前置条件（防"以错误理由通过"）：必须命中「形状不匹配」这条降级，
+        # 而非「训练权重加载失败」的通用 rule 降级 —— 二者都 neural_used=False、
+        # 都退化为加权均值，只断言数值无法区分。
+        # 实测：若不注入 checkpoint，「加载失败 → rule」下本用例仍然 PASSED。
+        assert result["neural_mode"] == "shape_mismatch_fallback"
         # 动态权重被 stub 成 1.0 ⇒ 规则降级结果 == 8.0（而不是随机网络的 0.0）
         assert result["consensus_score"] == pytest.approx(8.0, abs=1e-5)
 
-    def test_n5_keeps_level_discrimination(self, monkeypatch):
+    def test_n5_keeps_level_discrimination(self, monkeypatch, trained_mixer_checkpoint):
         """降级后各档位仍须单调可分——旧 bug 是四档全被 clamp 成同一个值。"""
-        torch, _, _ = mixer_mod._ensure_torch()
-        if torch is None:
-            pytest.skip("PyTorch 不可用，无法验证 checkpoint 形状不匹配")
-
         mixer = _build_mixer(monkeypatch, 5)
-        scores = [
-            asyncio.run(mixer.mix(_make_results(5, level), {}, "形状不匹配回归"))[
-                "consensus_score"
-            ]
+        results = [
+            asyncio.run(mixer.mix(_make_results(5, level), {}, "形状不匹配回归"))
             for level in (1.0, 4.0, 7.0, 9.5)
         ]
+        # 同上的前置条件：区分「形状不匹配降级」与「加载失败降级」。
+        assert {r["neural_mode"] for r in results} == {"shape_mismatch_fallback"}
+        scores = [r["consensus_score"] for r in results]
 
         assert scores == sorted(scores), scores
         assert len(set(scores)) == 4, scores
         assert all(0.0 < s <= 10.0 for s in scores), scores
 
-    def test_other_agent_counts_also_forbid_neural(self, monkeypatch):
+    def test_other_agent_counts_also_forbid_neural(self, monkeypatch, trained_mixer_checkpoint):
         """n=3/4/7/8 同样不得宣称神经推理（生产调用点长度不恒为 6）。"""
-        torch, _, _ = mixer_mod._ensure_torch()
-        if torch is None:
-            pytest.skip("PyTorch 不可用，无法验证 checkpoint 形状不匹配")
-
         for n in (3, 4, 7, 8):
             mixer = _build_mixer(monkeypatch, n)
             result = asyncio.run(mixer.mix(_make_results(n, 7.0), {}, "形状不匹配回归"))
             assert result["neural_used"] is False, f"n={n} 错误宣称神经推理"
             assert result["neural_mode"] == "shape_mismatch_fallback", f"n={n}"
 
-    def test_n6_still_uses_real_neural(self, monkeypatch):
-        """对照：n=6 权重完整 ⇒ 必须是真神经推理，降级逻辑不得误伤。"""
-        torch, _, _ = mixer_mod._ensure_torch()
-        if torch is None:
-            pytest.skip("PyTorch 不可用，无法验证 checkpoint 完整加载")
-
+    def test_n6_still_uses_real_neural(self, monkeypatch, trained_mixer_checkpoint):
+        """对照：n=6 且权重完整加载 ⇒ 必须走 torch 分支，降级逻辑不得误伤。"""
+        # 必须与 conftest 夹具 trained_mixer_checkpoint 的 n_agents 一致（=6），
+        # 否则本用例会因"夹具的 n 与断言不符"而失败，且失败原因指向错误方向。
         assert _TRAINED_N_AGENTS == 6
         mixer = _build_mixer(monkeypatch, 6)
         result = asyncio.run(mixer.mix(_make_results(6, 8.0), {}, "n=6 对照"))

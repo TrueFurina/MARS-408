@@ -175,12 +175,10 @@ class TestMixerWiring:
         assert mixer.get_stats()["mixer_trained_loaded"] is True
         assert mixer.get_stats()["mixer_embed_dim"] == 8
 
-    def test_trained_mixer_preserves_score_band_discrimination(self, monkeypatch):
+    def test_trained_mixer_preserves_score_band_discrimination(
+        self, monkeypatch, trained_mixer_checkpoint
+    ):
         """n=6 训练模型对低/中/高分档必须保持严格区分，不能被截断为同一值。"""
-        torch, _, _ = mixer_mod._ensure_torch()
-        if torch is None:
-            pytest.skip("PyTorch 不可用，无法验证训练权重推理量纲")
-
         rng = np.random.default_rng(20261005)
         embeddings = rng.standard_normal((6, 768)).astype(np.float32)
         embeddings /= np.linalg.norm(embeddings, axis=1, keepdims=True)
@@ -218,6 +216,17 @@ class TestMixerWiring:
         scores = asyncio.run(_run_levels())
 
         assert scores[0] < scores[1] < scores[2], scores
+        # ── 量纲回归锁（a9e0733 曾把共识分 ×10）──
+        # 夹具的 global_mixer 刻意构造成 identity 透传：
+        #   hidden = ReLU(mean(agent_scores)), out = mean(hidden)
+        # ⇒ 网络输出在数值上恒等于输入档位，mix() 只做 [0,10] 边界截断，
+        #   故共识分必须**精确等于**档位本身。
+        # 这条断言不是上面单调性的重复，实测两类变异可证：
+        #   (a) a9e0733 的原始形态 min(10.0, cs*10)（×10 在 clamp 内）→ 高档位饱和成
+        #       10.0，先被上面的单调性断言拦下；
+        #   (b) 保持单调的缩放 cs*1.05（0.525 / 5.25 / 9.975）→ 单调、互异、∈(0,10]
+        #       三条既有断言**全部通过**，只有本行能抓到（报 Mismatched elements）。
+        assert scores == pytest.approx([0.5, 5.0, 9.5], abs=1e-5), scores
         assert any(score < 10.0 for score in scores), scores
         assert len(set(scores)) > 1, scores
         stats = mixer.get_stats()
@@ -226,12 +235,10 @@ class TestMixerWiring:
         assert stats["mixer_weights_complete"] is True
         assert stats["mixer_weight_mismatch_layers"] == []
 
-    def test_n_agents_weight_shape_mismatch_is_observable(self, caplog):
+    def test_n_agents_weight_shape_mismatch_is_observable(
+        self, trained_mixer_checkpoint, caplog
+    ):
         """n≠6 的随机初始化层必须通过 WARNING 与 stats 显式暴露。"""
-        torch, _, _ = mixer_mod._ensure_torch()
-        if torch is None:
-            pytest.skip("PyTorch 不可用，无法验证 checkpoint 形状不匹配")
-
         mixer = NeuralGroupMixer()
         with caplog.at_level("WARNING", logger="netlearn.gomarl_mixer"):
             mixer._init_mixer(5)
@@ -240,16 +247,24 @@ class TestMixerWiring:
         assert "trained_n_agents=6" in caplog.text
         assert "该层保持随机初始化" in caplog.text
 
-    def test_n_agents_shape_mismatch_must_not_claim_neural(self, caplog):
+        # docstring 声明的是「WARNING **与 stats** 双通道」，故 stats 侧必须有断言。
+        # 缺失这组断言时本用例对「是否真的降级」不敏感：上面三条 WARNING 实际由
+        # _load_trained_weights 发出，与 _init_mixer 的降级分支无关 —— 实测把降级
+        # 分支改成 if False:（仍宣称 torch）本用例依然 PASSED，而邻居
+        # test_n_agents_shape_mismatch_must_not_claim_neural 才红。
+        stats = mixer.get_stats()
+        assert stats["mixer_weights_complete"] is False
+        assert "global_mixer.0.weight" in stats["mixer_weight_mismatch_layers"]
+        assert 5 in stats["mixer_shape_mismatch_n_agents"]
+
+    def test_n_agents_shape_mismatch_must_not_claim_neural(
+        self, trained_mixer_checkpoint, caplog
+    ):
         """n≠6 ⇒ 权重不完整 ⇒ 不得返回网络、不得标称神经推理（诚信红线）。
 
         与 ONNX「均匀权重冒充神经推理」同类：global_mixer.0.weight 形状不匹配时该层
         保持随机初始化，此时任何输出都不得被标为 neural_used=True。
         """
-        torch, _, _ = mixer_mod._ensure_torch()
-        if torch is None:
-            pytest.skip("PyTorch 不可用，无法验证 checkpoint 形状不匹配")
-
         mixer = NeuralGroupMixer()
         with caplog.at_level("WARNING", logger="netlearn.gomarl_mixer"):
             initialized = mixer._init_mixer(5)
@@ -267,12 +282,8 @@ class TestMixerWiring:
         assert 5 in stats["mixer_shape_mismatch_n_agents"]
         assert "冒充神经推理" in caplog.text
 
-    def test_n_agents_six_still_uses_torch(self):
+    def test_n_agents_six_still_uses_torch(self, trained_mixer_checkpoint):
         """回归对照：n=6 权重完整 ⇒ 仍必须走真神经推理，不得被降级逻辑误伤。"""
-        torch, _, _ = mixer_mod._ensure_torch()
-        if torch is None:
-            pytest.skip("PyTorch 不可用，无法验证 checkpoint 完整加载")
-
         mixer = NeuralGroupMixer()
         initialized = mixer._init_mixer(6)
         assert initialized is not None

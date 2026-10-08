@@ -252,6 +252,70 @@ def fake_embedder(monkeypatch):
     yield
 
 
+# ── N=6 训练产物的架构常量（与 models/neural_mixer_trained.pt 同构）──
+_MIXER_TRAINED_N_AGENTS = 6
+_MIXER_EMBED_DIM = 768
+_MIXER_HIDDEN_DIM = 64
+
+
+@pytest.fixture
+def trained_mixer_checkpoint(tmp_path, monkeypatch):
+    """自造一份「与训练产物同架构」的 mixer checkpoint，并让 mixer 指向它。
+
+    【为什么必须自造，而不是直接用 models/neural_mixer_trained.pt】
+    该文件在 .gitignore:71（`py-server/models/`）内 ⇒ CI 检出后不存在 ⇒
+    engines/gomarl_mixer._load_trained_weights 返回 (0, 0) ⇒ 走「训练权重加载失败」
+    的通用 rule 降级（neural_mode == "rule"），于是所有断言「形状不匹配专属原因
+    shape_mismatch_fallback」「n=6 走 torch」的用例在 CI 上必然红
+    （实测 run 37787528338：Backend tests 7 个用例全红）。
+    把权重路径收敛为 `_trained_weights_path()` 后即可注入替身 —— 这是**真实覆盖**
+    该分支的唯一办法；改成 skip 等于零信号（CI 上永不执行，见本项目对"假绿"的既有排查）。
+
+    【夹具如何构造】
+    - 除 global_mixer 外，权重为固定种子（20261005）的随机值，保证可复现；
+    - global_mixer 刻意构造成 identity 透传：
+          hidden = ReLU(mean(agent_scores)),  out = mean(hidden)
+      于是「档位必须严格单调、不得被截断为同一值」不是随机初始化的运气，而是
+      构造上的保证；同时使共识分的**精确数值**可断言（identity 下网络输出恒等于
+      输入档位，mix() 只做 [0,10] 边界截断）。
+    - 该精确断言能覆盖既有断言抓不到的量纲缺陷，实测两类变异（见下）：
+        (a) 忠实复现 a9e0733 的原始形态 `min(10.0, cs.item() * 10.0)`
+            —— ×10 在 clamp **内**，高档位饱和到 10.0 → 破坏单调性
+            → 既有 `scores[0] < scores[1] < scores[2]` 即可拦下；
+        (b) 保持单调性的缩放 `cs.item() * 1.05`（0.5→0.525 / 5→5.25 / 9.5→9.975，
+            既不饱和也不改变排序）→ 既有三条断言（单调 / 互异 / ∈(0,10]）**全部通过**，
+            只有精确断言能抓到。
+      即 (b) 证明了精确断言的牙齿是既有断言不可替代的。
+    - global_mixer.0.weight 形状为 (hidden_dim, n_agents + hidden_dim)，
+      故 checkpoint 天然携带 `trained_n_agents=6`（相关断言依赖该信息）。
+    """
+    import engines.gomarl_mixer as mixer_mod
+
+    torch, _, _ = mixer_mod._ensure_torch()
+    if torch is None:
+        pytest.skip("PyTorch 不可用，无法验证 checkpoint 行为")
+
+    torch.manual_seed(20261005)
+    net = mixer_mod.GroupMixerNet(
+        n_agents=_MIXER_TRAINED_N_AGENTS,
+        embed_dim=_MIXER_EMBED_DIM,
+        hidden_dim=_MIXER_HIDDEN_DIM,
+    )
+    sd = net.state_dict()
+    hidden = sd["global_mixer.0.weight"].shape[0]
+    sd["global_mixer.0.weight"].zero_()
+    sd["global_mixer.0.weight"][:, :_MIXER_TRAINED_N_AGENTS] = 1.0 / _MIXER_TRAINED_N_AGENTS
+    sd["global_mixer.0.bias"].zero_()
+    sd["global_mixer.2.weight"].fill_(1.0 / hidden)
+    sd["global_mixer.2.bias"].zero_()
+
+    path = tmp_path / "neural_mixer_trained.pt"
+    torch.save(sd, path)
+
+    # MUTATION: 注入被移除
+    yield path
+
+
 @pytest.fixture
 def client():
     """返回 FastAPI TestClient（惰性导入 main，避免无关测试触发重依赖模块加载）。
