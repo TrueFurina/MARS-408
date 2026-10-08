@@ -57,7 +57,10 @@ RUN mkdir -p /app/vectordb_data /app/milvus_lite_data /app/data /app/sessions /a
     && chown -R mangdehenzhi:mangdehenzhi /app/vectordb_data /app/milvus_lite_data /app/data /app/sessions /app/plots /app/assets /app/media
 
 # F-014：启动入口（已随 COPY py-server/ ./ 带入）——以 root 修复挂载卷属主，再用 gosu 切换非 root 运行
-RUN chmod +x /app/docker-entrypoint.sh
+# sed 剥离 CR：Windows 工作区 checkout 可能是 CRLF（core.autocrlf=true），
+# 一旦烘进镜像，`set -e` 会被解析成 `set -e\r` → 报 "set: Illegal option -"、entrypoint 启动即崩。
+# .gitattributes 已从源头锁 LF；这里作为构建上下文的纵深兜底，与 Dockerfile.final 保持一致。
+RUN sed -i 's/\r$//' /app/docker-entrypoint.sh && chmod +x /app/docker-entrypoint.sh
 
 # 环境变量
 ENV PYTHONPATH=/app

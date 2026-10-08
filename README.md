@@ -208,6 +208,31 @@ docker-compose up -d
 > 登录账号需先注册（`/api/auth/register`）；如库内无管理员账号，注册的首个账号可用于登录。
 > 生产部署：`docker-compose --profile production up -d`，需在 `.env` 显式设置 `AUTH_SECRET` / `ADMIN_PASSWORD`，否则 fail-fast。
 
+#### 可选数据：教材与本地模型
+
+`./documents`（教材）与 `./py-server/models`（E5 / reranker 本地模型）是**大体积可选数据**，均**不入库**
+（教材被 `.gitignore` 排除；models 在宿主机是指向冷存盘的 symlink）。因此全新克隆时宿主源目录并不存在，
+Docker 会按 bind mount 语义**自动创建空目录** → 容器内挂载点为空。
+
+这是预期行为、**不影响启动**，但此前表现为"功能凭空消失"、易被误判为缺陷。现已在容器启动时显式告警：
+
+```
+[preflight] ⚠️  教材目录 documents：挂载点为空 /app/documents（宿主源目录缺失，Docker 自动创建了空目录）
+[preflight]     如需教材：把教材文件放入宿主 ./documents/ 后重启容器；留空则教材检索/后台导入能力降级，核心流程仍可运行。
+[preflight] ✅ 本地模型 models（E5 / reranker）：已就绪 /app/models
+```
+
+补齐方式（可选）：
+
+```bash
+# 把教材文件放进 ./documents/、本地模型放进 ./py-server/models/ 后重启即可
+docker-compose restart app
+```
+
+> 若入口脚本报 `set: Illegal option -`，说明构建上下文里的 shell 脚本是 CRLF。
+> 本仓已用 `.gitattributes` 强制 `*.sh` / `Dockerfile*` 为 LF，且两个 Dockerfile 均会 `sed -i 's/\r$//'`
+> 兜底，正常不会出现；出现时检查是否有工具覆写了行尾。
+
 ### 本地开发
 
 ```bash

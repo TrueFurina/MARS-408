@@ -1,0 +1,35 @@
+# ============================================================
+# 行尾统一：强制 LF
+# ============================================================
+# 背景：本仓曾因 Windows 上 core.autocrlf=true，把 LF 转成 CRLF 后**提交回仓库**，
+# 导致 13 个 .sh 与 3 个 Dockerfile 的 git blob 实际是 CRLF。
+# 后果（真实故障，非理论）：
+#   - shell 脚本在 Linux 执行时 `set -e` 解析成 `set -e\r` → 报
+#     "set: Illegal option -" 并直接退出；`#!/bin/sh` 同理可能找不到解释器。
+#     评委在 Linux 上跑 scripts/*.sh、start.sh 会直接失败。
+#   - Dockerfile 的行续行符 `\` + CRLF 在部分版本下会被解析异常。
+# 措施：下列类型在**入库与检出两端**都强制 LF，不受各机 autocrlf 设置影响。
+#
+# 注意：这是"入站 + 出站"双向约束 —— 检出端 eol=lf 保证 Windows 工作区也是 LF，
+# 从而 docker build 的构建上下文（取自工作区）不会把 CRLF 烘进镜像。
+
+# ── Shell 脚本：对行尾最敏感，LF 是硬要求 ──
+*.sh text eol=lf
+
+# ── Dockerfile / Compose：避免行续行符与 CRLF 解析问题 ──
+Dockerfile text eol=lf
+Dockerfile.* text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# ── 保持二进制不参与行尾转换 ──
+*.png binary
+*.jpg binary
+*.ico binary
+*.mp4 binary
+*.zip binary
+*.pdf binary
+
+# ── 配置文件自身也强制 LF（避免 autocrlf 把它们检出成 CRLF）──
+.gitattributes text eol=lf
+.gitignore text eol=lf
