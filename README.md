@@ -188,10 +188,18 @@ start.bat
 
 ### Docker
 
+> **前置：先构建前端产物**。`Dockerfile:49` 是 `COPY dist ./static`（宿主机构建，理由见 Dockerfile 头部注释：
+> 容器内 `npm ci` 经代理拉 npmjs.org 会被 SSL 掐断），而 `dist/` 被 `.gitignore:24` 忽略、不在仓库中 ——
+> 新克隆后直接 `docker-compose up -d` 会在该行报 `failed to compute cache key: "/dist": not found`。
+
 ```bash
+npm ci && npm run build-only   # 生成 dist/（改动前端后需重跑）
 docker-compose up -d
 # 访问 http://localhost:8002
 ```
+
+> Dockerfile 使用 `RUN --mount=type=cache`，**要求 BuildKit**：若本机 compose 回退到 legacy builder，
+> 需以 `DOCKER_BUILDKIT=1 docker-compose up -d` 启动。
 
 > 登录账号需先注册（`/api/auth/register`）；如库内无管理员账号，注册的首个账号可用于登录。
 

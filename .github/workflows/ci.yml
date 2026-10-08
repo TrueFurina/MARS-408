@@ -419,12 +419,25 @@ jobs:
 
   # ───────────────────────────────────────────────────────────────
   # 镜像可构建性（验证 Dockerfile 的 /static 挂载与单进程 CMD）
+  # 前置契约：Dockerfile:49 `COPY dist ./static` 消费的是**宿主机预构建**产物
+  #   （92d50c8 为绕开国内代理 SSL 掐断，删除了容器内 frontend-builder 阶段）。
+  #   dist 被 .gitignore:24 忽略 → 新克隆的 checkout 里必然不存在，
+  #   故本 job 必须自己复现该前置步骤，否则恒红（历史事故：92d50c8 改了
+  #   Dockerfile 契约却未同步本 job 与 README，本 job 自那以后持续失败）。
+  #   此处步骤必须与 README「Docker」章节记载的宿主机构建步骤保持一致。
   # ───────────────────────────────────────────────────────────────
   docker-build:
     name: Docker image build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      # 只跑 vite build（不含 vue-tsc）：类型检查已由 lint-build 覆盖，不重复付费
+      - name: Prebuild frontend (satisfies Dockerfile COPY dist ./static)
+        run: npm ci && npm run build-only
       - name: Build image
         run: docker build -t netlearn:ci .
 
