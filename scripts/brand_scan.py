@@ -11,6 +11,7 @@
   - 前端：src/、public/、index.html、package.json
   - 后端：py-server/{app,api,services,agents,db,engines,tools,scripts} 下的 .py
           + py-server/config.py、py-server/main.py
+  - 交付：submission/（豁免 _archive*/ 归档快照与 00_提交清单.md 元清单）
 
 ── 面 B｜身份展示面（新增）────────────────────────────────────
   对一份**有限、可枚举**的「对外身份展示」文件清单，额外查**身份定性短语**
@@ -33,6 +34,8 @@
 排除（历史记录 / 生成产物 / 冻结副本 —— 有意保留原名）：
   - docs/ documents/ deliverables/ diagnostics/（历史与交付快照）
   - */crypto_platform/**（AGENTS.md:20 冻结的嵌套副本，未经确认不得改动）
+  - submission/_archive*/（有意保留旧名归档快照，非产品品牌展示面）
+  - submission/00_提交清单.md（交付元清单，记录旧品牌清理结果，非品牌展示）
   - dist/ node_modules/ .git/ __pycache__/，以及非文本扩展名
 
 特例白名单：仓库/站点真实 URL（GitHub 仓名尚未更名，属功能性引用，非品牌展示）
@@ -82,12 +85,18 @@ ALLOW_SUBSTRINGS = [
     "TrueFurina/MARS-408",
 ]
 
-SCAN_DIRS = ["src", "public"]
+SCAN_DIRS = ["src", "public", "submission"]
 SCAN_FILES = ["index.html", "package.json"]
 BACKEND_DIRS = ["app", "api", "services", "agents", "db", "engines", "tools", "scripts"]
 BACKEND_FILES = ["config.py", "main.py"]
 
 EXCLUDE_PARTS = {"node_modules", ".git", "dist", "crypto_platform", "__pycache__", ".pytest_cache"}
+
+# 提交清单元数据清单：记录旧品牌清理结果，属交付元文档而非产品品牌展示面，豁免扫描
+EXCLUDE_FILES = {"submission/00_提交清单.md"}
+
+# submission/ 下 _archive* 为有意保留的归档快照（旧名/旧件），整体豁免
+EXCLUDE_ARCHIVE_PREFIX = "_archive"
 
 TEXT_EXT = {
     ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".vue", ".json", ".html", ".htm",
@@ -118,7 +127,12 @@ def _iter_files():
 def _excluded(path: Path) -> bool:
     if set(path.parts) & EXCLUDE_PARTS:
         return True
+    if any(part.startswith(EXCLUDE_ARCHIVE_PREFIX) for part in path.parts):
+        return True
     if path.suffix.lower() not in TEXT_EXT:
+        return True
+    rel = path.relative_to(ROOT).as_posix()
+    if rel in EXCLUDE_FILES:
         return True
     return False
 

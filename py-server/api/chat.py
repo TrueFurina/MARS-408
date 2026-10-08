@@ -203,7 +203,7 @@ def _execute_tool(name: str, arguments: str) -> str:
                 if (rem >> (p_len - 1)) & 1:
                     rem ^= p
             # 处理最后一步后的剩余位
-            rem_bits = bin(rem)[2:].zfill(r)
+            bin(rem)[2:].zfill(r)
             # 完整余数
             div_int = int(dividend, 2)
             poly_int = int(poly, 2)
@@ -287,7 +287,7 @@ def _execute_tool(name: str, arguments: str) -> str:
         try:
             raw = str(args.get("arrivals", ""))
             # 格式: "P1:0,P2:1,P3:2"（进程:到达时间），默认服务时间=1
-            quantum = int(args.get("quantum", 1))
+            int(args.get("quantum", 1))
             if not raw:
                 return "请提供进程到达时间（如 P1:0,P2:1,P3:2）"
             procs = []

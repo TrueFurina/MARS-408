@@ -103,7 +103,7 @@ function chipStyle(tok: string) {
 
       <!-- 1. COLOR -->
       <section>
-        <div class="sec-head"><span class="idx">01</span><h2>调色板与角色</h2><span class="desc">语义层 · 双主题恒定品牌色 · 408 四科色</span></div>
+        <div class="sec-head"><span class="idx">01</span><h2>调色板与角色</h2><span class="desc">语义层 · 双主题恒定品牌色 · 学科四色</span></div>
         <p class="sub">语义层（组件只引用此层；浅色主题自动覆盖）</p>
         <div class="swatches">
           <div v-for="r in semantic" :key="r[0]" class="swatch">
@@ -127,7 +127,7 @@ function chipStyle(tok: string) {
             </div>
           </div>
         </div>
-        <p class="sub" style="margin-top:24px;">408 四科色（语义着色用 color-mix 14% tint）</p>
+        <p class="sub" style="margin-top:24px;">学科四色（语义着色用 color-mix 14% tint）</p>
         <div class="swatches">
           <div v-for="r in subjects" :key="r[0]" class="swatch">
             <div class="chip" :style="chipStyle(r[0])"></div>

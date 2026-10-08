@@ -72,7 +72,7 @@ def _pick_device(torch):
 def build_train_data(embeddings, all_subjects, n_samples, noise_range, seed=42):
     """构建训练数据，噪声可调"""
     rng = random.Random(seed)
-    np_rng = np.random.RandomState(seed)
+    np.random.RandomState(seed)
     train_data = []
     for _ in range(n_samples):
         n_agents = 6

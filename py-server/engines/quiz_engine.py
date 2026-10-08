@@ -336,7 +336,7 @@ class ErrorAnalyzer:
         for s in wrong_steps:
             cat = ErrorAnalyzer.ERROR_CATEGORIES.get(s.error_type, {})
             label = cat.get("label", s.error_type)
-            drill = cat.get("drill_type", "练习")
+            cat.get("drill_type", "练习")
             suggestions.append(f"• 第{s.step_index+1}步「{s.step_name}」: {label} → {s.hint}")
 
         return {

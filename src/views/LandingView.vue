@@ -7,10 +7,10 @@ const router = useRouter()
 
 // ── 数据指标药丸 ──
 const metrics = [
-  { value: '8', label: '协作 Agent', color: 'var(--accent-primary)' },
+  { value: '11', label: '编排节点', color: 'var(--accent-primary)' },
   { value: '7', label: '资源类型', color: 'var(--accent-cyan)' },
-  { value: '2122', label: '知识 chunks', color: 'var(--accent-blue)' },
-  { value: '86', label: '图谱节点', color: 'var(--accent-pink)' },
+  { value: '4', label: '实训场景', color: 'var(--accent-blue)' },
+  { value: '18', label: '能力端点', color: 'var(--accent-pink)' },
 ]
 
 // ── 三大创新亮点 ──
@@ -44,11 +44,11 @@ const innovations = [
   {
     id: 'graph',
     badge: '创新 03',
-    title: '408 领域知识图谱',
+    title: '知识图谱可视化',
     subtitle: 'Domain Knowledge Graph',
-    desc: '构建覆盖计算机考研 408 全科的知识图谱视图——26 大知识群组、2122 条知识向量，四科分色着色，支撑知识点关联浏览与个性化路径规划（v1 规则原型）。',
+    desc: '构建计算机类课程知识图谱视图——知识点关联浏览、先修推理与个性化路径规划，支撑职业素养场景下的结构化学习（v1 规则原型）。',
     stat: '26',
-    statLabel: '知识群组 / 2122 向量',
+    statLabel: '知识群组（v1）',
     accent: 'var(--accent-pink)',
     gradient: 'linear-gradient(135deg, color-mix(in srgb, var(--accent-pink) 12%, transparent), color-mix(in srgb, var(--accent-pink) 2%, transparent))',
     iconSvg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><line x1="12" y1="7" x2="5" y2="17"/><line x1="12" y1="7" x2="19" y2="17"/><line x1="5" y1="19" x2="19" y2="19"/></svg>`,
@@ -126,8 +126,8 @@ function goToTraining() {
         <span class="hero-title-sub">计算机类学生职业素养对抗实训平台</span>
       </h1>
       <p class="hero-desc">
-        以 8 个协作 Agent 为核心引擎，深度融合讯飞星火 10 项多模态能力、用户自定义 AI 教学技能平台、
-        与覆盖 408 全科的领域知识图谱，同时支撑职业素养对抗实训与考研 408 的个性化学习路径——让计算机类学生既会做题，也说得清、扛得住、有证据。
+        以 11 节点 LangGraph 流水线为核心引擎，深度融合讯飞星火 10 项多模态能力、用户自定义 AI 教学技能平台，
+        与领域知识图谱，专注计算机类学生职业素养对抗实训——让同学既说得清、扛得住、有证据。
       </p>
 
       <!-- 数据指标药丸 -->
@@ -187,8 +187,8 @@ function goToTraining() {
     <!-- 四科分色条 -->
     <section class="subjects-band">
       <div class="section-label-row">
-        <span class="section-idx">408 全科覆盖</span>
-        <h2 class="section-heading">四科分色 · 知识全域贯通</h2>
+        <span class="section-idx">计算机类核心课程</span>
+        <h2 class="section-heading">核心课程分色 · 知识全域贯通</h2>
       </div>
       <div class="subjects-grid">
         <div
@@ -211,7 +211,7 @@ function goToTraining() {
     <section class="bottom-cta">
       <div class="bottom-cta-inner">
         <h2 class="bottom-title">让每一道错题，都成为成长的起点</h2>
-        <p class="bottom-desc">8 Agent 协作 · 10 项多模态能力 · 无限可扩展教学技能 · 26 大知识群组</p>
+        <p class="bottom-desc">11 节点编排 · 10 项多模态能力 · 无限可扩展教学技能 · 知识图谱可视化</p>
         <button class="cta-primary cta-large" @click="enterSystem">
           <span>立即体验</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
@@ -220,7 +220,7 @@ function goToTraining() {
     </section>
 
     <footer class="landing-footer">
-      <span>芒得很职 · 基于大模型的个性化资源生成与学习多智能体系统</span>
+      <span>芒得很职 · 基于大模型的职业素养对抗实训多智能体平台</span>
       <span class="footer-tech">Vue 3 + Vite + TypeScript · 玻璃态发光设计系统</span>
     </footer>
   </div>

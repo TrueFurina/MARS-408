@@ -267,7 +267,7 @@ async def langgraph_stream(req: LangGraphStreamRequest, request: Request, user: 
             yield _sse("status", "done", "所有 Agent 流水线执行完毕")
             yield "data: [DONE]\n\n"
 
-        except Exception as e:
+        except Exception:
             logger.exception("LangGraph pipeline error")
             # Sanitized: no internal paths or tracebacks leaked to client
             yield _sse("error", "pipeline_error", "Pipeline execution failed, please retry")

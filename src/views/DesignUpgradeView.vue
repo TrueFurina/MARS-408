@@ -9,7 +9,6 @@ const store = useStudyStore()
 // ── 真实数据（只取本地可用、可溯源的字段，绝不编造指标）──
 const profileName = computed(() => (store.currentUser?.display_name || store.currentUser?.username || '同学'))
 const subjectCount = computed(() => Object.keys(store.subjects).length)
-const daysToExam = computed(() => store.daysToExam)
 const profileDone = computed(() => store.profileCompleted)
 const profilePct = computed(() => (store.profileCompleted ? 100 : 0))
 
@@ -132,7 +131,7 @@ const aiStateLabel: Record<AiState, string> = {
           <div class="hero-body">
             <div class="hero-greet">
               <div class="hero-hi">{{ profileName }}，今天也要稳住节奏 👋</div>
-              <div class="hero-meta">距考研约 <b>{{ daysToExam }}</b> 天 · 已学科目 <b>{{ subjectCount }}</b></div>
+              <div class="hero-meta">已学科目 <b>{{ subjectCount }}</b> · 学习体系持续覆盖</div>
             </div>
             <div class="hero-ring">
               <svg viewBox="0 0 88 88" class="ring">
@@ -158,17 +157,12 @@ const aiStateLabel: Record<AiState, string> = {
         <div class="bento-cell bento-kpi1">
           <div class="bento-cell-title">已学科目</div>
           <div class="kpi-value">{{ subjectCount || '—' }}</div>
-          <div class="kpi-foot">覆盖四科体系</div>
+          <div class="kpi-foot">覆盖核心课程</div>
         </div>
         <div class="bento-cell bento-kpi2">
           <div class="bento-cell-title">画像完整度</div>
           <div class="kpi-value">{{ profilePct }}<span class="kpi-unit">%</span></div>
           <div class="kpi-foot">{{ profileDone ? '可驱动推荐' : '待完成' }}</div>
-        </div>
-        <div class="bento-cell bento-kpi3">
-          <div class="bento-cell-title">距考研</div>
-          <div class="kpi-value">{{ daysToExam }}<span class="kpi-unit">天</span></div>
-          <div class="kpi-foot">2026-12-26</div>
         </div>
         <div class="bento-cell bento-kpi4">
           <div class="bento-cell-title">今日状态</div>
@@ -199,7 +193,7 @@ const aiStateLabel: Record<AiState, string> = {
 
         <!-- 8 智能体 -->
         <div class="bento-cell bento-agents">
-          <div class="bento-cell-title"><span v-html="icons.agent"></span> 8 智能体协作</div>
+          <div class="bento-cell-title"><span v-html="icons.agent"></span> 流水线智能体编排</div>
           <div class="agent-strip">
             <div v-for="a in agents" :key="a.name" class="agent-chip">
               <span class="agent-dot" :style="{ background: a.color }"></span>{{ a.name }}

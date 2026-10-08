@@ -11,7 +11,7 @@ const techHighlights = [
       { title: '空中域 · 无人机-骑手协同配送', desc: 'MAPPO 直训送达 38/600；诊断并修复 reward hacking（训练回报 1482 vs 评估 0 → 事件驱动奖励 2 万步 16.7%）；课程学习迁移与 C2 预注册对照的负结果均如实披露。', tag: 'AeroRider' },
       { title: '链上域 · 行为存证与激励共识', desc: '智能体行为 ECDSA 上链 + 贡献度 λ 激励；IQL 主结局 +28.17%（n=71, p=0.0095；全程 +7.92% 同报）；6 类签名攻击 100% 拦截（300/300）。', tag: 'MARL-ECDSA' },
       { title: '海上域 · 外部法规约束层', desc: 'COLREGs 局面 / CPA-TCPA 交互感知纯函数层（53 测试全绿、变异验证 14/14），作为规则约束层复用回主线，归档仓可溯源。', tag: '规则约束' },
-      { title: '多域延伸 · 教育 / 安全证据', desc: '教育域：学枢个性化学习平台 27 智能体、SAGE 引导式多智能体教学论文工作流；安全域：CTF 解题 Agent 57 个确定性 skill、离线回归 16/16。', tag: 'L1 决策层证据' },
+      { title: '多域延伸 · 教育 / 安全证据（他域成果）', desc: '（以下为团队他域研究成果，非本平台功能）教育域：学枢个性化学习平台 27 智能体、SAGE 引导式多智能体教学论文工作流；安全域：CTF 解题 Agent 57 个确定性 skill、离线回归 16/16。', tag: 'L1 决策层证据' },
     ],
   },
   {
@@ -19,7 +19,7 @@ const techHighlights = [
     items: [
       { title: '11 节点 LangGraph StateGraph', desc: 'Triage → Coordinator → Diagnostician → Planner → Retriever → Generator(7并行) → Assessor → Critic → EvidenceCheck → QualityGate → PathPlanner 全链路编排', tag: '45% 评分权重' },
       { title: '改进 GoMARL 共识机制', desc: '加权投票 + 7 Agent 交叉验证', tag: '创新价值' },
-      { title: '教学规则引擎嵌入', desc: '408 知识点依赖关系约束调度逻辑，分组奖赏函数加入掌握度指标', tag: '场景优化' },
+      { title: '教学规则引擎嵌入', desc: '知识点依赖关系约束调度逻辑，分组奖赏函数加入掌握度指标', tag: '场景优化' },
     ],
   },
   {
@@ -81,7 +81,7 @@ const techHighlights = [
 ]
 
 // ── 品牌级设计原型 ──
-// 已移除 5 个不可用/与 Vue 系统脱节的独立 HTML 原型：
+// 已归档 5 个早期独立 HTML 原型（移出 public/，不再打进 dist；见 deliverables/design-prototypes-archive/）：
 //   - 路演落地页 (芒得很职_roadshow_landing.html)
 //   - 答辩 Deck (芒得很职_dachuang_deck.html)
 //   - 产品官网 / 品牌站 (芒得很职_official_site.html)
@@ -91,7 +91,7 @@ const items = [
   { key: 'landing-v2', title: '路演落地页 v2 · 7 智能体对齐', scene: '路演 / 答辩 · 单页滚动', desc: '对齐大创申报书 7 智能体命名的最新路演落地页，评委入口首选。', file: '芒得很职-landing-final-v2.html', icon: icons.rocket },
   { key: 'profile', title: '学情画像详情页', scene: '应用内 · 学情画像', desc: '8 维能力画像 + 雷达图 + 薄弱点 + 学习建议，a11y 加固版。', file: '芒得很职-profile-final.html', icon: icons.user },
   { key: 'agent-collab', title: '智能体协作可视化', scene: '架构可视化 · 单页', desc: '7 智能体节点图 + GOMARL 共识 + FrugalRAG 闭环 + 协作追踪。', file: '芒得很职-agent-collab.html', icon: icons.agent },
-  { key: 'knowledge-graph', title: '知识图谱可视化', scene: '架构可视化 · 单页', desc: '408 四科 32 节点图谱 + 推荐学习路径 + 知识点详情。', file: '芒得很职-knowledge-graph.html', icon: icons.knowledge },
+  { key: 'knowledge-graph', title: '知识图谱可视化', scene: '架构可视化 · 单页', desc: '知识图谱可视化 + 推荐学习路径 + 知识点详情。', file: '芒得很职-knowledge-graph.html', icon: icons.knowledge },
   { key: 'architecture', title: '系统架构总览', scene: '架构可视化 · 手绘', desc: '11 节点 LangGraph + FastAPI + FrugalRAG/GOMARL 全链路，悬停任意组件高亮其连接。', file: '芒得很职-architecture.html', icon: icons.path },
   { key: 'portal', title: '展示总入口（门户）', scene: '统一门户 · 一键进入', desc: '聚合上述原型的导航门户，玻璃态卡片直达各页面，离线双击即开。', file: 'index.html', icon: icons.menu },
 ]

@@ -23,7 +23,8 @@ FROM python:3.12-slim
 
 # 安装系统依赖（PyMilvus 二进制包无需 gcc，但保留 libffi 以防降级回退）
 # gosu：用于以非 root 用户运行应用（F-014），回退 setpriv（util-linux，slim 自带）
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# 换清华镜像源（国内直连提速，避开代理链路）
+RUN sed -i 's|deb.debian.org|mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list.d/debian.sources 2>/dev/null || true \n    && apt-get update && apt-get install -y --no-install-recommends \
     curl libffi-dev ffmpeg gosu \
     && rm -rf /var/lib/apt/lists/*
 

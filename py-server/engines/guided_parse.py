@@ -29,7 +29,7 @@ def _detect_qtype(question: dict) -> str:
     opts = question.get("options")
     if opts and (isinstance(opts, dict) or isinstance(opts, list)):
         return "choice"
-    text = (question.get("question") or question.get("stem") or question.get("content") or "").lower()
+    (question.get("question") or question.get("stem") or question.get("content") or "").lower()
     if any(h in (question.get("question") or question.get("stem") or question.get("content") or "") for h in _CALC_HINTS):
         return "calc"
     if any(h in (question.get("question") or question.get("stem") or question.get("content") or "") for h in _EXPLAIN_HINTS):

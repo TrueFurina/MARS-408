@@ -69,7 +69,7 @@ def main():
             by_subject[subj] = []
         by_subject[subj].append(text)
 
-    subject_list = list(by_subject.keys())
+    list(by_subject.keys())
     logger.info(f'共 {len(by_subject)} 个科目分组')
 
     # 编码所有文本

@@ -182,7 +182,7 @@ def main() -> None:
                 sd, warmup_steps=args.warmup_steps, ppo_episodes=args.episodes,
                 horizon=args.horizon,
                 env_factory=lambda s, hz: CalibratedReviewEnv(seed=s, horizon=hz))
-            vals, ref_uni, ref_rule = [], statistics.mean(
+            vals, _ref_uni, ref_rule = [], statistics.mean(
                 [_eff(s, 3) for s in samples_gen]), None
             rule_vals = []
             for s, f in zip(samples_gen, feats_gen):

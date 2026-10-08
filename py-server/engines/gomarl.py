@@ -328,7 +328,7 @@ class GOMARLConsensus:
             topic_id = self._find_topic_id(topic)
             if topic_id:
                 # 建议Agent分配
-                suggested_agents = teaching_rules.suggest_agent_assignment(topic_id)
+                teaching_rules.suggest_agent_assignment(topic_id)
                 actual_agents = [r.agent_name for r in results]
 
                 # 检查是否有不适合的Agent

@@ -197,7 +197,7 @@ def embed_batch(texts: list[str], prefix: str = "query") -> list[list[float]]:
     （带 filelock 防跨进程损坏）。模型不可用时会抛错（与旧行为一致）。
     """
     _ensure_cache()
-    dim = get_embedding_config().get("dimension", EMBED_DIM)
+    get_embedding_config().get("dimension", EMBED_DIM)
     inputs = [_apply_prefix(t, prefix) for t in texts]
     results: list = [None] * len(texts)
     miss_entries: list[tuple[int, str]] = []   # (result_index, hash)

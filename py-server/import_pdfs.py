@@ -105,7 +105,7 @@ def extract_text_from_pdf_ocr(pdf_path: str) -> str:
         from PIL import Image
         import pytesseract
         import io
-    except ImportError as e:
+    except ImportError:
         logger.error(f"  ❌ OCR需要依赖: pip install pytesseract pillow")
         return ""
 

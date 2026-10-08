@@ -196,8 +196,8 @@ def main():
             if ca is not None: corr_a.append(ca)
 
             # 选中 agent 的 oracle 质量
-            sb = before["attention"]
-            sa = after["attention"]
+            before["attention"]
+            after["attention"]
             selq_b.append(scores[agents.index(next(a for a in agents if a["agent_name"] == before["selected_agent"]))])
             selq_a.append(scores[agents.index(next(a for a in agents if a["agent_name"] == after["selected_agent"]))])
 

@@ -45,7 +45,7 @@ async def replay_event_stream(state):
             event = await _ait.__anext__()
         except StopAsyncIteration:
             break
-        except Exception as e:
+        except Exception:
             print("\n[repro] !!! 节点执行内部抛出异常（astream.__anext__）:", flush=True)
             traceback.print_exc()
             raise
@@ -134,7 +134,7 @@ async def replay_event_stream(state):
                         return
                 elif node_name == "path_planner":
                     _sse("status", "path_planning", "路径规划完成")
-            except Exception as e:
+            except Exception:
                 print(f"\n[repro] !!! event_stream 处理节点 '{node_name}' 时抛出 int+bytes 类异常:", flush=True)
                 traceback.print_exc()
                 raise

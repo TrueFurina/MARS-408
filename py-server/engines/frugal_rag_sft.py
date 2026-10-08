@@ -329,7 +329,6 @@ class ReActRetriever:
                     text = c.get("text", "")[:100]
                     if text not in all_texts:
                         all_texts.add(text)
-                        new_chunks_from_eq = [c]  # 临时标记
                         all_chunks.append(c)
                         total_searches += 1
 

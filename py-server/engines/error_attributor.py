@@ -57,7 +57,7 @@ def _heuristic_attribution(question: dict, wrong_answer: str, correct_answer: st
     """规则降级归因：无 LLM 时使用，置信度低且明确标注 degraded。"""
     wa = (wrong_answer or "").strip()
     ca = (correct_answer or "").strip()
-    qtext = (question.get("question") or question.get("stem") or
+    (question.get("question") or question.get("stem") or
              question.get("content") or str(question)).strip()
 
     # 1) 完全没作答 / 空 -> 知识盲区

@@ -126,7 +126,6 @@ async def generate_resource(req: AgentResourceRequest, user: dict = Depends(get_
 
     # ── GOMARL 共识评估 + Agent 辩论 ──
     _hallu_warnings: list[str] = []  # P1-7: 提前初始化，供 GOMARL/审核链共用
-    debate_used = False
     try:
         from engines.gomarl import GOMARLConsensus, AgentResult
         gomarl = GOMARLConsensus()
@@ -167,7 +166,6 @@ async def generate_resource(req: AgentResourceRequest, user: dict = Depends(get_
                         quiz = refined
                     elif name == "media_designer" and refined:
                         media_plan = refined
-                debate_used = True
                 critic_review_content = (
                     f"请审阅经辩论精炼后的内容:\n\n"
                 f"【教学文档】\n{teacher_doc[:3000]}\n\n"

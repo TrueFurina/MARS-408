@@ -331,7 +331,7 @@ class AgentDebate:
 
         rounds = []
         current_contents = dict(agent_contents)
-        all_issues = list(conflict_issues or [])
+        list(conflict_issues or [])
 
         for round_num in range(1, self.max_debate_rounds + 1):
             round_result = DebateRound(round_num=round_num)

@@ -4,6 +4,7 @@
 # ============================================================
 
 import logging
+import os
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
 
@@ -337,10 +338,24 @@ async def import_knowledge(req: KnowledgeImportRequest, user: dict = Depends(req
 async def get_agent_performance(user: dict = Depends(require_teacher_or_demo_open)):
     """多智能体系统性能统计
 
-    注：以下 calls/latency/success_rate 为演示骨架值；生产环境应接入
-    shared.metrics 的实时聚合（record_llm_call / record_llm_fallback 等计数器），
-    避免向评委呈现未经实测支撑的数据（诚实化原则）。
+    诚信红线：本端点**默认**返回「真实指标未接入」的诚实占位（simulated=False），
+    绝不在生产环境默认呈现伪造成效。仅当显式启用演示骨架
+    （环境变量 ENABLE_SIMULATED_TEACHER_METRICS=1/true/yes）时，才返回带
+    simulated=True 标注的演示数据——且其中 neural_mixer 一律诚实标注
+    trained=False / neural_used=False（权重未训练、运行期恒返回 False，见 engines/gomarl_mixer.py）。
     """
+    enabled = os.environ.get("ENABLE_SIMULATED_TEACHER_METRICS", "").lower() in ("1", "true", "yes")
+    if not enabled:
+        # 生产默认：不呈现任何未实测支撑的数据（诚实化原则）
+        return {
+            "simulated": False,
+            "available": False,
+            "note": "实时指标聚合（shared.metrics）尚未接入；生产环境不呈现演示骨架数据",
+            "agents": [],
+            "gomarl_consensus": None,
+            "neural_mixer": {"trained": False, "neural_used": False},
+        }
+    # ── 以下为演示骨架（simulated=True，仅演示/评审环境显式启用，勿用于真实成效汇报）──
     return {
         "simulated": True,
         "_note": "演示数据骨架：生产应接入 shared.metrics 实时聚合，勿用于真实成效汇报",
@@ -361,9 +376,10 @@ async def get_agent_performance(user: dict = Depends(require_teacher_or_demo_ope
             "pass_rate": 0.85,
         },
         "neural_mixer": {
-            "trained": True,
-            "neural_used": True,
-            "avg_consensus_score": 7.8,
-            "sd_loss": 0.0003,
+            "trained": False,
+            "neural_used": False,
+            "avg_consensus_score": None,
+            "sd_loss": None,
+            "_note": "NeuralMixer 权重未训练（gitignored，非运行期能力）；neural_used 恒为 False（见 engines/gomarl_mixer.py）",
         },
     }

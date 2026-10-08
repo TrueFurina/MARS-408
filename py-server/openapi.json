@@ -4217,7 +4217,7 @@
           "teacher"
         ],
         "summary": "Get Agent Performance",
-        "description": "多智能体系统性能统计\n\n注：以下 calls/latency/success_rate 为演示骨架值；生产环境应接入\nshared.metrics 的实时聚合（record_llm_call / record_llm_fallback 等计数器），\n避免向评委呈现未经实测支撑的数据（诚实化原则）。",
+        "description": "多智能体系统性能统计\n\n诚信红线：本端点**默认**返回「真实指标未接入」的诚实占位（simulated=False），\n绝不在生产环境默认呈现伪造成效。仅当显式启用演示骨架\n（环境变量 ENABLE_SIMULATED_TEACHER_METRICS=1/true/yes）时，才返回带\nsimulated=True 标注的演示数据——且其中 neural_mixer 一律诚实标注\ntrained=False / neural_used=False（权重未训练、运行期恒返回 False，见 engines/gomarl_mixer.py）。",
         "operationId": "get_agent_performance_api_teacher_agent_performance_get",
         "parameters": [
           {

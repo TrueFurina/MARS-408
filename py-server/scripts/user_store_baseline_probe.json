@@ -63,6 +63,7 @@
     "create_user",
     "datetime",
     "delete_learning_resource",
+    "delete_user",
     "delete_wrong_question",
     "ensure_admin",
     "get_assignment",

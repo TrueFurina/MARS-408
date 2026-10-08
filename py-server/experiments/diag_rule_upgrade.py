@@ -172,7 +172,7 @@ def evaluate(seed: int) -> dict:
     uni = statistics.mean(arms["uniform"])
     ora = statistics.mean(arms["oracle"])
     headroom = ora - uni
-    rule_old = statistics.mean(arms["rule_old"])
+    statistics.mean(arms["rule_old"])
 
     out = {
         "seed": seed,

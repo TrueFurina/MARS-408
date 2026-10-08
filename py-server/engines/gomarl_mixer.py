@@ -555,7 +555,7 @@ class NeuralGroupMixer:
                         def update_group(self, new_group):
                             self.group = new_group
 
-                    self._neural_mode = "onnx_uniform_fallback"
+                    self._neural_mode = MODE_ONNX_UNIFORM_FALLBACK
                     self._trained_loaded = False
                     self._active_embed_dim = self._embed_dim
                     self._weights_complete = False
@@ -721,32 +721,17 @@ class NeuralGroupMixer:
                 if self._neural_mode == MODE_SHAPE_MISMATCH_FALLBACK:
                     mixer = None
                 if mixer is not None:
-                    # ONNX Runtime 均匀权重兜底路径
-                    if self._neural_mode == "onnx_uniform_fallback":
-                        scores_np = scores.reshape(1, -1) if len(scores.shape) == 1 else scores
-                        emb_np = embeddings.reshape(1, n, -1) if len(embeddings.shape) == 2 else embeddings
-                        # ONNX 模型要求 (batch, n_agents, embed_dim) 形状
-                        onnx_inputs = {
-                            "agent_scores": scores_np.astype(np.float32),
-                            "agent_embeddings": emb_np.astype(np.float32),
-                        }
-                        # 尝试不同的输入形状
-                        if len(scores.shape) == 1:
-                            onnx_inputs["agent_scores"] = scores.astype(np.float32)
-                        if len(embeddings.shape) == 2:
-                            onnx_inputs["agent_embeddings"] = embeddings.astype(np.float32)
-
-                        onnx_outputs = self._onnx_session.run(
-                            ["consensus_score", "group_weights", "sd_loss"],
-                            onnx_inputs,
+                    if self._neural_mode == MODE_ONNX_UNIFORM_FALLBACK:
+                        # 诚信红线：onnx_uniform_fallback 是「均匀权重兜底 ONNX」
+                        # （见模块头注释 "分组权重只能均匀兜底，非神经推理"），其输出
+                        # 不具训练语义，绝不允许标称 neural_used=True。此处**不使用**
+                        # 该 ONNX 输出，沿用步骤 4 初始化的规则加权均值，
+                        # neural_used 保持 False（见上方 line 714 初始化）。
+                        logger.info(
+                            "NeuralMixer onnx_uniform_fallback：均匀权重兜底（非神经推理），"
+                            "沿用规则加权共识，neural_used=False"
                         )
-                        cs_val = float(onnx_outputs[0])
-                        sd_val = float(onnx_outputs[2]) if len(onnx_outputs) > 2 else 0.0
-                        # 训练目标 true_consensus 本身就是 0–10 分制；仅做边界截断，
-                        # 禁止再次乘 10，否则真实 Agent 分数区间会被全部截成 10。
-                        consensus_score = max(0.0, min(10.0, float(cs_val)))
-                        sd_loss = sd_val
-                        neural_used = True
+                        # consensus_score / sd_loss 保持步骤 4 的规则加权均值，不覆盖。
                     else:
                         # PyTorch 推理路径
                         _torch, _, _ = _ensure_torch()

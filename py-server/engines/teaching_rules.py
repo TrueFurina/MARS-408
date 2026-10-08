@@ -441,7 +441,7 @@ class TeachingRuleEngine:
             # 难度匹配
             diff_match = dep.difficulty in aff.preferred_difficulty
             # 关键词匹配（资源类型关键词）
-            kw_match = any(k in resource_type for k in aff.topic_keywords) if resource_type else True
+            any(k in resource_type for k in aff.topic_keywords) if resource_type else True
 
             # 至少课程匹配就算候选
             if course_match or diff_match:

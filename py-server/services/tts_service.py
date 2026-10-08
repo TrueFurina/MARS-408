@@ -87,7 +87,7 @@ def melo_synthesize(text: str, language: str = "zh") -> Optional[bytes]:
     if model is None:
         return None
     try:
-        lang_code = MELO_LANGUAGES.get(language.lower(), "ZH")
+        MELO_LANGUAGES.get(language.lower(), "ZH")
         speaker_ids = model.hps.data.spk2id
         speaker_key = list(speaker_ids.keys())[0]
         bio = io.BytesIO()

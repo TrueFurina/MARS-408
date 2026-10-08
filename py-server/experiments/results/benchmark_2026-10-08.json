@@ -1,0 +1,843 @@
+{
+  "meta": {
+    "experiment": "exp1_frugalrag_vs_full_retrieval",
+    "date": "2026-10-08",
+    "backend": "server 172.16.222.99 / RTX 5080 / torch 2.10.0+cu128",
+    "e5_model": "intfloat/e5-base-v2 (本地 models/e5-base-v2)",
+    "kb_source": "py-server/vectordb_data/netlearn_kb.json",
+    "kb_chunks_used": 201,
+    "kb_note": "WARNING: 本机仅有 201-chunk KB 残副本；标准 2122-chunk KB 为 gitignored 资产，本机/服务器均缺失，故无法复现 SSOT benchmark_2026-09-18.json 的 2122 口径。",
+    "exp2_status": "BLOCKED: neural_mixer_trained.pt 训练权重本机缺失（gitignored），不伪造神经模式结果",
+    "elapsed_sec": 0.1
+  },
+  "per_query": [
+    {
+      "id": "cn_01",
+      "course": "computer_network",
+      "query": "TCP三次握手的过程是怎样的",
+      "expected_subjects": [
+        "tcp",
+        "transport"
+      ],
+      "frugalrag": {
+        "n_chunks": 5,
+        "tokens": 156,
+        "latency_ms": 1.75,
+        "recall@5": 1.0,
+        "precision@5": 0.6,
+        "mrr": 1.0,
+        "top1_subject": "transport",
+        "top1_score": 0.9396
+      },
+      "full_retrieval": {
+        "n_chunks": 5,
+        "tokens": 139,
+        "latency_ms": 0.18,
+        "recall@5": 1.0,
+        "precision@5": 1.0,
+        "mrr": 1.0,
+        "top1_subject": "transport",
+        "top1_score": 0.9194
+      }
+    },
+    {
+      "id": "cn_02",
+      "course": "computer_network",
+      "query": "OSI参考模型有哪七层 各层功能是什么",
+      "expected_subjects": [
+        "overview",
+        "architecture"
+      ],
+      "frugalrag": {
+        "n_chunks": 5,
+        "tokens": 118,
+        "latency_ms": 0.56,
+        "recall@5": 1.0,
+        "precision@5": 0.6,
+        "mrr": 1.0,
+        "top1_subject": "overview",
+        "top1_score": 0.9255
+      },
+      "full_retrieval": {
+        "n_chunks": 5,
+        "tokens": 129,
+        "latency_ms": 0.15,
+        "recall@5": 1.0,
+        "precision@5": 0.4,
+        "mrr": 1.0,
+        "top1_subject": "overview",
+        "top1_score": 0.8936
+      }
+    },
+    {
+      "id": "cn_03",
+      "course": "computer_network",
+      "query": "CSMA/CD协议的工作原理",
+      "expected_subjects": [
+        "ethernet",
+        "datalink",
+        "csma"
+      ],
+      "frugalrag": {
+        "n_chunks": 5,
+        "tokens": 116,
+        "latency_ms": 0.38,
+        "recall@5": 1.0,
+        "precision@5": 0.4,
+        "mrr": 1.0,
+        "top1_subject": "datalink",
+        "top1_score": 0.9213
+      },
+      "full_retrieval": {
+        "n_chunks": 5,
+        "tokens": 142,
+        "latency_ms": 0.14,
+        "recall@5": 1.0,
+        "precision@5": 0.4,
+        "mrr": 1.0,
+        "top1_subject": "datalink",
+        "top1_score": 0.9146
+      }
+    },
+    {
+      "id": "cn_04",
+      "course": "computer_network",
+      "query": "IP地址分类 A类B类C类地址范围",
+      "expected_subjects": [
+        "network",
+        "ip"
+      ],
+      "frugalrag": {
+        "n_chunks": 5,
+        "tokens": 126,
+        "latency_ms": 0.58,
+        "recall@5": 1.0,
+        "precision@5": 0.8,
+        "mrr": 1.0,
+        "top1_subject": "network",
+        "top1_score": 0.9255
+      },
+      "full_retrieval": {
+        "n_chunks": 5,
+        "tokens": 118,
+        "latency_ms": 0.14,
+        "recall@5": 1.0,
+        "precision@5": 0.6,
+        "mrr": 1.0,
+        "top1_subject": "network",
+        "top1_score": 0.8936
+      }
+    },
+    {
+      "id": "cn_05",
+      "course": "computer_network",
+      "query": "ARP协议的作用和工作过程",
+      "expected_subjects": [
+        "network",
+        "arp"
+      ],
+      "frugalrag": {
+        "n_chunks": 5,
+        "tokens": 128,
+        "latency_ms": 0.55,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "top1_subject": "network",
+        "top1_score": 0.9039
+      },
+      "full_retrieval": {
+        "n_chunks": 5,
+        "tokens": 123,
+        "latency_ms": 0.14,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 0.3333,
+        "top1_subject": "security",
+        "top1_score": 0.8969
+      }
+    },
+    {
+      "id": "cn_06",
+      "course": "computer_network",
+      "query": "DNS域名解析的递归查询和迭代查询",
+      "expected_subjects": [
+        "dns",
+        "application"
+      ],
+      "frugalrag": {
+        "n_chunks": 5,
+        "tokens": 137,
+        "latency_ms": 0.74,
+        "recall@5": 1.0,
+        "precision@5": 1.0,
+        "mrr": 1.0,
+        "top1_subject": "application",
+        "top1_score": 0.9466
+      },
+      "full_retrieval": {
+        "n_chunks": 5,
+        "tokens": 121,
+        "latency_ms": 0.14,
+        "recall@5": 1.0,
+        "precision@5": 1.0,
+        "mrr": 1.0,
+        "top1_subject": "application",
+        "top1_score": 0.9237
+      }
+    },
+    {
+      "id": "cn_07",
+      "course": "computer_network",
+      "query": "HTTP和HTTPS的区别 SSL握手过程",
+      "expected_subjects": [
+        "http",
+        "ssl",
+        "application",
+        "security"
+      ],
+      "frugalrag": {
+        "n_chunks": 5,
+        "tokens": 137,
+        "latency_ms": 0.7,
+        "recall@5": 1.0,
+        "precision@5": 0.8,
+        "mrr": 1.0,
+        "top1_subject": "application",
+        "top1_score": 0.9287
+      },
+      "full_retrieval": {
+        "n_chunks": 5,
+        "tokens": 111,
+        "latency_ms": 0.14,
+        "recall@5": 1.0,
+        "precision@5": 1.0,
+        "mrr": 1.0,
+        "top1_subject": "application",
+        "top1_score": 0.8981
+      }
+    },
+    {
+      "id": "os_01",
+      "course": "operating_system",
+      "query": "进程和线程的区别 上下文切换",
+      "expected_subjects": [
+        "os_process"
+      ],
+      "frugalrag": {
+        "n_chunks": 5,
+        "tokens": 184,
+        "latency_ms": 0.41,
+        "recall@5": 1.0,
+        "precision@5": 0.4,
+        "mrr": 1.0,
+        "top1_subject": "os_process",
+        "top1_score": 0.8745
+      },
+      "full_retrieval": {
+        "n_chunks": 5,
+        "tokens": 184,
+        "latency_ms": 0.15,
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "mrr": 0.0,
+        "top1_subject": "os_file",
+        "top1_score": 0.8525
+      }
+    },
+    {
+      "id": "os_02",
+      "course": "operating_system",
+      "query": "页面置换算法 LRU LFU FIFO",
+      "expected_subjects": [
+        "os_memory"
+      ],
+      "frugalrag": {
+        "n_chunks": 5,
+        "tokens": 192,
+        "latency_ms": 0.48,
+        "recall@5": 1.0,
+        "precision@5": 0.8,
+        "mrr": 1.0,
+        "top1_subject": "os_memory",
+        "top1_score": 0.935
+      },
+      "full_retrieval": {
+        "n_chunks": 5,
+        "tokens": 226,
+        "latency_ms": 0.14,
+        "recall@5": 1.0,
+        "precision@5": 0.4,
+        "mrr": 1.0,
+        "top1_subject": "os_memory",
+        "top1_score": 0.9072
+      }
+    },
+    {
+      "id": "os_03",
+      "course": "operating_system",
+      "query": "银行家算法死锁避免",
+      "expected_subjects": [
+        "os_process"
+      ],
+      "frugalrag": {
+        "n_chunks": 5,
+        "tokens": 146,
+        "latency_ms": 0.39,
+        "recall@5": 1.0,
+        "precision@5": 0.6,
+        "mrr": 1.0,
+        "top1_subject": "os_process",
+        "top1_score": 0.9059
+      },
+      "full_retrieval": {
+        "n_chunks": 5,
+        "tokens": 120,
+        "latency_ms": 0.13,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "top1_subject": "os_process",
+        "top1_score": 0.8656
+      }
+    },
+    {
+      "id": "os_04",
+      "course": "operating_system",
+      "query": "生产者消费者问题 PV操作信号量",
+      "expected_subjects": [
+        "os_process"
+      ],
+      "frugalrag": {
+        "n_chunks": 4,
+        "tokens": 147,
+        "latency_ms": 0.29,
+        "recall@5": 1.0,
+        "precision@5": 0.75,
+        "mrr": 1.0,
+        "top1_subject": "os_process",
+        "top1_score": 0.8822
+      },
+      "full_retrieval": {
+        "n_chunks": 5,
+        "tokens": 160,
+        "latency_ms": 0.13,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "top1_subject": "os_process",
+        "top1_score": 0.8503
+      }
+    },
+    {
+      "id": "os_05",
+      "course": "operating_system",
+      "query": "文件的物理结构 连续链接索引",
+      "expected_subjects": [
+        "os_file"
+      ],
+      "frugalrag": {
+        "n_chunks": 5,
+        "tokens": 178,
+        "latency_ms": 0.36,
+        "recall@5": 1.0,
+        "precision@5": 0.6,
+        "mrr": 1.0,
+        "top1_subject": "os_file",
+        "top1_score": 0.916
+      },
+      "full_retrieval": {
+        "n_chunks": 5,
+        "tokens": 184,
+        "latency_ms": 0.13,
+        "recall@5": 1.0,
+        "precision@5": 0.6,
+        "mrr": 1.0,
+        "top1_subject": "os_file",
+        "top1_score": 0.88
+      }
+    },
+    {
+      "id": "os_06",
+      "course": "operating_system",
+      "query": "磁盘调度算法 SCAN C-SCAN SSTF",
+      "expected_subjects": [
+        "os_io"
+      ],
+      "frugalrag": {
+        "n_chunks": 5,
+        "tokens": 204,
+        "latency_ms": 0.47,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 0.3333,
+        "top1_subject": "os_file",
+        "top1_score": 0.9333
+      },
+      "full_retrieval": {
+        "n_chunks": 5,
+        "tokens": 229,
+        "latency_ms": 0.15,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 0.2,
+        "top1_subject": "os_file",
+        "top1_score": 0.9048
+      }
+    },
+    {
+      "id": "os_07",
+      "course": "operating_system",
+      "query": "虚拟内存的概念和地址变换",
+      "expected_subjects": [
+        "os_memory"
+      ],
+      "frugalrag": {
+        "n_chunks": 5,
+        "tokens": 131,
+        "latency_ms": 0.34,
+        "recall@5": 1.0,
+        "precision@5": 0.4,
+        "mrr": 1.0,
+        "top1_subject": "os_memory",
+        "top1_score": 0.8877
+      },
+      "full_retrieval": {
+        "n_chunks": 5,
+        "tokens": 148,
+        "latency_ms": 0.13,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 0.25,
+        "top1_subject": "os_overview",
+        "top1_score": 0.8529
+      }
+    },
+    {
+      "id": "co_01",
+      "course": "computer_organization",
+      "query": "计算机性能指标 CPI 主频 MIPS",
+      "expected_subjects": [
+        "co_overview"
+      ],
+      "frugalrag": {
+        "n_chunks": 5,
+        "tokens": 166,
+        "latency_ms": 0.36,
+        "recall@5": 1.0,
+        "precision@5": 0.6,
+        "mrr": 1.0,
+        "top1_subject": "co_overview",
+        "top1_score": 0.934
+      },
+      "full_retrieval": {
+        "n_chunks": 5,
+        "tokens": 123,
+        "latency_ms": 0.13,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "top1_subject": "co_overview",
+        "top1_score": 0.9058
+      }
+    },
+    {
+      "id": "co_02",
+      "course": "computer_organization",
+      "query": "原码反码补码移码表示范围",
+      "expected_subjects": [
+        "co_data"
+      ],
+      "frugalrag": {
+        "n_chunks": 5,
+        "tokens": 125,
+        "latency_ms": 0.37,
+        "recall@5": 1.0,
+        "precision@5": 0.4,
+        "mrr": 1.0,
+        "top1_subject": "co_data",
+        "top1_score": 0.9218
+      },
+      "full_retrieval": {
+        "n_chunks": 5,
+        "tokens": 125,
+        "latency_ms": 0.13,
+        "recall@5": 1.0,
+        "precision@5": 0.4,
+        "mrr": 1.0,
+        "top1_subject": "co_data",
+        "top1_score": 0.8882
+      }
+    },
+    {
+      "id": "co_03",
+      "course": "computer_organization",
+      "query": "Cache映射方式 直接全相联组相联",
+      "expected_subjects": [
+        "co_memory"
+      ],
+      "frugalrag": {
+        "n_chunks": 5,
+        "tokens": 198,
+        "latency_ms": 0.49,
+        "recall@5": 1.0,
+        "precision@5": 0.8,
+        "mrr": 1.0,
+        "top1_subject": "co_memory",
+        "top1_score": 0.9351
+      },
+      "full_retrieval": {
+        "n_chunks": 5,
+        "tokens": 198,
+        "latency_ms": 0.14,
+        "recall@5": 1.0,
+        "precision@5": 0.8,
+        "mrr": 1.0,
+        "top1_subject": "co_memory",
+        "top1_score": 0.9073
+      }
+    },
+    {
+      "id": "co_04",
+      "course": "computer_organization",
+      "query": "指令周期 取指执行间址中断",
+      "expected_subjects": [
+        "co_cpu",
+        "co_isa"
+      ],
+      "frugalrag": {
+        "n_chunks": 5,
+        "tokens": 173,
+        "latency_ms": 0.4,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 0.5,
+        "top1_subject": "co_io",
+        "top1_score": 0.8966
+      },
+      "full_retrieval": {
+        "n_chunks": 5,
+        "tokens": 126,
+        "latency_ms": 0.14,
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "mrr": 0.0,
+        "top1_subject": "co_io",
+        "top1_score": 0.8523
+      }
+    },
+    {
+      "id": "co_05",
+      "course": "computer_organization",
+      "query": "CPU数据通路 ALU寄存器",
+      "expected_subjects": [
+        "co_cpu"
+      ],
+      "frugalrag": {
+        "n_chunks": 5,
+        "tokens": 207,
+        "latency_ms": 0.6,
+        "recall@5": 1.0,
+        "precision@5": 0.4,
+        "mrr": 1.0,
+        "top1_subject": "co_cpu",
+        "top1_score": 0.9392
+      },
+      "full_retrieval": {
+        "n_chunks": 5,
+        "tokens": 158,
+        "latency_ms": 0.13,
+        "recall@5": 1.0,
+        "precision@5": 0.4,
+        "mrr": 1.0,
+        "top1_subject": "co_cpu",
+        "top1_score": 0.9132
+      }
+    },
+    {
+      "id": "co_06",
+      "course": "computer_organization",
+      "query": "总线仲裁方式 链式查询计数器",
+      "expected_subjects": [
+        "co_bus"
+      ],
+      "frugalrag": {
+        "n_chunks": 5,
+        "tokens": 140,
+        "latency_ms": 0.28,
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "mrr": 0.0,
+        "top1_subject": "co_cpu",
+        "top1_score": 0.8883
+      },
+      "full_retrieval": {
+        "n_chunks": 5,
+        "tokens": 131,
+        "latency_ms": 0.13,
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "mrr": 0.0,
+        "top1_subject": "overview",
+        "top1_score": 0.8531
+      }
+    },
+    {
+      "id": "co_07",
+      "course": "computer_organization",
+      "query": "I/O控制方式 程序查询中断DMA",
+      "expected_subjects": [
+        "co_io"
+      ],
+      "frugalrag": {
+        "n_chunks": 5,
+        "tokens": 208,
+        "latency_ms": 0.4,
+        "recall@5": 1.0,
+        "precision@5": 0.8,
+        "mrr": 1.0,
+        "top1_subject": "co_io",
+        "top1_score": 0.9346
+      },
+      "full_retrieval": {
+        "n_chunks": 5,
+        "tokens": 176,
+        "latency_ms": 0.14,
+        "recall@5": 1.0,
+        "precision@5": 0.6,
+        "mrr": 1.0,
+        "top1_subject": "co_io",
+        "top1_score": 0.9065
+      }
+    },
+    {
+      "id": "ds_01",
+      "course": "data_structures",
+      "query": "栈和队列的区别 应用场景",
+      "expected_subjects": [
+        "ds_stack",
+        "ds_queue"
+      ],
+      "frugalrag": {
+        "n_chunks": 4,
+        "tokens": 78,
+        "latency_ms": 0.25,
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "mrr": 0.0,
+        "top1_subject": "ds_tree",
+        "top1_score": 0.5866
+      },
+      "full_retrieval": {
+        "n_chunks": 5,
+        "tokens": 189,
+        "latency_ms": 0.13,
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "mrr": 0.0,
+        "top1_subject": "os_memory",
+        "top1_score": 0.8573
+      }
+    },
+    {
+      "id": "ds_02",
+      "course": "data_structures",
+      "query": "二叉树遍历 前序中序后序",
+      "expected_subjects": [
+        "ds_tree"
+      ],
+      "frugalrag": {
+        "n_chunks": 5,
+        "tokens": 176,
+        "latency_ms": 0.5,
+        "recall@5": 1.0,
+        "precision@5": 1.0,
+        "mrr": 1.0,
+        "top1_subject": "ds_tree",
+        "top1_score": 0.9121
+      },
+      "full_retrieval": {
+        "n_chunks": 5,
+        "tokens": 151,
+        "latency_ms": 0.13,
+        "recall@5": 1.0,
+        "precision@5": 0.8,
+        "mrr": 1.0,
+        "top1_subject": "ds_tree",
+        "top1_score": 0.8745
+      }
+    },
+    {
+      "id": "ds_03",
+      "course": "data_structures",
+      "query": "图的遍历 深度优先DFS广度优先BFS",
+      "expected_subjects": [
+        "ds_graph"
+      ],
+      "frugalrag": {
+        "n_chunks": 5,
+        "tokens": 187,
+        "latency_ms": 0.45,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "top1_subject": "ds_graph",
+        "top1_score": 0.9619
+      },
+      "full_retrieval": {
+        "n_chunks": 5,
+        "tokens": 221,
+        "latency_ms": 0.13,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "top1_subject": "ds_graph",
+        "top1_score": 0.9456
+      }
+    },
+    {
+      "id": "ds_04",
+      "course": "data_structures",
+      "query": "快速排序算法的时间复杂度和过程",
+      "expected_subjects": [
+        "ds_sort"
+      ],
+      "frugalrag": {
+        "n_chunks": 5,
+        "tokens": 126,
+        "latency_ms": 0.34,
+        "recall@5": 1.0,
+        "precision@5": 0.6,
+        "mrr": 1.0,
+        "top1_subject": "ds_sort",
+        "top1_score": 0.8867
+      },
+      "full_retrieval": {
+        "n_chunks": 5,
+        "tokens": 92,
+        "latency_ms": 0.14,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 0.25,
+        "top1_subject": "os_process",
+        "top1_score": 0.8674
+      }
+    },
+    {
+      "id": "ds_05",
+      "course": "data_structures",
+      "query": "二分查找的条件和实现",
+      "expected_subjects": [
+        "ds_search"
+      ],
+      "frugalrag": {
+        "n_chunks": 5,
+        "tokens": 163,
+        "latency_ms": 0.45,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "top1_subject": "ds_search",
+        "top1_score": 0.8849
+      },
+      "full_retrieval": {
+        "n_chunks": 5,
+        "tokens": 157,
+        "latency_ms": 0.14,
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "mrr": 0.0,
+        "top1_subject": "ds_tree",
+        "top1_score": 0.8832
+      }
+    },
+    {
+      "id": "ds_06",
+      "course": "data_structures",
+      "query": "哈希表冲突解决 开放定址链地址",
+      "expected_subjects": [
+        "ds_search"
+      ],
+      "frugalrag": {
+        "n_chunks": 5,
+        "tokens": 150,
+        "latency_ms": 0.3,
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "mrr": 1.0,
+        "top1_subject": "ds_search",
+        "top1_score": 0.8888
+      },
+      "full_retrieval": {
+        "n_chunks": 5,
+        "tokens": 156,
+        "latency_ms": 0.13,
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "mrr": 0.0,
+        "top1_subject": "os_memory",
+        "top1_score": 0.8594
+      }
+    },
+    {
+      "id": "ds_07",
+      "course": "data_structures",
+      "query": "线性表顺序存储和链式存储比较",
+      "expected_subjects": [
+        "ds_linear"
+      ],
+      "frugalrag": {
+        "n_chunks": 5,
+        "tokens": 169,
+        "latency_ms": 0.33,
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "mrr": 0.0,
+        "top1_subject": "ds_sort",
+        "top1_score": 0.8914
+      },
+      "full_retrieval": {
+        "n_chunks": 5,
+        "tokens": 150,
+        "latency_ms": 0.13,
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "mrr": 0.0,
+        "top1_subject": "physical",
+        "top1_score": 0.8635
+      }
+    }
+  ],
+  "summary": {
+    "n_queries": 28,
+    "kb_chunks": 201,
+    "top_k": 5,
+    "frugalrag": {
+      "mean_chunks": 4.93,
+      "mean_tokens": 155.93,
+      "median_tokens": 153.0,
+      "mean_latency_ms": 0.48,
+      "median_latency_ms": 0.41,
+      "mean_recall@5": 0.8929,
+      "mean_precision@5": 0.4839,
+      "mean_mrr": 0.8512
+    },
+    "full_retrieval": {
+      "mean_chunks": 5.0,
+      "mean_tokens": 153.11,
+      "median_tokens": 149.0,
+      "mean_latency_ms": 0.14,
+      "median_latency_ms": 0.14,
+      "mean_recall@5": 0.75,
+      "mean_precision@5": 0.3571,
+      "mean_mrr": 0.644
+    },
+    "deltas": {
+      "token_reduction_pct": -1.84,
+      "latency_reduction_pct": 51.71,
+      "recall_delta": 0.1429,
+      "precision_delta": 0.1268,
+      "mrr_delta": 0.2071
+    }
+  }
+}

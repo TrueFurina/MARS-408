@@ -96,7 +96,7 @@ def build_corpus():
 
 
 def retrieve(query, course, docs, use_penalty, top_k=5):
-    qterms = BM25Scorer()._tokenize(query)  # 仅用于构造，实际在 score 内使用
+    BM25Scorer()._tokenize(query)  # 仅用于构造，实际在 score 内使用
     bs = BM25Scorer().score(query, [d["text"] for d in docs])
     ranked = sorted(zip(docs, bs), key=lambda x: x[1], reverse=True)
     subj = COURSE_SUBJECTS.get(course, [])

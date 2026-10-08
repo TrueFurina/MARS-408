@@ -1,0 +1,108 @@
+name: verify-structural
+
+# 结构守门脚本上 CI（审计 2026-10-06 · P0-5）
+# ---------------------------------------------------------------------------
+# 背景：8 个 `verify_*` + `scripts/brand_scan.py` + `scripts/scan_stale_calibration.py`
+# 此前**零 workflow 引用**——代码改坏它们也没人报警（审计定级 P0：红了没人知道）。
+#
+# 本 workflow 把它们接上 CI，按"是否需要外部基础设施"分两档：
+#
+#   • `structural` job（PR / push 自动跑，阻塞合并）
+#       跑「无需外部基础设施」的 6 个 verify_* + brand_scan + scan_stale_calibration。
+#       这些脚本只依赖 sqlite / numpy / fastapi / 内置语料，CI 标准 python 即可跑。
+#
+#   • `heavy` job（仅 workflow_dispatch 手动触发，不阻塞合并）
+#       跑 2 个依赖 Milvus 向量库 + E5 模型的 verify_*
+#       （gold_candidates / retrieval）。它们在无 KB 的 CI 上会「真空通过」
+#       （返回 0 条），属假绿，故**默认不进 PR 门禁**；需在已挂载 Milvus + KB
+#       的运行器（如实验服务器 / 自托管 runner）上手动触发，并且本 job 设
+#       `continue-on-error`，避免污染默认门禁。真空（KB 未挂载）会被显式判失败。
+
+on:
+  pull_request:
+  push:
+    branches: [career-literacy, main]
+  workflow_dispatch:
+    inputs:
+      heavy:
+        description: '同时运行依赖 Milvus+KB 的重型 verify（需运行器已挂载向量库）'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  structural:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 安装 py-server 依赖
+        run: |
+          python -m pip install --upgrade pip
+          cd py-server && pip install -e ".[test]" && cd ..
+
+      - name: 运行结构守门（轻量 6 + 品牌/口径扫描）
+        run: |
+          set -u
+          fail=0
+          run_one () {
+            local desc="$1"; local cmd="$2"; local wd="$3"
+            echo "── $desc ──"
+            ( cd "$wd" && eval "$cmd" ); local rc=$?
+            if [ $rc -ne 0 ]; then echo "  ❌ $desc 失败 (exit=$rc)"; fail=1; else echo "  ✅ $desc 通过"; fi
+          }
+
+          # 品牌一致性（产品可见层 + 身份展示面）
+          run_one "gate:brand (brand_scan)" "python scripts/brand_scan.py" "."
+          # benchmark 口径漂移扫描（活文档面）
+          run_one "scan_stale_calibration" "python scripts/scan_stale_calibration.py" "."
+
+          # 轻量结构守门：sqlite / numpy / fastapi / 内置语料，无需 Milvus
+          run_one "verify_app_wiring"            "python scripts/verify_app_wiring.py"            "py-server"
+          run_one "verify_auth_coverage"         "python scripts/verify_auth_coverage.py"         "py-server"
+          run_one "verify_core_lock_unification" "python scripts/verify_core_lock_unification.py" "py-server"
+          run_one "verify_kb_coverage"           "python scripts/verify_kb_coverage.py"           "py-server"
+          run_one "verify_seed_data_split"       "python scripts/verify_seed_data_split.py"       "py-server"
+          run_one "verify_user_store_split"      "python scripts/verify_user_store_split.py"      "py-server"
+
+          echo
+          if [ $fail -ne 0 ]; then echo "🔴 结构守门存在失败项"; exit 1; fi
+          echo "🟢 结构守门全部通过"
+
+  heavy:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && inputs.heavy == true
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 安装 py-server 依赖
+        run: |
+          python -m pip install --upgrade pip
+          cd py-server && pip install -e ".[test]" && cd ..
+
+      - name: 运行重型 verify（需 Milvus + KB）
+        run: |
+          set -u
+          cd py-server
+          echo "── verify_gold_candidates ──"
+          python scripts/verify_gold_candidates.py | tee /tmp/gc.log
+          echo "── verify_retrieval ──"
+          python scripts/verify_retrieval.py | tee /tmp/rt.log
+          # 无 KB 时这两个脚本会「真空通过」（返回 0 条），属假绿；
+          # 显式判定真空为失败，避免在缺向量库的运行器上误报绿。
+          if grep -qE "保留 0/" /tmp/gc.log || grep -qE "返回 0 条" /tmp/rt.log; then
+            echo "⚠️ 重型 verify 真空通过：KB 未挂载？此类 verify 需要 Milvus + KB。"
+            exit 1
+          fi
+          echo "🟢 重型 verify 非真空通过"
