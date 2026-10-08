@@ -18,9 +18,18 @@ import sys
 
 TEST_PATTERNS = [
     re.compile(r"(^|/)tests?/", re.I),
+    # `__tests__/` 目录（前端约定）：此前未列入 ⇒ 整个前端测试套件对本红线**隐形**。
+    # 实测（2026-10-08，`git ls-files` 全仓 34 个文件命中 __tests__ 或 .spec.）：
+    # src/components/__tests__/*.spec.ts 等 11 个 .spec.ts + 23 个 __tests__/ 下文件，
+    # 被本守卫判为"实现文件"，于是「测试 + 实现同 commit」这条红线对它们不生效。
+    # 该缺口由一次真实拦截暴露：提交 tests/benchmark_evidence_gate.py（判定=测试）
+    # + src/composables/__tests__/useBenchmark.spec.ts（误判=实现）时被拦，
+    # 分开看两个都是测试文件，本不该触发。
+    re.compile(r"(^|/)__tests__/", re.I),
     re.compile(r"(^|/)test_[^/]+\.py$", re.I),
     re.compile(r"(^|/)[^/]+_test\.py$", re.I),
-    re.compile(r"(^|/)[^/]+\.test\.(js|ts|tsx)$", re.I),
+    # .test.* 与 .spec.* 同等对待（vitest 两种约定均在使用）
+    re.compile(r"(^|/)[^/]+\.(test|spec)\.(js|ts|tsx|jsx)$", re.I),
     re.compile(r"(^|/)spec/", re.I),
 ]
 
