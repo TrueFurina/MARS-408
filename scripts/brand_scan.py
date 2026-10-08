@@ -13,6 +13,11 @@
           + py-server/config.py、py-server/main.py
   - 交付：submission/（豁免 _archive*/ 归档快照与 00_提交清单.md 元清单）
 
+  上述每条路径都是**声明的扫描面（FACE_A_ROOTS）**：任一条在磁盘上不存在即判
+  **exit 2 零覆盖**（见 main 末尾覆盖度自检）。理由与面 B 的 DRIFT 一致 ——
+  扫描面被改名/搬走会让门禁静默少扫一块，而输出仍写着 `命中 0 处`。
+  结论行因此会一并报出「已扫描 N 个文件（扫描面 M/M 在位）」。
+
 ── 面 B｜身份展示面（新增）────────────────────────────────────
   对一份**有限、可枚举**的「对外身份展示」文件清单，额外查**身份定性短语**
   （考研学子 / 408 考研个性化学习 / 个性化学习闭环 / 个性化学习(多智能体)系统）。
@@ -94,6 +99,33 @@ SCAN_FILES = ["index.html", "package.json"]
 BACKEND_DIRS = ["app", "api", "services", "agents", "db", "engines", "tools", "scripts"]
 BACKEND_FILES = ["config.py", "main.py"]
 
+# ── 面 A 的声明扫描面（真值源）──────────────────────────────────
+# `_iter_files()` 用 `if p.exists()` 逐根守卫 —— 这是**必要的**（某些检出里
+# submission/ 等目录可能不存在），但代价是：某个扫描面被改名/搬走时，面 A 会
+# **静默少扫一块**，而 main() 打印的仍是 `面A 命中 0 处` ＋ PASS。
+#
+# 2026-10-09 沙盒实测（决定性用例）：把 public/ 与 submission/ 整个删掉，
+# 只留少量面 B 清单文件，输出仍是
+#     `面A(产品可见层) 命中 0 处` → `PASS` → exit 0
+# —— 对"两个扫描面整体丢失"零信号。面 B 早已用 missing（DRIFT→失败）解决了
+# 同一问题，面 A 从未补上，故补齐：声明扫描面缺失按「零覆盖 / 环境错误」判
+# **exit 2**，与面 B 的内容清单 DRIFT（exit 1）刻意区分 —— 两者都让 job 变红，
+# 但一个是"扫描面本身丢失"，一个是"清单里的文件改了名"。
+FACE_A_ROOTS: list[str] = [*SCAN_DIRS, *SCAN_FILES]
+FACE_A_ROOTS += [f"py-server/{d}" for d in BACKEND_DIRS]
+FACE_A_ROOTS += [f"py-server/{f}" for f in BACKEND_FILES]
+
+
+def _missing_face_a_roots() -> list[str]:
+    """面 A 声明的扫描面中，在磁盘上不存在的条目。
+
+    `Path.exists()` 为假时 `_iter_files()` 只是安静地跳过该根（不抛错），
+    所以扫描面丢失必须在这里显式报出来，否则会退化成
+    「零覆盖 → 肯定性结论」（本仓最高频的失效形态）。
+    """
+    return [rel for rel in FACE_A_ROOTS if not (ROOT / rel).exists()]
+
+
 EXCLUDE_PARTS = {"node_modules", ".git", "dist", "crypto_platform", "__pycache__", ".pytest_cache"}
 
 # 提交清单元数据清单：记录旧品牌清理结果，属交付元文档而非产品品牌展示面，豁免扫描
@@ -173,9 +205,15 @@ def _brand_tokens():
     return [(t, re.compile(re.escape(t))) for t in BRAND_TOKENS]
 
 
-def scan_visible_layer() -> list[tuple[str, int, str, str]]:
-    """面 A：产品可见层 —— 只查旧品牌 / 旧赛事名。"""
+def scan_visible_layer() -> tuple[list[tuple[str, int, str, str]], int]:
+    """面 A：产品可见层 —— 只查旧品牌 / 旧赛事名。
+
+    Returns:
+        (命中列表, 实际扫描到的文本文件数)。第二个值供调用方做覆盖度自检 ——
+        「扫了 0 个文件」不可表述为「没有残留」，两者必须能区分。
+    """
     hits: list[tuple[str, int, str, str]] = []
+    scanned = 0
     tokens = _brand_tokens()
     for f in _iter_files():
         if _excluded(f):
@@ -184,9 +222,10 @@ def scan_visible_layer() -> list[tuple[str, int, str, str]]:
             text = f.read_text(encoding="utf-8", errors="ignore")
         except Exception:
             continue
+        scanned += 1
         rel = f.relative_to(ROOT).as_posix()
         hits.extend(_scan_text(rel, text, tokens))
-    return hits
+    return hits, scanned
 
 
 def scan_identity_surface() -> tuple[list[tuple[str, int, str, str]], list[str]]:
@@ -212,16 +251,23 @@ def scan_identity_surface() -> tuple[list[tuple[str, int, str, str]], list[str]]
 
 
 def main() -> int:
-    visible_hits = scan_visible_layer()
+    missing_roots = _missing_face_a_roots()
+    visible_hits, visible_scanned = scan_visible_layer()
     identity_hits, missing = scan_identity_surface()
 
     total = len(visible_hits) + len(identity_hits)
     surface_total = len(IDENTITY_SURFACE_FILES)
     surface_present = surface_total - len(missing)
+    roots_total = len(FACE_A_ROOTS)
+    roots_present = roots_total - len(missing_roots)
 
+    # 结论行必须自带覆盖证据：`命中 0 处` 与 `扫了 0 个文件` 是两件事，
+    # 只印前者会让"少扫了"读起来像"很干净"。
     print(
         f"[gate:brand] 身份展示面：{surface_present}/{surface_total} 文件在位"
-        f"；面A(产品可见层) 命中 {len(visible_hits)} 处"
+        f"；面A(产品可见层) 已扫描 {visible_scanned} 个文件"
+        f"（扫描面 {roots_present}/{roots_total} 在位）"
+        f"；面A 命中 {len(visible_hits)} 处"
         f"；面B(身份展示面) 命中 {len(identity_hits)} 处"
     )
 
@@ -246,6 +292,19 @@ def main() -> int:
             desc = dict(IDENTITY_SURFACE_FILES).get(rel, "")
             print(f"  [DRIFT] {rel}  ({desc})")
         print("  修法：文件若已改名/删除，请同步更新 brand_scan.py 的 IDENTITY_SURFACE_FILES。")
+
+    # 覆盖度自检（fail-closed）：扫描面缺失、或一个文件都没扫到时，
+    # 不得给出任何「无残留」结论 —— 那正是本仓最高频的失效形态
+    # （零覆盖 → 肯定性结论）。上面若有真实命中，已先行列出，此处不丢信息。
+    if missing_roots or visible_scanned == 0:
+        print("\n[gate:brand] FAIL(零覆盖) — 面A 扫描面不完整，本门禁结论不可采信：")
+        for rel in missing_roots:
+            print(f"  [缺失扫描面] {rel}（门禁指向失效路径 ⇒ 该面被静默跳过，从未被检查）")
+        if visible_scanned == 0:
+            print("  [零覆盖] 面A 实际扫描到 0 个文本文件，无法区分「没有残留」与「没扫到」。")
+        print("  修法：目录/文件若已改名或移出本仓，请同步更新 brand_scan.py 的")
+        print("        SCAN_DIRS / SCAN_FILES / BACKEND_DIRS / BACKEND_FILES。")
+        return 2
 
     if not ok:
         print(f"\n共 {total} 处（另有 {len(missing)} 处清单 DRIFT）。")
