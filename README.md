@@ -188,20 +188,25 @@ start.bat
 
 ### Docker
 
-> **前置：先构建前端产物**。`Dockerfile:49` 是 `COPY dist ./static`（宿主机构建，理由见 Dockerfile 头部注释：
-> 容器内 `npm ci` 经代理拉 npmjs.org 会被 SSL 掐断），而 `dist/` 被 `.gitignore:24` 忽略、不在仓库中 ——
-> 新克隆后直接 `docker-compose up -d` 会在该行报 `failed to compute cache key: "/dist": not found`。
+> **两段式构建**（绕过容器内 npm/uv 经代理 SSL 掐断）：依赖预装进持久卷，镜像 build 仅 COPY、零网络下载。
 
+**① 前置：前端产物 + 依赖卷**
 ```bash
-npm ci && npm run build-only   # 生成 dist/（改动前端后需重跑）
+npm ci && npm run build-only            # 生成 dist/（前端宿主机预构建，改动前端后需重跑）
+bash scripts/docker_pkgbuild.sh          # 建 studyhelp-base:deps 镜像 + studyhelp_venv 卷（uv sync，约 5.1GB，耗时数分钟）
+```
+
+**② 启动**
+```bash
 docker-compose up -d
 # 访问 http://localhost:8002
 ```
 
-> Dockerfile 使用 `RUN --mount=type=cache`，**要求 BuildKit**：若本机 compose 回退到 legacy builder，
-> 需以 `DOCKER_BUILDKIT=1 docker-compose up -d` 启动。
+> pkgbuild 阶段 `docker build -f Dockerfile.base` 使用 `RUN --mount=type=cache` 要求 BuildKit；
+> 若本机 compose 回退到 legacy builder，需以 `DOCKER_BUILDKIT=1 docker-compose up -d` 启动。
 
 > 登录账号需先注册（`/api/auth/register`）；如库内无管理员账号，注册的首个账号可用于登录。
+> 生产部署：`docker-compose --profile production up -d`，需在 `.env` 显式设置 `AUTH_SECRET` / `ADMIN_PASSWORD`，否则 fail-fast。
 
 ### 本地开发
 

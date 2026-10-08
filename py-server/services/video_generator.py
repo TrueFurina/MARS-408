@@ -231,7 +231,7 @@ def generate_scene_svg(scene: dict, topic: str, theme: str = "dark") -> str:
     svg += _render_template_content(template_type, lines, scene_id, accent, cyan, green, warm, pink, text_color, sub_color)
 
     # 底部水印
-    svg += f'''  <text x="640" y="660" text-anchor="middle" fill="rgba(255,255,255,0.15)" font-size="14" font-family="sans-serif">芒得很职 考研智能学习系统</text>
+    svg += f'''  <text x="640" y="660" text-anchor="middle" fill="rgba(255,255,255,0.15)" font-size="14" font-family="sans-serif">芒得很职 职业素养实训平台</text>
   <text x="640" y="690" text-anchor="middle" fill="rgba(255,255,255,0.1)" font-size="12" font-family="sans-serif">{_escape_svg(topic)}</text>
 </svg>'''
     return svg

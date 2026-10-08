@@ -77,6 +77,8 @@ jobs:
 
           # 品牌一致性（产品可见层 + 身份展示面）
           run_one "gate:brand (brand_scan)" "python scripts/brand_scan.py" "."
+          # 对外口径诚信红线（原仅挂本地 pre-commit hook；CI 不拦则 force-push / 绕 hook 改 main 可重引被禁宣称）
+          run_one "honesty_scan (对外口径红线)" "python scripts/pre-commit/honesty_scan.py --all" "."
           # benchmark 口径漂移扫描（活文档面）
           run_one "scan_stale_calibration" "python scripts/scan_stale_calibration.py" "."
           # 本机绝对路径扫描（静态、最便宜，故放最前）：

@@ -1,0 +1,58 @@
+# ============================================================
+# Dockerfile.final — 芒得很职 部署底座版
+# FROM studyhelp-base:deps（由 pkgbuild 容器 commit 固化：
+#   python:3.12-slim + apt 系统包(清华源) + uv + mangdehenzhi 用户）
+# 运行时依赖 .venv 来自持久卷 studyhelp_venv（uv sync 已 EXIT_0，5.1GB）
+# 构建本文件仅 COPY，无任何网络下载 —— 引擎存活窗口内必定完成
+# ============================================================
+
+FROM studyhelp-base:deps
+
+WORKDIR /app
+
+# ── D7：镜像元数据标签 ──
+ARG VERSION=1.0.0
+ARG BUILD_DATE
+LABEL org.opencontainers.image.title="芒得很职 多智能体职业素养实训平台"
+LABEL org.opencontainers.image.version="$VERSION"
+LABEL org.opencontainers.image.created="$BUILD_DATE"
+LABEL org.opencontainers.image.description="芒得很职 多智能体职业素养实训平台（GOMARL + FrugalRAG）"
+LABEL maintainer="芒得很职 Team"
+
+# 复制后端代码（.dockerignore 已排除 .venv/__pycache__/数据）
+COPY py-server/ ./
+
+# 复制前端构建产物（宿主机预构建：npm ci --registry=npmmirror + npm run build-only）
+COPY dist ./static
+
+# F-014：运行时可写目录
+RUN mkdir -p /app/vectordb_data /app/milvus_lite_data /app/data /app/sessions /app/plots /app/assets /app/media \
+    && chown -R mangdehenzhi:mangdehenzhi /app/vectordb_data /app/milvus_lite_data /app/data /app/sessions /app/plots /app/assets /app/media
+
+# Windows CRLF → LF：shebang 带 \r 会导致 exec 报 "no such file or directory"
+RUN sed -i 's/\r$//' /app/docker-entrypoint.sh && chmod +x /app/docker-entrypoint.sh
+
+# 环境变量（与原 Dockerfile 对齐）
+ENV PYTHONPATH=/app
+ENV STATIC_DIR=/app/static
+ENV HOST=0.0.0.0
+ENV PORT=8002
+ENV WEB_CONCURRENCY=1
+ENV LLM_PROVIDER=auto
+ENV MILVUS_HOST=milvus
+ENV MILVUS_PORT=19530
+ENV UV_LINK_MODE=copy
+ENV UV_DEFAULT_INDEX=https://pypi.tuna.tsinghua.edu.cn/simple
+# /app 属 root，运行时用户(非root)不可写：uv 缓存指到 /tmp，避免 /app/.cache 权限错误
+ENV UV_CACHE_DIR=/tmp/uv-cache
+ENV XDG_CACHE_HOME=/tmp/.cache
+
+EXPOSE 8002
+
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=60s \
+    CMD curl -sf http://localhost:8002/api/status || exit 1
+
+# ADR-007 硬约束：--workers 1 单进程
+# 直接用卷内 .venv 的 python（uv run 会尝试写 venv 元数据，降权用户对 root 卷无写权限，故绕开 uv）
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
+CMD ["/app/.venv/bin/python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8002", "--workers", "1"]

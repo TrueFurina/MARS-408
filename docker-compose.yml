@@ -12,16 +12,22 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.final
       # D7：构建时注入版本/构建日期标签（避免 latest）
       args:
         VERSION: "${APP_TAG:-1.0.0}"
         BUILD_DATE: "${BUILD_DATE:-}"
     # D7：固定镜像 tag（非 latest），便于指定上一 tag 一键回滚
-    image: mangdehenzhi/app:${APP_TAG:-1.0.0}
+    image: mangdehenzhi/app:1.0.0
     ports:
       - "8002:8002"
+    # 显式声明入口与命令：基础镜像由 pkgbuild 容器 commit 而来（继承其 sleep infinity CMD，须覆盖）
+    entrypoint: ["/app/docker-entrypoint.sh"]
+    command: ["/app/.venv/bin/python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8002", "--workers", "1"]
     environment:
+      - PYTHONPATH=/app
+      - STATIC_DIR=/app/static
+      - PORT=8002
       - LLM_PROVIDER=${LLM_PROVIDER:-auto}
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
       - DEEPSEEK_BASE_URL=${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
@@ -63,6 +69,8 @@ services:
       # 生产部署：docker-compose --profile production up -d 时通过 .env 或环境变量设 NETLEARN_ENV=production
       - NETLEARN_ENV=${NETLEARN_ENV:-development}
     volumes:
+      # venv 来自 pkgbuild 容器 uv sync 的裸名卷（external，防项目名前缀错配）
+      - studyhelp_venv:/app/.venv
       - ./py-server/vectordb_data:/app/vectordb_data
       - ./py-server/milvus_lite_data:/app/milvus_lite_data
       # ⚠️ 不挂载 config.json：config.json 属 gitignored 运行时配置，fresh clone 不存在时
@@ -147,6 +155,8 @@ services:
       start_period: 30s
 
 volumes:
+  studyhelp_venv:
+    external: true
   milvus_data:
   redis_data:
   pg_data:

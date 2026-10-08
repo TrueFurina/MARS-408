@@ -1,0 +1,25 @@
+# ============================================================
+# Dockerfile.base — 芒得很职 依赖底座（pkgbuild 阶段 build 成 studyhelp-base:deps）
+# 仅装「系统层 + uv + 运行时用户」，不含项目代码/依赖。
+# Dockerfile.final 基于本镜像 COPY 代码，运行时 .venv 来自 studyhelp_venv 持久卷。
+# ============================================================
+
+FROM python:3.12-slim
+
+# 换清华镜像源（国内直连提速，避开代理链路 SSL 掐断）
+RUN sed -i 's|deb.debian.org|mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list.d/debian.sources 2>/dev/null || true \
+    && apt-get update && apt-get install -y --no-install-recommends \
+    curl libffi-dev ffmpeg gosu \
+    && rm -rf /var/lib/apt/lists/*
+
+# 装 uv（清华 PyPI 镜像）
+RUN pip install --no-cache-dir -i https://pypi.tuna.tsinghua.edu.cn/simple uv
+
+# 创建非 root 用户（与 Dockerfile.final / docker-entrypoint.sh 一致）
+RUN groupadd -r mangdehenzhi && useradd -r -g mangdehenzhi -d /app -s /sbin/nologin mangdehenzhi
+
+# uv 走清华源（pkgbuild 阶段 uv sync 用）
+ENV UV_DEFAULT_INDEX=https://pypi.tuna.tsinghua.edu.cn/simple
+ENV UV_LINK_MODE=copy
+
+WORKDIR /app
