@@ -126,8 +126,21 @@ jobs:
           python scripts/verify_retrieval.py | tee /tmp/rt.log
           # 无 KB 时这两个脚本会「真空通过」（返回 0 条），属假绿；
           # 显式判定真空为失败，避免在缺向量库的运行器上误报绿。
-          if grep -qE "保留 0/" /tmp/gc.log || grep -qE "返回 0 条" /tmp/rt.log; then
-            echo "⚠️ 重型 verify 真空通过：KB 未挂载？此类 verify 需要 Milvus + KB。"
+          # 粒度必须分开判（2026-10-09 修）：
+          #   - verify_gold_candidates 只在**末行汇总**打印「保留 N/总数 题」⇒ N=0 即真空；
+          #   - verify_retrieval 对 4 个 CASES **各打印一行**「返回 N 条」⇒ 必须判「全部为 0」。
+          #     旧写法 `grep -qE "返回 0 条"` 判的是「任一为 0」⇒ 只要 4 个查询里有 1 个恰好
+          #     0 命中就误报真空并 exit 1，把正常运行判成「KB 未挂载」。
+          # 另注：以输出文本为判据是退而求其次 —— 这两个脚本自身不是 fail-closed 的。
+          # 何时把它们改成"自带覆盖率结论、零覆盖 exit 2"，何时即可删掉本段兜底。
+          if grep -qE "保留 0/" /tmp/gc.log; then
+            echo "⚠️ 重型 verify 真空通过（gold_candidates 保留 0）：KB 未挂载？此类 verify 需要 Milvus + KB。"
             exit 1
           fi
-          echo "🟢 重型 verify 非真空通过"
+          rt_total=$(grep -cE "^Q\[" /tmp/rt.log || true)
+          rt_zero=$(grep -cE "返回 0 条" /tmp/rt.log || true)
+          if [ "$rt_total" -gt 0 ] && [ "$rt_zero" -eq "$rt_total" ]; then
+            echo "⚠️ 重型 verify 真空通过（retrieval ${rt_zero}/${rt_total} 个查询全为 0 条）：KB 未挂载？"
+            exit 1
+          fi
+          echo "🟢 重型 verify 非真空通过（retrieval 0 条查询 ${rt_zero}/${rt_total}）"
