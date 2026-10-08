@@ -8,7 +8,8 @@ name: verify-structural
 # 本 workflow 把它们接上 CI，按"是否需要外部基础设施"分两档：
 #
 #   • `structural` job（PR / push 自动跑，阻塞合并）
-#       跑「无需外部基础设施」的 6 个 verify_* + brand_scan + scan_stale_calibration。
+#       跑「无需外部基础设施」的 6 个 verify_* + brand_scan + scan_stale_calibration
+#       + check_hardcoded_paths（新增：防脚本里写死本机绝对路径，见下方注释）。
 #       这些脚本只依赖 sqlite / numpy / fastapi / 内置语料，CI 标准 python 即可跑。
 #
 #   • `heavy` job（仅 workflow_dispatch 手动触发，不阻塞合并）
@@ -60,14 +61,30 @@ jobs:
           run_one () {
             local desc="$1"; local cmd="$2"; local wd="$3"
             echo "── $desc ──"
-            ( cd "$wd" && eval "$cmd" ); local rc=$?
-            if [ $rc -ne 0 ]; then echo "  ❌ $desc 失败 (exit=$rc)"; fail=1; else echo "  ✅ $desc 通过"; fi
+            # ⚠️ 必须写成 `... || rc=$?`，不能只写 `( ... ); local rc=$?`。
+            # GitHub Actions 的 `run:` 默认 shell 是 `bash --noprofile --norc -eo pipefail {0}`
+            # —— **-e 是默认开的**，写 `set -u` 并不会取消它。旧写法里 subshell 的非零退出
+            # 会立刻触发 errexit，整个 step 在**第一个失败的脚本**处就地终止，
+            # 于是后面的 `❌ ... 失败` 与末尾 `🔴 结构守门存在失败项` **永远打印不出来**：
+            # 本段看起来"累积全部失败再汇总"，实际退化成"只报第一个，且连第一个也不报"。
+            # 实测 run 37812723531：日志停在 `── verify_core_lock_unification ──` 的 traceback
+            # 之后直接 `##[error]Process completed with exit code 1.`，没有任何 ❌ 行。
+            # 把失败放进 `||` 右侧即成为 errexit 的豁免上下文。
+            local rc=0
+            ( cd "$wd" && eval "$cmd" ) || rc=$?
+            if [ "$rc" -ne 0 ]; then echo "  ❌ $desc 失败 (exit=$rc)"; fail=1; else echo "  ✅ $desc 通过"; fi
           }
 
           # 品牌一致性（产品可见层 + 身份展示面）
           run_one "gate:brand (brand_scan)" "python scripts/brand_scan.py" "."
           # benchmark 口径漂移扫描（活文档面）
           run_one "scan_stale_calibration" "python scripts/scan_stale_calibration.py" "."
+          # 本机绝对路径扫描（静态、最便宜，故放最前）：
+          # 防的是「脚本里写死开发机路径 ⇒ Linux runner 上 FileNotFoundError ⇒ job 红，
+          # 而开发机因为该路径真的存在而全绿」。实测事故：run 37812723531，
+          # verify_core_lock_unification.py 曾写死 r"E:\Program\MARL\study-help-pro\py-server"。
+          # 本脚本自身 fail-closed：扫到 0 个对象时 exit 2（不是打印"合规"）。
+          run_one "check_hardcoded_paths" "python scripts/check_hardcoded_paths.py" "."
 
           # 轻量结构守门：sqlite / numpy / fastapi / 内置语料，无需 Milvus
           run_one "verify_app_wiring"            "python scripts/verify_app_wiring.py"            "py-server"

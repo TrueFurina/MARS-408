@@ -22,7 +22,14 @@ import tempfile
 import threading
 import types
 
-ROOT = r"E:\Program\MARL\study-help-pro\py-server"
+# ROOT 必须由 __file__ 推导，**不得写死**：
+# 本脚本由 .github/workflows/verify-structural.yml 的 structural job 在 ubuntu-latest 上运行。
+# 原先写死为 r"E:\Program\MARL\study-help-pro\py-server"（开发机路径）⇒ 在 Linux runner 上被拼成
+# "<repo>/py-server/E:\Program\...\py-server/db/core.py" ⇒ FileNotFoundError ⇒ exit 1
+# ⇒ 整个 structural job 变红（实测 run 37812723531）。
+# 之所以一直没暴露：该 job 顺序跑 9 个脚本，此前卡在更前面的 verify_app_wiring（浅克隆）上，
+# 修好前一个红之后这个才浮出水面。
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_DIR = os.path.join(ROOT, "db")
 
 pkg = types.ModuleType("db")
