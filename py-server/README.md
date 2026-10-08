@@ -71,7 +71,7 @@ python -m pytest tests/test_engine_modules.py -v
 
 ```
 py-server/
-├── api/           # API 路由（43 模块, 约 240 端点 / openapi.json 实测 223 路径）
+├── api/           # API 路由（43 模块, 约 244 端点 / openapi.json 实测 227 路径）
 ├── agents/        # 多智能体节点（11 个 LangGraph 节点）
 ├── engines/       # 核心引擎
 │   ├── gomarl.py          # GOMARL 共识聚合
