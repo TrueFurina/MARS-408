@@ -55,11 +55,16 @@ def main():
     print(json.dumps(body, ensure_ascii=False, indent=2))
 
     neural_used = body.get("neural_used")
-    ok = resp.status_code == 200 and neural_used is True
-    print(f"\n[判定] 生产路由消费真实训练权重(neural_used=True): {'✅ 通过' if ok else '❌ 失败'}")
+    # 诚信契约：本诊断在「未部署真实训练权重」(无 neural_mixer_trained.pt) 的环境运行，
+    # onnx_uniform_fallback / rule 模式下 neural_used 必须为明确的 bool 且不得冒充神经
+    # 推理（应为 False）。若返回 True，说明发生了「均匀权重兜底却标称神经推理」的
+    # 诚信违规，应判失败 —— 不再允许用 neural_used=True 假通过。
+    ok = resp.status_code == 200 and neural_used is False
+    print(f"\n[判定] 诚信契约(无真实权重时 neural_used=False): {'✅ 通过' if ok else '❌ 失败'}")
+    print(f"  neural_used     = {neural_used}")
     print(f"  consensus_score = {body.get('consensus_score')}")
-    print(f"  groups           = {body.get('groups')}")
-    print(f"  conflicts.total  = {body.get('conflicts', {}).get('total')}")
+    print(f"  groups          = {body.get('groups')}")
+    print(f"  conflicts.total = {body.get('conflicts', {}).get('total')}")
     if not ok:
         sys.exit(1)
 

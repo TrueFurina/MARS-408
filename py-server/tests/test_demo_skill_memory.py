@@ -70,7 +70,7 @@ def test_demo_skill_reads_weak_points(monkeypatch):
     runtime = SkillPluginRuntime("weak-point-expert")
     _install_capturing_llm(monkeypatch, runtime, captured)
 
-    output = asyncio.run(runtime.execute(
+    asyncio.run(runtime.execute(
         user_input="讲讲我的薄弱点",
         user_id="u_demo",
         session_id="s1",

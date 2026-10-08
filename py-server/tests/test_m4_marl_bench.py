@@ -27,7 +27,7 @@ class TestMultiAgentTeachingEnv:
 
     def test_step_maps_actions(self):
         env = MultiAgentTeachingEnv(student_level=0.5, seed=1, horizon=2)
-        s = env.reset()
+        env.reset()
         actions = {0: 0, 1: 0, 2: 0}  # basic / sequential / full
         s2, r, done = env.step(actions)
         assert isinstance(r, float)

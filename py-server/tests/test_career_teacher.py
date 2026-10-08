@@ -56,7 +56,7 @@ def test_teacher_full_closed_loop(client, teacher_id):
         "difficulty": "medium", "max_turns": 4}).json()
     assert len(task["join_code"]) == 6
     # 4) 学生凭码加入（花名册绑定）
-    sid_user = _student_override(client, "stu_user_p4")
+    _student_override(client, "stu_user_p4")
     try:
         joined = client.post("/api/career/task/join",
                              json={"join_code": task["join_code"]})
