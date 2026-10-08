@@ -1,22 +1,12 @@
 # ============================================================
 # Dockerfile — 芒得很职 多智能体职业素养实训平台
 # 多阶段构建：前端构建 → Python后端（含 Milvus 支持）
+# 注意：必须以 BuildKit 构建（RUN --mount=type=cache 需要），本机 compose 默认回退 legacy，需 DOCKER_BUILDKIT=1
 # ============================================================
 
-# ── Stage 1: 构建前端 ──
-FROM node:22-alpine AS frontend-builder
-WORKDIR /app/frontend
-
-# 只复制前端所需的文件（利用 .dockerignore + 显式 COPY 减少层体积）
-COPY package*.json ./
-COPY index.html ./
-COPY env.d.ts ./
-COPY tsconfig*.json ./
-COPY vite.config.ts ./
-COPY public/ ./public/
-COPY src/ ./src/
-
-RUN npm ci && npm run build-only
+# ── Stage 1: 前端产物 ──
+# 容器内 npm ci 经代理拉 npmjs.org 会被 SSL 掐断（多次"Exit handler never called"），
+# 改为宿主机构建（npm ci --registry=npmmirror + npm run build-only），此处直接 COPY 产物 dist/
 
 # ── Stage 2: Python后端 ──
 FROM python:3.12-slim
@@ -24,7 +14,8 @@ FROM python:3.12-slim
 # 安装系统依赖（PyMilvus 二进制包无需 gcc，但保留 libffi 以防降级回退）
 # gosu：用于以非 root 用户运行应用（F-014），回退 setpriv（util-linux，slim 自带）
 # 换清华镜像源（国内直连提速，避开代理链路）
-RUN sed -i 's|deb.debian.org|mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list.d/debian.sources 2>/dev/null || true \n    && apt-get update && apt-get install -y --no-install-recommends \
+RUN sed -i 's|deb.debian.org|mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list.d/debian.sources 2>/dev/null || true \
+    && apt-get update && apt-get install -y --no-install-recommends \
     curl libffi-dev ffmpeg gosu \
     && rm -rf /var/lib/apt/lists/*
 
@@ -44,13 +35,18 @@ LABEL maintainer="芒得很职 Team"
 
 # 复制并安装 Python 依赖（先复制作业文件，利用 Docker 层缓存）
 COPY py-server/pyproject.toml py-server/uv.lock ./
-RUN pip install --no-cache-dir uv && uv sync --frozen --no-dev --no-install-project
+# uv.lock 记录的是 files.pythonhosted.org（经代理慢/易断），改写为清华镜像直连
+RUN sed -i 's|https://files.pythonhosted.org|https://pypi.tuna.tsinghua.edu.cn|g' uv.lock
+# uv 下载缓存挂载为持久 cache volume（存于 VM 磁盘，引擎重启不丢，断点续传）
+RUN --mount=type=cache,target=/root/.cache/uv,sharing=locked \
+    pip install --no-cache-dir -i https://pypi.tuna.tsinghua.edu.cn/simple uv \
+    && uv sync --frozen --no-dev --no-install-project
 
 # 复制后端代码
 COPY py-server/ ./
 
-# 复制前端构建产物
-COPY --from=frontend-builder /app/frontend/dist ./static
+# 复制前端构建产物（宿主机预构建）
+COPY dist ./static
 
 # 确保代码/依赖/静态资源属主为运行时非 root 用户
 RUN chown -R mangdehenzhi:mangdehenzhi /app
@@ -65,6 +61,8 @@ RUN chmod +x /app/docker-entrypoint.sh
 
 # 环境变量
 ENV PYTHONPATH=/app
+# uv 走清华 PyPI 镜像（国内直连提速，压进引擎存活窗口）
+ENV UV_DEFAULT_INDEX=https://pypi.tuna.tsinghua.edu.cn/simple
 ENV STATIC_DIR=/app/static
 ENV HOST=0.0.0.0
 ENV PORT=8002
