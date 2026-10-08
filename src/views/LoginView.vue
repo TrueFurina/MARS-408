@@ -14,6 +14,8 @@ const error = ref('')
 const loading = ref(false)
 const showPassword = ref(false)
 const isRegister = computed(() => mode.value === 'register')
+// 公开展示站（GitHub Pages）无后端：本地运行时不显示此提示
+const isLocalRun = ref(['localhost', '127.0.0.1', '::1'].includes(window.location.hostname))
 
 async function submit() {
   error.value = ''
@@ -41,6 +43,12 @@ function toggleMode() { mode.value = isRegister.value ? 'login' : 'register'; er
         <div class="brand-logo"><span class="logo-m">芒得</span><span class="logo-a">很职</span></div>
         <div class="brand-title">多智能体赋能职业素养对抗实训平台</div>
         <div class="brand-desc">新一代多智能体赋能的计算机类学生职业素养对抗实训平台</div>
+      </div>
+
+      <!-- 公开展示站提示（本地运行时不显示） -->
+      <div v-if="!isLocalRun" class="pub-notice">
+        <strong>公开展示版</strong>：本站未部署后端，登录 / 注册需在本地运行服务。
+        <a href="https://github.com/TrueFurina/MARS-408#docker" target="_blank" rel="noopener">本地运行说明 →</a>
       </div>
 
       <!-- 登录/注册切换 -->
@@ -120,6 +128,12 @@ function toggleMode() { mode.value = isRegister.value ? 'login' : 'register'; er
 .logo-a { font-size: var(--text-5xl); font-weight: 800; background: linear-gradient(135deg,var(--color-accent),var(--color-accent-text)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 .brand-title { font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--color-text); margin-bottom: var(--space-1); }
 .brand-desc { font-size: var(--text-sm); color: var(--color-text-3); line-height: 1.5; }
+
+/* 公开展示站提示 */
+.pub-notice { padding: 10px 14px; margin-bottom: var(--space-5); border-radius: 10px; background: rgba(var(--accent-rgb),0.08); border: 1px solid rgba(var(--accent-rgb),0.2); font-size: var(--text-sm); color: var(--color-text-2); line-height: 1.6; }
+.pub-notice strong { color: var(--color-accent-text); }
+.pub-notice a { color: var(--color-accent-text); text-decoration: none; }
+.pub-notice a:hover { text-decoration: underline; }
 
 /* 模式切换 */
 .mode-row { display: flex; gap: var(--space-1); padding: 3px; background: var(--color-surface-2); border-radius: 10px; margin-bottom: var(--space-5); }

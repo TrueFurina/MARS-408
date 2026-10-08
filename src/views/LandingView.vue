@@ -78,18 +78,21 @@ onUnmounted(() => {
   window.removeEventListener('scroll', onScroll)
 })
 
-function enterSystem() {
-  router.push('/')
+// ── 展示站 / 本地跑 分流 ──
+// 公开展示站（GitHub Pages）只承载静态前端、无后端；完整功能需本地启动。
+// 本地（localhost / 127.0.0.1）→ 正常进入；公开站 → 弹出「本地运行说明」，不假装能直接进。
+const isLocalRun = ref(['localhost', '127.0.0.1', '::1'].includes(window.location.hostname))
+const showRunGuide = ref(false)
+
+function routeOrGuide(target: string) {
+  if (isLocalRun.value) { router.push(target); return }
+  showRunGuide.value = true
 }
-function goToGraph() {
-  router.push('/knowledge-graph')
-}
-function goToSkills() {
-  router.push('/skill-platform')
-}
-function goToTraining() {
-  router.push('/career/training')
-}
+function enterSystem() { routeOrGuide('/') }
+function goToGraph() { routeOrGuide('/knowledge-graph') }
+function goToSkills() { routeOrGuide('/skill-platform') }
+function goToTraining() { routeOrGuide('/career/training') }
+function goLogin() { router.push('/login') }
 </script>
 
 <template>
@@ -108,7 +111,7 @@ function goToTraining() {
         <span class="nav-text">芒得很职</span>
       </div>
       <div class="nav-links">
-        <button class="nav-link" @click="enterSystem">进入系统</button>
+        <button class="nav-link" @click="enterSystem">{{ isLocalRun ? '进入系统' : '本地运行' }}</button>
         <button class="nav-link" @click="goToGraph">知识图谱</button>
         <button class="nav-link" @click="goToSkills">技能平台</button>
         <button class="nav-link" @click="goToTraining">体验对抗实训</button>
@@ -141,7 +144,7 @@ function goToTraining() {
       <!-- CTA -->
       <div class="hero-cta">
         <button class="cta-primary" @click="enterSystem">
-          <span>进入系统</span>
+          <span>{{ isLocalRun ? '进入系统' : '本地运行 · 体验完整功能' }}</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </button>
         <button class="cta-secondary" @click="goToGraph">
@@ -149,6 +152,10 @@ function goToTraining() {
           <span>探索知识图谱</span>
         </button>
       </div>
+      <p v-if="!isLocalRun" class="hero-notice">
+        本站为<strong>公开展示版</strong>（静态前端，未部署后端）· 完整功能请在本地运行
+        <button class="hero-notice-link" @click="showRunGuide = true">查看本地运行方式 →</button>
+      </p>
     </section>
 
     <!-- 三大创新亮点 -->
@@ -213,7 +220,7 @@ function goToTraining() {
         <h2 class="bottom-title">让每一道错题，都成为成长的起点</h2>
         <p class="bottom-desc">11 节点编排 · 10 项多模态能力 · 无限可扩展教学技能 · 知识图谱可视化</p>
         <button class="cta-primary cta-large" @click="enterSystem">
-          <span>立即体验</span>
+          <span>{{ isLocalRun ? '立即体验' : '本地运行 · 体验完整功能' }}</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </button>
       </div>
@@ -223,6 +230,48 @@ function goToTraining() {
       <span>芒得很职 · 基于大模型的职业素养对抗实训多智能体平台</span>
       <span class="footer-tech">Vue 3 + Vite + TypeScript · 玻璃态发光设计系统</span>
     </footer>
+
+    <!-- 本地运行说明弹窗（公开展示站） -->
+    <transition name="rg-fade">
+      <div v-if="showRunGuide" class="rg-mask" @click.self="showRunGuide = false">
+        <div class="rg-card" role="dialog" aria-modal="true" aria-labelledby="rg-title">
+          <button class="rg-close" @click="showRunGuide = false" aria-label="关闭">×</button>
+          <h3 id="rg-title" class="rg-title">本地运行 · 体验完整功能</h3>
+          <p class="rg-desc">
+            本站为<strong>公开展示版</strong>，仅承载静态前端。登录、数据与智能体编排等完整功能，
+            需在本地启动后端服务（含 Milvus / PostgreSQL / Redis，缺失时自动降级）。
+          </p>
+          <ol class="rg-steps">
+            <li>
+              <span class="rg-n">1</span>
+              <div class="rg-step-body">
+                <div class="rg-step-t">构建前端产物</div>
+                <code>npm ci &amp;&amp; npm run build-only</code>
+              </div>
+            </li>
+            <li>
+              <span class="rg-n">2</span>
+              <div class="rg-step-body">
+                <div class="rg-step-t">准备依赖卷并启动服务</div>
+                <code>bash scripts/docker_pkgbuild.sh &amp;&amp; docker-compose up -d</code>
+              </div>
+            </li>
+            <li>
+              <span class="rg-n">3</span>
+              <div class="rg-step-body">
+                <div class="rg-step-t">浏览器访问</div>
+                <code>http://localhost:8002</code>
+              </div>
+            </li>
+          </ol>
+          <div class="rg-demo">演示账号：<code>demo</code> / <code>demo123456</code></div>
+          <div class="rg-actions">
+            <button class="cta-primary" @click="goLogin">已在本地运行 · 进入登录</button>
+            <a class="rg-link" href="https://github.com/TrueFurina/MARS-408#docker" target="_blank" rel="noopener">查看部署文档</a>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -708,6 +757,143 @@ function goToTraining() {
 }
 .footer-tech { font-family: var(--font-mono); }
 
+/* ── 公开站提示条 ── */
+.hero-notice {
+  margin: var(--space-6) auto 0;
+  max-width: 640px;
+  font-size: var(--text-sm);
+  color: var(--color-text-3);
+  line-height: 1.7;
+  animation: fade-up 0.6s ease 0.45s both;
+}
+.hero-notice strong { color: var(--color-text-2); }
+.hero-notice-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent-primary);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.hero-notice-link:hover { text-decoration: underline; }
+
+/* ── 本地运行说明弹窗 ── */
+.rg-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5);
+  background: color-mix(in srgb, var(--color-canvas) 72%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.rg-card {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: var(--space-9) var(--space-8) var(--space-8);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  border: 1px solid var(--color-glass-border);
+  box-shadow: var(--shadow-xl);
+}
+.rg-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-hover);
+  color: var(--color-text-2);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.rg-close:hover { background: var(--color-glass-hover); color: var(--color-text); }
+.rg-title {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+.rg-desc {
+  margin: 0 0 var(--space-6);
+  font-size: var(--text-sm);
+  line-height: 1.75;
+  color: var(--color-text-2);
+}
+.rg-desc strong { color: var(--accent-primary); }
+.rg-steps {
+  list-style: none;
+  margin: 0 0 var(--space-5);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.rg-steps li { display: flex; gap: var(--space-3); align-items: flex-start; }
+.rg-n {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: var(--accent-primary-10);
+  color: var(--accent-primary);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  margin-top: 2px;
+}
+.rg-step-body { flex: 1; min-width: 0; }
+.rg-step-t { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--color-text); margin-bottom: 6px; }
+.rg-step-body code,
+.rg-demo code {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-2);
+  word-break: break-all;
+}
+.rg-demo {
+  margin-bottom: var(--space-6);
+  font-size: var(--text-sm);
+  color: var(--color-text-3);
+}
+.rg-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+.rg-actions .cta-primary { padding: 10px var(--space-6); font-size: var(--text-base); }
+.rg-link {
+  font-size: var(--text-sm);
+  color: var(--color-text-3);
+  text-decoration: none;
+  transition: var(--transition);
+}
+.rg-link:hover { color: var(--accent-primary); text-decoration: underline; }
+
+.rg-fade-enter-active, .rg-fade-leave-active { transition: opacity 0.2s ease; }
+.rg-fade-enter-from, .rg-fade-leave-to { opacity: 0; }
+
 /* ── 响应式 ── */
 @media (max-width: 900px) {
   .innovation-grid { grid-template-columns: 1fr; }
@@ -724,5 +910,7 @@ function goToTraining() {
   .metric-value { font-size: 1.375rem; }
   .hero-cta { flex-direction: column; }
   .bottom-cta-inner { padding: var(--space-8) var(--space-5); }
+  .rg-card { padding: var(--space-8) var(--space-5) var(--space-6); }
+  .rg-actions { flex-direction: column; align-items: stretch; }
 }
 </style>
