@@ -276,6 +276,10 @@ export default router
 // ── 登录守卫 ──
 // 注：router 在 Pinia 初始化前加载，因此直接读 localStorage 而非 authStore；
 // 权限通过路由 meta 声明（requiresRole / public / profileRequired），消除硬编码 path 判断。
+// 公开展示站（非 localhost）无后端：未登录一律引导到展示落地页 /landing，
+// 避免"一进来就落在登不进去的登录页"；本地站保持原行为（未登录 → /login）。
+const IS_PUBLIC_SITE = !['localhost', '127.0.0.1', '::1'].includes(window.location.hostname)
+
 router.beforeEach((to) => {
   let token: string | null = null
   let user: any = null
@@ -287,6 +291,11 @@ router.beforeEach((to) => {
 
   // 公开路由（meta.public）免登录：评委入口 /landing、设计原型聚合 /showcase
   if ((to.meta as any)?.public) return true
+
+  // 公开展示站：未登录访问受保护页 → 展示落地页；直接访问 /login 仍放行（含"展示版"提示）
+  if (!token && IS_PUBLIC_SITE) {
+    return to.path === '/login' ? true : { path: '/landing' }
+  }
 
   // 未登录且非登录页 → 跳登录
   if (!token && to.path !== '/login') return { path: '/login' }
