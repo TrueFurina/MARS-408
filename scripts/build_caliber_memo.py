@@ -3,7 +3,7 @@
 输出：deliverables/闽江申报材料归档-2026-09/大创交付件口径校验备忘录.docx
 """
 from docx import Document
-from docx.shared import Pt, Cm
+from docx.shared import Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 
 OUT = "deliverables/闽江申报材料归档-2026-09/大创交付件口径校验备忘录.docx"

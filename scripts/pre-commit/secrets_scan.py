@@ -213,7 +213,6 @@ def main():
     import sys
     files = sys.argv[1:] if len(sys.argv) > 1 else [str(p) for p in Path('.').rglob('*') if p.is_file()]
 
-    all_hits = []
     for f in files:
         p = Path(f)
         if not p.is_file():

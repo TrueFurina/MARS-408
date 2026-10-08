@@ -1,4 +1,4 @@
-import os, re, json, collections
+import os, re, collections
 
 ROOT = r"E:\Program\MARL\study-help-pro\src"
 vue_files = []

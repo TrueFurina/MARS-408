@@ -34,7 +34,7 @@ async def hit_overview(token: str) -> float:
         with urllib.request.urlopen(req, timeout=15) as resp:
             resp.read()
         return (time.perf_counter() - start) * 1000
-    except Exception as e:
+    except Exception:
         return -1.0  # 失败标记
 
 

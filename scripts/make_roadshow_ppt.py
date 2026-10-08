@@ -125,7 +125,6 @@ from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.oxml.ns import qn
-import copy
 
 # ── 主题色 ──
 NAVY   = RGBColor(0x12, 0x2A, 0x4A)   # 深蓝主色

@@ -1,4 +1,4 @@
-import os, re, collections, difflib
+import os, re, collections
 
 ROOT = r"E:\Program\MARL\study-help-pro"
 

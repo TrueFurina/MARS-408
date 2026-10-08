@@ -16,7 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent / "py-server"
 sys.path.insert(0, str(ROOT))
 
-import torch  # 确认 torch 可用
+import torch  # noqa: F401  # 确认 torch 可用（本脚本的可达性前提，故意不使用）
 
 from engines import review_policy as rp
 from engines import career_policy as cp
@@ -171,7 +171,7 @@ def verify_career():
     for seed in SEEDS:
         p = cp.CareerModePolicy(seed=seed)
         p.warmup_with_rules(cp.CareerAdversaryEnv(seed=seed, horizon=8), steps=400, seed=seed)
-        ppo = p.train_ppo(cp.CareerAdversaryEnv(seed=seed, horizon=8), episodes=3000,
+        p.train_ppo(cp.CareerAdversaryEnv(seed=seed, horizon=8), episodes=3000,
                           horizon=8, seed=seed, batch_episodes=48)
 
         def _rl_sel(feats, streak, _p=p):

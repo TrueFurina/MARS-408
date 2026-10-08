@@ -7,10 +7,8 @@
 规则来源：西湖论剑 CTF-Agent _structure_guard.py（通用化）
 默认只检查本次新增文件（--diff-filter=A），不误伤重命名/既有文件。
 """
-import re
 import subprocess
 import sys
-from pathlib import Path
 
 # 受管后缀（这些类型的散落文件必须归位）
 MANAGED_EXT = {"md", "txt", "html", "json", "csv", "pdf", "png", "jpg", "jpeg", "xlsx", "yml", "yaml"}

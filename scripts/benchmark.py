@@ -17,7 +17,6 @@
 
 import argparse
 import json
-import os
 import sys
 import time
 import random
@@ -52,7 +51,7 @@ BENCHMARK_QUERIES = [
 def benchmark_frugalrag_real():
     """真实模式：使用实际的 FrugalRAG 引擎和 InMemoryVectorStore"""
     import asyncio
-    from engines.frugal_rag import FrugalRAG, BM25Scorer, _reranker
+    from engines.frugal_rag import FrugalRAG
     from db.milvus_client import vector_db
     from db.embedder import embed_text
 
@@ -91,10 +90,8 @@ def benchmark_frugalrag_real():
             full_text = " ".join(c.get("text", "") for c in full_top5).lower()
             full_recall = sum(1 for kw in expected if kw.lower() in full_text) / len(expected)
 
-            # 去噪率：FrugalRAG 过滤了多少低相关度结果
             frugal_scores = [c.get("_vector_score", c.get("score", 0)) for c in frugal_chunks]
             full_scores = [c.get("score", 0) for c in full_top5]
-            noise_filtered = len(full_chunks) - len(frugal_chunks) if len(full_chunks) > len(frugal_chunks) else 0
 
             results["frugalrag"].append({
                 "query": query,
@@ -122,7 +119,6 @@ def benchmark_frugalrag_demo():
 
     for q in BENCHMARK_QUERIES:
         query = q["query"]
-        expected = q["expected_keywords"]
 
         # 模拟 FrugalRAG：阈值过滤后返回更少但更精准的结果
         frugal_latency = random.uniform(80, 180)  # E5编码+检索+BM25+融合
@@ -131,7 +127,6 @@ def benchmark_frugalrag_demo():
 
         # 模拟全量检索：无过滤，返回更多但含噪声
         full_latency = random.uniform(30, 70)  # 仅向量检索
-        full_chunks = 30
         full_recall = random.uniform(0.50, 0.75)  # 含噪声，Top-5 覆盖率较低
 
         results["frugalrag"].append({
@@ -287,7 +282,7 @@ def benchmark_consensus_real():
                 consensus_score = cr.overall_score
                 contradictions = len(cr.flagged_issues)
                 consistency = 1.0 - (contradictions * 0.15)
-            except Exception as e:
+            except Exception:
                 consensus_score = 0
                 contradictions = 0
                 consistency = 0

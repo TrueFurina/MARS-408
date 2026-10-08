@@ -63,7 +63,7 @@ def extract_docx_text(path):
                     if c.text.strip():
                         lines.append(c.text)
         return "\n".join(lines)
-    except Exception as e:
+    except Exception:
         return ""
 
 

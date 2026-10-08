@@ -40,7 +40,6 @@ except Exception:  # pragma: no cover
 from engines.review_policy import (  # noqa: E402
     ACTION_TOKENS,
     REVIEW_ACTIONS,
-    REVIEW_MIN_REVIEW,
     SKIP_STREAK_LIMIT,
     ReviewEnv,
     ReviewWeightPolicy,

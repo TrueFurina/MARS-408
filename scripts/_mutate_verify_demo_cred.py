@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import hashlib
-import io
 import subprocess
 import sys
 from pathlib import Path

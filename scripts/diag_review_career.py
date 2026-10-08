@@ -38,7 +38,6 @@ def fixed_action_return(env_cls, action, seed, horizon):
 
 def review_eval(seed):
     """单个 seed 下三方案平均回报（无噪声固定便于比较：noisy=False）。"""
-    env = rp.ReviewEnv(seed=seed, horizon=H, noisy=False)
     pol = rp.ReviewWeightPolicy(seed=seed)
     pol.warmup_with_rules(rp.ReviewEnv(seed=seed, noisy=False), steps=400, seed=seed)
     pol.train_ppo(rp.ReviewEnv(seed=seed, horizon=H, noisy=False), episodes=80, horizon=H, seed=seed)

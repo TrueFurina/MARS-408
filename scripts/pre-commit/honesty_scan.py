@@ -134,7 +134,6 @@ def is_skipped(path: Path) -> bool:
 
 def scan_text(text: str, path: str = "") -> list:
     hits = []
-    exempt = _path_redline_exempt(path)
     for idx, line in enumerate(text.splitlines(), start=1):
         stripped = _QUOTE_RE.sub("", line)
         for phrase in FORBIDDEN_PHRASES:

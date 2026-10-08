@@ -6,7 +6,7 @@ px -> rem 安全迁移脚本 (芒得很职 / 芒得很职 设计系统)
 - 只转换"尺寸类属性"的 px; 严格排除断点/阴影/hairline/动画/变量定义
 - 每个被改文件自动备份到 %TEMP%/pxrem_backup, 验证 OK 后可删
 """
-import re, os, sys, shutil, glob
+import re, os, shutil, glob
 
 ROOT = r'E:\Program\MARL\study-help-pro'
 BACKUP = os.path.join(os.environ.get('TEMP', r'C:\Users\Lenovo\AppData\Local\Temp'), 'pxrem_backup')
