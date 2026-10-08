@@ -1,5 +1,5 @@
 # ============================================================
-# Dockerfile — 芒得很职 408 个性化学习系统
+# Dockerfile — 芒得很职 多智能体职业素养实训平台
 # 多阶段构建：前端构建 → Python后端（含 Milvus 支持）
 # ============================================================
 
@@ -36,10 +36,10 @@ WORKDIR /app
 # ── D7：镜像元数据标签（固定 VERSION，避免 latest）──
 ARG VERSION=1.0.0
 ARG BUILD_DATE
-LABEL org.opencontainers.image.title="芒得很职 个性化学习系统"
+LABEL org.opencontainers.image.title="芒得很职 多智能体职业素养实训平台"
 LABEL org.opencontainers.image.version="$VERSION"
 LABEL org.opencontainers.image.created="$BUILD_DATE"
-LABEL org.opencontainers.image.description="408 考研 GOMARL + FrugalRAG 多智能体学习系统"
+LABEL org.opencontainers.image.description="芒得很职 多智能体职业素养实训平台（GOMARL + FrugalRAG）"
 LABEL maintainer="芒得很职 Team"
 
 # 复制并安装 Python 依赖（先复制作业文件，利用 Docker 层缓存）

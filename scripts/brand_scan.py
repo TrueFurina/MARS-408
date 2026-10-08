@@ -25,7 +25,8 @@
     **本来就该有 408 内容**，把业务代码纳入品牌门禁就永远要依赖白名单。
 
   因此面 B 的设计取舍是：**清单是有限的、可枚举的，措辞不是。**
-    只对 7 个"用户/评委真正会看到产品自称是什么"的位置启用身份短语，
+    只对 9 个"用户/评委真正会看到产品自称是什么"的位置启用身份短语
+    （含根目录 Dockerfile / docker-compose.yml 镜像与编排元数据），
     py-server 内部的合法 408 业务代码**不在清单内，永不误伤**。
 
   清单内文件若丢失 → 视为 DRIFT 并判失败：清单是本门禁的真值源，
@@ -60,6 +61,7 @@ BRAND_TOKENS = ["MARS", "火山杯", "软件杯", "三创赛", "huoshan", "火�
 # ⚠️ 场景内部的"408 考研"业务文案是合法内容，不在清单内，不受影响。
 IDENTITY_PATTERNS: list[tuple[str, "re.Pattern[str]"]] = [
     ("考研学子", re.compile(r"考研学子")),
+    ("408 考研", re.compile(r"408\s*考研")),
     ("408 考研个性化学习", re.compile(r"408\s*考研个性化学习")),
     ("个性化学习闭环", re.compile(r"个性化学习闭环")),
     ("个性化学习(多智能体)系统", re.compile(r"个性化学习(?:多智能体)?系统")),
@@ -76,6 +78,8 @@ IDENTITY_SURFACE_FILES: list[tuple[str, str]] = [
     ("index.html", "仓库根 index.html（SEO / og / title）"),
     ("py-server/main.py", "FastAPI OpenAPI 元数据（/docs 标题与描述，评委可见）"),
     ("py-server/openapi.json", "OpenAPI 冻结快照（git 已跟踪、随包发出；防与 main.py 同源身份静默漂移）"),
+    ("Dockerfile", "镜像元数据标签（docker inspect / 仓库可见，产品自称）"),
+    ("docker-compose.yml", "编排元数据注释（开箱即跑说明，产品自称）"),
 ]
 
 # 功能性 URL 白名单（仓名未更名前必须保留）

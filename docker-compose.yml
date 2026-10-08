@@ -1,4 +1,4 @@
-# docker-compose.yml — 芒得很职 408 个性化学习系统
+# docker-compose.yml — 芒得很职 多智能体职业素养实训平台
 #
 # 开箱即跑（评委默认）:  docker-compose up -d
 #   → development 模式：自动生成 AUTH_SECRET / ADMIN_PASSWORD，播种 demo/demo123456 演示账号
@@ -65,13 +65,27 @@ services:
     volumes:
       - ./py-server/vectordb_data:/app/vectordb_data
       - ./py-server/milvus_lite_data:/app/milvus_lite_data
-      - ./py-server/config.json:/app/config.json
+      # ⚠️ 不挂载 config.json：config.json 属 gitignored 运行时配置，fresh clone 不存在时
+      # Docker 会把它建成宿主目录，既污染仓库又违背「开箱即跑」。配置一律走 DEFAULTS + .env
+      #（密钥仅从 .env / 环境变量加载，见 config.py），无需文件挂载即可启动。
       # ADR-007: 挂载教材目录供后台 import_worker 单写者扫描（只读）
       - ./documents:/app/documents:ro
       # E5 / reranker 本地模型：宿主机 py-server/models 是指向冷存的 symlink，
       # Docker 在宿主机侧解析真实目录；容器内 /app/models 与 CONFIG_DIR/models 对齐（只读）
       - ./py-server/models:/app/models:ro
     restart: unless-stopped
+    # 生产部署（--profile production）时等待依赖服务 healthy 再启动；
+    # required:false 保证开发模式（不启 Milvus/PG/Redis）也能独立启动。
+    depends_on:
+      milvus:
+        condition: service_healthy
+        required: false
+      postgresql:
+        condition: service_healthy
+        required: false
+      redis:
+        condition: service_healthy
+        required: false
     healthcheck:
       # D4：探活 /api/status（镜像已装 curl）；start_period 给冷启动留时间
       test: ["CMD", "curl", "-f", "http://localhost:8002/api/status"]
