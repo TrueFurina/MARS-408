@@ -37,7 +37,7 @@
 | 真实对话生成 | ✅ 已实现 | `POST /api/chat/stream` → 200 / **5.4 s** / 有效 LLM 内容 |
 | 检索增强效果 | ✅ 已实现 | **Recall@5 +7.14pp / P@5 +15.71pp / MRR +12.38pp**（2026-09-18 benchmark 真实产出） |
 | 三级降级容灾 | ✅ 已实现 | Redis 未启用 / PostgreSQL→SQLite / Milvus→InMemory 逐级回退 |
-| 前端页面 | ✅ 已实现 | **45 个 views**（82 个 .vue 含组件），学生端 + 教师看板 |
+| 前端页面 | ✅ 已实现 | **46 个 views**（85 个 .vue 含组件），学生端 + 教师看板 |
 | 向量检索 | ✅ 已实现 | E5 已本地化（`models/e5-base-v2` 437MB / 768 维），`frugal_rag` 走真实向量检索，`_degraded` 关闭（2026-09-13 验证） |
 | 共识与冲突消解引擎 | ✅ 规则原型 + 三评审门禁 | M2 已实施：批评者结构化输出 + 共识证据门禁 + 置信度（tests/test_m2_review_gate.py 9 用例）；GoMARL 加权共识权重仍为规则设定 |
 | Triage 分级路由（M1） | ✅ 已实现 | 零 LLM 成本分类器 + low 短路快路径，tests/test_triage.py 18 用例通过 |
@@ -79,7 +79,7 @@
 
 ### 5. 全链路工程化与容灾
 
-- 前端 Vue 3 + TypeScript，**45 个页面（45 views）**，多端多角色（学生 / 教师看板）
+- 前端 Vue 3 + TypeScript，**46 个页面（46 views）**，多端多角色（学生 / 教师看板）
 - 后端 FastAPI + LangGraph，**约 244 个 API 端点**（openapi.json 实测 227 路径 / 244 操作，43 路由模块），**1177 项测试通过 / 227 跳过 / 3 xfail**（全量回归 0 失败）
 - **双通道大模型自动容灾**：DeepSeek（主）→ 讯飞星火 X2（兜底）
 - Milvus / PostgreSQL / Redis 缺失时逐级自动降级，单机即可完整运行
@@ -89,7 +89,7 @@
 ## 二、系统架构
 
 ```
-┌─ 前端 Vue 3 + TypeScript (45 页面 / 45 views) ───────────────┐
+┌─ 前端 Vue 3 + TypeScript (46 页面 / 46 views) ───────────────┐
 │  Vite :5173 → 代理 → 后端 :8002                               │
 │  学生端：对话 / 学习路径 / 知识图谱 / 练习 / 评估 / 职业素养实训│
 │  教师端：班级学情看板                                          │
@@ -227,9 +227,9 @@ npm install && npm run dev                   # :5173，代理 /api → 8002
 
 | 维度 | 指标 |
 |------|------|
-| 前端 | Vue 3 + TypeScript · 45 个 views（82 个 .vue） · Vite 构建 |
+| 前端 | Vue 3 + TypeScript · 46 个 views（85 个 .vue） · Vite 构建 |
 | 后端 | FastAPI + LangGraph · 约 244 个 API 端点（openapi.json 实测 227 路径 / 244 操作）· 11 Agent 节点 |
-| 代码量 | 后端 414 个 Python 文件 / 约 10.2 万行 · 前端 93 文件 / 约 2.8 万行 |
+| 代码量 | 后端 374 个 Python 文件 / 约 8.3 万行 · 前端 134 文件 / 约 5.1 万行 |
 | 测试 | 1177 项测试通过 / 227 跳过 / 3 xfail（全量回归 0 失败） |
 | LLM | DeepSeek（主）+ 讯飞星火 X2（兜底）双通道自动容灾 |
 | 检索 | 向量检索主路径 · 约 2122 条条目 · E5 已本地化启用（768 维） |

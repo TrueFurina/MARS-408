@@ -53,7 +53,7 @@ chain fails, the system **degrades to BM25-only** so demos and usage never break
 
 ### 5. Production-Grade Engineering and Graceful Degradation
 
-- Frontend: Vue 3 + TypeScript, **45 pages (45 views)**, multi-role (student / teacher dashboard)
+- Frontend: Vue 3 + TypeScript, **46 pages (46 views)**, multi-role (student / teacher dashboard)
 - Backend: FastAPI + LangGraph, **~244 API endpoints** (openapi.json: 227 paths / 244 operations), **1177 tests passing / 227 skipped / 3 xfail** (full regression, 0 failures)
 - **Dual-channel LLM failover**: DeepSeek (primary) + iFlytek Spark generalv3.5 (fallback; X2 not authorized)
 - Milvus / PostgreSQL / Redis each degrade independently — a single machine runs the system end to end
@@ -63,7 +63,7 @@ chain fails, the system **degrades to BM25-only** so demos and usage never break
 ## 2. System Architecture
 
 ```
-┌─ Frontend: Vue 3 + TypeScript (45 pages / 45 views) ──────────┐
+┌─ Frontend: Vue 3 + TypeScript (46 pages / 46 views) ──────────┐
 │  Vite :5173  ──proxy──▶  Backend :8002                        │
 │  Student: chat / learning path / knowledge graph / practice     │
 │  Teacher: class-level learning dashboard                        │
@@ -185,7 +185,7 @@ core features still run.
 
 | Dimension | Metric |
 |-----------|--------|
-| Frontend | Vue 3 + TypeScript · 45 pages (45 views) · Vite build |
+| Frontend | Vue 3 + TypeScript · 46 pages (46 views) · Vite build |
 | Backend | FastAPI + LangGraph · ~240 API endpoints (openapi.json: 223 paths / 240 ops) · 11 agent nodes |
 | Tests | 1177 tests passing / 227 skipped / 3 xfail (full regression, 0 failures) |
 | LLM | DeepSeek (primary) + iFlytek Spark generalv3.5 (fallback; X2 not authorized), dual-channel failover |
