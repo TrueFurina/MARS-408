@@ -122,7 +122,7 @@ def main() -> int:
             if fn.endswith(".html"):
                 consumers.append(os.path.join(d, fn))
     if missing_dirs:
-        print(f"[warn] 消费者目录不存在，已跳过: {missing_dirs}\n")
+        print(f"[!] 消费者目录不存在（本次未覆盖）: {missing_dirs}\n")
 
     total_drift = 0
     compared = 0   # 真正解析到 :root 并参与比对的消费者数
@@ -162,6 +162,21 @@ def main() -> int:
             print(f"  [OK]    {rel}  (对齐 {matched} · 扩展 {ext})")
 
     print()
+    # 覆盖度自检（fail-closed）—— 与 scripts/scan_stale_calibration.py 同口径：
+    # 声明扫描面缺失时，即使残余面全部对齐，也不得给出「零漂移」结论。
+    #
+    # 2026-10-09 前此处仅 `[warn] 消费者目录不存在，已跳过`：CONSUMER_DIRS 共 2 个目录 /
+    # 7 个消费者，若 public/showcase（6 个消费者）被改名，仍剩 1 个比对成功
+    # ⇒ 输出「零漂移 1/1」+ **exit 0**，静默丢掉 6/7 的覆盖。
+    # 只有「所有目录都缺」才会因 compared == 0 变红（极端情形），故必须**逐目录**判。
+    if missing_dirs:
+        print(f"[ERROR] 消费者扫描面不完整：缺失 {len(missing_dirs)}/{len(CONSUMER_DIRS)} 个目录 "
+              f"{missing_dirs}。\n"
+              f"        残余 {compared} 个消费者即便全部对齐，也只覆盖残余面，"
+              f"不能声称「零漂移」。\n"
+              f"        目录若已改名/移位，请同步更新 design-system/check_tokens.py 的 CONSUMER_DIRS。",
+              file=sys.stderr)
+        return 2
     if compared == 0:
         print(f"[ERROR] 零覆盖: 未比对任何消费者"
               f"（发现 {len(consumers)} 份 .html，其中 {len(no_root)} 份无 :root；"
@@ -170,7 +185,9 @@ def main() -> int:
               f"        请检查 CONSUMER_DIRS 是否已失效（目录改名/移位）。", file=sys.stderr)
         return 2
     if total_drift == 0:
-        print(f"=== 结论: 零漂移 (ZERO DRIFT) — {compared}/{len(consumers)} 个消费者与 _variables.css 对齐 ===")
+        print(f"=== 结论: 零漂移 (ZERO DRIFT) — 消费者目录 "
+              f"{len(CONSUMER_DIRS) - len(missing_dirs)}/{len(CONSUMER_DIRS)} 在位，"
+              f"{compared}/{len(consumers)} 个消费者与 _variables.css 对齐 ===")
         return 0
     else:
         print(f"=== 结论: 发现 {total_drift} 处漂移，需修复 ===")
