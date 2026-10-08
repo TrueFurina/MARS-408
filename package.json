@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
-    "build-only": "vite build",
+    "build-only": "vite build && node scripts/copy-spa-404.mjs",
     "type-check": "vue-tsc --build",
     "format": "prettier --write --experimental-cli src/",
     "lint": "eslint . --ext .vue,.js,.ts,.tsx",
