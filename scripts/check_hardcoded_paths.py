@@ -71,9 +71,16 @@ PY_INVOCATION = re.compile(r"[\w./\\-]+\.py")
 
 
 def tracked_python_files() -> set[str]:
-    """已跟踪的 .py 文件（相对仓库根的 posix 路径）。CI 只看得见这些。"""
+    """已跟踪的 .py 文件（相对仓库根的 posix 路径）。CI 只看得见这些。
+
+    必须带 `-z` 与 `-c core.quotePath=false`：
+    git 默认对含非 ASCII 的路径**加引号并转义成八进制**（本仓库实测 1009 条里 574 条如此），
+    于是 `Path(rel).name` 拿到的是 `agents/__init__.py"` 之类的乱码，
+    这类文件将**永远匹配不上** workflow 引用的 basename —— 即门禁静默漏对象。
+    `-z` 以 NUL 分隔且不做任何转义，从根上消除该形态。
+    """
     out = subprocess.run(
-        ["git", "ls-files", "*.py"],
+        ["git", "-c", "core.quotePath=false", "ls-files", "-z", "--", "*.py"],
         cwd=str(ROOT),
         capture_output=True,
         text=True,
@@ -85,20 +92,29 @@ def tracked_python_files() -> set[str]:
             file=sys.stderr,
         )
         sys.exit(2)
-    return {line.strip() for line in out.stdout.splitlines() if line.strip()}
+    return {p for p in out.stdout.split("\0") if p.strip()}
 
 
-def is_test_file(rel_posix: str) -> bool:
-    """测试文件刻意排除。
+def is_excluded(rel_posix: str) -> bool:
+    """排除两类文件。
 
-    理由：测试夹具里的绝对路径是**数据**（如 mock 掉的服务返回的 results_dir），
-    不是「被拿去做文件系统访问的本机路径」。本门禁无法做污点分析区分二者，
-    故整类排除，避免用假阳逼人加 noqa —— 那会让门禁失去公信力。
-    （`tests/benchmark_evidence_gate.py` 不匹配下列模式，仍在覆盖内。）
+    1) **测试文件** —— 测试夹具里的绝对路径是**数据**（如 mock 掉的服务返回的 results_dir），
+       不是「被拿去做文件系统访问的本机路径」。本门禁无法做污点分析区分二者，
+       故整类排除，避免用假阳逼人加 noqa（那会让门禁失去公信力）。
+       **注意别把根 `tests/` 一刀切排除**：它下面只有 `tests/benchmark_evidence_gate.py`，
+       那是 CI 执行的门禁脚本（不是测试），必须留在覆盖内 —— 本函数因此只按
+       「`py-server/tests/` 包」+「测试命名」排除，而不是按 `tests/` 目录名。
+       （这条曾经写错：docstring 声称它在覆盖内、代码却把它排除了，被 U1 单测抓出。）
+
+    2) **冻结副本**（`deliverables/`、`submission/`、`docs/`）—— 历史归档快照，
+       CI 从不执行；只因 basename 与 workflow 引用的脚本重名才会被匹配到。
+       扫它们只会带来假阳（也正是本仓库 eslint 噪音的 59% 来源）。真正的对象是
+       仓库根部那份 `py-server/scripts/...`。
     """
-    name = Path(rel_posix).name
-    if "/tests/" in f"/{rel_posix}" or rel_posix.startswith("tests/"):
+    norm = rel_posix.replace("\\", "/")
+    if norm.startswith(("deliverables/", "submission/", "docs/", "py-server/tests/")):
         return True
+    name = Path(norm).name
     return name.startswith("test_") or name.endswith("_test.py") or name == "conftest.py"
 
 
@@ -135,7 +151,7 @@ def workflow_referenced_scripts() -> tuple[list[Path], int]:
     found: list[Path] = []
     for name in sorted(wanted):
         for rel in sorted(by_name.get(name, [])):
-            if is_test_file(rel):
+            if is_excluded(rel):
                 continue
             found.append(ROOT / rel)
     return found, len(wfs)
