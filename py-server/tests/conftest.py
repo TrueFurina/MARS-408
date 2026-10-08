@@ -312,7 +312,7 @@ def trained_mixer_checkpoint(tmp_path, monkeypatch):
     path = tmp_path / "neural_mixer_trained.pt"
     torch.save(sd, path)
 
-    # MUTATION: 注入被移除
+    monkeypatch.setattr(mixer_mod, "_trained_weights_path", lambda: path)
     yield path
 
 
