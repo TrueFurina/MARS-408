@@ -28,6 +28,27 @@ logger = logging.getLogger("netlearn.gomarl_mixer")
 MODE_TORCH = "torch"
 MODE_ONNX_UNIFORM_FALLBACK = "onnx_uniform_fallback"
 MODE_SHAPE_MISMATCH_FALLBACK = "shape_mismatch_fallback"
+
+
+def _trained_weights_path():
+    """训练权重文件的**唯一**入口（路径推导只此一处）。
+
+    此前该表达式在 `_probe_trained_embed_dim` 与 `_load_trained_weights` 中各内联一份，
+    测试无法注入替身。后果（真实 CI run 37787528338，Backend tests 7 个用例全红）：
+    `py-server/models/` 被 .gitignore 排除 ⇒ CI 检出后 `neural_mixer_trained.pt` 不存在
+    ⇒ `_load_trained_weights` 返回 (0,0) ⇒ 走"训练权重加载失败"的通用 rule 降级
+    （neural_mode == "rule"），而测试断言的是形状不匹配专属的
+    "shape_mismatch_fallback" ⇒ 断言失败。
+
+    收敛为一个函数后，测试可 monkeypatch 本函数注入**自造 checkpoint**，
+    从而在没有二进制产物的 CI 上真实覆盖「权重完整加载」与「形状不匹配降级」两条分支
+    （而不是把它们 skip 掉 —— skip 等于零信号）。
+    """
+    from pathlib import Path
+
+    return Path(__file__).parent.parent / "models" / "neural_mixer_trained.pt"
+
+
 MODE_RULE = "rule"
 
 # Torch 延迟导入：Windows 上 torch 在某些环境下会触发 access violation，
@@ -407,11 +428,10 @@ class NeuralGroupMixer:
         优先级：训练权重 > 嵌入配置 dimension > 默认 384
         """
         try:
-            from pathlib import Path
             _torch, _, _ = _ensure_torch()
             if _torch is None:
                 return None
-            weights_path = Path(__file__).parent.parent / "models" / "neural_mixer_trained.pt"
+            weights_path = _trained_weights_path()
             if not weights_path.exists():
                 return None
             sd = _torch.load(str(weights_path), map_location="cpu", weights_only=True)
@@ -589,11 +609,10 @@ class NeuralGroupMixer:
         if self._mixer_net is None:
             return 0, 0
         try:
-            from pathlib import Path
             _torch, _, _ = _ensure_torch()
             if _torch is None:
                 return 0, 0
-            weights_path = Path(__file__).parent.parent / "models" / "neural_mixer_trained.pt"
+            weights_path = _trained_weights_path()
             if weights_path.exists():
                 state_dict = _torch.load(weights_path, map_location="cpu", weights_only=True)
                 # 只加载形状匹配的参数（n_agents 可能不同）
