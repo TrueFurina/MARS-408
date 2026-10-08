@@ -144,7 +144,7 @@ personalized re-ranking → augmented generation. On failure it degrades to BM25
 
 | Metric | Result | Notes |
 |--------|--------|-------|
-| Retrieval augmentation | **Recall@5 +10.7% / MRR +9.6%** | vs. no-reranking baseline, real CPU run (measured 2026-08-17) |
+| Retrieval augmentation | **Recall@5 +7.14pp / P@5 +15.71pp / MRR +12.38pp** | vs. no-reranking baseline, real CPU run (measured 2026-09-18) |
 | Retrieval-layer answerability baseline | `answerable_rate` = 0.533 | 30-question gold set (`eval_gold`), used for regression |
 
 Evaluation scripts ship with the source (`py-server/experiments/`); every metric can be reproduced with
