@@ -165,6 +165,24 @@ def _backend_pick_latest():
         return None, f"调用后端挑选函数失败：{e}"
 
 
+def _backend_candidate_report():
+    """取得 (合格候选, 被跳过的候选描述)，直接复用后端 _scan_candidates（单一真值源）。
+
+    为什么门禁要报出"被跳过"：2026-10-08 事故有两半 ——
+      ① 不合格产物（benchmark_2026-10-08.json 只有 experiment1 段）抢占了候选位，
+         端点静默降级为空响应却仍自称 mode=real；
+      ② 它是**新的真实数据**，因结构不符被丢弃，而没有任何地方能说出这件事。
+    只修①会让问题从"端点返回空"变为"数据被静默忽略"—— 故此处显式列出被跳过项。
+    """
+    mod, err = _load_backend_module()
+    if err:
+        return None, err
+    try:
+        return mod._scan_candidates(), None  # noqa: SLF001
+    except Exception as e:  # noqa: BLE001
+        return None, f"调用后端候选扫描失败：{e}"
+
+
 def check_real_artifact() -> None:
     """R2：真产物必须存在、且与后端挑选口径同源。
 
@@ -183,6 +201,18 @@ def check_real_artifact() -> None:
     if not picked:
         FAILS.append("后端未挑中任何真产物，/api/benchmark/results 将返回 404")
         return
+
+    # ── 报出全部候选的判定结果（合格 / 被跳过及原因）──
+    # 「结构不合格的新产物被静默忽略」是 2026-10-08 事故的另一半，必须可见。
+    report, rerr = _backend_candidate_report()
+    if rerr:
+        FAILS.append(f"R2 无法取得候选清单：{rerr}（门禁无法说明跳过了什么）")
+        return
+    qualified, skipped = report
+    print(f"  [INFO] 合格候选 {len(qualified)} 个：{'、'.join(qualified)}")
+    if skipped:
+        print(f"  [SKIP] 已跳过 {len(skipped)} 个不合格候选（不满足端点契约 experiment1+experiment2）："
+              f"{'、'.join(skipped)}")
     latest = Path(picked)
     try:
         data = json.loads(latest.read_text(encoding="utf-8"))

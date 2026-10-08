@@ -23,34 +23,75 @@ import { useBenchmark } from '@/composables/useBenchmark'
 const REAL_RESULTS_DIR = resolve(process.cwd(), 'py-server/experiments/results')
 
 /**
- * 选取最新真产物（与后端 api/benchmark.py `_latest_real_result` 同规则：
- * benchmark_*.json、排除 reproduce/exp2 复现文件；mode 校验由门禁 R2/R3 负责）。
- * 权威挑选逻辑在后端，此处只为测试夹具取最新样本——若两处规则漂移，
- * tests/benchmark_evidence_gate.py 会先红。
+ * 选取最新真产物（与后端 api/benchmark.py `_latest_real_result` 同规则）。
+ *
+ * 规则（逐条与后端对齐）：
+ *   · benchmark_*.json，排除 reproduce / exp2 复现文件；
+ *   · **必须 experiment1 与 experiment2 两段齐全**（2026-10-08 起新增的结构校验）。
+ *
+ * 为什么要校验结构（实测事故，真实 CI run 37787528338）：
+ *   只按文件名排序取最后一个，会让 **schema 不同的产物抢占候选位** ——
+ *   `benchmark_2026-10-08.json` 是 experiment1 单实验输出（顶层键
+ *   meta/per_query/summary，20KB vs 完整 bundle 的 256KB，其 meta 自述 exp2 BLOCKED），
+ *   名字日期最新 ⇒ 被选中 ⇒ `data.experiment1` 为 undefined ⇒ 本文件三个用例
+ *   抛 `TypeError: Cannot read properties of undefined (reading 'per_query')`。
+ *   后端侧同一根因表现为 Benchmark evidence chain gate 的 R3 四项全红。
+ *
+ * 权威挑选逻辑在后端；若两处规则漂移，tests/benchmark_evidence_gate.py 的 R2/R3 会先红。
  */
 function latestRealArtifactPath(): string {
-  const files = readdirSync(REAL_RESULTS_DIR)
+  const candidates = readdirSync(REAL_RESULTS_DIR)
     .filter((f) => f.startsWith('benchmark_') && f.endsWith('.json'))
     .filter((f) => !f.includes('reproduce') && !f.includes('exp2'))
     .sort()
-  if (files.length === 0) {
+
+  const usable: string[] = []
+  const skipped: string[] = []
+  for (const f of candidates) {
+    if (isCompleteBundle(resolve(REAL_RESULTS_DIR, f))) usable.push(f)
+    else skipped.push(f)
+  }
+  if (skipped.length > 0) {
+    // 不静默忽略：产物被跳过必须有人知道（后端对应位置打印同级 WARNING）
+    console.warn(
+      `[useBenchmark.spec] 跳过不满足端点契约（experiment1 + experiment2 两段齐全）的产物：${skipped.join('、')}`,
+    )
+  }
+  if (usable.length === 0) {
     throw new Error(
-      `真产物缺失：${REAL_RESULTS_DIR} 下无 benchmark_*.json\n` +
+      `无合格真产物：${REAL_RESULTS_DIR} 下无「benchmark_*.json 且 experiment1/experiment2 两段齐全」的文件\n` +
         '这不是测试写错，而是证据链断了。请先跑 tests/benchmark_evidence_gate.py 定位。',
     )
   }
-  return resolve(REAL_RESULTS_DIR, files[files.length - 1])
+  return resolve(REAL_RESULTS_DIR, usable[usable.length - 1])
 }
 
-function loadRealArtifact(): any {
+/** 端点契约要求两段齐全：experiment1 → per_query，experiment2 → per_question。 */
+function isCompleteBundle(path: string): boolean {
+  try {
+    const data = JSON.parse(readFileSync(path, 'utf-8'))
+    return Boolean(data?.experiment1) && Boolean(data?.experiment2)
+  } catch {
+    return false
+  }
+}
+
+/** 加载选中的真产物，并一并返回其文件名。
+ *
+ * 不重复挑选的理由：挑选函数在跳过不合格产物时会告警，重复挑选会重复告警；
+ * 且两次挑选若不一致（例如期间目录变动）会让夹具自相矛盾。
+ */
+function loadRealArtifact(): { data: any; fileName: string } {
   const path = latestRealArtifactPath()
-  return JSON.parse(readFileSync(path, 'utf-8'))
+  return {
+    data: JSON.parse(readFileSync(path, 'utf-8')),
+    fileName: path.split(/[\\/]/).pop() ?? 'benchmark.json',
+  }
 }
 
-function toApiPayload(data: any) {
+function toApiPayload(data: any, fileName: string) {
   const exp1 = data?.experiment1 ?? {}
   const exp2 = data?.experiment2 ?? {}
-  const fileName = latestRealArtifactPath().split(/[\\/]/).pop() ?? 'benchmark.json'
   return {
     provenance: {
       source_file: `experiments/results/${fileName}`,
@@ -97,8 +138,8 @@ describe('useBenchmark 证据链', () => {
   })
 
   it('从真产物结构正确取数（行数 / 题数 / 关键 delta）', async () => {
-    const data = loadRealArtifact()
-    const payload = toApiPayload(data)
+    const { data, fileName } = loadRealArtifact()
+    const payload = toApiPayload(data, fileName)
     fetchMock.mockResolvedValue(jsonResponse(200, payload))
 
     const bm = useBenchmark()
@@ -126,9 +167,9 @@ describe('useBenchmark 证据链', () => {
   })
 
   it('逐条明细字段映射正确（recall@5 等键名漂移即失败）', async () => {
-    const data = loadRealArtifact()
+    const { data, fileName } = loadRealArtifact()
     const src = data.experiment1.per_query[0]
-    fetchMock.mockResolvedValue(jsonResponse(200, toApiPayload(data)))
+    fetchMock.mockResolvedValue(jsonResponse(200, toApiPayload(data, fileName)))
 
     const bm = useBenchmark()
     await bm.load()
@@ -143,9 +184,9 @@ describe('useBenchmark 证据链', () => {
   })
 
   it('逐题 trials 聚合正确（答对次数与平均共识分）', async () => {
-    const data = loadRealArtifact()
+    const { data, fileName } = loadRealArtifact()
     const src = data.experiment2.per_question[0]
-    fetchMock.mockResolvedValue(jsonResponse(200, toApiPayload(data)))
+    fetchMock.mockResolvedValue(jsonResponse(200, toApiPayload(data, fileName)))
 
     const bm = useBenchmark()
     await bm.load()
@@ -203,5 +244,28 @@ describe('useBenchmark 证据链', () => {
     expect(bm.error.value).toBeNull()
     expect(bm.rows.value).toEqual([])
     expect(bm.questions.value).toEqual([])
+  })
+
+  it('真产物挑选要求 experiment1 + experiment2 两段齐全（2026-10-08 回归锁定）', () => {
+    const picked = latestRealArtifactPath()
+    const data = JSON.parse(readFileSync(picked, 'utf-8'))
+
+    // 选中的必须满足端点契约：缺段 ⇒ 后端 R3 四项红、前端取数得到 undefined
+    expect(data.experiment1, '选中的真产物缺 experiment1 段').toBeTruthy()
+    expect(data.experiment2, '选中的真产物缺 experiment2 段').toBeTruthy()
+
+    // 对照锁定：目录中若存在「文件名更新但结构不合格」的 benchmark_*.json，必须被跳过。
+    // 这正是 2026-10-08 的事故形态 —— 挑选逻辑若回退成「按文件名取最新」，此处必红。
+    const peers = readdirSync(REAL_RESULTS_DIR)
+      .filter((f) => f.startsWith('benchmark_') && f.endsWith('.json'))
+      .filter((f) => !f.includes('reproduce') && !f.includes('exp2'))
+      .sort()
+    const newestByName = peers[peers.length - 1]
+    if (!isCompleteBundle(resolve(REAL_RESULTS_DIR, newestByName))) {
+      expect(
+        picked.endsWith(newestByName),
+        `挑选逻辑按文件名选中了结构不合格的产物 ${newestByName}`,
+      ).toBe(false)
+    }
   })
 })
