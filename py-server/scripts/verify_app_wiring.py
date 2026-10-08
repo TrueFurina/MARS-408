@@ -29,6 +29,8 @@ os.environ.pop("PYTEST_CURRENT_TEST", None)       # 否则限流器会整体放�
 
 BASELINE_COMMIT = "f36b83e"  # M-4 拆分前的最后一个提交
 
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 ok = True
 
 
@@ -39,11 +41,29 @@ def check(label, cond, extra=""):
 
 
 def _baseline_router_names():
-    """从拆分前的 main.py 源文本中提取 _all_routers 列表（顺序敏感）。"""
-    src = subprocess.check_output(
-        ["git", "show", f"{BASELINE_COMMIT}:py-server/main.py"],
-        cwd=os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-    ).decode("utf-8")
+    """从拆分前的 main.py 源文本中提取 _all_routers 列表（顺序敏感）。
+
+    ⚠️ 本函数依赖 git **历史对象**：CI 的 actions/checkout 默认 fetch-depth=1（浅克隆），
+    此时 `git show <历史 sha>` 会以 `fatal: invalid object name` 失败（exit 128）。
+    故 verify-structural.yml 的 checkout 步骤必须声明 `fetch-depth: 0`。
+    （实测：2026-10-08 run 37787528182 的 structural job 即因此整条 workflow 变红。）
+
+    基线取不到时**必须判失败**而非跳过 —— 跳过等于「拆掉 main.py 后本门禁静默失效」。
+    失败信息给出可执行的两种修法，避免下次只看到一句 traceback。
+    """
+    cmd = ["git", "show", f"{BASELINE_COMMIT}:py-server/main.py"]
+    try:
+        out = subprocess.check_output(cmd, cwd=_REPO_ROOT, stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError as e:
+        reason = (e.stderr or b"").decode("utf-8", "replace").strip() or f"exit={e.returncode}"
+        raise RuntimeError(
+            f"无法读取基线 {BASELINE_COMMIT}:py-server/main.py —— {reason}\n"
+            "    原因一（最常见）：CI 浅克隆。请在 verify-structural.yml 的 checkout 步骤加 "
+            "`with: fetch-depth: 0`。\n"
+            "    原因二：该提交已随历史重写消失（本仓库曾用 git filter-repo 重写过历史）。"
+            f"此时需把基线 router 列表固化为常量，去掉对 {BASELINE_COMMIT} 的 git 依赖。"
+        ) from e
+    src = out.decode("utf-8")
     tree = ast.parse(src)
     names = None
     for node in ast.walk(tree):
@@ -69,10 +89,16 @@ def _current_router_names():
 
 def main():
     # ── 1) 路由集合：与拆分前逐项、逐序比对 ──
-    baseline = _baseline_router_names()
+    try:
+        baseline = _baseline_router_names()
+    except RuntimeError as e:
+        # 基线取不到 = 本门禁无法证明路由未丢（最危险的失败模式是"少装了一个 router
+        # 而应用照样起得来"）。故判 FAIL 并打印可执行修法，而不是让 traceback 淹没结论。
+        baseline = None
+        check("基线 _all_routers 可读取", False, str(e))
+    else:
+        check("基线 _all_routers 可解析", len(baseline) > 0, f"n={len(baseline)}")
     current = _current_router_names()
-    check("基线 _all_routers 可解析", baseline is not None and len(baseline) > 0,
-          f"n={len(baseline) if baseline else 0}")
     check("ALL_ROUTERS 与拆分前完全一致（含顺序）", baseline == current,
           f"baseline={len(baseline) if baseline else 0} current={len(current) if current else 0}")
 

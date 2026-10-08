@@ -37,6 +37,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # 必须取全历史：verify_app_wiring.py 用 `git show f36b83e:py-server/main.py`
+          # 读 M-4 拆分前的基线 router 列表。默认 fetch-depth=1（浅克隆）下该对象不存在，
+          # `git show` 以 `fatal: invalid object name` 退出 128 → 整个 job 变红
+          # （实测 2026-10-08 run 37787528182）。ci.yml / gates.yml 同样声明了 fetch-depth: 0。
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
@@ -81,6 +87,8 @@ jobs:
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 与 structural 一致：verify_* 可能读历史对象
 
       - uses: actions/setup-python@v5
         with:
