@@ -1,7 +1,7 @@
 """验证运行中后端的真实检索路径：E5 向量是否生效、是否命中相关段落。
 不依赖 LLM，只验证 FrugalRAG.retrieve 在 connect() 后的行为。
 """
-import sys, os, json
+import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 def log(*a):
