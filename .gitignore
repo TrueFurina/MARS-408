@@ -273,3 +273,12 @@ _salvaged/
 
 # ── 2026-09-23 Jev 旁路对照试点产物（pilot_jev_judgment.py 落盘；仅追加工件，不入库）──
 py-server/experiments/artifacts/
+
+# ── 可选数据目录占位（2026-10-09 收口 ④）：documents/ 整体 gitignored，
+#    但保留占位文件随仓库跟踪，避免 fresh clone 时 Docker 自动建空目录挂载。
+#    注意：git 不允许在父目录被排除后重新包含其内文件，故用
+#    「解禁目录 → 忽略内容 → 解禁占位」序列（末匹配生效）。
+!documents/
+documents/*
+!documents/.gitkeep
+!documents/README.md

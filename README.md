@@ -225,9 +225,14 @@ Docker 会按 bind mount 语义**自动创建空目录** → 容器内挂载点�
 补齐方式（可选）：
 
 ```bash
-# 把教材文件放进 ./documents/、本地模型放进 ./py-server/models/ 后重启即可
+# 一键建好两个可选目录并落占位说明（fresh clone 后运行，避免 Docker 自动建空目录挂载）
+bash scripts/setup_optional_data.sh
+
+# 之后把教材文件放进 ./documents/、本地模型放进 ./py-server/models/ 后重启即可
 docker-compose restart app
 ```
+
+> `documents/` 已随仓库跟踪占位文件（`README.md` + `.gitkeep`），克隆后即可见；`py-server/models` 在开发机常为指向冷存盘的 symlink，脚本会自动跳过、不污染冷存。
 
 > 若入口脚本报 `set: Illegal option -`，说明构建上下文里的 shell 脚本是 CRLF。
 > 本仓已用 `.gitattributes` 强制 `*.sh` / `Dockerfile*` 为 LF，且两个 Dockerfile 均会 `sed -i 's/\r$//'`

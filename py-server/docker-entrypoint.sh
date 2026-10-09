@@ -31,11 +31,16 @@ check_optional_data() {
   if [ ! -d "$_path" ]; then
     echo "[preflight] ⚠️  ${_label}：目录不存在 ${_path}"
     echo "[preflight]     ${_hint}"
-  elif [ -z "$(ls -A "$_path" 2>/dev/null)" ]; then
-    echo "[preflight] ⚠️  ${_label}：挂载点为空 ${_path}（宿主源目录缺失，Docker 自动创建了空目录）"
-    echo "[preflight]     ${_hint}"
   else
-    echo "[preflight] ✅ ${_label}：已就绪 ${_path}"
+    # 仅统计真实数据文件：忽略占位文件（.gitkeep / README.md / .placeholder），
+    # 避免"仅有占位"被误判为已就绪。
+    _real="$(ls -A "$_path" 2>/dev/null | grep -vE '^(\.gitkeep|README\.md|\.placeholder)$')"
+    if [ -z "$_real" ]; then
+      echo "[preflight] ⚠️  ${_label}：挂载点为空 ${_path}（仅占位或宿主源目录缺失，Docker 自动创建了空目录）"
+      echo "[preflight]     ${_hint}"
+    else
+      echo "[preflight] ✅ ${_label}：已就绪 ${_path}"
+    fi
   fi
 }
 
