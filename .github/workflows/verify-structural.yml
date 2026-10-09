@@ -94,6 +94,18 @@ jobs:
           # 本脚本自身 fail-closed：扫到 0 个对象时 exit 2（不是打印"合规"）。
           run_one "check_hardcoded_paths" "python scripts/check_hardcoded_paths.py" "."
 
+          # 前端设计令牌防回归（树级，纯标准库，无依赖）：
+          # 锁定 2026-10-09 基线（total 201 / brand 31 / known 57 / untracked 113）。
+          # 任一分类计数**上升**即判回归（exit 1）；冻结期只许降不许升。
+          # 10-28 紫族归一后跑
+          #   python scripts/token_scan.py --update-baseline scripts/token_scan.baseline.json
+          # 把基线降到归一后的新低值。
+          run_one "token_scan (设计令牌防回归)" "python scripts/token_scan.py --baseline scripts/token_scan.baseline.json" "."
+          # 前端可访问性硬门禁（图标按钮可读名）：当前 0 缺陷，发现即阻断。
+          run_one "a11y_scan (可访问性硬门禁)" "python scripts/a11y_scan.py" "."
+          # 前端可访问性深度审计（咨询级，report-only，不阻断）：A/B/C/D 见 CI 日志。
+          run_one "a11y_scan --audit (可访问性审计)" "python scripts/a11y_scan.py --audit" "."
+
           # 轻量结构守门：sqlite / numpy / fastapi / 内置语料，无需 Milvus
           run_one "verify_app_wiring"            "python scripts/verify_app_wiring.py"            "py-server"
           run_one "verify_auth_coverage"         "python scripts/verify_auth_coverage.py"         "py-server"

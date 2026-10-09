@@ -167,6 +167,10 @@ def main() -> int:
                     help="总硬编码超此阈值则 exit 1（防回归门禁）")
     ap.add_argument("--max-brand", type=int, default=None,
                     help="品牌紫未清零（超此值）则 exit 1")
+    ap.add_argument("--baseline", metavar="PATH",
+                    help="对比基线 JSON：任一分类计数上升则 exit 1（防回归门禁，冻结期用）")
+    ap.add_argument("--update-baseline", metavar="PATH",
+                    help="把当前计数写入基线 JSON 并 exit 0（10-28 紫族归一后重降基线用）")
     args = ap.parse_args()
 
     findings = scan()
@@ -217,6 +221,12 @@ def main() -> int:
         )
         print(f"JSON 报告已写 : {args.json}")
 
+    if args.update_baseline:
+        _write_baseline(args.update_baseline, total, by_cat)
+        return 0
+    if args.baseline:
+        return _check_baseline(args.baseline, by_cat)
+
     rc = 0
     if args.max is not None and total > args.max:
         print(f"[门禁] 总硬编码 {total} 超过 --max {args.max} → exit 1")
@@ -224,6 +234,36 @@ def main() -> int:
     if args.max_brand is not None and brand > args.max_brand:
         print(f"[门禁] 品牌紫 {brand} 超过 --max-brand {args.max_brand} → exit 1")
         rc = 1
+    return rc
+
+
+def _write_baseline(path: str, total: int, by_cat: Counter) -> None:
+    """把当前计数写入基线 JSON（供 --baseline 后续对比）。"""
+    data = {"total": total, "by_category": dict(by_cat)}
+    Path(path).write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"基线已写 : {path} (total={total})")
+
+
+def _check_baseline(path: str, by_cat: Counter) -> int:
+    """对比基线：任一分类计数上升即判回归（exit 1）。首次无基线则自动生成并放行。"""
+    p = Path(path)
+    if not p.exists():
+        _write_baseline(str(p), sum(by_cat.values()), by_cat)
+        print(f"[门禁] 基线不存在，已自动生成并放行：{p}")
+        return 0
+    data = json.loads(p.read_text(encoding="utf-8"))
+    base_cat = data.get("by_category", {})
+    rc = 0
+    for cat in ("brand-violet", "known-token-eq", "untracked"):
+        cur = by_cat.get(cat, 0)
+        old = base_cat.get(cat, 0)
+        if cur > old:
+            print(f"[门禁] {cat} 从 {old} 升至 {cur}（回归）→ exit 1")
+            rc = 1
+        else:
+            print(f"[门禁] {cat} {cur}（基线 {old}）✓")
+    if rc == 0:
+        print("[门禁] 未检测到回归（任一分类计数未上升）")
     return rc
 
 

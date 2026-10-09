@@ -129,3 +129,20 @@ else
 fi
 
 echo "✅ 七道门禁全部通过"
+
+# --- 树级质量机检（不依赖 diff，CI 与本地同跑；非「七道」diff 门禁之列）---
+#
+# 与 verify_metrics / check_hardcoded_paths 同类：扫整棵树、不按暂存文件判定。
+# 二者均为纯标准库、零依赖、毫秒级，挂本地提交无手感代价。
+#   · token_scan：设计令牌硬编码颜色防回归。锁定 2026-10-09 基线（total 201 /
+#     brand 31 / known 57 / untracked 113），任一分类计数上升即拦截 —— 冻结期
+#     只许降不许升；10-28 紫族归一后跑 `--update-baseline` 重降基线。
+#   · a11y_scan：可访问性硬门禁（图标按钮可读名），当前 0 缺陷。深度审计用
+#     `python scripts/a11y_scan.py --audit`（咨询级，不阻断）。
+echo "=== [树级] 设计令牌防回归 token_scan ==="
+"$PY" scripts/token_scan.py --baseline scripts/token_scan.baseline.json || exit 1
+
+echo "=== [树级] 前端可访问性 a11y 硬门禁 ==="
+"$PY" scripts/a11y_scan.py || exit 1
+
+echo "✅ 树级质量机检全部通过"
