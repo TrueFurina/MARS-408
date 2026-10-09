@@ -69,6 +69,15 @@ for _n, _orig in _ORIG_SUB.items():
     else:
         sys.modules[_n] = _orig
 
+# ── 回归守卫（2026-10-09）：确保上面的还原真的生效，未把 importlib 副本残留在
+# sys.modules["db.llm_provider"] 下。若有人回退还原逻辑，本断言会在模块导入期立即
+# 失败，避免「类身份分裂 → test_video_feedback 等用例随导入顺序在 XFAIL/XPASS 间翻转」
+# 的顺序脆弱（③）复发。本文件按设计可 --noconftest 独立跑，该守卫在两种运行方式下均生效。
+assert sys.modules.get("db.llm_provider") is not llm_provider, (
+    "db.llm_provider 的 importlib 副本残留在 sys.modules，将分裂 LLMProvider 类身份，"
+    "导致 test_video_feedback 等用例随导入顺序在 XFAIL/XPASS 间翻转（③ 顺序脆弱复发）"
+)
+
 _LP_SRC = open(_LP_PATH, "r", encoding="utf-8").read()
 _XFYUN_PATH = os.path.join(_PY_SERVER, "api", "xfyun.py")
 _MULTIMODAL_PATH = os.path.join(_PY_SERVER, "api", "multimodal.py")
