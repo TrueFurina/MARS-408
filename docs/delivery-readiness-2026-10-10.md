@@ -19,9 +19,9 @@
 
 ## 二、提交链（本地，未推 remote）
 
-`39545aa`（数字对齐核对清单）→ `31b09cf`（批量对齐：测试数/API/覆盖率 + PPT 重生成）→ `23e6217`（残留收口：SkillPlatformView 幻影数 + 工程规模指标同步）。
+`39545aa`（数字对齐核对清单）→ `31b09cf`（批量对齐：测试数/API/覆盖率 + PPT 重生成）→ `23e6217`（残留收口：SkillPlatformView 幻影数 + 工程规模指标同步）→ `1fe408e`（交付就绪审计背书）→ `cbd5f34`(codemod 自提交：加载失败落空态引导)→ `2c70e9a`（产品定位重构：保 408 演示域）→ `a19711d`(codemod 自提交：启动期自动播种官方技能)→ `463488e`（skill_store 播种冲突检测告警）。
 
-守「不推 main」红线，均仅本地提交。
+守「不推 main」红线，均仅本地提交；`origin/career-literacy` 落后 7（截至 2026-10-10）。
 
 ## 三、门禁状态
 
@@ -37,7 +37,7 @@
 | 类别 | 项 | 阻塞 | 处置 |
 |------|----|----|----|
 | 需环境 | 测试覆盖率 `54.96%` 复算（`--cov-fail-under=50`） | 本机 torch `c10.dll` SIGSEGV 跑不起测试 | 等 CI run 回填，或提供无 torch 崩溃环境 |
-| 需 CI | CI p0 档 `67` 条机器核验 | 6 文件模块级 `pytestmark=p0_regression`，本地收集不可靠 | 等 CI 实测 |
+| 需 CI | CI p0 档 `67` 条机器核验 | 6 文件模块级 `pytestmark=p0_regression`，本地收集不可靠（torch `c10.dll` SIGSEGV） | 已静态收敛：仅 6 文件含 `p0_regression` 标记（`test_career_nodes_fallback` / `test_career_policy_baseline` / `test_p0_f1` / `test_p0_f20` / `test_p0_f6` / `test_review_single_source`），共 **29** 个 `def/async def test_` 函数；`67` 应为参数化展开后的 collected 数，待 CI 实测确数 |
 | 仅人工 | PPT → PDF 配套导出 | 本机无 LibreOffice（C 盘余量不足，不宜现装） | 你本地装 LibreOffice 或 PowerPoint 另存 |
 | 仅人工 | 演示视频录制 | 需实操录屏 | 你执行 |
 | 仅人工 | 大赛官网提交 / 上传 | 需账号 + 网页操作 | 你执行 |
