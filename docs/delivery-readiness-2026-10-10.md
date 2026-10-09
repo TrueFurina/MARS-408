@@ -21,7 +21,7 @@
 
 `39545aa`（数字对齐核对清单）→ `31b09cf`（批量对齐：测试数/API/覆盖率 + PPT 重生成）→ `23e6217`（残留收口：SkillPlatformView 幻影数 + 工程规模指标同步）→ `1fe408e`（交付就绪审计背书）→ `cbd5f34`(codemod 自提交：加载失败落空态引导)→ `2c70e9a`（产品定位重构：保 408 演示域）→ `a19711d`(codemod 自提交：启动期自动播种官方技能)→ `463488e`（skill_store 播种冲突检测告警）。
 
-守「不推 main」红线，均仅本地提交；`origin/career-literacy` 落后 7（截至 2026-10-10）。
+守「不推 main」红线；`career-literacy` 已于 2026-10-10 经 SSH 推送至 `origin`（`39545aa..5f8afbe`，fast-forward），并经 `git ls-remote` 核验真实远程 = `5f8afbe` 落盘。推送触发 CI 可回填 p0 确数 / 覆盖率。
 
 ## 三、门禁状态
 
