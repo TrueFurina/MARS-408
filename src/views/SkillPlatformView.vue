@@ -1,132 +1,95 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { icons } from '@/components/icons'
+import Skeleton from '@/components/Skeleton.vue'
+import EmptyState from '@/components/EmptyState.vue'
+import SkillCard from '@/components/SkillCard.vue'
+import { useSkillStore } from '@/stores/skillStore'
 
 const router = useRouter()
+const store = useSkillStore()
 
-// ── 示例技能 ──
-interface SkillShowcase {
-  id: string
-  name: string
-  emoji: string
-  category: string
-  categoryLabel: string
-  desc: string
-  prompt: string
-  uses: number
-  rating: number
-  tags: string[]
-  rag: boolean
-  accent: string
+/**
+ * 本页是「快速开始」引导页。
+ * 技能卡片一律来自 skillStore 的真实接口数据，与 /skills 技能市场同源
+ * （fetchMarket / fetchOfficial / fetchTemplates + SkillCard 渲染）。
+ * 不内置任何写死技能、不伪造使用量/评分；拉不到或为空时渲染空态 + 引导。
+ */
+
+// 平台内置技能分类（与技能市场页的分类枚举保持一致）
+const SKILL_CATEGORIES = [
+  { value: 'teaching', label: '教学讲解' },
+  { value: 'quiz', label: '出题练习' },
+  { value: 'diagnosis', label: '诊断评估' },
+  { value: 'guide', label: '学习引导' },
+  { value: 'code', label: '代码实践' },
+  { value: 'mindmap', label: '思维导图' },
+  { value: 'other', label: '其他' },
+]
+
+// 展示列表：优先官方技能，其次市场技能；两者皆空 → 空态
+const showcaseItems = computed(() =>
+  store.officialSkills.length ? store.officialSkills : store.marketItems,
+)
+
+const showcaseTitle = computed(() =>
+  store.officialSkills.length
+    ? '官方推荐实训技能 · 点击查看 Prompt'
+    : '技能市场在售实训技能 · 点击查看 Prompt',
+)
+
+const selectedSkillId = ref('')
+const selectedSkill = computed(
+  () => showcaseItems.value.find(s => s.id === selectedSkillId.value) ?? null,
+)
+const selectedPrompt = computed(() => selectedSkill.value?.system_prompt || '')
+
+function selectSkill(id: string) {
+  selectedSkillId.value = id
 }
 
-const skills: SkillShowcase[] = [
-  {
-    id: 's1',
-    name: '考研重点提炼',
-    emoji: '',
-    category: 'teaching',
-    categoryLabel: '教学讲解',
-    desc: '自动提取 408 各章节高频考点，结合历年真题权重生成重点清单，附带记忆口诀与易错预警。',
-    prompt: '你是 408 考研重点分析专家。请根据以下章节内容，提取 Top 10 高频考点...',
-    uses: 1284,
-    rating: 4.9,
-    tags: ['数据结构', '高频考点', '真题权重'],
-    rag: true,
-    accent: 'var(--subject-ds)',
-  },
-  {
-    id: 's2',
-    name: '错题变式出题',
-    emoji: '',
-    category: 'quiz',
-    categoryLabel: '出题练习',
-    desc: '基于学生错题记录，自动生成同知识点不同题型的变式题目，确保「错过的不再错」。',
-    prompt: '你是 408 出题专家。请根据以下错题，生成 3 道同知识点不同考查角度的变式题...',
-    uses: 967,
-    rating: 4.8,
-    tags: ['变式出题', '错题驱动', '自适应'],
-    rag: true,
-    accent: 'var(--subject-cn)',
-  },
-  {
-    id: 's3',
-    name: '知识点诊断',
-    emoji: '',
-    category: 'diagnosis',
-    categoryLabel: '诊断评估',
-    desc: '通过对话式追问定位学生知识盲区，生成可视化诊断报告与针对性补救路径。',
-    prompt: '你是学习诊断专家。请通过苏格拉底式追问，定位学生在以下知识点的理解偏差...',
-    uses: 743,
-    rating: 4.7,
-    tags: ['诊断', '苏格拉底', '补救路径'],
-    rag: true,
-    accent: 'var(--subject-co)',
-  },
-  {
-    id: 's4',
-    name: '代码实战辅导',
-    emoji: '',
-    category: 'code',
-    categoryLabel: '代码实践',
-    desc: '数据结构算法实战：自动生成编程题、实时代码审查、复杂度分析与优化建议。',
-    prompt: '你是算法辅导教练。请根据学生水平生成一道编程题，并提供逐步提示而非直接解答...',
-    uses: 612,
-    rating: 4.8,
-    tags: ['算法', '代码审查', '复杂度'],
-    rag: false,
-    accent: 'var(--subject-os)',
-  },
-  {
-    id: 's5',
-    name: '思维导图生成',
-    emoji: '',
-    category: 'mindmap',
-    categoryLabel: '思维导图',
-    desc: '一键将任意知识点转化为结构化思维导图，标注先修关系与考点权重。',
-    prompt: '请将以下知识点转化为 Markdown 格式的思维导图，标注先修关系和考点权重...',
-    uses: 534,
-    rating: 4.6,
-    tags: ['思维导图', '结构化', '先修关系'],
-    rag: true,
-    accent: 'var(--accent-primary)',
-  },
-  {
-    id: 's6',
-    name: '苏格拉底追问',
-    emoji: '',
-    category: 'teaching',
-    categoryLabel: '教学讲解',
-    desc: '不直接给答案，而是通过层层追问引导学生自主发现知识漏洞，培养深度理解。',
-    prompt: '你是苏格拉底式教学导师。请用追问的方式引导学生理解以下概念，不要直接给出答案...',
-    uses: 489,
-    rating: 4.9,
-    tags: ['苏格拉底', '深度理解', '引导式'],
-    rag: false,
-    accent: 'var(--accent-cyan)',
-  },
-]
+function statusLabel(s: string): string {
+  return { draft: '草稿', published: '已发布', archived: '已归档' }[s] || s
+}
+
+function goToStudio() {
+  router.push('/studio')
+}
+function goToMarket() {
+  router.push('/skills')
+}
+
+onMounted(async () => {
+  await Promise.all([
+    store.fetchMarket({ sort_by: 'usage_count' }),
+    store.fetchTemplates(),
+    store.fetchOfficial(),
+  ])
+  const first = showcaseItems.value[0]
+  if (first) selectedSkillId.value = first.id
+})
 
 // ── 创建流程 ──
 const flowSteps = [
   {
     step: '01',
     title: '定义技能',
-    desc: '命名技能、选择分类、编写 System Prompt',
+    desc: '命名技能、选择分类、编写 System Prompt（如答辩追问、需求对齐等软素养场景）',
     icon: '',
     accent: 'var(--accent-primary)',
   },
   {
     step: '02',
     title: '配置引擎',
-    desc: '选择 LLM 通道、调节温度、启用 RAG 检索',
+    desc: '选择 LLM 通道、调节温度、挂载岗位知识库并启用 RAG 检索',
     icon: '',
     accent: 'var(--accent-cyan)',
   },
   {
     step: '03',
     title: '发布市场',
-    desc: '一键发布到技能市场，供全校师生使用',
+    desc: '一键发布到技能市场，供师生在对抗实训中复用',
     icon: '',
     accent: 'var(--accent-pink)',
   },
@@ -142,28 +105,16 @@ const comparison = [
   { feature: '技能使用数据分析', mars: true, competitor: false },
 ]
 
-// ── 选中技能（模拟编辑器预览）──
-const selectedSkill = ref<SkillShowcase>(skills[0]!)
-const selectedPrompt = computed(() => selectedSkill.value.prompt)
-
-function selectSkill(s: SkillShowcase) {
-  selectedSkill.value = s
-}
-
-function goToStudio() {
-  router.push('/studio')
-}
-function goToMarket() {
-  router.push('/skills')
-}
-
-// ── 统计 ──
-const platformStats = [
-  { value: '∞', label: '可扩展技能', color: 'var(--accent-primary)' },
-  { value: '6', label: '官方示例', color: 'var(--accent-cyan)' },
-  { value: '4', label: 'LLM 通道', color: 'var(--accent-blue)' },
-  { value: '7', label: '技能分类', color: 'var(--accent-pink)' },
-]
+// ── 统计：全部取自真实接口；三个技能来源全为 0 时不展示统计条 ──
+const platformStats = computed(() => [
+  { value: String(store.marketTotal), label: '市场技能', color: 'var(--accent-primary)' },
+  { value: String(store.officialSkills.length), label: '官方技能', color: 'var(--accent-cyan)' },
+  { value: String(store.templates.length), label: '创建模板', color: 'var(--accent-blue)' },
+  { value: String(SKILL_CATEGORIES.length), label: '内置分类', color: 'var(--accent-pink)' },
+])
+const hasStats = computed(
+  () => store.marketTotal > 0 || store.officialSkills.length > 0 || store.templates.length > 0,
+)
 </script>
 
 <template>
@@ -175,13 +126,13 @@ const platformStats = [
         竞品无法复制的差异化壁垒
       </div>
       <h1 class="sp-hero-title">
-        <span class="sp-hero-gradient">AI Skills</span> 教学技能平台
+        <span class="sp-hero-gradient">AI Skills</span> 实训技能平台
       </h1>
       <p class="sp-hero-desc">
-        支持用户自定义 AI 教学技能平台——教师与学习者可零代码创建、配置、发布个性化教学 Agent。
-        定义 System Prompt、挂载 RAG 知识库、切换多模型通道，让 AI 教学能力<span class="sp-highlight">无限扩展</span>。
+        支持用户自定义 AI 实训技能——教师与学习者可零代码创建、配置、发布职业素养对抗实训 Agent。
+        定义 System Prompt、挂载 RAG 知识库、切换多模型通道，让 AI 实训能力<span class="sp-highlight">无限扩展</span>。
       </p>
-      <div class="sp-hero-stats">
+      <div v-if="hasStats" class="sp-hero-stats">
         <div v-for="s in platformStats" :key="s.label" class="sp-hero-stat">
           <span class="sp-stat-value" :style="{ color: s.color }">{{ s.value }}</span>
           <span class="sp-stat-label">{{ s.label }}</span>
@@ -200,7 +151,7 @@ const platformStats = [
     <section class="sp-section">
       <div class="sp-section-head">
         <span class="sp-section-idx">三步创建</span>
-        <h2 class="sp-section-title">零代码 · 三步上线一个 AI 教学技能</h2>
+        <h2 class="sp-section-title">零代码 · 三步上线一个 AI 实训技能</h2>
       </div>
       <div class="sp-flow">
         <div
@@ -220,52 +171,53 @@ const platformStats = [
       </div>
     </section>
 
-    <!-- 技能列表 + 编辑器预览 -->
+    <!-- 技能列表 + 编辑器预览（数据来自 skillStore，与 /skills 同源） -->
     <section class="sp-section">
       <div class="sp-section-head">
-        <span class="sp-section-idx">示例技能</span>
-        <h2 class="sp-section-title">官方推荐教学技能 · 点击查看 Prompt</h2>
+        <span class="sp-section-idx">技能速览</span>
+        <h2 class="sp-section-title">{{ showcaseTitle }}</h2>
       </div>
 
       <div class="sp-showcase-layout">
         <!-- 技能卡片列表 -->
-        <div class="sp-skill-grid">
-          <article
-            v-for="s in skills"
-            :key="s.id"
-            class="sp-skill-card"
-            :class="{ active: selectedSkill.id === s.id }"
-            :style="{ '--card-accent': s.accent }"
-            @click="selectSkill(s)"
+        <div>
+          <div v-if="store.loading" class="sp-skeleton-grid">
+            <Skeleton v-for="i in 4" :key="i" variant="card" />
+          </div>
+          <div v-else-if="store.error" class="sp-load-error">{{ store.error }}</div>
+          <EmptyState
+            v-else-if="showcaseItems.length === 0"
+            :icon="icons.skill"
+            title="暂无可展示的技能"
+            description="技能库当前为空：官方技能需管理员在技能市场执行「播种官方技能」，你也可以直接创建第一个实训技能。"
           >
-            <div class="sp-card-top">
-              <span class="sp-card-emoji">{{ s.emoji }}</span>
-              <span class="sp-card-category" :style="{ color: s.accent, background: `color-mix(in srgb, ${s.accent} 12%, transparent)` }">{{ s.categoryLabel }}</span>
+            <template #action>
+              <button class="sp-cta-primary" @click="goToStudio">创建第一个技能</button>
+              <button class="sp-cta-secondary" @click="goToMarket">去技能市场看看</button>
+            </template>
+          </EmptyState>
+          <div v-else class="sp-skill-grid">
+            <div
+              v-for="s in showcaseItems"
+              :key="s.id"
+              class="sp-skill-slot"
+              :class="{ active: selectedSkillId === s.id }"
+              @click="selectSkill(s.id)"
+            >
+              <SkillCard :skill="s" />
             </div>
-            <h3 class="sp-card-name">{{ s.name }}</h3>
-            <p class="sp-card-desc">{{ s.desc }}</p>
-            <div class="sp-card-tags">
-              <span v-for="t in s.tags" :key="t" class="sp-card-tag">{{ t }}</span>
-            </div>
-            <div class="sp-card-footer">
-              <div class="sp-card-meta">
-                <span class="sp-meta-uses"> {{ s.uses }}</span>
-                <span class="sp-meta-rating"> {{ s.rating }}</span>
-              </div>
-              <span v-if="s.rag" class="sp-rag-badge">RAG</span>
-            </div>
-          </article>
+          </div>
         </div>
 
-        <!-- 编辑器预览面板 -->
-        <aside class="sp-editor-preview">
+        <!-- 编辑器预览面板（仅选中真实技能时渲染） -->
+        <aside v-if="selectedSkill" class="sp-editor-preview">
           <div class="sp-editor-header">
-            <span class="sp-editor-emoji">{{ selectedSkill.emoji }}</span>
+            <span class="sp-editor-emoji">{{ selectedSkill.icon }}</span>
             <div>
               <div class="sp-editor-name">{{ selectedSkill.name }}</div>
-              <div class="sp-editor-cat">{{ selectedSkill.categoryLabel }}</div>
+              <div class="sp-editor-cat">{{ selectedSkill.category_label }}</div>
             </div>
-            <span class="sp-editor-live">实时预览</span>
+            <span class="sp-editor-live">Prompt 预览</span>
           </div>
 
           <div class="sp-editor-section">
@@ -278,32 +230,32 @@ const platformStats = [
           <div class="sp-editor-row">
             <div class="sp-editor-field">
               <span class="sp-field-label">LLM 通道</span>
-              <span class="sp-field-value">讯飞星火</span>
+              <span class="sp-field-value">{{ selectedSkill.llm_channel }}</span>
             </div>
             <div class="sp-editor-field">
               <span class="sp-field-label">温度</span>
-              <span class="sp-field-value">0.7</span>
+              <span class="sp-field-value">{{ selectedSkill.temperature }}</span>
             </div>
             <div class="sp-editor-field">
-              <span class="sp-field-label">RAG</span>
-              <span class="sp-field-value" :class="{ on: selectedSkill.rag, off: !selectedSkill.rag }">
-                {{ selectedSkill.rag ? '已启用' : '未启用' }}
-              </span>
+              <span class="sp-field-label">最大 Token</span>
+              <span class="sp-field-value">{{ selectedSkill.max_tokens }}</span>
             </div>
           </div>
 
           <div class="sp-editor-row">
             <div class="sp-editor-field">
-              <span class="sp-field-label">最大 Token</span>
-              <span class="sp-field-value">2048</span>
+              <span class="sp-field-label">RAG</span>
+              <span class="sp-field-value" :class="{ on: selectedSkill.rag_enabled, off: !selectedSkill.rag_enabled }">
+                {{ selectedSkill.rag_enabled ? '已启用' : '未启用' }}
+              </span>
             </div>
             <div class="sp-editor-field">
-              <span class="sp-field-label">使用次数</span>
-              <span class="sp-field-value">{{ selectedSkill.uses }}</span>
+              <span class="sp-field-label">分类</span>
+              <span class="sp-field-value">{{ selectedSkill.category_label }}</span>
             </div>
             <div class="sp-editor-field">
-              <span class="sp-field-label">评分</span>
-              <span class="sp-field-value"> {{ selectedSkill.rating }}</span>
+              <span class="sp-field-label">状态</span>
+              <span class="sp-field-value">{{ statusLabel(selectedSkill.status) }}</span>
             </div>
           </div>
 
@@ -349,7 +301,7 @@ const platformStats = [
     <!-- 底部 CTA -->
     <section class="sp-bottom-cta">
       <div class="sp-bottom-inner">
-        <h2 class="sp-bottom-title">人人都能成为 AI 教学技能创作者</h2>
+        <h2 class="sp-bottom-title">人人都能成为 AI 实训技能创作者</h2>
         <p class="sp-bottom-desc">零代码 · 三步上线 · 全校共享 · 无限扩展</p>
         <div class="sp-bottom-actions">
           <button class="sp-cta-primary" @click="goToStudio">
@@ -607,88 +559,28 @@ const platformStats = [
   grid-template-columns: repeat(2, 1fr);
   gap: 14px;
 }
-.sp-skill-card {
-  padding: var(--space-5);
-  border-radius: var(--radius-lg);
-  background: var(--color-glass);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--color-glass-border);
+.sp-skill-slot {
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
   cursor: pointer;
   transition: var(--transition);
-  animation: fade-up 0.4s ease both;
 }
-.sp-skill-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--card-accent);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.25), 0 0 0 1px var(--card-accent);
+.sp-skill-slot.active {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-primary) 40%, transparent);
 }
-.sp-skill-card.active {
-  border-color: var(--card-accent);
-  box-shadow: 0 0 0 2px var(--card-accent), var(--shadow-card-hover);
-  background: color-mix(in srgb, var(--card-accent) 4%, var(--color-glass));
+.sp-skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
 }
-.sp-card-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-3);
-}
-.sp-card-emoji {
-  font-size: 1.75rem;
-  line-height: var(--leading-none);
-}
-.sp-card-category {
-  font-size: 0.625rem;
-  font-weight: var(--weight-bold);
-  padding: 3px 10px;
-  border-radius: var(--radius-full);
-}
-.sp-card-name {
-  font-size: var(--text-lg);
-  font-weight: var(--weight-bold);
-  color: var(--color-text);
-  margin: 0 0 6px;
-}
-.sp-card-desc {
-  font-size: var(--text-xs);
-  line-height: 1.6;
-  color: var(--color-text-2);
-  margin: 0 0 var(--space-3);
-}
-.sp-card-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1);
-  margin-bottom: var(--space-3);
-}
-.sp-card-tag {
-  font-size: 0.625rem;
-  font-weight: var(--weight-semibold);
-  padding: 2px var(--space-2);
-  border-radius: var(--radius-full);
-  background: var(--color-surface-hover);
-  color: var(--color-text-3);
-}
-.sp-card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.sp-card-meta {
-  display: flex;
-  gap: 10px;
-  font-size: var(--text-2xs);
-  color: var(--color-text-3);
-}
-.sp-rag-badge {
-  font-size: 0.5625rem;
-  font-weight: 800;
-  padding: 2px var(--space-2);
-  border-radius: var(--radius-full);
-  background: rgba(var(--subject-co-rgb),0.12);
-  color: var(--accent-cyan);
-  letter-spacing: 0.05em;
+.sp-load-error {
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--accent-danger) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-danger) 24%, transparent);
+  color: var(--accent-danger);
+  font-size: var(--text-sm);
 }
 
 /* ── 编辑器预览 ── */
@@ -775,6 +667,7 @@ const platformStats = [
   border-radius: var(--radius-sm);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
+  min-width: 0;
 }
 .sp-field-label {
   font-size: 0.625rem;
@@ -786,6 +679,7 @@ const platformStats = [
   font-weight: var(--weight-semibold);
   color: var(--color-text);
   font-family: var(--font-mono);
+  overflow-wrap: anywhere;
 }
 .sp-field-value.on { color: var(--accent-success); }
 .sp-field-value.off { color: var(--color-text-3); }
@@ -924,6 +818,7 @@ const platformStats = [
 }
 @media (max-width: 600px) {
   .sp-skill-grid { grid-template-columns: 1fr; }
+  .sp-skeleton-grid { grid-template-columns: 1fr; }
   .sp-hero-stats { flex-wrap: wrap; }
   .sp-hero-cta { flex-direction: column; }
   .sp-section { padding: var(--space-7) var(--space-5); }

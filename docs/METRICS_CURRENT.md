@@ -68,9 +68,9 @@
 | 前端 views（页面级组件） | 46 | `git ls-files 'src/views/*.vue'` 计数 |
 | 前端 .vue 总数 | 85 | `git ls-files 'src/**/*.vue'` 计数 |
 | 前端 .ts 总数 | 49 | `git ls-files 'src/**/*.ts'` 计数 |
-| 前端代码行数（.vue+.ts） | 50801 | git 跟踪的 `.vue` + `.ts` 全部行数 |
+| 前端代码行数（.vue+.ts） | 50698 | git 跟踪的 `.vue` + `.ts` 全部行数 |
 | 后端 Python 文件数 | 349 | `git ls-files 'py-server/**/*.py'` 计数 |
-| 后端代码行数 | 80317 | git 跟踪的 `.py` 全部行数 |
+| 后端代码行数 | 80320 | git 跟踪的 `.py` 全部行数 |
 | API 路由模块数 | 43 | `git ls-files 'py-server/api/*.py'` 去 `__init__.py` |
 | API 路径数（/api） | 227 | `py-server/openapi.json` 中 `/api` 路径数 |
 | API 操作数（/api，method 级） | 244 | `py-server/openapi.json` 中 `/api` 操作数（method 级） |
