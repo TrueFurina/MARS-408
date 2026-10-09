@@ -173,6 +173,26 @@ async def _seed_demo_data():
         logger.warning(f"演示种子数据写入失败（非阻塞）: {e}")
 
 
+async def _seed_official_skills():
+    """启动时自动播种官方技能。
+
+    为什么需要：`seed_official_skills()` 原先只在管理员手动调用
+    `POST /skills/seed-official` 时执行，导致**全新环境下** `/skills` 技能市场
+    与 `/skill-platform`（快速开始）首屏为空 —— 评委一进来看到的是空页面。
+
+    为什么可以安全地在启动时跑：该函数本身**幂等**
+    （`db/skill_store.py:1104-1110` 先查 `existing` 再 `INSERT OR IGNORE`），
+    重复调用不会重复插入。失败一律非阻塞，不让启动挂掉。
+    """
+    try:
+        from db.skill_store import seed_official_skills
+
+        seed_official_skills()
+        logger.info("官方技能已自动播种（幂等，已存在则跳过）。")
+    except Exception as e:
+        logger.warning(f"官方技能自动播种失败（非阻塞）: {e}")
+
+
 async def _check_llm_credentials():
     # ── LLM 凭证检测：无凭证时提示 demo 模式降级（仅警告，不阻塞启动）──
     # 核心链路（画像/资源生成/路径）在无 LLM 时返回内置样例或友好降级提示，不报错。
@@ -304,6 +324,7 @@ async def lifespan(app: FastAPI):
 
     await _run_migrations()
     await _seed_demo_data()
+    await _seed_official_skills()
     await _check_llm_credentials()
 
     # ── 导入队列 Worker（ADR-007）── 在 yield 前拉起
