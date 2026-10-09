@@ -39,6 +39,14 @@ const showcaseTitle = computed(() =>
     : '技能市场在售实训技能 · 点击查看 Prompt',
 )
 
+// 空态文案：区分「拉不到」与「确实为空」，两种情况都落到空态 + 引导，不做合成兜底
+const emptyTitle = computed(() => (store.error ? '技能列表加载失败' : '暂无可展示的技能'))
+const emptyDesc = computed(() =>
+  store.error
+    ? `${store.error}。可前往技能市场重试，或在技能工坊直接创建第一个实训技能。`
+    : '技能库当前为空：官方技能需管理员在技能市场执行「播种官方技能」，你也可以直接创建第一个实训技能。',
+)
+
 const selectedSkillId = ref('')
 const selectedSkill = computed(
   () => showcaseItems.value.find(s => s.id === selectedSkillId.value) ?? null,
@@ -184,12 +192,11 @@ const hasStats = computed(
           <div v-if="store.loading" class="sp-skeleton-grid">
             <Skeleton v-for="i in 4" :key="i" variant="card" />
           </div>
-          <div v-else-if="store.error" class="sp-load-error">{{ store.error }}</div>
           <EmptyState
             v-else-if="showcaseItems.length === 0"
             :icon="icons.skill"
-            title="暂无可展示的技能"
-            description="技能库当前为空：官方技能需管理员在技能市场执行「播种官方技能」，你也可以直接创建第一个实训技能。"
+            :title="emptyTitle"
+            :description="emptyDesc"
           >
             <template #action>
               <button class="sp-cta-primary" @click="goToStudio">创建第一个技能</button>
@@ -574,15 +581,6 @@ const hasStats = computed(
   grid-template-columns: repeat(2, 1fr);
   gap: 14px;
 }
-.sp-load-error {
-  padding: var(--space-4);
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--accent-danger) 10%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent-danger) 24%, transparent);
-  color: var(--accent-danger);
-  font-size: var(--text-sm);
-}
-
 /* ── 编辑器预览 ── */
 .sp-editor-preview {
   position: sticky;
