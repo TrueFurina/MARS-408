@@ -1,0 +1,39 @@
+# 仓库根 ruff 配置（本机 `ruff check .` / 未来通用 CI 门禁使用）
+#
+# 与既有 CI ruff 第5道（scripts/pre-commit/f401_gate.py）的关系：
+#   - f401_gate 硬编码 `--select F401,F811,F821,F822,F841` 且限定 py-server 范围、
+#     读 py-server/pyproject.toml，与本配置独立、互不干扰。
+#   - 本配置用于：① 消除归档快照噪音；② 把「真 bug 级」规则固化成可复现门禁，
+#     与 scripts/verify_metrics.py（工程规模指标机检）同源思路。
+#
+# 为什么 exclude 归档目录：
+#   deliverables/ 与 submission/_archive_ 是历史交付快照（项目纪律「归档快照不动」），
+#   内含 500+ 文件，全量 ruff 会爆出 1900+ 历史存量噪音，淹没真实活代码问题。
+
+line-length = 100
+target-version = "py312"
+
+exclude = [
+    "deliverables",
+    "submission",
+    "node_modules",
+    ".venv",
+    "dist",
+    "*.egg-info",
+]
+
+[lint]
+# 聚焦真 bug 级规则：
+#   F   = pyflakes 全（F401 死导入 / F811 重定义 / F821 未定义名 / F841 死赋值…）
+#   E9  = 语法错误（真实阻断级）
+#   B017 = 裸 except（pytest.raises(Exception) 过宽，已在 tests 放宽）
+#   B023 = 闭包延迟绑定循环变量（经典真 bug，需逐个核实后加 noqa）
+select = ["F", "E9", "B017", "B023"]
+
+# 低风险风格规则：集中于辅助脚本（py-server/tools、scripts、docs），不阻断门禁。
+# 这些在一次性/开发辅助工具里普遍且无害；若未来要收紧，逐目录 per-file-ignores 处理。
+ignore = ["B007", "B008", "B905", "F541"]
+
+[lint.per-file-ignores]
+# 测试里 pytest.raises(Exception) 与闭包是常规模式，放宽以免改测试引入风险。
+"**/tests/**" = ["B017", "B023"]

@@ -112,7 +112,7 @@ def main():
         sub = [r for r in out["rows"] if r["episodes"] == eps and r["batch_episodes"] == batch]
         if not sub:
             continue
-        def _m(k):
+        def _m(k):  # noqa: B023  # sub 为本迭代循环变量，_m 在循环体内立即同步消费，非延迟绑定
             return round(sum(r[k] for r in sub) / len(sub), 3)
         print(f"ep={eps} batch={batch} updates={sub[0]['n_updates']}: "
               f"train_ret {_m('train_return_first_third')}→{_m('train_return_last_third')} | "

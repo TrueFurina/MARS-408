@@ -452,7 +452,7 @@ def main() -> int:
         if not cells:
             continue
         n = len(cells)
-        def avg(key):
+        def avg(key):  # noqa: B023  # cells/n 为本迭代循环变量，avg 在循环体内立即同步消费，非延迟绑定
             return sum(c[key] for c in cells) / n
         results["aggregate_by_scheme"][scheme] = {
             "seeds": [c["seed"] for c in cells],

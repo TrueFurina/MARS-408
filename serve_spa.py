@@ -1,5 +1,5 @@
 """启动 SPA 预览服务器（解决后端路由问题）"""
-import http.server, socketserver, os, sys, threading, webbrowser
+import http.server, socketserver, os
 
 PORT = 5173
 DIST_DIR = os.path.join(os.path.dirname(__file__), "dist")

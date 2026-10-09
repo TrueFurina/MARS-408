@@ -1,4 +1,4 @@
-import os, glob, re
+import os, glob
 
 ROOT = r"E:\Program\MARL\study-help-pro\src"
 FILES = glob.glob(os.path.join(ROOT, "**", "*.vue"), recursive=True)

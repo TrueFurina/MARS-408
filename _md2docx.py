@@ -39,7 +39,7 @@ import argparse
 import os
 import re
 import sys
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import List, Optional, Sequence, Tuple
 
 try:
     from docx import Document

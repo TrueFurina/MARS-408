@@ -78,14 +78,14 @@ def verify_review():
         ppo = p_rl.train_ppo(rp.ReviewEnv(seed=seed, horizon=6), episodes=3000,
                              horizon=6, seed=seed, batch_episodes=48)
         a = run_review_episodes(
-            lambda f, s, r: p_rl.select_action(
+            lambda f, s, r: p_rl.select_action(  # noqa: B023  # p_rl 为本迭代循环变量，lambda 在循环体内被 run_review_episodes 同步立即消费，非延迟绑定
                 f, deterministic=True, skip_streak=s, reviews_done=r)[0], seed)
 
         # C: 监督 = 仅 warmup（离线回归规则标签），不跑 PPO
         p_sup = rp.ReviewWeightPolicy(seed=seed)
         p_sup.warmup_with_rules(rp.ReviewEnv(seed=seed, horizon=6), steps=400, seed=seed)
         c = run_review_episodes(
-            lambda f, s, r: p_sup.select_action(
+            lambda f, s, r: p_sup.select_action(  # noqa: B023  # p_sup 为本迭代循环变量，lambda 在循环体内被 run_review_episodes 同步立即消费，非延迟绑定
                 f, deterministic=True, skip_streak=s, reviews_done=r)[0], seed)
 
         # B: 固定规则

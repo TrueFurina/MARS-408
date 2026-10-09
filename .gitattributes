@@ -33,3 +33,21 @@ Dockerfile.* text eol=lf
 # ── 配置文件自身也强制 LF（避免 autocrlf 把它们检出成 CRLF）──
 .gitattributes text eol=lf
 .gitignore text eol=lf
+
+# ── 源码与配置：统一 LF（Python / 前端 / 配置类，避免 CRLF 进入工作区与构建上下文）──
+# 与上方 .sh / Dockerfile 同源：本机 core.autocrlf=true 下，不加约束会把 LF 转 CRLF 写回
+# 工作区，进而污染 docker build 构建上下文、或让 Linux 端工具对 CRLF 敏感而异常。
+# 对既有的 LF blob 不产生 diff（仅约束检出端与新增内容）；如需一次性规范化存量，
+# 用 `git add --renormalize .` 并单独提交，勿混入功能改动。
+*.py text eol=lf
+*.pyi text eol=lf
+*.toml text eol=lf
+*.json text eol=lf
+*.vue text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.xml text eol=lf
