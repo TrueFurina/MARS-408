@@ -8,7 +8,7 @@
 ## 命令
 - 后端: `cd py-server && pip install -e . && python main.py`（:8002）
 - 测试: `cd py-server && env -u PYTHONPATH -u PYTHONSTARTUP -u NODE_OPTIONS -u ELECTRON_RUN_AS_NODE .venv/Scripts/python.exe -m pytest tests/ -q --basetemp=.pytest_tmp --no-cov -p no:cacheprovider --continue-on-collection-errors`
-  - 2026-10-01 复核真值：**1177 passed / 227 skipped / 3 xfailed / 0 failed**（career-literacy 两轮实测；旧「923 / 1139」作废）。注：本机 Windows 因 torch `c10.dll` SIGSEGV 会丢失部分用例，CI/Linux 全量为准。
+  - 2026-10-09 CI 权威真值（run `37917008258`，Backend Test Linux 默认档）：**1389 passed / 38 skipped / 1 xfailed / 0 failed**（`1436 collected`，`addopts` deselect 8；旧「1177/227」「923/1139」「1178/208」作废）。注：本机 Windows 因 torch `c10.dll` SIGSEGV 会丢失部分用例，CI/Linux 全量为准；10-06 快照「1178 passed / 208 skipped」为标记剖面错位，非当前真值。
   - 前两个 `env -u` 是必需的：WorkBuddy shell 的注入会污染 pytest 子进程；`--continue-on-collection-errors` 用于跳过 torch c10.dll 的本机环境错误。
 - E5 模型恢复: `python scripts/fetch_e5_model.py`（模型不入库，会话重置后执行）
 - 机验（改动结构后跑）: `py-server/scripts/verify_{app_wiring,auth_coverage,core_lock_unification,kb_coverage,seed_data_split,user_store_split}.py`（轻量，CI 由 `.github/workflows/verify-structural.yml` 自动跑）；`verify_{gold_candidates,retrieval}.py` 依赖 Milvus+KB，仅手动 dispatch 触发；品牌/口径扫描 `scripts/brand_scan.py` + `scripts/scan_stale_calibration.py` 亦由该 workflow 接管。
@@ -28,7 +28,7 @@
 - **覆盖率门禁 = `--cov-fail-under=50`**（CI 真值，见 `ci.yml:191` / `p0-regression.yml:65`；旧「54 门禁」作废）。本机实测 **53.31%**（过 50 门禁，但属本机值非 CI 全量口径，对外引用前需重测）。补测加了 9 个测试文件
   （SSRF 守卫 / 页码对齐算法 / lifespan 守门 / 中间件矩阵 / 画像域契约 / DI 容器 / 内容安全 / SPA 挂载 / JWT 角色），
   并修复 1 个随 M-4 拆分失效的静态锚点测试。
-- **当前无阻塞项**：全量 **1177 passed / 227 skipped / 3 xfailed / 0 failed**（2026-10-01 复核）；唯一 error 是本机 torch `c10.dll` 加载失败（环境，CI/Linux 无此问题）。
+- **当前无阻塞项**：全量 **1389 passed / 38 skipped / 1 xfailed / 0 failed**（`1436 collected`，`addopts` deselect 8；2026-10-09 CI 默认档权威值）；唯一 error 是本机 torch `c10.dll` 加载失败（环境，CI/Linux 无此问题）。
 - 详细交接见 `deliverables/engineering-assurance/交接说明-2026-09-27.md`（含红线、可复现命令、踩坑表）。
 
 ## 项目级 skill（触发时读）

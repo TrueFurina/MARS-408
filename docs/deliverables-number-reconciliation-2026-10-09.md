@@ -99,3 +99,18 @@
 - ❌ 冻结期（现在）**不要**改 `build_roadshow_pptx.py` / `证据页.md` / `submission/` 实体——只按本清单与 submission 侧清单在 10-28 批量执行。
 - ❌ 不要把证据页的 "243" 误改成 "43"（记忆已证伪"API 模块 44→43"为计数边界误判）。
 - ✅ 所有数字以"机器复算 + CI 实测"为唯一来源，禁止手抄。
+
+## 六、执行记录（2026-10-10 提前批量，打破冻结）
+
+用户「继续」= 提前执行本预案（原定 10-28）。
+
+**已落地（A1–A5 + B）**：
+- A1/A2/A3：`build_roadshow_pptx.py:13/188/196` 测试数改为 CI 默认档 **1428 项 → 1389 passed / 38 skipped / 1 xfailed / 0 failed**（collected 1436, deselect 8）。
+- A4：覆盖率 54.96% **保留未复算**（本地 torch c10.dll SIGSEGV 无法可靠重跑 `--cov`，沿用最后实测值；备注已标注"精确时长以 CI/Linux 实测为准"）。
+- A5：禁用清单补 **1178**（`build_roadshow_pptx.py:17`）。
+- B：`证据页.md:35` API 端点 **243/226 → 244/227**（以 `openapi.json` 当前实测为准）。
+- **PPT 已重生成**（脚本双产物）：两份 PPT 内 1389 / 38 skipped 在位，1178 / 208 skipped / 1177 / 1397 全部 0 命中；54.96% 覆盖率保留。
+
+**未机器核验项**：
+- C「CI p0 档 67 条」：6 个测试文件用模块级 `pytestmark=p0_regression` 标记全量用例，本地因 torch SIGSEGV 无法可靠收集，保留 67 待 CI 实测确认（非冲突，仅待核）。
+- 代码行数指标：`verify_metrics` 现因 10-09 后代码增量漂移（前端 50801→50803、后端 80317→80320）变红，与本对齐无关；如需可 `scripts/verify_metrics.py --update` 同步真值文档。

@@ -179,11 +179,11 @@ async def competition_status():
         "competition": "",
         "team": "芒得很职",
         "functions": [
-            {"id": "F1", "name": "对话式学习画像构建", "status": "✅ 已实现", "detail": "8维度画像，对话式构建，随学随新", "route": "/chat"},
-            {"id": "F2", "name": "多智能体协同资源生成（核心）", "status": "✅ 已实现", "detail": "13个Agent协同，7种资源并行生成（讲解/习题/导图/拓展/PPT/代码/视频）", "route": "/resource"},
-            {"id": "F3", "name": "个性化学习路径规划", "status": "✅ 已实现", "detail": "KG-DAG拓扑排序，画像驱动薄弱点优先", "route": "/learning-path"},
-            {"id": "F4", "name": "智能辅导（加分项）", "status": "✅ 已实现", "detail": "多模态答疑，文字+图示+语音+视频", "route": "/chat"},
-            {"id": "F5", "name": "学习效果评估（加分项）", "status": "✅ 已实现", "detail": "多维度评估报告，热力图+易错点+趋势分析", "route": "/assessment"},
+            {"id": "F1", "name": "软素养对抗实训（核心）", "status": "✅ 已实现", "detail": "4 个真实职场冲突场景（开题答辩/需求评审/线上故障/代码评审），多轮对抗式对话；后端 11 节点 LangGraph 流水线驱动", "route": "/career/training"},
+            {"id": "F2", "name": "六维 ECD 素养评估（核心）", "status": "✅ 已实现", "detail": "表达逻辑/抗压应变/方案拆解/协作沟通/技术汇报/问题解决，逐轮打分并给出证据回放", "route": "/literacy"},
+            {"id": "F3", "name": "教师端班级看板（加分项）", "status": "✅ 已实现", "detail": "建班、导入学生、发布实训任务、查看班级完成度", "route": "/career/teacher"},
+            {"id": "F4", "name": "班级素养报告（加分项）", "status": "✅ 已实现", "detail": "按班级聚合六维得分，定位共性短板", "route": "/literacy/teacher"},
+            {"id": "F5", "name": "技能市场（加分项）", "status": "✅ 已实现", "detail": "官方示例技能 + 用户自建技能，支持复用与评分", "route": "/skills"},
         ],
         "non_functional": [
             {"name": "界面美观+流式输出", "status": "✅", "detail": "玻璃态设计系统，SSE流式推送"},
@@ -194,7 +194,10 @@ async def competition_status():
         "stats": {
             "knowledge_base_size": count,
             "user_count": user_count,
-            "agent_count": 13,
+            # 编排节点数：唯一真值源 agents/graph.py:99-109 共 11 个 add_node。
+            # 曾硬编码为 13 —— 那是我们已裁定「对外不得出现」的幻影数
+            # （既非编译图节点数，也非任何角色枚举数），故一并更正。
+            "agent_count": 11,
             "resource_types": 7,
             # 画像维度必须从唯一真值源派生：本分支权威定义在 agents.career_state.DIMENSIONS。
             # 曾硬编码为 8（旧版 408 学情画像遗留），与本线口径不符 ⇒ 改为派生，杜绝再漂移。

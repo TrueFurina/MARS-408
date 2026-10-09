@@ -6,11 +6,13 @@ import { icons } from '@/components/icons'
 const router = useRouter()
 
 // ── 数据指标药丸 ──
+// ⚠️ 以下均为硬编码数字，改后端代码时必须同步改此处（本页是免登录公开路由，
+//    评委可直达，数字漂移会当场穿帮）。每行末尾标注了取值锚点，便于核对。
 const metrics = [
-  { value: '11', label: '编排节点', color: 'var(--accent-primary)' },
-  { value: '7', label: '资源类型', color: 'var(--accent-cyan)' },
-  { value: '4', label: '实训场景', color: 'var(--accent-blue)' },
-  { value: '18', label: '能力端点', color: 'var(--accent-pink)' },
+  { value: '11', label: '编排节点', color: 'var(--accent-primary)' }, // agents/graph.py:99-109 共 11 个 add_node
+  { value: '7', label: '资源类型', color: 'var(--accent-cyan)' }, // agents/generator_cluster.py:67-69 并行 7 路
+  { value: '4', label: '实训场景', color: 'var(--accent-blue)' }, // app_config/career_scenarios.json 的 scenarios 共 4 项
+  { value: '19', label: '能力端点', color: 'var(--accent-pink)' }, // api/career_training.py 15 + api/literacy_assessment.py 4
 ]
 
 // ── 三大创新亮点 ──
