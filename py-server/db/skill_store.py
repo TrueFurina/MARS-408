@@ -1101,6 +1101,9 @@ def seed_official_skills():
     """将预设模板中的技能以官方身份写入数据库（幂等）"""
     with _lock:
         conn = _get_conn()
+        # 记录「模板存在但写不进去」的 id：INSERT OR IGNORE 遇主键冲突会静默跳过，
+        # 若不检测，官方技能会无声地少若干个（无任何日志），排查极困难。
+        conflicted: list[str] = []
         for tmpl in _BUILTIN_TEMPLATES:
             existing = conn.execute(
                 "SELECT id FROM skills WHERE id=? AND is_official=1",
@@ -1127,7 +1130,7 @@ def seed_official_skills():
                 updated_at=now,
                 published_at=now,
             )
-            conn.execute(
+            cur = conn.execute(
                 """INSERT OR IGNORE INTO skills (
                     id, name, description, icon, system_prompt,
                     llm_channel, temperature, max_tokens, kb_ids, rag_enabled,
@@ -1145,5 +1148,17 @@ def seed_official_skills():
                     skill.creator_id, skill.creator_name, 1 if skill.is_official else 0,
                 ),
             )
+            if cur.rowcount == 0:
+                # 库中已存在同 id 记录（通常是非官方/历史遗留），
+                # INSERT OR IGNORE 被主键冲突静默吞掉 → 该模板永远成不了官方技能。
+                conflicted.append(tmpl.id)
         conn.commit()
+        if conflicted:
+            logger.warning(
+                "官方技能播种：以下 %d 个模板未能写入为官方技能（库中已存在同 id 的"
+                "非官方记录，INSERT OR IGNORE 被主键冲突静默跳过）：%s；"
+                "全新空库不受影响，如需补全请先清理同 id 的非官方记录",
+                len(conflicted),
+                ", ".join(conflicted),
+            )
         logger.info("官方技能种子数据初始化完成")
