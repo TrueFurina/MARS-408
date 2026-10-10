@@ -101,7 +101,7 @@ function selectChapter(i: number) {
 .empty-icon { font-size: 48px; }
 .empty-text { font-size: var(--text-xl); font-weight: var(--weight-semibold); color: var(--color-text-2); }
 
-.selection-menu { position: fixed; z-index: 1000; display: flex; gap: var(--space-1); padding: var(--space-1); background: var(--color-elevated); border: 1px solid var(--color-border); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transform: translate(-50%, -100%); }
+.selection-menu { position: fixed; z-index: 1000; display: flex; gap: var(--space-1); padding: var(--space-1); background: var(--color-elevated); border: 1px solid var(--color-border); border-radius: 8px; box-shadow: var(--shadow-3); transform: translate(-50%, -100%); }
 .selection-btn { padding: 6px var(--space-3); border: none; border-radius: 6px; background: transparent; color: var(--color-text); font-size: var(--text-sm); cursor: pointer; white-space: nowrap; }
 .selection-btn:hover { background: var(--color-surface-hover); }
 

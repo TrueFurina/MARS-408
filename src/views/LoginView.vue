@@ -117,7 +117,7 @@ function toggleMode() { mode.value = isRegister.value ? 'login' : 'register'; er
   border-radius: 20px;
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+  box-shadow: var(--shadow-4);
 }
 
 /* 品牌 */

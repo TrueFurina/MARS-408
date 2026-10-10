@@ -108,9 +108,13 @@ function applyTheme(t: 'dark' | 'light') {
   document.documentElement.dataset.theme = t
   theme.value = t
   try { localStorage.setItem('mangdehenzhi-theme', t) } catch {}
-  // 同步移动端浏览器栏配色（theme-color 跟随双主题，取值同 --color-canvas）
+  // 同步移动端浏览器栏配色：跟随 _variables.css --color-canvas（深 #0E1217 / 浅 #F5F6F7），
+  // HTML 属性不能写 CSS var()，故运行时从计算样式解析，避免写死双主题值。
   const meta = document.querySelector('meta[name="theme-color"]')
-  if (meta) meta.setAttribute('content', t === 'dark' ? '#0E1217' : '#F5F6F7')
+  if (meta) {
+    const canvas = getComputedStyle(document.documentElement).getPropertyValue('--color-canvas').trim()
+    meta.setAttribute('content', canvas || (t === 'dark' ? '#0E1217' : '#F5F6F7'))
+  }
 }
 function toggleTheme() {
   applyTheme(theme.value === 'dark' ? 'light' : 'dark')

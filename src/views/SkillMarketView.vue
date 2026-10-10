@@ -218,7 +218,7 @@ async function loadMemoryOverview() {
 
 .tab-bar { display: flex; gap:var(--space-1); margin:var(--space-4) 0; background: var(--color-surface-2); border-radius:0.625rem; padding:var(--space-1); }
 .tab-btn { flex: 1; padding:var(--space-2) var(--space-4); border: none; border-radius:0.5rem; background: transparent; color: var(--color-text-2); font-size:var(--text-base); font-weight: var(--weight-medium); cursor: pointer; transition: var(--transition) }
-.tab-btn.active { background: var(--color-elevated); color: var(--color-text); box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+.tab-btn.active { background: var(--color-elevated); color: var(--color-text); box-shadow: var(--shadow-2); }
 .tab-btn:hover:not(.active) { color: var(--color-text); }
 
 .search-bar { display: flex; gap:var(--space-2); margin-bottom:var(--space-4); flex-wrap: wrap; }

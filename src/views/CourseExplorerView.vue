@@ -266,7 +266,7 @@ onMounted(load)
 .view-mode-tabs { display: flex; gap: var(--space-1); background: var(--color-surface-2); border-radius: 10px; padding: 3px; }
 .view-mode-tab { padding: 6px var(--space-3); border: none; border-radius: 8px; background: transparent; color: var(--color-text-2); font-size: var(--text-xs); font-weight: var(--weight-medium); cursor: pointer; transition: var(--transition); white-space: nowrap; }
 .view-mode-tab:hover { color: var(--color-text); }
-.view-mode-tab.active { background: var(--color-elevated); color: var(--color-text); box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+.view-mode-tab.active { background: var(--color-elevated); color: var(--color-text); box-shadow: var(--shadow-2); }
 
 .ce-loading, .ce-error { padding: var(--space-10); text-align: center; color: var(--color-text-2); }
 .ce-error { color: var(--accent-danger); }

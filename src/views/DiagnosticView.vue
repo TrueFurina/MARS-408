@@ -175,7 +175,7 @@ function goHome() {
 .og-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); }
 @media (max-width: 768px) { .og-grid { grid-template-columns: repeat(2, 1fr); } }
 .og-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: var(--space-4); text-align: center; cursor: pointer; transition: var(--transition); }
-.og-card:hover { border-color: var(--accent-primary); box-shadow: 0 4px 20px rgba(0,0,0,0.08); transform: translateY(-2px); }
+.og-card:hover { border-color: var(--accent-primary); box-shadow: var(--shadow-3); transform: translateY(-2px); }
 .og-icon { font-size: 28px; margin-bottom: var(--space-2); }
 .og-name { font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--text-primary); margin-bottom: 6px; }
 .og-desc { font-size: var(--text-xs); color: var(--text-muted); line-height: 1.5; }
