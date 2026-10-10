@@ -35,6 +35,18 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
     return JSONResponse(status_code=status_code, content={"detail": exc.detail})
 
 
+def _sanitize_errors(obj):
+    """dev 模式需把校验错误原样回传，但 pydantic 的 input 字段可能是 bytes
+    （如 form/raw body），直接 json.dumps 会抛 500。递归转为可读字符串。"""
+    if isinstance(obj, bytes):
+        return obj.decode("utf-8", "replace")
+    if isinstance(obj, dict):
+        return {k: _sanitize_errors(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_sanitize_errors(v) for v in obj]
+    return obj
+
+
 async def request_validation_error_handler(
     request: Request, exc: RequestValidationError
 ) -> JSONResponse:
@@ -48,7 +60,9 @@ async def request_validation_error_handler(
             status_code=status_code,
             content={"error": {"code": "VALIDATION_ERROR", "message": "请求参数不合法"}},
         )
-    return JSONResponse(status_code=status_code, content={"detail": exc.errors()})
+    return JSONResponse(
+        status_code=status_code, content={"detail": _sanitize_errors(exc.errors())}
+    )
 
 
 def install(app: FastAPI) -> None:
