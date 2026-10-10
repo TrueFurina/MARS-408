@@ -475,6 +475,24 @@ class WeakPointTracker:
         return recommended[:top_n]
 
 
+def filter_questions_for_weak_points(
+    weak_points: list[str],
+    difficulty: str = "all",
+    pool: list = STEP_QUESTIONS,
+) -> list:
+    """按薄弱科目过滤步骤化题库（纯函数，不采样，采样交由调用方）。
+
+    仅匹配 weak_points 中的 subject；difficulty != "all" 时再按难度过滤。
+    返回 StepQuestion 列表，可能为空（无匹配时调用方应回退常规选题）。
+    """
+    if not weak_points:
+        return []
+    candidates = [q for q in pool if getattr(q, "subject", None) in weak_points]
+    if difficulty != "all":
+        candidates = [q for q in candidates if q.difficulty == difficulty]
+    return candidates
+
+
 # 全局实例
 error_analyzer = ErrorAnalyzer()
 weak_point_tracker = WeakPointTracker()

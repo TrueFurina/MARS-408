@@ -704,7 +704,7 @@
           "quiz"
         ],
         "summary": "Generate Quiz",
-        "description": "根据科目/难度生成练习题",
+        "description": "根据科目/难度生成练习题；mode='adaptive' 时优先针对用户薄弱科目出题。",
         "operationId": "generate_quiz_api_quiz_generate_post",
         "parameters": [
           {
@@ -14994,6 +14994,11 @@
             "type": "integer",
             "title": "Count",
             "default": 3
+          },
+          "mode": {
+            "type": "string",
+            "title": "Mode",
+            "default": "normal"
           }
         },
         "type": "object",

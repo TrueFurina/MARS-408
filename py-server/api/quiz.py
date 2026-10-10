@@ -13,7 +13,7 @@ from shared.auth import get_current_user
 from shared.ratelimit import require_llm_quota
 from services.user_service import save_profile, get_profile, add_wrong_question
 from db.llm_provider import LLMProvider
-from engines.quiz_engine import STEP_QUESTIONS, error_analyzer, weak_point_tracker, StepResult
+from engines.quiz_engine import STEP_QUESTIONS, error_analyzer, weak_point_tracker, StepResult, filter_questions_for_weak_points
 
 logger = logging.getLogger("netlearn.quiz")
 router = APIRouter(prefix="/quiz", tags=["quiz"])
@@ -491,17 +491,37 @@ class GenerateQuizRequest(BaseModel):
     subject: str = "computer_network"
     difficulty: str = "medium"
     count: int = 3
+    mode: str = "normal"  # "normal"=常规按科目/难度；"adaptive"=优先针对用户薄弱科目
+
+
+def _adaptive_candidates(req: GenerateQuizRequest, user: dict) -> list:
+    """自适应选题：读该用户掌握度矩阵 → detect_weak_points → 按薄弱科目过滤题库。
+    严格可降级：任意异常或无可匹配薄弱点 → 返回空列表，调用方回退常规选题。"""
+    try:
+        from config import get_remediation_threshold, get_remediation_max_points
+        from db.memory_store import get_semantic_memory
+        mem = get_semantic_memory(user.get("user_id", "")) or {}
+        mastery = mem.get("mastery") or {}
+        weak_points = detect_weak_points(
+            mastery, get_remediation_threshold(), get_remediation_max_points()
+        )
+        if not weak_points:
+            return []
+        return filter_questions_for_weak_points(weak_points, req.difficulty)
+    except Exception as _e:
+        logger.debug("自适应选题降级（常规选题）: %s", _e)
+        return []
 
 
 @router.post("/generate")
 async def generate_quiz(req: GenerateQuizRequest, user: dict = Depends(require_llm_quota)):
-    """根据科目/难度生成练习题"""
-    from engines.quiz_engine import STEP_QUESTIONS
-
-    # 按科目和难度筛选
-    candidates = [q for q in STEP_QUESTIONS if q.subject == req.subject]
-    if req.difficulty != "all":
-        candidates = [q for q in candidates if q.difficulty == req.difficulty]
+    """根据科目/难度生成练习题；mode='adaptive' 时优先针对用户薄弱科目出题。"""
+    if req.mode == "adaptive":
+        candidates = _adaptive_candidates(req, user)
+    else:
+        candidates = [q for q in STEP_QUESTIONS if q.subject == req.subject]
+        if req.difficulty != "all":
+            candidates = [q for q in candidates if q.difficulty == req.difficulty]
 
     if not candidates:
         # 降级：仅按科目筛选
