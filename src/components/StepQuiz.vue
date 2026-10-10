@@ -16,6 +16,8 @@ const stepResult = ref<any>(null)
 const stepLoading = ref(false)
 const stepInput = ref('')
 const stepError = ref('')
+// P2 拓展：自适应选题开关 —— 开启后从 POST /quiz/generate(mode=adaptive) 拉取针对薄弱点的题
+const adaptiveMode = ref(false)
 
 const stepOptionLabels = ['A', 'B', 'C', 'D', 'E', 'F']
 
@@ -23,6 +25,24 @@ async function loadStepQuestions() {
   stepLoading.value = true
   stepError.value = ''
   try {
+    if (adaptiveMode.value) {
+      // P2 拓展：自适应选题 —— 后端按用户薄弱科目采样（network/transport 等归一化为 computer_network 等）
+      const data = await api.post<any>('/quiz/generate', {
+        subject: 'computer_network', difficulty: 'all', count: 5, mode: 'adaptive',
+      })
+      const qs = (data?.questions || []).map((q: any) => ({
+        id: q.id,
+        subject: q.subject,
+        difficulty: q.difficulty,
+        question_text: q.question_text,
+        step_count: (q.steps?.length) || 0,
+      }))
+      if (qs.length > 0) {
+        stepQuestions.value = qs
+        return
+      }
+      // 自适应无匹配题（如无任何薄弱点）则回退全部题目
+    }
     const data = await api.get<any>('/quiz/step-questions')
     stepQuestions.value = data.questions || []
   } catch (e: any) {
@@ -30,6 +50,13 @@ async function loadStepQuestions() {
   } finally {
     stepLoading.value = false
   }
+}
+
+function setMode(v: boolean) {
+  if (adaptiveMode.value === v) return
+  adaptiveMode.value = v
+  stepQuestions.value = []
+  loadStepQuestions()
 }
 
 async function startStepQuestion(qId: string) {
@@ -143,6 +170,13 @@ onUnmounted(() => {
     </div>
     <div class="step-quiz-desc">复杂题目拆成多步，每步独立判断，系统分析错因并追踪薄弱点</div>
 
+    <div class="step-mode-tabs">
+      <button class="step-mode-tab" :class="{ active: !adaptiveMode }" @click="setMode(false)">全部题目</button>
+      <button class="step-mode-tab" :class="{ active: adaptiveMode }" @click="setMode(true)">
+        智能针对薄弱点
+      </button>
+    </div>
+
     <div v-if="stepError" class="engine-error">{{ stepError }}</div>
 
     <!-- 题目列表 -->
@@ -226,6 +260,10 @@ onUnmounted(() => {
 .step-back-btn:hover { border-color: var(--accent-primary); color: var(--accent-primary); }
 .step-quiz-title { font-size:var(--text-lg); font-weight: var(--weight-bold); color: var(--text-primary); }
 .step-quiz-desc { font-size:var(--text-sm); color: var(--text-muted); margin-bottom:var(--space-4); }
+.step-mode-tabs { display: inline-flex; gap: var(--space-1); margin-bottom: var(--space-4); padding: 3px; border-radius: var(--radius-md); border: 1px solid var(--border-color); background: var(--bg-tertiary); }
+.step-mode-tab { padding: 0.375rem 0.875rem; border-radius: var(--radius-sm); border: none; background: transparent; color: var(--text-secondary); font-size: var(--text-sm); cursor: pointer; transition: var(--transition); }
+.step-mode-tab:hover { color: var(--text-primary); }
+.step-mode-tab.active { background: var(--color-accent-solid); color: var(--text-user); font-weight: var(--weight-semibold); }
 .step-question-list { display: flex; flex-direction: column; gap:var(--space-3); }
 .step-question-card { padding:var(--space-4) var(--space-5); cursor: pointer; transition: var(--transition); }
 .step-question-card:hover { border-color: var(--accent-primary); }
