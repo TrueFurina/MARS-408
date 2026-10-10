@@ -156,7 +156,7 @@ DEFAULTS = {
         "min_group_size": 2,             # 最小组大小
         "use_teaching_rules": True,      # 教学业务规则引擎（报告§3.3.3）
         # M3：MAPPO 教学策略层（三评审集成·增量四）
-        "use_mappo_policy": False,       # 权重来源接入 MAPPO（灰度，默认关闭 → EWMA 规则）
+        "use_mappo_policy": True,        # 权重来源接入 MAPPO（已激活；无 torch / 无模型时自动降级 EWMA 规则，fail-open）
         "mappo_checkpoint": "",          # MAPPO checkpoint 路径（空=默认 models/mappo_policy.pt）
         "mappo_hidden_dim": 64,          # 策略网络隐藏层维度
         "mappo_lr": 3e-4,                # PPO 学习率
