@@ -421,6 +421,22 @@ async def submit_step_answer(question_id: str, req: StepAnswerRequest, user: dic
         error_analyzer.analyze(all_results)
         weak_point_tracker.record_error(q, all_results, user["user_id"])
 
+        # P2 拓展闭环回写：步骤化答题完成后同步更新 L2 语义掌握度，
+        # 使自适应选题(mode=adaptive) 对真实用户也能针对薄弱科目出题。
+        # 此前仅更新 WeakPointTracker（无 redis 时仅内存、重启即丢），未写语义掌握度，
+        # 导致真实用户 adaptive 永远静默回退到所请科目；演示账号因启动预置 31 条历史才看似正常。
+        try:
+            from services.memory_service import record_quiz_result
+            overall_correct = bool(step_result.correct)
+            record_quiz_result(
+                user["user_id"], q.subject,
+                correct=overall_correct,
+                difficulty=q.difficulty,
+                mastery_delta=0.05,
+            )
+        except Exception as _me:
+            logger.debug("步骤化答题掌握度回写失败(忽略): %s", _me)
+
     return StepAnswerResponse(
         correct=correct,
         hint=step_result.hint,
