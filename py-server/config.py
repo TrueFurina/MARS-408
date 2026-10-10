@@ -216,6 +216,12 @@ DEFAULTS = {
     "import_worker": {
         "enabled": True,
     },
+
+    # ── P1 闭环触发：答题后薄弱知识点自动讲解 ──
+    # 掌握度低于 remediation_threshold 的知识点被视为薄弱，触发 weak-point-expert 讲解；
+    # 单次答题最多触发 remediation_max_points 个薄弱点的讲解（取掌握度最低的 N 个）。
+    "remediation_threshold": 0.6,
+    "remediation_max_points": 3,
 }
 
 _config_cache: Optional[dict] = None
@@ -315,6 +321,24 @@ def review_min_review() -> int:
 def get_career_config() -> dict:
     """career 对抗实训段配置（缺失返回空 dict，不报错）。"""
     return load_config().get("career", {})
+
+
+# ── P1 闭环触发：答题后薄弱知识点自动讲解配置 ──
+
+def get_remediation_threshold() -> float:
+    """掌握度阈值：低于此值视为薄弱知识点，触发自动讲解（默认 0.6）。"""
+    try:
+        return float(load_config().get("remediation_threshold", 0.6))
+    except (TypeError, ValueError):
+        return 0.6
+
+
+def get_remediation_max_points() -> int:
+    """单次答题最多触发讲解的薄弱点数量（默认 3）；<=0 时关闭闭环讲解。"""
+    try:
+        return int(load_config().get("remediation_max_points", 3))
+    except (TypeError, ValueError):
+        return 3
 
 
 # ── 大创真版算法增量：feature flag 读取接口（T1）──

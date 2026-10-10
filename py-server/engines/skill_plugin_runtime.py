@@ -216,6 +216,7 @@ class SkillPluginRuntime:
         max_tokens: Optional[int] = None,
         use_memory: bool = False,
         memory_access: str = "read_write",
+        system_prompt_override: Optional[str] = None,
     ) -> str:
         """执行技能
 
@@ -227,6 +228,8 @@ class SkillPluginRuntime:
             use_memory: 是否注入 L1/L2/L3 学情记忆（默认 False 保持原行为）
             memory_access: 技能记忆权限（P2②：none/read/write/read_write，
                 写回行为事件需含 write 权限）
+            system_prompt_override: 覆盖技能配置的 system_prompt（调用方手动渲染
+                占位符后注入，避免直接写运行时私有缓存）；为 None 时沿用技能原 prompt
 
         Returns:
             str: 技能输出
@@ -262,6 +265,8 @@ class SkillPluginRuntime:
                 return f"该技能仅对特定知识点激活（触发条件: {'、'.join(trigger_paths[:5])}），当前输入不匹配。"
 
         system_prompt = skill.get("system_prompt") or "你是一个有用的 AI 助手。"
+        if system_prompt_override is not None:
+            system_prompt = system_prompt_override
 
         # allowed_tools 工具白名单：技能声明后，约束系统提示词仅允许白名单内工具
         allowed_tools = skill.get("allowed_tools") or []

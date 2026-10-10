@@ -5,8 +5,10 @@
 import random
 import logging
 import json as json_mod
+from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends
-from models import QuizSubmitRequest, QuizSubmitResponse
+from models import QuizSubmitRequest, QuizSubmitResponse, RemediationItem
+from services.remediation import detect_weak_points
 from shared.auth import get_current_user
 from shared.ratelimit import require_llm_quota
 from services.user_service import save_profile, get_profile, add_wrong_question
@@ -58,6 +60,132 @@ def _merge_profile(profile: dict, records: list[dict]) -> dict:
     updated["recent_accuracy"] = round(accuracy, 3)
 
     return updated
+
+
+# ── P1 闭环触发：答题后薄弱知识点自动讲解 ──
+# 复用 weak-point-expert 官方技能（id 固定），通过 SkillPluginRuntime 触发，
+# 与 api/skills.py 的 /run-with-memory 端点保持一致的实例化与按 id 加载模式。
+
+WEAK_POINT_EXPERT_ID = "weak-point-expert"
+
+
+def _resolve_weak_expert_skill(get_skill, get_template) -> Optional[dict]:
+    """解析 weak-point-expert 技能配置：优先已 seed 的官方技能，缺失时回退模板。
+
+    返回运行时可直接使用的技能 dict（含 system_prompt / llm_channel / temperature /
+    max_tokens / memory_access 等字段）；均未命中返回 None（调用方据此降级）。
+    """
+    try:
+        skill = get_skill(WEAK_POINT_EXPERT_ID)
+        if skill is not None:
+            d = skill.to_dict()
+            if d.get("system_prompt"):
+                d.setdefault("memory_access", "read_write")
+                d.setdefault("trigger_paths", [])
+                d.setdefault("tools", [])
+                return d
+    except Exception as _e:
+        logger.debug(f"读取 weak-point-expert 官方技能失败(回退模板): {_e}")
+
+    try:
+        tmpl = get_template(WEAK_POINT_EXPERT_ID)
+        if tmpl is not None:
+            cfg = tmpl.default_config or {}
+            return {
+                "id": tmpl.id,
+                "name": tmpl.name,
+                "system_prompt": tmpl.system_prompt_template or "",
+                "llm_channel": cfg.get("llm_channel", "auto"),
+                "temperature": cfg.get("temperature", 0.6),
+                "max_tokens": cfg.get("max_tokens", 1500),
+                "memory_access": "read_write",
+                "trigger_paths": [],
+                "tools": [],
+            }
+    except Exception as _e:
+        logger.debug(f"读取 weak-point-expert 模板失败(降级): {_e}")
+
+    return None
+
+
+def _fill_subject_into_prompt(system_prompt: str, knowledge_point: str) -> str:
+    """将技能模板中的 {{subject}} 占位符替换为具体知识点名称。
+
+    SkillPluginRuntime.execute 不做 Jinja 风格占位符替换，需调用方手动替换；
+    替换后的 prompt 通过 execute(system_prompt_override=...) 注入，
+    不再直接写入运行时热加载缓存（避免触碰私有成员 _cache._cache）。
+    """
+    if "{{subject}}" in system_prompt:
+        return system_prompt.replace("{{subject}}", knowledge_point)
+    return system_prompt
+
+
+async def _generate_remediation(user_id: str) -> list[RemediationItem]:
+    """P1 闭环触发核心：读取掌握度 → 检测薄弱点 → 触发讲解，返回补救项列表。
+
+    严格可降级：任何异常（LLM 不可用、记忆/技能缺失、熔断器打开）都对应项
+    explanation=None 并继续，绝不抛出、绝不改变 quiz_submit 的既有返回字段。
+    mastery_json 缺失/空 → 返回空列表。
+    """
+    from config import get_remediation_threshold, get_remediation_max_points
+    from db.memory_store import get_semantic_memory
+    from engines.skill_plugin_runtime import SkillPluginRuntime
+    from db.skill_store import get_skill, get_template
+
+    threshold = get_remediation_threshold()
+    max_points = get_remediation_max_points()
+    if max_points <= 0:
+        return []
+
+    # 1) 读取掌握度矩阵
+    try:
+        mem = get_semantic_memory(user_id)
+        mastery = mem.get("mastery") or {}
+    except Exception as _e:
+        logger.debug(f"读取掌握度失败(降级，跳过闭环讲解): {_e}")
+        return []
+
+    # 2) 纯检测（无 LLM）
+    weak_points = detect_weak_points(mastery, threshold, max_points)
+    if not weak_points:
+        return []
+
+    # 3) 解析技能配置（官方技能优先，模板回退）
+    skill_dict = _resolve_weak_expert_skill(get_skill, get_template)
+
+    results: list[RemediationItem] = []
+    for kp in weak_points:
+        item = RemediationItem(knowledge_point=kp, explanation=None)
+        try:
+            if skill_dict is None:
+                raise ValueError(f"技能 {WEAK_POINT_EXPERT_ID} 未注册（官方技能未 seed 且无模板）")
+
+            runtime = SkillPluginRuntime.get(WEAK_POINT_EXPERT_ID)
+
+            # 渲染 {{subject}} 后通过 execute 的 system_prompt_override 注入，
+            # 不再触碰运行时私有缓存（_cache._cache）。
+            system_prompt = _fill_subject_into_prompt(
+                skill_dict.get("system_prompt", ""), kp
+            )
+
+            explanation = await runtime.execute(
+                user_input=(
+                    f"请结合我的学情记忆，针对知识点「{kp}」进行薄弱点专项讲解："
+                    "先讲清核心概念，再指出常见易错点，给出一道典型例题并解析，"
+                    "最后给出针对性复习建议。"
+                ),
+                user_id=user_id,
+                session_id="",
+                use_memory=True,        # 注入 L1/L2/L3 学情记忆（个性化）
+                memory_access="read_write",
+                system_prompt_override=system_prompt,
+            )
+            item.explanation = explanation or None
+        except Exception as _e:
+            logger.warning(f"薄弱点讲解生成失败(降级，不影响答题回写): kp={kp}, err={_e}")
+            item.explanation = None
+        results.append(item)
+    return results
 
 
 @router.post("/submit", response_model=QuizSubmitResponse)
@@ -167,10 +295,19 @@ async def quiz_submit(req: QuizSubmitRequest, user: dict = Depends(get_current_u
             "建议挑战更高难度题目，或进入下一章节学习。"
         )
 
+    # P1 闭环触发：检测薄弱知识点并触发 weak-point-expert 自动讲解（严格可降级）。
+    # 任何失败都返回 explanation=None 的 remediation 项或空列表，绝不破坏既有响应字段。
+    try:
+        remediation = await _generate_remediation(user["user_id"])
+    except Exception as _e:
+        logger.warning(f"闭环讲解整体降级(不影响答题回写): {_e}")
+        remediation = []
+
     return QuizSubmitResponse(
         total=total, correct_count=correct_count,
         accuracy=round(accuracy, 3), by_subject=by_subject,
         updated_profile=updated_profile, suggestions=suggestions,
+        remediation=remediation,
     )
 
 

@@ -16085,6 +16085,13 @@
             "type": "string",
             "title": "Suggestions",
             "default": ""
+          },
+          "remediation": {
+            "items": {
+              "$ref": "#/components/schemas/RemediationItem"
+            },
+            "type": "array",
+            "title": "Remediation"
           }
         },
         "type": "object",
@@ -16299,6 +16306,31 @@
         },
         "type": "object",
         "title": "RegisterResourceRequest"
+      },
+      "RemediationItem": {
+        "properties": {
+          "knowledge_point": {
+            "type": "string",
+            "title": "Knowledge Point"
+          },
+          "explanation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Explanation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "knowledge_point"
+        ],
+        "title": "RemediationItem",
+        "description": "单个薄弱知识点的补救讲解"
       },
       "ResourceIdRequest": {
         "properties": {

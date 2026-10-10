@@ -62,6 +62,12 @@ class QuizSubmitRequest(BaseModel):
     profile: dict
     records: list[QuizRecord]
 
+# ── P1 闭环触发：答题后薄弱知识点自动讲解项 ──
+class RemediationItem(BaseModel):
+    """单个薄弱知识点的补救讲解"""
+    knowledge_point: str                       # 知识点 id
+    explanation: Optional[str] = None          # 讲解内容；生成失败/降级时为 None
+
 class QuizSubmitResponse(BaseModel):
     total: int
     correct_count: int
@@ -69,6 +75,7 @@ class QuizSubmitResponse(BaseModel):
     by_subject: dict[str, dict]
     updated_profile: Optional[dict] = None
     suggestions: str = ""
+    remediation: list[RemediationItem] = Field(default_factory=list)
 
 
 # ── RAG ──
