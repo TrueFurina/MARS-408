@@ -85,6 +85,13 @@ const router = createRouter({
       component: () => import('@/views/PracticeView.vue'),
     },
     {
+      // P4 掌握度地图：科目掌握度 + 薄弱点可视化
+      path: '/mastery-map',
+      name: 'mastery-map',
+      meta: { profileRequired: true, title: '掌握度地图' },
+      component: () => import('@/views/MasteryMapView.vue'),
+    },
+    {
       // P3 归并：答题记录并入「错题本」页内 Tab（?tab=history），老 URL 经 redirect 保持可用
       path: '/quiz-history',
       name: 'quiz-history',

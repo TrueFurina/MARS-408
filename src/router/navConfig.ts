@@ -174,6 +174,13 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: icons.barChart,
         route: '/assessment',
       },
+      {
+        // P4：掌握度地图（科目掌握度 + 薄弱点），练习与复盘链路的自然延伸
+        key: 'mastery-map',
+        name: '掌握度地图',
+        icon: icons.mapPin,
+        route: '/mastery-map',
+      },
     ],
   },
 

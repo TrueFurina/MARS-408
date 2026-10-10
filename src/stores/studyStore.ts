@@ -87,6 +87,21 @@ export interface MasteryItem {
   pct: number
 }
 
+/** 薄弱点条目（GET /quiz/weak-points 返回） */
+export interface WeakPoint {
+  subject: string
+  chapter: string
+  concept: string
+  error_type: string
+  count: number
+  mastered: boolean
+}
+
+export interface WeakPointsResult {
+  weak_points: WeakPoint[]
+  total: number
+}
+
 export interface Question {
   id: string
   text: string
@@ -688,7 +703,25 @@ const userMsg: ChatMessage = {
     } catch {
       return []
     }
-}
+  }
+
+  /** 薄弱点数据（GET /quiz/weak-points?subject=...） */
+  const weakPoints = ref<WeakPoint[]>([])
+  const weakPointsTotal = ref<number>(0)
+  async function fetchWeakPoints(subject?: string): Promise<WeakPointsResult | null> {
+    try {
+      const qs = subject ? `?subject=${encodeURIComponent(subject)}` : ''
+      const data = await api.get<WeakPointsResult>(`/quiz/weak-points${qs}`)
+      if (data && Array.isArray(data.weak_points)) {
+        weakPoints.value = data.weak_points
+        weakPointsTotal.value = data.total ?? data.weak_points.length
+      }
+      return data
+    } catch {
+      // 后端不可用时返回 null，由视图展示空态；绝不填充占位数据
+      return null
+    }
+  }
 
   /** 获取知识图谱 */
   async function fetchKnowledgeGraph(subject: string): Promise<KnowledgeGraphData> {
@@ -786,5 +819,7 @@ const userMsg: ChatMessage = {
     fetchStats, fetchRecentSessions, fetchRecommendedTasks,
     fetchSubjects, fetchMasteryData, fetchKnowledgeGraph,
     fetchAssessment, generateQuestions, submitQuiz,
+    // mastery map (P4)
+    weakPoints, weakPointsTotal, fetchWeakPoints,
   }
 })
