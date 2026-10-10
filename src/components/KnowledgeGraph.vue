@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue'
 import { debounce } from '@/utils/perf'
+import { resolveToken, withAlpha } from '@/utils/themeTokens'
 
 const props = defineProps<{
   nodes: any[]
@@ -72,14 +73,14 @@ function initGraph() {
     y: h / 2 + (Math.random() - 0.5) * h * 0.5,
     vx: 0, vy: 0,
     radius: (n.value || 22) * (n.importance === 'high' ? 1.3 : n.importance === 'low' ? 0.8 : 1),
-    color: n.mastery ? masteryColor(n.mastery) : (n.color || '#7c6af2'),
+    color: n.mastery ? resolveToken(masteryColor(n.mastery), '#7c6af2') : (n.color || resolveToken('--color-accent', '#7c6af2')),
     mastery: n.mastery,
     data: n,
   }))
   const nodeMap = new Map(props.nodes.map((n, i) => [n.id, i]))
   edges2d.value = props.edges.map(e => ({
     from: nodeMap.get(e.from) ?? 0, to: nodeMap.get(e.to) ?? 0,
-    label: e.label || '', color: e.color?.color || '#94a3b8',
+    label: e.label || '', color: e.color?.color || resolveToken('--color-text-3', '#94a3b8'),
   }))
 }
 
@@ -144,7 +145,7 @@ function draw() {
     ctx.strokeStyle = edge.color; ctx.lineWidth = 1.5; ctx.stroke()
     if (edge.label) {
       const mx = (from.x + to.x) / 2; const my = (from.y + to.y) / 2
-      ctx.fillStyle = 'rgba(148,163,184,0.8)'; ctx.font = '11px sans-serif'
+      ctx.fillStyle = withAlpha(resolveToken('--color-text-3', '#94a3b8'), 0.8); ctx.font = '11px sans-serif'
       ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'
       ctx.fillText(edge.label, mx, my - 4)
     }
@@ -164,15 +165,15 @@ function draw() {
     // 掌握度外圈
     if (n.mastery) {
       ctx.beginPath(); ctx.arc(n.x, n.y, r + 3, 0, Math.PI * 2)
-      ctx.strokeStyle = masteryColor(n.mastery)
+      ctx.strokeStyle = resolveToken(masteryColor(n.mastery), '#7c6af2')
       ctx.lineWidth = 3; ctx.stroke()
     }
     ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, Math.PI * 2)
     ctx.fillStyle = n.color + '20'; ctx.fill()
-    ctx.strokeStyle = isSelected ? '#fff' : n.color
+    ctx.strokeStyle = isSelected ? resolveToken('--color-text', '#ffffff') : n.color
     ctx.lineWidth = isHovered || isSelected ? 3 : 2; ctx.stroke()
 
-    ctx.fillStyle = '#f8fafc'
+    ctx.fillStyle = resolveToken('--color-text', '#f8fafc') // 节点标签：覆盖在学科/掌握度色填充之上，跟随 --color-text（双主题均可读，且修复浅色主题白字不可见）
     ctx.font = `${isHovered ? 14 : 12}px sans-serif`
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
     ctx.fillText(n.label.length > 10 ? n.label.slice(0, 10) + '..' : n.label, n.x, n.y)
@@ -300,7 +301,7 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
     <template v-if="viewMode === 'outline'">
       <div class="outline-view">
         <div v-for="node in nodes" :key="node.id" class="outline-node" role="button" tabindex="0" :aria-label="node.label || node.id" @click="onOutlineClick(node)" @keydown.enter="onOutlineClick(node)" @keydown.space.prevent="onOutlineClick(node)">
-          <span class="outline-dot" :style="{ background: node.color || '#7c6af2' }"></span>
+          <span class="outline-dot" :style="{ background: node.color || 'var(--color-accent)' }"></span>
           <span class="outline-label">{{ node.label || node.id }}</span>
           <span v-if="node.mastery" class="outline-mastery" :style="{ color: masteryColor(node.mastery) }">[{{ masteryLabel(node.mastery) }}]</span>
           <span v-if="node.importance" class="outline-importance" :class="node.importance">{{ node.importance === 'high' ? '' : '' }}</span>
@@ -315,12 +316,12 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
     <template v-if="viewMode === 'mindmap'">
       <div class="mindmap-view">
         <div class="mindmap-center" role="button" tabindex="0" :aria-label="nodes[0]?.label || '根节点'" @click="onOutlineClick(nodes[0])" @keydown.enter="onOutlineClick(nodes[0])" @keydown.space.prevent="onOutlineClick(nodes[0])" v-if="nodes.length">
-          <span class="mindmap-center-dot" :style="{ background: nodes[0]?.color || '#7c6af2' }"></span>
+          <span class="mindmap-center-dot" :style="{ background: nodes[0]?.color || 'var(--color-accent)' }"></span>
           <span class="mindmap-center-label">{{ nodes[0]?.label || '根节点' }}</span>
         </div>
         <div class="mindmap-ring">
           <div v-for="(node, i) in nodes.slice(1, 12)" :key="node.id" class="mindmap-node" :style="getMindmapStyle(i, nodes.slice(1, 12).length)" role="button" tabindex="0" :aria-label="node.label || node.id" @click="onOutlineClick(node)" @keydown.enter="onOutlineClick(node)" @keydown.space.prevent="onOutlineClick(node)">
-            <span class="mindmap-dot" :style="{ background: node.color || '#7c6af2' }"></span>
+            <span class="mindmap-dot" :style="{ background: node.color || 'var(--color-accent)' }"></span>
             <span class="mindmap-label">{{ node.label || node.id }}</span>
           </div>
         </div>
@@ -335,7 +336,7 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
       <div class="map-view">
         <div class="map-path">
           <div v-for="(node, i) in nodes" :key="node.id" class="map-node" role="button" tabindex="0" :aria-label="node.label || node.id" @click="onOutlineClick(node)" @keydown.enter="onOutlineClick(node)" @keydown.space.prevent="onOutlineClick(node)">
-            <div class="map-node-card" :style="{ borderColor: node.color || '#7c6af2' }">
+            <div class="map-node-card" :style="{ borderColor: node.color || 'var(--color-accent)' }">
               <div class="map-node-step">{{ i + 1 }}</div>
               <div class="map-node-label">{{ node.label || node.id }}</div>
               <div v-if="node.mastery" class="map-node-mastery" :style="{ background: masteryColor(node.mastery) + '22', color: masteryColor(node.mastery) }">{{ masteryLabel(node.mastery) }}</div>
@@ -355,9 +356,9 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
         <div class="kg-detail-panel">
           <div class="kg-detail-header">
             <div class="kg-detail-title-row">
-              <span class="kg-detail-dot" :style="{ background: selectedNode.color || '#7c6af2' }"></span>
+              <span class="kg-detail-dot" :style="{ background: selectedNode.color || 'var(--color-accent)' }"></span>
               <span class="kg-detail-title">{{ selectedNode.label }}</span>
-              <span v-if="selectedNode.mastery" class="kg-detail-mastery" :style="{ background: masteryColor(selectedNode.mastery) + '22', color: masteryColor(selectedNode.mastery) }">
+              <span v-if="selectedNode.mastery" class="kg-detail-mastery" :style="{ background: withAlpha(resolveToken(masteryColor(selectedNode.mastery)), 0.13), color: masteryColor(selectedNode.mastery) }">
                 {{ masteryLabel(selectedNode.mastery) }}
               </span>
             </div>
@@ -384,7 +385,7 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
               </div>
               <div v-if="selectedNode.importance" class="kg-detail-row">
                 <span class="kg-detail-label">重要程度</span>
-                <span class="kg-detail-val" :style="{ color: selectedNode.importance === 'high' ? '#ef4444' : selectedNode.importance === 'medium' ? '#f59e0b' : '#94a3b8' }">
+                <span class="kg-detail-val" :style="{ color: selectedNode.importance === 'high' ? 'var(--color-danger)' : selectedNode.importance === 'medium' ? 'var(--color-warning)' : 'var(--color-text-3)' }">
                   {{ importanceLabel(selectedNode.importance) }}
                 </span>
               </div>
@@ -419,7 +420,7 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
             <div v-if="detailTab === 'mastery'">
               <div class="kg-detail-row">
                 <span class="kg-detail-label">掌握状态</span>
-                <span class="kg-detail-val" :style="{ color: selectedNode.mastery ? masteryColor(selectedNode.mastery) : '#94a3b8' }">
+                <span class="kg-detail-val" :style="{ color: selectedNode.mastery ? masteryColor(selectedNode.mastery) : 'var(--color-text-3)' }">
                   {{ selectedNode.mastery ? masteryLabel(selectedNode.mastery) : '未评估' }}
                 </span>
               </div>
@@ -465,8 +466,8 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
 .kg-legend-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 
 /* 详情面板 */
-.kg-detail-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; }
-.kg-detail-panel { width: 440px; max-height: 80vh; background: var(--color-canvas); border: 1px solid var(--color-border); border-radius: 14px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 16px 40px rgba(0,0,0,0.45); }
+.kg-detail-overlay { position: fixed; inset: 0; background: var(--color-overlay); z-index: 1000; display: flex; align-items: center; justify-content: center; }
+.kg-detail-panel { width: 440px; max-height: 80vh; background: var(--color-canvas); border: 1px solid var(--color-border); border-radius: 14px; display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--shadow-4); }
 .kg-detail-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--color-border); }
 .kg-detail-title-row { display: flex; align-items: center; gap: 10px; }
 .kg-detail-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
@@ -523,7 +524,7 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
 .map-path { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); justify-content: center; }
 .map-node { display: flex; align-items: center; gap: var(--space-2); }
 .map-node-card { padding: var(--space-3) var(--space-4); border-radius: 10px; background: var(--color-surface); border: 2px solid var(--color-border); cursor: pointer; transition: var(--transition); min-width: 120px; text-align: center; }
-.map-node-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+.map-node-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-2); }
 .map-node-step { font-size: var(--text-2xs); font-weight: var(--weight-bold); color: var(--color-text-3); margin-bottom: var(--space-1); }
 .map-node-label { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--color-text); }
 .map-node-mastery { font-size: 10px; padding: 1px var(--space-2); border-radius: 8px; margin-top: var(--space-1); display: inline-block; }

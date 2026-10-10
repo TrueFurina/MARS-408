@@ -23,6 +23,7 @@ import {
   type NavItem,
 } from '@/router/navConfig'
 import { useScene } from '@/composables/useScene'
+import { clearTokenCache } from '@/utils/themeTokens'
 
 /** 防御性 SVG 净化 — 虽然 icons.ts 硬编码，但竞赛评审要求所有 v-html 做净化 */
 function safeIcon(html: string): string {
@@ -115,6 +116,8 @@ function applyTheme(t: 'dark' | 'light') {
     const canvas = getComputedStyle(document.documentElement).getPropertyValue('--color-canvas').trim()
     meta.setAttribute('content', canvas || (t === 'dark' ? '#0E1217' : '#F5F6F7'))
   }
+  // 主题切换后清空 canvas 令牌缓存，使知识图谱等 canvas 组件下一次绘制取到新主题色
+  clearTokenCache()
 }
 function toggleTheme() {
   applyTheme(theme.value === 'dark' ? 'light' : 'dark')
