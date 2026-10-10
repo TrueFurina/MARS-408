@@ -138,6 +138,8 @@ scripts/_patch_*.json
 # 视频生成器产物（运行时生成，不入库）
 py-server/data/videos/
 py-server/data/video_cache/
+# 答题快照审计产物（api/quiz.py 运行时生成，纯审计用，不入库）
+py-server/data/quiz_snapshots/
 
 # 测试临时输出
 py-server/tests/*.txt

@@ -1,0 +1,122 @@
+{
+  "generated_at": "2026-10-11",
+  "levels": {
+    "beginner": {
+      "rules": {
+        "avg_reward": 1.6772,
+        "avg_accuracy": 0.9626,
+        "avg_cost": 2.0
+      },
+      "mappo": {
+        "avg_reward": {
+          "mean": 1.3397,
+          "std": 0.7036,
+          "per_seed": [
+            0.5273,
+            1.7477,
+            1.7441
+          ]
+        },
+        "avg_accuracy": {
+          "mean": 0.8774,
+          "std": 0.1479,
+          "per_seed": [
+            0.7066,
+            0.963,
+            0.9626
+          ]
+        },
+        "avg_cost": {
+          "mean": 2.6667,
+          "std": 0.5774,
+          "per_seed": [
+            3.0,
+            2.0,
+            3.0
+          ]
+        }
+      }
+    },
+    "intermediate": {
+      "rules": {
+        "avg_reward": 1.6765,
+        "avg_accuracy": 0.9633,
+        "avg_cost": 2.0
+      },
+      "mappo": {
+        "avg_reward": {
+          "mean": 1.3782,
+          "std": 0.4437,
+          "per_seed": [
+            0.8844,
+            1.5069,
+            1.7433
+          ]
+        },
+        "avg_accuracy": {
+          "mean": 0.919,
+          "std": 0.0677,
+          "per_seed": [
+            0.841,
+            0.9526,
+            0.9633
+          ]
+        },
+        "avg_cost": {
+          "mean": 2.6667,
+          "std": 0.5774,
+          "per_seed": [
+            3.0,
+            2.0,
+            3.0
+          ]
+        }
+      }
+    },
+    "advanced": {
+      "rules": {
+        "avg_reward": 1.6843,
+        "avg_accuracy": 0.9641,
+        "avg_cost": 2.0
+      },
+      "mappo": {
+        "avg_reward": {
+          "mean": 1.3224,
+          "std": 0.3059,
+          "per_seed": [
+            1.452,
+            0.973,
+            1.5421
+          ]
+        },
+        "avg_accuracy": {
+          "mean": 0.9183,
+          "std": 0.0469,
+          "per_seed": [
+            0.9366,
+            0.865,
+            0.9532
+          ]
+        },
+        "avg_cost": {
+          "mean": 2.6667,
+          "std": 0.5774,
+          "per_seed": [
+            3.0,
+            2.0,
+            3.0
+          ]
+        }
+      }
+    }
+  },
+  "mappo": {
+    "trained": true,
+    "seeds": [
+      1,
+      42,
+      2024
+    ],
+    "train_episodes": 1000
+  }
+}

@@ -135,14 +135,16 @@ def classify_request(user_request: str, topic: str = "", course: str = "",
 
 | 学生水平 | 策略 | 回合奖励 | 正确率 | token 成本系数 |
 |---|---|---|---|---|
-| beginner | 规则基线 | 1.677 | 0.963 | 2.000 |
-| beginner | MAPPO | 1.710±0.068 | 0.963±0.001 | 1.99±0.71 |
-| intermediate | 规则基线 | 1.677 | 0.963 | 2.000 |
-| intermediate | MAPPO | 1.637±0.153 | 0.963±0.001 | 1.88±0.47 |
-| advanced | 规则基线 | 1.684 | 0.964 | 2.000 |
-| advanced | MAPPO | 1.569±0.245 | 0.964±0.001 | 1.89±0.23 |
+| beginner | 规则基线 | 1.6772 | 0.9626 | 2.000 |
+| beginner | MAPPO | 1.3397±0.7036 | 0.8774±0.1479 | 2.6667±0.5774 |
+| intermediate | 规则基线 | 1.6765 | 0.9633 | 2.000 |
+| intermediate | MAPPO | 1.3782±0.4437 | 0.9190±0.0677 | 2.6667±0.5774 |
+| advanced | 规则基线 | 1.6843 | 0.9641 | 2.000 |
+| advanced | MAPPO | 1.3224±0.3059 | 0.9183±0.0469 | 2.6667±0.5774 |
 
-结论：MAPPO 在**正确率上与专家规则持平**（0.963±0.001，动态学生环境下），**成本不高于规则**（评审强度学会抽查降本），beginner 场景回合奖励 +1.9% 超越规则；且策略可训练、可调参、可扩展（对比静态规则的关键优势）。训练产物 `models/mappo_policy.pt`（checkpoint），实验结果 JSON 见 `experiments/results/mappo_policy_eval_20260912.json`。
+> ⚠️ **口径修正（2026-10-11 重新实测）**：上表为当前代码 `experiments/eval_mappo_policy.py`（3 seed × 1000 episodes）的真实结果，取代原「0.963±0.001 持平、成本不高于规则」的旧结论（旧结论引用于 `mappo_policy_eval_20260912.json`，当前代码已无法复现，予以撤回）。
+
+结论：在合成教学环境下，MAPPO 的**正确率低于规则基线**（0.877–0.932 vs 0.962–0.964），**评审成本高于规则**（2.67 vs 2.0，因策略更倾向 `full` 评审）。即「正确率持平、成本不高于规则」**不成立**。MAPPO 的边际价值在于策略**可训练 / 可调参 / 可扩展**，而非在本合成环境中超越规则；且系统对 MAPPO 推理失败 **fail-open 降级规则**，生产教学质量下限由规则基线保证。checkpoint 已落盘 `models/mappo_policy.pt`，评估 JSON 见 `experiments/results/mappo_policy_eval_20261011.json`。
 
 ---
 
