@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useStudyStore } from '@/stores/studyStore'
 import { useAchievementStore } from '@/stores/achievementStore'
 import { api } from '@/utils/api'
+import { resolveToken, withAlpha } from '@/utils/themeTokens'
 
 const store = useStudyStore()
 const achStore = useAchievementStore()
@@ -173,7 +174,7 @@ function drawRadar() {
       i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)
     }
     ctx.closePath()
-    ctx.strokeStyle = `rgba(124, 106, 242, ${0.08 + level * 0.10})`
+    ctx.strokeStyle = withAlpha(resolveToken('--color-accent'), 0.08 + level * 0.10)
     ctx.stroke()
   }
   // 轴线
@@ -181,7 +182,7 @@ function drawRadar() {
     const angle = -Math.PI / 2 + i * angleStep
     ctx.beginPath(); ctx.moveTo(cx, cy)
     ctx.lineTo(cx + radius * Math.cos(angle), cy + radius * Math.sin(angle))
-    ctx.strokeStyle = 'rgba(124, 106, 242, 0.18)'; ctx.stroke()
+    ctx.strokeStyle = withAlpha(resolveToken('--color-accent'), 0.18); ctx.stroke()
   }
   // 数据区域
   ctx.beginPath()
@@ -193,23 +194,23 @@ function drawRadar() {
   }
   ctx.closePath()
   const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius)
-  grad.addColorStop(0, 'rgba(124, 106, 242, 0.35)')
-  grad.addColorStop(0.5, 'rgba(124, 106, 242, 0.25)')
-  grad.addColorStop(1, 'rgba(59, 130, 246, 0.10)')
+  grad.addColorStop(0, withAlpha(resolveToken('--color-accent'), 0.35))
+  grad.addColorStop(0.5, withAlpha(resolveToken('--color-accent'), 0.25))
+  grad.addColorStop(1, withAlpha(resolveToken('--color-info'), 0.10))
   ctx.fillStyle = grad; ctx.fill()
-  ctx.strokeStyle = 'rgba(124, 106, 242, 0.7)'
+  ctx.strokeStyle = withAlpha(resolveToken('--color-accent'), 0.7)
   ctx.lineWidth = 2; ctx.stroke()
   // 标签
   for (let i = 0; i < n; i++) {
     const angle = -Math.PI / 2 + i * angleStep, item = traits.value[i]
     if (!item) continue
     const r = radius * (values[i] ?? 0), x = cx + r * Math.cos(angle), y = cy + r * Math.sin(angle)
-    const color = TRAIT_COLORS[i % TRAIT_COLORS.length] ?? '#8B5CF6'
+    const color = TRAIT_COLORS[i % TRAIT_COLORS.length] ?? resolveToken('--color-accent')
     ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2)
-    ctx.fillStyle = color; ctx.fill(); ctx.strokeStyle = '#8B5CF6'; ctx.lineWidth = 2; ctx.stroke()
+    ctx.fillStyle = color; ctx.fill(); ctx.strokeStyle = resolveToken('--color-accent'); ctx.lineWidth = 2; ctx.stroke()
     ctx.beginPath(); ctx.arc(x, y, 10, 0, Math.PI * 2); ctx.fillStyle = color + '20'; ctx.fill()
     const labelR = radius + 24, lx = cx + labelR * Math.cos(angle), ly = cy + labelR * Math.sin(angle)
-    ctx.fillStyle = '#94a3b8'
+    ctx.fillStyle = resolveToken('--color-text-3')
     ctx.font = '600 12px -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif'
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
     ctx.fillText(item.icon + ' ' + item.label, lx, ly)
@@ -280,7 +281,7 @@ onUnmounted(() => {
         <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);"> {{ memoryOverview.memory_level || 'L3' }}</span>
         <span style="padding:3px 10px;border-radius:12px;background:var(--bg-tertiary);color:var(--text-secondary);">掌握度 {{ memoryOverview.mastery_points ?? 0 }} 点</span>
         <span style="padding:3px 10px;border-radius:12px;background:var(--bg-tertiary);color:var(--text-secondary);">情景事件 {{ memoryOverview.episodic_count ?? 0 }}</span>
-        <span v-if="memoryOverview.weak_points?.length" style="padding:3px 10px;border-radius:12px;background:rgba(239,68,68,0.12);color:var(--accent-danger);">记忆薄弱: {{ memoryOverview.weak_points.slice(0, 4).join('、') }}</span>
+        <span v-if="memoryOverview.weak_points?.length" style="padding:3px 10px;border-radius:12px;background:rgba(var(--danger-rgb),0.12);color:var(--accent-danger);">记忆薄弱: {{ memoryOverview.weak_points.slice(0, 4).join('、') }}</span>
       </div>
 
       <!-- 编辑目标 -->

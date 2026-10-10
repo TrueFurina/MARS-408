@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useStudyStore } from '@/stores/studyStore'
 import { api } from '@/utils/api'
 import { renderMarkdownSafe } from '@/utils/markdown'
+import { withAlpha } from '@/utils/themeTokens'
 import { icons } from '@/components/icons'
 import ErrorBoundary from '@/components/ErrorBoundary.vue'
 
@@ -256,7 +257,7 @@ function drawMasteryRadar() {
       i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)
     }
     ctx.closePath()
-    ctx.strokeStyle = `rgba(124, 106, 242, ${0.08 + level * 0.08})`
+    ctx.strokeStyle = withAlpha(resolveToken('--color-accent'), 0.08 + level * 0.08)
     ctx.stroke()
   }
 
@@ -266,7 +267,7 @@ function drawMasteryRadar() {
     ctx.beginPath()
     ctx.moveTo(cx, cy)
     ctx.lineTo(cx + radius * Math.cos(angle), cy + radius * Math.sin(angle))
-    ctx.strokeStyle = 'rgba(124, 106, 242, 0.15)'
+    ctx.strokeStyle = withAlpha(resolveToken('--color-accent'), 0.15)
     ctx.stroke()
   }
 
@@ -282,12 +283,12 @@ function drawMasteryRadar() {
   }
   ctx.closePath()
   const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius)
-  grad.addColorStop(0, 'rgba(124, 106, 242, 0.35)')
-  grad.addColorStop(0.5, 'rgba(124, 106, 242, 0.22)')
-  grad.addColorStop(1, 'rgba(59, 130, 246, 0.08)')
+  grad.addColorStop(0, withAlpha(resolveToken('--color-accent'), 0.35))
+  grad.addColorStop(0.5, withAlpha(resolveToken('--color-accent'), 0.22))
+  grad.addColorStop(1, withAlpha(resolveToken('--color-info'), 0.08))
   ctx.fillStyle = grad
   ctx.fill()
-  ctx.strokeStyle = 'rgba(124, 106, 242, 0.7)'
+  ctx.strokeStyle = withAlpha(resolveToken('--color-accent'), 0.7)
   ctx.lineWidth = 2
   ctx.stroke()
 
@@ -329,7 +330,7 @@ function drawMasteryRadar() {
   // 中心点
   ctx.beginPath()
   ctx.arc(cx, cy, 3, 0, Math.PI * 2)
-  ctx.fillStyle = 'rgba(124, 106, 242, 0.5)'
+  ctx.fillStyle = withAlpha(resolveToken('--color-accent'), 0.5)
   ctx.fill()
 }
 
