@@ -13,7 +13,7 @@ from shared.auth import get_current_user
 from shared.ratelimit import require_llm_quota
 from services.user_service import save_profile, get_profile, add_wrong_question
 from db.llm_provider import LLMProvider
-from engines.quiz_engine import STEP_QUESTIONS, error_analyzer, weak_point_tracker, StepResult, filter_questions_for_weak_points
+from engines.quiz_engine import STEP_QUESTIONS, error_analyzer, weak_point_tracker, StepResult, filter_questions_for_weak_points, weak_points_from_history
 
 logger = logging.getLogger("netlearn.quiz")
 router = APIRouter(prefix="/quiz", tags=["quiz"])
@@ -494,9 +494,26 @@ class GenerateQuizRequest(BaseModel):
     mode: str = "normal"  # "normal"=常规按科目/难度；"adaptive"=优先针对用户薄弱科目
 
 
+def _weak_points_from_history(user_id: str, threshold: float) -> list[str]:
+    """语义掌握度为空时的回退：读答题历史，按科目聚合正确率，正确率低于阈值者视为薄弱。
+    返回已归一化的规范科目列表（network/transport/… → computer_network/…）。"""
+    try:
+        from db.profile_store import get_quiz_history
+        history = get_quiz_history(user_id) or []
+        return weak_points_from_history(history, threshold)
+    except Exception:
+        return []
+
+
 def _adaptive_candidates(req: GenerateQuizRequest, user: dict) -> list:
     """自适应选题：读该用户掌握度矩阵 → detect_weak_points → 按薄弱科目过滤题库。
-    严格可降级：任意异常或无可匹配薄弱点 → 返回空列表，调用方回退常规选题。"""
+
+    两层数据源、严格可降级：
+      1) 优先用语义记忆 mastery（由 quiz/submit 回写，键可能为中文/网络分层命名）；
+      2) mastery 为空时回退到答题历史 user_quiz_history 按科目正确率推断薄弱科目；
+      3) 任意异常或无可匹配薄弱点 → 返回空列表，调用方回退常规选题。
+    薄弱点科目经 normalize_subject 归一化后再与题库 subject 匹配。
+    """
     try:
         from config import get_remediation_threshold, get_remediation_max_points
         from db.memory_store import get_semantic_memory
@@ -505,6 +522,11 @@ def _adaptive_candidates(req: GenerateQuizRequest, user: dict) -> list:
         weak_points = detect_weak_points(
             mastery, get_remediation_threshold(), get_remediation_max_points()
         )
+        if not weak_points:
+            # 回退：语义掌握度为空（如演示账号），用答题历史按科目正确率推断薄弱科目
+            weak_points = _weak_points_from_history(
+                user.get("user_id", ""), get_remediation_threshold()
+            )
         if not weak_points:
             return []
         return filter_questions_for_weak_points(weak_points, req.difficulty)

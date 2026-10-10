@@ -71,6 +71,70 @@ class WeakPoint:
     mastered: bool = False  # 是否已掌握
 
 
+# ── 科目别名归一化 ──
+# 不同数据源使用的科目命名不统一（课程级 / 中文 408 科目 / 网络分层子主题），
+# 统一映射到 STEP_QUESTIONS 的 subject 取值，使"薄弱科目过滤"可跨数据源匹配。
+# 若不归一化，语义记忆 mastery 键（network/transport/…）与题库 subject（computer_network/…）
+# 永不相交，adaptive 模式会静默回退到常规选题。
+SUBJECT_ALIASES = {
+    # 课程级（已是规范值）
+    "computer_network": "computer_network",
+    "data_structures": "data_structures",
+    "computer_organization": "computer_organization",
+    "operating_system": "operating_system",
+    # 中文 408 科目
+    "计算机网络": "computer_network",
+    "数据结构": "data_structures",
+    "计算机组成原理": "computer_organization",
+    "计组": "computer_organization",
+    "操作系统": "operating_system",
+    # 网络分层子主题 → 计算机网络（408 中"计算机网络"科目的子集）
+    "overview": "computer_network",
+    "physical": "computer_network",
+    "datalink": "computer_network",
+    "network": "computer_network",
+    "transport": "computer_network",
+    "网络层": "computer_network",
+    "传输层": "computer_network",
+    "数据链路层": "computer_network",
+    "物理层": "computer_network",
+}
+
+
+def normalize_subject(subj) -> str:
+    """将任意科目的不同命名规约到 STEP_QUESTIONS 的 subject 取值；无法识别则原样返回。"""
+    if not subj:
+        return subj
+    key = str(subj).strip()
+    return SUBJECT_ALIASES.get(key, key)
+
+
+def weak_points_from_history(history: list[dict], threshold: float = 0.6) -> list[str]:
+    """按科目聚合答题历史正确率，正确率低于阈值者视为薄弱。
+
+    纯函数（不读 DB），便于单元测试。返回的科目已归一化为规范 subject，
+    可直接交给 filter_questions_for_weak_points 使用。
+    history 元素形如 {"subject": ..., "correct": bool, ...}。
+    """
+    if not history:
+        return []
+    by_subj: dict[str, dict] = {}
+    for r in history:
+        s = normalize_subject(r.get("subject", ""))
+        if not s:
+            continue
+        agg = by_subj.setdefault(s, {"total": 0, "correct": 0})
+        agg["total"] += 1
+        if r.get("correct"):
+            agg["correct"] += 1
+    weak = []
+    for s, agg in by_subj.items():
+        acc = agg["correct"] / max(agg["total"], 1)
+        if acc < threshold:  # 正确率低于阈值 → 薄弱
+            weak.append(s)
+    return weak
+
+
 # ── 步骤化题目库 ──
 
 STEP_QUESTIONS: list[StepQuestion] = [
@@ -487,7 +551,10 @@ def filter_questions_for_weak_points(
     """
     if not weak_points:
         return []
-    candidates = [q for q in pool if getattr(q, "subject", None) in weak_points]
+    # 归一化薄弱科目命名（network/transport/中文 408 科目等 → computer_network 等），
+    # 否则与题库 subject 词表错位会静默返回空。
+    norm = {normalize_subject(w) for w in weak_points}
+    candidates = [q for q in pool if getattr(q, "subject", None) in norm]
     if difficulty != "all":
         candidates = [q for q in candidates if q.difficulty == difficulty]
     return candidates
