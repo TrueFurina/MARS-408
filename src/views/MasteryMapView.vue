@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useStudyStore, type MasteryItem, type WeakPoint } from '@/stores/studyStore'
+import { useStudyStore, type MasteryItem, type WeakPoint, type KnowledgePoint } from '@/stores/studyStore'
 import { resolveToken } from '@/utils/themeTokens'
 import { icons } from '@/components/icons'
 import RingProgress from '@/components/RingProgress.vue'
@@ -84,6 +84,33 @@ const filteredWeakPoints = computed<WeakPoint[]>(() => {
 
 const weakTotal = computed(() => store.weakPointsTotal)
 
+// ── 知识点级（章节级）掌握度下钻 ──
+const knowledgePoints = ref<KnowledgePoint[]>([])
+const displayKnowledgePoints = computed<KnowledgePoint[]>(() => {
+  if (!selectedSubject.value) return knowledgePoints.value
+  return knowledgePoints.value.filter((k) => k.subject === selectedSubject.value)
+})
+
+// 章节英文 key → 中文展示名（仅已知 STEP_QUESTIONS 章节的静态标签映射，非编造数据）
+const CHAPTER_LABELS: Record<string, string> = {
+  tcp_congestion: 'TCP拥塞控制',
+  tree: '树与二叉树',
+  cache: '高速缓存',
+  page_replacement: '页面置换',
+  ip: 'IP与子网',
+  hash: '哈希表',
+  data: '数据与编码',
+  process: '进程调度',
+  sorting: '排序',
+}
+function chapterLabel(ch: string): string {
+  return CHAPTER_LABELS[ch] || ch
+}
+// 知识点掌握度 pct（mastery 0-1 → 0-100；null 视为未练习）
+function kpPct(kp: KnowledgePoint): number {
+  return kp.mastery == null ? 0 : Math.round(kp.mastery * 100)
+}
+
 async function loadData() {
   loading.value = true
   error.value = ''
@@ -91,8 +118,10 @@ async function loadData() {
     const [mastery] = await Promise.all([
       store.fetchMasteryData(),
       store.fetchWeakPoints(),
+      store.fetchKnowledgeMastery(),
     ])
     masteryData.value = mastery ?? []
+    knowledgePoints.value = store.knowledgePoints ?? []
   } catch (e: any) {
     error.value = e?.message || '加载掌握度数据失败'
   } finally {
@@ -239,13 +268,64 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- 数据层说明（真实数据缺口注释） -->
+      <!-- 知识点级（章节级）掌握度下钻 -->
+      <div class="map-card glass-card">
+        <div class="card-title">
+          <span v-html="icons.barChart" class="card-title-icon"></span>
+          知识点掌握度
+          <span v-if="selectedSubject" class="map-filter" @click="selectedSubject = ''">
+            已筛选：{{ masteryData.find((m) => m.subject === selectedSubject)?.label || selectedSubject }} ✕
+          </span>
+          <span v-else class="map-hint">（点击上方科目可下钻单个科目）</span>
+        </div>
+
+        <div v-if="displayKnowledgePoints.length === 0" class="weak-empty">
+          <span v-html="icons.sparkle" class="inline-icon"></span>
+          暂无知识点掌握度数据，完成步骤化练习后自动点亮
+        </div>
+
+        <div v-else class="kp-list">
+          <div
+            v-for="(kp, i) in displayKnowledgePoints"
+            :key="i"
+            class="kp-item"
+            :style="{ borderLeftColor: kp.mastery == null ? 'var(--mastery-none)' : tierToken(kpPct(kp)) }"
+          >
+            <div class="kp-main">
+              <div class="kp-top">
+                <span class="kp-chapter">{{ chapterLabel(kp.chapter) }}</span>
+                <span class="kp-tag">{{ kp.chapter }}</span>
+              </div>
+              <div class="kp-sub">
+                <span class="kp-subject">{{ kp.subject }}</span>
+                <span v-if="kp.mastery == null" class="kp-badge badge-none">未练习</span>
+                <span
+                  v-else
+                  class="kp-badge"
+                  :class="tierOf(kpPct(kp)) === 'high' ? 'badge-mastered' : 'badge-open'"
+                >{{ tierLabel(kpPct(kp)) }}</span>
+              </div>
+            </div>
+            <!-- 进度条：scaleX 填充（遵循 SSOT 动效约束，禁止 width 过渡） -->
+            <div class="kp-bar-bg">
+              <div
+                class="kp-bar-fill"
+                :style="{ width: '100%', transform: `scaleX(${kpPct(kp) / 100})`, background: kp.mastery == null ? 'var(--mastery-none)' : tierToken(kpPct(kp)) }"
+              ></div>
+            </div>
+            <div class="kp-count">
+              <span class="kp-count-num">{{ kp.mastery == null ? '—' : kpPct(kp) }}<span class="kp-count-unit" v-if="kp.mastery != null">%</span></span>
+              <span class="kp-count-sub">{{ kp.total }} 次练</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!--
-        数据层现状（P4）：
-        后端仅提供科目级 GET /user/mastery 与 GET /quiz/weak-points，
-        并无「知识点级掌握度」端点。因此本视图是「科目级 + 薄弱点」两层，
-        无法绘制细粒度（章节/知识点）热力图。若后续要更丰富的热力地图，
-        需新增如 GET /mastery/points?subject=... 的数据层支撑，再补前端渲染。
+        数据层现状（P4，已闭环）：
+        后端新增 GET /quiz/knowledge-mastery?subject=... 返回章节级真实掌握度
+        （mastery = 正确/(正确+错误)，未练习为 null 不插值）。
+        前端据此绘制知识点下钻，与科目级 / 薄弱点两层并列，无编造数字。
       -->
     </template>
   </div>
@@ -386,6 +466,53 @@ onMounted(() => {
 .weak-count { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
 .weak-count-num { font-size: var(--text-lg); font-weight: var(--weight-bold); font-variant-numeric: tabular-nums; }
 .weak-count-unit { font-size: var(--text-2xs); color: var(--text-muted); }
+
+/* ── 知识点掌握度 ── */
+.kp-list { display: flex; flex-direction: column; gap: var(--space-2); }
+.kp-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-2);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--mastery-none);
+  transition: var(--motion-transition);
+}
+.kp-item:hover { background: var(--color-surface-hover); transform: translateX(2px); }
+.kp-main { flex: 1; min-width: 0; }
+.kp-top { display: flex; align-items: center; gap: var(--space-2); }
+.kp-chapter { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+.kp-tag { font-size: var(--text-2xs); color: var(--text-muted); font-family: var(--font-mono, monospace); }
+.kp-sub { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-top: var(--space-1); }
+.kp-subject { font-size: var(--text-xs); color: var(--text-muted); }
+.kp-badge {
+  font-size: var(--text-2xs);
+  padding: 0.0625rem var(--space-2);
+  border-radius: var(--radius-full);
+  font-weight: var(--weight-bold);
+}
+.badge-none { background: var(--bg-tertiary); color: var(--text-muted); }
+.badge-open { background: var(--accent-danger-10); color: var(--accent-danger); }
+.badge-mastered { background: var(--accent-success-10); color: var(--accent-success); }
+.kp-bar-bg {
+  width: 7rem;
+  height: 0.5rem;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.kp-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  width: 100%;
+  transform-origin: left;
+  transition: transform var(--duration-slow) var(--ease-standard);
+}
+.kp-count { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; min-width: 3.5rem; }
+.kp-count-num { font-size: var(--text-lg); font-weight: var(--weight-bold); font-variant-numeric: tabular-nums; color: var(--text-primary); }
+.kp-count-sub { font-size: var(--text-2xs); color: var(--text-muted); }
 
 @media (max-width: 768px) {
   .map-card { padding: var(--space-4); }

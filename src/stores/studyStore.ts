@@ -102,6 +102,17 @@ export interface WeakPointsResult {
   total: number
 }
 
+/** 知识点级（章节级）掌握度（GET /quiz/knowledge-mastery 返回） */
+export interface KnowledgePoint {
+  subject: string
+  chapter: string
+  /** 真实正确率 0-1；未练习为 null（绝不插值/造假） */
+  mastery: number | null
+  success_count: number
+  error_count: number
+  total: number
+}
+
 export interface Question {
   id: string
   text: string
@@ -723,6 +734,23 @@ const userMsg: ChatMessage = {
     }
   }
 
+  /** 知识点级（章节级）掌握度（GET /quiz/knowledge-mastery?subject=...） */
+  const knowledgePoints = ref<KnowledgePoint[]>([])
+  async function fetchKnowledgeMastery(subject?: string): Promise<KnowledgePoint[]> {
+    try {
+      const qs = subject ? `?subject=${encodeURIComponent(subject)}` : ''
+      const data = await api.get<{ knowledge_points: KnowledgePoint[]; total: number }>(`/quiz/knowledge-mastery${qs}`)
+      if (data && Array.isArray(data.knowledge_points)) {
+        knowledgePoints.value = data.knowledge_points
+        return data.knowledge_points
+      }
+      return []
+    } catch {
+      // 后端不可用时返回空，由视图展示空态；绝不填充占位数据
+      return []
+    }
+  }
+
   /** 获取知识图谱 */
   async function fetchKnowledgeGraph(subject: string): Promise<KnowledgeGraphData> {
     try {
@@ -821,5 +849,6 @@ const userMsg: ChatMessage = {
     fetchAssessment, generateQuestions, submitQuiz,
     // mastery map (P4)
     weakPoints, weakPointsTotal, fetchWeakPoints,
+    knowledgePoints, fetchKnowledgeMastery,
   }
 })
