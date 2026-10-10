@@ -64,11 +64,12 @@ class WeakPoint:
     """薄弱点记录"""
     subject: str
     chapter: str
-    concept: str           # 具体知识点
+    concept: str           # 具体知识点；等于 _CHAPTER_MARKER 时为"章节级掌握度"聚合条目
     error_type: str        # 错因类型
     count: int = 0          # 出错次数
     last_wrong: str = ""    # 最后出错时间
     mastered: bool = False  # 是否已掌握
+    success_count: int = 0  # 答对次数（章节级掌握度聚合用；旧数据反序列化缺此字段时默认 0）
 
 
 # ── 科目别名归一化 ──
@@ -429,6 +430,9 @@ class WeakPointTracker:
     """
 
     _REDIS_TTL = 60 * 60 * 24 * 30  # 30 天
+    # 章节级掌握度聚合条目的 concept 哨兵值；与具体错因 concept 区分，
+    # 使 get_weak_topics（薄弱点清单）不混入章节级聚合条目。
+    _CHAPTER_MARKER = "__chapter__"
 
     def __init__(self):
         self._weak_points: dict[str, WeakPoint] = {}
@@ -468,9 +472,10 @@ class WeakPointTracker:
                 self._weak_points[k] = wp
 
     def record_error(self, question: StepQuestion, step_results: list[StepResult], user_id: str):
-        """记录答题错误到薄弱点"""
+        """记录答题错误到薄弱点（具体错因 concept + 章节级掌握度聚合条目各计一次出错）"""
         key_prefix = f"{user_id}:{question.subject}:{question.chapter}"
         now = time.strftime("%Y-%m-%dT%H:%M:%S")
+        chap_key = f"{key_prefix}:{self._CHAPTER_MARKER}"
 
         with self._lock:
             wps = self._load_user(user_id)
@@ -491,7 +496,93 @@ class WeakPointTracker:
                             count=1,
                             last_wrong=now,
                         )
+                    # 章节级掌握度聚合：出错次数 +1
+                    if chap_key in wps:
+                        wps[chap_key].count += 1
+                    else:
+                        wps[chap_key] = WeakPoint(
+                            subject=question.subject,
+                            chapter=question.chapter,
+                            concept=self._CHAPTER_MARKER,
+                            error_type="",
+                            count=1,
+                            last_wrong=now,
+                        )
             self._save_user(user_id, wps)
+
+    def record_success(self, question: StepQuestion, step_results: list[StepResult], user_id: str):
+        """记录答题正确到章节级掌握度聚合条目（success_count +1）。
+
+        仅对答对的步骤计数；答错由 record_error 计出错次数。
+        二者共用章节级聚合条目（concept=_CHAPTER_MARKER），从而
+        mastery = success_count / (success_count + count) 为真实正确率，不造假。
+        """
+        key_prefix = f"{user_id}:{question.subject}:{question.chapter}"
+        now = time.strftime("%Y-%m-%dT%H:%M:%S")
+        chap_key = f"{key_prefix}:{self._CHAPTER_MARKER}"
+
+        with self._lock:
+            wps = self._load_user(user_id)
+            for step in step_results:
+                if step.correct:
+                    if chap_key in wps:
+                        wps[chap_key].success_count += 1
+                    else:
+                        wps[chap_key] = WeakPoint(
+                            subject=question.subject,
+                            chapter=question.chapter,
+                            concept=self._CHAPTER_MARKER,
+                            error_type="",
+                            count=0,
+                            success_count=1,
+                            last_wrong=now,
+                        )
+            self._save_user(user_id, wps)
+
+    def get_knowledge_mastery(self, user_id: str, subject: str = "") -> list[dict]:
+        """知识点级（章节级）掌握度：基于真实答题正确/错误计数，mastery = 正确/(正确+错误)。
+
+        未练习章节（tracker 中无数据）也一并列出，mastery=None 表示尚未练习。
+        不返回任何估算/插值数字——没有数据就是 None。
+        """
+        with self._lock:
+            wps = self._load_user(user_id)
+
+        results: list[dict] = []
+        for key, wp in wps.items():
+            if wp.concept != self._CHAPTER_MARKER:
+                continue
+            if subject and wp.subject != subject:
+                continue
+            total = wp.success_count + wp.count
+            mastery = (wp.success_count / total) if total > 0 else None
+            results.append({
+                "subject": wp.subject,
+                "chapter": wp.chapter,
+                "mastery": mastery,
+                "success_count": wp.success_count,
+                "error_count": wp.count,
+                "total": total,
+            })
+
+        # 合并该 subject 在 STEP_QUESTIONS 中的全部章节（未练习的 mastery=None）
+        for q in STEP_QUESTIONS:
+            if subject and q.subject != subject:
+                continue
+            if any(r["chapter"] == q.chapter and r["subject"] == q.subject for r in results):
+                continue
+            results.append({
+                "subject": q.subject,
+                "chapter": q.chapter,
+                "mastery": None,
+                "success_count": 0,
+                "error_count": 0,
+                "total": 0,
+            })
+
+        # 掌握度升序（None 视为最弱，排最前），便于前端优先展示薄弱章节
+        results.sort(key=lambda r: (r["mastery"] if r["mastery"] is not None else -1.0))
+        return results
 
     def get_weak_topics(self, user_id: str, subject: str = "", top_n: int = 5) -> list[WeakPoint]:
         """获取用户薄弱知识点排名"""
@@ -500,6 +591,8 @@ class WeakPointTracker:
 
         results = []
         for key, wp in wps.items():
+            if wp.concept == self._CHAPTER_MARKER:
+                continue  # 章节级掌握度聚合条目不进入"薄弱点清单"
             if (key.startswith(f"{user_id}:{subject}") if subject else key.startswith(f"{user_id}:")):
                 if not wp.mastered:
                     results.append(wp)

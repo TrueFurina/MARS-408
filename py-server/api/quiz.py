@@ -420,6 +420,9 @@ async def submit_step_answer(question_id: str, req: StepAnswerRequest, user: dic
             all_results.append(StepResult(step_index=i, step_name=q.steps[i].step_name, correct=True))
         error_analyzer.analyze(all_results)
         weak_point_tracker.record_error(q, all_results, user["user_id"])
+        # 章节级掌握度聚合：答对步骤计 success_count（与 record_error 的出错计数共用章节级条目，
+        # 使知识点掌握度 = 正确/(正确+错误) 为真实正确率，不造假）。
+        weak_point_tracker.record_success(q, all_results, user["user_id"])
 
         # P2 拓展闭环回写：步骤化答题完成后同步更新 L2 语义掌握度，
         # 使自适应选题(mode=adaptive) 对真实用户也能针对薄弱科目出题。
@@ -484,6 +487,16 @@ async def get_weak_points(subject: str = "", user: dict = Depends(get_current_us
         ] + memory_weak_extra,
         "total": len(weak) + len(memory_weak_extra),
     }
+
+
+@router.get("/knowledge-mastery")
+async def get_knowledge_mastery(subject: str = "", user: dict = Depends(get_current_user)):
+    """知识点级（章节级）掌握度：基于真实答题正确/错误计数，mastery = 正确/(正确+错误)。
+
+    未练习章节 mastery=None（不插值、不造假）。前端掌握度地图可据此做知识点下钻。
+    """
+    points = weak_point_tracker.get_knowledge_mastery(user["user_id"], subject)
+    return {"knowledge_points": points, "total": len(points)}
 
 
 @router.get("/history")

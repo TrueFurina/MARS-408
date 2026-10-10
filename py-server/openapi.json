@@ -650,6 +650,64 @@
         }
       }
     },
+    "/api/quiz/knowledge-mastery": {
+      "get": {
+        "tags": [
+          "quiz"
+        ],
+        "summary": "Get Knowledge Mastery",
+        "description": "知识点级（章节级）掌握度：基于真实答题正确/错误计数，mastery = 正确/(正确+错误)。\n\n未练习章节 mastery=None（不插值、不造假）。前端掌握度地图可据此做知识点下钻。",
+        "operationId": "get_knowledge_mastery_api_quiz_knowledge_mastery_get",
+        "parameters": [
+          {
+            "name": "subject",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Subject"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/quiz/history": {
       "get": {
         "tags": [
