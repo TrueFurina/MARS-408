@@ -180,6 +180,7 @@ export const NAV_GROUPS: NavGroup[] = [
         name: '掌握度地图',
         icon: icons.mapPin,
         route: '/mastery-map',
+        scene: 'kaoyan',
       },
     ],
   },
