@@ -38,6 +38,10 @@ COPY py-server/pyproject.toml py-server/uv.lock ./
 # uv.lock 记录的是 files.pythonhosted.org（经代理慢/易断），改写为清华镜像直连
 RUN sed -i 's|https://files.pythonhosted.org|https://pypi.tuna.tsinghua.edu.cn|g' uv.lock
 # uv 下载缓存挂载为持久 cache volume（存于 VM 磁盘，引擎重启不丢，断点续传）
+# 限流 uv 并发：默认 50 并发下载是历史死亡窗口的触发负载（4GB 限额 VM 内内存尖峰），
+# 实测并发 4 连续 18 分钟稳定；EOF 家族第 4 例（1018s 处）后加入此限流
+ENV UV_CONCURRENT_DOWNLOADS=4
+ENV UV_CONCURRENT_INSTALLS=4
 RUN --mount=type=cache,target=/root/.cache/uv,sharing=locked \
     pip install --no-cache-dir -i https://pypi.tuna.tsinghua.edu.cn/simple uv \
     && uv sync --frozen --no-dev --no-install-project
