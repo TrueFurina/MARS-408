@@ -5,8 +5,8 @@ export const icons = {
   logo: `<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="芒得很职 408">
     <defs>
       <linearGradient id="nlGrad" x1="6" y1="6" x2="34" y2="34" gradientUnits="userSpaceOnUse">
-        <stop stop-color="#7c6af2"/>
-        <stop offset="1" stop-color="#5b8bd8"/>
+        <stop style="stop-color: var(--color-accent)"/>
+        <stop offset="1" style="stop-color: var(--color-info)"/>
       </linearGradient>
     </defs>
     <rect width="40" height="40" rx="11" fill="url(#nlGrad)"/>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { resolveToken, withAlpha } from '@/utils/themeTokens'
 
 const props = defineProps<{
   nodes: any[]
@@ -40,7 +41,7 @@ function initSphere() {
       y: radius * Math.sin(phi) * Math.sin(theta),
       z: radius * Math.cos(phi),
       label: node.label || node.id,
-      color: node.color || '#7c6af2',
+      color: node.color || resolveToken('--color-accent'),
       radius: (node.value || 22) * 0.8,
       data: node,
       mastery: node.mastery,
@@ -49,8 +50,12 @@ function initSphere() {
 }
 
 function getMasteryColor(mastery?: string): string {
-  const map: Record<string, string> = { mastered: '#22c55e', weak: '#f59e0b', unlearned: '#ef4444' }
-  return map[mastery || ''] || '#7c6af2'
+  const map: Record<string, string> = {
+    mastered: resolveToken('--color-success'),
+    weak: resolveToken('--color-warning'),
+    unlearned: resolveToken('--color-danger'),
+  }
+  return map[mastery || ''] || resolveToken('--color-accent')
 }
 
 function project3D(p: Point3D, angle: number, w: number, h: number) {
@@ -88,9 +93,9 @@ function draw() {
 
   // 半透明球体背景
   const grad = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, 220)
-  grad.addColorStop(0, 'rgba(124,106,242,0.04)')
-  grad.addColorStop(0.5, 'rgba(124,106,242,0.02)')
-  grad.addColorStop(1, 'rgba(124,106,242,0)')
+  grad.addColorStop(0, withAlpha(resolveToken('--color-accent'), 0.04))
+  grad.addColorStop(0.5, withAlpha(resolveToken('--color-accent'), 0.02))
+  grad.addColorStop(1, withAlpha(resolveToken('--color-accent'), 0))
   ctx.fillStyle = grad
   ctx.beginPath(); ctx.arc(w / 2, h / 2, 220, 0, Math.PI * 2); ctx.fill()
 
@@ -105,7 +110,7 @@ function draw() {
     ctx.beginPath()
     ctx.moveTo(pf.sx, pf.sy)
     ctx.lineTo(pt.sx, pt.sy)
-    ctx.strokeStyle = `rgba(148,163,184,${Math.max(0.1, (avgDepth + 300) / 600) * 0.5})`
+    ctx.strokeStyle = withAlpha(resolveToken('--color-text-3'), Math.max(0.1, (avgDepth + 300) / 600) * 0.5)
     ctx.lineWidth = 1.5
     ctx.stroke()
   }
@@ -131,7 +136,7 @@ function draw() {
 
     // 标签（只显示深度靠前的节点）
     if (p.depth > -50) {
-      ctx.fillStyle = `rgba(248,250,252,${alpha})`
+      ctx.fillStyle = withAlpha(resolveToken('--color-text'), alpha)
       ctx.font = '11px sans-serif'
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
@@ -203,7 +208,7 @@ watch(() => [props.nodes], () => { initSphere() })
 
 <style scoped>
 .sphere-wrapper { position: relative; width: 100%; }
-.sphere-canvas { width: 100%; height: auto; display: block; border-radius: 12px; background: rgba(255,255,255,0.02); border: 1px solid var(--color-border); cursor: pointer; }
+.sphere-canvas { width: 100%; height: auto; display: block; border-radius: 12px; background: var(--color-surface-2); border: 1px solid var(--color-border); cursor: pointer; }
 .sphere-hint { text-align: center; font-size: var(--text-xs); color: var(--color-text-3); margin-top: 6px; }
 .sphere-empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-2); pointer-events: none; }
 .empty-icon { font-size: 48px; }

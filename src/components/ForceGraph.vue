@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { resolveToken, withAlpha } from '@/utils/themeTokens'
 
 interface GraphNode { id: string; label: string; group: number; x?: number; y?: number; vx?: number; vy?: number; radius?: number }
 interface GraphEdge { source: string; target: string }
@@ -33,12 +34,6 @@ const ATTRACTION = 0.008
 const DAMPING = 0.9
 const CENTER_FORCE = 0
 const MIN_VELOCITY = 2
-
-function resolveToken(name: string): string {
-  if (typeof window === 'undefined') return 'var(--color-accent)'
-  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
-  return v || 'var(--color-accent)'
-}
 
 function groupColor(g: number): string {
   if (g <= 7) return props.subjectTokens[0] || '--subject-cn'
@@ -160,9 +155,9 @@ function render(w: number, h: number) {
     ctx.beginPath(); ctx.arc(nx, ny, r, 0, Math.PI * 2)
     const g2 = ctx.createRadialGradient(nx - 3, ny - 3, 0, nx, ny, r)
     g2.addColorStop(0, lighten(color, 30)); g2.addColorStop(1, color)
-    ctx.fillStyle = g2; ctx.fill(); ctx.strokeStyle = isHover ? '#fff' : color + '80'
+    ctx.fillStyle = g2; ctx.fill(); ctx.strokeStyle = isHover ? resolveToken('--color-text') : color + '80'
     ctx.lineWidth = isHover ? 2 : 1; ctx.stroke()
-    ctx.fillStyle = isHover ? '#fff' : 'rgba(148, 163, 184, 0.90)'
+    ctx.fillStyle = isHover ? resolveToken('--color-text') : withAlpha(resolveToken('--color-text-3'), 0.9)
     ctx.font = '12px -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif'
     ctx.textAlign = 'center'; ctx.textBaseline = 'top'
     ctx.fillText(node.label || '', nx, ny + r + 5)

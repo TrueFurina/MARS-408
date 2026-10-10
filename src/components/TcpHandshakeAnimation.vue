@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { resolveToken, withAlpha } from '@/utils/themeTokens'
 
 const props = defineProps<{
   mode?: 'normal' | 'synflood'
@@ -43,11 +44,11 @@ function drawBackground() {
   const h = canvas.clientHeight
 
   // Background
-  ctx.fillStyle = '#0E1217'
+  ctx.fillStyle = resolveToken('--color-canvas')
   ctx.fillRect(0, 0, w, h)
 
   // Grid
-  ctx.strokeStyle = 'rgba(124, 106, 242, 0.06)'
+  ctx.strokeStyle = withAlpha(resolveToken('--color-accent'), 0.06)
   ctx.lineWidth = 0.5
   for (let x = 0; x < w; x += 40) {
     ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke()
@@ -63,18 +64,18 @@ function drawEndpoint(x: number, label: string, isServer: boolean, highlight = f
   const h = canvas?.clientHeight ?? 400
 
   // Box shadow
-  ctx.shadowColor = 'rgba(0,0,0,0.4)'
+  ctx.shadowColor = withAlpha(resolveToken('--color-overlay'), 0.4)
   ctx.shadowBlur = 8
   ctx.shadowOffsetY = 3
 
   // Box
   const grad = ctx.createLinearGradient(x - boxW/2, 0, x + boxW/2, 0)
   if (highlight) {
-    grad.addColorStop(0, '#8B5CF6')
-    grad.addColorStop(1, '#7c6af2')
+    grad.addColorStop(0, resolveToken('--color-accent'))
+    grad.addColorStop(1, resolveToken('--color-accent'))
   } else {
-    grad.addColorStop(0, '#1c1c2b')
-    grad.addColorStop(1, '#161622')
+    grad.addColorStop(0, resolveToken('--color-elevated'))
+    grad.addColorStop(1, resolveToken('--color-surface-2'))
   }
   ctx.fillStyle = grad
   ctx.beginPath()
@@ -85,12 +86,12 @@ function drawEndpoint(x: number, label: string, isServer: boolean, highlight = f
   ctx.shadowColor = 'transparent'
 
   // Border
-  ctx.strokeStyle = highlight ? '#8B5CF6' : 'rgba(124,106,242,0.3)'
+  ctx.strokeStyle = highlight ? resolveToken('--color-accent') : withAlpha(resolveToken('--color-accent'), 0.3)
   ctx.lineWidth = highlight ? 2 : 1
   ctx.stroke()
 
   // Label
-  ctx.fillStyle = highlight ? '#fff' : '#94a3b8'
+  ctx.fillStyle = highlight ? resolveToken('--color-text') : resolveToken('--color-text-3')
   ctx.font = '600 14px -apple-system, "PingFang SC", sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
@@ -175,11 +176,11 @@ function drawScene() {
       const offset = i * 12
       const p = Math.max(0, Math.min(1, progress * 2 - i * 0.15))
       drawArrow(CX1, clientY + 5, CX2, serverY + 5,
-        i === 0 ? 'SYN' : '', '#ef4444', p, true)
+        i === 0 ? 'SYN' : '', resolveToken('--color-danger'), p, true)
     }
-    drawStateBox('半连接队列 (SYN_RCVD)', CX2, serverY + 100, '#ef4444')
+    drawStateBox('半连接队列 (SYN_RCVD)', CX2, serverY + 100, resolveToken('--color-danger'))
     if (progress > 0.5) {
-      ctx.fillStyle = '#ef4444'
+      ctx.fillStyle = resolveToken('--color-danger')
       ctx.font = '13px -apple-system, sans-serif'
       ctx.textAlign = 'center'
       ctx.fillText(' 半连接队列满！正常连接被拒绝', CX2, serverY + 130)
@@ -190,26 +191,26 @@ function drawScene() {
   // Step 1: SYN (client → server)
   if (step >= 1) {
     const p = step === 1 ? progress : 1
-    drawArrow(CX1, clientY + 5, CX2, serverY + 5, 'SYN\nseq=x', '#8B5CF6', p)
-    if (p >= 0.95) drawStateBox('SYN_SENT', CX1, clientY + 30, '#8B5CF6')
-    if (p >= 0.95) drawStateBox('LISTEN', CX2, serverY + 30, '#22C55E')
+    drawArrow(CX1, clientY + 5, CX2, serverY + 5, 'SYN\nseq=x', resolveToken('--color-accent'), p)
+    if (p >= 0.95) drawStateBox('SYN_SENT', CX1, clientY + 30, resolveToken('--color-accent'))
+    if (p >= 0.95) drawStateBox('LISTEN', CX2, serverY + 30, resolveToken('--color-success'))
   }
 
   // Step 2: SYN+ACK (server → client)
   if (step >= 2) {
     const p = step === 2 ? progress : 1
-    drawArrow(CX2, serverY - 5, CX1, clientY - 5, 'SYN+ACK\nseq=y,ack=x+1', '#7c6af2', p)
-    if (p >= 0.95) drawStateBox('SYN_RCVD', CX2, serverY + 30, '#7c6af2')
+    drawArrow(CX2, serverY - 5, CX1, clientY - 5, 'SYN+ACK\nseq=y,ack=x+1', resolveToken('--color-accent'), p)
+    if (p >= 0.95) drawStateBox('SYN_RCVD', CX2, serverY + 30, resolveToken('--color-accent'))
   }
 
   // Step 3: ACK (client → server)
   if (step >= 3) {
     const p = step === 3 ? progress : 1
-    drawArrow(CX1, clientY + 5, CX2, serverY + 5, 'ACK\nseq=x+1,ack=y+1', '#22C55E', p)
+    drawArrow(CX1, clientY + 5, CX2, serverY + 5, 'ACK\nseq=x+1,ack=y+1', resolveToken('--color-success'), p)
     if (p >= 0.95) {
-      drawStateBox('ESTABLISHED ', CX1, clientY + 30, '#22C55E')
-      drawStateBox('ESTABLISHED ', CX2, serverY + 30, '#22C55E')
-      ctx.fillStyle = '#22C55E'
+      drawStateBox('ESTABLISHED ', CX1, clientY + 30, resolveToken('--color-success'))
+      drawStateBox('ESTABLISHED ', CX2, serverY + 30, resolveToken('--color-success'))
+      ctx.fillStyle = resolveToken('--color-success')
       ctx.font = '700 16px -apple-system, sans-serif'
       ctx.textAlign = 'center'
       ctx.fillText(' TCP 连接建立成功', (CX1 + CX2) / 2, midY)
