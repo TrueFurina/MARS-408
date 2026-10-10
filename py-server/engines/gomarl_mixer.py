@@ -728,7 +728,12 @@ class NeuralGroupMixer:
         }
 
         # 4. 神经网络混合（如果可用）
-        consensus_score = float(np.mean(list(weighted_scores.values())))
+        # 规则模式共识分须与神经路径一致，约束到 0–10 契约区间：
+        # weighted_scores 含 dynamic_weight 乘子（EWMA 因子 0.5–1.5），score 高且 weight>1 时会越界 >10；
+        # consensus_score 对外是 10 分制（test_engine_modules.py:396-398,424），
+        # 神经路径 :763 已做 max(0,min(10,cs)) 钳制，规则路径此前未钳制（诚信缺口）。
+        rule_mean = float(np.mean(list(weighted_scores.values())))
+        consensus_score = max(0.0, min(10.0, rule_mean))
         sd_loss = 0.0
         neural_used = False
 
