@@ -114,3 +114,17 @@
 **未机器核验项**：
 - C「CI p0 档 67 条」：6 个测试文件用模块级 `pytestmark=p0_regression` 标记全量用例，本地因 torch SIGSEGV 无法可靠收集，保留 67 待 CI 实测确认（非冲突，仅待核）。
 - 代码行数指标：`verify_metrics` 现因 10-09 后代码增量漂移（前端 50801→50803、后端 80317→80320）变红，与本对齐无关；如需可 `scripts/verify_metrics.py --update` 同步真值文档。
+
+---
+
+## 七、后续口径更新（2026-10-11，追加，不改上文历史行）
+
+> 本节为**新增记录**，不改动上文 10-09/10-10 的历史快照行（保留可追溯）。
+
+- **认证覆盖率口径漂移**：`§一 / §三` 记录的 **94.67%（231/244）** 已过期。10-09 之后新增 1 个受保护端点，真值变为 **94.69%（232/245）**（覆盖率**上升**，非安全回归）。
+- 复算命令（真值来源）：
+  `cd py-server && <venv-python> scripts/verify_auth_coverage.py`
+  → `protected=232 / public=13 / total=245 → 94.69%`。
+- 凭证端点快照同步：`py-server/openapi.json` 现为 **245 ops / 228 paths**（旧记 244/227）。
+- 已同步的活跃口径：`py-server/main.py:49`（→ 94.69%（232/245））、`docs/ci-backend-test-result.md:32`（→ 245 ops/228 paths、94.69%/232/245）、`py-server/openapi.json`（重生成）。
+-**仍待同步（本次未改，属对外材料族）**：`py-server/scripts/verify_auth_coverage.py:25`（docstring 示例）、`py-server/tools/generate_demo_ppt.py:168`、`docs/METRICS_CURRENT.md:84`、`docs/submission-number-reconciliation-2026-10-09.md:16/85`。

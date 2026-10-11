@@ -29,4 +29,4 @@
 | 默认集测试 | 1389 passed / 38 skipped / 1 xfailed / 0 failed | run `38006205976` step1 完全一致 | ✅ |
 | 代码覆盖率 | 61% | TOTAL 21473/8453 = 61% | ✅（原写 54.96% 旧值，已修正） |
 | p0 档 | 67 条 | run `37905229979` = 67 passed | ✅ |
-| API / 认证覆盖率 | 244 ops / 227 paths、94.67%（231/244） | openapi() + verify_auth_coverage | ✅（早前已对齐） |
+| API / 认证覆盖率 | 245 ops / 228 paths、94.69%（232/245） | openapi() + verify_auth_coverage | ✅（2026-10-11 复算更新；原 244/227、231/244） |
