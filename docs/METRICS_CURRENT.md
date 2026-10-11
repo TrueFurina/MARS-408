@@ -72,8 +72,8 @@
 | 后端 Python 文件数 | 349 | `git ls-files 'py-server/**/*.py'` 计数 |
 | 后端代码行数 | 80356 | git 跟踪的 `.py` 全部行数 |
 | API 路由模块数 | 43 | `git ls-files 'py-server/api/*.py'` 去 `__init__.py` |
-| API 路径数（/api） | 227 | `py-server/openapi.json` 中 `/api` 路径数 |
-| API 操作数（/api，method 级） | 244 | `py-server/openapi.json` 中 `/api` 操作数（method 级） |
+| API 路径数（/api） | 228 | `py-server/openapi.json` 中 `/api` 路径数 |
+| API 操作数（/api，method 级） | 245 | `py-server/openapi.json` 中 `/api` 操作数（method 级） |
 <!-- METRICS_TABLE_END -->
 
 > **测试数不在上表**：passed / skipped / xfail 需真正跑一遍 pytest，耗时且依赖环境，
@@ -81,7 +81,7 @@
 > **1177 passed / 227 skipped / 3 xfailed / 0 failed**。
 >
 > **认证覆盖率**同理由独立脚本产出：`py-server/scripts/verify_auth_coverage.py`
-> （当前 total=244 / protected=231 / public=13 / coverage=**94.67%** / unregistered=0）。
+> （当前 total=245 / protected=232 / public=13 / coverage=**94.69%** / unregistered=0）。
 
 ## 漂移防护
 

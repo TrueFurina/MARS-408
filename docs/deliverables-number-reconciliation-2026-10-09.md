@@ -128,3 +128,23 @@
 - 凭证端点快照同步：`py-server/openapi.json` 现为 **245 ops / 228 paths**（旧记 244/227）。
 - 已同步的活跃口径：`py-server/main.py:49`（→ 94.69%（232/245））、`docs/ci-backend-test-result.md:32`（→ 245 ops/228 paths、94.69%/232/245）、`py-server/openapi.json`（重生成）。
 -**仍待同步（本次未改，属对外材料族）**：`py-server/scripts/verify_auth_coverage.py:25`（docstring 示例）、`py-server/tools/generate_demo_ppt.py:168`、`docs/METRICS_CURRENT.md:84`、`docs/submission-number-reconciliation-2026-10-09.md:16/85`。
+
+---
+
+## 八、2026-10-12 全量口径同步（追加，不改上文历史行）
+
+> 本节为**新增记录**，不改动上文 10-09 / 10-10 / 10-11 的历史快照行（保留可追溯）。
+
+- **§七 的「仍待同步」已于本日全部闭环**。认证覆盖率口径继续以运行时脚本为真值：
+  `cd py-server && D:/miniconda3_new/python.exe scripts/verify_auth_coverage.py`
+  → `__SUMMARY__ total=245 protected=232 public=13 coverage=94.69 unregistered=0`，
+  即 **94.69%（232/245）**（旧记 94.67%（231/244））。
+- **`/api` 端点形态同步为 245 operations / 228 paths**（旧记 244 / 227），与重生成后的 `py-server/openapi.json` 一致。
+- **本日共同步 12 个活跃文件**（2026-10-12），分组如下：
+  - 用户可见前端：`src/views/ShowcaseView.vue`（卡片标题 94.69%、数据总览 245 API 端点 / 94.69%）
+  - 脚本与生成器：`py-server/scripts/verify_auth_coverage.py:25`（docstring 示例）、`py-server/tools/generate_demo_ppt.py:168`
+  - 指标与 CI：`docs/METRICS_CURRENT.md`（:75/:76 的 /api 表 + :84 认证覆盖率行）；`docs/ci-backend-test-result.md:32` 于 10-11 已先行更新，**本次仅核验**
+  - 提交材料：`submission/00_提交清单.md`、`submission/02_配套文档/` 下 技术方案说明书 / 开发说明书 / 快速启动指南 / 测试说明书 / 系统架构设计文档
+  - 路演与证据：`deliverables/build_roadshow_pptx.py`、`deliverables/芒得很职-国创赛证据页.md`
+- **历史行按设计保留**：上文各节（`§一`、`§三`、`§六`、`§七`）中出现的 `94.67%` / `231/244` / `244 operations / 227 paths` 等旧值一律**原样不动**，它们记录的是各自时点的核对事实，改写会摧毁台账的可追溯性。同理 `_archive_*` 快照与 `源码/` 冻结副本不在同步范围内。
+- **本次未改、留待决定**：三份 README（`README.md:83/:261`、`README_EN.md:57`、`py-server/README.md:74`）仍为旧形态 244/227，因不属本轮 12 文件清单；以及 `submission/00_提交清单.md:120/:134` 两条「应得 paths=227 / operations=244」的校验期望（OpenAPI 快照现值已为 228/245），属校验用例文本，需另行确认是否一并更新。

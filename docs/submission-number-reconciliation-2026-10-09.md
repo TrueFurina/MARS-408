@@ -88,3 +88,23 @@
 - `00_提交清单.md:52` 与 PPT 内 54.96% 覆盖率一并保留（未重跑 `--cov`，本地不可靠），待 CI 复算回填。
 - `04_源码` zip 未重打：本次仅改 docs/scripts，py-server 代码未变，源码包内容不变。
 - 残留：CI p0 档 67 条未机器核验（见 deliverables 侧预案 §C）。
+
+---
+
+## 七、2026-10-12 全量口径同步（追加，不改上文历史行）
+
+> 本节为**新增记录**，不改动上文 10-09 / 10-10 的历史快照行（保留可追溯）。
+
+- **认证覆盖率口径推进**：上文 `§一` / `§三.2` / `§六` 记录的 **94.67%（231/244）** 已过期。以运行时脚本为真值：
+  `cd py-server && D:/miniconda3_new/python.exe scripts/verify_auth_coverage.py`
+  → `__SUMMARY__ total=245 protected=232 public=13 coverage=94.69 unregistered=0`，
+  新真值为 **94.69%（232/245）**（覆盖率**上升**，非安全回归）。
+- **`/api` 端点形态同步为 245 operations / 228 paths**（旧记 244 / 227），与重生成后的 `py-server/openapi.json` 一致；`py-server/main.py:49` 的对 OpenAPI description 断言已于 10-11 先行跟进。
+- **本日共同步 12 个活跃文件**（2026-10-12），分组如下：
+  - 用户可见前端：`src/views/ShowcaseView.vue`
+  - 脚本与生成器：`py-server/scripts/verify_auth_coverage.py:25`、`py-server/tools/generate_demo_ppt.py:168`
+  - 指标与 CI：`docs/METRICS_CURRENT.md`；`docs/ci-backend-test-result.md:32` 于 10-11 已先行更新，**本次仅核验**
+  - 提交材料：`submission/00_提交清单.md`、`submission/02_配套文档/` 下 技术方案说明书 / 开发说明书 / 快速启动指南 / 测试说明书 / 系统架构设计文档
+  - 路演与证据：`deliverables/build_roadshow_pptx.py`、`deliverables/芒得很职-国创赛证据页.md`
+- **历史行按设计保留**：上文各节出现的 `94.67` / `231/244` / `244 operations / 227 paths` 等旧值一律**原样不动**，它们记录的是各自时点的核对事实；改写会摧毁台账的可追溯性。`_archive_*` 快照与 `源码/` 冻结副本同样不在同步范围内。
+- **本次未改、留待决定**：`submission/00_提交清单.md:120` / `:134` 两条「应得 paths=227 / operations=244」的校验期望（OpenAPI 快照现值已为 228/245），属可执行校验收尾文本，需另行确认是否一并更新；三份 README 的旧形态 244/227 亦不属本轮 12 文件清单。
