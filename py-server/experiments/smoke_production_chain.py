@@ -69,6 +69,10 @@ def main():
     print("consensus.status:", cons.get("status"))
     print("consensus.confidence_score:", cons.get("confidence_score"))
     print("consensus.filtered_issues:", len(cons.get("filtered_issues", [])))
+    # ⚠️ 本断言写死于「规则基线」口径。生产 config.gomarl.use_mappo_policy 已激活
+    # 且存在已训练 checkpoint 时，coordinator 会走 MAPPO 网络路径 → source="mappo"，
+    # 本断言将不成立（此为策略基线差异，非链路故障）。若要在 MAPPO 激活态跑本冒烟，
+    # 请先关闭该开关，或把断言放宽为 in ("rules", "mappo")。
     assert pa and pa.get("source") == "rules", "policy_action 未端到端生效"
     assert "confidence_score" in cons, "consensus 置信度未透传"
     print("端到端冒烟通过 ✅")

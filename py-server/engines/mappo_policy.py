@@ -348,7 +348,7 @@ class MappoPolicy:
             "difficulty": d,
             "teaching_mode": mode,
             "review_intensity": intensity,
-            "source": "rule",
+            "source": "rules",  # 与 engines/teaching_rules.py:554 对齐（原 "rule" 单数口径已废弃）
         }
 
     # ── 动作选择 ──
