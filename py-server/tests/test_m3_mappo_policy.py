@@ -88,7 +88,7 @@ class TestMappoPolicyRuleFallback:
         """未训练（无 checkpoint）→ 规则降级，不崩溃。"""
         policy = MappoPolicy({"mappo_checkpoint": str(tmp_path / "missing.pt")})
         action = policy.select_action({"level": "beginner"}, deterministic=True)
-        assert action["source"] == "rule"
+        assert action["source"] == "rules"
         assert action["difficulty"] == "basic"
 
     def test_rule_retry_forces_full(self, tmp_path):
@@ -122,9 +122,18 @@ class TestTeachingRulesPolicyAction:
 
 
 class TestMixerMappoGrayscale:
-    def test_flag_off_zero_impact(self):
-        """use_mappo_policy 关闭（默认）→ _use_mappo=False。"""
+    def test_flag_off_zero_impact(self, monkeypatch):
+        """灰度契约：use_mappo_policy 关闭 → mixer._use_mappo=False（零影响）。
+
+        事实订正（2026-10-12）：生产默认**不是** False —— `config.py:159`
+        该键为 True（MAPPO 已激活；无 torch / 无模型时 fail-open 降级 EWMA）。
+        本测试要守的契约是「开关关闭时 mixer 零影响」这一下限，故显式 pin
+        关闭开关再构造 mixer，避免随全局默认值漂移（与 test_m5 同一 pin 写法）。
+        """
+        from config import get_gomarl_config
         from engines.gomarl_mixer import NeuralGroupMixer
+
+        monkeypatch.setitem(get_gomarl_config(), "use_mappo_policy", False)
         mixer = NeuralGroupMixer()
         assert mixer._use_mappo is False
 

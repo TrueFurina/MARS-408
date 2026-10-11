@@ -18,6 +18,7 @@ from agents.state import AgentState
 from agents.coordinator import coordinator_node, _resolve_policy_action
 from agents.critic import critic_node, _critic_confidence
 from engines.gomarl import GOMARLConsensus, AgentResult
+from config import get_gomarl_config
 
 
 # ── coordinator：策略决策接入 ──
@@ -39,17 +40,32 @@ class TestCoordinatorPolicyAction:
         if pa.get("source") == "rules":
             assert pa["difficulty"] == "basic"
 
-    def test_resolve_policy_action_rules_default(self):
-        """use_mappo_policy 默认 False → 规则版决策。"""
+    def test_resolve_policy_action_rules_default(self, monkeypatch):
+        """规则基线：显式关闭 MAPPO 开关 → 规则版决策（source=rules）。
+
+        事实订正（2026-10-11）：生产默认**不是** use_mappo_policy=False。
+        `config.py:159` 该键为 True；在有 torch 且 `models/mappo_policy.pt` 已训练时
+        `_resolve_policy_action` 会走 MAPPO 网络路径（source=mappo）；无 torch /
+        无模型时 `mappo_policy.select_action` 才 fail-open 降级为规则版。
+        故本测试显式 pin 关闭开关，**专测规则基线这一下限**，报告名保持语义。
+        """
+        monkeypatch.setitem(get_gomarl_config(), "use_mappo_policy", False)
         state = AgentState(student_profile={"level": "advanced"})
         pa = _resolve_policy_action(state)
         assert pa["source"] == "rules"
         assert pa["difficulty"] == "advanced"
 
-    def test_resolve_policy_action_round_escalation(self):
-        """评审强度随轮次升级（首轮 basic，重试轮 full）。"""
+    def test_resolve_policy_action_round_escalation(self, monkeypatch):
+        """规则基线：评审强度随轮次升级（首轮 spot，重试轮 full）。
+
+        同样 pin 关闭 MAPPO —— 「重试轮 → 全评审」是**规则基线**的硬保证
+        （teaching_rules.py:545）；MAPPO 学习策略的输出不保证该行为，
+        故此处按规则基线断言，避免随全局开关漂移。
+        """
+        monkeypatch.setitem(get_gomarl_config(), "use_mappo_policy", False)
         state = AgentState(student_profile={"level": "beginner"}, regenerate_round=1)
         pa = _resolve_policy_action(state)
+        assert pa["source"] == "rules"
         assert pa["review_intensity"] == "full"
 
 
