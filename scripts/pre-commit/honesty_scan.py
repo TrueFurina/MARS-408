@@ -57,14 +57,25 @@ _QUOTE_RE = re.compile("「[^」]*」|『[^』]*』|\"[^\"]*\"|'[^']*'")
 #      否则无从匹配。本文件自己加规则时就被自己拦下来过一次（每组规则都免不了这个自指），
 #      故对规则目录整体豁免。
 # ============================================================================
+# 归一化匹配辅助：把近义动词/副词视为等价，容忍变体（下降了/约/开销/提升了）
+# 与跨行拆分。宁可少量误报也不让红线漏过（跨行窗口见 scan_text）。
+_REDLINE_VERB_DOWN = r"(?:降低|下降|减少|下滑|缩减|削减|降)"
+_REDLINE_VERB_UP = r"(?:提升|升|上升|增长|提高|上扬)"
+_REDLINE_ADV = r"(?:约|近|大概|大致|大约|差不多)"
 _EXTERNAL_REDLINE_PATTERNS = (
-    re.compile(r"检索成本降低\s*45\s*%"),
-    re.compile(r"检索成本\s*降低\s*45"),
-    re.compile(r"成本降\s*45\s*%"),
-    re.compile(r"成本降低\s*45\s*%"),
-    re.compile(r"仅需\s*500\s*条"),
+    # 检索成本 [副词] [动词+了?] [副词] 45%  —— 覆盖 降低/下降/了/约/空格
+    re.compile(r"检索成本" + _REDLINE_ADV + r"?" + _REDLINE_VERB_DOWN + r"了?" + _REDLINE_ADV + r"?\s*45\s*%"),
+    # 检索成本 [间隔≤4字] [动词] [间隔≤2字] 45  —— 无百分号兜底
+    re.compile(r"检索成本.{0,4}?" + _REDLINE_VERB_DOWN + r".{0,2}?45\b"),
+    # 检索开销 [动词] 45%
+    re.compile(r"检索开销.{0,4}?" + _REDLINE_VERB_DOWN + r"了?.{0,2}?45\s*%"),
+    # 成本 [副词] [动词] 45%
+    re.compile(r"成本" + _REDLINE_ADV + r"?" + _REDLINE_VERB_DOWN + r"了?" + _REDLINE_ADV + r"?\s*45\s*%"),
+    # GOMARL/GoMARL [副词] [提升类动词+了?] 15%
+    re.compile(r"(?:GOMARL|GoMARL)" + _REDLINE_ADV + r"?" + _REDLINE_VERB_UP + r"了?\s*15\s*%"),
+    # 仅需 [间隔≤4字] 500 条 / 500 条标注样本
+    re.compile(r"仅需.{0,4}?500\s*条"),
     re.compile(r"500\s*条标注样本"),
-    re.compile(r"(?:GOMARL|GoMARL)\s*升\s*15\s*%"),
 )
 
 # 上述三类豁免：归档/记忆根目录 + 规则定义目录
@@ -134,23 +145,31 @@ def is_skipped(path: Path) -> bool:
 
 def scan_text(text: str, path: str = "") -> list:
     hits = []
-    for idx, line in enumerate(text.splitlines(), start=1):
+    lines = text.splitlines()
+    for idx in range(len(lines)):
+        line = lines[idx]
         stripped = _QUOTE_RE.sub("", line)
         for phrase in FORBIDDEN_PHRASES:
             if phrase in stripped:
-                hits.append(f"{path}:{idx}: 假水位短语 {phrase!r}")
+                hits.append(f"{path}:{idx+1}: 假水位短语 {phrase!r}")
         for pat in FORBIDDEN_PATTERNS:
             if pat.search(stripped):
-                hits.append(f"{path}:{idx}: 假水位正则 {pat.pattern!r}")
+                hits.append(f"{path}:{idx+1}: 假水位正则 {pat.pattern!r}")
 
         # ⚠️ 对外红线必须匹配**原始行**，不能用 stripped（引号剥离后的文本）：
         #    展示页正是把该宣称写在 JS 单引号字符串里（desc: '...检索成本降低 45%'），
         #    一旦走剥离，整条 JS 串会被当成"引用"抹掉 —— 拦截等于虚设。
         #    宁可承担少量误报，也不要让红线漏过去。
+        # ⚠️ 跨行窗口：取「前 2 行 + 当前行」拼接（去换行）作为匹配上下文，
+        #    捕捉被换行拆分的红线（如「检索成本\n降低 45%」）。归因到当前行号。
         if not _path_redline_exempt(path):
+            lo = max(0, idx - 2)
+            context = "".join(lines[lo:idx + 1])
             for pat in _EXTERNAL_REDLINE_PATTERNS:
-                if pat.search(line):
-                    hits.append(f"{path}:{idx}: 已证伪的对外红线 {pat.pattern!r}")
+                # 当前行 + 跨行窗口双重匹配；同一条红线首次命中即拦截，避免多正则重复上报
+                if pat.search(line) or pat.search(context):
+                    hits.append(f"{path}:{idx+1}: 已证伪的对外红线（变体/跨行） {pat.pattern!r}")
+                    break
     return hits
 
 
