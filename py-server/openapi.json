@@ -2239,7 +2239,7 @@
           "sandbox"
         ],
         "summary": "Sandbox Run",
-        "description": "代码沙箱执行（安全加固版：AST静态分析 + import拦截 + timeout下限 + async subprocess）",
+        "description": "代码沙箱执行（安全加固版：AST静态分析 + import拦截 + 内置清洗 + 隔离启动 + timeout下限 + async subprocess）",
         "operationId": "sandbox_run_api_sandbox_run_post",
         "parameters": [
           {
@@ -2299,7 +2299,7 @@
           "sandbox"
         ],
         "summary": "Sandbox Run",
-        "description": "代码沙箱执行（安全加固版：AST静态分析 + import拦截 + timeout下限 + async subprocess）",
+        "description": "代码沙箱执行（安全加固版：AST静态分析 + import拦截 + 内置清洗 + 隔离启动 + timeout下限 + async subprocess）",
         "operationId": "sandbox_run_api_sandbox_post",
         "parameters": [
           {
