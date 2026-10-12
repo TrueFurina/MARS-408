@@ -140,3 +140,34 @@ def test_narrated_video_endpoint_runs_off_main_thread(monkeypatch):
     finally:
         if os.path.exists(video_path):
             os.unlink(video_path)
+
+
+def test_teaching_video_package_runs_off_main_thread(monkeypatch):
+    """generate_teaching_video_package 内部同步调用 services.video_generator.generate_teaching_video
+    （含 subprocess.run(timeout=300) ffmpeg 渲染），必须丢线程池执行，否则会阻塞单 worker 事件循环。"""
+    import asyncio
+
+    import agents.media_generator as mg
+    import services.video_generator as vg
+
+    recorded = {}
+
+    async def fake_script(*args, **kwargs):
+        return "分镜1: 测试"
+
+    def fake_generate_teaching_video(**kwargs):
+        recorded["thread"] = threading.current_thread()
+        recorded["kwargs"] = kwargs
+        return {"status": "ok", "html": "<html></html>"}
+
+    monkeypatch.setattr(mg, "generate_enhanced_video_script", fake_script)
+    monkeypatch.setattr(vg, "generate_teaching_video", fake_generate_teaching_video)
+
+    result = asyncio.run(mg.generate_teaching_video_package(topic="测试主题"))
+
+    assert "thread" in recorded, "视频合成函数未被调用"
+    assert recorded["thread"] is not threading.main_thread(), (
+        "generate_teaching_video_package 内部仍在主线程同步调用 ffmpeg 渲染"
+        " —— 会阻塞事件循环（教学视频生成未丢线程池）"
+    )
+    assert result["status"] == "ok"
