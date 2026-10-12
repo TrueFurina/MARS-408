@@ -2970,7 +2970,7 @@
           "langgraph"
         ],
         "summary": "Langgraph Stream",
-        "description": "LangGraph 10-Agent 流式学习端点。\n\n使用 agent_graph.astream 替代手动顺序 await 各节点。\n条件边（route_after_retriever, route_after_critic, route_after_quality_gate）自动执行。\n循环重试（critic→retriever, quality_gate→generator_cluster）前端需处理重复节点事件。\n产物验收闸门（quality_gate）REJECT 时直接终止流。",
+        "description": "LangGraph 流式学习端点（Triage 分级路由 + 完整流水线）。\n\n⚠️ 节点数在本仓库是**两种口径，勿混用、勿互相\"修正\"**：\n  - 10 = Triage 之外的**流水线本体**（Triage 在流水线之前，见 agents/triage.py）；\n  - 11 = **编译图**业务节点数（流水线 10 + triage 节点）。\n对外述\"图\"时用 11；述\"Triage 之后的流水线\"时用 10。二者都对，改任一个都是错的。\n\n使用 agent_graph.astream 替代手动顺序 await 各节点。\n条件边（route_after_retriever, route_after_critic, route_after_quality_gate）自动执行。\n循环重试（critic→retriever, quality_gate→generator_cluster）前端需处理重复节点事件。\n产物验收闸门（quality_gate）REJECT 时直接终止流。",
         "operationId": "langgraph_stream_api_agents_langgraph_stream_post",
         "parameters": [
           {

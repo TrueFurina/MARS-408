@@ -31,6 +31,8 @@
   并修复 1 个随 M-4 拆分失效的静态锚点测试。
 - ⚠️ **改动 `src/` 或 `py-server/` 代码后必须补跑 `python scripts/verify_metrics.py`**（不一致时用脚本 sanctioned 的 `--update` 重生成，**禁止手改表格**）。它是 CI `.github/workflows/verify-structural.yml:89` 的**阻断性**检查，而**本地 pre-commit 七道门禁不跑它** ⇒「家里全绿、CI 红」是常态失效形态（2026-10-13 实测：`a711ed7`+`36f08ed` 后三项漂移未被察觉）。
 - **当前无阻塞项**（须每轮实测重确认，**勿当恒定真值**）：全量 **1389 passed / 38 skipped / 1 xfailed / 0 failed**（`1436 collected`，`addopts` deselect 8；2026-10-09 CI 默认档权威值）；唯一 error 是本机 torch `c10.dll` 加载失败（环境，CI/Linux 无此问题）。
+- ⚠️ **节点数两种口径（勿互相"修正"，改任一个都是错的）**：10 = Triage 之外的流水线本体；11 = 编译图业务节点数（10 + `triage` 节点）。对外述"图"用 11，述"Triage 之后的流水线"用 10。内部可视化组件 `LangGraphFlow.vue` 只画 10 个，**是对的，不要批量改 11**。
+- 🔒 **`/api/agents/runtime` 判定为"不实现"（已裁决，勿再当缺口重提）**：本仓库**没有 per-agent 运行时状态源**（LangGraph 流事件是瞬时的、无持久化），造一个就等于编造数据，违反诚信红线；真实引擎/向量库/模型状态走 `GET /api/status`。前端 `DashboardView.vue` 已诚实降级（注释写明"待后端提供后再接入"），不渲染任何运行时状态。
 - 详细交接见 `deliverables/engineering-assurance/交接说明-2026-09-27.md`（含红线、可复现命令、踩坑表）。
 
 ## 项目级 skill（触发时读）

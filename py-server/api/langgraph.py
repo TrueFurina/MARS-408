@@ -25,7 +25,12 @@ router = APIRouter(prefix="/agents", tags=["langgraph"], dependencies=[Depends(r
 
 @router.post("/langgraph/stream")
 async def langgraph_stream(req: LangGraphStreamRequest, request: Request, user: dict = Depends(get_current_user)):
-    """LangGraph 10-Agent 流式学习端点。
+    """LangGraph 流式学习端点（Triage 分级路由 + 完整流水线）。
+
+    ⚠️ 节点数在本仓库是**两种口径，勿混用、勿互相"修正"**：
+      - 10 = Triage 之外的**流水线本体**（Triage 在流水线之前，见 agents/triage.py）；
+      - 11 = **编译图**业务节点数（流水线 10 + triage 节点）。
+    对外述"图"时用 11；述"Triage 之后的流水线"时用 10。二者都对，改任一个都是错的。
 
     使用 agent_graph.astream 替代手动顺序 await 各节点。
     条件边（route_after_retriever, route_after_critic, route_after_quality_gate）自动执行。
@@ -40,6 +45,7 @@ async def langgraph_stream(req: LangGraphStreamRequest, request: Request, user: 
             # ── Triage 分级路由（三评审集成·增量一）──
             # 低风险请求（寒暄/简短答疑）短路到快路径 quick_answer，零评审、低时延；
             # 高风险请求进入完整 10 节点流水线 + 三评审。快路径失败自动回退流水线。
+            # 口径：此处 10 = 流水线本体（不含 triage）；编译图业务节点数 = 11（+triage）。
             from agents.triage import classify_request, LEVEL_LOW
             _triage = classify_request(
                 user_request=req.message,
