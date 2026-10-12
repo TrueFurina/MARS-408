@@ -10,7 +10,7 @@
 #   - 软性失败 (FIX)
 #   - 重试耗尽 (REJECT/PASS降级)
 #   - 空数据 / 默认值 (PASS)
-#   - 异常降级 (PASS)
+#   - 异常 fail-closed（显式 degraded，路由 fix/reject，不谎报通过） (PASS)
 # ============================================================
 
 import pytest
@@ -283,14 +283,30 @@ async def test_gate_no_evidence_report():
 
 
 # ────────────────────────────────────────────────────────────
-# 异常降级
+# 异常 fail-closed（不谎报通过）
 # ────────────────────────────────────────────────────────────
 
 @pytest.mark.asyncio
-async def test_gate_exception_fail_open():
+async def test_gate_exception_fail_closed():
+    """质检执行异常时必须 fail-closed：不得静默降级为 PASS。"""
     state = _make_state(evidence_report={"consistency_score": "bad_value"})
     result = await quality_gate_node(state)
-    assert result.get("gate_verdict") == "pass"
+    assert result.get("gate_passed") is False
+    assert result.get("gate_degraded") is True
+    assert result.get("gate_verdict") == "fix"  # 重试额度内 → 触发重新生成
+    assert result.get("gate_result", {}).get("degraded") is True
+    assert any("异常" in r for r in result.get("gate_reasons", []))
+
+
+@pytest.mark.asyncio
+async def test_gate_exception_fail_closed_retry_exhausted():
+    """重试额度耗尽时，异常应路由到 reject（不谎报通过）。"""
+    state = _make_state(evidence_report={"consistency_score": "bad_value"},
+                        gate_retry_count=1)  # MAX_GATE_RETRIES = 1
+    result = await quality_gate_node(state)
+    assert result.get("gate_passed") is False
+    assert result.get("gate_degraded") is True
+    assert result.get("gate_verdict") == "reject"
 
 
 # ────────────────────────────────────────────────────────────
