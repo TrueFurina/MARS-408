@@ -111,6 +111,11 @@ _REDLINE_SKIP_FILES = frozenset({
     #     本豁免只放行「设计目标」语境下的数字，不放行「已达成」宣称；出现后者请手工拦下。
     "py-server/data/labeled_samples.py",
     "py-server/engines/frugal_rag_stop.py",
+
+    # ── ③ py-server 测试夹具：本文件是 honesty_scan 的单元测试，故意包含红线字符串
+    #    作为**测试用例**（不是对外宣称）。若被自身门禁拦下，则该扫描器的回归测试无法落地。
+    #    与「规则定义目录整体豁免」同理——出现红线在此处是有意且合规的。
+    "py-server/tests/test_honesty_scan.py",
 })
 
 
