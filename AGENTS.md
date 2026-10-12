@@ -19,6 +19,7 @@
 - 永禁 `git add -A`（junction 会导致把未删文件误记为删除）；永禁 `git stash/merge/pull/gc/prune`
 - ~~`*/crypto_platform/py-server/**`（188 文件嵌套副本）未经用户确认不得移动或删除~~ → **已于 2026-10-05 经用户授权全量删除**（10 处 / 189 文件，核实 0 被 git 跟踪、0 代码引用、内容已漂移）。如再发现同类嵌套副本，先跑引用检查再处置
 - 品牌统一「芒得很职」：产品可见层（`src/`、`public/`、`index.html`、py-server 代码）禁出现旧品牌名与旧赛事名；机检 `npm run gate:brand`（历史文档/交付快照/冻结副本除外）
+- 🔒 **品牌例外（已裁决·永久保留，勿再当作待办重提）**：① GitHub 仓 URL 里的 `MARS-408`（**真实仓库名**，改成别的会直接弄坏克隆命令）；② `vite.config.ts` 的 `base: '/MARS-408/app/'`（与 GitHub Pages 部署路径绑定）。二者以外的对外文案一律用「芒得很职」。
 - 提交时必须逐文件显式 `git add`，且 add 后先看 `git status`（暂存为空时密钥扫描会退化成全仓扫描并误报）
 
 ## 当前状态（2026-09-27 架构评审收口，接手前先读）
@@ -28,7 +29,8 @@
 - **覆盖率门禁 = `--cov-fail-under=50`**（CI 真值，见 `ci.yml:191` / `p0-regression.yml:65`；旧「54 门禁」作废）。本机实测 **53.31%**（过 50 门禁，但属本机值非 CI 全量口径，对外引用前需重测）。补测加了 9 个测试文件
   （SSRF 守卫 / 页码对齐算法 / lifespan 守门 / 中间件矩阵 / 画像域契约 / DI 容器 / 内容安全 / SPA 挂载 / JWT 角色），
   并修复 1 个随 M-4 拆分失效的静态锚点测试。
-- **当前无阻塞项**：全量 **1389 passed / 38 skipped / 1 xfailed / 0 failed**（`1436 collected`，`addopts` deselect 8；2026-10-09 CI 默认档权威值）；唯一 error 是本机 torch `c10.dll` 加载失败（环境，CI/Linux 无此问题）。
+- ⚠️ **改动 `src/` 或 `py-server/` 代码后必须补跑 `python scripts/verify_metrics.py`**（不一致时用脚本 sanctioned 的 `--update` 重生成，**禁止手改表格**）。它是 CI `.github/workflows/verify-structural.yml:89` 的**阻断性**检查，而**本地 pre-commit 七道门禁不跑它** ⇒「家里全绿、CI 红」是常态失效形态（2026-10-13 实测：`a711ed7`+`36f08ed` 后三项漂移未被察觉）。
+- **当前无阻塞项**（须每轮实测重确认，**勿当恒定真值**）：全量 **1389 passed / 38 skipped / 1 xfailed / 0 failed**（`1436 collected`，`addopts` deselect 8；2026-10-09 CI 默认档权威值）；唯一 error 是本机 torch `c10.dll` 加载失败（环境，CI/Linux 无此问题）。
 - 详细交接见 `deliverables/engineering-assurance/交接说明-2026-09-27.md`（含红线、可复现命令、踩坑表）。
 
 ## 项目级 skill（触发时读）
