@@ -55,7 +55,7 @@ const cards: SceneCard[] = [
     key: 'career',
     title: '职业素养实训',
     sub: 'AI 对抗式能力训练 · 高年级 · 主推',
-    points: ['证据链（ECD）对抗实训', '答辩 / 面试 / 冲突沟通场景', '六维软素养评估报告'],
+    points: ['证据链（ECD）对抗实训', '答辩 / 评审 / 应急 / 冲突对抗场景', '六维软素养评估报告'],
     icon: icons.target,
     accent: 'teal',
   },
@@ -130,9 +130,9 @@ function enterScene(c: SceneCard) {
     </section>
 
     <section class="ph-stats" aria-label="平台能力">
-      <div class="ph-stat"><b>3</b><span>实训模式<br/>自学 / 对抗 / 导师</span></div>
+      <div class="ph-stat"><b>4</b><span>对抗实训场景<br/>答辩/评审/应急/冲突</span></div>
       <div class="ph-stat"><b>6</b><span>维 ECD<br/>职业素养评估</span></div>
-      <div class="ph-stat"><b>46</b><span>前端视图<br/>已落地可用</span></div><!-- 口径：ls src/views/*.vue 实测 46（2026-10-04），勿手改 -->
+      <div class="ph-stat"><b>47</b><span>前端视图<br/>已落地可用</span></div><!-- 口径：ls src/views/*.vue 实测 47（2026-10-13） -->
       <div class="ph-stat"><b>40+</b><span>真实实验产物<br/>可复现证据</span></div>
     </section>
 

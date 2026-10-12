@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
-import { api, friendlyError, getAuthHeaders } from '@/utils/api'
+import { api, friendlyError } from '@/utils/api'
 
 /* ===================== 类型与常量 ===================== */
 type Step = 'select' | 'briefing' | 'battle' | 'report'
@@ -130,15 +130,12 @@ async function exportEvidenceOnePager() {
   busyExport.value = true
   exportError.value = ''
   try {
-    const resp = await fetch(`/api/career/session/${encodeURIComponent(id)}/export-report`, {
-      method: 'GET',
-      headers: getAuthHeaders(),
-    })
-    if (!resp.ok) {
-      const text = await resp.text().catch(() => '')
-      throw new Error(`导出失败 (${resp.status}) ${text.slice(0, 200)}`)
+    const { blob: reportBlob, ok, status } = await api.getBlob(`/career/session/${encodeURIComponent(id)}/export-report`)
+    if (!ok) {
+      const text = await reportBlob.text().catch(() => '')
+      throw new Error(`导出失败 (${status}) ${text.slice(0, 200)}`)
     }
-    const html = await resp.text()
+    const html = await reportBlob.text()
     const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const win = window.open(url, '_blank')

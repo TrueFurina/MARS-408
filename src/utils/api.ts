@@ -283,6 +283,16 @@ export const api = {
   handleUnauthorized(resp.status)
   return { blob: await resp.blob(), ok: resp.ok, status: resp.status }
 },
+
+  /** GET 二进制下载（如导出报告 HTML）；接 401 统一登出，契约同 postBlob：不抛异常、返回 ok/status */
+  async getBlob(path: string): Promise<{ blob: Blob; ok: boolean; status: number }> {
+    const token = getToken()
+    const headers: Record<string, string> = {}
+    if (token) headers['Authorization'] = `Bearer ${token}`
+    const resp = await fetch(`${API_BASE}/api${path}`, { method: 'GET', headers })
+    handleUnauthorized(resp.status)
+    return { blob: await resp.blob(), ok: resp.ok, status: resp.status }
+  },
 }
 
 /** FormData 请求（不经过 JSON 序列化，且不设置 Content-Type） */

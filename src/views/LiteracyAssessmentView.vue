@@ -196,7 +196,7 @@ function restart(nextPhase: 'pre' | 'post') {
         </div>
 
         <div class="submit-row">
-          <input v-model="studentId" class="text-input" placeholder="实验编号（学号后4位，如 9001）" maxlength="4" />
+          <input v-model="studentId" class="text-input" placeholder="学号 / 昵称（可选，如 9001）" maxlength="4" />
           <input v-model="className" class="text-input" placeholder="班级（如：信息安全1班-实验组）" />
           <button class="btn primary" :disabled="!allAnswered || !studentId.trim() || submitting" @click="submit">
             {{ submitting ? '提交中…' : `提交测评（${answeredCount}/${questions.length}）` }}

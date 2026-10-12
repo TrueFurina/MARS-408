@@ -23,6 +23,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCAN_ROOTS = [
     "src",
     "docs",
+    "AGENTS.md",
     "deliverables/frontend",
     "deliverables/证据索引-2026-09-16.md",
     "deliverables/证据索引-2026-09-16.html",
