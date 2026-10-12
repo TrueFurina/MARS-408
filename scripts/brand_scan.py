@@ -94,7 +94,11 @@ ALLOW_SUBSTRINGS = [
     "TrueFurina/MARS-408",
 ]
 
-SCAN_DIRS = ["src", "public", "submission"]
+# 面 A 扫描目录。website/ 与 site/ 曾是**盲区**（不在扫描面内 ⇒ 旧品牌名与过期数字
+# 可在其中静默存活，门禁仍报 PASS）。2026-10-12 实测 website/index.html 确有
+# 「技术底座 MARS-408」×5 与「约 240 个 API 端点」等过期口径，即由该盲区漏出。
+# 二者均为对外页面，必须纳入扫描面（功能性 URL 白名单见 ALLOW_SUBSTRINGS）。
+SCAN_DIRS = ["src", "public", "submission", "website", "site"]
 SCAN_FILES = ["index.html", "package.json"]
 BACKEND_DIRS = ["app", "api", "services", "agents", "db", "engines", "tools", "scripts"]
 BACKEND_FILES = ["config.py", "main.py"]
