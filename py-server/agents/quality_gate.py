@@ -14,7 +14,7 @@
 # 决策逻辑：
 #   硬失败 + retry < 2 → FIX  |  硬失败 + retry ≥ 2 → REJECT
 #   仅软失败 + retry < 2 → FIX  |  仅软失败 + retry ≥ 2 → PASS（降级）
-#   全部通过 → PASS  |  任何异常 → PASS（fail-open）
+#   全部通过 → PASS  |  任何异常 → 显式 degraded 并路由 fix/reject（fail-closed）
 # ============================================================
 
 import logging
@@ -82,7 +82,7 @@ def _resolve_review_weights(state: dict, evidence: dict, consensus: dict):
 async def quality_gate_node(state: AgentState) -> AgentState:
     """产物验收闸门节点：基于 evidence_report 和 consensus 做硬性质量判定。
 
-    Fail-open 设计：任何异常均降级为 PASS，不阻断流水线。
+    Fail-closed 设计：任何异常均标记 degraded 并路由 fix/reject，绝不谎报「质检通过」。
     """
     state["status"] = "gate_checking"
     state["current_agent"] = "quality_gate"
@@ -202,21 +202,41 @@ async def quality_gate_node(state: AgentState) -> AgentState:
         )
 
     except Exception as e:
-        # Fail-open：不阻断流水线
-        logger.error(f"闸门异常，降级通过: {e}")
-        state["gate_passed"] = True
-        state["gate_verdict"] = "pass"
-        state["gate_reasons"] = [f"闸门异常降级通过: {str(e)}"]
+        # Fail-closed：质检执行异常时**不得**静默降级为通过——原 fail-open 会谎报
+        # 「质检通过」，违反「叙述诚实不夸大」红线。改为显式标记 degraded，并路由到
+        # fix（在重试额度内重新生成）或 reject（额度耗尽），让下游/用户能感知
+        # 「本次产物未经质检」。MAX_GATE_RETRIES 保证至多再 attempt 一次即终止，不无限循环。
+        logger.error(f"闸门执行异常，质检未通过（降级）: {e}")
+        gate_retry = state.get("gate_retry_count", 0)
+        if gate_retry < MAX_GATE_RETRIES:
+            verdict = "fix"
+            reasons = [
+                f"质检执行异常，触发重新生成: {str(e)}",
+                f"闸门重试 {gate_retry + 1}/{MAX_GATE_RETRIES}",
+            ]
+            new_retry = gate_retry + 1
+        else:
+            verdict = "reject"
+            reasons = [
+                f"质检执行异常且已达最大重试次数 ({MAX_GATE_RETRIES}): {str(e)}"
+            ]
+            new_retry = gate_retry
+        state["gate_passed"] = False
+        state["gate_degraded"] = True
+        state["gate_verdict"] = verdict
+        state["gate_reasons"] = reasons
+        state["gate_retry_count"] = new_retry
         state["gate_result"] = {
-            "verdict": "pass",
-            "reasons": state["gate_reasons"],
+            "verdict": verdict,
+            "reasons": reasons,
             "hard_failures": [],
             "soft_failures": [],
             "consistency_score": None,
             "consistency_score_raw": None,
             "review_weights_applied": False,
-            "gate_retry_count": state.get("gate_retry_count", 0),
+            "gate_retry_count": new_retry,
             "error": str(e),
+            "degraded": True,
         }
 
     return state
