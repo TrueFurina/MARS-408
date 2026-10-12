@@ -4,6 +4,7 @@
 # 生成内容：分镜脚本 + SVG 示意图 + Mermaid 图 + 信息图设计
 # ============================================================
 
+import asyncio
 import logging
 import re
 from typing import Optional
@@ -319,10 +320,12 @@ async def generate_teaching_video_package(
     # 1. 生成视频脚本
     script = await generate_enhanced_video_script(topic, profile, knowledge_context, difficulty)
 
-    # 2. 调用视频合成服务
+    # 2. 调用视频合成服务（同步 ffmpeg 渲染，丢线程池执行，避免阻塞单 worker
+    #    事件循环；与 P1-1 的 generate_narrated_video 保持一致的 to_thread 模式）
     from services.video_generator import generate_teaching_video
 
-    result = generate_teaching_video(
+    result = await asyncio.to_thread(
+        generate_teaching_video,
         topic=topic,
         video_script=script,
         output_format=output_format,
