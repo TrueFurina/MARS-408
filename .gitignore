@@ -33,6 +33,11 @@ htmlcov/
 # Environment variables (secrets)
 .env
 py-server/.env
+# 一次性 IQ 评测运行目录（iq_diag.py 生成）：其 .env.test 含本机绝对路径与测试口令，
+# 且 2026-10-12 核实该文件零消费方（CI 不读；两个 system 测试各自在 tmp_path
+# 自写 env 文件；build_portable.py/build_source_zip.py 本就把它排除出打包），
+# 已 git rm 出索引，此处防止再次误提交。
+py-server/iq_run_tmp/
 
 # WorkBuddy 本地 AI 记忆 / 技能（含真实密钥，禁止入库；已 git rm --cached 移出索引）
 .workbuddy/
