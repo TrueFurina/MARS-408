@@ -83,6 +83,33 @@ def test_teacher_full_closed_loop(client, teacher_id):
     stu = next(s for s in dash["students"] if s["user_id"] == "stu_user_p4")
     assert stu["session_count"] >= 1 and stu["bound"] is True
     assert any(s["status"] == "finished" for s in stu["sessions"])
+    # 7) 班级级聚合（2026-10-14 新增）：完成率与"最弱维度"的相对排序口径
+    summ = dash["summary"]
+    assert summ["student_count"] == 3 and summ["assessed_count"] == 1
+    assert summ["finished_count"] == 1
+    assert summ["completion_rate"] == round(1 / 3, 2)
+    wd = summ["weakest_dimensions"]
+    assert wd == sorted(wd, key=lambda x: x["avg"]), "最弱维度必须是按均分升序的相对排序"
+    assert len(wd) <= 3
+    reasons = {a["reason"] for a in dash["attention"]}
+    assert "not_started" in reasons, "未参与的学生应进 attention"
+    assert all(a["detail"] for a in dash["attention"]), "attention 每条都必须有可反查的说明"
+
+
+def test_dashboard_class_aggregation_empty_class(client, teacher_id):
+    """边界：全班无人开始实训时，聚合指标不得凭空产生数字（0/空 而非 None 或编造）。"""
+    cls = client.post("/api/career/classes", json={"class_name": "零学情班"}).json()
+    client.post(f"/api/career/classes/{cls['class_id']}/students",
+                json={"roster": "01 甲\n02 乙"})
+    dash = client.get(f"/api/career/classes/{cls['class_id']}/dashboard").json()
+    summ = dash["summary"]
+    assert summ["student_count"] == 2
+    assert summ["started_count"] == 0 and summ["finished_count"] == 0
+    assert summ["assessed_count"] == 0
+    assert summ["completion_rate"] == 0.0
+    assert summ["dimension_avg"] == {} and summ["weakest_dimensions"] == []
+    assert {a["reason"] for a in dash["attention"]} == {"not_started"}
+    assert len(dash["attention"]) == 2
 
 
 def test_student_forbidden_on_teacher_endpoints(client):
