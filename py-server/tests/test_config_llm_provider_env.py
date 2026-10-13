@@ -39,8 +39,32 @@ def test_llm_provider_env_does_not_touch_other_sections(monkeypatch):
 
 
 def test_llm_provider_env_accepts_all_known_values(monkeypatch):
-    for val in ("auto", "deepseek", "xfyun", "qwen"):
+    for val in ("auto", "deepseek", "xfyun", "qwen", "glm"):
         monkeypatch.setenv("LLM_PROVIDER", val)
         cfg = {"llm_provider": "auto"}
         _apply_env_overrides(cfg)
         assert cfg["llm_provider"] == val
+
+
+def test_zhipu_api_key_maps_to_glm_channel(monkeypatch):
+    """守护：智谱凭据可由环境变量注入 glm 通道（2026-10-13 接入第 4 通道兜底）。
+
+    无此映射时，用户环境里已有的 ZHIPU_API_KEY 无法被项目识别，
+    auto 兜底通道形同不存在。
+    """
+    monkeypatch.setenv("ZHIPU_API_KEY", "zk-test")
+    monkeypatch.setenv("ZHIPU_MODEL", "glm-4-flash")
+    monkeypatch.delenv("GLM_API_KEY", raising=False)
+    cfg = {"llm_provider": "auto", "glm": {"api_key": "", "model": ""}}
+    _apply_env_overrides(cfg)
+    assert cfg["glm"]["api_key"] == "zk-test"
+    assert cfg["glm"]["model"] == "glm-4-flash"
+
+
+def test_glm_api_key_alias_maps_to_glm_channel(monkeypatch):
+    """别名 GLM_API_KEY 同样生效（env_map 中与 ZHIPU_API_KEY 同指 glm.api_key）。"""
+    monkeypatch.delenv("ZHIPU_API_KEY", raising=False)
+    monkeypatch.setenv("GLM_API_KEY", "alias-test")
+    cfg = {"llm_provider": "auto", "glm": {"api_key": ""}}
+    _apply_env_overrides(cfg)
+    assert cfg["glm"]["api_key"] == "alias-test"
