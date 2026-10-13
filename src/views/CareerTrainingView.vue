@@ -1,17 +1,13 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
 import { api, friendlyError } from '@/utils/api'
+import { CAREER_DIM_LABEL as DIM_LABEL, CAREER_DIM_ORDER as DIM_ORDER } from '@/data/careerDimensions'
 
 /* ===================== 类型与常量 ===================== */
 type Step = 'select' | 'briefing' | 'battle' | 'report'
 interface Scenario { id: string; type: string; subtype: string; type_label: string; subtype_label: string; title: string; difficulty_default: string }
 interface Turn { role: 'interviewer' | 'student'; text: string; mode?: string; dimension?: string; evidence?: any }
 
-const DIM_LABEL: Record<string, string> = {
-  expression: '表达逻辑', stress: '抗压应变', decompose: '方案拆解',
-  collab: '协作沟通', presentation: '技术汇报', problem_solving: '问题解决',
-}
-const DIM_ORDER = ['expression', 'stress', 'decompose', 'collab', 'presentation', 'problem_solving']
 const MODE_LABEL: Record<string, string> = { normal: '常规追问', escalating: '逐步加压', catfish: '鲶鱼反诘' }
 const MODE_CLASS: Record<string, string> = { normal: 'm-normal', escalating: 'm-escalating', catfish: 'm-catfish' }
 const DIFF_LABEL: Record<string, string> = { easy: '简单', medium: '中等', hard: '困难' }

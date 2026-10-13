@@ -497,13 +497,26 @@ def list_tasks_by_teacher(teacher_id: str, class_id: Optional[str] = None) -> li
 
 
 def class_dashboard(cid: str, teacher_id: str) -> Optional[dict]:
-    """班级学情看板：每生实训完成状态 + 六维均分 + overall（聚合 career_sessions/assessments）"""
+    """班级学情看板：每生实训完成状态 + 六维均分 + overall（聚合 career_sessions/assessments）
+
+    2026-10-14 新增**班级级聚合**（服务于"报告能回答教学问题"，见 plans/teacher-loop-gap-2026-10-14.md）：
+      - ``summary``：参与/完成人数、完成率、全班各维均分、**最弱维度**
+      - ``attention``：需关注学生清单，每条带 ``reason``（**结构性事实，可反查**）
+
+    诚实约束（本函数不做主观打分）：
+      * 最弱维度是**纯相对排序**（按全班均分升序），**不引入任何绝对阈值**——
+        均分高低本身不代表"教学干预线"，教师自行判断。
+      * attention 的判定只依据**可反查的结构性事实**（无会话 / 有会话但未完成 / 完成但无可评分结果 /
+        得分相对靠后），不编造"学习困难"之类的结论，也不给心理健康或能力定性。
+      * 只使用 career_sessions / career_assessments 里真实存在的数据，缺失即标注缺失（None），不插值。
+    """
     cls = get_class(cid, teacher_id)
     if not cls:
         return None
     q = "?" if pg_client.is_fallback else "%s"
     roster = list_students(cid, teacher_id)
     students = []
+    class_dim_acc: dict = {}  # 维度 → [各生该维均分]（用于全班各维均分）
     for stu in roster:
         rows = _query(
             "SELECT s.id AS session_id, s.status, s.turn_count, a.dimension_scores, a.consistency_score "
@@ -525,6 +538,8 @@ def class_dashboard(cid: str, teacher_id: str) -> Optional[dict]:
             sessions.append({"session_id": r.get("session_id"), "status": r.get("status"),
                              "turn_count": r.get("turn_count"), "overall": ov})
         dim_avg = {d: round(sum(v) / len(v), 2) for d, v in dim_acc.items() if v}
+        for d, v in dim_avg.items():
+            class_dim_acc.setdefault(d, []).append(float(v))
         students.append({
             "student_no": stu.get("student_no"), "name": stu.get("name"),
             "user_id": stu.get("user_id"), "bound": bool(stu.get("user_id")),
@@ -533,8 +548,48 @@ def class_dashboard(cid: str, teacher_id: str) -> Optional[dict]:
             "dimension_avg": dim_avg, "overall_best": overall_best,
             "sessions": sessions[:5],
         })
+
+    # ── 班级级聚合 ──
+    total = len(students)
+    started = [s for s in students if s["session_count"] > 0]
+    finished = [s for s in students if s["finished_count"] > 0]
+    scored = [s for s in students if s["overall_best"] is not None]
+    dimension_avg = {d: round(sum(v) / len(v), 2)
+                     for d, v in class_dim_acc.items() if v}
+    # 相对排序，不设绝对阈值：均分由低到高，取前 3（不足则全取）
+    weakest = sorted(dimension_avg.items(), key=lambda kv: kv[1])[:3]
+
+    attention = []
+    for s in students:
+        if s["session_count"] == 0:
+            attention.append({**s, "reason": "not_started",
+                              "detail": "尚未开始任何一场实训（无会话记录）"})
+        elif s["finished_count"] == 0:
+            attention.append({**s, "reason": "unfinished",
+                              "detail": f"已开始 {s['session_count']} 场但未完成任何一场，无有效评估"})
+        elif s["overall_best"] is None:
+            attention.append({**s, "reason": "no_score",
+                              "detail": "已完成实训但没有可评分的维度结果"})
+    # 得分相对靠后（后 30%，至少 1 人；仅在有人得分时给出）
+    if scored:
+        k = max(1, round(len(scored) * 0.3))
+        for rank, s in enumerate(sorted(scored, key=lambda x: x["overall_best"])[:k], 1):
+            attention.append({**s, "reason": "lowest_score",
+                              "detail": f"综合得分在已完成学生中相对靠后（第 {rank}/{len(scored)}）"})
+
     return {"class_id": cid, "class_name": cls.get("class_name"),
-            "student_count": len(students), "students": students}
+            "student_count": total, "students": students,
+            "summary": {
+                "student_count": total,
+                "started_count": len(started),
+                "finished_count": len(finished),
+                "assessed_count": len(scored),
+                "completion_rate": round(len(finished) / total, 2) if total else 0.0,
+                "dimension_avg": dimension_avg,
+                "weakest_dimensions": [{"dimension": d, "avg": v} for d, v in weakest],
+                "note": "最弱维度为全班均分的相对排序（升序），非绝对达标线；无数据维度不出现在此。",
+            },
+            "attention": attention}
 
 
 def bind_student(class_id: str, user_id: str, name: str = "") -> Optional[dict]:

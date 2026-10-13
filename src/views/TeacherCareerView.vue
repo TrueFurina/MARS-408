@@ -2,6 +2,7 @@
 // P4 教师端：建班 → 导花名册 → 发任务（任务码）→ 班级学情看板
 import { ref, onMounted } from 'vue'
 import { api, friendlyError } from '@/utils/api'
+import { CAREER_DIM_LABEL } from '@/data/careerDimensions'
 
 interface ClassItem { class_id: string; class_name: string; student_count: number }
 interface StudentItem { student_no: string; name: string; user_id: string | null; joined_at?: string }
@@ -16,8 +17,30 @@ interface DashStudent {
   dimension_avg: Record<string, number>; overall_best: number | null
   sessions: DashSession[]
 }
-interface Dash { class_id: string; class_name: string; student_count: number; students: DashStudent[] }
+interface DashSummary {
+  student_count: number; started_count: number; finished_count: number; assessed_count: number
+  completion_rate: number
+  dimension_avg: Record<string, number>
+  weakest_dimensions: { dimension: string; avg: number }[]
+  note: string
+}
+interface DashAttention extends DashStudent { reason: string; detail: string }
+interface Dash {
+  class_id: string; class_name: string; student_count: number
+  students: DashStudent[]
+  /** 班级级聚合（2026-10-14 新增；旧响应可能没有 ⇒ 前端按可选处理） */
+  summary?: DashSummary
+  attention?: DashAttention[]
+}
 interface ScenarioItem { id: string; title: string }
+
+/** attention.reason 的中文名（后端只给结构性事实标识，文案在前端） */
+const REASON_LABEL: Record<string, string> = {
+  not_started: '未开始', unfinished: '未完成', no_score: '无评分', lowest_score: '得分靠后',
+}
+
+/** 维度 key → 中文名（未收录时回落原 key，不隐藏异常） */
+function dimLabel(d: string) { return CAREER_DIM_LABEL[d] || d }
 
 const classes = ref<ClassItem[]>([])
 const scenarios = ref<ScenarioItem[]>([])
@@ -203,25 +226,62 @@ onMounted(() => {
       <div class="card wide">
         <h2>3 · 班级学情看板</h2>
         <p v-if="!dash" class="hint">点击班级右侧「看板」查看聚合学情</p>
-        <table v-else>
-          <thead>
-            <tr>
-              <th>学号</th><th>姓名</th><th>完成/场次</th><th>best overall</th><th>六维均分</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(s, i) in dash.students" :key="i">
-              <td>{{ s.student_no || '—' }}</td>
-              <td>{{ s.name }}<span v-if="!s.bound" class="dim">（未加入）</span></td>
-              <td>{{ s.finished_count }} / {{ s.session_count }}</td>
-              <td>{{ s.overall_best ?? '—' }}</td>
-              <td>
-                <span v-for="(v, d) in s.dimension_avg" :key="d" class="chip">{{ d }} {{ v }}</span>
-                <span v-if="!Object.keys(s.dimension_avg).length" class="dim">—</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <template v-else>
+          <!-- 班级级聚合：直接回答"这个班整体怎么样、哪里最弱、谁要关注" -->
+          <div v-if="dash.summary" class="agg">
+            <div class="stats">
+              <div class="stat"><span class="k">参与</span><span class="v">{{ dash.summary.started_count }}/{{ dash.summary.student_count }}</span></div>
+              <div class="stat"><span class="k">完成</span><span class="v">{{ dash.summary.finished_count }}/{{ dash.summary.student_count }}</span></div>
+              <div class="stat"><span class="k">完成率</span><span class="v">{{ Math.round(dash.summary.completion_rate * 100) }}%</span></div>
+              <div class="stat"><span class="k">可评估</span><span class="v">{{ dash.summary.assessed_count }}</span></div>
+            </div>
+            <p class="agg-line">
+              <span class="agg-k">最弱维度</span>
+              <span v-for="w in dash.summary.weakest_dimensions" :key="w.dimension" class="chip weak-chip">
+                {{ dimLabel(w.dimension) }} {{ w.avg }}
+              </span>
+              <span v-if="!dash.summary.weakest_dimensions.length" class="dim">暂无（还没有可评估的维度分）</span>
+            </p>
+            <p class="agg-line">
+              <span class="agg-k">全班六维均分</span>
+              <span v-for="(v, d) in dash.summary.dimension_avg" :key="d" class="chip">{{ dimLabel(d) }} {{ v }}</span>
+              <span v-if="!Object.keys(dash.summary.dimension_avg).length" class="dim">暂无</span>
+            </p>
+            <p class="hint">{{ dash.summary.note }}</p>
+          </div>
+
+          <!-- 需关注学生：只列结构性事实 + 可反查的明细 -->
+          <div v-if="dash.attention?.length" class="attention">
+            <p class="agg-k">需关注（{{ dash.attention.length }}）</p>
+            <ul>
+              <li v-for="(a, i) in dash.attention" :key="i">
+                <span class="tag" :class="'r-' + a.reason">{{ REASON_LABEL[a.reason] || a.reason }}</span>
+                <b>{{ a.name }}</b>
+                <span class="dim">{{ a.detail }}</span>
+              </li>
+            </ul>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>学号</th><th>姓名</th><th>完成/场次</th><th>best overall</th><th>六维均分</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(s, i) in dash.students" :key="i">
+                <td>{{ s.student_no || '—' }}</td>
+                <td>{{ s.name }}<span v-if="!s.bound" class="dim">（未加入）</span></td>
+                <td>{{ s.finished_count }} / {{ s.session_count }}</td>
+                <td>{{ s.overall_best ?? '—' }}</td>
+                <td>
+                  <span v-for="(v, d) in s.dimension_avg" :key="d" class="chip">{{ dimLabel(d) }} {{ v }}</span>
+                  <span v-if="!Object.keys(s.dimension_avg).length" class="dim">—</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </template>
       </div>
     </section>
   </div>
@@ -252,5 +312,22 @@ table { width: 100%; border-collapse: collapse; }
 th, td { text-align: left; padding: .45rem .5rem; border-bottom: 1px solid var(--border, var(--color-border)); font-size: .92rem; }
 .chip { display: inline-block; margin-right: .35rem; padding: .1rem .4rem; border-radius: 999px; background: var(--accent-soft, var(--color-surface-2)); font-size: .8rem; }
 .hint { color: var(--text-dim, var(--color-text-3)); font-size: .9rem; }
+
+/* 班级级聚合 */
+.agg { margin-bottom: var(--space-4); padding-bottom: var(--space-3); border-bottom: 1px dashed var(--border, var(--color-border)); }
+.stats { display: flex; gap: var(--space-4); flex-wrap: wrap; margin-bottom: .6rem; }
+.stat { display: flex; flex-direction: column; min-width: 4.5rem; }
+.stat .k { font-size: .78rem; color: var(--text-dim, var(--color-text-3)); }
+.stat .v { font-size: 1.25rem; font-weight: var(--weight-bold); }
+.agg-line { margin: .35rem 0; display: flex; align-items: center; gap: .35rem; flex-wrap: wrap; }
+.agg-k { font-size: .82rem; color: var(--text-dim, var(--color-text-3)); margin-right: .25rem; }
+.weak-chip { background: var(--accent-soft, var(--color-surface-2)); border: 1px solid currentColor; color: var(--color-warning, var(--accent)); }
+/* 需关注 */
+.attention { margin-bottom: var(--space-3); }
+.attention ul { list-style: none; padding: 0; margin: .35rem 0 0; }
+.attention li { padding: .3rem 0; border-bottom: 1px dashed var(--border, var(--color-border)); display: flex; align-items: baseline; gap: .4rem; flex-wrap: wrap; }
+.tag { font-size: .75rem; padding: .1rem .45rem; border-radius: 999px; background: var(--accent-soft, var(--color-surface-2)); }
+.r-not_started, .r-unfinished { color: var(--color-warning, var(--accent)); }
+.r-no_score, .r-lowest_score { color: var(--text-dim, var(--color-text-3)); }
 @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
 </style>
