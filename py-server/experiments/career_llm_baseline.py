@@ -66,10 +66,38 @@ _TMP = tempfile.mkdtemp(prefix="career_baseline_")
 os.environ["NETLEARN_USER_DB"] = os.path.join(_TMP, "users.db")
 atexit.register(shutil.rmtree, _TMP, ignore_errors=True)
 
-import db.pg_client as _pgc  # noqa: E402
+import importlib
+import db.pg_client as _pgc_shadowed  # noqa: E402,F401
+# ⚠️ 上面这行**拿不到模块**：db/__init__.py 里 `from .pg_client import pg_client` 会把
+# **实例**绑成 `db.pg_client` 这个包属性，遮蔽同名子模块。所以 `import db.pg_client as X`
+# 得到的是 PgClient 实例，往它身上设属性不会改到模块全局 —— 曾因此**静默污染真实库**
+# （2026-10-14 实测：20 场基线会话写进了服务器 data/pg_fallback.db）。
+# 必须先 import 包、再用 importlib 取真正的模块对象：
+import db as _db_pkg  # noqa: E402,F401
 
+_pgc = importlib.import_module("db.pg_client")
+assert type(_pgc).__name__ == "module", "取到的不是模块（遮蔽未处理），拒绝继续"
 _pgc._FALLBACK_DIR = _TMP
 _pgc._FALLBACK_DB = os.path.join(_TMP, "pg_fallback.db")
+
+
+def _verify_isolation() -> None:
+    """fail-closed：确认落库连接真的指向临时目录，否则拒绝运行。
+
+    加这道闸的原因：上面那个遮蔽陷阱**不会报错**（属性设在一个没人用的对象上），
+    只会安静地把测试数据写进真实库。宁可直接失败，也不接受"看起来没问题"。
+    """
+    _pgc.pg_client.connect()
+    conn = _pgc.pg_client._conn
+    if conn is None:
+        raise SystemExit("❌ DB 隔离校验失败：pg_client 未建立连接")
+    files = [r[2] for r in conn.execute("PRAGMA database_list").fetchall()]
+    ok = [f for f in files if f and os.path.abspath(f).startswith(os.path.abspath(_TMP))]
+    if not ok:
+        raise SystemExit(
+            f"❌ DB 隔离校验失败：连接实际指向 {files}，预期位于 {_TMP}。"
+            "拒绝运行，以免污染真实 data/*.db。")
+    print(f"[baseline] DB 隔离校验通过 → {ok[0]}")
 
 # ── 固定作答序列（两模式共用 → 唯一变量是 LLM 可用性）──
 ANSWERS = [
@@ -189,6 +217,8 @@ async def run(mode: str, out_path: str, fail_after: int = -1) -> int:
 
     from services import career_service as cs
     from db import career_store as store
+
+    _verify_isolation()  # 先证明写的是临时库，再动手
 
     print(f"[baseline] mode={mode} llm={json.dumps(llm, ensure_ascii=False)}")
     print(f"[baseline] 隔离 DB = {os.environ['NETLEARN_USER_DB']}")
