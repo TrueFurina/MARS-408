@@ -86,8 +86,14 @@ def scan(kind: str, pattern: re.Pattern[str], strict_links: bool) -> list[tuple[
 # ─────────────────────────────────────────────────────────────────────────────
 
 # A. 浮层/沙箱组件识别
-OVERLAY_NAME = re.compile(r"(modal|dialog|drawer|overlay|sandbox|playground|codelab|terminal|wasm)", re.I)
-OVERLAY_BODY = re.compile(r'role="dialog"|<teleport|\.modal\b|\.drawer\b|\.overlay\b|Transition name="modal"', re.I)
+# 词边界：避免 "Multimodal"/"CodeLabView" 等文件名子串误命中 "modal"/"codelab"
+# （实测误报：MultimodalCard / CodeLabView 本非模态组件，却因文件名含 modal/codelab 被标记）。
+OVERLAY_NAME = re.compile(r"\b(modal|dialog|drawer|overlay|sandbox|playground|codelab|terminal|wasm)\b", re.I)
+# 仅当具备**模态语义**（role="dialog" / aria-modal / .modal|.drawer|.overlay 类 / modal 过渡）才要求焦点管理；
+# 单纯 <teleport> 包裹的非模态内容（toast 通知、选区菜单等）不应要求焦点陷阱
+# （WCAG 2.4.3 仅约束模态对话框，toast/菜单 trap 焦点反而是错误做法）。
+# 实测误报：ToastNotification（toast 非模态）、PdfReader（选区菜单非模态）曾因 <teleport> 被标记。
+OVERLAY_BODY = re.compile(r'role="dialog"|aria-modal|\.modal\b|\.drawer\b|\.overlay\b|Transition name="modal"', re.I)
 FOCUS_SIGNALS = re.compile(
     r"focus-trap|focusTrap|trapFocus|\.focus\(\)|@keydown\.esc|tabindex|v-focus|"
     r"firstFocusable|focusFirst|restoreFocus",
