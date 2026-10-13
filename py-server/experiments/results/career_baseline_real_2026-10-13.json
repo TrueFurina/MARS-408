@@ -1,0 +1,235 @@
+{
+  "mode": "real",
+  "generated_at": "2026-10-13T23:22:06",
+  "llm": {
+    "available": true,
+    "name": "deepseek",
+    "model": "deepseek-chat",
+    "has_api_key": true
+  },
+  "answers_sha": "61c938532fa2fb96",
+  "scenarios": [
+    {
+      "id": "defense_thesis_proposal",
+      "title": "毕业设计开题答辩：你的系统架构被评委质疑",
+      "type": "defense",
+      "script_gen": {
+        "probe_plan": 8,
+        "success_signals": 5,
+        "opening_from_llm": true
+      },
+      "opening_question": "请你先用两分钟讲清楚：你这个系统到底解决什么问题？为什么非要用多智能体，单个大模型不行吗？",
+      "turns": [
+        {
+          "index": 1,
+          "status": "ongoing",
+          "adversary_mode": "normal",
+          "evidence_hits": 5,
+          "template_suspect": false,
+          "density": 0.7,
+          "next_question": "你刚才讲的是迭代排期，可架构图上写的是多智能体。请具体说：在实训场景哪个环节单Agent会失败？用你系统的一条流程讲清。"
+        },
+        {
+          "index": 2,
+          "status": "ongoing",
+          "adversary_mode": "normal",
+          "evidence_hits": 4,
+          "template_suspect": true,
+          "density": 0.4,
+          "next_question": "你刚才讲的是风险分层，可我问的是架构。具体说：实训场景里单Agent在哪个环节会失败？用你系统的一条流程讲清。"
+        }
+      ],
+      "assessment": {
+        "source": "llm",
+        "overall": 2.6,
+        "dims_present": [
+          "collab",
+          "decompose",
+          "expression",
+          "presentation",
+          "problem_solving",
+          "stress"
+        ],
+        "scores": {
+          "expression": 2.0,
+          "stress": 2.5,
+          "decompose": 3.0,
+          "collab": 3.5,
+          "problem_solving": 2.5
+        },
+        "evidence_chain_len": 6,
+        "chain_with_quotes": 5,
+        "has_summary": true
+      },
+      "status": "ok",
+      "elapsed_s": 23.78
+    },
+    {
+      "id": "review_requirement_alignment",
+      "title": "需求评审会：产品经理临时加需求且工期不变",
+      "type": "review",
+      "script_gen": {
+        "probe_plan": 8,
+        "success_signals": 5,
+        "opening_from_llm": true
+      },
+      "opening_question": "这个智能推荐功能竞品都上线了，老板也很看重，你们开发这边两周内必须做出来，应该没问题吧？",
+      "turns": [
+        {
+          "index": 1,
+          "status": "ongoing",
+          "adversary_mode": "normal",
+          "evidence_hits": 6,
+          "template_suspect": false,
+          "density": 0.9,
+          "next_question": "竞品都上了，老板点名要，客户也在问，你跟我说做不完？是不是你技术不行，或者不想加班？"
+        },
+        {
+          "index": 2,
+          "status": "ongoing",
+          "adversary_mode": "normal",
+          "evidence_hits": 5,
+          "template_suspect": false,
+          "density": 0.85,
+          "next_question": "别绕风险了，我就问你：竞品都上了，老板点名要，客户天天催，你跟我说做不完？是不是你技术不行，还是不想加班？"
+        }
+      ],
+      "assessment": {
+        "source": "llm",
+        "overall": 4.45,
+        "dims_present": [
+          "collab",
+          "decompose",
+          "expression",
+          "presentation",
+          "problem_solving",
+          "stress"
+        ],
+        "scores": {
+          "expression": 4.5,
+          "stress": 4.5,
+          "decompose": 4.5,
+          "collab": 4.5,
+          "presentation": 4.0,
+          "problem_solving": 4.5
+        },
+        "evidence_chain_len": 6,
+        "chain_with_quotes": 6,
+        "has_summary": true
+      },
+      "status": "ok",
+      "elapsed_s": 19.52
+    },
+    {
+      "id": "incident_production_outage",
+      "title": "线上故障应急：核心接口大面积超时，领导在群里追问",
+      "type": "incident",
+      "script_gen": {
+        "probe_plan": 8,
+        "success_signals": 5,
+        "opening_from_llm": true
+      },
+      "opening_question": "现在到底什么情况？影响多少用户？多久能恢复？你给我一个准话！",
+      "turns": [
+        {
+          "index": 1,
+          "status": "ongoing",
+          "adversary_mode": "normal",
+          "evidence_hits": 6,
+          "template_suspect": false,
+          "density": 0.85,
+          "next_question": "别跟我说可能。现在到底多少用户受影响？这个数你怎么估出来的？"
+        },
+        {
+          "index": 2,
+          "status": "ongoing",
+          "adversary_mode": "normal",
+          "evidence_hits": 5,
+          "template_suspect": false,
+          "density": 0.6,
+          "next_question": "我问的是现在，不是迭代排期。别跟我讲三层风险，直接说：此刻多少用户受影响？这个数你从哪来的？"
+        }
+      ],
+      "assessment": {
+        "source": "llm",
+        "overall": 3.15,
+        "dims_present": [
+          "collab",
+          "decompose",
+          "expression",
+          "presentation",
+          "problem_solving",
+          "stress"
+        ],
+        "scores": {
+          "expression": 3.5,
+          "stress": 2.0,
+          "decompose": 4.0,
+          "collab": 4.0,
+          "presentation": 3.0,
+          "problem_solving": 3.5
+        },
+        "evidence_chain_len": 6,
+        "chain_with_quotes": 6,
+        "has_summary": true
+      },
+      "status": "ok",
+      "elapsed_s": 19.82
+    },
+    {
+      "id": "conflict_code_review_dispute",
+      "title": "代码评审冲突：同学坚持的实现方案你认为有隐患",
+      "type": "conflict",
+      "script_gen": {
+        "probe_plan": 8,
+        "success_signals": 5,
+        "opening_from_llm": true
+      },
+      "opening_question": "我这代码明明能跑，明天就要交了，你怎么老是针对我、让我改这改那？",
+      "turns": [
+        {
+          "index": 1,
+          "status": "ongoing",
+          "adversary_mode": "normal",
+          "evidence_hits": 5,
+          "template_suspect": false,
+          "density": 0.85,
+          "next_question": "你说的排期和MVP我听到了，但我现在问的是：你指出我代码隐患时，我当场黑脸，你下一步具体怎么开口，既接住我的情绪又不放弃改代码？"
+        },
+        {
+          "index": 2,
+          "status": "ongoing",
+          "adversary_mode": "normal",
+          "evidence_hits": 4,
+          "template_suspect": true,
+          "density": 0.35,
+          "next_question": "你列的这些是项目排期，我问的是你面对我黑脸那一刻，第一句话到底怎么说？先接情绪还是先讲代码，你选哪个？"
+        }
+      ],
+      "assessment": {
+        "source": "llm",
+        "overall": 3.1,
+        "dims_present": [
+          "collab",
+          "decompose",
+          "expression",
+          "presentation",
+          "problem_solving",
+          "stress"
+        ],
+        "scores": {
+          "expression": 3.0,
+          "stress": 3.5,
+          "decompose": 4.0,
+          "collab": 2.0,
+          "problem_solving": 4.0
+        },
+        "evidence_chain_len": 6,
+        "chain_with_quotes": 5,
+        "has_summary": true
+      },
+      "status": "ok",
+      "elapsed_s": 20.05
+    }
+  ]
+}

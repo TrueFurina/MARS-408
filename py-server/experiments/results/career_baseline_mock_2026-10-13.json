@@ -1,0 +1,219 @@
+{
+  "mode": "mock",
+  "generated_at": "2026-10-13T23:21:38",
+  "llm": {
+    "available": false,
+    "error": "LLMUnavailable: 所有 LLM 通道均未配置 API Key"
+  },
+  "answers_sha": "61c938532fa2fb96",
+  "scenarios": [
+    {
+      "id": "defense_thesis_proposal",
+      "title": "毕业设计开题答辩：你的系统架构被评委质疑",
+      "type": "defense",
+      "script_gen": {
+        "probe_plan": 5,
+        "success_signals": 0,
+        "opening_from_llm": false
+      },
+      "opening_question": "请你先用两分钟讲清楚：你这个系统到底解决什么问题？为什么非要用多智能体，单个大模型不行吗？",
+      "turns": [
+        {
+          "index": 1,
+          "status": "ongoing",
+          "adversary_mode": "normal",
+          "evidence_hits": 0,
+          "template_suspect": false,
+          "density": 0.44,
+          "next_question": "质疑工作量是否够一个毕设，要求说清模块边界"
+        },
+        {
+          "index": 2,
+          "status": "ongoing",
+          "adversary_mode": "normal",
+          "evidence_hits": 0,
+          "template_suspect": false,
+          "density": 0.46,
+          "next_question": "要求给出关键技术风险和应对预案"
+        }
+      ],
+      "assessment": {
+        "source": "rule_fallback",
+        "overall": 2.6,
+        "dims_present": [
+          "collab",
+          "decompose",
+          "expression",
+          "presentation",
+          "problem_solving",
+          "stress"
+        ],
+        "scores": {
+          "expression": 2.6,
+          "problem_solving": 2.6
+        },
+        "evidence_chain_len": 6,
+        "chain_with_quotes": 2,
+        "has_summary": true
+      },
+      "status": "ok",
+      "elapsed_s": 0.07
+    },
+    {
+      "id": "review_requirement_alignment",
+      "title": "需求评审会：产品经理临时加需求且工期不变",
+      "type": "review",
+      "script_gen": {
+        "probe_plan": 5,
+        "success_signals": 0,
+        "opening_from_llm": false
+      },
+      "opening_question": "这个智能推荐功能竞品都上线了，老板也很看重，你们开发这边两周内必须做出来，应该没问题吧？",
+      "turns": [
+        {
+          "index": 1,
+          "status": "ongoing",
+          "adversary_mode": "normal",
+          "evidence_hits": 0,
+          "template_suspect": false,
+          "density": 0.44,
+          "next_question": "质疑你是不是在推脱、技术能力不行"
+        },
+        {
+          "index": 2,
+          "status": "ongoing",
+          "adversary_mode": "normal",
+          "evidence_hits": 0,
+          "template_suspect": false,
+          "density": 0.46,
+          "next_question": "要求你当场给出排期"
+        }
+      ],
+      "assessment": {
+        "source": "rule_fallback",
+        "overall": 2.6,
+        "dims_present": [
+          "collab",
+          "decompose",
+          "expression",
+          "presentation",
+          "problem_solving",
+          "stress"
+        ],
+        "scores": {
+          "expression": 2.6,
+          "problem_solving": 2.6
+        },
+        "evidence_chain_len": 6,
+        "chain_with_quotes": 2,
+        "has_summary": true
+      },
+      "status": "ok",
+      "elapsed_s": 0.02
+    },
+    {
+      "id": "incident_production_outage",
+      "title": "线上故障应急：核心接口大面积超时，领导在群里追问",
+      "type": "incident",
+      "script_gen": {
+        "probe_plan": 5,
+        "success_signals": 0,
+        "opening_from_llm": false
+      },
+      "opening_question": "现在到底什么情况？影响多少用户？多久能恢复？你给我一个准话！",
+      "turns": [
+        {
+          "index": 1,
+          "status": "ongoing",
+          "adversary_mode": "normal",
+          "evidence_hits": 0,
+          "template_suspect": false,
+          "density": 0.44,
+          "next_question": "追问为什么没有提前发现、是不是你的责任"
+        },
+        {
+          "index": 2,
+          "status": "ongoing",
+          "adversary_mode": "normal",
+          "evidence_hits": 0,
+          "template_suspect": false,
+          "density": 0.46,
+          "next_question": "要求你给出明确恢复时间点"
+        }
+      ],
+      "assessment": {
+        "source": "rule_fallback",
+        "overall": 2.6,
+        "dims_present": [
+          "collab",
+          "decompose",
+          "expression",
+          "presentation",
+          "problem_solving",
+          "stress"
+        ],
+        "scores": {
+          "expression": 2.6,
+          "problem_solving": 2.6
+        },
+        "evidence_chain_len": 6,
+        "chain_with_quotes": 2,
+        "has_summary": true
+      },
+      "status": "ok",
+      "elapsed_s": 0.03
+    },
+    {
+      "id": "conflict_code_review_dispute",
+      "title": "代码评审冲突：同学坚持的实现方案你认为有隐患",
+      "type": "conflict",
+      "script_gen": {
+        "probe_plan": 5,
+        "success_signals": 0,
+        "opening_from_llm": false
+      },
+      "opening_question": "我这代码明明能跑，明天就要交了，你怎么老是针对我、让我改这改那？",
+      "turns": [
+        {
+          "index": 1,
+          "status": "ongoing",
+          "adversary_mode": "normal",
+          "evidence_hits": 0,
+          "template_suspect": false,
+          "density": 0.44,
+          "next_question": "以时间紧为由拒绝任何修改"
+        },
+        {
+          "index": 2,
+          "status": "ongoing",
+          "adversary_mode": "normal",
+          "evidence_hits": 0,
+          "template_suspect": false,
+          "density": 0.46,
+          "next_question": "要求你『行你上』，把责任推回给你"
+        }
+      ],
+      "assessment": {
+        "source": "rule_fallback",
+        "overall": 2.6,
+        "dims_present": [
+          "collab",
+          "decompose",
+          "expression",
+          "presentation",
+          "problem_solving",
+          "stress"
+        ],
+        "scores": {
+          "expression": 2.6,
+          "problem_solving": 2.6
+        },
+        "evidence_chain_len": 6,
+        "chain_with_quotes": 2,
+        "has_summary": true
+      },
+      "status": "ok",
+      "elapsed_s": 0.01
+    }
+  ]
+}

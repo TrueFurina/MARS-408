@@ -34,13 +34,22 @@
 > `DEEPSEEK_API_KEY` / `DEEPSEEK_BASE_URL` / `DEEPSEEK_MODEL` / `LLM_PROVIDER`。
 > 本机实测：`LLM_PROVIDER=deepseek` → 通道判定 `deepseek-chat`、key 注入成功、真实调用返回可用内容。
 > 仓库探活：**DeepSeek ✅(0.97s) / 智谱 GLM ✅(0.60s)** 可用；DashScope·Moonshot·SiliconFlow·OpenRouter 均因账号/地区不可用。
-> ⚠️ 服务器 `172.16.222.99` 实测**无任何 LLM key、`py-server/.env` 不存在** → 上服务器跑基线前必须先配。
+> ✅ 服务器 `172.16.222.99` 已于 2026-10-13 配置 `~/study-help-pro/py-server/.env`
+> （`LLM_PROVIDER=deepseek` + key，chmod 600）。服务器**零安装**即可跑 career 链路——
+> 用 `/home/user/miniconda3/envs/all-in-rag/bin/python`（含 langgraph/fastapi；career 链路
+> 不依赖 Milvus/Redis，缺失时自动回退）。注意 `~/studyhelp-venv2` **缺 langgraph**。
 
 - [ ] ① **真实 LLM 接入**
   - [x] 通道探活 + 项目侧端到端首验（本机，2026-10-13）
-  - [ ] 服务器配 key（`~/study-help-pro/py-server/.env` 或 export）→ 上服务器跑实验的前置
-  - [ ] 端到端质量基线：同一组 4 场景 **mock vs 真实** 各跑一遍，差异如实入档（含失败/降级案例）
+  - [x] 服务器配 key（`~/study-help-pro/py-server/.env`，2026-10-13，chmod 600）
+  - [x] **4 场景 mock vs 真实对比基线已跑并落档**（2026-10-13）——
+        脚本 `experiments/career_llm_baseline.py`；数据 `experiments/results/career_baseline_*.json`；
+        逐项对比 `career_baseline_compare_2026-10-13.md`；结论 `career_baseline_结论-2026-10-13.md`。
+        要点：兜底模式 4/4 场景可跑完但**六维只覆盖 2 维、追问退化为指令标签、overall 恒 2.60 无区分度**；
+        真实模式 4/4 场景脚本由 LLM 生成、六维覆盖 5~6 维、追问能抓住答非所问、overall 有区分度（2.60/4.45/3.15/3.10）。
   - [ ] 兜底通道：视需要在 config 增补智谱 GLM 通道（现仅 deepseek/xfyun/qwen 三档）
+  - [ ] 待查：**开场问题两模式逐字相同** → 首个问题疑取自种子 `opening_question`（未核实，不臆断）
+  - [ ] 待补用例：LLM **部分降级**（超时/限流下的混态）——本轮 4 场景均成功，未覆盖
 - [ ] ② **教师侧最小教学闭环**
   - [ ] 缺口盘点：现有端点（作业/提交/资源/teacher 角色）能覆盖闭环到哪一步 → 列缺口
   - [ ] 前后端最小路径：布置场景 → 学生对抗 → 自动评分 → 班级报告（1 场景 / 1 班）
@@ -64,6 +73,8 @@
 
 ## 已完成
 
+- [x] 2026-10-13 **拼图① 第一步**：服务器配 key + 4 场景 mock vs 真实对比基线跑通并落档
+      （`experiments/career_llm_baseline.py` + `experiments/results/career_baseline_*`）
 - [x] 2026-10-13 源码包清理与提交清单同步（`e133087`，恢复点 `b20b70f`）；制定路线图 `plans/roadmap-2026-10-13.md`
 - [x] 2026-10-13 两项 P1 闭环（quality_gate fail-closed `2ce9154`；诚实红线扫描归一化 `cc31b74`）
 - [x] 2026-10-10 10-06 的 9 条 P0 全部闭合复测通过
