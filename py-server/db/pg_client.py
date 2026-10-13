@@ -32,8 +32,12 @@ except ImportError:
     logger.info("psycopg2 未安装，使用 SQLite 本地回退")
     PG_AVAILABLE = False
 
-_FALLBACK_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
-_FALLBACK_DB = os.path.join(_FALLBACK_DIR, "pg_fallback.db")
+# 路径可用环境变量覆盖（与 db/core.DB_PATH 的 NETLEARN_USER_DB 同一约定，供测试/E2E 隔离）：
+# NETLEARN_PG_DB 直接指定文件；NETLEARN_PG_DIR 指定目录。两者都未设时用 py-server/data/。
+_FALLBACK_DIR = os.environ.get("NETLEARN_PG_DIR") or os.path.join(
+    os.path.dirname(os.path.dirname(__file__)), "data"
+)
+_FALLBACK_DB = os.environ.get("NETLEARN_PG_DB") or os.path.join(_FALLBACK_DIR, "pg_fallback.db")
 
 
 def _coerce_scores(raw: list) -> list[float]:
