@@ -41,8 +41,8 @@ def _load_dotenv():
 
 # 默认配置
 DEFAULTS = {
-    # ── LLM 三通道 ──
-    "llm_provider": "auto",  # auto | deepseek | xfyun | qwen
+    # ── LLM 四通道 ──
+    "llm_provider": "auto",  # auto | deepseek | xfyun | qwen | glm
     "deepseek": {
         "api_key": "",
         "base_url": "https://api.deepseek.com",
@@ -81,6 +81,17 @@ DEFAULTS = {
         "api_key": "",
         "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
         "model": "qwen3.8-max",  # 优先级4a：Qwen3.8-Max 接入三通道（DashScope 兼容模式）
+        "supports_tools": True,
+        "supports_streaming": True,
+    },
+    "glm": {
+        # 智谱 GLM：OpenAI 兼容端点，作为第 4 通道（兜底）。
+        # base_url 含完整 /chat/completions 路径（与 qwen 同款写法，_build_url 直接采用）。
+        # 默认模型固定 glm-4-flash —— 实测（2026-10-13）本账号 glm-4-plus / glm-4-air /
+        # glm-4.5 均返回 429「余额不足或无可用资源包」，仅 glm-4-flash 可用；换模型须先确认额度。
+        "api_key": "",
+        "base_url": "https://open.bigmodel.cn/api/paas/v4/chat/completions",
+        "model": "glm-4-flash",
         "supports_tools": True,
         "supports_streaming": True,
     },
@@ -273,8 +284,8 @@ def get_llm_config(provider: Optional[str] = None) -> dict:
     if target != "auto":
         return config.get(target, {})
 
-    # auto: 按优先级尝试（优先级4a：接入 Qwen3.8-Max 第三通道）
-    for name in ["xfyun", "deepseek", "qwen"]:
+    # auto: 按优先级尝试（xfyun 赛题合规主通道 → deepseek → qwen → glm 兜底）
+    for name in ["xfyun", "deepseek", "qwen", "glm"]:
         provider_config = config.get(name, {})
         if provider_config.get("api_key") or provider_config.get("app_id"):
             return provider_config
@@ -484,7 +495,12 @@ def _apply_env_overrides(config: dict) -> None:
         "QWEN_API_KEY": ("qwen", "api_key"),
         "QWEN_BASE_URL": ("qwen", "base_url"),
         "QWEN_MODEL": ("qwen", "model"),
-        "LLM_PROVIDER": ("", "llm_provider"),  # 顶层键：环境变量覆盖主通道（auto|deepseek|xfyun|qwen）
+        "ZHIPU_API_KEY": ("glm", "api_key"),   # 智谱开放平台（bigmodel.cn）标准命名
+        "ZHIPU_BASE_URL": ("glm", "base_url"),
+        "ZHIPU_MODEL": ("glm", "model"),
+        "GLM_API_KEY": ("glm", "api_key"),     # 别名：部分环境用 GLM_API_KEY
+        "GLM_MODEL": ("glm", "model"),
+        "LLM_PROVIDER": ("", "llm_provider"),  # 顶层键：环境变量覆盖主通道（auto|deepseek|xfyun|qwen|glm）
         "TAVILY_API_KEY": ("tavily", "api_key"),
         "MILVUS_HOST": ("milvus", "host"),
         "MILVUS_PORT": ("milvus", "port"),

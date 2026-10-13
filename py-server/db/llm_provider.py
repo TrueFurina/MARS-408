@@ -150,7 +150,7 @@ class LLMProvider:
 
     def __init__(self, provider_name: Optional[str] = None):
         """
-        provider_name: "deepseek" | "xfyun" | "qwen" | None(auto)
+        provider_name: "deepseek" | "xfyun" | "qwen" | "glm" | None(auto)
         """
         # 配置统一经 DI 容器：get_container().settings 已 lru_cache 缓存 load_config() 结果，
         # 避免 40+ 处 LLMProvider() 各自重复 load_config()（IO 开销）并可能读到不一致的运行时配置。
@@ -174,14 +174,14 @@ class LLMProvider:
         timeout: float = 60,
     ) -> dict:
         """非流式请求，返回 OpenAI 格式 response dict。
-        调用失败时自动回退到下一可用通道（xfyun→deepseek→qwen，优先级4a 接入 Qwen3.8-Max）"""
+        调用失败时自动回退到下一可用通道（xfyun→deepseek→qwen→glm）"""
         if self._target != "auto":
             provider = self._resolve()
             return await self._call_provider(
                 provider, "chat", messages, temperature, max_tokens, tools, thinking, timeout
             )
-        # auto: 逐通道尝试，失败回退（讯飞星火X2为第一优先级—赛题合规，Qwen3.8-Max 为第三通道）
-        for name in ["xfyun", "deepseek", "qwen"]:
+        # auto: 逐通道尝试，失败回退（讯飞星火X2 第一优先级—赛题合规 → DeepSeek → Qwen → 智谱GLM 兜底）
+        for name in ["xfyun", "deepseek", "qwen", "glm"]:
             provider_cfg = self._config.get(name, {})
             if not _provider_configured(name, provider_cfg):
                 logger.debug("LLM 通道 %s 未配置可用凭证，跳过", name)
@@ -227,9 +227,9 @@ class LLMProvider:
             ):
                 yield chunk
             return
-        # auto: 逐通道尝试，失败回退（讯飞星火X2第一优先级，Qwen3.8-Max 第三通道）
+        # auto: 逐通道尝试，失败回退（讯飞星火X2 第一优先级 → DeepSeek → Qwen → 智谱GLM 兜底）
         yielded_any = False
-        for name in ["xfyun", "deepseek", "qwen"]:
+        for name in ["xfyun", "deepseek", "qwen", "glm"]:
             provider_cfg = self._config.get(name, {})
             if not _provider_configured(name, provider_cfg):
                 logger.debug("LLM 通道 %s 未配置可用凭证，跳过", name)
@@ -327,9 +327,10 @@ class LLMProvider:
                 raise LLMUnavailable(f"LLM 通道 '{target}' 缺少 API Key")
             return _apply_xfyun_preset(target, provider)
 
-        # auto: 按优先级 xfyun > deepseek > qwen（优先级4a 接入 Qwen3.8-Max）
-        # 讯飞星火 X2 为第一优先级（赛题合规要求 + 出题企业科大讯飞深度整合）
-        for name in ["xfyun", "deepseek", "qwen"]:
+        # auto: 按优先级 xfyun > deepseek > qwen > glm
+        # 讯飞星火 X2 为第一优先级（赛题合规要求 + 出题企业科大讯飞深度整合）；
+        # 智谱 GLM 为第 4 通道兜底（2026-10-13 接入，实测 glm-4-flash 可用）。
+        for name in ["xfyun", "deepseek", "qwen", "glm"]:
             provider = config.get(name, {})
             if _provider_configured(name, provider):
                 return _apply_xfyun_preset(name, provider)

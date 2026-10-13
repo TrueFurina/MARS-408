@@ -36,12 +36,12 @@ async def config_get(user: dict = Depends(require_admin)):
     """获取配置 — 从深度嵌套结构手动提取到扁平 ConfigResponse"""
     cfg = load_config()
     provider_mode = cfg.get("llm_provider", "auto")
-    # auto 模式：解析运行级实际生效的通道（xfyun→deepseek→qwen 首个已配置凭证者），
+    # auto 模式：解析运行级实际生效的通道（xfyun→deepseek→qwen→glm 首个已配置凭证者），
     # 用其 base_url/model/api_key 填充 llm_* 字段，避免 /config 把 active 通道
     # 误报为硬编码的 deepseek 默认值（F4：auto 下误导性运维）。llm_provider 仍如实回传 "auto"。
     if provider_mode == "auto":
         eff_name = None
-        for name in ["xfyun", "deepseek", "qwen"]:
+        for name in ["xfyun", "deepseek", "qwen", "glm"]:
             if _provider_configured(name, cfg.get(name, {})):
                 eff_name = name
                 break
