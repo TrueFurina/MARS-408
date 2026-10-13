@@ -8,7 +8,6 @@ import logging
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
-from agents.tutor import tutor_answer, quick_answer
 from db.llm_provider import LLMProvider
 from shared.content_safety import audit_output  # P1-7：统一输出内容安全审核
 from shared.ratelimit import require_llm_quota
@@ -47,6 +46,11 @@ async def tutor_endpoint(req: TutorRequest, user: dict = Depends(require_llm_quo
     快速模式: 跳过检索, 直接LLM回答 (适合简单问题, 减少延迟)
     """
     logger.info(f"答疑请求: question={req.question[:50]}..., quick={req.quick_mode}")
+
+    # 懒加载（与本文件下方 enhanced 端点 :118 的既有做法一致）：
+    # agents.tutor 会拉起 engines.frugal_rag 检索链，属重依赖，不进模块顶层 ——
+    # 否则 import api.tutor 即加载向量/嵌入栈。
+    from agents.tutor import quick_answer, tutor_answer
 
     if req.quick_mode:
         # 快速模式: 跳过检索
