@@ -14,7 +14,7 @@ SCENARIO_SCRIPT_SYSTEM = """你是面向计算机类专业学生的职业素养�
 你的任务：根据给定的情景种子，生成一份结构清晰、可直接用于多轮对抗演练的脚本。
 要求：
 1. 场景真实、贴合计算机类学生（开发/测试/运维/答辩/团队协作），不要空泛说教；
-2. 开场问题要具体、有压迫感但符合身份，能立刻把学生带入情境；
+2. 开场问题要具体、有压迫感但符合身份，能立刻把学生带入情境；**必须自行改写，不得与下方的「种子开场」重复**；
 3. 考察计划覆盖给定权重较高的维度，设计 6-8 个逐步深入的追问方向，由浅入深、先常规后高压；
 4. 严格输出 JSON，不要输出 JSON 以外的任何解释或 markdown 代码块标记。"""
 
@@ -24,7 +24,7 @@ SCENARIO_SCRIPT_USER_TMPL = """【情景种子】
 学生扮演：{student_role}
 对手扮演：{interviewer_role}
 难度：{difficulty}
-参考开场：{opening}
+种子开场（**仅用于理解情境，必须重写：不得照搬原句**）：{opening}
 建议追问方向：{probe_tree}
 重点考察：{focus_points}
 维度权重：{weights}
@@ -34,7 +34,7 @@ SCENARIO_SCRIPT_USER_TMPL = """【情景种子】
   "setting": "细化后的场景背景（120字内，第二人称，有代入感）",
   "student_role": "学生角色",
   "interviewer_role": "对手角色",
-  "opening_question": "第一问（具体、有现场感）",
+  "opening_question": "第一问（须自行改写，不得与种子开场重复）",
   "probe_plan": ["追问方向1", "追问方向2", "...共6-8条，按深入顺序"],
   "dimension_weights": {weight_json},
   "success_signals": ["表现优秀时的典型信号3-5条"],

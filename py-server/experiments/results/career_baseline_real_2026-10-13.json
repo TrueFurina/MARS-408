@@ -1,6 +1,6 @@
 {
   "mode": "real",
-  "generated_at": "2026-10-13T23:22:06",
+  "generated_at": "2026-10-13T23:27:46",
   "llm": {
     "available": true,
     "name": "deepseek",
@@ -18,30 +18,30 @@
         "success_signals": 5,
         "opening_from_llm": true
       },
-      "opening_question": "请你先用两分钟讲清楚：你这个系统到底解决什么问题？为什么非要用多智能体，单个大模型不行吗？",
+      "opening_question": "先别念PPT了。你口口声声说‘多智能体’，那我问你：如果我把你的系统砍成一个单体大模型加几个提示词模板，功能上到底会缺什么？用一句话告诉我，缺了它你的系统就转不起来。",
       "turns": [
         {
           "index": 1,
           "status": "ongoing",
           "adversary_mode": "normal",
           "evidence_hits": 5,
-          "template_suspect": false,
-          "density": 0.7,
-          "next_question": "你刚才讲的是迭代排期，可架构图上写的是多智能体。请具体说：在实训场景哪个环节单Agent会失败？用你系统的一条流程讲清。"
+          "template_suspect": true,
+          "density": 0.25,
+          "next_question": "你刚才答的是排期，不是我问的。回到架构：砍成单体大模型加提示词模板，功能上到底缺什么？一句话，缺了它系统就转不起来的那一点。"
         },
         {
           "index": 2,
           "status": "ongoing",
-          "adversary_mode": "normal",
-          "evidence_hits": 4,
+          "adversary_mode": "catfish",
+          "evidence_hits": 5,
           "template_suspect": true,
-          "density": 0.4,
-          "next_question": "你刚才讲的是风险分层，可我问的是架构。具体说：实训场景里单Agent在哪个环节会失败？用你系统的一条流程讲清。"
+          "density": 0.3,
+          "next_question": "假设答辩前一小时，你唯一的多Agent通信中间件服务器崩了且无法恢复，只剩单机。你现场砍掉哪几个Agent、保留哪几个？给出具体Agent名称和理由。"
         }
       ],
       "assessment": {
         "source": "llm",
-        "overall": 2.6,
+        "overall": 1.91,
         "dims_present": [
           "collab",
           "decompose",
@@ -51,18 +51,18 @@
           "stress"
         ],
         "scores": {
-          "expression": 2.0,
-          "stress": 2.5,
-          "decompose": 3.0,
-          "collab": 3.5,
-          "problem_solving": 2.5
+          "expression": 1.5,
+          "stress": 1.5,
+          "decompose": 2.5,
+          "collab": 3.0,
+          "problem_solving": 1.5
         },
         "evidence_chain_len": 6,
         "chain_with_quotes": 5,
         "has_summary": true
       },
       "status": "ok",
-      "elapsed_s": 23.78
+      "elapsed_s": 25.56
     },
     {
       "id": "review_requirement_alignment",
@@ -73,7 +73,7 @@
         "success_signals": 5,
         "opening_from_llm": true
       },
-      "opening_question": "这个智能推荐功能竞品都上线了，老板也很看重，你们开发这边两周内必须做出来，应该没问题吧？",
+      "opening_question": "这个推荐功能竞品早就有了，老板也特别关注，你们开发加把劲，两周内搞定，没问题吧？",
       "turns": [
         {
           "index": 1,
@@ -82,7 +82,7 @@
           "evidence_hits": 6,
           "template_suspect": false,
           "density": 0.9,
-          "next_question": "竞品都上了，老板点名要，客户也在问，你跟我说做不完？是不是你技术不行，或者不想加班？"
+          "next_question": "老板点名要，竞品也上了，别拿实习当借口。你就直说，两周到底行不行？"
         },
         {
           "index": 2,
@@ -90,8 +90,8 @@
           "adversary_mode": "normal",
           "evidence_hits": 5,
           "template_suspect": false,
-          "density": 0.85,
-          "next_question": "别绕风险了，我就问你：竞品都上了，老板点名要，客户天天催，你跟我说做不完？是不是你技术不行，还是不想加班？"
+          "density": 0.9,
+          "next_question": "别绕方案了，团队就等你一句话：两周内到底接还是不接？不接，延期责任你来负吗？"
         }
       ],
       "assessment": {
@@ -118,41 +118,41 @@
         "has_summary": true
       },
       "status": "ok",
-      "elapsed_s": 19.52
+      "elapsed_s": 19.92
     },
     {
       "id": "incident_production_outage",
       "title": "线上故障应急：核心接口大面积超时，领导在群里追问",
       "type": "incident",
       "script_gen": {
-        "probe_plan": 8,
+        "probe_plan": 7,
         "success_signals": 5,
         "opening_from_llm": true
       },
-      "opening_question": "现在到底什么情况？影响多少用户？多久能恢复？你给我一个准话！",
+      "opening_question": "你现在立刻告诉我：这个超时到底影响了多少业务？有没有在恢复？我要一个明确的判断，别跟我说还在查！",
       "turns": [
         {
           "index": 1,
           "status": "ongoing",
           "adversary_mode": "normal",
-          "evidence_hits": 6,
+          "evidence_hits": 5,
           "template_suspect": false,
-          "density": 0.85,
-          "next_question": "别跟我说可能。现在到底多少用户受影响？这个数你怎么估出来的？"
+          "density": 0.5,
+          "next_question": "先别讲推荐排期，那是另一回事。我问的是现在：这个接口超时影响多少业务、有没有在恢复？信息不全你也得给我定级和范围，怎么答？"
         },
         {
           "index": 2,
           "status": "ongoing",
           "adversary_mode": "normal",
-          "evidence_hits": 5,
+          "evidence_hits": 4,
           "template_suspect": false,
-          "density": 0.6,
-          "next_question": "我问的是现在，不是迭代排期。别跟我讲三层风险，直接说：此刻多少用户受影响？这个数你从哪来的？"
+          "density": 0.55,
+          "next_question": "停。你连我在问什么都没接住。现在接口在超时、业务在骂，你还在讲迭代排期。信息不全你就给不了定级和影响范围吗？怎么答，说。"
         }
       ],
       "assessment": {
         "source": "llm",
-        "overall": 3.15,
+        "overall": 2.14,
         "dims_present": [
           "collab",
           "decompose",
@@ -162,19 +162,19 @@
           "stress"
         ],
         "scores": {
-          "expression": 3.5,
-          "stress": 2.0,
-          "decompose": 4.0,
-          "collab": 4.0,
-          "presentation": 3.0,
-          "problem_solving": 3.5
+          "expression": 2.0,
+          "stress": 1.5,
+          "decompose": 2.5,
+          "collab": 3.0,
+          "presentation": 2.0,
+          "problem_solving": 2.5
         },
         "evidence_chain_len": 6,
         "chain_with_quotes": 6,
         "has_summary": true
       },
       "status": "ok",
-      "elapsed_s": 19.82
+      "elapsed_s": 21.46
     },
     {
       "id": "conflict_code_review_dispute",
@@ -185,7 +185,7 @@
         "success_signals": 5,
         "opening_from_llm": true
       },
-      "opening_question": "我这代码明明能跑，明天就要交了，你怎么老是针对我、让我改这改那？",
+      "opening_question": "你又在挑我代码的毛病？这模块跑起来没问题，测试也过了，明天就要交了，你到底想怎样？",
       "turns": [
         {
           "index": 1,
@@ -193,22 +193,22 @@
           "adversary_mode": "normal",
           "evidence_hits": 5,
           "template_suspect": false,
-          "density": 0.85,
-          "next_question": "你说的排期和MVP我听到了，但我现在问的是：你指出我代码隐患时，我当场黑脸，你下一步具体怎么开口，既接住我的情绪又不放弃改代码？"
+          "density": 0.9,
+          "next_question": "先别急着说需求，我问你：他一开口就说你针对他个人，你第一句话怎么回，才能不被他带偏、又能稳住这场对话？"
         },
         {
           "index": 2,
           "status": "ongoing",
           "adversary_mode": "normal",
-          "evidence_hits": 4,
+          "evidence_hits": 5,
           "template_suspect": true,
           "density": 0.35,
-          "next_question": "你列的这些是项目排期，我问的是你面对我黑脸那一刻，第一句话到底怎么说？先接情绪还是先讲代码，你选哪个？"
+          "next_question": "我问的是：他一开口就说你针对他个人，你第一句话怎么回？别给我风险分层，我要你现场那句原话。"
         }
       ],
       "assessment": {
         "source": "llm",
-        "overall": 3.1,
+        "overall": 3.69,
         "dims_present": [
           "collab",
           "decompose",
@@ -218,18 +218,18 @@
           "stress"
         ],
         "scores": {
-          "expression": 3.0,
+          "expression": 3.5,
           "stress": 3.5,
-          "decompose": 4.0,
-          "collab": 2.0,
-          "problem_solving": 4.0
+          "decompose": 4.5,
+          "collab": 3.0,
+          "problem_solving": 4.5
         },
         "evidence_chain_len": 6,
         "chain_with_quotes": 5,
         "has_summary": true
       },
       "status": "ok",
-      "elapsed_s": 20.05
+      "elapsed_s": 19.71
     }
   ]
 }
