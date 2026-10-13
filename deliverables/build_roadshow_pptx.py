@@ -10,7 +10,7 @@
 2. submission/01_演示PPT/作品演示PPT-最终版.pptx            —— 对外提交件
 
 口径铁律（改动前务必核对 submission/00_提交清单.md）：
-- 测试：CI 默认档 1484 run（1492 collected，addopts deselect 8）→ 1445 passed / 38 skipped / 1 xfailed / 0 failed（沙箱 live 测试桩已修复，QA 独立验证通过，CI 复测待确认）；CI p0 档 67 条
+- 测试：CI 默认档 1484 run（1492 collected，addopts deselect 8）→ 1445 passed / 38 skipped / 1 xfailed / 0 failed（沙箱 live 测试桩已修复，CI 已复测确认：61.20% 覆盖率达标）；CI p0 档 67 条
 - 覆盖率 61%（门禁 --cov-fail-under=50，余量 11pp）
 - API：245 operations / 228 paths（app.openapi() 运行时实测）；认证覆盖率 94.69%（232/245）
 - 共识分 mean 7.0446 / std 0.2857 —— 必须同时标 stratified 分布 / 96 样本 / seed 20261006 / n=6
