@@ -94,6 +94,14 @@ def test_teacher_full_closed_loop(client, teacher_id):
     reasons = {a["reason"] for a in dash["attention"]}
     assert "not_started" in reasons, "未参与的学生应进 attention"
     assert all(a["detail"] for a in dash["attention"]), "attention 每条都必须有可反查的说明"
+    # 8) 六维均分必须真的解析出来 —— 2026-10-14 浏览器走查抓到的回归：
+    #    career_assessments.dimension_scores 存的是**嵌套** {"dimensions": {dim: {…}}}，
+    #    直接遍历顶层键会让 dimension_avg 恒为空（且不报错）。此前断言只覆盖
+    #    summary 的计数与排序口径，漏了"六维到底有没有值"，故此处补上。
+    assert stu["dimension_avg"], "学生六维均分不得为空（dimension_scores 是嵌套形态）"
+    assert all(isinstance(v, (int, float)) and 1 <= v <= 5 for v in stu["dimension_avg"].values())
+    assert summ["dimension_avg"], "全班各维均分不得为空"
+    assert wd, "存在评估数据时最弱维度不得为空"
 
 
 def test_dashboard_class_aggregation_empty_class(client, teacher_id):
