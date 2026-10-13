@@ -99,6 +99,63 @@ def test_student_forbidden_on_teacher_endpoints(client):
         _restore_auth(client)
 
 
+def test_join_binds_roster_row_by_name(client, teacher_id):
+    """学生姓名与花名册一致时，应按**姓名**绑定（而非取第一个未绑定行）。
+
+    背景：bind_student 原 docstring 称「按姓名匹配」，实现却是直接取第一个未绑定行
+    ——多人同时凭码加入会张冠李戴。2026-10-14 补上真实姓名匹配，本用例守护之。
+    """
+    from db.user_store import create_user, get_user_by_username
+
+    uname = "p4_lisi"
+    if not get_user_by_username(uname):
+        create_user(uname, "pw_123456", "李四", "student")
+    u = get_user_by_username(uname)
+
+    cls = client.post("/api/career/classes", json={"class_name": "按名绑定班"}).json()
+    client.post(f"/api/career/classes/{cls['class_id']}/students",
+                json={"roster": "01 张三\n02 李四\n03 王五"})
+    sc = client.get("/api/career/scenarios").json()["scenarios"]
+    task = client.post("/api/career/tasks", json={
+        "class_id": cls["class_id"], "scenario_id": sc[0]["id"], "max_turns": 4}).json()
+
+    _student_override(client, u["id"])
+    try:
+        body = client.post("/api/career/task/join",
+                           json={"join_code": task["join_code"]}).json()
+    finally:
+        _restore_auth(client)
+
+    assert body["roster_bound"] is True
+    assert body["bound_match"] == "name", "姓名一致时应按姓名绑定，而不是取第一个未绑定行"
+    assert body["bound_name"] == "李四"
+
+
+def test_join_falls_back_to_first_unbound_when_name_unmatched(client, teacher_id):
+    """姓名无法匹配时退回「第一个未绑定行」——如实回传 bound_match，不假装按姓名命中。
+
+    （保持历史行为：宁可绑定位置可能不准，也不能让花名册里的学生完全绑不上。）
+    """
+    cls = client.post("/api/career/classes", json={"class_name": "退回绑定班"}).json()
+    client.post(f"/api/career/classes/{cls['class_id']}/students",
+                json={"roster": "01 张三"})
+    sc = client.get("/api/career/scenarios").json()["scenarios"]
+    task = client.post("/api/career/tasks", json={
+        "class_id": cls["class_id"], "scenario_id": sc[0]["id"], "max_turns": 4}).json()
+
+    # 该 user_id 在用户表中不存在 → 取不到姓名 → 走退回路径
+    _student_override(client, "stu_no_name_p4")
+    try:
+        body = client.post("/api/career/task/join",
+                           json={"join_code": task["join_code"]}).json()
+    finally:
+        _restore_auth(client)
+
+    assert body["roster_bound"] is True
+    assert body["bound_match"] == "first_unbound"
+    assert body["bound_name"] == "张三"
+
+
 def test_join_invalid_code_404(client):
     assert client.post("/api/career/task/join",
                        json={"join_code": "ZZZZZZ"}).status_code == 404
