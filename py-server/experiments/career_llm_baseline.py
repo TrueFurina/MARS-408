@@ -35,6 +35,11 @@ fallback 返回种子 probe_tree、success_signals=[]）。这意味着：
   LLM_PROVIDER=deepseek DEEPSEEK_API_KEY=... python experiments/career_llm_baseline.py \
       --mode real --out experiments/results/career_baseline_real_<date>.json
 
+  # 模式 C（混态：**每场会话**前 N 次 LLM 调用成功，其后强制降级）
+  LLM_PROVIDER=deepseek DEEPSEEK_API_KEY=... python experiments/career_llm_baseline.py \
+      --mode mixed --fail-after 4 \
+      --out experiments/results/career_baseline_mixed_<date>.json
+
   # 对比出报告
   python experiments/career_llm_baseline.py --compare A.json B.json \
       --out experiments/results/career_baseline_compare_<date>.md
@@ -92,8 +97,11 @@ def probe_llm() -> dict:
         return {"available": False, "error": f"{type(e).__name__}: {e}"[:200]}
 
 
-async def run_scenario(cs, store, sc: dict) -> dict:
+async def run_scenario(cs, store, sc: dict, llm_state: dict | None = None) -> dict:
     rec: dict = {"id": sc["id"], "title": sc["title"], "type": sc["type"]}
+    if llm_state is not None:  # 每场会话独立计数
+        llm_state["calls"] = 0
+        llm_state["failed"] = 0
     t0 = time.time()
     try:
         started = await cs.start_session("baseline_probe", sc["id"], "medium", max_turns=4)
@@ -141,15 +149,47 @@ async def run_scenario(cs, store, sc: dict) -> dict:
     except Exception as e:
         rec["status"] = "error"
         rec["error"] = f"{type(e).__name__}: {e}"[:300]
+    if llm_state is not None:
+        rec["llm_calls"] = {"calls": llm_state["calls"], "failed": llm_state["failed"]}
     rec["elapsed_s"] = round(time.time() - t0, 2)
     return rec
 
 
-async def run(mode: str, out_path: str) -> int:
+def inject_fail_after(n: int) -> dict:
+    """让前 n 次 LLM 调用走真实通道，之后一律抛 LLMUnavailable —— 制造「部分降级」混态。
+
+    只 patch 类方法：career_nodes 每个节点都 `LLMProvider()` new 新实例，patch 实例无效。
+    用途：验证「脚本/证据来自真实模型、但评估已降级」时，系统是否仍能产出可对齐的报告。
+    """
+    import db.llm_provider as _lp
+    orig = _lp.LLMProvider.text_completion
+    # calls/failed 按「每场会话」计（由 run_scenario 在场景开始时清零），
+    # total_* 为全程累计。语义：每场实训跑到第 n+1 次 LLM 调用时模型服务挂了。
+    state = {"limit": n, "calls": 0, "failed": 0, "total_calls": 0, "total_failed": 0}
+
+    async def _wrapped(self, *a, **kw):
+        state["calls"] += 1
+        state["total_calls"] += 1
+        if state["calls"] > n:
+            state["failed"] += 1
+            state["total_failed"] += 1
+            raise _lp.LLMUnavailable(
+                f"[injected] 本场第 {state['calls']} 次 LLM 调用起强制失败（fail_after={n}）")
+        return await orig(self, *a, **kw)
+
+    _lp.LLMProvider.text_completion = _wrapped
+    return state
+
+
+async def run(mode: str, out_path: str, fail_after: int = -1) -> int:
+    llm = probe_llm()
+    llm_state = inject_fail_after(fail_after) if fail_after >= 0 else None
+    if llm_state:
+        print(f"[baseline] ⚠️ 故障注入：前 {fail_after} 次 LLM 调用放行，其后强制失败（混态用例）")
+
     from services import career_service as cs
     from db import career_store as store
 
-    llm = probe_llm()
     print(f"[baseline] mode={mode} llm={json.dumps(llm, ensure_ascii=False)}")
     print(f"[baseline] 隔离 DB = {os.environ['NETLEARN_USER_DB']}")
 
@@ -157,18 +197,28 @@ async def run(mode: str, out_path: str) -> int:
         "mode": mode,
         "generated_at": datetime.datetime.now().isoformat(timespec="seconds"),
         "llm": llm,
+        "injected_fail_after": fail_after if fail_after >= 0 else None,
         "answers_sha": __import__("hashlib").sha256(
             "\n".join(ANSWERS).encode("utf-8")).hexdigest()[:16],
         "scenarios": [],
     }
     for sc in cs.list_scenarios():
-        rec = await run_scenario(cs, store, sc)
+        rec = await run_scenario(cs, store, sc, llm_state)
         out["scenarios"].append(rec)
         tag = rec.get("error") if rec["status"] == "error" else \
             f"script_llm={rec['script_gen']['opening_from_llm']} " \
             f"overall={rec['assessment']['overall']} " \
             f"chain={rec['assessment']['evidence_chain_len']}"
+        if rec.get("llm_calls"):
+            tag += f" llm={rec['llm_calls']['calls']}/失败{rec['llm_calls']['failed']}"
         print(f"  - {sc['id']:32s} {rec['status']:5s} {rec['elapsed_s']:6.2f}s  {tag}")
+
+    if llm_state:
+        out["llm_calls"] = {"limit_per_scenario": llm_state["limit"],
+                            "total_calls": llm_state["total_calls"],
+                            "total_failed_injected": llm_state["total_failed"]}
+        print(f"[baseline] LLM 调用统计: 全程总调用={llm_state['total_calls']} "
+              f"其中注入失败={llm_state['total_failed']}")
 
     os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as f:
@@ -283,8 +333,10 @@ def compare(a_path: str, b_path: str, out_path: str | None) -> int:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--mode", choices=["mock", "real"], help="运行模式标签（写入结果）")
+    ap.add_argument("--mode", choices=["mock", "real", "mixed"], help="运行模式标签（写入结果）")
     ap.add_argument("--out", help="运行结果 / 对比报告输出路径")
+    ap.add_argument("--fail-after", type=int, default=-1, metavar="N",
+                    help="故障注入：前 N 次 LLM 调用放行、其后强制失败（制造部分降级混态）")
     ap.add_argument("--compare", nargs=2, metavar=("A_JSON", "B_JSON"),
                     help="对比两份运行结果，产出 markdown 报告")
     args = ap.parse_args()
@@ -293,7 +345,7 @@ def main() -> int:
         return compare(args.compare[0], args.compare[1], args.out)
     if not args.mode or not args.out:
         ap.error("运行模式需要同时提供 --mode 与 --out")
-    return asyncio.run(run(args.mode, args.out))
+    return asyncio.run(run(args.mode, args.out, args.fail_after))
 
 
 if __name__ == "__main__":

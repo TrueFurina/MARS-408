@@ -1,0 +1,256 @@
+{
+  "mode": "mixed",
+  "generated_at": "2026-10-13T23:33:43",
+  "llm": {
+    "available": true,
+    "name": "deepseek",
+    "model": "deepseek-chat",
+    "has_api_key": true
+  },
+  "injected_fail_after": 4,
+  "answers_sha": "61c938532fa2fb96",
+  "scenarios": [
+    {
+      "id": "defense_thesis_proposal",
+      "title": "毕业设计开题答辩：你的系统架构被评委质疑",
+      "type": "defense",
+      "script_gen": {
+        "probe_plan": 8,
+        "success_signals": 5,
+        "opening_from_llm": true
+      },
+      "opening_question": "先别急着讲背景。你直接说，这个系统里多智能体到底承担了什么不可替代的角色？如果我用一个带角色提示词的大模型加上工作流引擎，能不能覆盖你80%的功能？",
+      "turns": [
+        {
+          "index": 1,
+          "status": "ongoing",
+          "adversary_mode": "normal",
+          "evidence_hits": 4,
+          "template_suspect": false,
+          "density": 0.6,
+          "next_question": "先停一下，你答的是排期，不是我的问题。我问的是：多智能体在你系统里到底承担什么不可替代的角色？单模型加工作流能不能覆盖你80%的功能？正面回答。"
+        },
+        {
+          "index": 2,
+          "status": "ongoing",
+          "adversary_mode": "normal",
+          "evidence_hits": 4,
+          "template_suspect": true,
+          "density": 0.25,
+          "next_question": "这个毕设的工作量如何体现？请列出你计划交付的模块清单，并说明每个模块的输入输出和验收标准。"
+        }
+      ],
+      "assessment": {
+        "source": "rule_fallback",
+        "overall": 2.78,
+        "dims_present": [
+          "collab",
+          "decompose",
+          "expression",
+          "presentation",
+          "problem_solving",
+          "stress"
+        ],
+        "scores": {
+          "expression": 2.3,
+          "stress": 2.8,
+          "decompose": 3.5,
+          "collab": 3.7,
+          "problem_solving": 1.7
+        },
+        "evidence_chain_len": 6,
+        "chain_with_quotes": 5,
+        "has_summary": true
+      },
+      "status": "ok",
+      "llm_calls": {
+        "calls": 8,
+        "failed": 4
+      },
+      "elapsed_s": 10.09
+    },
+    {
+      "id": "review_requirement_alignment",
+      "title": "需求评审会：产品经理临时加需求且工期不变",
+      "type": "review",
+      "script_gen": {
+        "probe_plan": 8,
+        "success_signals": 5,
+        "opening_from_llm": true
+      },
+      "opening_question": "竞品上周已经全量上线推荐了，老板在周会上点名要我们这版跟上。两周后必须发，开发这边你给个准话，能不能搞定？",
+      "turns": [
+        {
+          "index": 1,
+          "status": "ongoing",
+          "adversary_mode": "normal",
+          "evidence_hits": 6,
+          "template_suspect": false,
+          "density": 0.9,
+          "next_question": "别讲条件了，你就说接不接？不接我找别人，但项目延期你负责。"
+        },
+        {
+          "index": 2,
+          "status": "ongoing",
+          "adversary_mode": "normal",
+          "evidence_hits": 5,
+          "template_suspect": false,
+          "density": 0.9,
+          "next_question": "质疑能力与态度：是不是你实习经验不够，或者不想接这个活？别的后端也没说做不了。"
+        }
+      ],
+      "assessment": {
+        "source": "rule_fallback",
+        "overall": 4.54,
+        "dims_present": [
+          "collab",
+          "decompose",
+          "expression",
+          "presentation",
+          "problem_solving",
+          "stress"
+        ],
+        "scores": {
+          "expression": 4.6,
+          "stress": 4.6,
+          "decompose": 4.6,
+          "collab": 4.6,
+          "presentation": 4.0,
+          "problem_solving": 4.6
+        },
+        "evidence_chain_len": 6,
+        "chain_with_quotes": 6,
+        "has_summary": true
+      },
+      "status": "ok",
+      "llm_calls": {
+        "calls": 7,
+        "failed": 3
+      },
+      "elapsed_s": 10.28
+    },
+    {
+      "id": "incident_production_outage",
+      "title": "线上故障应急：核心接口大面积超时，领导在群里追问",
+      "type": "incident",
+      "script_gen": {
+        "probe_plan": 8,
+        "success_signals": 5,
+        "opening_from_llm": true
+      },
+      "opening_question": "现在系统什么状况？你手头有哪些确切信息？别给我模棱两可的，先告诉我影响范围有多大，业务方都在催了！",
+      "turns": [
+        {
+          "index": 1,
+          "status": "ongoing",
+          "adversary_mode": "normal",
+          "evidence_hits": 5,
+          "template_suspect": false,
+          "density": 0.75,
+          "next_question": "先别谈排期，我在问线上故障！现在错误率、超时接口、影响用户数各是多少？用数字回答，别绕。"
+        },
+        {
+          "index": 2,
+          "status": "ongoing",
+          "adversary_mode": "normal",
+          "evidence_hits": 4,
+          "template_suspect": true,
+          "density": 0.35,
+          "next_question": "业务方要求立刻回滚，你如何评估回滚的风险和收益？会立即回滚吗？"
+        }
+      ],
+      "assessment": {
+        "source": "rule_fallback",
+        "overall": 3.17,
+        "dims_present": [
+          "collab",
+          "decompose",
+          "expression",
+          "presentation",
+          "problem_solving",
+          "stress"
+        ],
+        "scores": {
+          "expression": 3.0,
+          "stress": 2.5,
+          "decompose": 3.9,
+          "collab": 4.2,
+          "problem_solving": 3.0
+        },
+        "evidence_chain_len": 6,
+        "chain_with_quotes": 5,
+        "has_summary": true
+      },
+      "status": "ok",
+      "llm_calls": {
+        "calls": 7,
+        "failed": 3
+      },
+      "elapsed_s": 8.79
+    },
+    {
+      "id": "conflict_code_review_dispute",
+      "title": "代码评审冲突：同学坚持的实现方案你认为有隐患",
+      "type": "conflict",
+      "script_gen": {
+        "probe_plan": 8,
+        "success_signals": 5,
+        "opening_from_llm": true
+      },
+      "opening_question": "这模块我测过能跑通，功能没问题。你非揪着这点不放，是不是觉得我拖后腿了？",
+      "turns": [
+        {
+          "index": 1,
+          "status": "ongoing",
+          "adversary_mode": "normal",
+          "evidence_hits": 5,
+          "template_suspect": false,
+          "density": 0.85,
+          "next_question": "先别急，我不是针对你。功能确实实现了，我想确认：数据量从几十条涨到几千条，你估计响应时间会变成多少？"
+        },
+        {
+          "index": 2,
+          "status": "ongoing",
+          "adversary_mode": "normal",
+          "evidence_hits": 5,
+          "template_suspect": true,
+          "density": 0.5,
+          "next_question": "你说时间紧不想大改，我理解。那如果只改最关键的几行，比如把嵌套循环换成哈希表，半小时内能搞定，你愿意试一下吗？我可以帮你一起改。"
+        }
+      ],
+      "assessment": {
+        "source": "rule_fallback",
+        "overall": 4.12,
+        "dims_present": [
+          "collab",
+          "decompose",
+          "expression",
+          "presentation",
+          "problem_solving",
+          "stress"
+        ],
+        "scores": {
+          "expression": 3.8,
+          "stress": 3.2,
+          "decompose": 4.4,
+          "collab": 4.4,
+          "problem_solving": 4.4
+        },
+        "evidence_chain_len": 6,
+        "chain_with_quotes": 5,
+        "has_summary": true
+      },
+      "status": "ok",
+      "llm_calls": {
+        "calls": 7,
+        "failed": 3
+      },
+      "elapsed_s": 10.92
+    }
+  ],
+  "llm_calls": {
+    "limit_per_scenario": 4,
+    "total_calls": 29,
+    "total_failed_injected": 13
+  }
+}

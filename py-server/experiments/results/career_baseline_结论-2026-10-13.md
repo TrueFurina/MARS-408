@@ -1,8 +1,8 @@
 # career 对抗链路：LLM 兜底 vs 真实 LLM 基线结论（2026-10-13）
 
-> 拼图①（真实 LLM 接入）的第一步证据。原始数据见同目录
-> `career_baseline_mock_2026-10-13.json`、`career_baseline_real_2026-10-13.json`、
-> `career_baseline_compare_2026-10-13.md`（自动生成的逐项对比表）。
+> 拼图①（真实 LLM 接入）的证据。原始数据见同目录
+> `career_baseline_mock_2026-10-13.json`（兜底）、`career_baseline_real_2026-10-13.json`（真实）、
+> `career_baseline_mixed_2026-10-13.json`（混态注入）、`career_baseline_compare_2026-10-13.md`（自动生成的逐项对比表）。
 
 ## 怎么跑的（可复现）
 
@@ -22,12 +22,19 @@ env -u DEEPSEEK_API_KEY -u LLM_PROVIDER \
   /home/user/miniconda3/envs/all-in-rag/bin/python experiments/career_llm_baseline.py \
   --mode real --out experiments/results/career_baseline_real_2026-10-13.json
 
+# 模式 C：混态（每场会话前 4 次 LLM 调用放行，其后强制降级 —— 故障注入）
+env -u DEEPSEEK_API_KEY -u LLM_PROVIDER \
+  /home/user/miniconda3/envs/all-in-rag/bin/python experiments/career_llm_baseline.py \
+  --mode mixed --fail-after 4 --out experiments/results/career_baseline_mixed_2026-10-13.json
+
 # 对比
 ... --compare <A.json> <B.json> --out experiments/results/career_baseline_compare_2026-10-13.md
 ```
 
 **控制变量**：两模式的场景、作答序列完全一致（作答哈希 `61c938532fa2fb96` 双方一致），
 唯一变量是 LLM 是否可用。脚本全程写临时库，**不触碰** `data/*.db`。
+混态模式另加一个变量：**每场会话第 N+1 次 LLM 调用起不可用**（`--fail-after N`，只 patch 类方法，
+因为 `career_nodes` 每个节点都 `LLMProvider()` new 新实例）。
 
 ## 结论一：系统在没有 LLM 凭据时确实能跑完闭环（可降级是真的）
 
@@ -93,12 +100,41 @@ env -u DEEPSEEK_API_KEY -u LLM_PROVIDER \
   正是"要有对照基线"的价值所在。对照面（同一输入、只变一个变量）能让"看起来正常"的
   输出暴露异常。
 
+## 结论四：部分降级（混态）—— 系统不崩，且**瓶颈被定位到「证据采集」而非「评估器」**
+
+真实场景不会总是"模型全好"或"模型全挂"，更常见的是**一场实训进行到一半模型服务挂了**。
+用故障注入复现（`--mode mixed --fail-after 4`：每场会话前 4 次 LLM 调用放行，其后抛
+`LLMUnavailable`；只 patch 类方法，因为 `career_nodes` 每个节点都 new 新实例）。
+**调用的自然顺序**为：脚本 → 取证①→追问① → 取证②→追问② → 六维评估 → 提升路径（约 7 次/场）。
+`fail_after=4` ⇒ 脚本与两轮**取证**都来自真模型，追问②/评估/提升路径降级。
+
+| 模式 | 脚本 | 每轮证据命中 | 评估源 | 有分维度 | `overall` | 含原话链条 |
+|---|---|---|---|---|---|---|
+| 纯兜底 mock | 种子 | **0** | rule_fallback | **2 / 6** | **恒 2.60** | 2 / 6 |
+| **混态 mixed** | LLM（probe_plan 8） | 4~6 | **rule_fallback** | 5~6 / 6 | **2.78 / 4.54 / 3.17 / 4.12** | 5~6 / 6 |
+| 真实 real | LLM | 5~6 | llm | 5~6 / 6 | 1.91 / 4.45 / 2.14 / 3.69 | 5~6 / 6 |
+
+**三条实证结论：**
+
+1. **不崩**：4/4 场次全部跑完，证据链仍 6 条，闭环完整 —— 降级是"质量下降"而非"功能中断"。
+2. **评估器降级了，报告却没有塌**：混态的 `assessment_source` 是 `rule_fallback`（评估那次调用失败），
+   但 `overall` **不再是恒 2.60**，有分维度从 2 回到 5~6，含原话链条从 2 回到 5~6。
+   ⇒ 说明**规则评估器本身没问题，它只是"没料可评"**：喂给它真模型采的证据，它照样能产出有区分度、
+   可追溯的报告。（也印证了 `_finish` 里"用 `evidence_turns` 回填 `per_turn_evidence`"的设计是有效的。）
+3. **因此质量瓶颈在「证据采集」这一步**：纯兜底之所以差，根因是 `dimension_hits` 全空（无模型就采不到维度证据），
+   而不是评估算法弱。**工程含义**：若要降本，最该保住的 LLM 调用是**取证**（每轮一次），而不是脚本或评估。
+
+**一个附带细节**：降级追问 `_fallback_question` 取自 `script["probe_plan"]`（`career_nodes.py:275-285`），
+所以它的质量**取决于 probe_plan 的来源** —— 混态下 probe_plan 来自模型（写成可作答的问句），降级追问仍可用；
+纯兜底下来自种子的 `probe_tree`（是指令标签"要求你当场给出排期"），才退化为标签。
+
 ## 诚实边界（不得越界引用）
 
 - **只证明"输出改变了、质量特征改善了"，不宣称"教学效果提升"。** 没有人工评分基线，
   无法判断真实 LLM 打的分是否更接近真人判断。
 - **单次运行**（温度 0.2~0.6，LLM 有随机性），未做多次采样与方差分析。
 - **样本 = 4 场景 × 固定 2 轮作答**，非真实用户、非真实对话长度。
-- 真实模式 4 场景均成功，**未覆盖 LLM 超时/限流下的部分降级**（混态）——那是另一组用例。
+- 混态用例（结论四）是**故障注入**（`--fail-after 4`）而非真实限流/超时；真实网络故障的
+  形态（间歇性、按维度失败）未覆盖。
 - **数据版本**：`career_baseline_real_2026-10-13.json` 是**修复「开场照抄」后重跑**的结果；
   修复前那一轮（53 处差异）保留在 git 历史 `bcdb973` 中，可 `git show bcdb973:…` 取出对照。
