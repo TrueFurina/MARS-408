@@ -35,7 +35,7 @@ pytestmark = pytest.mark.p0_regression
 class _RaisingLLM:
     """替换 LLMProvider 的桩：任何 text_completion/chat 调用都抛异常。
 
-    模拟"讯飞 X2 / DeepSeek / Qwen 三通道全部不可用"，用于验证节点兜底路径。
+    模拟"讯飞 X2 / DeepSeek / Qwen / 智谱 GLM 四通道全部不可用"，用于验证节点兜底路径。
     """
 
     def __init__(self, *args, **kwargs):
