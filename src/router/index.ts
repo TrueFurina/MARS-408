@@ -70,6 +70,7 @@ const router = createRouter({
     {
       path: '/teacher',
       name: 'teacher',
+      meta: { requiresRole: ['teacher', 'admin'] },
       component: () => import('@/views/TeacherView.vue'),
     },
     {
@@ -144,6 +145,7 @@ const router = createRouter({
       // 教师端：班级素养六维报告（前后测聚合 + CSV 导出）
       path: '/literacy/teacher',
       name: 'literacy-teacher',
+      meta: { requiresRole: ['teacher', 'admin'] },
       component: () => import('@/views/TeacherLiteracyReportView.vue'),
     },
     {
@@ -170,6 +172,7 @@ const router = createRouter({
       // P4 教师端：对抗实训建班/发任务/班级看板
       path: '/career/teacher',
       name: 'career-teacher',
+      meta: { requiresRole: ['teacher', 'admin'] },
       component: () => import('@/views/TeacherCareerView.vue'),
     },
     {

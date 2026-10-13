@@ -26,7 +26,11 @@ async function submit() {
     const user = isRegister.value
       ? await authStore.register(username.value.trim(), password.value, displayName.value.trim())
       : await authStore.login(username.value.trim(), password.value)
-    router.push(user.diagnostic_required ? '/diagnostic/start' : (user.role === 'admin' ? '/admin' : '/'))
+    // 入学测评（学情诊断）只针对**学生**：教师/管理员不应被送进学生测评流程。
+    // 修复前未判角色，教师登录后直接落到 /diagnostic/start（浏览器走查实测）。
+    const role = user.role || 'student'
+    const home = role === 'admin' ? '/admin' : (role === 'teacher' ? '/teacher' : '/')
+    router.push(role === 'student' && user.diagnostic_required ? '/diagnostic/start' : home)
   } catch (e: any) {
     error.value = e?.message || (isRegister.value ? '注册失败' : '登录失败')
   } finally { loading.value = false }
