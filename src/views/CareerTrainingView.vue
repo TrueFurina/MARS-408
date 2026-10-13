@@ -36,6 +36,11 @@ const battleScroll = ref<HTMLElement | null>(null)
 const busyExport = ref(false)
 const exportError = ref('')
 
+/* 教师任务：凭任务码加入后，场景/难度/轮数由任务决定，会话须带 task_id 才会进班级看板 */
+const joinCode = ref('')
+const joinedTask = ref<any>(null)
+const joining = ref(false)
+
 const currentScenario = computed(() => scenarios.value.find(s => s.id === scenarioId.value))
 const turnsDone = computed(() => turns.value.filter(t => t.role === 'student').length)
 const progressText = computed(() => `${turnsDone.value}/${session.value?.max_turns ?? maxTurns.value}`)
@@ -54,14 +59,39 @@ async function loadScenarios() {
 }
 loadScenarios()
 
+/* ===================== 凭任务码加入教师实训 ===================== */
+async function joinByCode() {
+  const code = joinCode.value.trim().toUpperCase()
+  if (!code || joining.value) return
+  joining.value = true; errorMsg.value = ''
+  try {
+    const res = await api.post<any>('/career/task/join', { join_code: code })
+    joinedTask.value = res
+    // 任务已锁定场景/难度/轮数，不再由学生自选
+    scenarioId.value = res.scenario_id
+    difficulty.value = res.difficulty || 'medium'
+    maxTurns.value = Number(res.max_turns) || 6
+  } catch (e) {
+    joinedTask.value = null
+    errorMsg.value = friendlyError(e, '任务码无效或加入失败')
+  } finally { joining.value = false }
+}
+
+function quitTask() {
+  joinedTask.value = null; joinCode.value = ''; scenarioId.value = ''
+}
+
 /* ===================== 启动实训 ===================== */
 async function startTraining() {
   if (!scenarioId.value) { errorMsg.value = '请先选择一个实训情景'; return }
   busy.value = true; errorMsg.value = ''
   try {
-    const res = await api.post<any>('/career/session/start', {
+    // task_id 必须透传：班级看板只统计带 task_id 的会话（db/career_store.class_dashboard）
+    const payload: any = {
       scenario_id: scenarioId.value, difficulty: difficulty.value, max_turns: maxTurns.value,
-    })
+    }
+    if (joinedTask.value?.task_id) payload.task_id = joinedTask.value.task_id
+    const res = await api.post<any>('/career/session/start', payload)
     session.value = res
     turns.value = [{ role: 'interviewer', text: res.next_question.question, mode: 'normal', dimension: res.next_question.probe_dimension }]
     step.value = 'briefing'
@@ -204,7 +234,44 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
         <div class="c-desc">多智能体扮演高压职场对手，多轮追问并全程留证，结束后按证据中心设计（ECD）生成六维能力报告</div>
       </div>
 
-      <div v-if="loadingScenarios" class="c-loading">正在加载实训情景…</div>
+      <!-- 教师任务码：有码即加入老师布置的实训（加入后场景/难度/轮数由任务锁定） -->
+      <div class="join-bar">
+        <template v-if="!joinedTask">
+          <span class="opt-label">有教师任务码？</span>
+          <input
+            v-model="joinCode"
+            class="join-input"
+            type="text"
+            maxlength="12"
+            placeholder="输入任务码，例如 A1B2C3"
+            :disabled="joining"
+            @keydown.enter="joinByCode"
+          >
+          <button class="ghost-btn" :disabled="joining || !joinCode.trim()" @click="joinByCode">
+            {{ joining ? '加入中…' : '加入实训' }}
+          </button>
+        </template>
+        <template v-else>
+          <span class="join-badge">教师任务已加入</span>
+          <span class="join-desc">任务码 <strong>{{ joinCode.toUpperCase() }}</strong> · 场景与轮数由老师设定</span>
+          <span v-if="!joinedTask.roster_bound" class="join-warn">
+            未在班级花名册匹配到你的姓名，教师看板会把你显示为「未认领」
+          </span>
+          <span v-else-if="joinedTask.bound_match === 'name'" class="join-ok">
+            已按姓名匹配花名册：{{ joinedTask.bound_name }}
+          </span>
+          <span v-else class="join-warn">
+            花名册未按姓名匹配到你，已按名单顺序绑定——看板显示的姓名可能与你本人不符
+          </span>
+          <button class="ghost-btn" @click="quitTask">退出任务</button>
+        </template>
+      </div>
+
+      <div v-if="joinedTask" class="task-locked">
+        <div class="tl-sub">{{ currentScenario?.type_label }} · {{ currentScenario?.subtype_label }}</div>
+        <div class="tl-title">{{ currentScenario?.title || '（任务指定场景）' }}</div>
+      </div>
+      <div v-else-if="loadingScenarios" class="c-loading">正在加载实训情景…</div>
       <div v-else class="scenario-grid">
         <div v-for="s in scenarios" :key="s.id" class="scenario-card"
              :class="{ active: scenarioId === s.id }" @click="scenarioId = s.id">
@@ -213,7 +280,7 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
         </div>
       </div>
 
-      <div class="opt-bar">
+      <div v-if="!joinedTask" class="opt-bar">
         <div class="opt-group">
           <span class="opt-label">难度</span>
           <button v-for="d in ['easy','medium','hard']" :key="d" class="chip"
@@ -228,7 +295,7 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
 
       <div v-if="errorMsg" class="c-error">{{ errorMsg }}</div>
       <button class="primary-btn" :disabled="busy || !scenarioId" @click="startTraining">
-        {{ busy ? '正在生成对抗脚本…' : '开始实训' }}
+        {{ busy ? '正在生成对抗脚本…' : (joinedTask ? '开始本次任务实训' : '开始实训') }}
       </button>
     </template>
 
@@ -379,6 +446,21 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
 .c-loading, .c-error { padding: 14px; border-radius: 10px; font-size: var(--text-sm); margin: var(--space-3) 0; }
 .c-loading { background: var(--bg-secondary); }
 .c-error { background: var(--accent-danger-10); color: var(--accent-danger); }
+
+/* 教师任务码 / 任务锁定态 */
+.join-bar { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
+  background: var(--bg-secondary); border-radius: 12px; padding: 10px 12px; margin-bottom: var(--space-3); }
+.join-input { flex: 1; min-width: 150px; max-width: 260px; padding: 8px 12px; border-radius: 9px;
+  border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary); font-size: var(--text-sm); }
+.join-badge { font-size: var(--text-2xs); font-weight: var(--weight-semibold); color: var(--accent-primary);
+  background: var(--accent-primary-10); padding: 3px 10px; border-radius: 10px; }
+.join-desc { font-size: var(--text-sm); color: var(--text-secondary); }
+.join-warn { flex-basis: 100%; font-size: var(--text-2xs); color: var(--color-warning); }
+.join-ok { font-size: var(--text-2xs); color: var(--accent-success); }
+.task-locked { border: 1.5px solid var(--accent-primary); border-radius: 14px; padding: 14px;
+  background: var(--bg-card); box-shadow: 0 0 0 3px var(--accent-primary-15); }
+.tl-sub { font-size: var(--text-2xs); color: var(--accent-primary); font-weight: var(--weight-semibold); margin-bottom: 6px; }
+.tl-title { font-size: var(--text-base); font-weight: var(--weight-semibold); line-height: 1.5; }
 
 /* 情景卡片 */
 .scenario-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-3); }

@@ -545,9 +545,21 @@ async def join_task(req: TaskJoinRequest, user: dict = Depends(get_current_user)
     task = career_store.get_task_by_code(req.join_code)
     if not task:
         raise HTTPException(status_code=404, detail="任务码无效")
-    bound = career_store.bind_student(task["class_id"], user["user_id"])
+    # 取用户姓名用于花名册匹配（get_current_user 只给 user_id/role，故此处查一次）
+    user_name = ""
+    try:
+        from db import user_store
+        u = user_store.get_user_by_id(user["user_id"]) or {}
+        user_name = (u.get("display_name") or u.get("username") or "").strip()
+    except Exception:
+        logger.warning("加入任务时读取用户姓名失败（不影响加入，退回按未绑定行绑定）", exc_info=True)
+    bound = career_store.bind_student(task["class_id"], user["user_id"], user_name)
     return {"task_id": task["id"], "scenario_id": task["scenario_id"],
             "scenario_type": task.get("scenario_type", ""),
             "difficulty": task.get("difficulty", "medium"),
             "max_turns": int(task.get("max_turns") or 8),
-            "class_id": task["class_id"], "roster_bound": bound}
+            "class_id": task["class_id"],
+            "roster_bound": bool(bound),
+            # 如实回传绑定结果：matched_by=name 表示按姓名命中；first_unbound 表示退回旧行为（可能错位）
+            "bound_name": (bound or {}).get("name", ""),
+            "bound_match": (bound or {}).get("matched_by", "")}

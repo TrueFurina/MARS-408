@@ -61,9 +61,11 @@
         `POST /career/task/join` 已就绪但**前端零入口**，且学生发起实训**不传 `task_id`**；
         而班级看板只统计带 `task_id` 的会话（`db/career_store.py:511`）⇒ **教师发的任务收不到数据、看板恒空**。
         📌 **补齐是纯前端工作量（后端零改动）**，这修正了"缺后端能力"的预判。
-  - [ ] 前后端最小路径：布置场景 → 学生对抗 → 自动评分 → 班级报告（1 场景 / 1 班）
-        —— 只剩"学生凭码加入 + task_id 透传"；另：`bind_student` docstring 与实现不符（称按姓名匹配，
-        实为取第一个未绑定行，`db/career_store.py:541`），多人同时加入会张冠李戴，需一并处理
+  - [x] **学生侧断链已补齐（2026-10-14）**：`CareerTrainingView.vue` 加"凭任务码加入"入口 →
+        `POST /career/task/join` → 任务锁定场景/难度/轮数 → `session/start` **透传 `task_id`**（否则看板永远空）。
+        连带修复 `bind_student` 名实不符：原 docstring 称"按姓名匹配"、实现取第一个未绑定行 ⇒ 现**优先按姓名精确匹配**、
+        匹配不到才退回旧行为，并把 `bound_match`（name / first_unbound）如实回传前端显示。
+        验证：`tests/test_career_teacher.py` 7 passed（含新增 2 例守护姓名匹配与退回路径）；前端 type-check 干净、eslint 0 error。
   - [ ] 报告设计：能回答教学问题（全班最弱维度、需干预学生），且结论可由对抗记录反查
         —— 现 `class_dashboard` 仅 per-student 汇总，**无班级级聚合**，需新增只读聚合视图
 - [ ] ③ **成效证据链**

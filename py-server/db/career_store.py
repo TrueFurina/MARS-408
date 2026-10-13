@@ -537,13 +537,42 @@ def class_dashboard(cid: str, teacher_id: str) -> Optional[dict]:
             "student_count": len(students), "students": students}
 
 
-def bind_student(class_id: str, user_id: str) -> bool:
-    """学生凭任务码加入后绑定 user_id（按姓名匹配未绑定行，取第一个未绑定者）"""
+def bind_student(class_id: str, user_id: str, name: str = "") -> Optional[dict]:
+    """学生凭任务码加入时，把其 user_id 绑定到花名册中的某一行。
+
+    匹配策略（**优先姓名，失败才退回旧行为**）：
+      1. 若调用方传入 name，先在该班**未绑定**行中按姓名精确匹配（trim + 大小写不敏感）；
+      2. 匹配不到（或未传 name），退回「第一个未绑定行」——保持历史行为，
+         避免因姓名写法不一致导致完全无法绑定（宁可绑错位也不能绑不上）。
+
+    Returns: 被绑定的花名册行 ``{"student_no", "name", "matched_by"}``；
+             无可绑定行（花名册已满/为空）时返回 ``None``。
+             ``matched_by`` ∈ ``{"name", "first_unbound"}``，供调用方如实回传给前端。
+
+    注意：本函数**不自己去查用户姓名**（career_store 只依赖 pg_client，不做用户域查询）——
+    姓名由调用方 ``api/career_training.join_task`` 传入。
+
+    历史说明：本函数原 docstring 写作「按姓名匹配未绑定行」，但实现是直接取第一个未绑定行，
+    名实不符。**2026-10-14 补上真实姓名匹配**（此前 30 人同时加入会张冠李戴）。
+    """
     ensure_tables()
     q = "?" if pg_client.is_fallback else "%s"
-    rows = _query(f"SELECT id FROM career_class_students WHERE class_id={q} AND user_id IS NULL LIMIT 1",
-                  (class_id,))
+    rows = _query(
+        f"SELECT id, student_no, name FROM career_class_students "
+        f"WHERE class_id={q} AND user_id IS NULL", (class_id,))
     if not rows:
-        return False
-    _exec(f"UPDATE career_class_students SET user_id={q} WHERE id={q}", (user_id, rows[0]["id"]))
-    return True
+        return None
+    target = (name or "").strip().lower()
+    picked = None
+    matched_by = "first_unbound"
+    if target:
+        picked = next(
+            (r for r in rows if (r.get("name") or "").strip().lower() == target), None)
+        if picked is not None:
+            matched_by = "name"
+    if picked is None:
+        picked = rows[0]
+    _exec(f"UPDATE career_class_students SET user_id={q} WHERE id={q}",
+          (user_id, picked["id"]))
+    return {"student_no": picked.get("student_no"), "name": picked.get("name"),
+            "matched_by": matched_by}
