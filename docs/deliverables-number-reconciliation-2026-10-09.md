@@ -1,5 +1,7 @@
 # 国创赛交付物（deliverables/）数字对齐核对清单
 
+> ⚠️ **当前真值（HEAD `01ba5e9`，2026-10-12 之后）**：本文 §一 / §三 为 10-09 时点快照，**以 §七 / §八 为准** —— API **245 ops / 228 paths**、认证覆盖率 **94.69%（232/245）**、测试 **1389 passed / 38 skipped / 1 xfailed**（1428 运行项 / 1436 collected）。改数请以 §八 与机器复算为唯一来源，禁止手抄旧值。
+
 > 生成时间：2026-10-09 ｜ 范围：`deliverables/` 下国创赛相关文档与 PPT 生成器
 > 方法：只读审计 + 机器复算（不手数）。本机实跑 `verify_metrics.py`（9/9 通过）、`openapi.json` 计数、CI run `37917008258` 实测摘要。
 > 配合文档：`docs/submission-number-reconciliation-2026-10-09.md`（submission/ 侧）

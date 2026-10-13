@@ -1,5 +1,7 @@
 # 提交包数字对齐核对清单（2026-10-09 预检）
 
+> ⚠️ **当前真值（HEAD `01ba5e9`，2026-10-12 之后）**：本文 §一 / §三 / §六 是 10-09 / 10-10 时点快照，**以 §七 / §八 为准** —— API **245 ops / 228 paths**、认证覆盖率 **94.69%（232/245）**、测试 **1389 passed / 38 skipped / 1 xfailed**（1428 运行项 / 1436 collected，addopts deselect 8）。改任何数字请以 §八 与机器复算（`scripts/verify_metrics.py` / `scripts/verify_auth_coverage.py`）为唯一来源，禁止手抄旧值。
+
 > **性质**：只读审计 + diff 清单。**10-28 冻结窗口前不碰 `submission/` 实体**，本文件只列"到时改什么"。
 > **真值来源**（按可信度）：
 > 1. `gh run view 37917008258 --log` —— `Backend Test (Linux)` 在 HEAD 前一个测试提交（`test(f015)`）的**实测**摘要。该提交与 HEAD 的测试文件完全相同（后续 fe 提交只动 `scripts/`/`.github/`/`docs/`），故数值对当前 HEAD 有效。
