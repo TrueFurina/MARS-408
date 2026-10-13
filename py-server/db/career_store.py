@@ -527,7 +527,12 @@ def class_dashboard(cid: str, teacher_id: str) -> Optional[dict]:
         dim_acc: dict = {}
         overall_best = None
         for r in rows:
-            dims = _loads(r.get("dimension_scores"), {}) or {}
+            # ⚠️ 库里 dimension_scores 存的是**完整 assessment**（形如
+            # {"dimensions": {dim: {"score": …}}, "summary": …}），六维在 "dimensions" 之下。
+            # 直接遍历顶层键会得到 "dimensions" 本身（其 .get("score") 为 None）⇒ 均分恒空。
+            # 兼容早期的扁平形态（顶层即 {dim: {"score": …}}）。
+            raw = _loads(r.get("dimension_scores"), {}) or {}
+            dims = raw.get("dimensions") if isinstance(raw, dict) and isinstance(raw.get("dimensions"), dict) else raw
             scores = {d: v.get("score") for d, v in dims.items()
                       if isinstance(v, dict) and v.get("score") is not None}
             for d, v in scores.items():
