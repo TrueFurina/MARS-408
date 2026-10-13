@@ -36,7 +36,7 @@ export const capabilityComparison: ComparisonItem[] = [
   {
     category: 'LLM 集成',
     items: [
-      { other: '单通道LLM', ours: '三通道容灾：讯飞星火X2 → DeepSeek → Qwen3.8-Max', tag: '合规' },
+      { other: '单通道LLM', ours: '四通道容灾：讯飞星火X2 → DeepSeek → Qwen3.8-Max → 智谱GLM', tag: '合规' },
       { other: '无合规考量', ours: '出题企业讯飞工具深度整合', tag: '合规' },
     ],
   },

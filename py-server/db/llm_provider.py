@@ -146,7 +146,7 @@ def _exc_retryable(e) -> "tuple":
 
 
 class LLMProvider:
-    """统一的 LLM 调用接口，封装三通道差异"""
+    """统一的 LLM 调用接口，封装四通道差异（xfyun / deepseek / qwen / glm）"""
 
     def __init__(self, provider_name: Optional[str] = None):
         """
@@ -162,7 +162,7 @@ class LLMProvider:
         # P1-5①: 语义级注入防护递归控制（语义分类器自身发起的 LLM 调用跳过语义检查）
         self._skip_semantic = False
 
-    # ── 公共 API（含运行级三通道回退） ──
+    # ── 公共 API（含运行级四通道回退） ──
 
     async def chat(
         self,

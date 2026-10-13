@@ -72,7 +72,7 @@
           "chat"
         ],
         "summary": "Chat Stream",
-        "description": "流式聊天接口，SSE 格式输出。agent_mode 时支持工具调用。\n\n统一使用 LLMProvider.stream_chat()（含三通道运行级回退），\n不再手动拼接 httpx 请求，避免讯飞鉴权/端点差异导致的空响应。",
+        "description": "流式聊天接口，SSE 格式输出。agent_mode 时支持工具调用。\n\n统一使用 LLMProvider.stream_chat()（含四通道运行级回退），\n不再手动拼接 httpx 请求，避免讯飞鉴权/端点差异导致的空响应。",
         "operationId": "chat_stream_api_chat_stream_post",
         "parameters": [
           {

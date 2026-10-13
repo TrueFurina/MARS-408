@@ -1068,7 +1068,7 @@ _TOOLS_DEF = [
 async def chat_stream(req: ChatSendRequest, request: Request, user: dict = Depends(get_current_user)):
     """流式聊天接口，SSE 格式输出。agent_mode 时支持工具调用。
 
-    统一使用 LLMProvider.stream_chat()（含三通道运行级回退），
+    统一使用 LLMProvider.stream_chat()（含四通道运行级回退），
     不再手动拼接 httpx 请求，避免讯飞鉴权/端点差异导致的空响应。
     """
     from prompts import AGENT_PROMPT, CHAT_PROMPT

@@ -37,7 +37,7 @@ export interface paths {
          * Chat Stream
          * @description 流式聊天接口，SSE 格式输出。agent_mode 时支持工具调用。
          *
-         *     统一使用 LLMProvider.stream_chat()（含三通道运行级回退），
+         *     统一使用 LLMProvider.stream_chat()（含四通道运行级回退），
          *     不再手动拼接 httpx 请求，避免讯飞鉴权/端点差异导致的空响应。
          */
         post: operations["chat_stream_api_chat_stream_post"];
@@ -236,6 +236,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/quiz/knowledge-mastery": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Knowledge Mastery
+         * @description 知识点级（章节级）掌握度：基于真实答题正确/错误计数，mastery = 正确/(正确+错误)。
+         *
+         *     未练习章节 mastery=None（不插值、不造假）。前端掌握度地图可据此做知识点下钻。
+         */
+        get: operations["get_knowledge_mastery_api_quiz_knowledge_mastery_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/quiz/history": {
         parameters: {
             query?: never;
@@ -267,7 +289,7 @@ export interface paths {
         put?: never;
         /**
          * Generate Quiz
-         * @description 根据科目/难度生成练习题
+         * @description 根据科目/难度生成练习题；mode='adaptive' 时优先针对用户薄弱科目出题。
          */
         post: operations["generate_quiz_api_quiz_generate_post"];
         delete?: never;
@@ -779,7 +801,7 @@ export interface paths {
         put?: never;
         /**
          * Sandbox Run
-         * @description 代码沙箱执行（安全加固版：AST静态分析 + import拦截 + timeout下限 + async subprocess）
+         * @description 代码沙箱执行（安全加固版：AST静态分析 + import拦截 + 内置清洗 + 隔离启动 + timeout下限 + async subprocess）
          */
         post: operations["sandbox_run_api_sandbox_run_post"];
         delete?: never;
@@ -799,7 +821,7 @@ export interface paths {
         put?: never;
         /**
          * Sandbox Run
-         * @description 代码沙箱执行（安全加固版：AST静态分析 + import拦截 + timeout下限 + async subprocess）
+         * @description 代码沙箱执行（安全加固版：AST静态分析 + import拦截 + 内置清洗 + 隔离启动 + timeout下限 + async subprocess）
          */
         post: operations["sandbox_run_api_sandbox_post"];
         delete?: never;
@@ -1050,7 +1072,12 @@ export interface paths {
         put?: never;
         /**
          * Langgraph Stream
-         * @description LangGraph 10-Agent 流式学习端点。
+         * @description LangGraph 流式学习端点（Triage 分级路由 + 完整流水线）。
+         *
+         *     ⚠️ 节点数在本仓库是**两种口径，勿混用、勿互相"修正"**：
+         *       - 10 = Triage 之外的**流水线本体**（Triage 在流水线之前，见 agents/triage.py）；
+         *       - 11 = **编译图**业务节点数（流水线 10 + triage 节点）。
+         *     对外述"图"时用 11；述"Triage 之后的流水线"时用 10。二者都对，改任一个都是错的。
          *
          *     使用 agent_graph.astream 替代手动顺序 await 各节点。
          *     条件边（route_after_retriever, route_after_critic, route_after_quality_gate）自动执行。
@@ -1532,9 +1559,11 @@ export interface paths {
          * Get Agent Performance
          * @description 多智能体系统性能统计
          *
-         *     注：以下 calls/latency/success_rate 为演示骨架值；生产环境应接入
-         *     shared.metrics 的实时聚合（record_llm_call / record_llm_fallback 等计数器），
-         *     避免向评委呈现未经实测支撑的数据（诚实化原则）。
+         *     诚信红线：本端点**默认**返回「真实指标未接入」的诚实占位（simulated=False），
+         *     绝不在生产环境默认呈现伪造成效。仅当显式启用演示骨架
+         *     （环境变量 ENABLE_SIMULATED_TEACHER_METRICS=1/true/yes）时，才返回带
+         *     simulated=True 标注的演示数据——且其中 neural_mixer 一律诚实标注
+         *     trained=False / neural_used=False（权重未训练、运行期恒返回 False，见 engines/gomarl_mixer.py）。
          */
         get: operations["get_agent_performance_api_teacher_agent_performance_get"];
         put?: never;
@@ -4290,6 +4319,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/career/session/{session_id}/export-report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Report
+         * @description 导出证据链一页纸（自包含 HTML，浏览器另存为 PDF 即得一页纸报告）。
+         */
+        get: operations["export_report_api_career_session__session_id__export_report_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/career/sessions": {
         parameters: {
             query?: never;
@@ -5525,6 +5574,11 @@ export interface components {
              * @default 3
              */
             count: number;
+            /**
+             * Mode
+             * @default normal
+             */
+            mode: string;
         };
         /** GenerationRequest */
         GenerationRequest: {
@@ -6123,6 +6177,8 @@ export interface components {
              * @default
              */
             suggestions: string;
+            /** Remediation */
+            remediation?: components["schemas"]["RemediationItem"][];
         };
         /** RAGSearchRequest */
         RAGSearchRequest: {
@@ -6229,6 +6285,16 @@ export interface components {
              * @description 质量评分（可选）
              */
             quality_score?: number | null;
+        };
+        /**
+         * RemediationItem
+         * @description 单个薄弱知识点的补救讲解
+         */
+        RemediationItem: {
+            /** Knowledge Point */
+            knowledge_point: string;
+            /** Explanation */
+            explanation?: string | null;
         };
         /** ResourceIdRequest */
         ResourceIdRequest: {
@@ -7164,6 +7230,39 @@ export interface operations {
         };
     };
     get_weak_points_api_quiz_weak_points_get: {
+        parameters: {
+            query?: {
+                subject?: string;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_knowledge_mastery_api_quiz_knowledge_mastery_get: {
         parameters: {
             query?: {
                 subject?: string;
@@ -14229,6 +14328,39 @@ export interface operations {
         };
     };
     report_api_career_session__session_id__report_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_report_api_career_session__session_id__export_report_get: {
         parameters: {
             query?: never;
             header?: {

@@ -82,7 +82,7 @@ py-server/
 │   ├── agent_debate.py    # 多智能体辩论协议
 │   └── teaching_rules.py  # 408 教学规则引擎
 ├── db/           # 数据层
-│   ├── llm_provider.py    # LLM 三通道路由器
+│   ├── llm_provider.py    # LLM 四通道路由器（xfyun→deepseek→qwen→glm）
 │   ├── milvus_client.py   # 向量数据库抽象层
 │   ├── embedder.py        # E5 文本嵌入
 │   ├── pg_client.py       # PostgreSQL 客户端

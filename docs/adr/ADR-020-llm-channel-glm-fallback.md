@@ -1,8 +1,9 @@
 # ADR-020 — LLM 通道扩展：接入智谱 GLM 作第 4 兜底通道
 
-- **状态**：Proposed（代码已实现并验证；**对外口径表述变更待确认**，见「待确认」）
-- **日期**：2026-10-13
-- **决策人**：待确认（用户 张敏杰 于 2026-10-13 指令「兜底通道：视需要在 config 增补智谱 GLM 通道」）
+- **状态**：Accepted（2026-10-14 用户确认对外口径选项 A 后转正；代码先于本确认落地并验证）
+- **日期**：2026-10-13（实现）／2026-10-14（口径确认转正）
+- **决策人**：用户（张敏杰）—— 2026-10-13 指令「兜底通道：视需要在 config 增补智谱 GLM 通道」；
+  2026-10-14 就对外口径答复「A」
 - **相关**：ADR-009（LLM 通道策略）§影响「扩展性：新增通道须走 ADR，禁止静默扩大通道枚举」——
   **本 ADR 即该原则要求的程序，未绕过**；`docs/adr/INDEX.md`
 
@@ -35,7 +36,8 @@
 3. **同步全部 5 处硬编码枚举**（漏一处即口径不一致）：
    `config.py` ×1、`db/llm_provider.py` ×3（chat 回退 / stream 回退 / `_resolve`）、`api/config_routes.py` ×1。
 4. **与 ADR-009 的关系**：不推翻其「禁止静默扩大通道枚举」原则（本 ADR 即该程序）；
-   但其「权威口径 = 两通道」的表述**需要重新表述** —— 见「待确认」。
+   但其 **§决策 1/3 的「权威口径 = 两通道」已被本 ADR 取代**（口径改为四通道枚举链），
+   ADR-009 据此标注为**部分 Superseded**（见「口径决议」）。
 
 ## 理由
 
@@ -52,18 +54,32 @@
   （`ZHIPU_API_KEY` → `glm.api_key` 映射；`GLM_API_KEY` 别名），并扩展 provider 取值枚举。
 - **验证（已实测）**：`LLM_PROVIDER=glm` 真实调用成功（1.06s，返回内容正确）；
   同时配置 `DEEPSEEK_API_KEY` + `ZHIPU_API_KEY` 时，auto 仍选中 `deepseek-chat` ⇒ **优先级未被破坏**。
-- **文档**：口径表述待统一（**待确认后 sweep**）——已知出现处：
-  `src/data/capabilityComparison.ts:39`（「三通道容灾：讯飞星火X2 → DeepSeek → Qwen3.8-Max」）、
-  `docs/overview.md:21`、`py-server/README.md:85`、`py-server/.env.example:5`、
-  `docs/芒得很职_PRD_Lite_2026-07.md:245`。
+- **文档**：活口径面已按选项 A 同步（清单见「口径决议」）；历史快照有意不改并已在同节登记。
 
-## 待确认（唯一一项）
+## 口径决议（2026-10-14 已确认：选项 A）
 
-**对外口径如何表述？** 在确认前**不修改任何对外文案**，本 ADR 保持 Proposed。
+**权威对外口径 = 「四通道容灾：讯飞星火X2 → DeepSeek → Qwen3.8-Max → 智谱GLM」。**
 
-- **选项 A**：改为「四通道容灾：讯飞星火X2 → DeepSeek → Qwen → 智谱 GLM」（与代码枚举完全一致）
-- **选项 B**：不报具体路数，改为「多通道按优先级自动回退（含智谱 GLM 兜底）」
-- **选项 C**：保持现有「三通道」表述不动（**会与实际枚举不符**，不推荐；ADR-009 已把这类漂移记为文档债）
+用户于 2026-10-14 就本 ADR 提出的三个选项答复 **A**。同步范围（**活口径面**）：
+
+| 位置 | 改动 |
+|---|---|
+| `src/data/capabilityComparison.ts` | 「三通道容灾：…」→「四通道容灾：讯飞星火X2 → DeepSeek → Qwen3.8-Max → 智谱GLM」 |
+| `py-server/api/chat.py` docstring | 三通道运行级回退 → 四通道 |
+| `py-server/db/llm_provider.py`（2 处注释） | 封装三/四通道差异、运行级三/四通道回退 |
+| `py-server/README.md` | LLM 三/四通道路由器（并标出优先级链） |
+| `py-server/.env.example` | 段标题改四通道，并补 `ZHIPU_*` 三行模板 |
+| `py-server/tests/test_career_nodes_fallback.py` 注释 | 桩说明改四通道 |
+| `py-server/openapi.json` + `src/types/api.generated.ts` | 随 `chat.py` 描述变更**重生成**（契约门禁已复验一致） |
+
+**有意不改（历史快照，按「归档不回改」原则）**——已在 ADR 中登记，勿当作待办重提：
+`docs/overview.md`（2026-08-30）、`docs/reports/PRODUCTION_READINESS_2026-07-12.md`（2026-07-12）、
+`docs/芒得很职_PRD_Lite_2026-07.md`（2026-07）、`py-server/*.egg-info/PKG-INFO`（构建产物）。
+
+**副产品发现（与本次改动无关，但一并修正）**：`src/types/api.generated.ts` **长期未随 `openapi.json` 重生成**
+（缺 `/api/quiz/knowledge-mastery`、仍写着过时的「10-Agent」与旧沙箱描述等）。
+该文件**没有任何门禁守护**（`verify_openapi_snapshot.py` 只守 `openapi.json`）⇒ 静默腐烂。
+本次借重生成一并修正；是否为其加门禁另议。
 
 ## 备选方案（被否决）
 
