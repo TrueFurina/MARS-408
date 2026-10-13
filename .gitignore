@@ -289,3 +289,6 @@ py-server/experiments/artifacts/
 documents/*
 !documents/.gitkeep
 !documents/README.md
+
+# ── 2026-10-14 云服务联调临时目录（探针结果/截图/短期凭证，不入库）──
+_e2e_tmp_mdhz/
