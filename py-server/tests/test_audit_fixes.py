@@ -10,6 +10,7 @@ import re
 import json
 import subprocess
 import sys
+import tempfile
 import pytest
 
 # segv_env：本模块调用真实 torch/numpy 嵌入等，Windows 原生库下触发 SIGSEGV；
@@ -473,12 +474,7 @@ class TestP0_3_SandboxSecurity:
         malicious_code = 'import os\nos.system("echo hacked")'
         # Execute through the SANDBOX_PREFIX logic
         full_code = _extract_sandbox_prefix() + "\n" + malicious_code
-        result = subprocess.run(
-            [PYTHON, "-c", full_code],
-            capture_output=True,
-            text=True,
-            timeout=15,
-        )
+        result = _run_sandbox_prefix_live(full_code)
         # os.system should raise PermissionError due to _Blocker
         assert "PermissionError" in result.stderr or "blocked" in result.stderr.lower(), (
             f"Code with os.system should be blocked. Got stdout={result.stdout}, stderr={result.stderr}"
@@ -508,6 +504,40 @@ def _extract_sandbox_prefix() -> str:
     if match:
         return match.group(1)
     raise ValueError("Could not extract SANDBOX_PREFIX from learning.py")
+
+
+def _run_sandbox_prefix_live(full_code: str) -> "subprocess.CompletedProcess[str]":
+    """Execute ``full_code`` the same way production does (api/sandbox.py::sandbox_run).
+
+    Production writes the safe code into a temporary ``main.py`` file and runs it as a
+    *real file* via ``[sys.executable, "-I", "-S", "-X", "utf8", tmpfile]``. That makes
+    ``__file__`` defined inside the child, so ``SANDBOX_PREFIX``'s ``_sandbox_init``
+    (which reads ``__file__`` at line 117) runs to completion and installs the blockers
+    (sys.modules poisoning + builtin scrubbing) *before* the malicious code runs.
+
+    The old approach used ``python -c <code>`` where ``__file__`` is undefined →
+    ``NameError`` aborted ``_sandbox_init`` before the blockers were installed → the
+    dangerous call was NOT intercepted → the test saw ``NameError`` instead of the
+    expected ``PermissionError``/"blocked". This helper reproduces the production path
+    so the assertions remain valid. It does NOT modify any production code.
+    """
+    with tempfile.NamedTemporaryFile(
+        "w", suffix=".py", delete=False, encoding="utf-8"
+    ) as f:
+        f.write(full_code)
+        path = f.name
+    try:
+        return subprocess.run(
+            [PYTHON, "-I", "-S", "-X", "utf8", path],
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+    finally:
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
 
 
 # ============================================================
@@ -788,12 +818,7 @@ class TestRound2_SandboxEdgeCases:
         """Live test: import subprocess should be blocked."""
         malicious_code = 'import subprocess\nsubprocess.run(["ls"])'
         full_code = _extract_sandbox_prefix() + "\n" + malicious_code
-        result = subprocess.run(
-            [PYTHON, "-c", full_code],
-            capture_output=True,
-            text=True,
-            timeout=15,
-        )
+        result = _run_sandbox_prefix_live(full_code)
         assert "PermissionError" in result.stderr or "blocked" in result.stderr.lower(), (
             f"Code with subprocess.run should be blocked. Got stdout={result.stdout}, stderr={result.stderr}"
         )
@@ -805,12 +830,7 @@ class TestRound2_SandboxEdgeCases:
         """Live test: import shutil should be blocked."""
         malicious_code = 'import shutil\nshutil.rmtree("/tmp")'
         full_code = _extract_sandbox_prefix() + "\n" + malicious_code
-        result = subprocess.run(
-            [PYTHON, "-c", full_code],
-            capture_output=True,
-            text=True,
-            timeout=15,
-        )
+        result = _run_sandbox_prefix_live(full_code)
         assert "PermissionError" in result.stderr or "blocked" in result.stderr.lower(), (
             f"Code with shutil.rmtree should be blocked. Got stdout={result.stdout}, stderr={result.stderr}"
         )
