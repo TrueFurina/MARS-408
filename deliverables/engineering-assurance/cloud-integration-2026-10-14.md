@@ -93,6 +93,25 @@ Cookie 绑定（响应无 Set-Cookie、裸 fetch 复现）、接入代码字段�
 | 浏览器走查 | `scripts/e2e/cloud_lab_walkthrough.cjs`（puppeteer-core + 系统 Chrome，人工跑不进 CI） |
 | 应用清单 | `.wbapp_SCV2PQvaYZGxutFzKn3mwC.genie`（publicConfig 四项均为可公开凭证） |
 
+## 附：可用性与 Origin 白名单实测（2026-10-14 补）
+
+**开通云服务 ≠ 发布上线**：activate 只开通后端环境并预留应用域名，不把页面放到公网。
+
+| Origin | 云端是否放行 | 含义 |
+|---|---|---|
+| `http://127.0.0.1:5300`（本地 dev） | ✅ 200 | 开发联调可用 |
+| `https://mangdehenzhi.app.workbuddy.host`（本应用发布域） | ✅ 200 | 发布后云功能正常 |
+| `https://truefurina.github.io`（现有 GitHub Pages） | ❌ 403 `the request origin is not allowed for this client` | 页面能打开，但云功能全挂 |
+
+其它实测：
+- GitHub Pages `https://truefurina.github.io/MARS-408/` 返回 200 —— **任何人、任何时间都能打开**（托管在 GitHub，与本机/客户端无关）。
+- 云数据面裸访问（不带 key）返回 401 —— 它是 **API 端点不是给人看的页面**。
+- 关掉本机 WorkBuddy / dev server **不影响云端资源**（表、RLS、模型、已存数据都在，云端托管）。
+
+**结论**：要真正让别人「用得上」云功能（登录/存档/AI 助教），
+必须用 `workbuddy_sites_deploy` 发布并**复用同一 applicationId `wbapp_SCV2PQvaYZGxutFzKn3mwC`**
+——复用才保留已预留的域名与 Origin 白名单；新建应用会换域名，Origin 不匹配则云登录必挂。
+
 ## 诚实边界
 
 - 本报告是**接入正确性**证据，**不是成效证据**；项目仍为零真实用户，禁引用任何条数当成效。
