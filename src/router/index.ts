@@ -164,6 +164,12 @@ const router = createRouter({
       component: () => import('@/views/DailyPlanView.vue'),
     },
     {
+      // 云服务接入：源码实验室进度 / 源码文件的云端存档 + 免密钥 AI 助教
+      path: '/cloud-lab',
+      name: 'cloud-lab',
+      component: () => import('@/views/CloudLabView.vue'),
+    },
+    {
       path: '/career/training',
       name: 'career-training',
       component: () => import('@/views/CareerTrainingView.vue'),

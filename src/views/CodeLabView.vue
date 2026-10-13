@@ -237,6 +237,8 @@ onBeforeUnmount(() => {
           @click="workspace = 'source'"
         >Linux 0.11 源码</button>
       </div>
+      <!-- 云服务接入：进度与源码的云端存档入口（详见 /cloud-lab） -->
+      <RouterLink class="cloud-link" to="/cloud-lab">云端存档 →</RouterLink>
     </div>
 
     <div v-if="workspace === 'source'">

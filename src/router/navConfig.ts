@@ -290,6 +290,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { key: 'memory', name: '学情记忆', icon: icons.brain, route: '/memory' },
       { key: 'sandbox', name: '代码沙箱', icon: icons.play, route: '/sandbox', roles: ['teacher', 'admin'] },
       { key: 'code-lab', name: 'C/C++ 实验室', icon: icons.fileText, route: '/code-lab' },
+      { key: 'cloud-lab', name: '云端实验存档', icon: icons.package, route: '/cloud-lab' },
       { key: 'design-system', name: '设计系统', icon: icons.edit, route: '/design-system' },
       { key: 'design-upgrade', name: '设计升级预览', icon: icons.sparkle, route: '/design-upgrade' },
     ],
