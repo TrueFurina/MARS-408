@@ -7,7 +7,7 @@
 # 的覆盖顺序反了），上层 rgba 全部跑得动，直到 KB 检索按 group 过滤时才出错。
 #
 # 校验方式：差分。先在拆分前冻结一份符号快照
-# （scripts/seed_data_baseline_snapshot.json：33 个公共符号的 repr sha256），
+# （scripts/seed_data_baseline_snapshot.json：35 个公共符号的 repr sha256，含 AI 学科 2 个），
 # 拆分后逐个符号比对 repr 哈希 + 类型 + 长度，任一不符即失败。
 #
 # 运行：cd py-server && python scripts/verify_seed_data_split.py
@@ -78,10 +78,10 @@ def main():
     check("KG 边数 = 639", len(seed.KNOWLEDGE_GRAPH["edges"]) == 639,
           str(len(seed.KNOWLEDGE_GRAPH["edges"])))
     check("KG group 覆盖 1-26 共 26 组", groups == list(range(1, 27)), f"groups={groups[:5]}...{groups[-3:]}")
-    check("语料 chunks = 1892", len(seed.SEED_KNOWLEDGE_CHUNKS) == 1892,
+    check("语料 chunks = 2015", len(seed.SEED_KNOWLEDGE_CHUNKS) == 2015,
           str(len(seed.SEED_KNOWLEDGE_CHUNKS)))
     check("试题 questions = 230", len(seed.SEED_QUESTIONS) == 230, str(len(seed.SEED_QUESTIONS)))
-    check("SEED_SUBJECTS 含 27 个方向", len(seed.SEED_SUBJECTS) == 27, str(len(seed.SEED_SUBJECTS)))
+    check("SEED_SUBJECTS 含 29 个方向", len(seed.SEED_SUBJECTS) == 29, str(len(seed.SEED_SUBJECTS)))
 
     # ── 4) 私有/未登记符号不外泄 ──
     leaked = False

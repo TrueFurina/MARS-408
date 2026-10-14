@@ -28,6 +28,7 @@ from seed.net import *
 from seed.ds import *
 from seed.co import *
 from seed.os import *
+from seed.ai import *
 
 # ── 合并 / 派生与组装（原 seed_data.py 1098-1527 行二进制原样搬运，勿改）──
 # ============================================================
@@ -36,6 +37,7 @@ from seed.os import *
 SEED_KNOWLEDGE_CHUNKS.extend(DS_SEED_KNOWLEDGE_CHUNKS)
 SEED_KNOWLEDGE_CHUNKS.extend(CO_SEED_KNOWLEDGE_CHUNKS)
 SEED_KNOWLEDGE_CHUNKS.extend(OS_SEED_KNOWLEDGE_CHUNKS)
+SEED_KNOWLEDGE_CHUNKS.extend(AI_SEED_KNOWLEDGE_CHUNKS)  # AI/深度学习与大模型语料（Datawhale 注入）
 SEED_QUESTIONS.extend(DS_SEED_QUESTIONS)
 SEED_QUESTIONS.extend(CO_SEED_QUESTIONS)
 SEED_QUESTIONS.extend(OS_SEED_QUESTIONS)
@@ -205,6 +207,7 @@ _ALL_SUBJECTS.update(SEED_SUBJECTS)           # 计网
 _ALL_SUBJECTS.update(DS_SEED_SUBJECTS)         # 数据结构
 _ALL_SUBJECTS.update(CO_SEED_SUBJECTS)         # 计组
 _ALL_SUBJECTS.update(OS_SEED_SUBJECTS)         # 操作系统
+_ALL_SUBJECTS.update(AI_SEED_SUBJECTS)         # AI/深度学习与大模型
 SEED_SUBJECTS = _ALL_SUBJECTS
 
 # 合并知识图谱（需要调整 DS/CO/OS 的 group 编号，避免与计网 groups 13-19 冲突）
@@ -462,7 +465,7 @@ LEARNING_PATH_DAG = {
 }
 
 # ── 对外表面 ──
-# 显式列出（而非运行时推导）：让 `from seed import *` 精确导出 **33 个**公共符号，
+# 显式列出（而非运行时推导）：让 `from seed import *` 精确导出 **35 个**公共符号（原 33 + AI 学科 2），
 # 与拆分前 seed_data 完全一致（由 scripts/verify_seed_data_split.py 差分校验）。
 __all__ = [
     "CO_EXPANDED_CHUNKS",
@@ -498,4 +501,6 @@ __all__ = [
     "SEED_KNOWLEDGE_CHUNKS",
     "SEED_QUESTIONS",
     "SEED_SUBJECTS",
+    "AI_SEED_KNOWLEDGE_CHUNKS",
+    "AI_SEED_SUBJECTS",
 ]
