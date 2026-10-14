@@ -1,0 +1,146 @@
+{
+ "date": "2026-10-15",
+ "python": "3.12.10",
+ "glm_configured": true,
+ "scenarios": [
+  {
+   "scenario": "s0",
+   "injected_invalid": [],
+   "success": true,
+   "winner": "deepseek",
+   "fallback_delta": 1,
+   "walk": [
+    [
+     "xfyun",
+     "failed"
+    ],
+    [
+     "deepseek",
+     "ok"
+    ]
+   ],
+   "latency_ms": 1672,
+   "content_preview": "你好",
+   "error": null,
+   "error_type": null,
+   "passed": true,
+   "reason": "auto 链路基线调用成功"
+  },
+  {
+   "scenario": "s1",
+   "injected_invalid": [
+    "xfyun"
+   ],
+   "success": true,
+   "winner": "deepseek",
+   "fallback_delta": 1,
+   "walk": [
+    [
+     "xfyun",
+     "failed"
+    ],
+    [
+     "deepseek",
+     "ok"
+    ]
+   ],
+   "latency_ms": 719,
+   "content_preview": "你好",
+   "error": null,
+   "error_type": null,
+   "passed": true,
+   "reason": "xfyun 故障后自动回退 deepseek 并成功（回退 1 次）"
+  },
+  {
+   "scenario": "s2",
+   "injected_invalid": [
+    "xfyun",
+    "deepseek"
+   ],
+   "success": true,
+   "winner": "glm",
+   "fallback_delta": 3,
+   "walk": [
+    [
+     "xfyun",
+     "failed"
+    ],
+    [
+     "deepseek",
+     "failed"
+    ],
+    [
+     "qwen",
+     "failed"
+    ],
+    [
+     "glm",
+     "ok"
+    ]
+   ],
+   "latency_ms": 1062,
+   "content_preview": "你好",
+   "error": null,
+   "error_type": null,
+   "passed": true,
+   "reason": "deepseek 故障后链路继续向后走，落到 glm 并成功（回退 3 次）"
+  },
+  {
+   "scenario": "s3",
+   "injected_invalid": [
+    "xfyun",
+    "deepseek",
+    "qwen"
+   ],
+   "success": true,
+   "winner": "glm",
+   "fallback_delta": 3,
+   "walk": [
+    [
+     "xfyun",
+     "failed"
+    ],
+    [
+     "deepseek",
+     "failed"
+    ],
+    [
+     "qwen",
+     "failed"
+    ],
+    [
+     "glm",
+     "ok"
+    ]
+   ],
+   "latency_ms": 1281,
+   "content_preview": "你好",
+   "error": null,
+   "error_type": null,
+   "passed": true,
+   "reason": "前三通道全故障 → 自动回落 GLM 并成功（回退 3 次）"
+  }
+ ],
+ "restore_check": {
+  "scenario": "restore_check",
+  "injected_invalid": [],
+  "success": true,
+  "winner": "deepseek",
+  "fallback_delta": 1,
+  "walk": [
+   [
+    "xfyun",
+    "failed"
+   ],
+   [
+    "deepseek",
+    "ok"
+   ]
+  ],
+  "latency_ms": 766,
+  "content_preview": "你好",
+  "error": null,
+  "error_type": null
+ },
+ "all_passed": true
+}
