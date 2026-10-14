@@ -432,3 +432,37 @@ class TestSingleWorkerGuardOrdering:
             async with L.lifespan(app=None):
                 pass
         assert touched == [], "单写者违规时不得发生任何初始化写入"
+
+
+class TestResolveBind:
+    """main.resolve_bind() —— 发布通道硬契约：监听 PORT 且绑定 0.0.0.0。
+
+    发布通道只注入 ``PORT``（无 HOST 注入项），服务必须监听它并绑定 ``0.0.0.0``
+    才能被沙箱外部访问；而本机开发的默认行为必须**完全不变**（仍是
+    ``127.0.0.1:8002``）——不得因支持 PORT 而把本机服务无意暴露到局域网。
+    此前该地址硬编码在 ``main.__main__`` 中，是全仓唯一阻塞公网发布的点。
+    """
+
+    def test_defaults_without_port_keep_localhost_8002(self, monkeypatch):
+        """无 PORT / 无 HOST → 本机开发默认 127.0.0.1:8002（行为不变）。"""
+        monkeypatch.delenv("PORT", raising=False)
+        monkeypatch.delenv("HOST", raising=False)
+        from main import resolve_bind
+
+        assert resolve_bind() == ("127.0.0.1", 8002)
+
+    def test_port_env_binds_all_interfaces(self, monkeypatch):
+        """仅设 PORT → 绑定 0.0.0.0 并采用该端口（沙箱对外可达）。"""
+        monkeypatch.setenv("PORT", "5399")
+        monkeypatch.delenv("HOST", raising=False)
+        from main import resolve_bind
+
+        assert resolve_bind() == ("0.0.0.0", 5399)
+
+    def test_explicit_host_overrides_default(self, monkeypatch):
+        """显式 HOST 优先级最高，可覆盖 PORT 推导出的 0.0.0.0。"""
+        monkeypatch.setenv("PORT", "5399")
+        monkeypatch.setenv("HOST", "127.0.0.1")
+        from main import resolve_bind
+
+        assert resolve_bind() == ("127.0.0.1", 5399)
