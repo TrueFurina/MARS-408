@@ -107,9 +107,17 @@
 
 ## 系统理解任务
 
-- [ ] 理解 Triage 分级路由 + 三元评审校验壳的判定链路
-- [ ] 掌握 MAPPO 教学策略层与 GOMARL 共识引擎的关系
-- [ ] 搞清 main → career-literacy 单向同步机制，避免双向漂移
+- [x] 理解 Triage 分级路由 + 三元评审校验壳的判定链路
+- [x] 掌握 MAPPO 教学策略层与 GOMARL 共识引擎的关系
+- [x] 搞清 main → career-literacy 单向同步机制，避免双向漂移
+      —— 三项均完成（2026-10-14，只读分析）→ `deliverables/engineering-assurance/系统理解-Triage-MAPPO-GOMARL-同步机制-2026-10-14.md`。
+      要点：Triage 纯规则 + API 层短路（零评审快路径）；三信号 = honest/critic/consensus，
+      均匀权重=行为零变化，MAPPO 调权重全走灰度 flag；MAPPO×GOMARL 有三个真实接入点
+      （mixer 动态权重已激活 / gate 评审权重灰度 / debate 内容预算灰度）；同步 = 单向
+      `git merge origin/main`（历史 6 个 merge 提交可查）+ `career_*` 前缀隔离（ADR-015）。
+      🔴 顺带抓到文档漂移 3 处（CLAUDE.md:74 fail-open 陈旧——代码早已 fail-closed；
+      :179 main 冻结位次陈旧；:101 种子计数陈旧）与风险 4 项（policy_action 无下游消费/
+      gomarl_bridge 死代码/_build_networks 私有 API 耦合/models gitignore 致 CI 必降级）。
 
 ## 已完成
 
