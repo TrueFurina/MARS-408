@@ -34,7 +34,13 @@
       并 fail-closed（扫描面 0 个 .vue / 未知类 → exit 2），`verify-structural.yml` 接入为 PR 阻断项。
       A 类 2→0；门禁六路自证（真绿/变异红/两条 fail-closed/不误伤/隔离可判）；
       9 例回归 spec 双向变异验证；全量前端 23 文件 / 152 测试通过。
-- [ ] P1-2 紫族 17 处品牌紫归一 + `token_scan --update-baseline` 降到新低
+- [x] P1-2 紫族清零 —— 2026-10-14 闭环（`ae99337`）：**计划前提被取证推翻**，17 处没有一处
+      是该换成 `var()` 的样式硬编码（canvas 兜底 8 / 色板数据 2 / 分类调色板 9），归一会造成
+      canvas 取色失效 + 色板自引用 + 徽章画像配色压平。改为零产品代码的**豁免机制**：
+      `scripts/token_scan_exemptions.json`（10 条规则覆盖 17 处，reason 枚举 + 格式错即响）
+      + **僵尸豁免检测**（规则不再命中即 exit 1，且拒绝刷新基线）；清单不写 line（findings
+      行号是 strip_comments 后的偏移值）。基线降到新低：total 201→128、brand-violet 31→**0**、
+      known 57→51、untracked 113→77；双向变异验证（僵尸检测红 / 绕过豁免红）。
 - [x] ~~冻结区 PPT 重生成~~ —— **已取消**（PPT 属交付物，用户指令「不要任何交付」）
 
 ## 中期（打磨次批 · B 组）
