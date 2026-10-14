@@ -177,9 +177,15 @@ def test_llm_provider_token_bucket_real_key_matches_chat():
 # ══════════════════════════════════════════════════════════
 
 class TestRedisLocalRateLimitFallback:
-    """Redis 不可用 → 进程内滑动窗口兜底（既不放行、也不误拒）。"""
+    """Redis 不可用时的限流语义：生产默认 fail-closed；显式开关下才降级为进程内窗口。
 
-    def _disabled_client(self, monkeypatch, strict=None):
+    三条路径（见 ``db/redis_client.check_rate_limit`` docstring）：
+      - 非生产 → 进程内滑动窗口兜底（本地联调不受影响）；
+      - 生产 + 未开 RATE_LIMIT_ALLOW_LOCAL_FALLBACK → **fail-closed 拒绝**（G2 不变量）；
+      - 生产 + 显式开开关 → 进程内窗口兜底（无 Redis 部署的可用性开关）。
+    """
+
+    def _disabled_client(self, monkeypatch, strict=None, allow_fallback=None):
         """构造一个「Redis 未启用」的隔离实例；strict 给定则覆盖模块级 REDIS_STRICT。"""
         # 注意：db/__init__.py 的 `from .redis_client import redis_client` 会把包属性
         # db.redis_client 覆盖成「单例实例」，故 `import db.redis_client as rc` 拿到的是
@@ -190,6 +196,8 @@ class TestRedisLocalRateLimitFallback:
 
         if strict is not None:
             monkeypatch.setattr(rc, "REDIS_STRICT", strict)
+        if allow_fallback is not None:
+            monkeypatch.setattr(rc, "ALLOW_LOCAL_FALLBACK", allow_fallback)
         c = rc.RedisClient()
         c._enabled = False
         return c
@@ -201,12 +209,26 @@ class TestRedisLocalRateLimitFallback:
             assert c.check_rate_limit("k", 3, 60) is True, f"第 {i + 1} 次应放行"
         assert c.check_rate_limit("k", 3, 60) is False
 
-    def test_strict_disabled_redis_falls_back_not_fail_closed(self, monkeypatch):
-        """生产(STRICT) 下 Redis 不可用也必须走兜底，首次调用不得直接拒绝。
+    def test_strict_disabled_redis_fails_closed_without_optin(self, monkeypatch):
+        """🔒 安全不变量（CI 门禁 G2）：生产(STRICT) 且未显式开启降级开关时，
+        Redis 不可用必须 **fail-closed 立即拒绝**——攻击者打掉 Redis 不能让限流失效。
 
-        修复前这里首次即 return False → /api/auth/login 一律 422（本次回归的根因）。
+        这条断言就是 G2（``scripts/security_gate_assert.py``）在 AST 层面守护的语义，
+        在行为层面再钉一次：改回「无条件降级」会让本用例红。
         """
-        c = self._disabled_client(monkeypatch, strict=True)
+        c = self._disabled_client(monkeypatch, strict=True, allow_fallback=False)
+        for i in range(5):
+            assert c.check_rate_limit("login:ip:1.2.3.4", 5, 900) is False, (
+                f"第 {i + 1} 次应为 fail-closed 拒绝，而非放行"
+            )
+        assert c._local_buckets == {}, "fail-closed 路径不得写入进程内桶"
+
+    def test_strict_with_optin_falls_back_to_local(self, monkeypatch):
+        """显式开启 RATE_LIMIT_ALLOW_LOCAL_FALLBACK 后，生产下 Redis 不可用才走兜底。
+
+        这是无 Redis 部署（本试点沙箱）的可用性开关；仍然强制限额，只是计数在单进程内。
+        """
+        c = self._disabled_client(monkeypatch, strict=True, allow_fallback=True)
         for _ in range(5):
             assert c.check_rate_limit("login:ip:1.2.3.4", 5, 900) is True
         assert c.check_rate_limit("login:ip:1.2.3.4", 5, 900) is False
@@ -260,9 +282,9 @@ class TestRedisLocalRateLimitFallback:
         assert c.check_rate_limit("rk", 2, 60) is False
         assert c._local_buckets == {}, "Redis 启用路径不得使用进程内兜底"
 
-    def test_query_exception_falls_back_to_local(self, monkeypatch):
-        """Redis 查询抛异常时降级为进程内限流，而非直接拒绝。"""
-        c = self._disabled_client(monkeypatch, strict=True)
+    def test_query_exception_fails_closed_without_optin(self, monkeypatch):
+        """🔒 生产 + 未开降级开关时，Redis 查询抛异常也必须 fail-closed 拒绝。"""
+        c = self._disabled_client(monkeypatch, strict=True, allow_fallback=False)
 
         class _BoomRedis:
             def get(self, k):
@@ -270,6 +292,193 @@ class TestRedisLocalRateLimitFallback:
 
         c._client = _BoomRedis()
         c._enabled = True  # 声称已启用，但查询会炸
+        for i in range(3):
+            assert c.check_rate_limit("ex", 3, 60) is False, f"第 {i + 1} 次应 fail-closed"
+        assert c._local_buckets == {}, "fail-closed 路径不得写入进程内桶"
+
+    def test_query_exception_falls_back_with_optin(self, monkeypatch):
+        """显式开启开关后，Redis 查询异常才降级为进程内限流。"""
+        c = self._disabled_client(monkeypatch, strict=True, allow_fallback=True)
+
+        class _BoomRedis:
+            def get(self, k):
+                raise RuntimeError("redis down")
+
+        c._client = _BoomRedis()
+        c._enabled = True
         for _ in range(3):
             assert c.check_rate_limit("ex", 3, 60) is True
         assert c.check_rate_limit("ex", 3, 60) is False
+
+    def test_query_exception_non_strict_falls_back(self, monkeypatch):
+        """非生产环境不设开关也降级（本地联调不受影响），不 fail-closed。"""
+        c = self._disabled_client(monkeypatch, strict=False, allow_fallback=False)
+
+        class _BoomRedis:
+            def get(self, k):
+                raise RuntimeError("redis down")
+
+        c._client = _BoomRedis()
+        c._enabled = True
+        for _ in range(3):
+            assert c.check_rate_limit("ex2", 3, 60) is True
+        assert c.check_rate_limit("ex2", 3, 60) is False
+
+
+# ══════════════════════════════════════════════════════════
+# db.redis_client.check_rate_limit —— 进程内兜底的「真实并发」验证
+#
+# 与 TestRedisLocalRateLimitFallback 互补：Fallback 类用单线程验证语义正确性；
+# 本类用**真线程并发**验证竞态（正确性 / 内存上界 / 无死锁）与 FastAPI 同步依赖的
+# threadpool 语义（进程内兜底确实被多线程并发调用，而非单线程串行）。
+# 依据：shared/ratelimit.require_llm_quota 是同步 `def` 依赖，被 14 个路由模块引用；
+#       FastAPI 对同步依赖走 anyio.to_thread.run_sync ⇒ 并发请求落在不同线程。
+# ══════════════════════════════════════════════════════════
+
+class TestRedisLocalRateLimitConcurrency:
+    """Redis 不可用时的进程内兜底：并发正确性 + 内存上界 + 无死锁 + 多线程实证。"""
+
+    def _disabled_client(self, monkeypatch, strict=False):
+        import importlib
+
+        rc = importlib.import_module("db.redis_client")
+        monkeypatch.setattr(rc, "REDIS_STRICT", strict)
+        c = rc.RedisClient()
+        c._enabled = False
+        return c
+
+    @pytest.mark.timeout(30)
+    def test_concurrent_same_key_exact_admission(self, monkeypatch):
+        """T=32 线程 × K=20 次调用**同一 key**，max_requests=50 / window=60，时钟恒定。
+
+        (a) 放行次数必须**恰好 50**（<50 = 丢更新误拒；>50 = 竞态超额放行）；
+        (b) 结束后该 key 桶长度必须**恰好 50**。
+        30s 超时兜底死锁（锁内做重活会在此暴露）。时钟恒定 ⇒ 不可能发生滑出，
+        故「恰好 50」是确定性结论，任何偏差都指向竞态。
+        """
+        from concurrent.futures import ThreadPoolExecutor
+
+        c = self._disabled_client(monkeypatch)
+        c._time_source = lambda: 1000.0  # 恒定 → 无过期
+        key, max_req, threads, per_thread = "conc:same", 50, 32, 20
+
+        with ThreadPoolExecutor(max_workers=threads) as ex:
+            futures = [
+                ex.submit(lambda: [c.check_rate_limit(key, max_req, 60) for _ in range(per_thread)])
+                for _ in range(threads)
+            ]
+            results = [r for f in futures for r in f.result()]
+
+        allowed = sum(1 for r in results if r)
+        assert len(results) == threads * per_thread
+        assert allowed == max_req, f"放行 {allowed} 次 ≠ 上界 {max_req}（竞态：丢更新或超额放行）"
+        assert len(c._local_buckets[key]) == max_req, len(c._local_buckets[key])
+
+    @pytest.mark.timeout(30)
+    def test_concurrent_same_key_random_time_source(self, monkeypatch):
+        """同 A，但时钟**随机**（去掉确定性）——仍须恰好放行 50 次、桶长恰好 50。
+
+        时钟严格单调、每次随机推进 ≤0.05s，全程跨度 ≤ 32s < window 60s ⇒ 无滑出，
+        「恰好 50」依旧成立；随机仅用于打散并发到达顺序，暴露对时间源的隐式假设。
+        """
+        import random
+        import threading
+        from concurrent.futures import ThreadPoolExecutor
+
+        c = self._disabled_client(monkeypatch)
+        clock_lock = threading.Lock()
+        state = {"t": 1000.0}
+
+        def _rand_clock():
+            with clock_lock:
+                state["t"] += random.uniform(0.0, 0.05)
+                return state["t"]
+
+        c._time_source = _rand_clock
+        key, max_req, threads, per_thread = "conc:rand", 50, 32, 20
+
+        with ThreadPoolExecutor(max_workers=threads) as ex:
+            futures = [
+                ex.submit(lambda: [c.check_rate_limit(key, max_req, 60) for _ in range(per_thread)])
+                for _ in range(threads)
+            ]
+            results = [r for f in futures for r in f.result()]
+
+        allowed = sum(1 for r in results if r)
+        assert allowed == max_req, f"放行 {allowed} 次 ≠ 上界 {max_req}"
+        assert len(c._local_buckets[key]) == max_req
+
+    @pytest.mark.timeout(30)
+    def test_concurrent_distinct_keys_respect_memory_bound(self, monkeypatch):
+        """64 线程 × 每线程 200 个互异 key（共 12800 ≫ 上界 4096）并发灌入。
+
+        约束：结束后 `_local_buckets` 规模必须 ≤ `_LOCAL_MAX_KEYS`，且全程不抛异常
+        （并发下「先清过期桶、再按最久未活跃淘汰」逻辑不能崩、不能越界）。
+        时钟恒定 ⇒ 无过期桶 ⇒ 强制走「按最久未活跃淘汰」分支。
+        """
+        from concurrent.futures import ThreadPoolExecutor
+
+        c = self._disabled_client(monkeypatch)
+        c._time_source = lambda: 1000.0
+        threads, per_thread = 64, 200
+        assert threads * per_thread > c._LOCAL_MAX_KEYS  # 前置：确实超上界
+
+        def _worker(tid):
+            for j in range(per_thread):
+                c.check_rate_limit(f"flood:{tid}:{j}", 10, 60)
+            return True
+
+        with ThreadPoolExecutor(max_workers=threads) as ex:
+            list(ex.map(_worker, range(threads)))
+
+        assert len(c._local_buckets) <= c._LOCAL_MAX_KEYS, len(c._local_buckets)
+
+    @pytest.mark.timeout(30)
+    def test_fastapi_sync_dependency_enters_from_multiple_threads(self, monkeypatch):
+        """实证 FastAPI 同步依赖走 threadpool：并发请求下进入限流路径的线程数 > 1。
+
+        把被 14 个路由模块复用的同步依赖 `require_llm_quota` 挂到测试 App，在真正的
+        落点 `RedisClient._local_rate_limit` 上记录 `threading.get_ident()`；
+        若为单线程串行，则恒只有 1 个 id —— 本断言即证明并发是真实的。
+        """
+        import importlib
+        import threading
+        from concurrent.futures import ThreadPoolExecutor
+
+        from fastapi import Depends, FastAPI
+        from fastapi.testclient import TestClient
+
+        from shared.auth import get_current_user
+        from shared.ratelimit import require_llm_quota
+
+        rc = importlib.import_module("db.redis_client")
+        singleton = rc.redis_client
+        monkeypatch.setattr(singleton, "_enabled", False)
+        monkeypatch.setattr(singleton, "_time_source", lambda: 1000.0)
+
+        seen: set[int] = set()
+        seen_lock = threading.Lock()
+        orig = singleton._local_rate_limit
+
+        def _spy(key, max_requests, window):
+            with seen_lock:
+                seen.add(threading.get_ident())
+            return orig(key, max_requests, window)
+
+        monkeypatch.setattr(singleton, "_local_rate_limit", _spy)
+
+        app = FastAPI()
+        app.dependency_overrides[get_current_user] = lambda: {"user_id": "conc_probe", "role": "admin"}
+
+        @app.get("/probe")
+        def probe(user: dict = Depends(require_llm_quota)):
+            return {"ok": True}
+
+        client = TestClient(app)
+
+        with ThreadPoolExecutor(max_workers=16) as ex:
+            codes = list(ex.map(lambda _: client.get("/probe").status_code, range(64)))
+
+        assert seen, "限流路径从未被进入（依赖注入失败？）"
+        assert len(seen) > 1, f"仅 {len(seen)} 个线程进入限流路径，threadpool 语义不成立"
+        assert set(codes) <= {200, 429}, set(codes)
