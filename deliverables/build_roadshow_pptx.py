@@ -10,11 +10,11 @@
 2. submission/01_演示PPT/作品演示PPT-最终版.pptx            —— 对外提交件
 
 口径铁律（改动前务必核对 submission/00_提交清单.md）：
-- 测试：CI 默认档 1484 run（1492 collected，addopts deselect 8）→ 1445 passed / 38 skipped / 1 xfailed / 0 failed（沙箱 live 测试桩已修复，CI 已复测确认：61.20% 覆盖率达标）；CI p0 档 67 条
-- 覆盖率 61%（门禁 --cov-fail-under=50，余量 11pp）
+- 测试：CI 默认档 1503 run（1511 collected，addopts deselect 8）→ 1464 passed / 38 skipped / 1 xfailed / 0 failed（覆盖率 61% 达标）；CI p0 档 67 条
+- 覆盖率 61%（门禁 --cov-fail-under=50，余量 11pp）—— 全部数字单一真值源见模块级 METRICS（含 CI run 溯源）
 - API：245 operations / 228 paths（app.openapi() 运行时实测）；认证覆盖率 94.69%（232/245）
 - 共识分 mean 7.0446 / std 0.2857 —— 必须同时标 stratified 分布 / 96 样本 / seed 20261006 / n=6
-- 禁用：451/243 端点、35 路由、1133/915/923/1139/1178/1177/1168、54.08%、6.8413、旧品牌名与旧赛事名
+- 禁用：451/243 端点、35 路由、1133/915/923/1139/1178/1177/1168/1389、54.08%、6.8413、旧品牌名与旧赛事名
 """
 import os
 
@@ -46,6 +46,28 @@ AMBTX = RGBColor(0xC0, 0x5A, 0x10)
 GRY   = RGBColor(0x7F, 0x8C, 0x8D)
 PALE  = RGBColor(0xB8, 0xC4, 0xCE)
 FONT  = "Microsoft YaHei"
+
+#: 权威测试/质量指标 —— 单一真值源（改动前必须先跑 CI 默认档复核，禁止手改）
+#: 来源：GitHub Actions backend-test.yml 默认档 run 38448377027（2026-10-13，success）
+#: 默认档命令：python -m pytest -q（pyproject addopts 排除 system/requires_milvus/slow，deselect 8）
+METRICS = {
+    "ci_run_id": "38448377027",
+    "ci_date": "2026-10-13",
+    "tests_collected": 1511,    # 1464 passed + 38 skipped + 1 xfailed + 8 deselected
+    "tests_deselected": 8,      # pyproject addopts 排除 system/requires_milvus/slow
+    "tests_run": 1503,          # collected - deselected
+    "tests_passed": 1464,
+    "tests_skipped": 38,
+    "tests_xfailed": 1,
+    "tests_failed": 0,
+    "coverage_pct": 61,         # CI TOTAL 行：21766 stmts / 8403 miss
+    "cov_gate": 50,             # --cov-fail-under=50
+    "api_operations": 245,
+    "api_paths": 228,           # app.openapi() 运行时实测
+    "auth_coverage_pct": 94.69,
+    "auth_covered": 232,
+    "auth_total": 245,
+}
 
 prs = Presentation()
 prs.slide_width = Inches(13.333)
@@ -185,15 +207,15 @@ s = new_slide(LIGHT); band(s, TEAL)
 title(s, "技术底座可信：工程化 + 防伪证体系")
 body(s, [
     '• 芒得很职 多智能体底座已获国家级大创立项背书',
-    '• 质量门禁可复现：CI 默认档 1484 run（1492 collected）→ 1445 passed / 38 skipped / 1 xfailed / 0 failed',
-    '    - CI p0 档 67 条；覆盖率 61%（门禁 --cov-fail-under=50，余量 11pp）',
+    f'• 质量门禁可复现：CI 默认档 {METRICS["tests_run"]} run（{METRICS["tests_collected"]} collected）→ {METRICS["tests_passed"]} passed / {METRICS["tests_skipped"]} skipped / {METRICS["tests_xfailed"]} xfailed / {METRICS["tests_failed"]} failed',
+    f'    - CI p0 档 67 条；覆盖率 {METRICS["coverage_pct"]}%（门禁 --cov-fail-under={METRICS["cov_gate"]}，余量 {METRICS["coverage_pct"]-METRICS["cov_gate"]}pp）',
     '• 共识引擎实测：mean 7.0446 / std 0.2857（stratified 分布 / 96 样本 / seed 20261006 / n=6）',
     '• 同源知识图谱防伪证流水线已于 2026-09-30 并入 main：136 节点 / 18 边',
     '    - 验证报告自带 8 条机检守护（哈希 / 逐行归属 / 锚点 / 复现命令可移植 + 元守护）',
     '• 含义：同一套"写下的结论必须可被机器复验"的工程纪律，同时保障考研线与职业线',
 ], top=1.5)
 footer(s, 7)
-notes(s, '我们不是只有 demo。技术底座已经拿到国家级大创立项，说明工程化能力是被认可的。更关键的是工程纪律：CI 默认档 1484 run（1492 collected），1445 通过、38 跳过、1 个预期失败、零失败，覆盖率 61%，超过 50 的门槛 11 个百分点；共识引擎实测均分 7.04、标准差 0.29，96 个样本、固定随机种子、6 个智能体，评委可以自己复现。和底座同源的知识图谱防伪证流水线，136 个节点、18 条边，验证报告自带 8 条机器检查守护，连"复现命令能不能在别人机器跑通"都有守护盯着。同一套"写下的结论必须能被机器复验"的纪律，同时保着两条产品线。这就是我们敢说"可信"的底气。')
+notes(s, f'我们不是只有 demo。技术底座已经拿到国家级大创立项，说明工程化能力是被认可的。更关键的是工程纪律：CI 默认档 {METRICS["tests_run"]} run（{METRICS["tests_collected"]} collected），{METRICS["tests_passed"]} 通过、{METRICS["tests_skipped"]} 跳过、{METRICS["tests_xfailed"]} 个预期失败、零失败，覆盖率 {METRICS["coverage_pct"]}%，超过 {METRICS["cov_gate"]} 的门槛 {METRICS["coverage_pct"]-METRICS["cov_gate"]} 个百分点；共识引擎实测均分 7.04、标准差 0.29，96 个样本、固定随机种子、6 个智能体，评委可以自己复现。和底座同源的知识图谱防伪证流水线，136 个节点、18 条边，验证报告自带 8 条机器检查守护，连"复现命令能不能在别人机器跑通"都有守护盯着。同一套"写下的结论必须能被机器复验"的纪律，同时保着两条产品线。这就是我们敢说"可信"的底气。')
 
 # ---------- Slide 8: Innovation ----------
 s = new_slide(LIGHT); band(s, NAVY)
