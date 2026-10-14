@@ -1,0 +1,263 @@
+#!/usr/bin/env python
+"""build_career_pilot_package.py — 从 ``py-server/`` 生成 / 刷新「芒得很职」云部署瘦包骨架
+
+为什么需要
+--------------------------------------------------------------------------
+``deploy/career-pilot/backend/`` 曾是 ``py-server/`` 的**手工整树拷贝**。手工拷贝无法
+随源树自动更新：一旦 ``py-server/``（如 ``main.py``）被改动，拷贝就会**静默漂移**，
+而漂移只在公网发布时才暴露（例如绑定地址仍硬编码 ``127.0.0.1``）。本脚本让拷贝**可再生**：
+    python scripts/build_career_pilot_package.py         # 生成 / 刷新
+    python scripts/build_career_pilot_package.py --check  # 只校验，不一致则 exit 1
+
+它做什么
+--------------------------------------------------------------------------
+1. 以 ``py-server/`` 为源、``deploy/career-pilot/backend/`` 为目标，**同步**（复制缺失/变动，
+   并清理源树已不存在的陈旧文件）；
+2. 显式排除与「单端口 HTTP 云沙箱」无关的物：模型权重 / 虚拟环境 / 测试 / 内部文档 /
+   训练数据 / 研究实验 / 缓存 / 日志 / 一次性脚本；
+3. 落地瘦版运行依赖 ``requirements.txt``、配置范本 ``config.example.json``、解释器版本
+   ``.python-version`` 与 ``.env`` 模板 ``.env.example``；
+4. **绝不覆盖已存在的 ``.env``**（其中含真实密钥），仅在其缺失时按模板生成。
+
+退出码：0=成功（或 --check 一致）；1=--check 发现漂移；2=环境错误（源目录缺失）。
+"""
+from __future__ import annotations
+
+import argparse
+import filecmp
+import os
+import pathlib
+import shutil
+import sys
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+SRC = ROOT / "py-server"
+DST = ROOT / "deploy" / "career-pilot" / "backend"
+
+# ── 排除规则（相对 py-server 的路径）─────────────────────────────────────────
+# 目录名（出现在路径中任一非末段即整棵剪枝）
+EXCLUDE_DIR_NAMES = {
+    "models", ".venv", "venv", "tests", "documents", "data",
+    "experiments", "milvus_lite_data", "node_modules", ".git",
+    "__pycache__", ".pytest_cache", ".pytest_tmp", ".ruff_cache",
+    "_scratch", "_debug_smoke",
+}
+# 文件后缀
+EXCLUDE_FILE_SUFFIXES = (".log", ".pyc", ".pyo")
+# 文件全名（精确匹配）
+EXCLUDE_FILE_NAMES = {
+    "docker-entrypoint.sh", "uv.lock", "pyproject.toml",
+    "pip-audit-report.json", ".coverage", "export_onnx.py",
+    "guardian.bat", "import_docling.py", "import_pdfs.py",
+    "import_textbook.py", "iq_diag.py", ".env.example", "nul",
+}
+
+# ── 瘦版运行依赖（相对 py-server 全量删除了 torch 系 / 向量库 / 关系库客户端）──
+THIN_REQUIREMENTS = """\
+# 芒得很职 · 职业素养对抗实训试点 —— 轻量运行依赖（规则模式，无需 torch / 向量库 / 关系库）
+# 设计：career 链路默认 use_career_mappa=False → 纯规则决策，无需 torch / sentence-transformers / 2.4G 模型。
+# 删除项（相对 py-server 全量）：pymilvus / psycopg2-binary / redis / sentence-transformers / mcp / matplotlib / pymupdf / python-docx / sse-starlette
+# 原因：云沙箱单端口 HTTP、无 DB/缓存/队列；milvus 走 InMemoryVectorStore 回退，pg 走 SQLite 回退，redis dev 模式 fail-open。
+
+fastapi>=0.136.3
+uvicorn[standard]>=0.49.0
+pydantic>=2.0.0
+pydantic-settings>=2.14.2
+httpx>=0.28.1
+numpy>=2.4.6
+langgraph>=1.2.0
+langchain-core>=1.4.0
+python-multipart>=0.0.32
+filelock>=3.13.0
+
+# 安全下限约束（与 py-server 对齐，防止传递依赖回退漏洞版本）
+anyio>=4.14.2
+cryptography>=50.0.0
+fsspec>=2026.6.0
+langgraph-sdk>=0.4.4
+pillow>=12.3.0
+starlette>=1.3.1
+urllib3>=2.8.0
+"""
+
+# ── .env 模板（占位，不含任何真实密钥；随包上传的真实 .env 由人工/发布流程注入）──
+ENV_TEMPLATE = """\
+# 芒得很职 · 试点运行环境（云端沙箱）—— 本文件为模板，真实 .env 不入库。
+# 发布通道无环境变量注入项，密钥只能随包 .env 走。
+LLM_PROVIDER=deepseek
+# ⚠️ 必须 development（不是 production）：沙箱**无 Redis**，而 production 下
+# db/redis_client.check_rate_limit 对「Redis 未启用」fail-closed 返回 False →
+# /api/auth/login 一律 422「操作过于频繁」（已实跑复现）；且 production 会跳过
+# 演示账号播种（app/lifespan._seed_demo_data）。二者叠加 = 无人可登录。
+# 开发模式下限流 fail-open、演示账号自动播种，配合下方固定 AUTH_SECRET 即稳定可用。
+NETLEARN_ENV=development
+# 前端 SPA 产物目录（前后端同源单端口；site/ 而非 dist/ —— 上传排除 "dist" 构建产物）。
+STATIC_DIR=../site
+HF_HUB_OFFLINE=1
+TRANSFORMERS_OFFLINE=1
+# 必填：>=32 字符随机串（dev 下也已显式提供 → token 跨重启稳定）。
+# 生成：python -c "import secrets;print(secrets.token_urlsafe(48))"
+AUTH_SECRET=REPLACE_WITH_RANDOM_SECRET_AT_LEAST_32_CHARS
+# 管理员口令（>=16 字符）；固定后 admin 账号跨重启确定。
+ADMIN_PASSWORD=REPLACE_WITH_RANDOM_ADMIN_PASSWORD_AT_LEAST_16
+DEEPSEEK_API_KEY=REPLACE_WITH_REAL_DEEPSEEK_API_KEY
+"""
+
+
+def _rel_parts(rel: pathlib.PurePosixPath) -> tuple[str, ...]:
+    return rel.parts
+
+
+def _excluded(rel: pathlib.PurePosixPath) -> bool:
+    """给定相对 py-server 的路径，判断是否应排除。"""
+    parts = _rel_parts(rel)
+    # 目录段（除末段）命中 → 排除
+    for p in parts[:-1]:
+        if p in EXCLUDE_DIR_NAMES or p.endswith(".egg-info"):
+            return True
+    name = parts[-1]
+    # .env 系列（.env / .env.example / .env.bak*）：目标包内的 .env 由本脚本单独
+    # 管理（保留真实密钥 / 按模板生成），源树的 .env 一律不参与复制与一致性比对。
+    if name == ".env" or name.startswith(".env."):
+        return True
+    if name.endswith(".egg-info"):
+        return True
+    if name in EXCLUDE_FILE_NAMES:
+        return True
+    if any(name.endswith(s) for s in EXCLUDE_FILE_SUFFIXES):
+        return True
+    # 根目录：说明文档 / 一次性脚本（``_`` 前缀）/ 临时文本
+    if len(parts) == 1:
+        if name.endswith(".md") or name.endswith(".txt"):
+            return True
+        if name.startswith("_") and name not in {"__init__.py"}:
+            return True
+    return False
+
+
+def _iter_src_files():
+    """遍历 py-server，产出 (relative_posix_path, 绝对源路径)，已按规则剪枝。"""
+    for dirpath, dirnames, filenames in os.walk(SRC):
+        dpath = pathlib.Path(dirpath)
+        rel_dir = dpath.relative_to(SRC)
+        # 就地剪枝：剔除被排除的子目录
+        keep = []
+        for d in dirnames:
+            rel = pathlib.PurePosixPath((rel_dir / d).as_posix())
+            if not _excluded(rel):
+                keep.append(d)
+        dirnames[:] = sorted(keep)
+        for f in sorted(filenames):
+            rel = pathlib.PurePosixPath((rel_dir / f).as_posix())
+            if _excluded(rel):
+                continue
+            yield rel, dpath / f
+
+
+def _dst_for(rel: pathlib.PurePosixPath) -> pathlib.Path:
+    return DST / rel.as_posix()
+
+
+def _overlay_files() -> dict[pathlib.PurePosixPath, bytes]:
+    """脚本自产文件（源树中不存在或以瘦版为准）。"""
+    out = {
+        pathlib.PurePosixPath("requirements.txt"): THIN_REQUIREMENTS.encode("utf-8"),
+        pathlib.PurePosixPath(".env.example"): ENV_TEMPLATE.encode("utf-8"),
+    }
+    return out
+
+
+def build() -> int:
+    if not SRC.is_dir():
+        print(f"[build_career_pilot_package] ❌ 源目录不存在：{SRC}", file=sys.stderr)
+        return 2
+
+    env_path = DST / ".env"
+    preserved_env = env_path.read_bytes() if env_path.is_file() else None
+
+    expected: set[pathlib.PurePosixPath] = set()
+    copied = 0
+    unchanged = 0
+    for rel, src_file in _iter_src_files():
+        dst_file = _dst_for(rel)
+        expected.add(rel)
+        dst_file.parent.mkdir(parents=True, exist_ok=True)
+        if dst_file.is_file() and filecmp.cmp(src_file, dst_file, shallow=False):
+            unchanged += 1
+            continue
+        shutil.copy2(src_file, dst_file)
+        copied += 1
+
+    # 自产文件（瘦版 requirements.txt / .env.example）
+    overlay = _overlay_files()
+    for rel, data in overlay.items():
+        expected.add(rel)
+        dst_file = _dst_for(rel)
+        dst_file.parent.mkdir(parents=True, exist_ok=True)
+        old = dst_file.read_bytes() if dst_file.is_file() else None
+        if old != data:
+            dst_file.write_bytes(data)
+            copied += 1
+        else:
+            unchanged += 1
+
+    # .env：优先保留已存在（真实密钥），否则从模板生成
+    expected.add(pathlib.PurePosixPath(".env"))
+    if preserved_env is not None:
+        env_path.write_bytes(preserved_env)
+    else:
+        env_path.write_bytes(ENV_TEMPLATE.encode("utf-8"))
+        print("[build_career_pilot_package] ℹ️ .env 缺失 → 已按模板生成（需人工填真实密钥与 AUTH_SECRET）")
+
+    # 清理陈旧文件（源树已不存在者），保留 .env；Windows 保留名（nul）删除失败则跳过
+    removed = 0
+    for dirpath, _dirnames, filenames in os.walk(DST, topdown=False):
+        for f in filenames:
+            p = pathlib.Path(dirpath) / f
+            rel = pathlib.PurePosixPath(p.relative_to(DST).as_posix())
+            if rel in expected:
+                continue
+            try:
+                p.unlink()
+                removed += 1
+            except OSError:
+                pass  # 保留名 / 占用中 → 跳过（不影响可运行性）
+
+    print(
+        f"[build_career_pilot_package] ✅ 已刷新 {DST}\n"
+        f"    复制/更新 {copied} · 未变 {unchanged} · 清理陈旧 {removed} · 目标文件合计 {len(expected)}"
+    )
+    return 0
+
+
+def check() -> int:
+    """校验目标瘦包与源树一致（对每份应拷贝文件做字节比对）。"""
+    if not SRC.is_dir():
+        print(f"[build_career_pilot_package] ❌ 源目录不存在：{SRC}", file=sys.stderr)
+        return 2
+    drift: list[str] = []
+    for rel, src_file in _iter_src_files():
+        dst_file = _dst_for(rel)
+        if not dst_file.is_file():
+            drift.append(f"缺失: {rel}")
+        elif src_file.read_bytes() != dst_file.read_bytes():
+            drift.append(f"内容不一致: {rel}")
+    if drift:
+        print(f"[build_career_pilot_package] ❌ 瘦包与 py-server 漂移 {len(drift)} 处：")
+        for d in drift[:20]:
+            print(f"    - {d}")
+        print("    请跑 `python scripts/build_career_pilot_package.py` 刷新。")
+        return 1
+    print("[build_career_pilot_package] ✅ 瘦包与 py-server 源码一致（无漂移）")
+    return 0
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description="生成/刷新芒得很职云部署瘦包骨架")
+    ap.add_argument("--check", action="store_true", help="只校验一致性，不写盘")
+    args = ap.parse_args()
+    return check() if args.check else build()
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -19,6 +19,7 @@
 # ============================================================
 
 import logging
+import os
 
 # ① 环境引导：必须最先执行（HF 离线标记 / .env / 结构化日志）
 from app.env import bootstrap
@@ -78,9 +79,32 @@ static_sites.install_spa(app)
 __all__ = ["app", "lifespan", "_seed_vector_db", "competition_status", "status"]
 
 
-if __name__ == "__main__":
-    import os
+def resolve_bind() -> tuple[str, int]:
+    """解析 uvicorn 的绑定地址 (host, port)（环境变量驱动）。
 
+    发布通道硬契约：容器化/沙箱化发布时运行环境会注入 ``PORT``，服务必须监听它
+    并绑定 ``0.0.0.0`` 才能被外部访问。本函数把绑定地址从硬编码改为环境变量驱动，
+    同时**保持本机开发的默认行为完全不变**（仍是 ``127.0.0.1:8002``）。
+
+    规则（纯函数，便于单元测试，不读取除环境变量外的任何状态）：
+      - ``port = int(os.environ["PORT"])`` 若 ``PORT`` 已设置，否则 ``8002``；
+      - ``host = os.environ["HOST"]`` 若显式设置（最高优先级）；
+        否则当 ``PORT`` 已设置时用 ``"0.0.0.0"``（沙箱需对外可达），
+        否则用 ``"127.0.0.1"``（本机开发默认，避免无意暴露到局域网）。
+
+    返回:
+        (host, port) 二元组。
+    """
+    raw_port = os.environ.get("PORT")
+    port = int(raw_port) if raw_port else 8002
+    host = os.environ.get("HOST") or ("0.0.0.0" if raw_port else "127.0.0.1")
+    return host, port
+
+
+if __name__ == "__main__":
     import uvicorn
+
     reload_mode = os.environ.get("UVICORN_RELOAD", "").lower() in ("1", "true", "yes")
-    uvicorn.run("main:app", host="127.0.0.1", port=8002, reload=reload_mode, workers=1)
+    _host, _port = resolve_bind()
+    # workers=1 不可改：vectordb_data/.import_writer.lock 为单写者锁（见 lifespan._assert_single_worker）。
+    uvicorn.run("main:app", host=_host, port=_port, reload=reload_mode, workers=1)
