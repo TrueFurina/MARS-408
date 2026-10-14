@@ -136,6 +136,27 @@
       🔴 顺带抓到文档漂移 3 处（CLAUDE.md:74 fail-open 陈旧——代码早已 fail-closed；
       :179 main 冻结位次陈旧；:101 种子计数陈旧）与风险 4 项（policy_action 无下游消费/
       gomarl_bridge 死代码/_build_networks 私有 API 耦合/models gitignore 致 CI 必降级）。
+      其中 policy_action 已于同日接线闭环（见下）；余 3 项仍开放。
+
+- [x] `policy_action` 处置 ——2026-10-14 闭环（`7285083` + `7048ea7` + `820941f` + `a9f4205`）：
+      用户拍板**选项 2（接线 teaching_mode）**。含一个前置修复与一次基线：
+      - 接线：`teaching_mode`（三取值 sequential/example_first/analogy）注入 teacher prompt
+        的输出格式提醒之前；**只对 teacher 生效**；`gomarl.use_teaching_mode_prompt` 为
+        kill-switch（关掉即回到接线前逐字等价）；未知取值 fail-open 到现状。
+      - 🔴 前置缺陷：生产 `student_profile` 契约是 `weak_points`（字符串），而
+        `decide_policy_action` 读`weak_topics`/`weak_subjects` ⇒ `example_first` 是**死取值**，
+        不修则接线也是死代码。已加 `_teaching_weak_count` 按真实契约计数（兼容中文逗号与
+        list，旧键优先）。**刻意不动 `review_intensity`**（评审强度控制面，与 ADR-011 权重
+        灰度不同层，改它会顺带改评审行为）。
+      - 基线（真实 LLM deepseek-chat，2 topic × 2 profile × 4 臂 × 3 重复 = 48 次、0 错误）：
+        主指标「开头即场景引入率」example_first **12/12 = 100% Wilson[0.76,1.00]**，
+        baseline/sequential/analogy 均 0/12 = 0% Wilson[0.00,0.24] ⇒ **区间不重叠、效果显著**；
+        内容退化率全 0。
+      - 🔴 方法论教训两条：① 初版「各臂按自己定义判合规」是**循环论证**（baseline 可比性 0），
+        必须用模式无关的主指标让所有臂同尺量；② 探针词表须据**真实产物人工核对**归并
+        （模型几乎不用"定义/是指"字面；且话题与薄弱点必须同领域，否则模型开篇会纠正错位）。
+      - 21 例回归 spec 双向变异验证（删注入 if → 3 红；口径改回旧 → 3 红）。
+      - **仍未接线**：`review_intensity`（无采样层）与 `difficulty`（两套坐标，不混传）。
 
 ## 已完成
 
