@@ -77,8 +77,8 @@
 <!-- METRICS_TABLE_END -->
 
 > **测试数不在上表**：passed / skipped / xfail 需真正跑一遍 pytest，耗时且依赖环境，
-> 其真值以 CI 全量回归为准（见 `AGENTS.md` 复核记录）。当前为
-> **1177 passed / 227 skipped / 3 xfailed / 0 failed**。
+> 其真值以 CI 全量回归为准（见 `AGENTS.md` 复核记录）。标注来源时点：
+> **1389 通过 / 38 跳过 / 1 xfail（2026-10-09 CI run 37917008258，见 AGENTS.md；套件已增长，须由下一次 CI 全量回归刷新）**。
 >
 > **认证覆盖率**同理由独立脚本产出：`py-server/scripts/verify_auth_coverage.py`
 > （当前 total=245 / protected=232 / public=13 / coverage=**94.69%** / unregistered=0）。

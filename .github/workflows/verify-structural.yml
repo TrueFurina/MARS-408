@@ -87,6 +87,14 @@ jobs:
           # 背景：README 曾多次漂移（views 45→46、后端文件 414→374、API 约240→244、测试 917→1177）。
           # 改动代码后请跑 `python scripts/verify_metrics.py --update` 同步文档。
           run_one "verify_metrics (工程规模指标 SSOT)" "python scripts/verify_metrics.py" "."
+          # 活文档面「规模指标副本」防漂移（2026-10-14 新增）：
+          # verify_metrics 只守护 docs/METRICS_CURRENT.md 的围栏表；README / README_EN /
+          # 前端统计块（PlatformHomeView.vue）/ 提交清单里还有同一批指标的手抄副本，
+          # 它们此前不在任何闸门之下（同一指标一度漂移成 45/46/47 三个值）。
+          # 本脚本只认「带单位锚定」的出现、不扫裸数字 —— 故 ShowcaseView 的
+          # 「45% 评分权重」（赛题功能权重，事实正确）天然不被命中。
+          # fail-closed：目标文件缺失 / 某规则命中 0 处即 exit 2（"照不到"≠"干净"）。
+          run_one "scan_metric_occurrences (活文档面指标副本)" "python scripts/scan_metric_occurrences.py" "."
           # 本机绝对路径扫描（静态、最便宜，故放最前）：
           # 防的是「脚本里写死开发机路径 ⇒ Linux runner 上 FileNotFoundError ⇒ job 红，
           # 而开发机因为该路径真的存在而全绿」。实测事故：run 37812723531，

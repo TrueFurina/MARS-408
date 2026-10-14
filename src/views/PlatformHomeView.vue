@@ -132,7 +132,7 @@ function enterScene(c: SceneCard) {
     <section class="ph-stats" aria-label="平台能力">
       <div class="ph-stat"><b>4</b><span>对抗实训场景<br/>答辩/评审/应急/冲突</span></div>
       <div class="ph-stat"><b>6</b><span>维 ECD<br/>职业素养评估</span></div>
-      <div class="ph-stat"><b>47</b><span>前端视图<br/>已落地可用</span></div><!-- 口径：ls src/views/*.vue 实测 47（2026-10-13） -->
+      <div class="ph-stat"><b>48</b><span>前端视图<br/>已落地可用</span></div><!-- 口径：ls src/views/*.vue 实测 48（2026-10-14） -->
       <div class="ph-stat"><b>40+</b><span>真实实验产物<br/>可复现证据</span></div>
     </section>
 
