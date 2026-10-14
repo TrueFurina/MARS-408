@@ -1,0 +1,324 @@
+{
+  "generated_at": "2026-10-14T14:49:48",
+  "provider_note": "{\"name\": \"deepseek\", \"base_url\": \"https://api.deepseek.com\", \"model\": \"deepseek-chat\", \"supports_tools\": true, \"supports_streaming\": true}",
+  "params": {
+    "topics": 2,
+    "profiles": 2,
+    "modes": [
+      "baseline",
+      "sequential",
+      "example_first",
+      "analogy"
+    ],
+    "repeats": 3,
+    "temperature": 0.7,
+    "max_tokens": 2000
+  },
+  "probes": {
+    "example_markers": [
+      "例",
+      "比如",
+      "举例",
+      "典型题",
+      "设想",
+      "想象",
+      "来看一个",
+      "试想",
+      "一道题",
+      "这道"
+    ],
+    "definition_markers": [
+      "定义",
+      "是指",
+      "称为",
+      "所谓",
+      "本质",
+      "是一种",
+      "指的是"
+    ],
+    "analogy_markers": [
+      "类比",
+      "好比",
+      "相当于",
+      "就像",
+      "类似于",
+      "打个比方",
+      "等同于"
+    ],
+    "note": "主指标 head_opens_with_scenario 模式无关、所有臂同尺量；各臂自证合规率只作参考",
+    "opening_structure": [
+      "我们先",
+      "先看",
+      "先来",
+      "先说一个",
+      "举个",
+      "设想",
+      "想象一下",
+      "想象一个",
+      "试想",
+      "从一个问题",
+      "从一个",
+      "有一种情况",
+      "你会发现",
+      "有没有想过",
+      "从一道",
+      "从某",
+      "从一则",
+      "从某个",
+      "引入题",
+      "引入一个",
+      "导入"
+    ],
+    "concept_lead": [
+      "是一种",
+      "指的是",
+      "的核心",
+      "由",
+      "包括",
+      "负责",
+      "全称",
+      "简称",
+      "是"
+    ]
+  },
+  "cells": [
+    {
+      "profile": "weak",
+      "mode": "baseline",
+      "trials": 6,
+      "ok": 6,
+      "errors": 0,
+      "compliant": 0,
+      "observable": 0,
+      "degraded": 0,
+      "body_chars": [
+        1091,
+        1051,
+        1158,
+        1245,
+        1420,
+        1092
+      ],
+      "error_kinds": {},
+      "compliance_denominator": 6,
+      "compliance_rate": 0.0,
+      "degradation_rate": 0.0,
+      "mean_body_chars": 1176.2,
+      "verdict": "REFERENCE"
+    },
+    {
+      "profile": "weak",
+      "mode": "sequential",
+      "trials": 6,
+      "ok": 6,
+      "errors": 0,
+      "compliant": 5,
+      "observable": 5,
+      "degraded": 0,
+      "body_chars": [
+        1236,
+        1069,
+        1201,
+        1213,
+        953,
+        998
+      ],
+      "error_kinds": {},
+      "compliance_denominator": 5,
+      "compliance_rate": 1.0,
+      "degradation_rate": 0.0,
+      "mean_body_chars": 1111.7,
+      "verdict": "OK"
+    },
+    {
+      "profile": "weak",
+      "mode": "example_first",
+      "trials": 6,
+      "ok": 6,
+      "errors": 0,
+      "compliant": 6,
+      "observable": 6,
+      "degraded": 0,
+      "body_chars": [
+        1345,
+        1156,
+        999,
+        1169,
+        1138,
+        1150
+      ],
+      "error_kinds": {},
+      "compliance_denominator": 6,
+      "compliance_rate": 1.0,
+      "degradation_rate": 0.0,
+      "mean_body_chars": 1159.5,
+      "verdict": "OK"
+    },
+    {
+      "profile": "weak",
+      "mode": "analogy",
+      "trials": 6,
+      "ok": 6,
+      "errors": 0,
+      "compliant": 5,
+      "observable": 6,
+      "degraded": 0,
+      "body_chars": [
+        1352,
+        1161,
+        1216,
+        979,
+        960,
+        1085
+      ],
+      "error_kinds": {},
+      "compliance_denominator": 6,
+      "compliance_rate": 0.8333,
+      "degradation_rate": 0.0,
+      "mean_body_chars": 1125.5,
+      "verdict": "OK"
+    },
+    {
+      "profile": "strong",
+      "mode": "baseline",
+      "trials": 6,
+      "ok": 6,
+      "errors": 0,
+      "compliant": 0,
+      "observable": 0,
+      "degraded": 0,
+      "body_chars": [
+        1514,
+        1167,
+        1210,
+        1016,
+        1171,
+        1286
+      ],
+      "error_kinds": {},
+      "compliance_denominator": 6,
+      "compliance_rate": 0.0,
+      "degradation_rate": 0.0,
+      "mean_body_chars": 1227.3,
+      "verdict": "REFERENCE"
+    },
+    {
+      "profile": "strong",
+      "mode": "sequential",
+      "trials": 6,
+      "ok": 6,
+      "errors": 0,
+      "compliant": 5,
+      "observable": 5,
+      "degraded": 0,
+      "body_chars": [
+        1320,
+        1317,
+        1029,
+        1282,
+        1047,
+        1184
+      ],
+      "error_kinds": {},
+      "compliance_denominator": 5,
+      "compliance_rate": 1.0,
+      "degradation_rate": 0.0,
+      "mean_body_chars": 1196.5,
+      "verdict": "OK"
+    },
+    {
+      "profile": "strong",
+      "mode": "example_first",
+      "trials": 6,
+      "ok": 6,
+      "errors": 0,
+      "compliant": 6,
+      "observable": 6,
+      "degraded": 0,
+      "body_chars": [
+        1078,
+        1255,
+        1188,
+        1107,
+        1245,
+        1003
+      ],
+      "error_kinds": {},
+      "compliance_denominator": 6,
+      "compliance_rate": 1.0,
+      "degradation_rate": 0.0,
+      "mean_body_chars": 1146,
+      "verdict": "OK"
+    },
+    {
+      "profile": "strong",
+      "mode": "analogy",
+      "trials": 6,
+      "ok": 6,
+      "errors": 0,
+      "compliant": 4,
+      "observable": 5,
+      "degraded": 0,
+      "body_chars": [
+        981,
+        1036,
+        1130,
+        1020,
+        1028,
+        922
+      ],
+      "error_kinds": {},
+      "compliance_denominator": 5,
+      "compliance_rate": 0.8,
+      "degradation_rate": 0.0,
+      "mean_body_chars": 1019.5,
+      "verdict": "OK"
+    }
+  ],
+  "primary_metric": {
+    "baseline": {
+      "trials": 12,
+      "errors": 0,
+      "head_scenario_hits": 0,
+      "rate": 0.0,
+      "wilson95": [
+        0.0,
+        0.243
+      ],
+      "delta_vs_baseline": 0.0
+    },
+    "sequential": {
+      "trials": 12,
+      "errors": 0,
+      "head_scenario_hits": 0,
+      "rate": 0.0,
+      "wilson95": [
+        0.0,
+        0.243
+      ],
+      "delta_vs_baseline": 0.0
+    },
+    "example_first": {
+      "trials": 12,
+      "errors": 0,
+      "head_scenario_hits": 12,
+      "rate": 1.0,
+      "wilson95": [
+        0.757,
+        1.0
+      ],
+      "delta_vs_baseline": 1.0
+    },
+    "analogy": {
+      "trials": 12,
+      "errors": 0,
+      "head_scenario_hits": 0,
+      "rate": 0.0,
+      "wilson95": [
+        0.0,
+        0.243
+      ],
+      "delta_vs_baseline": 0.0
+    }
+  }
+}
