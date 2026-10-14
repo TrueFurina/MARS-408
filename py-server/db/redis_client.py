@@ -15,12 +15,23 @@ from config import get_redis_config
 
 logger = logging.getLogger("netlearn.redis")
 
-# 生产环境(NETLEARN_ENV=production)标记。历史上它决定「Redis 不可用 → 限流 fail-closed」，
-# 但这在**无 Redis 的部署**（本试点沙箱无缓存/队列）下会误伤：production 下
-# /api/auth/login 一律 422（限流 fail-closed），不可用。
-# 现改为：无论是否 STRICT，Redis 不可用/异常一律**降级为进程内滑动窗口限流**（见
-# RedisClient.check_rate_limit），既不放行也不误拒；STRICT 仅影响降级日志级别。
+# 生产环境(NETLEARN_ENV=production)标记。它决定「Redis 不可用 → 限流 fail-closed」。
 REDIS_STRICT = os.environ.get("NETLEARN_ENV", "development").lower() in ("production", "prod")
+
+# 「Redis 不可用时降级为进程内滑动窗口限流」的**显式开关**（默认关闭）。
+#
+# 🔒 默认关闭 ⇒ 生产环境 Redis 不可用仍 **fail-closed 拒绝请求**，这是 CI 安全门禁
+#    G2（`scripts/security_gate_assert.py::assert_g2_rate_limit_fail_closed`）固化的
+#    安全不变量：**攻击者打掉 Redis 不能使限流失效**。不要为了让某次部署跑起来就
+#    把默认值翻成 True——那等于移除该不变量。
+#
+# 仅在**设计上就没有 Redis 的部署**（本试点沙箱无缓存/队列）显式打开：此时以进程内
+# 滑动窗口替代，**仍然强制限额（不是放行）**，只是计数落在单进程内。
+# 代价：多 worker 下每个 worker 各记一份、实际阈值被放大 workers 倍；本部署被
+# `vectordb_data/.import_writer.lock` 单写者锁约束为 workers=1 ⇒ 与 Redis 计数等价。
+ALLOW_LOCAL_FALLBACK = os.environ.get(
+    "RATE_LIMIT_ALLOW_LOCAL_FALLBACK", ""
+).lower() in ("1", "true", "yes", "on")
 
 try:
     import redis
@@ -188,12 +199,14 @@ class RedisClient:
     def check_rate_limit(self, key: str, max_requests: int, window: int = 60) -> bool:
         """滑动窗口限流：返回 True 表示允许，False 表示超限/被拒绝。
 
-        两条路径：
+        三条路径（前两条是 Redis 不可用时的行为，由 :data:`ALLOW_LOCAL_FALLBACK` 决定）：
           - **Redis 正常启用** → 复用 Redis 原子滑动窗口（行为一字未改）。
-          - **Redis 未启用 / 查询异常** → 退回**进程内滑动窗口兜底**
-            （:meth:`_local_rate_limit`），**既不 fail-open 放行、也不 fail-closed 拒绝**，
-            语义与 Redis 分支一致：``window`` 秒内允许 ``max_requests`` 次。
-            ``REDIS_STRICT``（生产）下仅把降级日志提到 error 级，不再直接拒绝请求。
+          - **Redis 不可用 / 查询异常 + 生产(STRICT) + 未开开关** → **fail-closed 返回
+            False**（CI 安全门禁 G2 固化的不变量：打掉 Redis 不能让限流失效）。
+          - **Redis 不可用 / 查询异常 + （非生产 或 显式开了开关）** → 退回**进程内
+            滑动窗口兜底**（:meth:`_local_rate_limit`），**既不 fail-open 放行、也不
+            fail-closed 拒绝**，语义与 Redis 分支一致：``window`` 秒内允许
+            ``max_requests`` 次。
 
         ── 为什么进程内兜底在本部署下与 Redis 限流「功能等价」────────────────────
         本部署被 ``vectordb_data/.import_writer.lock`` 单写者锁硬约束为 **workers=1**
@@ -204,10 +217,18 @@ class RedisClient:
         内存安全：进程内桶按 key 计数，受 :attr:`_LOCAL_MAX_KEYS` 上界保护。
         """
         if not self._enabled:
+            if REDIS_STRICT and not ALLOW_LOCAL_FALLBACK:
+                logger.error(
+                    "Redis 未启用，生产限流 fail-closed（拒绝本次请求, key=%s）。"
+                    "如需在无 Redis 的部署下降级为进程内滑动窗口（仍强制限额，但仅单进程），"
+                    "显式设置 RATE_LIMIT_ALLOW_LOCAL_FALLBACK=1。",
+                    key,
+                )
+                return False
             if REDIS_STRICT:
                 logger.error(
                     "Redis 未启用，限流已降级为进程内滑动窗口(key=%s)。"
-                    "生产环境建议启用 Redis；多 worker 部署下进程内限流不生效。",
+                    "多 worker 部署下进程内限流不生效；本部署 workers=1。",
                     key,
                 )
             return self._local_rate_limit(key, max_requests, window)
@@ -222,6 +243,11 @@ class RedisClient:
             self._client.incr(key)
             return True
         except Exception as e:
+            if REDIS_STRICT and not ALLOW_LOCAL_FALLBACK:
+                logger.error(
+                    "限流查询异常，生产 fail-closed（拒绝本次请求, key=%s）: %s", key, e
+                )
+                return False
             if REDIS_STRICT:
                 logger.error("限流查询异常，已降级为进程内滑动窗口(key=%s): %s", key, e)
             else:
