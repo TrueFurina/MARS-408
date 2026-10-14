@@ -46,10 +46,10 @@
 
 ## 中期（打磨次批 · B 组）
 
-- [ ] B1 数字漂移与过度承诺文案逐条复查（46→47、「面试」情景、实训模式数）
-- [ ] B2 legacy MARL 死代码归档决策（**先核引用，不直接删**；确认无 `career_*` 链引用后再动）
-- [ ] B3 4 个孤儿视图决策（改造 / 删除；**动前先定 views 计数口径**，47 依赖它们）
-- [ ] B4 `api/tutor.py:11` 顶层 import 改懒加载 + 清理过时 CLAUDE.md 警告
+- [ ] B1 数字漂移与过度承诺文案逐条复查 —— 引用三项已由 `36f08ed`（2026-10-13）完成（46→47、「面试」→精确场景名、「3 实训模式」→「4 对抗场景」）；**全量逐条复查仍未做**（其余活视图的硬编码数字 / 过度承诺文案）
+- [x] B2 legacy MARL 死代码归档决策 —— 2026-10-14 复核**闭环：非死代码，全部保留**。引用取证：`gomarl.evaluate` 生产在用（`generator_cluster.py:195` / `api/agents.py:137`）；`mappo_policy` 生产在用（`coordinator.py:104` / `gomarl_mixer.py:889`）；`algorithm_factory`/`marl_dqn` 被测试引用（`test_t1_qa_supplement.py:21` / `test_m4_marl_bench.py:16`）；`train_mixer*` 被实验脚本引用。与 `a711ed7` 结论一致
+- [x] B3 4 个孤儿视图决策 —— 2026-10-14 复核**闭环：非孤儿，全部保留**。`CourseExplorerView`/`KnowledgeGraphView` 被 `KnowledgeView.vue:8-9,263,268` 挂载；`ReviewView`/`QuizHistoryView` 被 `WrongQuestionsView.vue:7-8,312,317` 挂载。47 视图计数含它们是对的。与 `a711ed7` 结论一致
+- [x] B4 `api/tutor.py` 懒加载 + CLAUDE.md 过时警告 —— 2026-10-14 复核**前提失真，无需改动**：① `api/tutor.py` **已在函数内懒加载** `agents.tutor`（:53，附注释说明为何不进顶层——重依赖会拉起向量/嵌入栈），现 :11 为 `db.llm_provider` 顶层 import（轻依赖，合规）；② CLAUDE.md 三处"陈旧"均已自愈：:74 fail-open 已改 fail-closed（删除线标注"2026-10-13 已改"）、:101 种子计数已改为"以命令为准"、:179 分支位次已改为"以 `git log` 现查、勿写死提交号"
 - [x] B5 真实浏览器 E2E 走查（2026-10-14 完成）—— 第一次在浏览器里把整条链点完，
       并抓到 2 个只有浏览器能看见的问题（教师登录落学生测评 / 三条职员路由无角色守卫）
       + 1 个前端看不见的后端读空 bug（看板六维均分恒空）。均已修 + 已用走查复验。
