@@ -174,6 +174,8 @@ def main() -> int:
     args = ap.parse_args()
 
     findings = scan()
+    rules = load_exemptions()
+    findings, exempted, stale = split_exempt(findings, rules)
     by_cat = Counter(f["category"] for f in findings)
     by_ext = Counter(f["file"].rsplit(".", 1)[-1] for f in findings)
     by_file = Counter(f["file"] for f in findings)
@@ -193,6 +195,10 @@ def main() -> int:
     print(f"  ├ brand-violet   : {brand}   (品牌紫族，归一明确待办)")
     print(f"  ├ known-token-eq : {known}   (与令牌等价，应改 var())")
     print(f"  └ untracked      : {untracked}   (未追踪，需人工确认)")
+    if rules:
+        by_reason = Counter(f["exempt_reason"] for f in exempted)
+        detail = " / ".join(f"{k}={v}" for k, v in sorted(by_reason.items()))
+        print(f"豁免（不计入门禁）  : {len(exempted)}   [{detail}]  规则 {len(rules)} 条")
     print("-" * 64)
     print("按扩展名 : " + ", ".join(f".{e}={c}" for e, c in sorted(by_ext.items())))
     print("TOP 文件 :")
@@ -214,6 +220,8 @@ def main() -> int:
                 "by_ext": dict(by_ext),
             },
             "top_files": by_file.most_common(50),
+            "exempted": exempted,
+            "stale_exemptions": stale,
             "findings": findings,
         }
         Path(args.json).write_text(
@@ -222,12 +230,21 @@ def main() -> int:
         print(f"JSON 报告已写 : {args.json}")
 
     if args.update_baseline:
+        if stale:
+            print("[门禁] 存在僵尸豁免，拒绝刷新基线（先清理豁免清单）")
+            return 1
         _write_baseline(args.update_baseline, total, by_cat)
         return 0
     if args.baseline:
-        return _check_baseline(args.baseline, by_cat)
+        rc = _check_baseline(args.baseline, by_cat)
+        return rc or (1 if stale else 0)
 
     rc = 0
+    for r in stale:
+        print(f"[门禁] 僵尸豁免（规则已不命中任何 finding）：{r['file']} {r.get('value', '*')} "
+              f"reason={r['reason']} → 请删除该规则或修代码")
+    if stale:
+        rc = 1
     if args.max is not None and total > args.max:
         print(f"[门禁] 总硬编码 {total} 超过 --max {args.max} → exit 1")
         rc = 1
@@ -237,9 +254,71 @@ def main() -> int:
     return rc
 
 
+EXEMPT_FILE = ROOT / "scripts" / "token_scan_exemptions.json"
+EXEMPT_REASONS = {"canvas-fallback", "palette-data", "category-palette"}
+
+
+def load_exemptions() -> list[dict]:
+    """读豁免清单。清单不存在即视为无豁免（返回 []），非法条目直接报错退出——
+    豁免是门禁的一部分，格式错必须响（fail-closed），不得静默忽略。"""
+    if not EXEMPT_FILE.exists():
+        return []
+    data = json.loads(EXEMPT_FILE.read_text(encoding="utf-8"))
+    rules = []
+    for idx, r in enumerate(data.get("exemptions", []), 1):
+        missing = [k for k in ("file", "reason") if not r.get(k)]
+        if missing:
+            raise SystemExit(f"[ERROR] 豁免清单第 {idx} 条缺字段 {missing}：{r}")
+        if r["reason"] not in EXEMPT_REASONS:
+            raise SystemExit(
+                f"[ERROR] 豁免清单第 {idx} 条 reason='{r['reason']}' 不在允许集合 "
+                f"{sorted(EXEMPT_REASONS)}"
+            )
+        rules.append(r)
+    return rules
+
+
+def split_exempt(findings: list[dict], rules: list[dict]) -> tuple[list[dict], list[dict], list[dict]]:
+    """按豁免规则拆分 findings → (计入门禁的, 被豁免的, 僵尸规则)。
+
+    规则匹配：file 相等 + value 相等（缺省则不限色值）+ line 相等（缺省则不限行号）。
+    一条 finding 只被第一条匹配到的规则豁免（规则可重叠，命中数不会重复计数）。
+    """
+    kept: list[dict] = []
+    exempted: list[dict] = []
+    for f in findings:
+        hit = None
+        for r in rules:
+            if r["file"] != f["file"]:
+                continue
+            if r.get("value") and r["value"].lower() != str(f["value"]).lower():
+                continue
+            if r.get("line") and int(r["line"]) != int(f["line"]):
+                continue
+            hit = r
+            break
+        (exempted if hit else kept).append(f if not hit else {**f, "exempt_reason": hit["reason"]})
+    used = {(f["file"], f["line"], str(f["value"]).lower(), f.get("exempt_reason")) for f in exempted}
+    stale = [
+        r for r in rules
+        if not any(
+            k[0] == r["file"] and k[3] == r["reason"] and (not r.get("value") or r["value"].lower() == k[2])
+            for k in used
+        )
+    ]
+    return kept, exempted, stale
+
+
 def _write_baseline(path: str, total: int, by_cat: Counter) -> None:
-    """把当前计数写入基线 JSON（供 --baseline 后续对比）。"""
-    data = {"total": total, "by_category": dict(by_cat)}
+    """把当前计数写入基线 JSON（供 --baseline 后续对比）。
+
+    三类计数**始终显式写出**（归零也写 0），避免某类清零后键消失、
+    看基线的人误以为该项没被扫过。
+    """
+    data = {
+        "total": total,
+        "by_category": {k: by_cat.get(k, 0) for k in ("brand-violet", "known-token-eq", "untracked")},
+    }
     Path(path).write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"基线已写 : {path} (total={total})")
 

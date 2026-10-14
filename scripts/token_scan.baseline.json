@@ -1,8 +1,8 @@
 {
-  "total": 201,
+  "total": 128,
   "by_category": {
-    "known-token-eq": 57,
-    "untracked": 113,
-    "brand-violet": 31
+    "brand-violet": 0,
+    "known-token-eq": 51,
+    "untracked": 77
   }
 }

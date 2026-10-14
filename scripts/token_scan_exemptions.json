@@ -1,0 +1,65 @@
+{
+  "_doc": "token_scan 豁免清单。每条规则：file 必填；value 可选（缺省=该文件该色值的全部命中）；line 可选（缺省=不限定行）。reason 三选一：canvas-fallback（canvas 绘制兜底色，fillStyle/strokeStyle 不解析 CSS 变量，必须字面量）/ palette-data（色板/展示数据，值本身即被展示内容）/ category-palette（分类调色板常量，整表多色体系中的若干色）。规则若不再命中任何 finding = 僵尸条目 → 门禁 exit 1（豁免过期不得静默放行）。新增豁免必须在提交信息里写明理由。",
+  "exemptions": [
+    {
+      "file": "src/components/KnowledgeGraph.vue",
+      "value": "#7c6af2",
+      "reason": "canvas-fallback",
+      "_note": "resolveToken() 的双主题解析兜底（:76 节点填充 ×2、:168 掌握度外圈），canvas fillStyle 不解析 var()"
+    },
+    {
+      "file": "src/views/KnowledgeView.vue",
+      "value": "#7c6af2",
+      "reason": "canvas-fallback",
+      "_note": "resolveToken() 的 SSR 分支与空值兜底（:63/:65）"
+    },
+    {
+      "file": "src/views/AssessmentView.vue",
+      "value": "#7c6af2",
+      "reason": "canvas-fallback",
+      "_note": "resolveToken() 的空值兜底（:190）"
+    },
+    {
+      "file": "src/views/DesignSystemView.vue",
+      "value": "#7c6af2",
+      "reason": "palette-data",
+      "_note": "设计系统色板表格数据行 ['--accent', '#7c6af2', '主色·紫']，值本身即展示内容"
+    },
+    {
+      "file": "src/views/DesignSystemView.vue",
+      "value": "#a98cdd",
+      "reason": "palette-data",
+      "_note": "同上，subject 色板行（数据结构紫）"
+    },
+    {
+      "file": "src/stores/achievementStore.ts",
+      "value": "#7c6af2",
+      "reason": "category-palette",
+      "_note": "成就定义表分类色（:27/:45/:60），整表 20+ 色分类调色板，品牌紫只是其中一档"
+    },
+    {
+      "file": "src/stores/achievementStore.ts",
+      "value": "#8b5cf6",
+      "reason": "category-palette",
+      "_note": "同上（:28/:40/:54）"
+    },
+    {
+      "file": "src/views/ProfileView.vue",
+      "value": "#7c6af2",
+      "reason": "category-palette",
+      "_note": "TRAIT_COLORS 八维画像调色板（:48）"
+    },
+    {
+      "file": "src/views/ProfileView.vue",
+      "value": "#8b5cf6",
+      "reason": "category-palette",
+      "_note": "同上（:48）"
+    },
+    {
+      "file": "src/views/MasteryMapView.vue",
+      "value": "#7c6af2",
+      "reason": "canvas-fallback",
+      "_note": "tierColorResolved() 的 resolveToken 兜底（代码注释明写「canvas 上下文无法解析 CSS 变量」）"
+    }
+  ]
+}
