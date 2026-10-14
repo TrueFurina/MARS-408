@@ -63,7 +63,18 @@ async def coordinator_node(state: AgentState) -> AgentState:
         state.setdefault("regenerate_round", 0)
 
     # ── 教学策略决策（三评审集成·增量三/四）：规则版 or MAPPO 版 ──
-    # 写入 state["policy_action"]，供生成/评审环节参考（难度档位/讲解方式/评审强度）
+    # ⚠️ **预留接口，当前生产链零消费**（2026-10-14 审查实证）：本 dict 写入
+    # state["policy_action"] 后，生成侧只读 plan["difficulty"]（coordinator LLM
+    # 解析的**课程难度** easy/medium/hard，另一套坐标），评审侧（quality_gate /
+    # review_policy）零处引用 review_intensity。三个字段均无可对齐的现成消费点：
+    #   difficulty        —— 与 plan["difficulty"] 是两套坐标，本文件下方注释亦
+    #                        明写"不混传"；接线等于引入第三套语义
+    #   teaching_mode     —— 无任何实现消费，接线=新功能（改生成 prompt 与产物）
+    #   review_intensity  —— 无采样层；quality_gate 走 review_policy 的**权重**灰度
+    #                        （ADR-011），与"强度采样"是两套控制面
+    # 因此现保留计算与落 state（供链路追溯 / experiments 对比 / 未来接线），
+    # 但**不得**据本文老注释理解成"已在生效"。接线或删除待产品决策，
+    # 见 plans/current.md 与 deliverables/engineering-assurance/系统理解-* §5。
     try:
         state["policy_action"] = _resolve_policy_action(state)
         logger.info(f"教学策略决策: {state['policy_action']}")
