@@ -107,17 +107,30 @@ _fake_redis = _FakeRedis()
 _redis_orig = sys.modules.get("db.redis_client")
 _db_redis = types.ModuleType("db.redis_client")
 _db_redis.redis_client = _fake_redis
-sys.modules["db.redis_client"] = _db_redis
 
 
 @pytest.fixture(scope="module", autouse=True)
-def _restore_redis_stub():
-    yield
-    # 本文件测试结束后还原真实 db.redis_client，避免污染同会话其它测试
-    if _redis_orig is None:
-        sys.modules.pop("db.redis_client", None)
-    else:
-        sys.modules["db.redis_client"] = _redis_orig
+def _stub_redis_module():
+    """本模块测试期间把 db.redis_client 换成桩，**测试一结束立即还原**。
+
+    ⚠️ 桩只能在 fixture 内安装，**绝不能放在模块顶层**：
+    pytest **收集阶段**会导入所有测试模块，模块级的 `sys.modules[...] = ...`
+    会在收集期就装上桩并一直挂着，直到本模块测试跑完才还原。于是所有按字母序
+    排在本文件**之前**的测试拿到的是桩而非真实模块 —— 实测（2026-10-14 CI）
+    `test_ratelimit_circuit.py` 全类爆
+    `AttributeError: module 'db.redis_client' has no attribute 'REDIS_STRICT'`，
+    以及 FastAPI 用例拿到 `_FakeRedis` 而非 `RedisClient`（`has no attribute '_enabled'`）。
+    该缺陷暴露在 CI、却因单文件本地运行而长期不可见。
+    """
+    sys.modules["db.redis_client"] = _db_redis
+    try:
+        yield
+    finally:
+        # 还原真实 db.redis_client，避免污染同会话其它测试
+        if _redis_orig is None:
+            sys.modules.pop("db.redis_client", None)
+        else:
+            sys.modules["db.redis_client"] = _redis_orig
 
 
 # ============================================================
