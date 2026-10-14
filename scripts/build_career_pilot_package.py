@@ -15,8 +15,9 @@
    并清理源树已不存在的陈旧文件）；
 2. 显式排除与「单端口 HTTP 云沙箱」无关的物：模型权重 / 虚拟环境 / 测试 / 内部文档 /
    训练数据 / 研究实验 / 缓存 / 日志 / 一次性脚本；
-3. 落地瘦版运行依赖 ``requirements.txt``、配置范本 ``config.example.json``、解释器版本
-   ``.python-version`` 与 ``.env`` 模板 ``.env.example``；
+3. 落地瘦版运行依赖 ``requirements.txt``、**沙箱专用** ``config.json``（强制
+   ``milvus.enabled=false`` / ``redis.enabled=false``，见 :func:`_sandbox_config_bytes`）、
+   配置范本 ``config.example.json``、解释器版本 ``.python-version`` 与 ``.env`` 模板 ``.env.example``；
 4. **绝不覆盖已存在的 ``.env``**（其中含真实密钥），仅在其缺失时按模板生成；
 5. **保留**由 ``vite.deploy.config.ts`` 直接产出到 ``backend/site/`` 的前端产物
    （见 ``PRESERVE_TOP_NAMES``）——前端与后端同根，使 ``STATIC_DIR=site`` 相对包根
@@ -28,6 +29,7 @@ from __future__ import annotations
 
 import argparse
 import filecmp
+import json
 import os
 import pathlib
 import shutil
@@ -53,6 +55,9 @@ EXCLUDE_FILE_NAMES = {
     "pip-audit-report.json", ".coverage", "export_onnx.py",
     "guardian.bat", "import_docling.py", "import_pdfs.py",
     "import_textbook.py", "iq_diag.py", ".env.example", "nul",
+    # config.json 由本脚本**自持生成**（见 _sandbox_config_bytes）：包内配置必须声明
+    # 「沙箱无 Milvus/Redis」，不能让 py-server 的本地配置把它冲掉（曾导致 /api/status 误报 degraded）。
+    "config.json",
 }
 
 # 目标包内**由其它流程产出、不属于本脚本同步范围**的顶层条目，清理陈旧文件时必须保留。
@@ -168,11 +173,40 @@ def _dst_for(rel: pathlib.PurePosixPath) -> pathlib.Path:
     return DST / rel.as_posix()
 
 
+def _sandbox_config_bytes() -> bytes:
+    """生成**沙箱专用** ``config.json``（本脚本自持，源树同名文件不参与复制）。
+
+    以 ``py-server/config.json`` 为基线，**强制覆写** ``milvus.enabled=false`` 与
+    ``redis.enabled=false``。理由：本试点沙箱无 Milvus / 无 Redis，thin 包亦不含
+    ``pymilvus``/``redis-py``；把「意图启用却连不上」声明为 ``false`` 才是**如实配置**。
+    若沿用 py-server 的 ``milvus.enabled=true``，``app/status.py:96``
+    （``milvus_cfg_enabled and not milvus_connected``）会让 ``/api/status`` **误报
+    ``degraded``**。此覆盖写进脚本、而非手工改包内文件——否则下次同步又被冲掉。
+    """
+    base: dict = {}
+    src_cfg = SRC / "config.json"
+    if src_cfg.is_file():
+        try:
+            loaded = json.loads(src_cfg.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict):
+                base = loaded
+        except Exception:  # noqa: BLE001 — 源配置损坏时降级为空基线，不阻断打包
+            base = {}
+    for key in ("milvus", "redis"):
+        section = base.get(key)
+        if not isinstance(section, dict):
+            section = {}
+            base[key] = section
+        section["enabled"] = False
+    return (json.dumps(base, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+
+
 def _overlay_files() -> dict[pathlib.PurePosixPath, bytes]:
     """脚本自产文件（源树中不存在或以瘦版为准）。"""
     out = {
         pathlib.PurePosixPath("requirements.txt"): THIN_REQUIREMENTS.encode("utf-8"),
         pathlib.PurePosixPath(".env.example"): ENV_TEMPLATE.encode("utf-8"),
+        pathlib.PurePosixPath("config.json"): _sandbox_config_bytes(),
     }
     return out
 

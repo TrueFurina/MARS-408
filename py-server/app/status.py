@@ -211,6 +211,8 @@ async def metrics():
 
 
 def install(app: FastAPI) -> None:
-    app.get("/api/status")(status)
+    # HEAD 与 GET 同挂：HTTP 语义要求 HEAD 在 GET 可用处同样可用。此前 HEAD /api/status
+    # 返回 405（FastAPI 路由默认只挂 GET），会让只发 HEAD 探活的下游误判服务不可用。
+    app.api_route("/api/status", methods=["GET", "HEAD"])(status)
     app.get("/api/status/competition")(competition_status)
     app.get("/metrics")(metrics)

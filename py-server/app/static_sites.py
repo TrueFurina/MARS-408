@@ -61,7 +61,9 @@ def install_spa(app: FastAPI) -> None:
         # StaticFiles 挂载（如 /showcase）会对精确匹配的目录路径返回 307 重定向
         # （/showcase → /showcase/），导致 Vue SPA 路由 /showcase 直接访问时 404。
         # 此处将 307 也回退到 index.html，让 Vue Router 接管该路径。
-        if response.status_code in (307, 404) and request.method == "GET" \
+        # HEAD 一并回退：HTTP 语义上 HEAD 应在 GET 可用处同样可用，否则只发 HEAD 的
+        # 健康探针会把「服务正常」误判为 404（下游误判不可用）。
+        if response.status_code in (307, 404) and request.method in ("GET", "HEAD") \
                 and not request.url.path.startswith("/api/") \
                 and not request.url.path.startswith("/assets/") \
                 and not request.url.path.startswith("/plots/") \
