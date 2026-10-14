@@ -27,7 +27,13 @@
 > 用户 2026-10-13 明确「不要解冻」⇒「冻结/解冻」窗口作废，本节按「是否属交付物」重新分流：
 > 非交付物的代码改进（P1-1 / P1-2）可随时做；**属交付物的 PPT 重生成按「不做任何交付」取消**。
 
-- [ ] P1-1 修 `VideoPlayer` / `LandingView` 两模态框焦点管理 + `verify-structural.yml` 加 `--gate-class`（检测逻辑已备，A=2 真违规）
+- [x] P1-1 浮层焦点管理 + A 类升硬门禁 —— 2026-10-14 闭环（`a749cc0` + `eb1d0d5`）：
+      新增 `src/composables/useModalFocus.ts`（打开聚焦 / Tab 圈闭 / 关闭归还 opener /
+      unmount 兜底，纯原生无依赖），VideoPlayer + LandingView 两浮层接入；
+      `a11y_scan.py` 落地 `--gate-class`（**10-13 记忆称检测逻辑已备实为未落地**，本次补写）
+      并 fail-closed（扫描面 0 个 .vue / 未知类 → exit 2），`verify-structural.yml` 接入为 PR 阻断项。
+      A 类 2→0；门禁六路自证（真绿/变异红/两条 fail-closed/不误伤/隔离可判）；
+      9 例回归 spec 双向变异验证；全量前端 23 文件 / 152 测试通过。
 - [ ] P1-2 紫族 17 处品牌紫归一 + `token_scan --update-baseline` 降到新低
 - [x] ~~冻结区 PPT 重生成~~ —— **已取消**（PPT 属交付物，用户指令「不要任何交付」）
 
