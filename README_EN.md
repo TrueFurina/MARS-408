@@ -47,8 +47,8 @@ not merely by prompt wording.
 ### 4. FrugalRAG Adaptive Retrieval Pipeline
 
 E5 768-dimension vector retrieval + BM25 full-text retrieval + personalized re-ranking + adaptive
-early stopping. Ships with **1,883 real knowledge chunks + 200 practice questions**, loaded as
-**2,122 vector entries**, organized into **26 subject groups**. If any stage of the retrieval
+early stopping. Ships with **2,015 real knowledge chunks + 230 practice questions**, loaded as
+**2,245 vector entries**, organized into **29 subject groups**. If any stage of the retrieval
 chain fails, the system **degrades to BM25-only** so demos and usage never break.
 
 ### 5. Production-Grade Engineering and Graceful Degradation
@@ -80,8 +80,8 @@ chain fails, the system **degrades to BM25-only** so demos and usage never break
 ┌─ Data Layer ───────────────────────────────────────────────────┐
 │  Milvus (vector store) / InMemoryVectorStore (fallback)        │
 │  PostgreSQL / SQLite (fallback) · Redis / in-memory (fallback) │
-│  E5 embeddings (768-dim) · 1,883 chunks + 200 questions        │
-│  · 26 knowledge groups                                         │
+│  E5 embeddings (768-dim) · 2,015 chunks + 230 questions        │
+│  · 29 knowledge groups                                         │
 └───────────────────────────────────────────────────────────────┘
 ```
 
@@ -129,10 +129,10 @@ readings, slide outlines, hands-on code, and video scripts.
 
 | Data | Count | Notes |
 |------|-------|-------|
-| Knowledge chunks | 1,883 | 739 `knowledge_point` + 1,144 `knowledge_variant` |
-| Practice questions | 200 | Multiple-choice / fill-in / short-answer, core subjects |
-| Vector entries | 2,122 | All real E5 embeddings (768-dim), **zero all-zero vectors** |
-| Knowledge groups | 26 | Topic-level groups enabling cross-group conflict detection |
+| Knowledge chunks | 2,015 | 871 `knowledge_point` + 1,144 `knowledge_variant` |
+| Practice questions | 230 | Multiple-choice / fill-in / short-answer, core subjects |
+| Vector entries | 2,245 | All real E5 embeddings (768-dim), **zero all-zero vectors** |
+| Knowledge groups | 29 | Topic-level groups enabling cross-group conflict detection |
 
 Retrieval chain: user query → E5 vector search → BM25 full-text search → fusion ranking →
 personalized re-ranking → augmented generation. On failure it degrades to BM25-only (flagged
@@ -189,9 +189,9 @@ core features still run.
 | Backend | FastAPI + LangGraph · ~245 API endpoints (openapi.json: 228 paths / 245 ops) · 11 agent nodes |
 | Tests | 1389 tests passing / 38 skipped / 1 xfail (CI default profile, full regression, 0 failures) |
 | LLM | DeepSeek (primary) + iFlytek Spark generalv3.5 (fallback; X2 not authorized), dual-channel failover |
-| Retrieval | Real E5 768-dim embeddings · 2,122 vectors · BM25 degradation guard |
+| Retrieval | Real E5 768-dim embeddings · 2,245 vectors · BM25 degradation guard |
 | Resilience | Milvus / PG / Redis degrade independently · runs fully on one machine |
-| Data | 1,883 knowledge chunks + 200 questions · 26 knowledge groups |
+| Data | 2,015 knowledge chunks + 230 questions · 29 knowledge groups |
 
 ---
 

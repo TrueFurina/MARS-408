@@ -293,12 +293,14 @@ documents/*
 # ── 2026-10-14 云服务联调临时目录（探针结果/截图/短期凭证，不入库）──
 _e2e_tmp_mdhz/
 
-# ── career-pilot 本地部署包运行期产物（2026-10-14 用户放行补入）─────────────
-# deploy/career-pilot/ = 服务器部署用的本地快照（backend/ 为 py-server 副本 + 前端 dist）。
+# ── career-pilot 本地部署包（2026-10-14 用户放行：部署包不入库，整目录 ignore）──
+# deploy/career-pilot/ = 服务器部署用的本地快照，全部为派生内容：
+#   backend/ = py-server 代码副本（56MB，含 .env/config.json 机密）
+#   site/    = 前端 vite 构建产物（hash 命名 assets）
 # 机密文件（.env / config.json）与构建产物（dist）已由上方全局规则覆盖；
-# 此处补运行期产物，防一次 `git add -A` 把日志 / 生成媒体 / 绘图 / Windows
-# nul 重定向垃圾卷进提交。注：backend/ 代码快照本体仍未忽略——部署包不入库，
-# 建议后续整目录 ignore 或移出仓库工作树（待用户拍板）。
+# 此处整目录封挡，防一次 `git add -A` 把 56MB 快照卷进提交。
+deploy/career-pilot/backend/
+deploy/career-pilot/site/
 deploy/career-pilot/**/*.log
 deploy/career-pilot/**/media/
 deploy/career-pilot/**/plots/
