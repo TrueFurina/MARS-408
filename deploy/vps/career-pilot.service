@@ -1,0 +1,89 @@
+# ============================================================
+# 芒得很职 · 职业素养对抗实训 —— systemd 单元（单机全栈部署）
+#
+# 用途：在腾讯云轻量 2C4G（或任意 Linux 主机）上以非 root 用户常驻后端服务。
+# 放置：/etc/systemd/system/career-pilot.service
+# 启用：sudo systemctl daemon-reload && sudo systemctl enable --now career-pilot
+#
+# ── 为什么这样写（改前必读）──────────────────────────────────
+# 1) 单写者硬约束：本服务**必须单进程**。`app/lifespan._assert_single_worker()`
+#    会在启动期核验 WEB_CONCURRENCY / UVICORN_WORKERS（>1 即 raise 拒启），
+#    且 `vectordb_data/.import_writer.lock` 强制「同一时刻只有一个写者」。
+#    故此处固化两个环境变量为 1，且 ExecStart 不传 --workers。
+#    ⚠️ 不要为了"提高并发"改成多进程：会重新引入 last-writer-wins 数据竞争。
+# 2) 端口/绑定由 .env 驱动：`main.py` 的 `resolve_bind()` 读 HOST / PORT
+#    （HOST 显式设置时优先级最高）。本机对外由 nginx 反代，故后端只绑
+#    loopback，不直接暴露到公网。
+# 3) 可写目录：程序运行期需要写 vectordb_data / data(SQLite) / sessions /
+#    plots / media。下方 ProtectSystem=strict 会让文件系统整体只读，
+#    因此必须用 ReadWritePaths 逐个放行 —— 少写一个就会出现
+#    只读文件系统报错（且往往在业务跑起来之后才炸）。
+# ============================================================
+
+[Unit]
+Description=MangDeHenZhi career-training backend (FastAPI + LangGraph, single-writer)
+Documentation=file:/opt/career-pilot/backend/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+
+# ── 运行身份（非 root）──
+# 前置：sudo useradd -r -s /usr/sbin/nologin career
+#       sudo chown -R career:career /opt/career-pilot
+User=career
+Group=career
+
+# ── 工作目录 = 程序根：STATIC_DIR 是相对路径，CWD 错了前端就挂不上 ──
+WorkingDirectory=/opt/career-pilot/backend
+
+# ── 环境：密钥与运行态全在 .env（chmod 600，不入库）──
+# .env 中应包含：NETLEARN_ENV=production / HOST=127.0.0.1 / PORT=8000
+#               AUTH_SECRET(>=32) / ADMIN_PASSWORD(>=16) / DEEPSEEK_API_KEY
+#               STATIC_DIR=site / HF_HUB_OFFLINE=1 / TRANSFORMERS_OFFLINE=1
+EnvironmentFile=/opt/career-pilot/backend/.env
+
+# ── 单写者：与 lifespan 守卫呼应，双保险 ──
+Environment=WEB_CONCURRENCY=1
+Environment=UVICORN_WORKERS=1
+
+# ── 启动：走 main.py 入口（由 resolve_bind() 吃 HOST/PORT）──
+# 等价写法：/opt/career-pilot/venv/bin/python -m uvicorn main:app \
+#             --host 127.0.0.1 --port 8000 --workers 1
+ExecStart=/opt/career-pilot/venv/bin/python main.py
+
+# ── 生命周期 ──
+Restart=always
+RestartSec=3
+# 冷启动要加载向量库二进制缓存（跳过 JSON 重建），给足优雅退出时间
+TimeoutStopSec=30
+KillSignal=SIGTERM
+
+# ── 日志：统一进 journal（journalctl -u career-pilot -f）──
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=career-pilot
+
+# ── 加固（最小权限）──
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectControlGroups=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+RestrictSUIDSGID=true
+RestrictNamespaces=true
+LockPersonality=true
+# ⚠️ ProtectHome=true 要求程序装在 /opt（而非 /home）之下；若你坚持装在 ~，
+#    请改为 ProtectHome=read-only 或注释掉本行。
+ProtectHome=true
+# 运行期可写目录（逐个放行，缺一个都会因只读文件系统而失败）
+ReadWritePaths=/opt/career-pilot/backend/vectordb_data
+ReadWritePaths=/opt/career-pilot/backend/data
+ReadWritePaths=/opt/career-pilot/backend/sessions
+ReadWritePaths=/opt/career-pilot/backend/plots
+ReadWritePaths=/opt/career-pilot/backend/media
+
+[Install]
+WantedBy=multi-user.target
