@@ -482,3 +482,63 @@ class TestRedisLocalRateLimitConcurrency:
         assert seen, "限流路径从未被进入（依赖注入失败？）"
         assert len(seen) > 1, f"仅 {len(seen)} 个线程进入限流路径，threadpool 语义不成立"
         assert set(codes) <= {200, 429}, set(codes)
+
+
+# ══════════════════════════════════════════════════════════
+# 守护：限流窗口状态不得跨用例累积
+#   （conftest._reset_process_local_rate_windows）
+#
+# 机制回顾：CI 与本机都没有 Redis，check_rate_limit 恒走进程内兜底，
+#   计数落在**进程级**字典；conftest.mock_auth 又让所有用例共用同一个 uid
+#   ⇒ 若不在用例间清空窗口，窗口一满，其后用例成片 429
+#   （2026-10-14 实测：完整套件本地/CI 同形态失败簇，均由 429 及其引发的 KeyError 组成）。
+#
+# 本类用两个**有先后依赖**的用例把这条不变量钉死：
+#   test_a 把探测 uid 打满 —— 第 N+1 次必 429，同时证明「打满」确实会发生；
+#   test_b 在**下一个用例**里断言同一 uid 又能放行 —— 只有 conftest 真在用例间
+#          清空了窗口才成立。删掉那个 fixture，test_b 立刻变红。
+# ⚠️ 依赖模块内用例定义顺序（pytest 保证按序执行）；只 -k test_b 单跑时为弱断言。
+# ══════════════════════════════════════════════════════════
+
+class TestRateWindowIsolation:
+    _UID = "u_window_isolation_probe"
+
+    @staticmethod
+    def _singleton():
+        import importlib
+
+        return importlib.import_module("db.redis_client").redis_client
+
+    @staticmethod
+    def _call():
+        """按共享聚合键调用一次配额检查；超限抛 HTTPException(429)。"""
+        from shared.ratelimit import check_llm_quota
+
+        check_llm_quota({"user_id": TestRateWindowIsolation._UID})
+
+    def _skip_if_redis_backed(self) -> None:
+        if self._singleton()._enabled:
+            pytest.skip("Redis 启用时计数在服务端，本守护只覆盖进程内兜底路径")
+
+    def test_a_shared_uid_window_fills_up(self):
+        """把探测 uid 打到超限：恰好放行 LLM_PER_MINUTE 次，第 N+1 次 429。"""
+        from fastapi import HTTPException
+
+        from shared.ratelimit import LLM_PER_MINUTE
+
+        self._skip_if_redis_backed()
+        codes = []
+        for _ in range(LLM_PER_MINUTE + 1):
+            try:
+                self._call()
+                codes.append(200)
+            except HTTPException as e:
+                codes.append(e.status_code)
+
+        assert codes[-1] == 429, f"第 {LLM_PER_MINUTE + 1} 次应超限，实测 {codes[-1]}"
+        assert codes.count(200) == LLM_PER_MINUTE, codes
+
+    def test_b_next_test_starts_with_clean_window(self):
+        """上一个用例已把该 uid 打满；窗口若跨用例累积，这里必然 429。"""
+        self._skip_if_redis_backed()
+        self._call()  # 不抛即证明 conftest 已在用例间清空进程内窗口

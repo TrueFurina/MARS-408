@@ -106,6 +106,57 @@ def _isolate_video_cache(monkeypatch, tmp_path):
 
 
 @pytest.fixture(autouse=True)
+def _reset_process_local_rate_windows():
+    """每个用例开始前清空「进程内滑动窗口限流」桶，切断窗口状态在用例间的累积。
+
+    ── 为什么必须清（2026-10-14 实测事故）──────────────────────────────────
+    CI（.github/workflows/ci.yml 的 backend tests job）与本机联调环境**都没有 Redis**：
+    该 job 不设 NETLEARN_ENV、也不起 redis service。于是
+    `RedisClient.check_rate_limit` 恒走**进程内兜底** `_local_rate_limit`，
+    计数落在**进程级**字典里，语义是「window 秒内允许 max_requests 次」。
+
+    而 `mock_auth` 让**所有用例共用同一个 test_admin uid**，于是
+
+        shared/ratelimit.check_llm_quota → 键 llm_min:{同一个 uid}，上限 20 次 / 60 秒
+
+    整套 ~1.5k 用例共用同一把桶 ⇒ 窗口一满，其后**成片 429**。
+    实证：直接连调 `check_llm_quota` 21 次，第 21 次即 429；
+    完整套件本地复现出与 CI 同形态的失败簇（测试文件 × 429 + 由 429 引发的 KeyError setup 错误）。
+    `api/auth.py` 的注册/登录限流复用**同一把桶**，同样被波及
+    （`register:{client_ip}` 仅 3 次/小时，而测试只有 3 个 HTTP 注册点——余量为零）。
+
+    注：这段累积曾被另一处**偶然**掩盖——test_wave_b_security.py 原先把
+    `sys.modules["db.redis_client"]` 的桩写在模块顶层，收集期即全局生效，
+    使整套用例的限流恒返回 True（该缺陷已由独立提交修为 fixture 内安装）。
+    即：套件此前是「碰巧绿」，本 fixture 让它变成「按设计绿」。
+
+    ── 处置口径 ──────────────────────────────────────────────────────────
+    与既有的 `test_app_middleware_matrix.TestRateLimit.setup_method`
+    （`middleware._rate_buckets.clear()`）同一口径：**限流器状态不跨用例共享**。
+    此处不打桩、不放行，只清状态 ⇒ 单个用例内计数依旧真实，用例之间互不污染。
+    限流器自身的正确性另有专门覆盖：`test_ratelimit_circuit.py`（自建 RedisClient 实例，
+    单线程语义 + 32 线程真并发）与 `test_wave_b_security.py`（配额超限抛 429 的直调断言）；
+    两条都自建实例/自装桩，不受本 fixture 影响。
+
+    ⚠️ 仅清「进程内兜底」。若 CI 日后接上真实 Redis（计数在服务端），本 fixture 不再生效，
+    届时须改为清理对应 key，或为测试进程准备独立 Redis DB。
+    """
+    # 刻意用 sys.modules 取已导入的模块，**不** `import db.redis_client`：
+    # 后者会执行 db/__init__.py（其中 `from .milvus_client import vector_db`），
+    # 在本机 Windows 上会拉起重型原生库（历史上触发过 SIGSEGV），且会改变导入顺序。
+    # 模块尚未被导入 ⇒ 本进程内必然还没有任何窗口状态，直接放行即可。
+    _rc = sys.modules.get("db.redis_client")
+    if _rc is not None:
+        _client = getattr(_rc, "redis_client", None)
+        _buckets = getattr(_client, "_local_buckets", None)
+        _lock = getattr(_client, "_local_lock", None)
+        if _buckets is not None and _lock is not None:
+            with _lock:
+                _buckets.clear()
+    yield
+
+
+@pytest.fixture(autouse=True)
 def mock_llm(monkeypatch):
     """注入离线 Mock LLM，使所有依赖 LLM 的端点在测试环境确定性跑通。
 
