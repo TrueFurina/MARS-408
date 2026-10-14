@@ -17,7 +17,10 @@
    训练数据 / 研究实验 / 缓存 / 日志 / 一次性脚本；
 3. 落地瘦版运行依赖 ``requirements.txt``、配置范本 ``config.example.json``、解释器版本
    ``.python-version`` 与 ``.env`` 模板 ``.env.example``；
-4. **绝不覆盖已存在的 ``.env``**（其中含真实密钥），仅在其缺失时按模板生成。
+4. **绝不覆盖已存在的 ``.env``**（其中含真实密钥），仅在其缺失时按模板生成；
+5. **保留**由 ``vite.deploy.config.ts`` 直接产出到 ``backend/site/`` 的前端产物
+   （见 ``PRESERVE_TOP_NAMES``）——前端与后端同根，使 ``STATIC_DIR=site`` 相对包根
+   恒定解析，**入口不依赖外部 CWD**（发布时 ``directory`` 即包根）。
 
 退出码：0=成功（或 --check 一致）；1=--check 发现漂移；2=环境错误（源目录缺失）。
 """
@@ -51,6 +54,11 @@ EXCLUDE_FILE_NAMES = {
     "guardian.bat", "import_docling.py", "import_pdfs.py",
     "import_textbook.py", "iq_diag.py", ".env.example", "nul",
 }
+
+# 目标包内**由其它流程产出、不属于本脚本同步范围**的顶层条目，清理陈旧文件时必须保留。
+# ``site`` = 前端 SPA 产物（由 vite.deploy.config.ts 直接产出到 backend/site），
+# 与后端同根 → 使入口对 CWD 无关（STATIC_DIR=site 相对包根，恒定解析正确）。
+PRESERVE_TOP_NAMES = {"site"}
 
 # ── 瘦版运行依赖（相对 py-server 全量删除了 torch 系 / 向量库 / 关系库客户端）──
 THIN_REQUIREMENTS = """\
@@ -91,8 +99,10 @@ LLM_PROVIDER=deepseek
 # 演示账号播种（app/lifespan._seed_demo_data）。二者叠加 = 无人可登录。
 # 开发模式下限流 fail-open、演示账号自动播种，配合下方固定 AUTH_SECRET 即稳定可用。
 NETLEARN_ENV=development
-# 前端 SPA 产物目录（前后端同源单端口；site/ 而非 dist/ —— 上传排除 "dist" 构建产物）。
-STATIC_DIR=../site
+# 前端 SPA 产物目录：site/ 与后端同根（backend/site/）。发布时 CWD=包根，
+# 故用相对包根的 `site` 即可恒定解析（入口不依赖外部 CWD）。命名 site/ 而非 dist/ 是为
+# 避开发布通道对 "dist" 构建产物的上传排除规则。
+STATIC_DIR=site
 HF_HUB_OFFLINE=1
 TRANSFORMERS_OFFLINE=1
 # 必填：>=32 字符随机串（dev 下也已显式提供 → token 跨重启稳定）。
@@ -209,13 +219,17 @@ def build() -> int:
         env_path.write_bytes(ENV_TEMPLATE.encode("utf-8"))
         print("[build_career_pilot_package] ℹ️ .env 缺失 → 已按模板生成（需人工填真实密钥与 AUTH_SECRET）")
 
-    # 清理陈旧文件（源树已不存在者），保留 .env；Windows 保留名（nul）删除失败则跳过
+    # 清理陈旧文件（源树已不存在者），保留 .env 与 PRESERVE_TOP_NAMES（如 site/）；
+    # Windows 保留名（nul）删除失败则跳过
     removed = 0
     for dirpath, _dirnames, filenames in os.walk(DST, topdown=False):
         for f in filenames:
             p = pathlib.Path(dirpath) / f
             rel = pathlib.PurePosixPath(p.relative_to(DST).as_posix())
             if rel in expected:
+                continue
+            # 受保护的顶层目录（前端产物 site/ 等）不属于本脚本同步范围 → 不清理
+            if rel.parts and rel.parts[0] in PRESERVE_TOP_NAMES:
                 continue
             try:
                 p.unlink()
