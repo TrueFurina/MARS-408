@@ -107,3 +107,33 @@ class TestSpaInstall:
         client = TestClient(app)
         resp = client.get("/showcase", follow_redirects=False)
         assert resp.status_code == 200 and "SPA-INDEX" in resp.text
+
+
+class TestSpaHeadSupport:
+    """HEAD 应与 GET 同样可用（HTTP 语义；供只发 HEAD 的下游健康探针）。"""
+
+    def test_head_root_falls_back_to_index(self, tmp_path, monkeypatch):
+        """HEAD / → 200（此前只判 GET，HEAD / 落到 404，下游会误判服务不可用）。"""
+        dist = tmp_path / "dist"
+        (dist / "assets").mkdir(parents=True)
+        (dist / "index.html").write_text("<html>SPA-INDEX</html>", encoding="utf-8")
+        monkeypatch.delenv("STATIC_DIR", raising=False)
+        monkeypatch.setattr(static_sites, "_REPO_ROOT", str(tmp_path))
+
+        app = FastAPI()
+        static_sites.install_spa(app)
+        client = TestClient(app)
+        assert client.head("/").status_code == 200
+
+    def test_head_api_path_still_not_swallowed(self, tmp_path, monkeypatch):
+        """/api 下的 HEAD 也不得被 index.html 顶掉（与 GET 同约定）。"""
+        dist = tmp_path / "dist"
+        (dist / "assets").mkdir(parents=True)
+        (dist / "index.html").write_text("<html>SPA-INDEX</html>", encoding="utf-8")
+        monkeypatch.delenv("STATIC_DIR", raising=False)
+        monkeypatch.setattr(static_sites, "_REPO_ROOT", str(tmp_path))
+
+        app = FastAPI()
+        static_sites.install_spa(app)
+        client = TestClient(app)
+        assert client.head("/api/definitely-not-here").status_code == 404

@@ -203,3 +203,24 @@ def test_openapi_description_auth_coverage_matches_recomputation():
         f"对外宣称认证覆盖率 {claimed}%，而从真实路由表重算为 {measured}%"
         f"（{len(protected)}/{total}）—— 请跑 scripts/verify_auth_coverage.py 复核并同步文案"
     )
+
+
+def test_head_status_endpoint_supported():
+    """HEAD /api/status 必须可用（HTTP 语义：GET 可用处 HEAD 亦应可用）。
+
+    此前 FastAPI 路由只挂 GET → HEAD 返回 405（allow: GET），只发 HEAD 探活的下游会
+    把「服务正常」误判为不可用（如部分 PaaS/LB 的健康检查）。
+    """
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+
+    from app.status import install
+
+    app = FastAPI()
+    install(app)
+    client = TestClient(app)
+
+    resp = client.head("/api/status")
+    assert resp.status_code == 200
+    assert resp.headers.get("content-length") is not None, "HEAD 响应应带 content-length"
+    assert resp.content == b"", "HEAD 响应不得带 body"
