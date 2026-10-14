@@ -6,14 +6,20 @@
 import json
 import logging
 import os
+import threading
+import time
+from collections import deque
 from typing import Optional
 
 from config import get_redis_config
 
 logger = logging.getLogger("netlearn.redis")
 
-# 生产环境(NETLEARN_ENV=production)下，Redis 不可用/异常时限流改为 fail-closed（拒绝请求），
-# 避免登录/注册限流被静默关闭；开发环境保持 fail-open（放行），便于本地无 Redis 调试。
+# 生产环境(NETLEARN_ENV=production)标记。历史上它决定「Redis 不可用 → 限流 fail-closed」，
+# 但这在**无 Redis 的部署**（本试点沙箱无缓存/队列）下会误伤：production 下
+# /api/auth/login 一律 422（限流 fail-closed），不可用。
+# 现改为：无论是否 STRICT，Redis 不可用/异常一律**降级为进程内滑动窗口限流**（见
+# RedisClient.check_rate_limit），既不放行也不误拒；STRICT 仅影响降级日志级别。
 REDIS_STRICT = os.environ.get("NETLEARN_ENV", "development").lower() in ("production", "prod")
 
 try:
@@ -27,9 +33,18 @@ except ImportError:
 class RedisClient:
     """Redis 缓存封装，开发期不可用时静默降级"""
 
+    # 进程内兜底限流的 key 上界：防止被海量（如伪造头生成的）key 打爆内存。
+    _LOCAL_MAX_KEYS = 4096
+
     def __init__(self):
         self._client = None
         self._enabled = False
+        # 进程内滑动窗口限流：key → 最近 window 秒内的请求时间戳 deque。
+        # 仅在 Redis 不可用/异常时使用（见 check_rate_limit）。
+        self._local_buckets: dict[str, deque[float]] = {}
+        self._local_lock = threading.Lock()
+        # 时间源可注入（默认单调时钟），便于测试确定性地推进窗口而无需真实 sleep。
+        self._time_source = time.monotonic
 
     def connect(self) -> bool:
         config = get_redis_config()
@@ -126,17 +141,76 @@ class RedisClient:
 
     # ── 限流 ──
 
-    def check_rate_limit(self, key: str, max_requests: int, window: int = 60) -> bool:
-        """滑动窗口限流：返回 True 表示允许，False 表示超限/被拒绝
+    def _local_rate_limit(self, key: str, max_requests: int, window: int) -> bool:
+        """进程内滑动窗口限流（Redis 不可用时的兜底）。
 
-        安全基线：生产环境(REDIS_STRICT)下，Redis 未启用或异常时返回 False（fail-closed），
-        杜绝限流静默失效导致的暴力破解风险；开发环境返回 True（fail-open）。
+        语义与 Redis 分支完全一致：``window`` 秒内允许 ``max_requests`` 次；
+        超限返回 False，未超限返回 True（并计入本次）。实现为「每 key 一个时间戳
+        deque + 一把可重入安全的互斥锁」，该进程唯一，故无需跨进程协调。
+
+        内存安全：桶数受 :attr:`_LOCAL_MAX_KEYS` 上界保护——新增 key 前先清理
+        「已完全滑出窗口」的空桶，仍达上界则淘汰最久未活跃的桶，硬保证字典规模不越界。
+        """
+        now = self._time_source()
+        with self._local_lock:
+            dq = self._local_buckets.get(key)
+            if dq is None:
+                # 内存上界保护：仅在确实要新建 key 时才付出清理代价。
+                if len(self._local_buckets) >= self._LOCAL_MAX_KEYS:
+                    self._evict_local_buckets(now, window)
+                dq = deque()
+                self._local_buckets[key] = dq
+            # 剔除滑出窗口的时间戳
+            cutoff = now - window
+            while dq and dq[0] <= cutoff:
+                dq.popleft()
+            if len(dq) >= max_requests:
+                return False
+            dq.append(now)
+            return True
+
+    def _evict_local_buckets(self, now: float, window: int) -> None:
+        """内存上界保护：清空过期桶，仍达上界则按「最久未活跃」淘汰。"""
+        cutoff = now - window
+        stale = [k for k, dq in self._local_buckets.items() if not dq or dq[-1] <= cutoff]
+        for k in stale:
+            del self._local_buckets[k]
+        # 仍达上界（窗口内活跃 key 过多）→ 淘汰最旧的一批，硬保证上界
+        if len(self._local_buckets) >= self._LOCAL_MAX_KEYS:
+            overflow = len(self._local_buckets) - self._LOCAL_MAX_KEYS + 1
+            oldest = sorted(
+                self._local_buckets.items(),
+                key=lambda kv: kv[1][-1] if kv[1] else 0.0,
+            )
+            for k, _ in oldest[:overflow]:
+                del self._local_buckets[k]
+
+    def check_rate_limit(self, key: str, max_requests: int, window: int = 60) -> bool:
+        """滑动窗口限流：返回 True 表示允许，False 表示超限/被拒绝。
+
+        两条路径：
+          - **Redis 正常启用** → 复用 Redis 原子滑动窗口（行为一字未改）。
+          - **Redis 未启用 / 查询异常** → 退回**进程内滑动窗口兜底**
+            （:meth:`_local_rate_limit`），**既不 fail-open 放行、也不 fail-closed 拒绝**，
+            语义与 Redis 分支一致：``window`` 秒内允许 ``max_requests`` 次。
+            ``REDIS_STRICT``（生产）下仅把降级日志提到 error 级，不再直接拒绝请求。
+
+        ── 为什么进程内兜底在本部署下与 Redis 限流「功能等价」────────────────────
+        本部署被 ``vectordb_data/.import_writer.lock`` 单写者锁硬约束为 **workers=1**
+        （见 ``app/lifespan._assert_single_worker``），全进程唯一 → 进程内计数器即全局
+        唯一计数器，与 Redis 共享计数无差别。**若将来改为多 worker，必须换回 Redis
+        或其它共享存储**，否则每个 worker 各记一份，实际阈值会被放大 workers 倍。
+
+        内存安全：进程内桶按 key 计数，受 :attr:`_LOCAL_MAX_KEYS` 上界保护。
         """
         if not self._enabled:
             if REDIS_STRICT:
-                logger.error("Redis 未启用，限流 fail-closed 拒绝请求(key=%s)。生产环境请启用 Redis。", key)
-                return False
-            return True
+                logger.error(
+                    "Redis 未启用，限流已降级为进程内滑动窗口(key=%s)。"
+                    "生产环境建议启用 Redis；多 worker 部署下进程内限流不生效。",
+                    key,
+                )
+            return self._local_rate_limit(key, max_requests, window)
         try:
             current = self._client.get(key)
             if current is None:
@@ -149,10 +223,10 @@ class RedisClient:
             return True
         except Exception as e:
             if REDIS_STRICT:
-                logger.error("限流查询异常，fail-closed 拒绝请求(key=%s): %s", key, e)
-                return False
-            logger.warning("限流查询异常，开发环境 fail-open 放行(key=%s): %s", key, e)
-            return True
+                logger.error("限流查询异常，已降级为进程内滑动窗口(key=%s): %s", key, e)
+            else:
+                logger.warning("限流查询异常，已降级为进程内滑动窗口(key=%s): %s", key, e)
+            return self._local_rate_limit(key, max_requests, window)
 
 
 # 全局单例
