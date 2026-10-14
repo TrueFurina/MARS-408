@@ -151,6 +151,38 @@ async function loadDashboard(cls: ClassItem) {
   }
 }
 
+/** CSV 单元格转义：含逗号 / 引号 / 换行时加双引号并转义内部引号（防姓名等破列） */
+function csvCell(v: unknown): string {
+  const s = v == null ? '' : String(v)
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+}
+
+/** 导出班级看板 CSV（过程性考核依据落盘；与素养测评导出一致，纯前端生成，零后端依赖） */
+function exportDashCsv() {
+  if (!dash.value) return
+  const d = dash.value
+  // 维度列：优先取班级聚合的六维键，退回首个学生的维度键
+  const dims = Object.keys(d.summary?.dimension_avg || d.students[0]?.dimension_avg || {})
+  const head = ['学号', '姓名', '是否加入', '完成场次', '总会话', 'best_overall', ...dims.map(dimLabel)]
+  const rows = d.students.map(s =>
+    [s.student_no || '', s.name, s.bound ? '已加入' : '未加入',
+     s.finished_count, s.session_count, s.overall_best ?? '',
+     ...dims.map(dim => s.dimension_avg[dim] ?? '')])
+  // 末尾附班级六维均分（有聚合才有）
+  if (d.summary) {
+    rows.push(['', `班级均分（${d.summary.student_count}人）`, '',
+      d.summary.finished_count, d.summary.started_count, '',
+      ...dims.map(dim => d.summary!.dimension_avg[dim] ?? '')])
+  }
+  const csv = [head, ...rows].map(r => r.map(csvCell).join(',')).join('\n')
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = `对抗实训看板_${d.class_name}.csv`
+  a.click()
+  URL.revokeObjectURL(a.href)
+}
+
 onMounted(() => {
   loadClasses().catch(() => {})
   loadScenarios().catch(() => {})
@@ -227,6 +259,7 @@ onMounted(() => {
         <h2>3 · 班级学情看板</h2>
         <p v-if="!dash" class="hint">点击班级右侧「看板」查看聚合学情</p>
         <template v-else>
+          <button class="link dash-export" @click="exportDashCsv">导出 CSV（过程性考核依据）</button>
           <!-- 班级级聚合：直接回答"这个班整体怎么样、哪里最弱、谁要关注" -->
           <div v-if="dash.summary" class="agg">
             <div class="stats">
@@ -304,6 +337,7 @@ button { cursor: pointer; }
 button:disabled { opacity: .5; cursor: not-allowed; }
 .link { background: none; border: none; padding: .15rem .25rem; color: var(--accent); }
 .link.dim, .dim { color: var(--text-dim, var(--color-text-3)); }
+.dash-export { margin-bottom: var(--space-3); }
 .class-list, .roster { list-style: none; padding: 0; margin: .5rem 0 0; }
 .class-list li, .roster li { display: flex; justify-content: space-between; gap: .5rem; padding: .3rem 0; border-bottom: 1px dashed var(--border, var(--color-border)); }
 .class-list li.active { font-weight: var(--weight-semibold); }
