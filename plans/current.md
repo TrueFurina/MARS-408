@@ -43,6 +43,12 @@
       记录 `deliverables/engineering-assurance/browser-e2e-2026-10-14.md`；
       脚本 `scripts/e2e/teacher_loop_walkthrough.cjs`（人工运行，不在 CI）。
       ⚠️ F1/F2 尚无自动化守护（前端无测试基建）—— 见报告第八节。
+      ✅ **守护已补（2026-10-14 续）**：`src/router/landing.ts` 把登录落点口径提为纯函数
+      （LoginView 改调用），新增 `src/router/landing.spec.ts`（7 例，F1 三分支回归）
+      与 `src/router/guards.spec.ts`（8 例，F2 三路由 + A2 /sandbox + /admin 系 meta 在位）；
+      **双向变异验证**：改回旧落点逻辑 → 教师/管理员 2 例红；删 /sandbox meta → 对应 1 例红。
+      全量前端 22 文件 / 143 测试通过。报告 §8 的「零 vitest 用例」判断在其写就时已开始过期
+      （当日其他会话已落 navConfig/useBenchmark 等 spec），以本提交时的全量结果为准。
 
 ## 主线（用户 2026-10-13 批准：三拼图全部拓展）
 
