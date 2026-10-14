@@ -55,6 +55,10 @@ EXCLUDE_FILE_NAMES = {
     "pip-audit-report.json", ".coverage", "export_onnx.py",
     "guardian.bat", "import_docling.py", "import_pdfs.py",
     "import_textbook.py", "iq_diag.py", ".env.example", "nul",
+    # filelock 的**运行时**单写者锁文件：锁绑定的是「持有进程的文件句柄」而非文件是否存在，
+    # 留一个无主锁文件毫无意义；且本地开发服务器持有它时 Windows 会拒绝读取该文件，
+    # 使本脚本的字节一致性比对抛 PermissionError（构建随本地进程状态随机失败）。
+    ".import_writer.lock",
     # config.json 由本脚本**自持生成**（见 _sandbox_config_bytes）：包内配置必须声明
     # 「沙箱无 Milvus/Redis」，不能让 py-server 的本地配置把它冲掉（曾导致 /api/status 误报 degraded）。
     "config.json",
