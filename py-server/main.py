@@ -57,6 +57,41 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# ── OpenAPI 去重：GET+HEAD 同挂一条 route 时的 operationId 重号 ─────────────────
+# /api/status 用 `api_route(methods=["GET","HEAD"])` 一条 route 挂两个方法（必须是一条，
+# 否则 `verify_auth_coverage.collect()` 按 route 计数会把 /api 端点从 245 顶到 246）。
+# 但 FastAPI 会为这两个方法各生成一个 operation，且**复用同一个 operationId**
+# （实测：get 与 head 都写成 `status_api_status_head`，并告警
+#  "Duplicate Operation ID ..."）。OpenAPI 规范要求 operationId 唯一 ⇒ 不对齐的话
+# 随源码包发出的 openapi.json 会是**非法文档**。
+#
+# 处置：HEAD 是 HTTP 传输层的便利语义（GET 可用处即应可用），按惯例**不列入对外契约**；
+# 故此处把与同路径 GET 重号的 head 操作摘掉 —— 对外契约仍是 246 操作、与快照逐字一致，
+# 而路由表本身未改（HEAD 仍然真实可用，`tests/test_app_status_invariants.py`
+# ::test_head_status_endpoint_supported 守着这一点）。
+# 该告警由 FastAPI 在生成阶段抛出、且我们紧随其后确定性地消除，故就地点屏蔽，
+# 避免每次导出契约都刷一条已被处理的噪音。
+_app_openapi = app.openapi
+
+
+def _openapi_dedup_head() -> dict:
+    """导出契约前摘掉与同路径 GET 重号的 head 操作（见上方说明）。"""
+    import warnings
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore", message=r".*Duplicate Operation ID.*", category=UserWarning
+        )
+        spec = _app_openapi()
+    for ops in (spec.get("paths") or {}).values():
+        head, get = ops.get("head"), ops.get("get")
+        if head and get and head.get("operationId") == get.get("operationId"):
+            ops.pop("head")
+    return spec
+
+
+app.openapi = _openapi_dedup_head
+
 # ② 静态资源（plots / media）
 static_sites.install_plots_media(app)
 

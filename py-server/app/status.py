@@ -211,8 +211,23 @@ async def metrics():
 
 
 def install(app: FastAPI) -> None:
-    # HEAD 与 GET 同挂：HTTP 语义要求 HEAD 在 GET 可用处同样可用。此前 HEAD /api/status
-    # 返回 405（FastAPI 路由默认只挂 GET），会让只发 HEAD 探活的下游误判服务不可用。
-    app.api_route("/api/status", methods=["GET", "HEAD"])(status)
+    # HEAD 与 GET **同挂成一条 route**：HTTP 语义要求 HEAD 在 GET 可用处同样可用。此前
+    # HEAD /api/status 返回 405（FastAPI 路由不会像 Starlette 那样自动为 GET 补 HEAD），
+    # 会让只发 HEAD 探活的下游误判服务不可用。
+    #
+    # ⚠️ 必须保持「一条 route、两个方法」，不要拆成 app.get + app.head 两条：
+    #   `scripts/verify_auth_coverage.py::collect()` 按 **route 对象**计数，拆两条会把
+    #   /api 端点总数从 245 顶到 246、认证覆盖率从 94.69% 掉到 94.31%（分母虚增），
+    #   而这两个数都是已固化的对外口径（见 tests/test_app_status_invariants.py 的重算断言）。
+    #
+    # ⚠️ 必须**显式固定 operation_id**：不给时 FastAPI 用 `route.unique_id` 派生，而它依赖
+    #   `route.methods` 这个 **set** 的迭代顺序 —— 集合顺序随 PYTHONHASHSEED 变化，实测同一份
+    #   代码在不同进程里 GET 会一会叫 `status_api_status_get`、一会叫 `status_api_status_head`
+    #   （非确定性！），于是契约快照与运行时必然时对时不对。
+    #   写死成快照里已冻结的那个 id ⇒ 契约 id 与函数名解耦、且确定可复现。
+    #   HEAD 的重号操作由 main.py 的 `_openapi_dedup_head` 摘除。
+    app.api_route(
+        "/api/status", methods=["GET", "HEAD"], operation_id="status_api_status_get"
+    )(status)
     app.get("/api/status/competition")(competition_status)
     app.get("/metrics")(metrics)
