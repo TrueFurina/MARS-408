@@ -19,6 +19,7 @@ import logging
 from typing import Optional
 
 from agents.state import AgentState
+from config import get_gomarl_config
 from db.llm_provider import LLMProvider
 from engines.frugal_rag import format_retrieval_for_llm
 from engines.gomarl import GOMARLConsensus, AgentResult
@@ -47,6 +48,9 @@ async def generator_cluster_node(state: AgentState) -> AgentState:
     # L1/L2/L3 三层学情记忆（低侵入注入：由 api/langgraph.py 经 build_memory_context 组装后写入 state）
     # 此前 4 个专用资源 Agent（mindmap/code/pppt/video）未被传入，导致记忆注入在编排层失效（死代码）。
     memory_context = state.get("memory_context") or ""
+    # 教学策略接线：coordinator 节点（本节点上游，graph.py:115-118）写入的讲解方式决策。
+    # 缺失/未接入时为空串 → prompt 与接线前逐字等价。
+    teaching_mode_instruction = _teaching_mode_instruction(state.get("policy_action"))
 
     # 构建知识上下文 (所有子 Agent 共享)
     knowledge_context = format_retrieval_for_llm(chunks, max_chars=3000)
@@ -54,7 +58,7 @@ async def generator_cluster_node(state: AgentState) -> AgentState:
     llm = LLMProvider()
 
     # ── 构建简单 text_completion Agent 的用户提示 ──
-    teacher_prompt = _build_agent_prompt("teacher", plan, profile, knowledge_context, diagnosis, memory_context)
+    teacher_prompt = _build_agent_prompt("teacher", plan, profile, knowledge_context, diagnosis, memory_context, teaching_mode_instruction)
     quiz_prompt = _build_agent_prompt("quizmaster", plan, profile, knowledge_context, diagnosis, memory_context)
     extension_prompt = _build_agent_prompt("extension", plan, profile, knowledge_context, diagnosis, memory_context)
 
@@ -207,6 +211,33 @@ async def generator_cluster_node(state: AgentState) -> AgentState:
     return state
 
 
+# ── 教学策略接线：teaching_mode → 讲解顺序指令（2026-10-14）──
+# 来源：coordinator 节点写入 state["policy_action"]["teaching_mode"]
+# （engines.teaching_rules.decide_policy_action / engines.mappo_policy.select_action）。
+# 三方约定取值：sequential（默认顺序讲解）/ example_first（薄弱点≥2 → 例题先行）/ analogy（类比讲解）。
+#
+# 关键约定：**只改讲解顺序，不改内容要求**。措辞刻意避开"必须/禁止"等强约束，
+# 避免与 TEACHER_PROMPT 的既定要求冲突或压过学生画像指令。
+# 未知取值一律不注入（fail-open 到现状），杜绝上游新增枚举时静默改产物。
+TEACHING_MODE_INSTRUCTIONS = {
+    "sequential": "【讲解顺序】先讲核心概念与定义，再讲原理与机制，最后讲实际应用。",
+    "example_first": "【讲解顺序】先用一道具体例子/一道典型题引入，再由现象回推概念与原理，最后收在实际应用。",
+    "analogy": "【讲解顺序】先用学生熟悉的日常类比搭桥，再落到概念与原理，最后收在实际应用。",
+}
+
+
+def _teaching_mode_instruction(policy_action: Optional[dict]) -> str:
+    """由 state["policy_action"] 取出讲解顺序指令；不可用/未知取值时返回空串。
+
+    返回空串时 `_build_agent_prompt` 与接线前逐字等价（不插入任何空行或占位）。
+    """
+    if not get_gomarl_config().get("use_teaching_mode_prompt", True):
+        return ""
+    if not isinstance(policy_action, dict):
+        return ""
+    return TEACHING_MODE_INSTRUCTIONS.get(policy_action.get("teaching_mode") or "", "")
+
+
 def _build_agent_prompt(
     agent_type: str,
     plan: dict,
@@ -214,6 +245,7 @@ def _build_agent_prompt(
     knowledge_context: str,
     diagnosis: dict,
     memory_context: str = "",
+    teaching_mode_instruction: str = "",
 ) -> str:
     """为 text_completion 类子 Agent 构建用户提示
 
@@ -259,6 +291,10 @@ def _build_agent_prompt(
 
     # 输出格式提醒
     if agent_type == "teacher":
+        # 教学策略接线：讲解顺序指令紧贴输出格式要求之前——它约束"怎么组织"，
+        # 与前面的"讲什么"（主题/难点/记忆）分层；插在任务指令前会被学生画像挤到尾部。
+        if teaching_mode_instruction:
+            prompt_parts.append(teaching_mode_instruction)
         prompt_parts.append("\n请先输出 ---TEACHER_START---，然后生成讲解内容。")
     elif agent_type == "quizmaster":
         prompt_parts.append("\n请先输出 ---QUIZ_START---，然后生成题目（含答案和解析）。")

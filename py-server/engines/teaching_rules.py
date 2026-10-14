@@ -516,6 +516,24 @@ class TeachingRuleEngine:
         scored.sort(reverse=True)
         return [tid for _, tid in scored]
 
+    @staticmethod
+    def _teaching_weak_count(profile: dict) -> int:
+        """按生产画像契约数薄弱点，供 teaching_mode 判定用。
+
+        口径来源：weak_topics / weak_subjects（列表，M3 早期口径，保留优先兼容）
+        → weak_points（生产 StudentProfile 的逗号分隔字符串，api/assessment.py:89
+        以 "," join 写入、:285 以"，"/"," 切分解析）→ 0。
+
+        刻意**不**读 weak_points 的字数或长度近似：那是"有几个薄弱点"的语义错误。
+        """
+        old = len(profile.get("weak_topics", []) or []) + len(profile.get("weak_subjects", []) or [])
+        if old:
+            return old
+        raw = profile.get("weak_points") or ""
+        if isinstance(raw, (list, tuple)):
+            return len([x for x in raw if str(x).strip()])
+        return len([s for s in str(raw).replace("，", ",").split(",") if s.strip()])
+
     def decide_policy_action(
         self,
         profile: Optional[dict] = None,
@@ -540,6 +558,15 @@ class TeachingRuleEngine:
 
         weak_count = len(profile.get("weak_topics", []) or []) + len(profile.get("weak_subjects", []) or [])
         mode = "example_first" if weak_count >= 2 else "sequential"
+        # 讲解方式（teaching_mode）另走生产契约口径（2026-10-14 接线取证）。
+        # 背景：生产链路传入的是 state["student_profile"]，其契约为
+        # {knowledge_base, learning_style, weak_points, ...}（agents/state.py:15、
+        # 前端 StudentProfile），**不存在** weak_topics/weak_subjects/level。
+        # 原口径恒读到 0 → teaching_mode 恒 sequential，example_first 是死取值
+        # （接线后也是死代码）。故 mode 用真实字段重算，且保留旧键优先兼容。
+        # 刻意与上面的 weak_count 分开：review_intensity 属评审强度控制面
+        # （ADR-011 权重灰度是另一层），不因本次接线而改变触发条件。
+        mode = "example_first" if self._teaching_weak_count(profile) >= 2 else "sequential"
 
         retried = (gate_result or {}).get("verdict") in ("fix", "reject")
         if round_num > 0 or retried or weak_count >= 3:

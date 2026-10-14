@@ -172,6 +172,11 @@ DEFAULTS = {
         "mappo_hidden_dim": 64,          # 策略网络隐藏层维度
         "mappo_lr": 3e-4,                # PPO 学习率
         "mappo_episodes": 1000,          # 训练回合数（实验脚本默认）
+        # M3 接线（2026-10-14）：policy_action.teaching_mode 注入生成 prompt。
+        # 关闭 → 生成侧完全不读 policy_action（接线前行为，逐字等价）。
+        # 打开 → teacher prompt 追加一段「讲解顺序」指令（见 generator_cluster 的
+        # TEACHING_MODE_INSTRUCTIONS）。基线对比见 experiments/eval_teaching_mode_prompt.py。
+        "use_teaching_mode_prompt": True,
     },
 
     # ── 大创真版算法增量：feature flag（D1 默认 lite 保护演示稳定）──
