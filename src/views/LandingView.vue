@@ -269,7 +269,6 @@ function goLogin() { router.push('/login') }
           <div class="rg-demo">演示账号：<code>demo</code> / <code>demo123456</code></div>
           <div class="rg-actions">
             <button class="cta-primary" @click="goLogin">已在本地运行 · 进入登录</button>
-            <a class="rg-link" href="https://github.com/TrueFurina/MARS-408#docker" target="_blank" rel="noopener">查看部署文档</a>
           </div>
         </div>
       </div>
@@ -885,13 +884,6 @@ function goLogin() { router.push('/login') }
   flex-wrap: wrap;
 }
 .rg-actions .cta-primary { padding: 10px var(--space-6); font-size: var(--text-base); }
-.rg-link {
-  font-size: var(--text-sm);
-  color: var(--color-text-3);
-  text-decoration: none;
-  transition: var(--transition);
-}
-.rg-link:hover { color: var(--accent-primary); text-decoration: underline; }
 
 .rg-fade-enter-active, .rg-fade-leave-active { transition: opacity 0.2s ease; }
 .rg-fade-enter-from, .rg-fade-leave-to { opacity: 0; }
