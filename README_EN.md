@@ -1,4 +1,4 @@
-# Mangdehenzhi (芒得很职) — Career-Literacy Adversarial Training Platform on the 芒得很职 Multi-Agent Base
+# MangoCareer (芒得很职) — Career-Literacy Adversarial Training Platform on the MARS-408 Multi-Agent Base
 
 > 📖 English README (this page) · [中文 README](README.md)
 
