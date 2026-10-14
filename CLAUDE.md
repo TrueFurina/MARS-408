@@ -71,7 +71,7 @@ triage → coordinator → diagnostician → planner → retriever
 **关键设计决策**：
 - `AgentState` 定义在 `agents/state.py`，TypedDict，所有节点共享读写
 - `regenerate_round` 由对应节点**自增**，路由函数**只读不写**
-- Quality Gate 是 **fail-open**（异常降级通过），教学场景优先保障内容交付
+- Quality Gate 是 **fail-closed**（异常不谎报通过：显式标记 `degraded` 并路由 fix/reject，见 `agents/quality_gate.py:17,:85,:204-225`）。~~fail-open~~ 的旧设计会把「质检通过」当降级结果，正是「叙述诚实不夸大」红线禁止的情形（2026-10-13 已改）
 - 7 个 generator 子 Agent (`generator_cluster.py`) 并行生成：Teacher / QuizMaster / MindMap / Extension / CodePractice / PPT / VideoScript
 
 ### GOMARL 共识引擎（py-server/engines/gomarl*.py）
@@ -98,7 +98,8 @@ triage → coordinator → diagnostician → planner → retriever
 - **Milvus** (向量库) → `db/milvus_client.py`，不可达时自动回退 InMemoryVectorStore。`.emb.npy` 二进制缓存加速冷启动
 - **PostgreSQL** → `db/pg_client.py`，不可达时自动回退 SQLite (`data/pg_fallback.db`)
 - **Redis** → `db/redis_client.py`，不可达时 fail-open（开发放行 / 生产配置 `REDIS_STRICT` 硬拒绝）
-- **种子数据**: 1883 chunks + 200 题，启动时向量库为空才写入（幂等）
+- **种子数据**: 2015 chunks（29 学科，含 2026-10-14 新增 AI/LLM/DL 两科）+ 230 题，启动时向量库为空才写入（幂等）。
+  计数以 `python -c "import seed; print(len(seed.SEED_KNOWLEDGE_CHUNKS), len(seed.SEED_SUBJECTS), len(seed.SEED_QUESTIONS))"` 为准（`scripts/verify_seed_data_split.py` 守门）
 
 ## 关键约束与约定
 
@@ -176,10 +177,10 @@ uvicorn `--workers 1` 下 sync 阻塞会串行化所有请求：
 ### Git Remote 与分支矩阵
 
 本仓库已配置两个 remote：`origin`（GitHub `TrueFurina/MARS-408`）与 `mangdehenzhi`（本地 `E:/Code/芒得很职` 副本）。分支矩阵：
-- `main` — **芒得很职** 考研系统，已冻结（末次提交 `8065295`，2026-09-04），用于大创结题；
-- `career-literacy` — **芒得很职** 创新创业竞赛作品，当前活跃开发分支（HEAD `90fd377`，2026-09-14），已跟踪 upstream `origin/career-literacy`。
+- `main` — 对外口径已是 **MARS-408 火山杯参赛版**（`79caaf8` 去双分支与「芒得很职」章节；大创结题材料移入 `archive/` 与 `submission/`）。仍在收口，**位次以 `git log main -1` 为准**（不要在本文件写死提交号——历史上写死过 `8065295`/`2026-09-04`，早已过期）；
+- `career-literacy` — **芒得很职** 创新创业竞赛作品，当前活跃开发分支，已跟踪 upstream `origin/career-literacy`（位次同理由 `git log -1` 现查）。
 
-两条分支共享底座，`main → career-literacy` 单向同步；`career-literacy` 的提交可 `git push origin career-literacy`。
+两条分支共享底座，`main → career-literacy` 单向同步（历史 6 个 merge 提交可查；`career_*` 前缀隔离见 `docs/adr/ADR-015`）；`career-literacy` 的提交可 `git push origin career-literacy`。
 
 ## 并发会话提交纪律（多 AI 会话同仓协作必读）
 
