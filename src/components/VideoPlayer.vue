@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useModalFocus } from '@/composables/useModalFocus'
 
 const props = defineProps<{
   html: string
@@ -11,18 +12,23 @@ const emit = defineEmits<{
 }>()
 
 const iframeRef = ref<HTMLIFrameElement | null>(null)
+const overlayRef = ref<HTMLDivElement | null>(null)
 const loaded = ref(false)
+
+const { activate, trapTab } = useModalFocus(overlayRef)
 
 function getIframeHtml(): string {
   return props.html || '<div style="display:flex;align-items:center;justify-content:center;height:100%;background:var(--color-canvas);color:var(--color-text-2);font-size:16px;">暂无视频内容</div>'
 }
 
 function handleKeydown(e: KeyboardEvent) {
+  trapTab(e)
   if (e.key === 'Escape') emit('close')
 }
 
 onMounted(() => {
   document.addEventListener('keydown', handleKeydown)
+  activate()
   // 等待 iframe 加载
   if (iframeRef.value) {
     iframeRef.value.onload = () => { loaded.value = true }
@@ -36,7 +42,7 @@ onUnmounted(() => {
 
 <template>
   <Teleport to="body">
-    <div class="video-overlay" @click.self="emit('close')" role="dialog" aria-modal="true" :aria-label="'视频播放器: ' + (title || '教学视频')">
+    <div ref="overlayRef" class="video-overlay" tabindex="-1" @click.self="emit('close')" role="dialog" aria-modal="true" :aria-label="'视频播放器: ' + (title || '教学视频')">
       <div class="video-player">
         <div class="video-header">
           <span class="video-title"> {{ title || '教学视频' }}</span>

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { icons } from '@/components/icons'
+import { useModalFocus } from '@/composables/useModalFocus'
 
 const router = useRouter()
 
@@ -85,6 +86,10 @@ onUnmounted(() => {
 // 本地（localhost / 127.0.0.1）→ 正常进入；公开站 → 弹出「本地运行说明」，不假装能直接进。
 const isLocalRun = ref(['localhost', '127.0.0.1', '::1'].includes(window.location.hostname))
 const showRunGuide = ref(false)
+const runGuideRef = ref<HTMLDivElement | null>(null)
+const { activate, deactivate, trapTab } = useModalFocus(runGuideRef)
+
+watch(showRunGuide, (on) => { if (on) activate(); else deactivate() })
 
 function routeOrGuide(target: string) {
   if (isLocalRun.value) { router.push(target); return }
@@ -236,7 +241,7 @@ function goLogin() { router.push('/login') }
     <!-- 本地运行说明弹窗（公开展示站） -->
     <transition name="rg-fade">
       <div v-if="showRunGuide" class="rg-mask" @click.self="showRunGuide = false">
-        <div class="rg-card" role="dialog" aria-modal="true" aria-labelledby="rg-title">
+        <div ref="runGuideRef" class="rg-card" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="rg-title" @keydown.esc="showRunGuide = false" @keydown.tab="trapTab">
           <button class="rg-close" @click="showRunGuide = false" aria-label="关闭">×</button>
           <h3 id="rg-title" class="rg-title">本地运行 · 体验完整功能</h3>
           <p class="rg-desc">

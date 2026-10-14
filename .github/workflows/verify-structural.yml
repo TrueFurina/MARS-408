@@ -103,7 +103,13 @@ jobs:
           run_one "token_scan (设计令牌防回归)" "python scripts/token_scan.py --baseline scripts/token_scan.baseline.json" "."
           # 前端可访问性硬门禁（图标按钮可读名）：当前 0 缺陷，发现即阻断。
           run_one "a11y_scan (可访问性硬门禁)" "python scripts/a11y_scan.py" "."
-          # 前端可访问性深度审计（咨询级，report-only，不阻断）：A/B/C/D 见 CI 日志。
+          # 浮层焦点管理硬门禁（2026-10-14 由 report-only 升为阻断，P1-1）：
+          # VideoPlayer / LandingView 两处浮层补齐焦点圈闭（打开聚焦 / Tab 圈闭 /
+          # 关闭归还 opener）后 A 类违规归零，故把该类提为门禁——今后新增无焦点管理的
+          # 浮层会直接阻断 merge。脚本 fail-closed：扫描面为 0 个 .vue 时 exit 2
+          # （"照不到"不得当作"干净"，否则改坏扫描器会静默放行）。
+          run_one "a11y gate-class a (浮层焦点管理)" "python scripts/a11y_scan.py --gate-class a" "."
+          # 前端可访问性深度审计（咨询级，report-only，不阻断）：B/C/D 见 CI 日志。
           run_one "a11y_scan --audit (可访问性审计)" "python scripts/a11y_scan.py --audit" "."
 
           # 轻量结构守门：sqlite / numpy / fastapi / 内置语料，无需 Milvus

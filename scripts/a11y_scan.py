@@ -228,7 +228,45 @@ def run_audit() -> None:
     print(
         "\n说明：以上为静态初筛，可能含误报（如全局守卫或运行时处理），需人工走查确认；"
     )
-    print("      待 10-28 窗口后可将成熟规则提升为硬门禁（改 exit 1）。")
+    print(
+        "      A 类（浮层焦点管理）已于 2026-10-14 提升为硬门禁："
+        "`--gate-class a`，见 verify-structural.yml。"
+    )
+
+
+# `--gate-class` 的类 → (标签, 扫描器)。A 类已转硬门禁；B/C/D 仍是 report-only。
+GATE_FUNCS: dict[str, tuple[str, object]] = {
+    "a": ("浮层/沙箱焦点管理 (WCAG 2.4.3)", audit_overlays),
+    "b": ("流式输出 aria-live (WCAG 4.1.3)", audit_streaming),
+    "c": ("自定义可点击键盘可达 (WCAG 2.1.1)", audit_custom_clickable),
+    "d": ("reduced-motion 守卫 (WCAG 2.3.3)", audit_reduced_motion),
+}
+
+
+def run_gate(classes: list[str]) -> int:
+    """把指定审计类按硬门禁判：任一类命中即返回 1。
+
+    fail-closed：扫描面为 0 个 .vue 文件时返回 2（不是绿）——
+    门禁"照不到"与"扫干净"必须可区分，否则改坏扫描器会静默放行。
+    """
+    if not VUE_FILES:
+        print(
+            "[FAIL-CLOSED] --gate-class 已启用，但扫描面为 0 个 .vue 文件："
+            "无法判定该类是否合规（exit 2，不放行）"
+        )
+        return 2
+    rc = 0
+    for key in classes:
+        label, fn = GATE_FUNCS[key]
+        hits = fn()  # type: ignore[operator]
+        print(f"[gate:{key}] {label} —— 命中 {len(hits)} 条")
+        for x in hits:
+            print(x)
+        if hits:
+            rc = 1
+    if rc == 0:
+        print(f"[PASS] gate-class {','.join(classes)}：无命中（扫描面 {len(VUE_FILES)} 个 .vue）")
+    return rc
 
 
 def main() -> int:
@@ -239,9 +277,36 @@ def main() -> int:
         action="store_true",
         help="输出深度咨询级审计（焦点陷阱/流式 aria-live/键盘可达/reduced-motion），不阻断",
     )
+    ap.add_argument(
+        "--gate-class",
+        action="append",
+        default=[],
+        metavar="ABCD",
+        help=(
+            "把指定审计类提升为硬门禁（命中即 exit 1）；"
+            "可重复或逗号分隔，如 --gate-class a / --gate-class a,c。"
+            "A=浮层焦点管理 B=流式 aria-live C=键盘可达 D=reduced-motion"
+        ),
+    )
     args = ap.parse_args()
 
+    gate_classes: list[str] = []
+    for item in args.gate_class:
+        for raw in item.replace(",", " ").split():
+            key = raw.strip().lower()
+            if key not in GATE_FUNCS:
+                print(f"[ERROR] 未知审计类 '{raw}'，可选：{'/'.join(sorted(GATE_FUNCS))}")
+                return 2
+            if key not in gate_classes:
+                gate_classes.append(key)
+
     if not SRC.is_dir():
+        if gate_classes:
+            print(
+                f"[FAIL-CLOSED] --gate-class 已启用，但未找到源码目录 {SRC}："
+                "无法判定该类是否合规（exit 2，不放行）"
+            )
+            return 2
         print(f"[skip] 未找到 {SRC}")
         return 0
 
@@ -272,6 +337,11 @@ def main() -> int:
 
     if args.audit:
         run_audit()
+
+    if gate_classes:
+        gate_rc = run_gate(gate_classes)
+        if gate_rc:
+            return gate_rc
 
     return 1 if total_bad else 0
 
