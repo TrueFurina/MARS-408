@@ -1,8 +1,23 @@
 # ============================================================
 # 限流辅助：每用户 LLM 配额（F-011）/ 登录注册限流（F-010 复用）
 # 复用 db.redis_client 的 Redis 滑动窗口限流（RedisClient.check_rate_limit）。
-# 开发环境(Redis 未启用)：限流 fail-open（放行），不影响本地联调；
-# 生产环境(REDIS_STRICT + Redis 启用)：真正强制限额。
+#
+# 计数落在哪里，取决于 check_rate_limit 走哪条路径（详见其 docstring）：
+#   · Redis 启用 → Redis 原子滑动窗口，计数跨进程/跨 worker 共享。
+#   · Redis 未启用（含 CI 与本机联调，二者都没有 Redis）→ **进程内滑动窗口兜底**
+#     （RedisClient._local_rate_limit），同一 uid 的配额只由**单进程内存**计数；
+#     多 worker 部署下每个 worker 各记一份、实际阈值被放大 workers 倍
+#     （本部署受 vectordb_data/.import_writer.lock 单写者锁约束为 workers=1，
+#      故与 Redis 计数等价）。生产(REDIS_STRICT)且未显式设
+#     RATE_LIMIT_ALLOW_LOCAL_FALLBACK=1 时，这条路径改为 fail-closed 直接拒绝。
+#
+# ⚠️ 订正（2026-10-14）：本文件此前的头注释写「开发环境(Redis 未启用)：限流 fail-open
+#    （放行），不影响本地联调」——该描述在「进程内兜底」落地后**已不成立**：无 Redis 的
+#    进程同样会强制限额。这处失真把「整套测试成片 429」一度引向「环境噪声」的误判
+#    （CI 与本机都无 Redis，而 tests/conftest.py 的 mock_auth 给**所有用例同一个 uid**，
+#    全套件共用一个「每分钟 20 次」的窗口，跨用例累积后集体超限）。
+#    测试侧的对应处置见 tests/conftest.py 的 `_reset_process_local_rate_windows`：
+#    用例之间清空进程内窗口，不放行、不打桩。
 # ============================================================
 
 import os
