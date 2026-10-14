@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
+import { resolveLandingRoute } from '@/router/landing'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -28,9 +29,8 @@ async function submit() {
       : await authStore.login(username.value.trim(), password.value)
     // 入学测评（学情诊断）只针对**学生**：教师/管理员不应被送进学生测评流程。
     // 修复前未判角色，教师登录后直接落到 /diagnostic/start（浏览器走查实测）。
-    const role = user.role || 'student'
-    const home = role === 'admin' ? '/admin' : (role === 'teacher' ? '/teacher' : '/')
-    router.push(role === 'student' && user.diagnostic_required ? '/diagnostic/start' : home)
+    // 口径实现在 src/router/landing.ts（纯函数，landing.spec.ts 守护防回归）。
+    router.push(resolveLandingRoute(user))
   } catch (e: any) {
     error.value = e?.message || (isRegister.value ? '注册失败' : '登录失败')
   } finally { loading.value = false }
