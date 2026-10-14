@@ -57,6 +57,11 @@ export default [
         TextDecoder: 'readonly',
       },
     },
+    // Node 运行时脚本（.cjs/.mjs）使用 CommonJS `require()` 是惯用且正确的；
+    // 关闭 no-require-imports 仅作用于这些 Node 文件，不影响任何浏览器端代码。
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+    },
   },
   {
     name: 'app/rules',
