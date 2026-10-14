@@ -7,9 +7,20 @@
 
 - [x] ~~A5 重新生成源码包~~ —— **已取消**（用户 2026-10-13 指令：**不要任何交付、不要任何压缩包、不要解冻**）
 - [ ] A1 公开站外链 `MARS-408` 仓库地址处置（**待用户确认边界**：vite base 与仓 URL 属"已裁决永久保留"，此条仅指前端文案外链）
-- [ ] A2 学生侧隐藏 admin-only 沙箱入口（`navConfig` 加 roles 或禁用态）
-- [ ] A3 `CareerTrainingView.vue:133` 裸 fetch 改走 `api.ts` 统一封装
-- [ ] A4 孤儿路由 `POST /api/guide/quiz` 决策（挂载 / 删除，二选一并写明理由）
+      —— 2026-10-14 取证：全前端仅 2 处文案外链，均指向 `github.com/TrueFurina/MARS-408#docker`（部署文档锚点）：
+      `LandingView.vue:272`「查看部署文档」、`LoginView.vue:55`「本地运行说明」。
+      建议**保留**：仓库本就公开（GitHub Pages 部署源，og:url 已暴露同域），链接是部署文档唯一入口，
+      改动无收益且断文档路径。**待用户一句话确认**。
+- [x] A2 学生侧隐藏 admin-only 沙箱入口 —— 2026-10-14 闭环：真相与计划预设不同——`navConfig`
+      的「代码沙箱」项**早有** `roles: ['teacher','admin']`，漏的是**路由本身**无 meta
+      （F2 同款纵深缺失，学生输 URL 可开）。已给 `/sandbox` 补 `meta: { requiresRole: ['teacher','admin'] }`；
+      全量差集核对（nav roles vs 路由 meta）确认仅此一处漏网。vue-tsc / eslint 双干净。
+- [x] A3 `CareerTrainingView.vue:133` 裸 fetch 改走 `api.ts` 统一封装 —— 2026-10-14 核实**已完成**：
+      该文件现经 `@/utils/api` 的 `api` 封装发全部请求，全文 0 处裸 `fetch`（早期提交
+      `209a0f6`/`81514f1` 落下的修复，计划行号已过期）。
+- [x] A4 孤儿路由 `POST /api/guide/quiz` 决策 —— 2026-10-14 裁决：**计划项过期，无需处置**。
+      证据：`git log --all -S "guide/quiz"` 仅命中 3 条**计划文档**提交（`ad7913f`/`103b400`/`f2180a9`）；
+      当前分支与 `main` 的代码里（前端路由 / 后端 api）该路径**从未存在** ⇒ 无路由可挂、也无路由可删。
 
 ## 已排期（原定 10-28）
 

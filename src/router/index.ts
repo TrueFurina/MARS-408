@@ -118,6 +118,10 @@ const router = createRouter({
     {
       path: '/sandbox',
       name: 'sandbox',
+      // A2（2026-10-14）：navConfig「代码沙箱」项早有 roles: ['teacher','admin']，
+      // 但路由本身无 meta —— 学生输 URL 即可打开职员 UI（F2 同款纵深缺失）。
+      // 导航隐藏只是可视性，角色守卫必须落在路由上；后端 Sandbox 执行端点另有防线。
+      meta: { requiresRole: ['teacher', 'admin'] },
       component: () => import('@/views/SandboxView.vue'),
     },
     {
