@@ -46,7 +46,7 @@
 
 ## 中期（打磨次批 · B 组）
 
-- [ ] B1 数字漂移与过度承诺文案逐条复查 —— 引用三项已由 `36f08ed`（2026-10-13）完成（46→47、「面试」→精确场景名、「3 实训模式」→「4 对抗场景」）；**全量逐条复查仍未做**（其余活视图的硬编码数字 / 过度承诺文案）
+- [x] B1 数字漂移与过度承诺文案逐条复查 —— 2026-10-15 **全量闭环**（`4ddcaeb`）：对活视图 12 条数字宣称逐条对照代码真值（口径先行），9 条本就正确、4 处改动修 3 类问题（「8个AI智能体」旧架构残留→7 生成器真值 / DashboardView 标签「审核报告」→「视频脚本」/ LandingView 讯飞卡举例与「星火 10 项多模态」外延错→按 `get_all_status` 实际 10 项列举）。裁定文档 `deliverables/engineering-assurance/number-drift-audit-2026-10-15.md`。此前 `36f08ed`（2026-10-13）已完成引用三项（46→47、「面试」→精确场景名、「3 实训模式」→「4 对抗场景」）
 - [x] B2 legacy MARL 死代码归档决策 —— 2026-10-14 复核**闭环：非死代码，全部保留**。引用取证：`gomarl.evaluate` 生产在用（`generator_cluster.py:195` / `api/agents.py:137`）；`mappo_policy` 生产在用（`coordinator.py:104` / `gomarl_mixer.py:889`）；`algorithm_factory`/`marl_dqn` 被测试引用（`test_t1_qa_supplement.py:21` / `test_m4_marl_bench.py:16`）；`train_mixer*` 被实验脚本引用。与 `a711ed7` 结论一致
 - [x] B3 4 个孤儿视图决策 —— 2026-10-14 复核**闭环：非孤儿，全部保留**。`CourseExplorerView`/`KnowledgeGraphView` 被 `KnowledgeView.vue:8-9,263,268` 挂载；`ReviewView`/`QuizHistoryView` 被 `WrongQuestionsView.vue:7-8,312,317` 挂载。47 视图计数含它们是对的。与 `a711ed7` 结论一致
 - [x] B4 `api/tutor.py` 懒加载 + CLAUDE.md 过时警告 —— 2026-10-14 复核**前提失真，无需改动**：① `api/tutor.py` **已在函数内懒加载** `agents.tutor`（:53，附注释说明为何不进顶层——重依赖会拉起向量/嵌入栈），现 :11 为 `db.llm_provider` 顶层 import（轻依赖，合规）；② CLAUDE.md 三处"陈旧"均已自愈：:74 fail-open 已改 fail-closed（删除线标注"2026-10-13 已改"）、:101 种子计数已改为"以命令为准"、:179 分支位次已改为"以 `git log` 现查、勿写死提交号"
