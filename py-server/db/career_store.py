@@ -706,7 +706,12 @@ def student_detail(cid: str, teacher_id: str, user_id: str) -> Optional[dict]:
     """班级内单个学生的实训明细（教师下钻用）。
 
     权限：班级必须属于该教师；学生必须在该班花名册内且已绑定账号。
-    返回该生**全部**会话（不受看板 5 条截断限制）+ 每场六维分 / overall / 轮数 / 起止时间。
+    返回该生**本班任务下**的会话（不受看板 5 条截断限制）+ 每场六维分 /
+    overall / 轮数 / 起止时间。
+
+    口径边界（与 class_dashboard 一致）：只统计 ``task_id`` 归属本班任务的会话——
+    学生的**自由练习**（无任务关联）不计入班级视角，故此处并非"该生全部会话"，
+    个人全部会话见学生端 ``growth_profile``。
 
     诚实约束：只呈现真实落库数据；无评分会话的 dimension_scores 为 {}（不插值），
     overall_best 仅在有真实 consistency_score 时给出。
@@ -758,10 +763,14 @@ def student_detail(cid: str, teacher_id: str, user_id: str) -> Optional[dict]:
 # F2 任务管理中心（2026-10-15）：任务参与进度 + 关闭任务
 # ────────────────────────────────────────────────────────────
 def task_stats(tid: str, teacher_id: str) -> Optional[dict]:
-    """任务参与进度：按该任务的**真实会话**计已开始/已完成人数。
+    """任务参与进度：按该任务的**真实会话**计已开始/已完成**人数**。
 
-    诚实口径：只有真的建了会话的学生才计入"已开始"——没有"加入但未开始"的
-    Join 日志，就不虚构"已加入人数"这个数。
+    诚实口径：
+    - 只有真的建了会话的学生才计入"已开始"——没有"加入但未开始"的
+      Join 日志，就不虚构"已加入人数"这个数。
+    - ``started_count`` / ``finished_count`` 均为**去重学生数**（数人不数场，
+      与 ``class_dashboard.summary`` 同口径）；``session_count`` 是会话总数。
+      一名学生重复开多场只计 1 人——前端标签是"人"，口径必须撑得起这个字。
     """
     task = get_task_by_id(tid)
     if not task or task.get("teacher_id") != teacher_id:
@@ -769,9 +778,10 @@ def task_stats(tid: str, teacher_id: str) -> Optional[dict]:
     q = "?" if pg_client.is_fallback else "%s"
     rows = _query(f"SELECT user_id, status FROM career_sessions WHERE task_id={q}", (tid,))
     started_users = {r.get("user_id") for r in rows if r.get("user_id")}
-    finished = sum(1 for r in rows if r.get("status") == "finished")
+    finished_users = {r.get("user_id") for r in rows
+                      if r.get("user_id") and r.get("status") == "finished"}
     return {"task_id": tid, "started_count": len(started_users),
-            "finished_count": finished, "session_count": len(rows)}
+            "finished_count": len(finished_users), "session_count": len(rows)}
 
 
 def close_task(tid: str, teacher_id: str) -> Optional[dict]:

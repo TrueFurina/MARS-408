@@ -65,12 +65,12 @@
 <!-- METRICS_TABLE_START -->
 | 指标 | 真值 | 口径（可复现） |
 | --- | --- | --- |
-| 前端 views（页面级组件） | 48 | `git ls-files 'src/views/*.vue'` 计数 |
-| 前端 .vue 总数 | 87 | `git ls-files 'src/**/*.vue'` 计数 |
+| 前端 views（页面级组件） | 49 | `git ls-files 'src/views/*.vue'` 计数 |
+| 前端 .vue 总数 | 88 | `git ls-files 'src/**/*.vue'` 计数 |
 | 前端 .ts 总数 | 61 | `git ls-files 'src/**/*.ts'` 计数 |
-| 前端代码行数（.vue+.ts） | 53490 | git 跟踪的 `.vue` + `.ts` 全部行数 |
+| 前端代码行数（.vue+.ts） | 53723 | git 跟踪的 `.vue` + `.ts` 全部行数 |
 | 后端 Python 文件数 | 361 | `git ls-files 'py-server/**/*.py'` 计数 |
-| 后端代码行数 | 85297 | git 跟踪的 `.py` 全部行数 |
+| 后端代码行数 | 85310 | git 跟踪的 `.py` 全部行数 |
 | API 路由模块数 | 42 | `git ls-files 'py-server/api/*.py'` 去 `__init__.py` |
 | API 路径数（/api） | 236 | `py-server/openapi.json` 中 `/api` 路径数 |
 | API 操作数（/api，method 级） | 254 | `py-server/openapi.json` 中 `/api` 操作数（method 级） |

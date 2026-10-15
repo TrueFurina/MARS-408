@@ -569,7 +569,7 @@ async def close_task(task_id: str, user: dict = Depends(get_current_user)):
     return res
 
 
-# ── 学生个体下钻（F1：班内单个学生的全部会话明细）──
+# ── 学生个体下钻（F1：班内单个学生的会话明细，与看板同口径：仅本班任务关联会话）──
 @router.get("/classes/{class_id}/students/{user_id}/detail")
 async def student_detail(class_id: str, user_id: str, user: dict = Depends(get_current_user)):
     _require_teacher(user)
