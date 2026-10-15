@@ -12,6 +12,17 @@ export default [
       'archive',
       'coverage',
       'eslint.config.js',
+      // 构建/发布产物：deploy 下的 site/assets/*.js 是 **压缩后的 bundle**，
+      // 用源码规则去扫必然满屏假阳性（实测 187 error 全部来自这里，例如把压缩代码里
+      // 的字符串片段误报成 `IPython`/`cell`/`WScript` is not defined）。
+      // 后果是 `npm run lint` 恒 fail ⇒ 实际没人跑 lint（verify_all.mjs 也因此没纳入它）。
+      'deploy',
+      '_e2e_tmp*',
+      // 第三方依赖自带的 JS（绘图库、覆盖率工具、HTTP 库等在虚拟环境内的产物），
+      // 不是我们的代码，扫它们同样只产出假阳性（实测占剩余 50 error 的全部）。
+      '.venv',
+      '**/.venv',
+      '**/site-packages',
     ],
   },
   js.configs.recommended,
