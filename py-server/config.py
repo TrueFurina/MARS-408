@@ -128,9 +128,9 @@ DEFAULTS = {
     # ── Embedding ──
     "embedding": {
         "mode": "local",  # local | api
-        "model": "intfloat/e5-base-v2",
-        "dimension": 768,  # E5-base-v2 = 768
-        "local_model_repo": str(CONFIG_DIR / "models" / "e5-base-v2"),
+        "model": "intfloat/multilingual-e5-base",
+        "dimension": 768,  # E5-base = 768
+        "local_model_repo": str(CONFIG_DIR / "models" / "multilingual-e5-base"),
     },
 
     # ── FrugalRAG ──

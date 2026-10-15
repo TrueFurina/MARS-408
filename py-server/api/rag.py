@@ -43,7 +43,7 @@ async def rag_status(user: dict = Depends(get_current_user)):
         "by_subject": dict(subject_counts.most_common()),
         "engine": "FrugalRAG (E5 + BM25 + Reranker)",
         "dimension": 768,
-        "embedding_model": "intfloat/e5-base-v2",
+        "embedding_model": "intfloat/multilingual-e5-base",
     }
 
 
@@ -68,10 +68,14 @@ async def rag_search(req: RAGSearchRequest, user: dict = Depends(get_current_use
         logger.debug(f"RAG 记忆增强失败(降级): {_me}")
 
     # 使用 FrugalRAG 进行融合检索
-    course_filter = req.course if req.course and req.course != "all" else None
+    # course="all" / 空 → 全局检索（course=None，不做任何课程 subject 约束）；
+    # 具体课程名 → 该课程约束检索。
+    # ⚠️ 历史 bug：此处曾把 "all" 兜底成 computer_network，导致未映射到具体课程的
+    # 科目（如 ai_deep_learning / ai_llm_agent）被课程软过滤永久排除、永远搜不到。
+    course_param = req.course if (req.course and req.course != "all") else None
     results = await frugal_rag.retrieve(
         query=query,
-        course=course_filter or "computer_network",
+        course=course_param,
         top_k=req.top_k,
     )
 

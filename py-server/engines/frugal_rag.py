@@ -250,6 +250,12 @@ class FrugalRAG:
             "os", "os_overview", "os_process", "os_memory",
             "os_file", "os_io",
         ],
+        # AI 科目独立成课：datawhale 注入的深度学习 / LLM-Agent 语料未映射到
+        # 408 四科，故单列一门 "ai"，使 course="ai" 可显式约束到 AI 内容。
+        # （前端课程菜单是否暴露 "ai" 是产品决策，此处仅补齐后端过滤能力。）
+        "ai": [
+            "ai_deep_learning", "ai_llm_agent",
+        ],
     }
 
     def _get_course_subjects(self, course: str) -> list[str]:
@@ -281,6 +287,13 @@ class FrugalRAG:
         k = top_k or self.top_k
         start_time = time.time()
 
+        # 全局检索开关：course 为空 / "all" 时不做任何课程 subject 约束，
+        # 走全库检索（确保未映射到具体课程的科目，如 ai_*，也能被检索到）。
+        # 历史 bug：course="all" 曾被兜底成 computer_network，导致 AI 科目被永久过滤。
+        is_global = not course or course == "all"
+        # 全局检索时 KG 增强用 "general"（搜索全部 KG 文件）；课程约束时限定本课程。
+        kg_subject = "general" if is_global else course
+
         # 知识图谱增强：用知识图谱中的相关实体扩展查询
         enhanced_query = query
         if use_kg_enhance:
@@ -288,7 +301,7 @@ class FrugalRAG:
                 # M-3：实现已下沉 shared/kg_search（原从 agents.knowledge_graph
                 # 延迟导入，形成 engines → agents 反向依赖）。
                 from shared.kg_search import search_kg_entities
-                related = search_kg_entities(query, subject=course)
+                related = search_kg_entities(query, subject=kg_subject)
                 if related.get("entities"):
                     names = [e["name"] for e in related["entities"][:5]]
                     enhanced_query = f"{query} {' '.join(names)}"

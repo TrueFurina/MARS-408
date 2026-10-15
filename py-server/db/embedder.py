@@ -2,7 +2,7 @@
 # 嵌入服务 — 独立模块，不依赖 engines 层
 # 解决循环依赖: db/milvus_client.py 不再导入 engines/frugal_rag.py
 #
-# 模型: intfloat/e5-base-v2 (768维, ~420MB)
+# 模型: intfloat/multilingual-e5-base (768维, ~1.1GB)
 # 注意: 与 config.json embedding 配置保持一致
 #
 # v2 优化（2026-07-22）：内容寻址的磁盘嵌入缓存。
@@ -28,7 +28,7 @@ logger = logging.getLogger("netlearn.embedder")
 _e5_model = None
 
 # 模型配置（与 config.json embedding 保持一致）
-EMBED_MODEL_NAME = "intfloat/e5-base-v2"
+EMBED_MODEL_NAME = "intfloat/multilingual-e5-base"
 EMBED_DIM = 768
 
 # ── 嵌入缓存（内容寻址）──
@@ -155,7 +155,7 @@ def _ensure_cache():
 
 
 def _get_e5_model():
-    """延迟加载 e5-base-v2 模型（优先本地预打包 models/e5-base-v2）"""
+    """延迟加载 multilingual-e5-base 模型（优先本地预打包 models/multilingual-e5-base）"""
     global _e5_model
     if _e5_model is not None:
         return _e5_model
@@ -185,7 +185,7 @@ def _get_e5_model():
 
 
 def embed_batch(texts: list[str], prefix: str = "query") -> list[list[float]]:
-    """批量文本 → 向量（768维，e5-base-v2）。命中缓存的文本跳过模型推理。
+    """批量文本 → 向量（768维，multilingual-e5-base）。命中缓存的文本跳过模型推理。
 
     prefix: "query"（检索侧）或 "passage"（入库/文档侧），"" 表示不加前缀。
             intfloat/e5 系列要求两侧分别加前缀，否则语义质量显著退化。
@@ -221,7 +221,7 @@ def embed_batch(texts: list[str], prefix: str = "query") -> list[list[float]]:
 
     if miss_unique:
         model = _get_e5_model()
-        # e5-base-v2 官方要求 query/passage 两侧分别加前缀。
+        # E5 系列（含 multilingual-e5-base）官方要求 query/passage 两侧分别加前缀。
         # 当前向量库(netlearn_kb.json, 2113条)已用 passage 前缀重建(embedding_status=e5_real)，
         # 检索侧 embed_query 默认 query 前缀 —— 两侧前缀匹配，向量检索生效。
         # 逃生舱 E5_PREFIX=off 可退回无前缀（兼容无前缀训练的 NeuralMixer 权重）。
@@ -256,7 +256,7 @@ def embed_batch(texts: list[str], prefix: str = "query") -> list[list[float]]:
 
 
 def embed_text(text: str, prefix: str = "query") -> list[float]:
-    """文本 → 向量（768维，e5-base-v2）"""
+    """文本 → 向量（768维，multilingual-e5-base）"""
     return embed_batch([text], prefix=prefix)[0]
 
 

@@ -2,10 +2,10 @@
 # ============================================================
 # 一键恢复知识库（E5 模型 + 向量库）
 #
-# 背景：会话间非 git 提交产物会被清空——venv、models/e5-base-v2、
+# 背景：会话间非 git 提交产物会被清空——venv、models/multilingual-e5-base、
 #       vectordb_data/netlearn_kb.json(.emb.npy) 全丢，只剩 .tmp 残留。
 #       本脚本把"恢复 KB"做成可重复执行的一步操作，联网时即可重建：
-#         1. 确保 E5 (intfloat/e5-base-v2, 768维) 落在 models/e5-base-v2
+#         1. 确保 multilingual-e5-base (intfloat/multilingual-e5-base, 768维) 落在 models/multilingual-e5-base
 #            （缺失则从 HuggingFace 下载；离线则给出清晰指引并退出）
 #         2. 重建向量库 netlearn_kb（复用 rebuild_vectordb.main 的 seed 逻辑）
 #         3. 校验：向量矩阵形状 (N,768) 且零向量数为 0（诚实红线：不得有零向量）
@@ -35,9 +35,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger("setup_kb")
 
-EMBED_MODEL_NAME = "intfloat/e5-base-v2"
+EMBED_MODEL_NAME = "intfloat/multilingual-e5-base"
 EMBED_DIM = 768
-MODEL_DIR = ROOT / "models" / "e5-base-v2"
+MODEL_DIR = ROOT / "models" / "multilingual-e5-base"
 VECTOR_DIR = ROOT / "vectordb_data"
 
 
@@ -86,7 +86,7 @@ def _provision_model(force: bool) -> bool:
     except Exception as e:  # 网络受限 / 无 token / 代理失败
         logger.error("❌ E5 模型下载失败: %s", e)
         logger.error(
-            "离线恢复方案：手动把 e5-base-v2 整目录放到 %s\n"
+            "离线恢复方案：手动把 multilingual-e5-base 整目录放到 %s\n"
             "（来源：https://huggingface.co/%s ，或团队共享的内部镜像）。",
             MODEL_DIR, EMBED_MODEL_NAME,
         )
