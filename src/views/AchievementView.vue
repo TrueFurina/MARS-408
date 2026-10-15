@@ -85,7 +85,8 @@ async function loadMemoryOverview() {
       </div>
       <div class="achievement-grid">
         <div v-for="ach in achStore.achievements" :key="ach.id" class="achievement-card" :class="{ unlocked: ach.unlocked }">
-          <div class="ach-icon">{{ ach.unlocked ? ach.icon : '' }}</div>
+          <!-- 未解锁也显示图标（灰化）：全空会让用户以为"成就没有图标"（实测反馈） -->
+          <div class="ach-icon" :class="{ 'is-locked': !ach.unlocked }">{{ ach.icon }}</div>
           <div class="ach-info">
             <div class="ach-title">{{ ach.name }}</div>
             <div class="ach-desc">{{ ach.description }}</div>
@@ -109,6 +110,8 @@ async function loadMemoryOverview() {
 .achievement-card { display: flex; align-items: center; gap: var(--space-3); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--glass-border); background: var(--glass-bg); transition: var(--transition); }
 .achievement-card.unlocked { border-color: var(--accent-primary); background: var(--accent-primary-05); }
 .ach-icon { font-size: 32px; width: 48px; text-align: center; }
+/* 未解锁：图标灰化但仍可见（否则整格空白，用户会以为图标缺失） */
+.ach-icon.is-locked { filter: grayscale(1); opacity: 0.35; }
 .ach-info { flex: 1; }
 .ach-title { font-size: var(--text-base); font-weight: var(--weight-semibold); margin-bottom: 2px; }
 .ach-desc { font-size: var(--text-xs); color: var(--text-muted); }
