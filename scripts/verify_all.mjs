@@ -14,6 +14,10 @@ import { spawnSync } from 'node:child_process'
 /** [显示名, npm 脚本名]，顺序与旧 verify 一致 */
 const STEPS = [
   ['类型检查', 'type-check'],
+  // 代码规范只做 **error 级**（--quiet）：历史积压的格式类 warning 有 8k+，
+  // 全量输出会把真正的问题埋掉；error 级才是必须守住的线。
+  // 此前 lint 恒 fail（扫到了构建产物与第三方 JS 的假阳性），修好 ignores 后接入。
+  ['代码规范（error 级）', 'lint:errors'],
   ['单元测试', 'test'],
   ['benchmark 证据链', 'gate:evidence'],
   ['可访问性扫描', 'gate:a11y'],

@@ -21,7 +21,8 @@
     "gate:xss": "python scripts/xss_scan.py",
     "gate:brand": "python scripts/brand_scan.py",
     "verify": "node scripts/verify_all.mjs",
-    "types:generate": "openapi-typescript py-server/openapi.json -o src/types/api.generated.ts"
+    "types:generate": "openapi-typescript py-server/openapi.json -o src/types/api.generated.ts",
+    "lint:errors": "eslint . --ext .vue,.js,.ts,.tsx --quiet"
   },
   "dependencies": {
     "@obsidize/tar-browserify": "^6.3.2",
