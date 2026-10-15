@@ -89,7 +89,10 @@ onUnmounted(() => {
 // 探测失败（例：只部署了静态前端的展示站）→ 才回退到「本地运行说明」，保持诚实。
 const isLocalRun = ref(['localhost', '127.0.0.1', '::1'].includes(window.location.hostname))
 const backendReady = ref<boolean | null>(isLocalRun.value ? true : null) // null=探测中
-const canEnterDirectly = computed(() => isLocalRun.value || backendReady.value === true)
+// ⚠️ 乐观放行：只有「确认后端不可达（false）」才拦并弹「本地运行说明」。
+//    探测中（null）就拦会让手快的访客点任何按钮都弹窗（实测反馈"点啥都弹"）——
+//    而当下事实是后端在线，拦是错的。
+const canEnterDirectly = computed(() => isLocalRun.value || backendReady.value !== false)
 
 onMounted(async () => {
   if (isLocalRun.value) return

@@ -32,3 +32,9 @@ export function probeBackend(): Promise<boolean> {
     })
   return inflight
 }
+
+// 模块加载即开始探测（router / landing 任一先 import 都会被覆盖）：
+// 尽早拿到结果，压缩"探测中"这一不确定窗口，避免访客手快点击时误判。
+if (typeof window !== 'undefined') {
+  void probeBackend()
+}
