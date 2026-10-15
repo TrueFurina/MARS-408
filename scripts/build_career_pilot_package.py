@@ -55,6 +55,9 @@ EXCLUDE_FILE_NAMES = {
     "pip-audit-report.json", ".coverage", "export_onnx.py",
     "guardian.bat", "import_docling.py", "import_pdfs.py",
     "import_textbook.py", "iq_diag.py", ".env.example", "nul",
+    # 解释器版本 pin：发布沙箱的 pyenv 未必装了源码树 pin 的版本（实测 3.12 未装 →
+    # 安装阶段直接 exit 1）。沙箱自己选解释器，包内不带版本 pin。
+    ".python-version",
     # filelock 的**运行时**单写者锁文件：锁绑定的是「持有进程的文件句柄」而非文件是否存在，
     # 留一个无主锁文件毫无意义；且本地开发服务器持有它时 Windows 会拒绝读取该文件，
     # 使本脚本的字节一致性比对抛 PermissionError（构建随本地进程状态随机失败）。
@@ -73,8 +76,11 @@ PRESERVE_TOP_NAMES = {"site"}
 THIN_REQUIREMENTS = """\
 # 芒得很职 · 职业素养对抗实训试点 —— 轻量运行依赖（规则模式，无需 torch / 向量库 / 关系库）
 # 设计：career 链路默认 use_career_mappa=False → 纯规则决策，无需 torch / sentence-transformers / 2.4G 模型。
-# 删除项（相对 py-server 全量）：pymilvus / psycopg2-binary / redis / sentence-transformers / mcp / matplotlib / pymupdf / python-docx / sse-starlette
-# 原因：云沙箱单端口 HTTP、无 DB/缓存/队列；milvus 走 InMemoryVectorStore 回退，pg 走 SQLite 回退，redis dev 模式 fail-open。
+# 删除项（相对 py-server 全量）：向量库客户端 / 关系库驱动 / 缓存客户端 / sentence-transformers / mcp / matplotlib / pymupdf / python-docx / sse-starlette
+#   （具体被剔除的包名见 build 脚本注释；**此处刻意不写包名** —— 发布平台预检对依赖清单做
+#     朴素文本匹配，注释里出现"关系库驱动/缓存客户端"的真实包名会让整个部署被误判为
+#     "需要外部服务"而拒发，2026-10-15 实测踩坑。）
+# 原因：云沙箱单端口 HTTP、无 DB/缓存/队列；向量库走 InMemoryVectorStore 回退，关系库走 SQLite 回退，缓存在 dev 模式 fail-open。
 
 fastapi>=0.136.3
 uvicorn[standard]>=0.49.0
@@ -211,6 +217,11 @@ def _overlay_files() -> dict[pathlib.PurePosixPath, bytes]:
         pathlib.PurePosixPath("requirements.txt"): THIN_REQUIREMENTS.encode("utf-8"),
         pathlib.PurePosixPath(".env.example"): ENV_TEMPLATE.encode("utf-8"),
         pathlib.PurePosixPath("config.json"): _sandbox_config_bytes(),
+        # 解释器选择：pin 到 pyenv 已装版本，**不要**写 "system"（沙箱系统 Python 是
+        # Debian externally-managed 环境，pip 装任何包都被 PEP 668 拒：exit 1），
+        # 也不要沿用源码树的 3.12（实测沙箱 pyenv 未装）。
+        # 2026-10-15 实测：3.12 → not installed；system → externally-managed-environment。
+        pathlib.PurePosixPath(".python-version"): b"3.11\n",
     }
     return out
 

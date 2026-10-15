@@ -578,14 +578,17 @@ async def generate_teaching_video_stream(
 
         # 步骤 4: 完成
         yield f"data: {json_mod.dumps({'type': 'progress', 'step': 4, 'total': 4, 'message': '视频生成完成'})}\n\n"
-        yield f"data: {json_mod.dumps({
+        # ⚠️ 下面不可写成跨行 f-string（PEP 701 是 Python 3.12 特性）——
+        # 部署沙箱 pyenv 最高 3.11，跨行 f-string 会直接 SyntaxError 起不来（2026-10-15 实测）。
+        complete_payload = {
             'type': 'complete',
             'html': result.get('html', ''),
             'scenes': result.get('scenes', 0),
             'duration_sec': result.get('duration_sec', 0),
             'duration_str': result.get('duration_str', ''),
             'video_script': result.get('video_script', ''),
-        })}\n\n"
+        }
+        yield f"data: {json_mod.dumps(complete_payload)}\n\n"
         yield "data: [DONE]\n\n"
 
     return StreamingResponse(sse_disconnect_guard(request, event_stream()), media_type="text/event-stream")

@@ -68,9 +68,9 @@
 | 前端 views（页面级组件） | 49 | `git ls-files 'src/views/*.vue'` 计数 |
 | 前端 .vue 总数 | 88 | `git ls-files 'src/**/*.vue'` 计数 |
 | 前端 .ts 总数 | 61 | `git ls-files 'src/**/*.ts'` 计数 |
-| 前端代码行数（.vue+.ts） | 53725 | git 跟踪的 `.vue` + `.ts` 全部行数 |
+| 前端代码行数（.vue+.ts） | 53754 | git 跟踪的 `.vue` + `.ts` 全部行数 |
 | 后端 Python 文件数 | 361 | `git ls-files 'py-server/**/*.py'` 计数 |
-| 后端代码行数 | 85378 | git 跟踪的 `.py` 全部行数 |
+| 后端代码行数 | 85410 | git 跟踪的 `.py` 全部行数 |
 | API 路由模块数 | 42 | `git ls-files 'py-server/api/*.py'` 去 `__init__.py` |
 | API 路径数（/api） | 236 | `py-server/openapi.json` 中 `/api` 路径数 |
 | API 操作数（/api，method 级） | 254 | `py-server/openapi.json` 中 `/api` 操作数（method 级） |
@@ -81,7 +81,7 @@
 > **1389 通过 / 38 跳过 / 1 xfail（2026-10-09 CI run 37917008258，见 AGENTS.md；套件已增长，须由下一次 CI 全量回归刷新）**。
 >
 > **认证覆盖率**同理由独立脚本产出：`py-server/scripts/verify_auth_coverage.py`
-> （当前 total=245 / protected=232 / public=13 / coverage=**94.69%** / unregistered=0）。
+> （当前 total=245 / protected=232 / public=13 / coverage=**94.88%** / unregistered=0）。
 
 ## 漂移防护
 

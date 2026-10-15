@@ -25,11 +25,19 @@ export function hasAuthToken(): boolean {
   return !!getToken()
 }
 
-/** 获取带 Auth Token 的请求头（供裸 fetch 调用使用） */
+/**
+ * 获取带 Auth Token 的请求头（供裸 fetch 调用使用）
+ * ⚠️ 用 X-App-Token 而非 Authorization：发布沙箱（CloudStudio）网关会把
+ * Authorization 替换成平台身份 token（2026-10-15 实测），自定义头才原样透传。
+ * 两个都设：本地/dev 无网关时 Authorization 正常，沙箱下后端优先读 X-App-Token。
+ */
 export function getAuthHeaders(): Record<string, string> {
   const token = getToken()
   const headers: Record<string, string> = {}
-  if (token) headers['Authorization'] = `Bearer ${token}`
+  if (token) {
+    headers['X-App-Token'] = token
+    headers['Authorization'] = `Bearer ${token}`
+  }
   return headers
 }
 
@@ -166,6 +174,7 @@ async function request<T>(
     ...(options.headers as Record<string, string>),
   }
   if (token) {
+    headers['X-App-Token'] = token
     headers['Authorization'] = `Bearer ${token}`
   }
 
@@ -237,7 +246,10 @@ export const api = {
   async postStream(path: string, body: unknown, signal?: AbortSignal): Promise<Response> {
     const token = getToken()
     const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-    if (token) headers['Authorization'] = `Bearer ${token}`
+    if (token) {
+      headers['X-App-Token'] = token
+      headers['Authorization'] = `Bearer ${token}`
+    }
 
     const resp = await fetch(`${API_BASE}/api${path}`, {
       method: 'POST',
@@ -276,7 +288,10 @@ export const api = {
   async postBlob(path: string, body: unknown): Promise<{ blob: Blob; ok: boolean; status: number }> {
     const token = getToken()
     const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-    if (token) headers['Authorization'] = `Bearer ${token}`
+    if (token) {
+      headers['X-App-Token'] = token
+      headers['Authorization'] = `Bearer ${token}`
+    }
 
   const resp = await fetch(`${API_BASE}/api${path}`, {
     method: 'POST',

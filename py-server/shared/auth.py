@@ -109,11 +109,23 @@ def verify_token(token: str) -> dict:
         raise HTTPException(status_code=401, detail="Invalid or expired credentials")
 
 
-def get_current_user(authorization: Optional[str] = Header(default=None)) -> dict:
-    """FastAPI dependency: parse current user from `Authorization: Bearer <token>`."""
-    if not authorization or not authorization.startswith("Bearer "):
+def get_current_user(
+    authorization: Optional[str] = Header(default=None),
+    x_app_token: Optional[str] = Header(default=None, alias="X-App-Token"),
+) -> dict:
+    """FastAPI dependency: parse current user from `X-App-Token` (preferred) or `Authorization: Bearer`.
+
+    为什么优先 ``X-App-Token``：发布沙箱（CloudStudio）的入口网关会把请求的
+    ``Authorization`` 头**替换成平台自己的身份 token**（2026-10-15 实测：发
+    ``Bearer FAKE_TEST_123`` 到达服务端的是 395 字符的 cloudstudio.net token），
+    应用自己的 JWT 因此永远验不过；而自定义头（X-App-Token / Cookie）原样透传。
+    本地/dev 无该网关，两个头都设时行为一致（X-App-Token 优先）。
+    """
+    token = x_app_token
+    if not token and authorization and authorization.startswith("Bearer "):
+        token = authorization[len("Bearer "):]
+    if not token:
         raise HTTPException(status_code=401, detail="Not logged in or missing credentials")
-    token = authorization[len("Bearer "):]
     payload = verify_token(token)
     return {"user_id": payload["sub"], "role": payload.get("role", "student")}
 
