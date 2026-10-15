@@ -12,7 +12,9 @@ const subjectCount = computed(() => Object.keys(store.subjects).length)
 const profileDone = computed(() => store.profileCompleted)
 const profilePct = computed(() => (store.profileCompleted ? 100 : 0))
 
-// ── 8 智能体（静态架构，与 DashboardView 同口径：无运行时状态接口，只声明结构）──
+// ── 8 类流水线角色（静态架构声明：11 节点 LangGraph 的角色视图——Triage + 8 角色，
+//    其中「审核」展开为 critic / evidence_check / quality_gate 三个独立节点；
+//    无运行时状态接口，只声明结构，计数口径见 agents/graph.py 的 11 个 add_node）──
 const agents = [
   { name: '协调', duty: '意图识别与任务分派', color: 'var(--agent-coord)' },
   { name: '诊断', duty: '学情画像与薄弱点定位', color: 'var(--agent-diag)' },
@@ -191,7 +193,7 @@ const aiStateLabel: Record<AiState, string> = {
           </div>
         </div>
 
-        <!-- 8 智能体 -->
+        <!-- 8 类流水线角色（11 节点的角色视图，粒度见文件头注释） -->
         <div class="bento-cell bento-agents">
           <div class="bento-cell-title"><span v-html="icons.agent"></span> 流水线智能体编排</div>
           <div class="agent-strip">

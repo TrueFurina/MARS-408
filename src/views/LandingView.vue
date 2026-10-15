@@ -23,7 +23,7 @@ const innovations = [
     badge: '创新 01',
     title: '讯飞 10 项能力集成',
     subtitle: 'XFYun Full-Stack Integration',
-    desc: '深度对接讯飞星火大模型 10 项核心能力——语音识别、语音合成、图像理解、OCR、数学能力、代码生成等，构建多模态教学引擎。',
+    desc: '深度对接讯飞开放平台 10 项核心能力——图像生成、图片理解、聚合搜索、智能PPT、数字人视频、文本纠错、公文校对、文本合规、角色模拟、智能简历，构建多模态教学引擎。',
     stat: '10',
     statLabel: '项能力',
     accent: 'var(--accent-primary)',
@@ -136,7 +136,7 @@ function goLogin() { router.push('/login') }
         <span class="hero-title-sub">计算机类学生职业素养对抗实训平台</span>
       </h1>
       <p class="hero-desc">
-        以 11 节点 LangGraph 流水线为核心引擎，深度融合讯飞星火 10 项多模态能力、用户自定义 AI 教学技能平台，
+        以 11 节点 LangGraph 流水线为核心引擎，深度融合讯飞开放平台 10 项能力、用户自定义 AI 教学技能平台，
         与领域知识图谱，专注计算机类学生职业素养对抗实训——让同学既说得清、扛得住、有证据。
       </p>
 
@@ -225,7 +225,7 @@ function goLogin() { router.push('/login') }
     <section class="bottom-cta">
       <div class="bottom-cta-inner">
         <h2 class="bottom-title">让每一道错题，都成为成长的起点</h2>
-        <p class="bottom-desc">11 节点编排 · 10 项多模态能力 · 无限可扩展教学技能 · 知识图谱可视化</p>
+        <p class="bottom-desc">11 节点编排 · 10 项讯飞能力 · 无限可扩展教学技能 · 知识图谱可视化</p>
         <button class="cta-primary cta-large" @click="enterSystem">
           <span>{{ isLocalRun ? '立即体验' : '本地运行 · 体验完整功能' }}</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
