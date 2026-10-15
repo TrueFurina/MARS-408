@@ -125,7 +125,11 @@ function clearAuthStorage(): void {
 
 function isLoginRoute(): boolean {
   try {
-    return window.location.pathname === '/login'
+    // 兼容两种路由模式：history 模式看 pathname（/login），
+    // hash 模式（静态托管、无 SPA 回退）路由在 hash 里（#/login），pathname 永远是 base 路径
+    const p = window.location.pathname.replace(/\/$/, '')
+    const h = window.location.hash.replace(/^#/, '').split('?')[0]
+    return p === '/login' || h === '/login'
   } catch {
     return false
   }

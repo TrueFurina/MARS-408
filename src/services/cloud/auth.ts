@@ -147,7 +147,12 @@ export async function completeWechatRedirect(): Promise<CloudSession | null> {
   if (res.error) throw toCallError(res.error, '微信登录回调处理失败')
   const session = res.data ?? null
   if (session) {
-    window.history.replaceState(null, '', window.location.pathname + window.location.hash)
+    // 清掉地址栏的 code/state。两种模式下它们的位置不同：
+    //   history 模式在 search（?code=…），hash 模式在 hash 的 query 段（#/…?code=…）。
+    // 这里把 hash 的 query 段一并剥掉，避免刷新时重放已消费的 code。
+    const hash = window.location.hash
+    const cleanedHash = hash.includes('?') ? hash.slice(0, hash.indexOf('?')) : hash
+    window.history.replaceState(null, '', window.location.pathname + cleanedHash)
   }
   return session
 }

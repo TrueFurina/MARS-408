@@ -1,7 +1,10 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 
+// hash 路由（而非 history 路由）：发布域是纯静态托管、无 SPA history 回退，
+// history 模式下直接访问 /cloud-lab 等子路由会 404；hash 模式（/#/cloud-lab）
+// 的路径部分不发给服务器，任何子页面都能直接打开 / 刷新 / 分享链接。
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHashHistory(import.meta.env.BASE_URL),
   routes: [
     {
       // 平台统一入口（双场景门户）：登录后首屏，选择「专业能力训练 / 职业素养实训」
