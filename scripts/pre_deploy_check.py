@@ -127,19 +127,36 @@ def main() -> int:
     # 若忘了注入，线上 LLM 全程不可用 ⇒ career 实训退化为**规则兜底**：
     # 六维里多数维度「证据不足不予评分」、追问变模板话术（2026-10-15 真人演练实测到）。
     # 这种退化很隐蔽（页面不报错），所以必须在发布前拦住。
+    # 按 LLM_PROVIDER 判定对应通道的 key：provider 换成 glm 后，
+    # 残留的 DEEPSEEK_API_KEY 占位符已不参与调用，若仍查它会误报 No-Go。
+    PROVIDER_KEYS = {
+        "deepseek": ["DEEPSEEK_API_KEY"],
+        "glm": ["ZHIPU_API_KEY", "GLM_API_KEY"],
+        "qwen": ["QWEN_API_KEY", "DASHSCOPE_API_KEY"],
+        "xfyun": ["XF_API_KEY", "XF_API_SECRET"],
+    }
     env_path = REPO / "deploy" / "career-pilot" / "backend" / ".env"
-    llm_placeholder = False
+    env_vars: dict[str, str] = {}
     if env_path.exists():
         for line in env_path.read_text(encoding="utf-8", errors="replace").splitlines():
-            if line.startswith("DEEPSEEK_API_KEY="):
-                val = line.split("=", 1)[1].strip()
-                if not val or val.startswith("your_") or "placeholder" in val.lower() or len(val) < 20:
-                    llm_placeholder = True
-    else:
-        llm_placeholder = True
+            if "=" in line and not line.lstrip().startswith("#"):
+                k, v = line.split("=", 1)
+                env_vars[k.strip()] = v.strip()
+    provider = env_vars.get("LLM_PROVIDER", "auto").strip().lower()
+    # auto 时任一通道有真 key 即可（config 会按优先级兜底），故检查全部已知通道
+    keys_to_check = PROVIDER_KEYS.get(provider) or [k for ks in PROVIDER_KEYS.values() for k in ks]
+
+    def _is_placeholder(val: str) -> bool:
+        return (not val or val.startswith("your_") or "placeholder" in val.lower()
+                or "changeme" in val.lower() or len(val) < 20)
+
+    present = [k for k in keys_to_check if not _is_placeholder(env_vars.get(k, ""))]
+    llm_placeholder = not present
     if not args.quiet:
+        detail = f"provider={provider}；已注入 {present[0]}" if present else \
+                 f"provider={provider}；{', '.join(keys_to_check)} 均为占位符/缺失"
         print(f"\n[2/5] 包内 .env 的 LLM 凭据\n  {WARN if llm_placeholder else OK} "
-              + ("仍是占位符 ⇒ 线上实训会退化为规则兜底（六维多数维度不给分）" if llm_placeholder else "已注入"))
+              + (detail + " ⇒ 线上实训会退化为规则兜底（六维多数维度不给分）" if llm_placeholder else detail))
     if llm_placeholder:
         warned.append("包内 .env 的 LLM key 未注入（线上将走兜底模式）")
 
