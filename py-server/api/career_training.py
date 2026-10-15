@@ -734,7 +734,8 @@ def _render_class_export_html(dash: dict) -> str:
         ("已开始", summary.get("started_count", 0)),
         ("已完成", summary.get("finished_count", 0)),
         ("已评分", summary.get("assessed_count", 0)),
-        ("完成率", f"{summary.get('completion_rate', 0)}%"),
+        # completion_rate 是 0-1 小数率（db/career_store.class_dashboard），与前端 Math.round(rate*100) 同口径
+        ("完成率", f"{round(float(summary.get('completion_rate') or 0) * 100)}%"),
     ]
     sw_html = "".join(
         f'<div><div class="sw-h">{_esc(k)}</div><div class="sw-v">{_esc(v)}</div></div>'
