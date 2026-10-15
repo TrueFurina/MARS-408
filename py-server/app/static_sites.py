@@ -53,24 +53,33 @@ def install_spa(app: FastAPI) -> None:
         app.mount("/showcase", StaticFiles(directory=showcase_dir), name="showcase")
 
     index_path = os.path.join(static_dir, "index.html")
+    static_root_abs = os.path.abspath(static_dir)
 
     # 用中间件处理 SPA 路由：所有 404 的 GET 请求返回 index.html
     @app.middleware("http")
     async def spa_fallback(request: Request, call_next):
         response = await call_next(request)
+        path = request.url.path
         # StaticFiles 挂载（如 /showcase）会对精确匹配的目录路径返回 307 重定向
         # （/showcase → /showcase/），导致 Vue SPA 路由 /showcase 直接访问时 404。
         # 此处将 307 也回退到 index.html，让 Vue Router 接管该路径。
         # HEAD 一并回退：HTTP 语义上 HEAD 应在 GET 可用处同样可用，否则只发 HEAD 的
         # 健康探针会把「服务正常」误判为 404（下游误判不可用）。
         if response.status_code in (307, 404) and request.method in ("GET", "HEAD") \
-                and not request.url.path.startswith("/api/") \
-                and not request.url.path.startswith("/assets/") \
-                and not request.url.path.startswith("/plots/") \
-                and not request.url.path.startswith("/media/") \
-                and not request.url.path.startswith("/showcase/"):
-            headers = {"Cache-Control": "no-cache, no-store, must-revalidate"}
-            return FileResponse(index_path, headers=headers)
+                and not path.startswith("/api/"):
+            # ① 真实存在的静态文件优先返回（favicon.ico / site.webmanifest / brand/* 等
+            #    public/ 资源）。这些路径没有专门的 mount，若不在此处理，会被下面②
+            #    当成 SPA 深链回退成 index.html —— HTML 被当作图片解析 ⇒ 线上 logo 裂图，
+            #    而 dev 下 vite 直接服务 public/ 一切正常（典型「本地好好的、线上坏」）。
+            rel = path.lstrip("/")
+            cand = os.path.abspath(os.path.join(static_dir, rel))
+            if rel and (cand == static_root_abs or cand.startswith(static_root_abs + os.sep)) \
+                    and os.path.isfile(cand):
+                return FileResponse(cand, headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+            # ② SPA 深链回退（排除 API 与已挂载的产物目录）
+            if not path.startswith(("/assets/", "/plots/", "/media/", "/showcase/")):
+                headers = {"Cache-Control": "no-cache, no-store, must-revalidate"}
+                return FileResponse(index_path, headers=headers)
         return response
 
     logger.info(f"前端 SPA 已挂载: {static_dir} -> /")
