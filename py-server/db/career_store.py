@@ -576,14 +576,24 @@ def class_dashboard(cid: str, teacher_id: str) -> Optional[dict]:
         return None
     q = "?" if pg_client.is_fallback else "%s"
     roster = list_students(cid, teacher_id)
+    # 单查询取本班任务关联的全部会话（替代逐生一查的 N+1：50 人班 = 51 次往返）。
+    # 语义与旧逐生查询逐字对齐：LEFT JOIN 保留无评分会话；按 task_id 归属本班过滤；
+    # Python 侧只保留花名册内学生的行——非花名册用户（未 join 直接带 task_id 开局）
+    # 的会话在旧实现里同样不可见，此处不改变可见性。
+    all_rows = _query(
+        "SELECT s.user_id AS uid, s.id AS session_id, s.status, s.turn_count, "
+        "a.dimension_scores, a.consistency_score "
+        "FROM career_sessions s "
+        "LEFT JOIN career_assessments a ON a.session_id = s.id "
+        f"WHERE s.task_id IN (SELECT id FROM career_tasks WHERE class_id={q}) "
+        "ORDER BY s.started_at DESC", (cid,))
+    by_user: dict = {}
+    for r in all_rows:
+        by_user.setdefault(r.get("uid"), []).append(r)
     students = []
     class_dim_acc: dict = {}  # 维度 → [各生该维均分]（用于全班各维均分）
     for stu in roster:
-        rows = _query(
-            "SELECT s.id AS session_id, s.status, s.turn_count, a.dimension_scores, a.consistency_score "
-            f"FROM career_sessions s LEFT JOIN career_assessments a ON a.session_id = s.id "
-            f"WHERE s.user_id={q} AND s.task_id IN (SELECT id FROM career_tasks WHERE class_id={q}) "
-            f"ORDER BY s.started_at DESC", (stu.get("user_id") or "", cid))
+        rows = by_user.get(stu.get("user_id") or "", [])
         sessions = []
         dim_acc: dict = {}
         overall_best = None
