@@ -495,6 +495,8 @@ def test_class_export_report(client, teacher_id):
     assert "导出报告班" in html and "班级学情报告" in html
     assert "不作插值" in html, "必须带不插值口径 banner"
     assert "pilot_evidence_report" in html, "必须带取证闸引用提示"
+    # 完成率口径：后端是 0-1 小数率，导出必须换算成百分数（2 人 1 完成 → 50%）
+    assert "50%" in html, "完成率必须换算为百分数（防 0.5% 显示 bug 回归）"
     # 他人班级 → 404；学生 → 403
     from db.user_store import create_user, get_user_by_username
     other = "teacher_other_f7"
