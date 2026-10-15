@@ -251,6 +251,38 @@ class TestRedisLocalRateLimitFallback:
             c.check_rate_limit(f"flood:{i}", 10, 60)
         assert len(c._local_buckets) <= 16, len(c._local_buckets)
 
+    def test_memory_bound_evicts_oldest_first(self, monkeypatch):
+        """触顶淘汰必须逐「最久未活跃」——不是逐新、不是随机、不是成批错杀。
+
+        为什么单列：`test_memory_bound_evicts` 只断言规模上界，**不断言淘汰对象**；
+        而「淘汰谁」正是淘汰实现（nsmallest + 10% 摊销批量）必须守住的行为。
+        时钟每次调用 +1s（跨度 20s < window 60s）⇒ 无桶过期 ⇒ 强制走
+        「最久未活跃」分支；cap=16 时批量 = max(1, 16//10) = 1，逐个淘汰，
+        期望集合确定。
+        """
+        c = self._disabled_client(monkeypatch, strict=False)
+        monkeypatch.setattr(c, "_LOCAL_MAX_KEYS", 16)
+        clock = {"t": 1000.0}
+
+        def _tick():
+            clock["t"] += 1.0
+            return clock["t"]
+
+        c._time_source = _tick
+        # 16 个 key 各一次调用 ⇒ 恰好达到上界，last 时间戳依次 1001..1016
+        for i in range(16):
+            assert c.check_rate_limit(f"k{i}", 10, 60) is True
+        # 再灌 4 个新 key ⇒ 每次触顶淘汰当前最旧的一个
+        for i in range(16, 20):
+            assert c.check_rate_limit(f"k{i}", 10, 60) is True
+
+        keys = set(c._local_buckets)
+        assert len(keys) == 16, len(keys)
+        assert not {f"k{i}" for i in range(4)} & keys, (
+            f"最旧的 k0..k3 应被优先淘汰，实际残留: {sorted(keys)[:6]}"
+        )
+        assert {f"k{i}" for i in range(4, 20)} <= keys, "较新项不应被误淘汰"
+
     def test_redis_enabled_path_unchanged(self, monkeypatch):
         """Redis 启用时仍走 Redis 原子窗口，完全不落到进程内兜底。"""
 
