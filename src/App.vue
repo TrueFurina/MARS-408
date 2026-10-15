@@ -77,6 +77,49 @@ async function checkBackend() {
   }
 }
 
+/**
+ * 空闲时预取「侧边栏导航可见页面」的懒加载 chunk。
+ * 判定与加载都走 vue-router 自身（resolve → matched[].components），
+ * 因此不必硬编码页面清单，导航配置改动后自动跟随。
+ * 逐条串行触发，避免瞬间并发抢占带宽；失败静默（预取失败不影响正常使用）。
+ */
+function scheduleNavPrefetch() {
+  const run = async () => {
+    try {
+      const targets = new Set<string>()
+      // ① 侧边栏导航可见页
+      for (const item of flattenItems(visibleGroups(currentRole.value, sceneFilter.value))) {
+        const target = (item as NavItem).route
+        if (target) targets.add(target)
+      }
+      // ② 兜底：路由表内所有静态顶层路径。
+      //    只靠①不够稳妥 —— 导航项与真实路由的写法可能不一致（实测 /kaoyan「今日总览」
+      //    在①里没能覆盖到），导致点了它仍要现拉 chunk、照旧出现空档。
+      for (const rec of router.getRoutes()) {
+        const p = rec.path
+        if (p && p.startsWith('/') && !p.includes(':') && !p.includes('*')) targets.add(p)
+      }
+      await Promise.allSettled(
+        [...targets].map(async (target) => {
+          const matched = router.resolve(target).matched
+          await Promise.allSettled(
+            matched.map(async (rec) => {
+              const comp = rec.components?.default as unknown
+              if (typeof comp === 'function') await (comp as () => Promise<unknown>)()
+            }),
+          )
+        }),
+      )
+      console.debug('[prefetch] 预取完成，目标', targets.size, '个')
+    } catch { /* 预取整体失败不影响使用 */ }
+  }
+  if (typeof (window as any).requestIdleCallback === 'function') {
+    ;(window as any).requestIdleCallback(run, { timeout: 4000 })
+  } else {
+    setTimeout(run, 1500)
+  }
+}
+
 onMounted(() => {
   // 初始化主题（localStorage > 系统偏好 > 默认深色）
   let saved: string | null = null
@@ -85,6 +128,12 @@ onMounted(() => {
     saved = (typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: light)').matches) ? 'light' : 'dark'
   }
   applyTheme(saved === 'light' ? 'light' : 'dark')
+
+  // 空闲时预取侧边栏导航页的懒加载 chunk。
+  // 为什么：视图是 `() => import(...)` 懒加载，首次点击时 js+css 要走一次网络往返，
+  // 期间 router-view 为空 ⇒ 内容区从满屏骤降到近空白再填充（冷缓存实测 1601→822→…→1176），
+  // 用户感知为"卡一下/闪一下"。预取后点击即命中缓存，无空档。
+  scheduleNavPrefetch()
 
   // 定时检查后端健康状态
   checkBackend()
