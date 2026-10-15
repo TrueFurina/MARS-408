@@ -281,6 +281,10 @@ def _build_networks(torch):
     return ActorNet, CriticNet
 
 
+# 公开别名（P1-E 2026-10-15：消除跨模块私有 API 耦合，外部模块改用此名导入）
+build_networks = _build_networks
+
+
 # ── MAPPO 主策略 ──
 
 class MappoPolicy:

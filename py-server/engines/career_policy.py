@@ -58,7 +58,10 @@ CAREER_SIX_NOISE = 0.08
 
 
 try:  # torch 可用才构建网络（与 mappo_policy 同策略：延迟导入）
-    from engines.mappo_policy import _build_networks as _mp_build_networks
+    try:  # P1-E 2026-10-15：优先公开 API，不再 import 私有函数
+        from engines.mappo_policy import build_networks as _mp_build_networks
+    except ImportError:  # 兼容尚无公开别名的旧版 mappo_policy
+        from engines.mappo_policy import _build_networks as _mp_build_networks
     _TORCH_HINT = True
 except Exception:  # pragma: no cover - torch 缺失环境
     _mp_build_networks = None
