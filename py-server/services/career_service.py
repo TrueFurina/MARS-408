@@ -6,6 +6,7 @@
 # 后续 P5 可平滑替换为 LangGraph checkpointer，业务节点不变。
 # ============================================================
 
+import asyncio
 import logging
 from typing import Optional
 
@@ -122,7 +123,19 @@ async def answer_turn(session_id: str, answer_text: str) -> dict:
 
     # 2) 是否达到轮数上限 → 终评
     if turn_index >= int(state.get("max_turns", DEFAULT_MAX_TURNS)):
-        return await _finish(state)
+        # 终评异步化：与 end_session 同理，同步跑两轮 LLM 必然撞上公网网关超时。
+        if state.get("status") == "finished" and store.get_assessment_by_session(session_id):
+            return _finished_payload(state, turn_index)
+        if state.get("report_status") != "generating":
+            state["report_status"] = "generating"
+            state["report_error"] = ""
+            store.save_session_state(state, status="ongoing")
+            asyncio.create_task(_finish_background(session_id))
+        return {
+            "status": "finished_pending",
+            "turns_done": turn_index,
+            "message": _GENERATING_MSG,
+        }
 
     # 3) 决定对抗模式（鲶鱼/加压），生成下一问
     new_mode, triggered, catfish_cont = nodes.decide_adversary_mode(
@@ -179,7 +192,77 @@ async def end_session(session_id: str, force: bool = False) -> dict:
             "min_turns": MIN_TURNS,
             "message": f"证据不足，至少完成 {MIN_TURNS} 轮才能生成评估报告（可 force=true 强制结束）",
         }
-    return await _finish(state)
+
+    # ── 报告已生成过：直接回放，不重复烧 token（幂等重入）──
+    if state.get("status") == "finished" and store.get_assessment_by_session(session_id):
+        return _finished_payload(state, len(turns))
+
+    # ── 已在生成中：不要并发再起一次（否则同一会话两份评估）──
+    if state.get("report_status") == "generating":
+        return {
+            "status": "generating",
+            "turns_done": len(turns),
+            "message": _GENERATING_MSG,
+        }
+
+    # ── 异步出报告（关键改动，见下方 _finish_background 注释）──
+    state["report_status"] = "generating"
+    state["report_error"] = ""
+    store.save_session_state(state, status=state.get("status") or "ongoing")
+    asyncio.create_task(_finish_background(session_id))
+    return {
+        "status": "generating",
+        "turns_done": len(turns),
+        "message": _GENERATING_MSG,
+    }
+
+
+_GENERATING_MSG = "评估报告生成中（六维 ECD 评估 + 提升路径），请稍候约 30 秒后查看报告"
+
+
+def _finished_payload(state: dict, turns_done: int) -> dict:
+    """已完成的会话：直接用落库内容组装响应（不再调用 LLM）。"""
+    record = store.get_assessment_by_session(state["session_id"]) or {}
+    return {
+        "status": "finished",
+        "turns_done": turns_done,
+        "assessment": record.get("dimension_scores") or state.get("assessment_report", {}),
+        "improvement": record.get("improvement_plan") or state.get("improvement_plan", {}),
+        "evidence_chain": record.get("evidence_chain", []),
+    }
+
+
+async def _finish_background(session_id: str) -> None:
+    """后台生成报告。
+
+    为什么必须异步（2026-10-16 公网实测）：
+        终评 = 六维评估(max_tokens=2000) + 提升路径 两次串行 LLM 调用，
+        实测单轮对话 20s / 首题 26s，终评总耗时稳定超过发布平台网关的
+        ~60s 超时 ⇒ 同步返回时用户侧拿到的是 **504**，而后端其实已经算完并
+        落库（随后 report 接口 200）。同步接口在公网形态下本质是"必然超时"，
+        故改为：end 立即回 generating，后台跑完落库，前端轮询 report。
+    """
+    try:
+        state = store.get_session_state(session_id)
+        if not state:
+            logger.warning("后台终评：会话已不存在 %s", session_id)
+            return
+        await _finish(state)
+        # _finish 内部最后一次 save 用了它自己的 state 副本，这里重读再落状态
+        fresh = store.get_session_state(session_id) or state
+        fresh["report_status"] = "ready"
+        fresh["report_error"] = ""
+        store.save_session_state(fresh, status="finished")
+        logger.info("后台终评完成：%s", session_id)
+    except Exception as e:  # 失败必须可读：否则前端只会永远轮询
+        logger.exception("后台终评失败")
+        try:
+            fresh = store.get_session_state(session_id) or {}
+            fresh["report_status"] = "failed"
+            fresh["report_error"] = str(e)[:200]
+            store.save_session_state(fresh, status=fresh.get("status") or "ongoing")
+        except Exception:
+            logger.exception("后台终评失败状态回写也失败")
 
 
 # ────────────────────────────────────────────────────────────
@@ -296,6 +379,15 @@ def get_report(session_id: str) -> dict:
     if not state:
         raise KeyError(f"实训会话不存在: {session_id}")
     record = store.get_assessment_by_session(session_id)
+    # 终评已异步化：报告尚未落库时，如实回「生成中 / 失败」，让前端轮询或重试，
+    # 而不是给一份空报告把"还没算完"伪装成"算完了但没分"。
+    if not record and state.get("report_status") == "generating":
+        return {"session_id": session_id, "status": "generating", "message": _GENERATING_MSG}
+    if not record and state.get("report_status") == "failed":
+        return {
+            "session_id": session_id, "status": "failed",
+            "message": f"报告生成失败：{state.get('report_error') or '未知原因'}（可重新结束会话重试）",
+        }
     return {
         "session_id": session_id,
         "title": state.get("title", ""),

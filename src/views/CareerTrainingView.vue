@@ -24,6 +24,9 @@ const phase = ref<string>('')           // F5: 前后测标记（''=不标记 / 
 const loadingScenarios = ref(true)
 const busy = ref(false)
 const errorMsg = ref('')
+// 终评已异步化（公网网关约 60s 超时，终评两次串行 LLM 必然超时 ⇒ 后端先回 generating）
+const reportPending = ref(false)
+const progressMsg = ref('')
 
 const session = ref<any>(null)
 const turns = ref<Turn[]>([])
@@ -188,10 +191,12 @@ async function submitAnswer() {
     const mine = turns.value[idx]
     if (mine) mine.evidence = res.last_evidence
     if (res.status === 'finished') {
-      assessment.value = res.assessment
-      improvement.value = res.improvement
-      evidenceChain.value = res.evidence_chain || []
-      step.value = 'report'
+      applyReport(res)
+    } else if (res.status === 'finished_pending') {
+      // 末轮触发终评：后台生成中，轮询报告（不要回滚学生气泡，作答已落库）
+      reportPending.value = true
+      progressMsg.value = res.message || '评估报告生成中…'
+      await pollReport(session.value.session_id)
     } else {
       turns.value.push({
         role: 'interviewer', text: res.next_question.question,
@@ -200,24 +205,77 @@ async function submitAnswer() {
       await scrollBottom()
     }
   } catch (e) {
+    // 末轮终评若被网关掐断（504），后端仍在生成 —— 先试轮询，别回滚作答
+    const sid = session.value?.session_id
+    if (sid && await pollReport(sid, true)) { busy.value = false; return }
     errorMsg.value = friendlyError(e, '提交失败')
     turns.value.pop() // 失败回滚学生气泡
-  } finally { busy.value = false }
+  } finally {
+    reportPending.value = false
+    busy.value = false
+  }
 }
 
-/* 提前结束（至少4轮后端才出报告） */
+/* 提前结束（至少4轮后端才出报告）
+   终评走后台异步：end 立即回 generating，前端轮询 report 直到 ready。
+   若 end 请求本身被网关掐断（504），后端其实仍在算 —— 不直接判失败，转轮询。 */
 async function finishEarly() {
   if (busy.value) return
+  const sid = session.value?.session_id
+  if (!sid) return
   busy.value = true; errorMsg.value = ''
+  reportPending.value = true; progressMsg.value = '评估报告生成中（六维 ECD 评估 + 提升路径），约需 30 秒…'
   try {
-    const res = await api.post<any>(`/career/session/${session.value.session_id}/end`, { force: false })
-    if (res.status === 'insufficient') { errorMsg.value = res.message; busy.value = false; return }
-    assessment.value = res.assessment; improvement.value = res.improvement
-    evidenceChain.value = res.evidence_chain || []
-    step.value = 'report'
+    const res = await api.post<any>(`/career/session/${sid}/end`, { force: false })
+    if (res.status === 'insufficient') {
+      errorMsg.value = res.message
+      reportPending.value = false; busy.value = false
+      return
+    }
+    if (res.status === 'finished') { applyReport(res); return }
+    await pollReport(sid)
   } catch (e) {
-    errorMsg.value = friendlyError(e, '结束失败')
-  } finally { busy.value = false }
+    const ok = await pollReport(sid, true)
+    if (!ok) errorMsg.value = friendlyError(e, '结束失败')
+  } finally {
+    reportPending.value = false; busy.value = false
+  }
+}
+
+/* 轮询报告：后端报告落库后返回完整内容（最多等 90 秒） */
+async function pollReport(sid: string, silentOnError = false): Promise<boolean> {
+  const deadline = Date.now() + 90_000
+  while (Date.now() < deadline) {
+    await new Promise(r => setTimeout(r, 3000))
+    try {
+      const r = await api.get<any>(`/career/session/${sid}/report`)
+      if (r?.status === 'failed') {
+        errorMsg.value = r.message || '报告生成失败，请重试结束'
+        reportPending.value = false
+        return false
+      }
+      if (r?.status === 'generating') {
+        progressMsg.value = r.message || '评估报告生成中…'
+        continue
+      }
+      if (r?.assessment && Object.keys(r.assessment).length) { applyReport(r); return true }
+    } catch {
+      if (silentOnError) continue  // 网关抖动：继续等
+      throw new Error('报告拉取失败')
+    }
+  }
+  progressMsg.value = ''
+  errorMsg.value = '报告生成超时（超过 90 秒），请稍后重试结束'
+  reportPending.value = false
+  return false
+}
+
+function applyReport(r: any) {
+  assessment.value = r.assessment
+  improvement.value = r.improvement
+  evidenceChain.value = r.evidence_chain || []
+  reportPending.value = false
+  step.value = 'report'
 }
 
 function restart() {
@@ -454,7 +512,8 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
             </div>
           </template>
         </div>
-        <div v-if="busy" class="bubble interviewer typing">对手正在思考下一个问题…</div>
+        <div v-if="busy && !reportPending" class="bubble interviewer typing">对手正在思考下一个问题…</div>
+        <div v-if="reportPending" class="bubble interviewer typing">{{ progressMsg || '评估报告生成中…' }}</div>
       </div>
 
       <div v-if="errorMsg" class="c-error">{{ errorMsg }}</div>

@@ -204,7 +204,14 @@ async function main() {
 
     await step('结束会话 → 拉取六维报告', async () => {
       const e = await api('POST', `/api/career/session/${sessionId}/end`, {}, studentToken)
-      const rep = await api('GET', `/api/career/session/${sessionId}/report`, undefined, studentToken)
+      // 终评已异步化（公网网关 ~60s 超时）：end 只回 generating，轮询 report 等落库
+      let rep = null
+      const deadline = Date.now() + 150000
+      while (Date.now() < deadline) {
+        rep = await api('GET', `/api/career/session/${sessionId}/report`, undefined, studentToken)
+        if (!(rep.data && rep.data.status === 'generating')) break
+        await new Promise(r => setTimeout(r, 4000))
+      }
       // report 的真实字段是 assessment（其内可能是 {dimensions:{...}} 或维度分平铺）
       const assessment = (rep.data && rep.data.assessment) || {}
       const dims = assessment.dimensions || assessment
