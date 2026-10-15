@@ -47,8 +47,10 @@ EXCLUDE_DIR_NAMES = {
     "__pycache__", ".pytest_cache", ".pytest_tmp", ".ruff_cache",
     "_scratch", "_debug_smoke",
 }
-# 目录前缀（排除运行时数据目录及其备份，如 vectordb_data / vectordb_data_pre_multi_bak）
-EXCLUDE_DIR_PREFIXES = ("vectordb_data",)
+# 目录前缀（排除运行时数据目录及其备份，如 vectordb_data / vectordb_data_pre_multi_bak）。
+# 也用于测试临时目录：pytest 的 --basetemp 常带后缀（.pytest_tmp_qc / .pytest_tmp_f2 …），
+# 精确名匹配会漏掉 ⇒ 实测包内曾混入十余个测试残留目录。
+EXCLUDE_DIR_PREFIXES = ("vectordb_data", ".pytest_tmp", ".pytest_cache", ".ruff_cache")
 # 目录/文件后缀（备份、旧版本残留）
 EXCLUDE_DIR_SUFFIXES = ("_bak", "_backup", "_old")
 # 文件后缀
