@@ -7,6 +7,10 @@
 import pytest
 from fastapi.testclient import TestClient
 
+# run 级唯一后缀：本文件多数用例跑在共享回退库上，固定 uid 会被上一轮数据污染
+# （成长页/同意状态按 uid 聚合），故对"按 uid 断言全局状态"的用例加后缀。
+_RUN = __import__("uuid").uuid4().hex[:6]
+
 
 @pytest.fixture()
 def client():
@@ -339,5 +343,173 @@ def test_my_tasks_empty_before_join(client):
     _student_override(client, "stu_no_class")
     try:
         assert client.get("/api/career/my-tasks").json()["tasks"] == []
+    finally:
+        _restore_auth(client)
+
+
+# ────────────────────────────────────────────────────────────
+# F4 成长页 / F5 前后测标记 / F6 同意与简评 / F7 班级报告导出（2026-10-15）
+# ────────────────────────────────────────────────────────────
+
+_WEAK_ANSWER = "嗯，我不知道。"
+_RICH_ANSWER = ("先看监控指标确认爆炸半径（错误率/延迟/CPU），再查最近发布记录与变更单；"
+                "确认根因后先回滚止损，同时准备预案：补压测、加告警阈值、写复盘文档；"
+                "同步值班同学与产品，说明影响面与恢复时间，后续推动增加灰度发布机制防止复发。")
+
+
+def _student_finish_with(client, task, uid, phase=None, answer=_WEAK_ANSWER):
+    """夹具：学生凭码加入并以指定 phase 跑完一场（返回 user_id）"""
+    _student_override(client, uid)
+    try:
+        joined = client.post("/api/career/task/join",
+                             json={"join_code": task["join_code"]}).json()
+        start = client.post("/api/career/session/start", json={
+            "scenario_id": joined["scenario_id"], "max_turns": 4,
+            "task_id": joined["task_id"], "phase": phase}).json()
+        sid = start["session_id"]
+        # start 响应回带的 phase：合法值原样回带，非法值归一为 None（不猜）
+        assert start.get("phase") == (phase if phase in ("pre", "post") else None)
+        client.post(f"/api/career/session/{sid}/answer", json={"answer": answer})
+        client.post(f"/api/career/session/{sid}/end", json={"force": True})
+    finally:
+        _restore_auth(client)
+    return uid
+
+
+def test_phase_marker_growth_and_compare(client, teacher_id):
+    """F5+F4：pre/post 两场 → 成长页有阶段标记、六维趋势、前后测差值（不插值口径）"""
+    uid = f"stu_pre_{_RUN}"
+    cid, task = _setup_class_task(client, class_name="前后测班")
+    _student_finish_with(client, task, uid, phase="pre", answer=_WEAK_ANSWER)
+    _student_finish_with(client, task, uid, phase="post", answer=_RICH_ANSWER)
+    _student_override(client, uid)
+    try:
+        g = client.get("/api/career/my-growth").json()
+    finally:
+        _restore_auth(client)
+    assert g["session_count"] == 2 and g["finished_count"] == 2
+    phases = {s["phase"] for s in g["sessions"]}
+    assert phases == {"pre", "post"}, "两场必须分别带上阶段标记"
+    # 趋势：每个评过分的维度都有 2 个点（按时间正序）
+    assert g["dimension_trend"], "已完成会话必须产出六维趋势"
+    for pts in g["dimension_trend"].values():
+        assert len(pts) == 2 and pts[0]["date"] <= pts[1]["date"]
+    # 前后测对比：仅当两侧都有已评分会话才给出（本用例满足）
+    pc = g["phase_compare"]
+    assert pc and pc["pre"] and pc["post"] and pc["delta"], "两侧齐备必须给出对比"
+    assert "不排除练习/记忆效应" in pc["note"], "对比必须带探索性口径声明"
+    # 金句：取自评估真实引用过的原话（本用例有真实作答）
+    assert g["quotes"], "已完成会话必须能提取到证据金句"
+    assert all(q["quote"] for q in g["quotes"])
+
+
+def test_phase_invalid_value_ignored(client, teacher_id):
+    """F5 边界：非法 phase 值一律视为未标记（不猜、不落库）"""
+    cid, task = _setup_class_task(client, class_name="非法阶段班")
+    _student_finish_with(client, task, "stu_bad_phase", phase="midterm")
+    _student_override(client, "stu_bad_phase")
+    try:
+        g = client.get("/api/career/my-growth").json()
+    finally:
+        _restore_auth(client)
+    assert g["sessions"][0]["phase"] is None, "非法值必须回落为未标记"
+    assert g["phase_compare"] is None, "只有一侧/无标记不得编造前后测对比"
+
+
+def test_my_growth_empty_for_new_student(client):
+    """F4 边界：零会话学生 → 空画像不报错、不编造"""
+    _student_override(client, "stu_brand_new")
+    try:
+        g = client.get("/api/career/my-growth").json()
+    finally:
+        _restore_auth(client)
+    assert g["session_count"] == 0 and g["finished_count"] == 0
+    assert g["sessions"] == [] and g["dimension_trend"] == {}
+    assert g["phase_compare"] is None and g["quotes"] == []
+
+
+def test_consent_record_and_read(client):
+    """F6：同意状态查询 → 记录 → 复查（含版本与文本；不同意也如实留痕）"""
+    uid = f"stu_consent_{_RUN}"
+    _student_override(client, uid)
+    try:
+        first = client.get("/api/career/consent").json()
+        assert first["consent"] is None and first["text"] and first["version"]
+        r = client.post("/api/career/consent", json={"agreed": True}).json()
+        assert r["agreed"] is True
+        again = client.get("/api/career/consent").json()["consent"]
+        assert again["agreed"] is True and again["version"] == first["version"]
+        # 改主意不同意 → 覆盖记录（审计可见"看过但不同意"）
+        r2 = client.post("/api/career/consent", json={"agreed": False}).json()
+        assert r2["agreed"] is False
+        assert client.get("/api/career/consent").json()["consent"]["agreed"] is False
+    finally:
+        _restore_auth(client)
+
+
+def test_feedback_flow_and_permissions(client, teacher_id):
+    """F6：本人提交简评 → 重复提交更新；他人 403；评分越界 422；教师按班级隔离查看"""
+    cid, task = _setup_class_task(client, class_name="简评班")
+    uid = _student_finish_one(client, task)
+    # 越界评分 → 422（Pydantic 校验）
+    _student_override(client, uid)
+    try:
+        assert client.post("/api/career/session/x/feedback",
+                           json={"rating": 9}).status_code == 422
+        sid = client.get("/api/career/sessions").json()["sessions"][0]["id"]
+        r = client.post(f"/api/career/session/{sid}/feedback",
+                        json={"rating": 5, "comment": "对抗追问很真实"}).json()
+        assert r["rating"] == 5 and r["updated"] is False
+        # 重复提交 → 更新（不叠加第二条）
+        r2 = client.post(f"/api/career/session/{sid}/feedback",
+                         json={"rating": 3, "comment": "二评"}).json()
+        assert r2["updated"] is True and r2["rating"] == 3
+    finally:
+        _restore_auth(client)
+    # 他人会话 → 403/404（仅本人可评价）
+    _student_override(client, "stu_other_fb")
+    try:
+        assert client.post("/api/career/session/sess_missing/feedback",
+                           json={"rating": 1}).status_code in (403, 404)
+    finally:
+        _restore_auth(client)
+    # 教师：只看得到本人班级学生的简评（隔离；按班级过滤后恰为本人这场）
+    fb = client.get(f"/api/career/feedback?class_id={cid}").json()["feedback"]
+    assert len(fb) == 1 and fb[0]["rating"] == 3 and fb[0]["comment"] == "二评"
+    assert fb[0]["student_name"]
+    # 学生调教师端点 → 403
+    _student_override(client, uid)
+    try:
+        assert client.get("/api/career/feedback").status_code == 403
+    finally:
+        _restore_auth(client)
+
+
+def test_class_export_report(client, teacher_id):
+    """F7：班级一页纸导出（自包含 HTML，只含真实数据 + 口径 banner）"""
+    cid, task = _setup_class_task(client, class_name="导出报告班")
+    _student_finish_one(client, task)
+    r = client.get(f"/api/career/classes/{cid}/export-report")
+    assert r.status_code == 200 and "text/html" in r.headers["content-type"]
+    html = r.text
+    assert "导出报告班" in html and "班级学情报告" in html
+    assert "不作插值" in html, "必须带不插值口径 banner"
+    assert "pilot_evidence_report" in html, "必须带取证闸引用提示"
+    # 他人班级 → 404；学生 → 403
+    from db.user_store import create_user, get_user_by_username
+    other = "teacher_other_f7"
+    if not get_user_by_username(other):
+        create_user(other, "pw_123456", "另一位教师", "teacher")
+    from main import app
+    from shared.auth import get_current_user
+    app.dependency_overrides[get_current_user] = lambda: {
+        "user_id": get_user_by_username(other)["id"], "role": "teacher"}
+    try:
+        assert client.get(f"/api/career/classes/{cid}/export-report").status_code == 404
+    finally:
+        _restore_auth(client)
+    _student_override(client, "stu_f7")
+    try:
+        assert client.get(f"/api/career/classes/{cid}/export-report").status_code == 403
     finally:
         _restore_auth(client)
