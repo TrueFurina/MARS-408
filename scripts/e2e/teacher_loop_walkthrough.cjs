@@ -1,7 +1,8 @@
 /**
  * 教师侧教学闭环 · 真实浏览器走查（Playwright）
  * ============================================================================
- * 覆盖路线图 B5「登录→建班→发任务→学生凭码加入→对抗→六维报告→教师看板」。
+ * 覆盖路线图 B5「登录→建班→发任务→学生凭码加入→对抗→六维报告→教师看板」，
+ * 及拼图②产品向收尾「看板 CSV 导出（纯前端生成→浏览器下载→落盘校验）」（D 步）。
  *
  * 前置（脚本不负责起服务）：
  *   1) 后端：cd py-server && python main.py            # :8002
@@ -147,6 +148,36 @@ async function login(page, u, p) {
   log('C1 班级统计(参与/完成/完成率/可评估):', stat ? stat.slice(1).join(' / ') : '(未匹配)');
   log('C1 含最弱维度与需关注:', /最弱维度/.test(dash) && /需关注/.test(dash));
   log('C1 看板含学生行:', dash.includes(S.u) || /E2E 学生/.test(dash));
+
+  // ── D：看板 CSV 导出（拼图②产品向收尾；exportDashCsv 为纯前端生成，零后端依赖）──
+  const exportBtn = page.getByRole('button', { name: /导出 CSV/ });
+  const hasExport = await exportBtn.count();
+  log('D0 导出按钮存在:', hasExport > 0);
+  if (hasExport > 0) {
+    const [download] = await Promise.all([
+      page.waitForEvent('download', { timeout: 15000 }),
+      exportBtn.first().click(),
+    ]);
+    const csvPath = path.join(OUT, '15-dashboard-export.csv');
+    await download.saveAs(csvPath);
+    const raw = fs.readFileSync(csvPath);
+    const text = raw.toString('utf8');
+    const bom = raw[0] === 0xEF && raw[1] === 0xBB && raw[2] === 0xBF;
+    const lines = text.replace(/^\ufeff/, '').split('\n').filter(Boolean);
+    const head = lines[0] || '';
+    const cols = head.split(',');
+    const hasStudent = lines.some(l => l.includes(S.u) || l.includes('E2E 学生'));
+    const hasAgg = lines.some(l => l.includes('班级均分'));
+    const coreOk = ['学号', '姓名', '是否加入', '完成场次', '总会话', 'best_overall'].every(k => head.includes(k));
+    log('D1 下载文件名:', download.suggestedFilename(), `（期望 对抗实训看板_${CLASS_NAME}.csv）`);
+    log('D2 BOM(UTF-8):', bom, '| 数据行数:', lines.length, '| 列数:', cols.length);
+    log('D3 表头:', head);
+    log('D4 含花名册学生行:', hasStudent, '| 含班级均分行:', hasAgg);
+    log('D5 核心列齐全(≥12 列=6 核心+六维):', coreOk && cols.length >= 12);
+    log('D6 落盘 CSV 与页面数据一致(学生行进 CSV):', hasStudent);
+    await page.screenshot({ path: path.join(OUT, '15-dashboard-export.png'), fullPage: true });
+  }
+
   log('ERR:', JSON.stringify([...new Set(errs)].slice(0, 8)));
   await browser.close();
 })().catch(e => { console.error('FATAL', e.message); process.exit(1); });

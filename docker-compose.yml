@@ -105,6 +105,8 @@ services:
   # ── Milvus 向量数据库（生产部署） ──
   milvus:
     image: milvusdb/milvus:v2.4.17
+    # 镜像 ENTRYPOINT=[/tini --] 且 CMD 为空，必须由 compose 提供启动命令，否则 tini 无程序可跑直接退出。
+    command: ["milvus", "run", "standalone"]
     ports:
       - "19530:19530"
       - "9091:9091"

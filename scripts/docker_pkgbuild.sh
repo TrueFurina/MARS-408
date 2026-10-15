@@ -27,8 +27,15 @@ docker volume create studyhelp_venv >/dev/null
 
 # py-server 只读挂载（不污染仓库），复制进 /tmp/build 后改 uv.lock 源为清华镜像，
 # uv sync 生成 .venv，再拷入持久卷 /venv（= studyhelp_venv）。
+# Git Bash(MSYS) 会把容器侧 POSIX 路径 /workspace 误转成 Windows 路径，导致 docker 报
+# "working directory ... is invalid"。故 MSYS 环境下用 cygpath 把挂载源转成 Windows 路径，
+# 并用 MSYS_NO_PATHCONV=1 保住容器侧路径；Linux/macOS 下自动回落到原生路径。
+case "$(uname -s 2>/dev/null)" in
+  MINGW*|MSYS*|CYGWIN*) _SRC="$(cygpath -w "$REPO_ROOT")"; export MSYS_NO_PATHCONV=1 ;;
+  *) _SRC="$REPO_ROOT" ;;
+esac
 docker run --rm \
-  -v "${REPO_ROOT}/py-server:/workspace:ro" \
+  -v "${_SRC}/py-server:/workspace:ro" \
   -v studyhelp_venv:/venv \
   -w /workspace \
   studyhelp-base:deps \
