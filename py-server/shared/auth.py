@@ -120,9 +120,13 @@ def get_current_user(
     ``Bearer FAKE_TEST_123`` 到达服务端的是 395 字符的 cloudstudio.net token），
     应用自己的 JWT 因此永远验不过；而自定义头（X-App-Token / Cookie）原样透传。
     本地/dev 无该网关，两个头都设时行为一致（X-App-Token 优先）。
+    ⚠️ 两个参数都必须做 isinstance(str) 判定：FastAPI 依赖注入时它们是 str/None，
+    但**直接调用**（单测、内部复用）时拿到的是 `Header(default=...)` **对象本身**——
+    若不做类型判定，那个对象是 truthy，会被当成 token 传给 verify_token 并崩在
+    `.split(".")`（AttributeError）。曾因此挂掉 test_valid_bearer_returns_user。
     """
-    token = x_app_token
-    if not token and authorization and authorization.startswith("Bearer "):
+    token = x_app_token if isinstance(x_app_token, str) else None
+    if not token and isinstance(authorization, str) and authorization.startswith("Bearer "):
         token = authorization[len("Bearer "):]
     if not token:
         raise HTTPException(status_code=401, detail="Not logged in or missing credentials")
