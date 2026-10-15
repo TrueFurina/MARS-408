@@ -14,7 +14,7 @@ from typing import Optional
 from shared.auth import get_current_user
 from services import career_service
 from db import career_store
-from agents.career_state import DIMENSION_LABELS
+from agents.career_state import DIMENSIONS, DIMENSION_LABELS
 
 logger = logging.getLogger("netlearn.career.api")
 router = APIRouter(prefix="/career", tags=["career-training"])
@@ -727,7 +727,6 @@ def _render_class_export_html(dash: dict) -> str:
     summary = dash.get("summary") or {}
     students = dash.get("students") or []
     attention = dash.get("attention") or []
-    dim_labels = {d: dim_label(d) for d in (summary.get("dimension_avg") or {})}
 
     stat_cards = [
         ("班级人数", summary.get("student_count", len(students))),
@@ -742,13 +741,23 @@ def _render_class_export_html(dash: dict) -> str:
         for k, v in stat_cards)
 
     dim_avg = summary.get("dimension_avg") or {}
-    dim_html = "、".join(
-        f"{_esc(dim_labels.get(d, d))} {_esc(v)}" for d, v in dim_avg.items()) or "暂无已评分数据"
+    # 固定按 canonical 六维渲染：无数据维度显「无数据」而非从行里消失
+    # （2026-10-15 浏览器走查发现：按数据键渲染时，无证据维度整项消失，"六维"名不副实）
+    if dim_avg:
+        dim_html = "、".join(
+            (f"{_esc(dim_label(d))} {_esc(dim_avg[d])}" if d in dim_avg
+             else f"{_esc(dim_label(d))} 无数据")
+            for d in DIMENSIONS)
+    else:
+        dim_html = "暂无已评分数据"
 
     rows = []
     for s in students:
         dims = s.get("dimension_avg") or {}
-        dim_cell = "、".join(f"{_esc(dim_label(d))} {_esc(v)}" for d, v in dims.items()) or "—"
+        dim_cell = ("、".join(
+            (f"{_esc(dim_label(d))} {_esc(dims[d])}" if d in dims
+             else f"{_esc(dim_label(d))} 无数据")
+            for d in DIMENSIONS) if dims else "—")
         best = s.get("overall_best")
         rows.append(
             f"<tr><td>{_esc(s.get('student_no') or '—')}</td>"

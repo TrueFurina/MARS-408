@@ -3,7 +3,7 @@
 // F1（2026-10-15）：学生个体下钻；F2：任务管理中心（进度 + 关闭）
 import { ref, onMounted, watch } from 'vue'
 import { api, friendlyError } from '@/utils/api'
-import { CAREER_DIM_LABEL } from '@/data/careerDimensions'
+import { CAREER_DIM_LABEL, CAREER_DIM_ORDER } from '@/data/careerDimensions'
 import { useModalFocus } from '@/composables/useModalFocus'
 
 interface ClassItem { class_id: string; class_name: string; student_count: number }
@@ -245,8 +245,11 @@ function csvCell(v: unknown): string {
 function exportDashCsv() {
   if (!dash.value) return
   const d = dash.value
-  // 维度列：优先取班级聚合的六维键，退回首个学生的维度键
-  const dims = Object.keys(d.summary?.dimension_avg || d.students[0]?.dimension_avg || {})
+  // 维度列：固定取 canonical 六维（CAREER_DIM_ORDER，与后端 agents/career_state.DIMENSIONS
+  // 同序同集），无数据留空。**不按数据键取列** —— 2026-10-15 浏览器走查实测：某轮评估
+  // 对「技术汇报」无证据（score=null）时，按数据键取列会让该维整列消失，"全班六维"
+  // 名不副实，且跨班级/场次合并 CSV 会错列。
+  const dims: string[] = [...CAREER_DIM_ORDER]
   const head = ['学号', '姓名', '是否加入', '完成场次', '总会话', 'best_overall', ...dims.map(dimLabel)]
   const rows = d.students.map(s =>
     [s.student_no || '', s.name, s.bound ? '已加入' : '未加入',
@@ -442,8 +445,14 @@ onMounted(() => {
             </p>
             <p class="agg-line">
               <span class="agg-k">全班六维均分</span>
-              <span v-for="(v, d) in dash.summary.dimension_avg" :key="d" class="chip">{{ dimLabel(d) }} {{ v }}</span>
-              <span v-if="!Object.keys(dash.summary.dimension_avg).length" class="dim">暂无</span>
+              <template v-if="Object.keys(dash.summary.dimension_avg).length">
+                <!-- 固定渲染 canonical 六维：无数据的维度显「无数据」而非消失（2026-10-15 走查修复） -->
+                <span v-for="d in CAREER_DIM_ORDER" :key="d"
+                      :class="['chip', { dim: dash.summary.dimension_avg[d] === undefined }]">
+                  {{ dimLabel(d) }} {{ dash.summary.dimension_avg[d] ?? '无数据' }}
+                </span>
+              </template>
+              <span v-else class="dim">暂无</span>
             </p>
             <p class="hint">{{ dash.summary.note }}</p>
           </div>

@@ -8,8 +8,13 @@
  *   1) 后端：cd py-server && python main.py            # :8002
  *      建议加 LLM_PROVIDER=deepseek，否则 auto 会先试讯飞（本环境 11200 无权限）
  *      再回退 → 每次调用白等数秒。
+ *      数据隔离（B5 同款）：加 NETLEARN_USER_DB / NETLEARN_PG_DIR / NETLEARN_PG_DB
+ *      指向临时目录，真实 data/*.db 零写入；账号须在临时库上重建
+ *      （admin 登录 → POST /api/admin/users 建 teacher；/api/auth/register 建 student）。
  *   2) 前端：npx vite --host 127.0.0.1 --port 5300     # base=/MARS-408/app/
  *      ⚠️ Windows 保留段 5162-5261 含默认端口 5173，直接 npm run dev 会 EACCES。
+ *      ⚠️ 2026-10-15 起前端为 hash 路由（createWebHashHistory）：所有 page.goto
+ *      必须用 BASE + '#/<route>'，落点判定看 URL 的 hash 段而非 pathname。
  *   3) 账号：教师与学生各一（教师需 role=teacher，注册端点只建 student，
  *      需管理员经 POST /api/admin/users 创建）。
  *   4) 学生需已过入学测评，否则登录后落 /diagnostic/start
@@ -45,9 +50,10 @@ const log = (...a) => console.log(...a);
 
 async function login(page, u, p) {
   // 换角色前先清登录态：否则 /login 被守卫弹回首页，表单根本不存在
-  await page.goto(BASE + 'login', { waitUntil: 'domcontentloaded' });
+  // （2026-10-15 起前端为 hash 路由 createWebHashHistory，导航须带 # 前缀）
+  await page.goto(BASE + '#/login', { waitUntil: 'domcontentloaded' });
   await page.evaluate(() => { try { localStorage.clear(); } catch { /* noop */ } });
-  await page.goto(BASE + 'login', { waitUntil: 'domcontentloaded' });
+  await page.goto(BASE + '#/login', { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1200);
   await page.locator('input').nth(0).fill(u);
   await page.locator('input').nth(1).fill(p);
@@ -67,8 +73,8 @@ async function login(page, u, p) {
 
   // ── A：教师建班 → 花名册 → 发任务 ─────────────────────────────────
   await login(page, T.u, T.p);
-  log('A1 教师登录落点:', page.url(), '（期望 .../teacher，不是 /diagnostic/start）');
-  await page.goto(BASE + 'career/teacher', { waitUntil: 'domcontentloaded' });
+  log('A1 教师登录落点:', page.url(), '（期望 hash 为 #/teacher，不是 #/diagnostic/start）');
+  await page.goto(BASE + '#/career/teacher', { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(2500);
   await page.getByPlaceholder(/班级名称/).fill(CLASS_NAME);
   await page.getByRole('button', { name: '创建', exact: true }).click();
@@ -89,11 +95,11 @@ async function login(page, u, p) {
   // ── B：学生凭码加入 → 对抗 → 六维报告 ─────────────────────────────
   await login(page, S.u, S.p);
   log('B1 学生登录落点:', page.url());
-  await page.goto(BASE + 'career/teacher', { waitUntil: 'domcontentloaded' });
+  await page.goto(BASE + '#/career/teacher', { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1800);
-  log('B1b 学生访问 /career/teacher 后落点:', new URL(page.url()).pathname, '（期望回到 app 根，被守卫拦下）');
+  log('B1b 学生访问 /career/teacher 后落点 hash:', new URL(page.url()).hash, '（期望被守卫弹离 #/career/teacher）');
 
-  await page.goto(BASE + 'career/training', { waitUntil: 'domcontentloaded' });
+  await page.goto(BASE + '#/career/training', { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(2500);
   await page.getByPlaceholder(/输入任务码/).fill(CODE);
   await page.getByRole('button', { name: /加入实训/ }).click();
@@ -136,7 +142,7 @@ async function login(page, u, p) {
 
   // ── C：教师看板（须重新以教师身份登录） ────────────────────────────
   await login(page, T.u, T.p);
-  await page.goto(BASE + 'career/teacher', { waitUntil: 'domcontentloaded' });
+  await page.goto(BASE + '#/career/teacher', { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(2500);
   await page.getByRole('button', { name: new RegExp(CLASS_NAME) }).first().click();
   await page.waitForTimeout(1500);

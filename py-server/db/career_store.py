@@ -663,7 +663,7 @@ def class_dashboard(cid: str, teacher_id: str) -> Optional[dict]:
                 "completion_rate": round(len(finished) / total, 2) if total else 0.0,
                 "dimension_avg": dimension_avg,
                 "weakest_dimensions": [{"dimension": d, "avg": v} for d, v in weakest],
-                "note": "最弱维度为全班均分的相对排序（升序），非绝对达标线；无数据维度不出现在此。",
+                "note": "最弱维度为全班均分的相对排序（升序），非绝对达标线；无数据维度不参与最弱排序（六维均分中显示为无数据）。",
             },
             "attention": attention}
 
