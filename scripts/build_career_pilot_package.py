@@ -47,8 +47,12 @@ EXCLUDE_DIR_NAMES = {
     "__pycache__", ".pytest_cache", ".pytest_tmp", ".ruff_cache",
     "_scratch", "_debug_smoke",
 }
+# 目录前缀（排除运行时数据目录及其备份，如 vectordb_data / vectordb_data_pre_multi_bak）
+EXCLUDE_DIR_PREFIXES = ("vectordb_data",)
+# 目录/文件后缀（备份、旧版本残留）
+EXCLUDE_DIR_SUFFIXES = ("_bak", "_backup", "_old")
 # 文件后缀
-EXCLUDE_FILE_SUFFIXES = (".log", ".pyc", ".pyo")
+EXCLUDE_FILE_SUFFIXES = (".log", ".pyc", ".pyo", ".npz", ".lock")
 # 文件全名（精确匹配）
 EXCLUDE_FILE_NAMES = {
     "docker-entrypoint.sh", "uv.lock", "pyproject.toml",
@@ -140,7 +144,15 @@ def _excluded(rel: pathlib.PurePosixPath) -> bool:
     for p in parts[:-1]:
         if p in EXCLUDE_DIR_NAMES or p.endswith(".egg-info"):
             return True
+        # 运行时数据/备份目录（含末段同判，见下）：
+        # 这类目录由并行工作或运行期产生、体积大且无业务价值 —— 曾把
+        # vectordb_data_pre_multi_bak（51MB，含 .npz 缓存）整包复制进发布产物
+        # （包体 67MB→118MB），发布时白传且可能触发上传失败。
+        if p.startswith(EXCLUDE_DIR_PREFIXES) or p.endswith(EXCLUDE_DIR_SUFFIXES):
+            return True
     name = parts[-1]
+    if name.startswith(EXCLUDE_DIR_PREFIXES) or name.endswith(EXCLUDE_DIR_SUFFIXES):
+        return True
     # .env 系列（.env / .env.example / .env.bak*）：目标包内的 .env 由本脚本单独
     # 管理（保留真实密钥 / 按模板生成），源树的 .env 一律不参与复制与一致性比对。
     if name == ".env" or name.startswith(".env."):
