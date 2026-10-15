@@ -179,6 +179,12 @@ const router = createRouter({
       component: () => import('@/views/CareerTrainingView.vue'),
     },
     {
+      // F4 学生端：个人成长页（六维趋势 / 前后测对比 / 证据金句）
+      path: '/career/growth',
+      name: 'career-growth',
+      component: () => import('@/views/StudentGrowthView.vue'),
+    },
+    {
       // P4 教师端：对抗实训建班/发任务/班级看板
       path: '/career/teacher',
       name: 'career-teacher',

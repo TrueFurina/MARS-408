@@ -14,9 +14,14 @@ from typing import Optional
 from shared.auth import get_current_user
 from services import career_service
 from db import career_store
+from agents.career_state import DIMENSION_LABELS
 
 logger = logging.getLogger("netlearn.career.api")
 router = APIRouter(prefix="/career", tags=["career-training"])
+
+# 维度 key → 中文名（单一真值源：agents.career_state.DIMENSION_LABELS，与前端 CAREER_DIM_LABEL 同源）
+def dim_label(d: str) -> str:
+    return DIMENSION_LABELS.get(d, d)
 
 
 # ── 请求模型 ──
@@ -25,6 +30,7 @@ class StartRequest(BaseModel):
     difficulty: str = "medium"          # easy/medium/hard
     max_turns: int = 8
     task_id: Optional[str] = None       # 教师任务（自主练习为空）
+    phase: Optional[str] = None         # F5: 前后测标记 pre/post（其余值视为未标记）
 
 
 class AnswerRequest(BaseModel):
@@ -33,6 +39,15 @@ class AnswerRequest(BaseModel):
 
 class EndRequest(BaseModel):
     force: bool = False
+
+
+class ConsentRequest(BaseModel):
+    agreed: bool = True
+
+
+class FeedbackRequest(BaseModel):
+    rating: int = Field(..., ge=1, le=5, description="课后简评 1-5 分")
+    comment: str = Field("", max_length=500)
 
 
 class ClassCreateRequest(BaseModel):
@@ -101,6 +116,7 @@ async def start(req: StartRequest, user: dict = Depends(get_current_user)):
         return await career_service.start_session(
             user_id=user["user_id"], scenario_id=req.scenario_id,
             difficulty=req.difficulty, max_turns=req.max_turns, task_id=req.task_id,
+            phase=req.phase,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -157,6 +173,11 @@ _LEVEL_LABEL = {
     "weak": "薄弱", "insufficient": "证据不足",
 }
 _MODE_LABEL = {"normal": "常规", "escalating": "逐步加压", "catfish": "鲶鱼反诘"}
+# attention.reason 中文名（与前端 TeacherCareerView.REASON_LABEL 同源；后端只给结构性事实标识）
+_REASON_LABEL = {
+    "not_started": "未开始", "unfinished": "未完成",
+    "no_score": "无评分", "lowest_score": "得分靠后",
+}
 
 
 def _credibility_label(confidence: float) -> str:
@@ -608,3 +629,168 @@ async def join_task(req: TaskJoinRequest, user: dict = Depends(get_current_user)
             # 如实回传绑定结果：matched_by=name 表示按姓名命中；first_unbound 表示退回旧行为（可能错位）
             "bound_name": (bound or {}).get("name", ""),
             "bound_match": (bound or {}).get("matched_by", "")}
+
+
+# ────────────────────────────────────────────────────────────
+# F4 个人成长页（学生端）：六维趋势 + 证据金句 + 前后测对比
+# ────────────────────────────────────────────────────────────
+@router.get("/my-growth")
+async def my_growth(user: dict = Depends(get_current_user)):
+    """我的成长：全部已完成会话的六维趋势/均分、评估引用过的原话金句、
+    pre/post 前后测差值（仅两侧都有已评分会话时才给出，不插值）。"""
+    return career_store.growth_profile(user["user_id"])
+
+
+# ────────────────────────────────────────────────────────────
+# F6 知情同意与课后简评（试用伦理 + 满意度数据）
+# ────────────────────────────────────────────────────────────
+@router.get("/consent")
+async def get_consent(user: dict = Depends(get_current_user)):
+    """当前用户的同意状态 + 同意书文本（前端据此渲染门禁）。"""
+    rec = career_store.get_consent(user["user_id"])
+    return {"consent": rec,
+            "version": career_store.CONSENT_VERSION,
+            "text": career_store.CONSENT_TEXT}
+
+
+@router.post("/consent")
+async def post_consent(req: ConsentRequest, user: dict = Depends(get_current_user)):
+    """记录知情同意（agreed=false 也如实记录，便于审计"看过但不同意"）。"""
+    try:
+        return career_store.record_consent(user["user_id"], req.agreed)
+    except Exception as e:
+        logger.exception("记录知情同意失败")
+        raise HTTPException(status_code=500, detail=f"记录失败: {e}")
+
+
+@router.post("/session/{session_id}/feedback")
+async def post_feedback(session_id: str, req: FeedbackRequest,
+                        user: dict = Depends(get_current_user)):
+    """课后简评：仅会话本人可提交（教师代填无意义）；每场一条（重复提交更新）。"""
+    state = _check_owner(session_id, user)
+    if state.get("user_id") != user.get("user_id"):
+        raise HTTPException(status_code=403, detail="仅可评价本人的实训会话")
+    try:
+        return career_store.save_feedback(session_id, user["user_id"],
+                                          int(req.rating), (req.comment or "").strip())
+    except Exception as e:
+        logger.exception("保存课后简评失败")
+        raise HTTPException(status_code=500, detail=f"保存失败: {e}")
+
+
+@router.get("/feedback")
+async def list_feedback(class_id: Optional[str] = None, user: dict = Depends(get_current_user)):
+    """教师查看本人班级学生的课后简评（按班级归属隔离；可按班级过滤）。"""
+    _require_teacher(user)
+    return {"feedback": career_store.list_feedback(user["user_id"], class_id)}
+
+
+# ────────────────────────────────────────────────────────────
+# F7 班级报告一页纸导出（对标 session export-report：自包含 HTML）
+# ────────────────────────────────────────────────────────────
+_CLASS_EXPORT_CSS = """<style>
+* { box-sizing: border-box; }
+body { font-family: "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+  color: #1a1a1a; margin: 0; padding: 16px 20px; font-size: 12px; line-height: 1.5; }
+@media print {
+  body { padding: 6px 10px; font-size: 11px; }
+  @page { margin: 9mm; }
+  tr { page-break-inside: avoid; }
+}
+h1 { font-size: 17px; margin: 0 0 4px; }
+.meta { color: #555; font-size: 11px; margin-bottom: 6px; }
+.banner { background: #fff7e6; border: 1px solid #ffd591; border-radius: 6px;
+  padding: 6px 10px; font-size: 10.5px; color: #7a4b00; margin-bottom: 10px; }
+.section { margin-top: 10px; }
+.section > h2 { font-size: 13px; border-left: 3px solid #1677ff; padding-left: 6px; margin: 0 0 6px; }
+.sw { display: flex; gap: 12px; flex-wrap: wrap; }
+.sw > div { flex: 1; min-width: 120px; border: 1px solid #e8e8e8; border-radius: 6px; padding: 6px 10px; }
+.sw-h { font-size: 10px; color: #888; margin-bottom: 3px; }
+.sw-v { font-size: 18px; font-weight: 700; color: #1677ff; }
+table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+th, td { border: 1px solid #e8e8e8; padding: 4px 7px; text-align: left; font-size: 11px; }
+th { background: #fafafa; }
+.dim { color: #999; font-size: 10px; }
+.att { border: 1px solid #e8e8e8; border-radius: 6px; padding: 6px 10px; margin-bottom: 6px; }
+.att-h { font-weight: 600; }
+.footer { margin-top: 10px; border-top: 1px solid #eee; padding-top: 6px; color: #999; font-size: 10px; }
+</style>"""
+
+
+def _render_class_export_html(dash: dict) -> str:
+    """班级学情一页纸：只渲染 class_dashboard 真实返回的数据。
+
+    诚信约束：未完成/无评分一律显示「缺失」，绝不插值编数；
+    完成率为真实 finished/student_count；attention 只呈现后端给出的结构性事实。
+    """
+    class_name = _esc(dash.get("class_name", "") or "（未命名班级）")
+    summary = dash.get("summary") or {}
+    students = dash.get("students") or []
+    attention = dash.get("attention") or []
+    dim_labels = {d: dim_label(d) for d in (summary.get("dimension_avg") or {})}
+
+    stat_cards = [
+        ("班级人数", summary.get("student_count", len(students))),
+        ("已开始", summary.get("started_count", 0)),
+        ("已完成", summary.get("finished_count", 0)),
+        ("已评分", summary.get("assessed_count", 0)),
+        ("完成率", f"{summary.get('completion_rate', 0)}%"),
+    ]
+    sw_html = "".join(
+        f'<div><div class="sw-h">{_esc(k)}</div><div class="sw-v">{_esc(v)}</div></div>'
+        for k, v in stat_cards)
+
+    dim_avg = summary.get("dimension_avg") or {}
+    dim_html = "、".join(
+        f"{_esc(dim_labels.get(d, d))} {_esc(v)}" for d, v in dim_avg.items()) or "暂无已评分数据"
+
+    rows = []
+    for s in students:
+        dims = s.get("dimension_avg") or {}
+        dim_cell = "、".join(f"{_esc(dim_label(d))} {_esc(v)}" for d, v in dims.items()) or "—"
+        best = s.get("overall_best")
+        rows.append(
+            f"<tr><td>{_esc(s.get('student_no') or '—')}</td>"
+            f"<td>{_esc(s.get('name') or '—')}"
+            f"<span class=\"dim\">{'' if s.get('bound') else '（未加入）'}</span></td>"
+            f"<td>{_esc(s.get('session_count', 0))}</td>"
+            f"<td>{_esc(s.get('finished_count', 0))}</td>"
+            f"<td>{_esc(best if best is not None else '缺失')}</td>"
+            f"<td>{dim_cell}</td></tr>")
+
+    att_html = ""
+    for a in attention:
+        att_html += (f"<div class=\"att\"><span class=\"att-h\">{_esc(a.get('name') or '—')}</span>"
+                     f"<span class=\"dim\">（{_esc(_REASON_LABEL.get(a.get('reason', ''), a.get('reason', '')))}）</span>"
+                     f"<div class=\"dim\">{_esc(a.get('detail', ''))}</div></div>")
+    if not att_html:
+        att_html = '<div class="dim">当前无需关注的学生（结构性口径：全员已开始且已完成且有评分）。</div>'
+
+    return f"""<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<title>班级学情报告 — {class_name}</title>{_CLASS_EXPORT_CSS}</head>
+<body>
+<h1>班级学情报告 — {class_name}</h1>
+<div class="meta">导出时间：{_esc(datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"))} ·
+  数据来源：实训会话与系统自动评分记录（真实落库）</div>
+<div class="banner">口径说明：本报告为班级级汇总，仅呈现真实记录；未完成或无评分的项显示「缺失」，不作插值。
+  如需引用成效数字，请先跑 pilot_evidence_report 取证闸（当前尚未开展真实试用前，不得引用任何条数）。</div>
+<div class="section"><h2>班级概览</h2><div class="sw">{sw_html}</div></div>
+<div class="section"><h2>六维班级均分</h2><div>{dim_html}</div></div>
+<div class="section"><h2>需关注（结构性事实）</h2>{att_html}</div>
+<div class="section"><h2>学生明细</h2>
+<table><thead><tr><th>学号</th><th>姓名</th><th>会话数</th><th>已完成</th><th>最高 overall</th><th>六维均分</th></tr></thead>
+<tbody>{"".join(rows) or '<tr><td colspan="6" class="dim">暂无学生</td></tr>'}</tbody></table></div>
+<div class="footer">芒得很职 · 班级学情一页纸（浏览器打印/另存为 PDF 即得报告）</div>
+</body></html>"""
+
+
+@router.get("/classes/{class_id}/export-report")
+async def export_class_report(class_id: str, user: dict = Depends(get_current_user)):
+    """导出班级学情一页纸（自包含 HTML，浏览器另存为 PDF 即得报告）。"""
+    _require_teacher(user)
+    dash = career_store.class_dashboard(class_id, user["user_id"])
+    if not dash:
+        raise HTTPException(status_code=404, detail="班级不存在或无权查看")
+    return Response(content=_render_class_export_html(dash),
+                    media_type="text/html; charset=utf-8")

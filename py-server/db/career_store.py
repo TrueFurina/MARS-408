@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS career_sessions (
     max_turns INTEGER DEFAULT 8,
     state JSONB,
     status VARCHAR(16) DEFAULT 'ongoing',
+    phase VARCHAR(16),
     turn_count INTEGER DEFAULT 0,
     started_at TIMESTAMP DEFAULT NOW(),
     finished_at TIMESTAMP
@@ -89,6 +90,26 @@ CREATE TABLE IF NOT EXISTS career_class_students (
     joined_at TIMESTAMP DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_career_students_class ON career_class_students(class_id);
+
+-- F6: 知情同意留痕（试用伦理；一人一条，重复同意覆盖更新时间）
+CREATE TABLE IF NOT EXISTS career_consents (
+    user_id VARCHAR(64) PRIMARY KEY,
+    agreed BOOLEAN NOT NULL DEFAULT FALSE,
+    version VARCHAR(32) NOT NULL,
+    agreed_at TIMESTAMP DEFAULT NOW()
+);
+
+-- F6: 课后简评（学生每场会话一条；rating 1-5 整数，comment 选填）
+CREATE TABLE IF NOT EXISTS career_feedback (
+    id VARCHAR(64) PRIMARY KEY,
+    session_id VARCHAR(64) NOT NULL,
+    user_id VARCHAR(64) NOT NULL,
+    rating INTEGER NOT NULL,
+    comment TEXT DEFAULT '',
+    created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_career_feedback_session ON career_feedback(session_id);
+CREATE INDEX IF NOT EXISTS idx_career_feedback_user ON career_feedback(user_id);
 """
 
 # SQLite 建表脚本（TEXT 代替 JSONB，AUTOINCREMENT）
@@ -126,6 +147,7 @@ CREATE TABLE IF NOT EXISTS career_sessions (
     max_turns INTEGER DEFAULT 8,
     state TEXT,
     status TEXT DEFAULT 'ongoing',
+    phase TEXT,
     turn_count INTEGER DEFAULT 0,
     started_at TEXT DEFAULT (datetime('now')),
     finished_at TEXT
@@ -163,6 +185,26 @@ CREATE TABLE IF NOT EXISTS career_class_students (
     joined_at TEXT DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_career_students_class ON career_class_students(class_id);
+
+-- F6: 知情同意留痕（试用伦理；一人一条，重复同意覆盖更新时间）
+CREATE TABLE IF NOT EXISTS career_consents (
+    user_id TEXT PRIMARY KEY,
+    agreed INTEGER NOT NULL DEFAULT 0,
+    version TEXT NOT NULL,
+    agreed_at TEXT DEFAULT (datetime('now'))
+);
+
+-- F6: 课后简评（学生每场会话一条；rating 1-5 整数，comment 选填）
+CREATE TABLE IF NOT EXISTS career_feedback (
+    id TEXT PRIMARY KEY,
+    session_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    rating INTEGER NOT NULL,
+    comment TEXT DEFAULT '',
+    created_at TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_career_feedback_session ON career_feedback(session_id);
+CREATE INDEX IF NOT EXISTS idx_career_feedback_user ON career_feedback(user_id);
 """
 
 
@@ -188,6 +230,13 @@ def ensure_tables(force: bool = False) -> bool:
             pg_client.migrate_exec(
                 "ALTER TABLE career_tasks ADD COLUMN status VARCHAR(16) DEFAULT 'open'" if not pg_client.is_fallback
                 else "ALTER TABLE career_tasks ADD COLUMN status TEXT DEFAULT 'open'")
+        except Exception:
+            pass  # 列已存在
+        # F5: career_sessions 补 phase 列（pre/post 前后测标记；旧库幂等迁移，默认 NULL=未标记）
+        try:
+            pg_client.migrate_exec(
+                "ALTER TABLE career_sessions ADD COLUMN phase VARCHAR(16)" if not pg_client.is_fallback
+                else "ALTER TABLE career_sessions ADD COLUMN phase TEXT")
         except Exception:
             pass  # 列已存在
         _TABLES_READY = True
@@ -232,8 +281,8 @@ def create_session(state: dict) -> str:
     state["session_id"] = sid
     sql = (
         "INSERT INTO career_sessions "
-        "(id,user_id,task_id,scenario_id,scenario_type,scenario_subtype,title,difficulty,max_turns,state,status,turn_count) "
-        f"VALUES ({_ph(12)})"
+        "(id,user_id,task_id,scenario_id,scenario_type,scenario_subtype,title,difficulty,max_turns,state,status,turn_count,phase) "
+        f"VALUES ({_ph(13)})"
     )
     params = (
         sid, state.get("user_id"), state.get("task_id"),
@@ -241,6 +290,7 @@ def create_session(state: dict) -> str:
         state.get("scenario_subtype", ""), state.get("title", ""),
         state.get("difficulty", "medium"), int(state.get("max_turns", 8)),
         _dumps(state), "ongoing", len(state.get("dialogue_turns", [])),
+        state.get("phase"),
     )
     if pg_client.is_fallback:
         with pg_client._lock:
@@ -291,7 +341,7 @@ def get_session_state(sid: str) -> Optional[dict]:
 def list_my_sessions(user_id: str, limit: int = 20) -> list[dict]:
     ensure_tables()
     q = "?" if pg_client.is_fallback else "%s"
-    sql = (f"SELECT id,scenario_type,scenario_subtype,title,status,turn_count,started_at,finished_at "
+    sql = (f"SELECT id,scenario_type,scenario_subtype,title,status,turn_count,started_at,finished_at,phase "
            f"FROM career_sessions WHERE user_id={q} ORDER BY started_at DESC LIMIT {int(limit)}")
     if pg_client.is_fallback:
         with pg_client._lock:
@@ -755,3 +805,186 @@ def my_tasks(user_id: str) -> list[dict]:
         "JOIN career_classes c ON c.id = t.class_id "
         f"WHERE s.user_id={q} AND t.status='open' "
         "ORDER BY t.created_at DESC LIMIT 50", (user_id,))
+
+
+# ────────────────────────────────────────────────────────────
+# F4 个人成长页（2026-10-15）：学生全部会话的六维趋势 + 证据金句 + 前后测对比
+# ────────────────────────────────────────────────────────────
+def _extract_quotes(evidence_chain, limit: int = 6) -> list[dict]:
+    """从真实 evidence_chain 提取学生原话金句（dimension/quote/turn/polarity）。
+
+    只取评估真实引用过的原话：evidence_quotes 与 per_turn_evidence.answer_snippet，
+    不编造、不改写。
+    """
+    out: list[dict] = []
+    for item in (evidence_chain or []):
+        if len(out) >= limit:
+            break
+        if not isinstance(item, dict):
+            continue
+        label = item.get("label", "") or item.get("dimension", "") or "维度"
+        score = item.get("score")
+        for q in (item.get("evidence_quotes") or []):
+            if len(out) >= limit:
+                break
+            text = (q or "").strip() if isinstance(q, str) else ""
+            if text:
+                out.append({"dimension": label, "score": score, "quote": text,
+                            "turn": None, "polarity": ""})
+        for h in (item.get("per_turn_evidence") or []):
+            if len(out) >= limit:
+                break
+            if not isinstance(h, dict):
+                continue
+            snippet = (h.get("answer_snippet", "") or "").strip()
+            if snippet:
+                out.append({"dimension": label, "score": score, "quote": snippet,
+                            "turn": h.get("turn"), "polarity": h.get("polarity", "")})
+    return out
+
+
+def growth_profile(user_id: str) -> dict:
+    """学生个人成长画像：全部会话（新→旧）+ 六维趋势 + 证据金句 + 前后测对比。
+
+    诚信约束：
+    - 只统计 status=finished 且真有评估记录的会话进入趋势/对比（未完成场次只在明细里如实呈现）；
+    - phase_compare 仅当 pre 与 post **都有**已评分会话时给出该维度差值，缺一侧就不出这个数（不插值）；
+    - 金句只从评估真实引用过的原话提取。
+    """
+    ensure_tables()
+    q = "?" if pg_client.is_fallback else "%s"
+    rows = _query(
+        "SELECT s.id AS session_id, s.title, s.scenario_id, s.status, s.phase, "
+        "s.turn_count, s.started_at, s.finished_at, a.dimension_scores, a.evidence_chain, "
+        "a.consistency_score "
+        "FROM career_sessions s LEFT JOIN career_assessments a ON a.session_id = s.id "
+        f"WHERE s.user_id={q} ORDER BY s.started_at DESC LIMIT 100", (user_id,))
+    sessions: list[dict] = []
+    trend: dict = {}          # dim -> [{"date","score","phase"}]（按时间正序，前端画趋势）
+    phase_acc: dict = {}      # phase -> dim -> [scores]
+    all_quotes: list[dict] = []
+    for r in rows:
+        raw = _loads(r.get("dimension_scores"), {}) or {}
+        dims = raw.get("dimensions") if isinstance(raw, dict) and isinstance(raw.get("dimensions"), dict) else raw
+        scores = {d: v.get("score") for d, v in dims.items()
+                  if isinstance(v, dict) and v.get("score") is not None}
+        started = str(r.get("started_at") or "")
+        phase = r.get("phase") or None
+        finished = r.get("status") == "finished"
+        overall = r.get("consistency_score") if finished else None
+        sessions.append({
+            "session_id": r.get("session_id"), "title": r.get("title", ""),
+            "scenario_id": r.get("scenario_id"), "status": r.get("status"),
+            "phase": phase, "turn_count": r.get("turn_count"),
+            "started_at": started,
+            "finished_at": str(r["finished_at"]) if r.get("finished_at") else None,
+            "dimension_scores": scores, "overall": overall,
+        })
+        if not finished:
+            continue  # 未完成场次不进趋势/对比（无评估）
+        for d, v in scores.items():
+            trend.setdefault(d, []).append({"date": started[:10], "score": float(v), "phase": phase})
+            if phase in ("pre", "post"):
+                phase_acc.setdefault(phase, {}).setdefault(d, []).append(float(v))
+        quotes = _extract_quotes(_loads(r.get("evidence_chain"), []))
+        for item in quotes:
+            item["session_id"] = r.get("session_id")
+            item["started_at"] = started
+        all_quotes.extend(quotes)
+    # 趋势按时间正序（画图从左到右）
+    for d in trend:
+        trend[d].sort(key=lambda x: x["date"])
+    dim_avg = {d: round(sum(x["score"] for x in pts) / len(pts), 2) for d, pts in trend.items() if pts}
+    # 前后测对比：仅两侧都有的维度才给差值（探索性观察口径，不作显著性宣称）
+    phase_compare = None
+    if "pre" in phase_acc and "post" in phase_acc:
+        pre_avg = {d: round(sum(v) / len(v), 2) for d, v in phase_acc["pre"].items() if v}
+        post_avg = {d: round(sum(v) / len(v), 2) for d, v in phase_acc["post"].items() if v}
+        delta = {d: round(post_avg[d] - pre_avg[d], 2)
+                 for d in post_avg if d in pre_avg}
+        if delta:
+            phase_compare = {"pre": pre_avg, "post": post_avg, "delta": delta,
+                             "note": "单组前后测·探索性观察：仅呈现同维度分值差，不排除练习/记忆效应，不作因果与显著性宣称"}
+    return {"user_id": user_id, "session_count": len(sessions),
+            "finished_count": sum(1 for s in sessions if s["status"] == "finished"),
+            "sessions": sessions, "dimension_trend": trend, "dimension_avg": dim_avg,
+            "phase_compare": phase_compare, "quotes": all_quotes[:30]}
+
+
+# ────────────────────────────────────────────────────────────
+# F6 知情同意与课后简评（2026-10-15）：试用伦理留痕 + 满意度数据
+# ────────────────────────────────────────────────────────────
+CONSENT_VERSION = "2026-10-15-v1"
+
+CONSENT_TEXT = (
+    "知情同意：本实训系统会记录你的作答、六维评分与改进建议，用于产品改进与"
+    "汇总统计分析（报告中只呈现匿名汇总，不点名个人）。你的答题数据不会分享给"
+    "无关第三方。如不同意，你仍可使用系统自由练习，但数据不会被纳入试用分析。"
+)
+
+
+def record_consent(user_id: str, agreed: bool, version: str = CONSENT_VERSION) -> dict:
+    """记录/更新知情同意（一人一条；重复提交覆盖 agreed/version/时间）。"""
+    ensure_tables()
+    q = "?" if pg_client.is_fallback else "%s"
+    now_expr = "datetime('now')" if pg_client.is_fallback else "NOW()"
+    sql = ("INSERT INTO career_consents (user_id, agreed, version, agreed_at) "
+           f"VALUES ({q},{q},{q},{now_expr}) "
+           f"ON CONFLICT(user_id) DO UPDATE SET agreed={q}, version={q}, agreed_at={now_expr}")
+    _exec(sql, (user_id, 1 if agreed else 0, version, 1 if agreed else 0, version))
+    return {"user_id": user_id, "agreed": bool(agreed), "version": version}
+
+
+def get_consent(user_id: str) -> Optional[dict]:
+    ensure_tables()
+    q = "?" if pg_client.is_fallback else "%s"
+    rows = _query(f"SELECT user_id, agreed, version, agreed_at FROM career_consents WHERE user_id={q}",
+                  (user_id,))
+    if not rows:
+        return None
+    r = rows[0]
+    return {"user_id": r.get("user_id"),
+            "agreed": bool(r.get("agreed")),
+            "version": r.get("version"),
+            "agreed_at": str(r.get("agreed_at") or "")}
+
+
+def save_feedback(session_id: str, user_id: str, rating: int, comment: str = "") -> dict:
+    """保存课后简评（每场会话一条：重复提交更新原记录，不叠加）。"""
+    ensure_tables()
+    q = "?" if pg_client.is_fallback else "%s"
+    existing = _query(f"SELECT id FROM career_feedback WHERE session_id={q}", (session_id,))
+    if existing:
+        _exec(f"UPDATE career_feedback SET rating={q}, comment={q} WHERE session_id={q}",
+              (rating, comment, session_id))
+        return {"session_id": session_id, "rating": rating, "updated": True}
+    fid = new_id("fb")
+    _exec(f"INSERT INTO career_feedback (id, session_id, user_id, rating, comment) VALUES ({q},{q},{q},{q},{q})",
+          (fid, session_id, user_id, rating, comment))
+    return {"session_id": session_id, "rating": rating, "updated": False}
+
+
+def list_feedback(teacher_id: str, class_id: Optional[str] = None, limit: int = 100) -> list[dict]:
+    """教师查看本人班级学生的课后简评（按班级归属隔离，看不到别班学生的评价）。
+
+    归属路径走 反馈→会话→任务→班级（会话真实的班级），不按学生绑定关系 JOIN——
+    否则一个学生在本人多个班有绑定行时，同一份简评会被重复放大。
+    """
+    ensure_tables()
+    q = "?" if pg_client.is_fallback else "%s"
+    sql = (
+        "SELECT DISTINCT f.id, f.session_id, f.user_id, f.rating, f.comment, f.created_at, "
+        "s.name AS student_name, c.class_name "
+        "FROM career_feedback f "
+        "JOIN career_sessions sess ON sess.id = f.session_id "
+        "JOIN career_tasks t ON t.id = sess.task_id "
+        "JOIN career_classes c ON c.id = t.class_id "
+        "LEFT JOIN career_class_students s ON s.user_id = f.user_id AND s.class_id = c.id "
+        f"WHERE c.teacher_id={q}"
+    )
+    params: list = [teacher_id]
+    if class_id:
+        sql += f" AND c.id={q}"
+        params.append(class_id)
+    sql += f" ORDER BY f.created_at DESC LIMIT {int(limit)}"
+    return _query(sql, tuple(params))

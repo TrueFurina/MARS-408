@@ -148,6 +148,7 @@ async function selectClass(classId: string) {
   }
   const cls = classes.value.find(c => c.class_id === classId)
   if (cls) await loadTasks(cls)
+  await loadFeedback()
 }
 
 /* ── F2 任务管理中心：本班任务列表（含参与进度）── */
@@ -231,6 +232,7 @@ async function loadDashboard(cls: ClassItem) {
   } finally {
     loading.value = false
   }
+  await loadFeedback()
 }
 
 /** CSV 单元格转义：含逗号 / 引号 / 换行时加双引号并转义内部引号（防姓名等破列） */
@@ -263,6 +265,56 @@ function exportDashCsv() {
   a.download = `对抗实训看板_${d.class_name}.csv`
   a.click()
   URL.revokeObjectURL(a.href)
+}
+
+/** F7：导出班级学情一页纸（后端渲染自包含 HTML，浏览器另存为 PDF；镜像学生端证据一页纸） */
+const busyExportReport = ref(false)
+async function exportClassReport() {
+  const cid = activeClassId.value
+  if (!cid || busyExportReport.value) return
+  busyExportReport.value = true
+  try {
+    const { blob: reportBlob, ok, status } = await api.getBlob(
+      `/career/classes/${encodeURIComponent(cid)}/export-report`)
+    if (!ok) {
+      const text = await reportBlob.text().catch(() => '')
+      throw new Error(`导出失败 (${status}) ${text.slice(0, 200)}`)
+    }
+    const html = await reportBlob.text()
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const win = window.open(url, '_blank')
+    if (!win) {
+      // 弹窗被拦截时降级为下载
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `班级学情报告_${dash.value?.class_name || cid}.html`
+      a.click()
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 60000)
+  } catch (e) {
+    msg.value = friendlyError(e, '导出班级报告失败')
+  } finally {
+    busyExportReport.value = false
+  }
+}
+
+/* ── F6 课后简评：本班学生的真实提交（按班级过滤；无提交如实显示空）── */
+interface FeedbackItem {
+  id: string; session_id: string; user_id: string; rating: number
+  comment: string; created_at: string; student_name: string; class_name: string
+}
+const feedback = ref<FeedbackItem[]>([])
+
+async function loadFeedback() {
+  if (!activeClassId.value) return
+  try {
+    const res = await api.get<{ feedback: FeedbackItem[] }>(
+      `/career/feedback?class_id=${encodeURIComponent(activeClassId.value)}`)
+    feedback.value = res.feedback || []
+  } catch {
+    feedback.value = []  // 加载失败按空处理，不阻塞看板
+  }
 }
 
 onMounted(() => {
@@ -366,7 +418,13 @@ onMounted(() => {
         <h2>3 · 班级学情看板</h2>
         <p v-if="!dash" class="hint">点击班级右侧「看板」查看聚合学情</p>
         <template v-else>
-          <button class="link dash-export" @click="exportDashCsv">导出 CSV（过程性考核依据）</button>
+          <div class="dash-exports">
+            <button class="link" @click="exportDashCsv">导出 CSV（过程性考核依据）</button>
+            <!-- F7：班级学情一页纸（自包含 HTML，浏览器另存为 PDF） -->
+            <button class="link" :disabled="busyExportReport" @click="exportClassReport">
+              {{ busyExportReport ? '生成中…' : '导出一页纸报告（PDF）' }}
+            </button>
+          </div>
           <!-- 班级级聚合：直接回答"这个班整体怎么样、哪里最弱、谁要关注" -->
           <div v-if="dash.summary" class="agg">
             <div class="stats">
@@ -426,6 +484,20 @@ onMounted(() => {
               </tr>
             </tbody>
           </table>
+
+          <!-- F6 课后简评：本班学生真实提交（按班级过滤；无提交如实显示空） -->
+          <div class="feedback">
+            <p class="agg-k">课后简评（{{ feedback.length }}）</p>
+            <div v-if="feedback.length" class="fb-list">
+              <div v-for="f in feedback" :key="f.id" class="fb-row">
+                <b>{{ f.student_name || f.user_id }}</b>
+                <span class="fb-stars">{{ '★'.repeat(f.rating) }}{{ '☆'.repeat(5 - f.rating) }}</span>
+                <span class="dim">{{ shortTime(f.created_at) }}</span>
+                <span v-if="f.comment" class="fb-comment">「{{ f.comment }}」</span>
+              </div>
+            </div>
+            <p v-else class="hint">本班学生还没有提交课后简评。</p>
+          </div>
         </template>
       </div>
     </section>
@@ -490,6 +562,15 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .link { background: none; border: none; padding: .15rem .25rem; color: var(--accent); }
 .link.dim, .dim { color: var(--text-dim, var(--color-text-3)); }
 .dash-export { margin-bottom: var(--space-3); }
+.dash-exports { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: var(--space-3); }
+.dash-exports .link { padding: 0; }
+/* F6 课后简评 */
+.feedback { margin-top: var(--space-4); border-top: 1px dashed var(--border-color); padding-top: var(--space-3); }
+.feedback .agg-k { font-size: var(--text-sm); font-weight: var(--weight-semibold); margin: 0 0 var(--space-2); }
+.fb-list { display: grid; gap: 6px; }
+.fb-row { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; font-size: var(--text-sm); }
+.fb-stars { color: var(--color-warning); letter-spacing: 1px; }
+.fb-comment { color: var(--text-secondary); }
 .class-list, .roster { list-style: none; padding: 0; margin: .5rem 0 0; }
 .class-list li, .roster li { display: flex; justify-content: space-between; gap: .5rem; padding: .3rem 0; border-bottom: 1px dashed var(--border, var(--color-border)); }
 .class-list li.active { font-weight: var(--weight-semibold); }

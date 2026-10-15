@@ -11,6 +11,8 @@ interface Turn { role: 'interviewer' | 'student'; text: string; mode?: string; d
 const MODE_LABEL: Record<string, string> = { normal: '常规追问', escalating: '逐步加压', catfish: '鲶鱼反诘' }
 const MODE_CLASS: Record<string, string> = { normal: 'm-normal', escalating: 'm-escalating', catfish: 'm-catfish' }
 const DIFF_LABEL: Record<string, string> = { easy: '简单', medium: '中等', hard: '困难' }
+// F5: 前后测阶段（老师安排前后测时选；不标记则不参与前后测对比）
+const PHASE_LABEL: Record<string, string> = { '': '不标记', pre: '前测', post: '后测' }
 
 /* ===================== 响应式状态 ===================== */
 const step = ref<Step>('select')
@@ -18,6 +20,7 @@ const scenarios = ref<Scenario[]>([])
 const scenarioId = ref('')
 const difficulty = ref('medium')
 const maxTurns = ref(6)
+const phase = ref<string>('')           // F5: 前后测标记（''=不标记 / pre / post）
 const loadingScenarios = ref(true)
 const busy = ref(false)
 const errorMsg = ref('')
@@ -98,6 +101,56 @@ async function joinTaskDirect(t: any) {
   await joinByCode()
 }
 
+/* ===================== F6 知情同意（2026-10-15）=====================
+ * 首次进入先拉取同意状态；无记录时展示同意书门禁（不强制——不同意也可
+ * 自由练习，但数据不纳入试用分析，这与 CONSENT_TEXT 的承诺一致）。 */
+const consent = ref<{ agreed: boolean | null; text: string; version: string }>({
+  agreed: null, text: '', version: '',
+})
+const consentBusy = ref(false)
+
+async function loadConsent() {
+  try {
+    const res = await api.get<any>('/career/consent')
+    consent.value = { agreed: res.consent?.agreed ?? null, text: res.text || '', version: res.version || '' }
+  } catch {
+    consent.value.agreed = null  // 拉取失败不当成已同意，按未同意展示门禁
+  }
+}
+loadConsent()
+
+async function submitConsent(agreed: boolean) {
+  if (consentBusy.value) return
+  consentBusy.value = true
+  try {
+    const res = await api.post<any>('/career/consent', { agreed })
+    consent.value.agreed = res.agreed
+  } catch (e) {
+    errorMsg.value = friendlyError(e, '同意记录保存失败')
+  } finally { consentBusy.value = false }
+}
+
+/* ===================== F6 课后简评（2026-10-15）=====================
+ * 报告步骤底部：1-5 分 + 选填留言；仅本人本场一次（重复提交为更新）。 */
+const myRating = ref(0)
+const myComment = ref('')
+const feedbackBusy = ref(false)
+const feedbackDone = ref<{ rating: number; updated: boolean } | null>(null)
+
+async function submitFeedback() {
+  const sid = session.value?.session_id
+  if (!sid || !myRating.value || feedbackBusy.value) return
+  feedbackBusy.value = true
+  try {
+    const res = await api.post<any>(`/career/session/${encodeURIComponent(sid)}/feedback`, {
+      rating: myRating.value, comment: myComment.value.trim(),
+    })
+    feedbackDone.value = { rating: res.rating, updated: res.updated }
+  } catch (e) {
+    errorMsg.value = friendlyError(e, '简评提交失败')
+  } finally { feedbackBusy.value = false }
+}
+
 /* ===================== 启动实训 ===================== */
 async function startTraining() {
   if (!scenarioId.value) { errorMsg.value = '请先选择一个实训情景'; return }
@@ -108,6 +161,8 @@ async function startTraining() {
       scenario_id: scenarioId.value, difficulty: difficulty.value, max_turns: maxTurns.value,
     }
     if (joinedTask.value?.task_id) payload.task_id = joinedTask.value.task_id
+    // F5: 仅在有选择时透传 phase（'' 不传，后端按未标记处理）
+    if (phase.value) payload.phase = phase.value
     const res = await api.post<any>('/career/session/start', payload)
     session.value = res
     turns.value = [{ role: 'interviewer', text: res.next_question.question, mode: 'normal', dimension: res.next_question.probe_dimension }]
@@ -168,6 +223,7 @@ async function finishEarly() {
 function restart() {
   step.value = 'select'; session.value = null; assessment.value = null
   improvement.value = null; evidenceChain.value = []; turns.value = []; answerInput.value = ''
+  myRating.value = 0; myComment.value = ''; feedbackDone.value = null
 }
 
 /* 导出证据链「一页纸」：拉取自包含 HTML，新标签页打开（浏览器另存为 PDF） */
@@ -249,6 +305,22 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
       <div class="c-header">
         <div class="c-title"> 职业素养对抗实训</div>
         <div class="c-desc">多智能体扮演高压职场对手，多轮追问并全程留证，结束后按证据中心设计（ECD）生成六维能力报告</div>
+        <router-link class="growth-link" to="/career/growth">查看我的成长（六维趋势 · 前后测对比 · 证据金句）→</router-link>
+      </div>
+
+      <!-- F6 知情同意门禁：无同意记录时展示（不强制阻断——不同意也可自由练习） -->
+      <div v-if="consent.agreed === null" class="consent-gate">
+        <div class="cg-title"> 知情同意</div>
+        <p class="cg-text">{{ consent.text }}</p>
+        <div class="cg-actions">
+          <button class="ghost-btn" :disabled="consentBusy" @click="submitConsent(false)">不同意</button>
+          <button class="primary-btn" :disabled="consentBusy" @click="submitConsent(true)">
+            {{ consentBusy ? '提交中…' : '同意并继续' }}
+          </button>
+        </div>
+      </div>
+      <div v-else-if="consent.agreed === false" class="consent-note">
+        你已记录「不同意」：仍可自由练习，但本次数据不会纳入试用分析（可在刷新后重新考虑）。
       </div>
 
       <!-- 教师任务码：有码即加入老师布置的实训（加入后场景/难度/轮数由任务锁定） -->
@@ -320,6 +392,11 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
           <span class="opt-label">对抗轮数</span>
           <button v-for="n in [4,6,8]" :key="n" class="chip"
                   :class="{ on: maxTurns === n }" @click="maxTurns = n">{{ n }} 轮</button>
+        </div>
+        <div class="opt-group">
+          <span class="opt-label">阶段（老师安排前后测时选）</span>
+          <button v-for="p in ['', 'pre', 'post']" :key="p" class="chip"
+                  :class="{ on: phase === p }" @click="phase = p">{{ PHASE_LABEL[p] }}</button>
         </div>
       </div>
 
@@ -463,6 +540,26 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
         <button class="ghost-btn" :disabled="busyExport" @click="exportEvidenceOnePager">导出证据一页纸</button>
         <button class="ghost-btn" @click="step = 'battle'">返回对抗</button>
         <button class="primary-btn" @click="restart">再来一场 →</button>
+      </div>
+
+      <!-- F6 课后简评：仅本人本场一次（重复提交为更新） -->
+      <div class="feedback-card">
+        <template v-if="!feedbackDone">
+          <div class="fb-title">这场对抗体验如何？（1-5 分）</div>
+          <div class="fb-stars">
+            <button v-for="n in [1,2,3,4,5]" :key="n" class="fb-star"
+                    :class="{ on: myRating >= n }" :aria-label="`${n} 分`"
+                    @click="myRating = n">★</button>
+          </div>
+          <textarea v-model="myComment" class="fb-input" rows="2" maxlength="500"
+                    placeholder="选填：哪里特别真实？哪里希望改进？（不超过 500 字）"></textarea>
+          <button class="ghost-btn" :disabled="feedbackBusy || !myRating" @click="submitFeedback">
+            {{ feedbackBusy ? '提交中…' : '提交简评' }}
+          </button>
+        </template>
+        <div v-else class="fb-done">
+          已收到你的简评（{{ feedbackDone.rating }} 分）{{ feedbackDone.updated ? '· 已更新' : '' }}，谢谢反馈！
+        </div>
       </div>
     </template>
   </div>
@@ -623,4 +720,30 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
 .replay-turn.interviewer { color: var(--text-secondary); }
 .replay-turn.student { color: var(--text-primary); }
 .report-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+/* F4 成长页入口 */
+.growth-link { display: inline-block; margin-top: 8px; font-size: var(--text-sm); color: var(--accent-primary); text-decoration: none; }
+.growth-link:hover { text-decoration: underline; }
+
+/* F6 知情同意门禁 */
+.consent-gate { background: var(--bg-card); border: 1px solid var(--accent-primary); border-radius: 12px;
+  padding: var(--space-4); margin-bottom: var(--space-4); }
+.cg-title { font-size: var(--text-md); font-weight: var(--weight-semibold); margin-bottom: var(--space-2); }
+.cg-text { font-size: var(--text-sm); color: var(--text-secondary); line-height: 1.7; margin: 0 0 var(--space-3); }
+.cg-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.consent-note { background: var(--bg-secondary); border-radius: 10px; padding: 10px 14px;
+  font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--space-4); }
+
+/* F6 课后简评 */
+.feedback-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;
+  padding: var(--space-3) 14px; margin-top: 14px; }
+.fb-title { font-size: var(--text-sm); font-weight: var(--weight-semibold); margin-bottom: var(--space-2); }
+.fb-stars { display: flex; gap: 4px; margin-bottom: var(--space-2); }
+.fb-star { background: none; border: none; font-size: 22px; line-height: 1; cursor: pointer;
+  color: var(--text-dim, var(--text-secondary)); padding: 0 2px; }
+.fb-star.on { color: var(--color-warning); }
+.fb-input { width: 100%; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 8px;
+  background: var(--bg-secondary); color: var(--text-primary); padding: 8px 10px;
+  font-size: var(--text-sm); font-family: inherit; resize: vertical; margin-bottom: var(--space-2); }
+.fb-done { font-size: var(--text-sm); color: var(--accent-primary); }
 </style>

@@ -32,13 +32,16 @@ def list_scenarios() -> list[dict]:
 async def start_session(user_id: str, scenario_id: str,
                         difficulty: str = "medium",
                         max_turns: int = DEFAULT_MAX_TURNS,
-                        task_id: Optional[str] = None) -> dict:
+                        task_id: Optional[str] = None,
+                        phase: Optional[str] = None) -> dict:
     seed = nodes.get_scenario(scenario_id)
     if not seed:
         raise ValueError(f"情景不存在: {scenario_id}")
 
     max_turns = max(MIN_TURNS, min(int(max_turns or DEFAULT_MAX_TURNS), 12))
     difficulty = difficulty if difficulty in ("easy", "medium", "hard") else seed.get("difficulty_default", "medium")
+    # F5: 前后测阶段标记（pre/post 白名单；其余值一律视为未标记，不猜）
+    phase = phase if phase in ("pre", "post") else None
 
     state = new_state(
         session_id="", user_id=user_id,
@@ -49,6 +52,8 @@ async def start_session(user_id: str, scenario_id: str,
     state["scenario_id"] = scenario_id
     state["title"] = seed.get("title", "")
     state["scenario_label"] = seed.get("type_label", SCENARIO_TYPE_LABELS.get(seed.get("type", ""), ""))
+    if phase:
+        state["phase"] = phase
 
     # 1) 生成对抗脚本
     script = await nodes.build_scenario_script(seed, difficulty)
@@ -75,6 +80,7 @@ async def start_session(user_id: str, scenario_id: str,
         "next_question": {"question": opening, "mode": "normal", "probe_dimension": "expression"},
         "turns_done": 0,
         "status": "ongoing",
+        "phase": phase,
     }
 
 
