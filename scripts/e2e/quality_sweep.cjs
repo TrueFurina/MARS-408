@@ -16,7 +16,14 @@ const puppeteer = require('puppeteer-core')
 const BASE = process.env.E2E_BASE || 'https://mangdehenzhi.app.workbuddy.host/'
 const U = process.env.E2E_USER || ''
 const P = process.env.E2E_PASS || ''
-const PAGES = (process.env.E2E_PAGES || '/kaoyan,/achievements,/profile,/career/training,/memory,/engine,/code-lab,/cloud-lab,/design-system').split(',')
+// 路径规范化：调用方可能传 "kaoyan" 或 "/kaoyan"；
+// 且 Git Bash 会把裸 "/kaoyan" 当路径做 MSYS 转换（变成 D:/.../kaoyan），
+// 故统一补前导斜杠，避免抽检打到错误地址（表现为内容极少的 404 页）。
+const PAGES = (process.env.E2E_PAGES || '/kaoyan,/achievements,/profile,/career/training,/memory,/engine,/code-lab,/cloud-lab,/design-system')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean)
+  .map((s) => (s.startsWith('/') ? s : '/' + s))
 const CHROME = process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe'
 
 async function login(p) {
