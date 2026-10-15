@@ -463,7 +463,13 @@ function hoverPrefetch(routePath: string) {
 
 /* 公开展示页（/landing、/showcase、/design-upgrade）：全屏无侧边栏 */
 .standalone-screen {
-  min-height:100vh;
+  /* #app 是 flex row，此包裹层作为 flex 子项默认收缩到内容宽且靠左（实测 landing 整页
+     只有 ~743px 宽）；body 又是 overflow:hidden，滚动必须由本层接管 ——
+     否则独立页（landing/showcase/design-upgrade）整页既偏左又完全无法滚动。 */
+  width: 100%;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
   background: var(--color-canvas);
 }
 
