@@ -61,7 +61,10 @@ fi
 # deliverables/芒得很职 考研…/）。旧的 `$(git diff --cached --name-only …)` 未加引号，
 # 会在这种路径上把参数拆错、静默漏扫；更糟的是**没有暂存文件时它会退化成全树扫描**。
 scan_staged_secrets() {
-    if command -v xargs >/dev/null 2>&1; then
+    # 2026-10-15 本机修复：git spawn 的 sh 环境下 MSYS xargs 触发
+    # `assertion "bc_ctl.arg_max >= LINE_MAX"` 崩溃（环境块大小相关，交互 shell 内不复现）。
+    # 加可用性探针：xargs 真能跑才走快速分支，坏了走下方逐文件兜底（语义完全一致）。
+    if command -v xargs >/dev/null 2>&1 && printf '' | xargs -0 -r true >/dev/null 2>&1; then
         git -c core.quotePath=false diff --cached --name-only --diff-filter=ACM -z \
             | xargs -0 -r "$PY" scripts/pre-commit/secrets_scan.py
     else

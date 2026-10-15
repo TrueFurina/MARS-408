@@ -65,7 +65,17 @@ def auth_token(request):
 # ────────────────────────────────────────────────────────────
 # 1. 全端点可达性矩阵（架构级：无路由缺失）
 #    条目：(method, path, body_or_None, needs_auth)
+#    needs_auth: True=带测试用户 token / False=匿名 / GATE=必须匿名且真鉴权
 # ────────────────────────────────────────────────────────────
+
+# GATE：匿名真实路径 + 断言被鉴权闸门拦截（401/403）。
+# 用于所有自带 require_admin / require_teacher_or_demo_open / get_current_user
+# 闸门的管理端与写操作条目。conftest 的 mock_auth（autouse）会把上述依赖顶成
+# admin 假用户；若这些条目沿用 False，请求将【以 admin 真实执行】——
+# 2026-10-16 实测：/knowledge/reindex 与 /knowledge/clear 因此删掉了真实
+# vectordb_data/netlearn_kb.json（2245 条教材语料 + .emb.npy）。
+# 走 GATE 时测试内动态请求 no_mock_auth（清除依赖覆盖），无凭据打真闸门。
+GATE = "gate"
 
 REACHABILITY = [
     # 公开信息类 GET
@@ -96,30 +106,34 @@ REACHABILITY = [
     ("POST", "/api/user/quiz-history", {"records": []}, True),
     ("POST", "/api/user/conversations", {"messages": []}, True),
     # 管理员 / 教师域（无 token → 鉴权闸门 401/403，仍 ≠404）
-    ("GET", "/api/admin/users", None, False),
-    ("GET", "/api/admin/stats", None, False),
-    ("GET", "/api/teacher/students/overview", None, False),
-    ("GET", "/api/teacher/knowledge-base/stats", None, False),
-    ("GET", "/api/teacher/analytics/class-performance", None, False),
-    ("GET", "/api/teacher/agent-performance", None, False),
-    ("GET", "/api/teacher/students/s1/detail", None, False),
-    ("POST", "/api/teacher/knowledge-base/import", {}, False),
+    # ⚠️ 这些条目必须走 GATE（无凭据真实路径）：conftest 的 mock_auth（autouse）
+    # 会把 get_current_user / require_admin 顶成 admin 假用户，若沿用 False，
+    # 请求会以 admin 真实执行——曾造成 /knowledge/reindex 与 /knowledge/clear
+    # 在测试进程里删掉真实 vectordb_data/netlearn_kb.json（2245 条教材语料）。
+    ("GET", "/api/admin/users", None, GATE),
+    ("GET", "/api/admin/stats", None, GATE),
+    ("GET", "/api/teacher/students/overview", None, GATE),
+    ("GET", "/api/teacher/knowledge-base/stats", None, GATE),
+    ("GET", "/api/teacher/analytics/class-performance", None, GATE),
+    ("GET", "/api/teacher/agent-performance", None, GATE),
+    ("GET", "/api/teacher/students/s1/detail", None, GATE),
+    ("POST", "/api/teacher/knowledge-base/import", {}, GATE),
     # 纯逻辑闭环
     ("POST", "/api/learning-path", {"current_chapter": 1}, False),
     ("POST", "/api/learning-path-with-resources", {"current_chapter": 1}, False),
     ("POST", "/api/quiz/submit",
      {"profile": {}, "records": [{"subject": "network", "correct": True}]}, False),
     ("POST", "/api/assessment", {"quiz_history": [{"subject": "network", "correct": True}]}, False),
-    # 知识库写操作
+    # 知识库写操作（全部 require_admin；GATE 防 mock 顶掉闸门后真实执行）
     ("POST", "/api/knowledge/upsert",
-     {"documents": [{"content": "x", "metadata": {"subject": "network"}}]}, False),
-    ("POST", "/api/knowledge/delete", {"ids": ["x"]}, False),
-    ("POST", "/api/knowledge/upload", {}, False),
-    ("POST", "/api/knowledge/preview", {"content": "x"}, False),
+     {"documents": [{"content": "x", "metadata": {"subject": "network"}}]}, GATE),
+    ("POST", "/api/knowledge/delete", {"ids": ["x"]}, GATE),
+    ("POST", "/api/knowledge/upload", {}, GATE),
+    ("POST", "/api/knowledge/preview", {"content": "x"}, GATE),
     ("POST", "/api/knowledge/batch-commit",
-     {"documents": [{"content": "x", "metadata": {}}]}, False),
-    ("POST", "/api/knowledge/reindex", None, False),
-    ("POST", "/api/knowledge/clear", None, False),
+     {"documents": [{"content": "x", "metadata": {}}]}, GATE),
+    ("POST", "/api/knowledge/reindex", None, GATE),
+    ("POST", "/api/knowledge/clear", None, GATE),
     ("POST", "/api/knowledge/graph", {"subject": "all"}, False),
     # LLM 依赖端点（可达性即可，具体响应由 mock 组精确校验）
     ("POST", "/api/profile/build", {"message": "hi", "history": []}, False),
@@ -155,24 +169,38 @@ REACHABILITY = [
     ("GET", "/api/skills/templates", None, False),
     ("POST", "/api/skills/create",
      {"name": "reach_skill", "description": "契约测试", "icon": "🤖",
-      "system_prompt": "你是一个测试技能", "category": "teaching"}, False),
-    ("POST", "/api/skills/import", {"skills": []}, False),
+      "system_prompt": "你是一个测试技能", "category": "teaching"}, GATE),
+    ("POST", "/api/skills/import", {"skills": []}, GATE),
 ]
 
 
 @pytest.mark.parametrize("method,path,body,needs_auth", REACHABILITY)
-def test_endpoint_reachable(method, path, body, needs_auth, auth_token):
+def test_endpoint_reachable(request, method, path, body, needs_auth, auth_token):
     """架构级契约：每个已知端点都必须挂载且可访问（响应码 != 404）。
 
     404 意味着路由缺失或路径拼写漂移——这正是本次事故中
     POST /knowledge/graph 的故障类型。此测试防止回归。
+
+    needs_auth == GATE 的条目：动态清除 mock_auth 覆盖，以无凭据请求真实
+    到达端点，断言被鉴权闸门拦截（401/403）——既证明路由挂载，也证明闸门
+    真的挂在依赖上，且不会以 admin 身份真实执行写操作（见 GATE 定义）。
     """
-    headers = _auth_headers(auth_token) if needs_auth else {}
+    if needs_auth == GATE:
+        request.getfixturevalue("no_mock_auth")
+        headers = {}
+    else:
+        headers = _auth_headers(auth_token) if needs_auth else {}
     fn = getattr(client, method.lower())
     if body is None:
         resp = fn(path, headers=headers)
     else:
         resp = fn(path, json=body, headers=headers)
+    if needs_auth == GATE:
+        assert resp.status_code in (401, 403), (
+            f"{method} {path} 无凭证应被鉴权闸门拦截（401/403），实际 {resp.status_code}"
+            " —— 闸门缺失或被 mock 顶掉！"
+        )
+        return
     assert resp.status_code != 404, (
         f"{method} {path} 返回 404 —— 路由缺失或路径漂移！"
     )
