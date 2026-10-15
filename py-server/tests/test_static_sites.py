@@ -109,6 +109,58 @@ class TestSpaInstall:
         assert resp.status_code == 200 and "SPA-INDEX" in resp.text
 
 
+class TestSpaServesPublicAssets:
+    """public/ 下的非 assets 资源（brand/、favicon.ico…）必须直接返回文件本体。
+
+    历史缺陷（2026-10-15 线上实测）：install_spa 只 mount 了 /assets 与 /showcase，
+    其余 public 资源没有对应路由，请求被 SPA 回退**兜成 index.html** ——
+    HTML 被当作 PNG 解析 ⇒ 侧边栏/落地页 logo 全部裂图，而 HTTP 状态是 200，
+    监控与接口测试都看不出问题；dev 下 vite 直接服务 public/ 所以本地一切正常
+    （典型「本地好好的、线上坏」）。故此处固化断言。
+    """
+
+    def _app_with_public_assets(self, tmp_path, monkeypatch):
+        dist = tmp_path / "dist"
+        (dist / "assets").mkdir(parents=True)
+        (dist / "brand").mkdir()
+        (dist / "brand" / "logo.png").write_bytes(b"\x89PNG\r\n\x1a\nFAKE-PNG-BODY")
+        (dist / "favicon.ico").write_bytes(b"FAKE-ICO")
+        (dist / "index.html").write_text("<html>SPA-INDEX</html>", encoding="utf-8")
+        monkeypatch.delenv("STATIC_DIR", raising=False)
+        monkeypatch.setattr(static_sites, "_REPO_ROOT", str(tmp_path))
+        app = FastAPI()
+        static_sites.install_spa(app)
+        return TestClient(app)
+
+    def test_brand_asset_returned_as_file_not_index(self, tmp_path, monkeypatch):
+        client = self._app_with_public_assets(tmp_path, monkeypatch)
+        resp = client.get("/brand/logo.png")
+        assert resp.status_code == 200
+        assert resp.content == b"\x89PNG\r\n\x1a\nFAKE-PNG-BODY", \
+            "public 资源被 SPA 回退兜成 index.html（线上表现为 logo 裂图）"
+        assert "SPA-INDEX" not in resp.text
+
+    def test_root_level_file_like_favicon_returned(self, tmp_path, monkeypatch):
+        client = self._app_with_public_assets(tmp_path, monkeypatch)
+        resp = client.get("/favicon.ico")
+        assert resp.status_code == 200 and resp.content == b"FAKE-ICO"
+
+    def test_unknown_path_still_falls_back_to_index(self, tmp_path, monkeypatch):
+        """修复不得破坏原行为：确实不存在的路径仍走 SPA 回退（前端深链刷新可用）。"""
+        client = self._app_with_public_assets(tmp_path, monkeypatch)
+        resp = client.get("/some/deep/spa/route")
+        assert resp.status_code == 200 and "SPA-INDEX" in resp.text
+
+    def test_path_traversal_does_not_escape_static_root(self, tmp_path, monkeypatch):
+        """目录穿越：dist 之外的既有文件不得被读到（应回退 index.html）。"""
+        outside = tmp_path / "outside.txt"
+        outside.write_text("SECRET-OUTSIDE", encoding="utf-8")
+        client = self._app_with_public_assets(tmp_path, monkeypatch)
+        for probe in ("/../outside.txt", "/%2e%2e/outside.txt", "/..%2foutside.txt"):
+            resp = client.get(probe)
+            assert "SECRET-OUTSIDE" not in resp.text, f"{probe} 读到了静态根之外的文件"
+
+
 class TestSpaHeadSupport:
     """HEAD 应与 GET 同样可用（HTTP 语义；供只发 HEAD 的下游健康探针）。"""
 
