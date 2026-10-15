@@ -338,6 +338,37 @@ def test_task_center_stats_and_close(client, teacher_id):
     assert stu["finished_count"] == 1 and stu["dimension_avg"]
 
 
+def test_task_stats_counts_people_not_sessions(client, teacher_id):
+    """F2 口径守护：一名学生对同一任务完成 2 场，已完成人数仍是 1（数人不数场次）。
+
+    旧实现 finished_count 数的是会话数——前端标签是「人」，1 人 2 场会显示
+    「已完成 2 人」虚高。本断言锁死去重学生口径（与 started_count 同源），
+    同时确认 session_count 如实反映 2 场真实会话。
+    """
+    cid, task = _setup_class_task(client, class_name="任务统计口径班")
+    uid = "stu_stats_" + _RUN
+    _student_override(client, uid)
+    try:
+        joined = client.post("/api/career/task/join",
+                             json={"join_code": task["join_code"]}).json()
+        for _ in range(2):  # 同一学生对同一任务完整跑两场
+            start = client.post("/api/career/session/start", json={
+                "scenario_id": joined["scenario_id"], "max_turns": 4,
+                "task_id": joined["task_id"]}).json()
+            sid = start["session_id"]
+            client.post(f"/api/career/session/{sid}/answer",
+                        json={"answer": "先看监控指标确认爆炸半径，再查最近发布记录，回滚后补压测与告警预案。"})
+            client.post(f"/api/career/session/{sid}/end", json={"force": True})
+    finally:
+        _restore_auth(client)
+    tasks = client.get(f"/api/career/tasks?class_id={cid}").json()["tasks"]
+    t = next(t for t in tasks if t["task_id"] == task["task_id"])
+    st = t["stats"]
+    assert st["session_count"] == 2, "两场真实会话必须如实计入会话总数"
+    assert st["started_count"] == 1 and st["finished_count"] == 1, \
+        "数人不数场：一名学生完成 2 场，已完成人数仍是 1（旧实现会虚高成 2）"
+
+
 def test_my_tasks_empty_before_join(client):
     """F3 边界：未加入任何班级的学生 → 任务中心为空列表（不报错、不编造）"""
     _student_override(client, "stu_no_class")
