@@ -17,6 +17,8 @@ from fastapi.testclient import TestClient
 from main import app
 from services import career_service
 
+from tests._career_report_wait import wait_report_ready
+
 
 DISTINCTIVE = "根因定位后对比三套方案并给出回滚预案与监控指标。"
 
@@ -46,6 +48,7 @@ def _seed_session(client: TestClient) -> str:
     assert ans2.status_code == 200
     end = client.post(f"/api/career/session/{sid}/end", json={"force": True})
     assert end.status_code == 200
+    wait_report_ready(client, sid)  # 终评异步：等后台报告落库再导出
     return sid
 
 

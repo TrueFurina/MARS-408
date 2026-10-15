@@ -20,6 +20,7 @@ from agents.career_state import (
     ADVERSARY_MODES,
 )
 from db import career_store
+from tests._career_report_wait import wait_report_ready
 
 
 # ────────────────────────────────────────────────────────────
@@ -203,9 +204,10 @@ def test_start_answer_end_closed_loop(client):
     assert ans.status_code == 200
     end = client.post(f"/api/career/session/{sid}/end", json={"force": True})
     assert end.status_code == 200
+    # 终评已异步：end 只回 generating，报告后台生成 —— 必须等它落库
+    body = wait_report_ready(client, sid)
     rep = client.get(f"/api/career/session/{sid}/report")
     assert rep.status_code == 200
-    body = rep.json()
     assert "assessment" in body and "improvement" in body
 
 

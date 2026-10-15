@@ -6,6 +6,7 @@
 
 import pytest
 from fastapi.testclient import TestClient
+from tests._career_report_wait import wait_report_ready
 
 # run 级唯一后缀：本文件多数用例跑在共享回退库上，固定 uid 会被上一轮数据污染
 # （成长页/同意状态按 uid 聚合），故对"按 uid 断言全局状态"的用例加后缀。
@@ -79,6 +80,7 @@ def test_teacher_full_closed_loop(client, teacher_id):
         end = client.post(f"/api/career/session/{sess_id}/end",
                           json={"force": True})
         assert end.status_code == 200
+        wait_report_ready(client, sess_id)  # 终评异步：等后台报告落库
     finally:
         _restore_auth(client)
     # 6) 教师看板聚合：能看到该学生的完成会话与评估
@@ -252,6 +254,7 @@ def _student_finish_one(client, task):
         client.post(f"/api/career/session/{sid}/answer",
                     json={"answer": "先看监控指标确认爆炸半径，再查最近发布记录，回滚后补压测与告警预案。"})
         client.post(f"/api/career/session/{sid}/end", json={"force": True})
+        wait_report_ready(client, sid)  # 终评异步：等后台报告落库
     finally:
         _restore_auth(client)
     return uid
@@ -359,6 +362,7 @@ def test_task_stats_counts_people_not_sessions(client, teacher_id):
             client.post(f"/api/career/session/{sid}/answer",
                         json={"answer": "先看监控指标确认爆炸半径，再查最近发布记录，回滚后补压测与告警预案。"})
             client.post(f"/api/career/session/{sid}/end", json={"force": True})
+            wait_report_ready(client, sid)  # 终评异步：等后台报告落库
     finally:
         _restore_auth(client)
     tasks = client.get(f"/api/career/tasks?class_id={cid}").json()["tasks"]
@@ -387,6 +391,7 @@ def test_dashboard_hides_non_roster_sessions(client, teacher_id):
         client.post(f"/api/career/session/{sid}/answer",
                     json={"answer": "先看监控指标确认爆炸半径，再查最近发布记录，回滚后补压测与告警预案。"})
         client.post(f"/api/career/session/{sid}/end", json={"force": True})
+        wait_report_ready(client, sid)  # 终评异步：等后台报告落库
     finally:
         _restore_auth(client)
     dash = client.get(f"/api/career/classes/{cid}/dashboard").json()
@@ -429,6 +434,7 @@ def _student_finish_with(client, task, uid, phase=None, answer=_WEAK_ANSWER):
         assert start.get("phase") == (phase if phase in ("pre", "post") else None)
         client.post(f"/api/career/session/{sid}/answer", json={"answer": answer})
         client.post(f"/api/career/session/{sid}/end", json={"force": True})
+        wait_report_ready(client, sid)  # 终评异步：等后台报告落库
     finally:
         _restore_auth(client)
     return uid
