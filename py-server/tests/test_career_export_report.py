@@ -137,3 +137,33 @@ def test_export_report_evidence_chain_has_real_tracing(client: TestClient):
     assert saw_snippet, "至少有一个维度带学生原话 snippet"
     # 本环境为规则兜底模式，评分维度应补全逐轮原话证据（answer_snippet）
     assert seen_any_pte, "至少应有维度的逐轮证据带来学生原话（answer_snippet）"
+
+
+def test_class_export_renders_all_six_dimensions_with_nodata_marker():
+    """诚信守护（2026-10-15 浏览器走查发现）：维度数据不完整时，无证据维度必须
+    渲染为「无数据」而非从六维中整项消失——否则「六维均分」名不副实，
+    且跨班级/场次合并导出会错列。"""
+    from api.career_training import _render_class_export_html
+
+    dash = {
+        "class_name": "走查回归班",
+        "summary": {
+            "student_count": 1, "started_count": 1, "finished_count": 1,
+            "assessed_count": 1, "completion_rate": 1.0,
+            # 仅两维有数据：模拟 LLM 对技术汇报无证据、其余维未考察
+            "dimension_avg": {"expression": 2.0, "problem_solving": 3.5},
+            "weakest_dimensions": [{"dimension": "expression", "avg": 2.0}],
+            "note": "最弱维度为全班均分的相对排序（升序），非绝对达标线。",
+        },
+        "students": [{
+            "student_no": "1001", "name": "张三", "bound": True,
+            "session_count": 1, "finished_count": 1, "overall_best": 2.8,
+            "dimension_avg": {"expression": 2.0, "problem_solving": 3.5},
+        }],
+        "attention": [],
+    }
+    html = _render_class_export_html(dash)
+    for label in ["表达逻辑", "抗压应变", "方案拆解", "协作沟通", "技术汇报", "问题解决"]:
+        assert label in html, f"六维标签 {label} 不得从导出中消失"
+    assert "技术汇报 无数据" in html, "无证据维度必须显式标注无数据，不得静默省略"
+    assert "表达逻辑 2.0" in html, "有数据维度必须带真实分值"
