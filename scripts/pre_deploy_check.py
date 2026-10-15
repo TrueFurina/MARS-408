@@ -105,7 +105,7 @@ def main() -> int:
         dirty[prefix] = kept
         skipped[prefix] = len(all_changed) - len(kept)
     if not args.quiet:
-        print("[1/4] 将进入发布产物的未提交改动（打包脚本整树复制）")
+        print("[1/5] 将进入发布产物的未提交改动（打包脚本整树复制）")
         for prefix, files in dirty.items():
             note = f"（另有 {skipped[prefix]} 个改动被打包排除规则挡下，不会上线）" if skipped[prefix] else ""
             if files:
@@ -122,24 +122,45 @@ def main() -> int:
         if files:
             warned.append(f"{prefix}/ 有 {len(files)} 个未提交文件将被发布")
 
-    # ── 2) 工程规模指标一致性（CI 阻断项）──
+    # ── 2) 包内 .env 的 LLM 凭据是否已注入 ──
+    # 打包脚本按模板生成包内 .env（占位符，"真实 .env 由人工/发布流程注入"）。
+    # 若忘了注入，线上 LLM 全程不可用 ⇒ career 实训退化为**规则兜底**：
+    # 六维里多数维度「证据不足不予评分」、追问变模板话术（2026-10-15 真人演练实测到）。
+    # 这种退化很隐蔽（页面不报错），所以必须在发布前拦住。
+    env_path = REPO / "deploy" / "career-pilot" / "backend" / ".env"
+    llm_placeholder = False
+    if env_path.exists():
+        for line in env_path.read_text(encoding="utf-8", errors="replace").splitlines():
+            if line.startswith("DEEPSEEK_API_KEY="):
+                val = line.split("=", 1)[1].strip()
+                if not val or val.startswith("your_") or "placeholder" in val.lower() or len(val) < 20:
+                    llm_placeholder = True
+    else:
+        llm_placeholder = True
+    if not args.quiet:
+        print(f"\n[2/5] 包内 .env 的 LLM 凭据\n  {WARN if llm_placeholder else OK} "
+              + ("仍是占位符 ⇒ 线上实训会退化为规则兜底（六维多数维度不给分）" if llm_placeholder else "已注入"))
+    if llm_placeholder:
+        warned.append("包内 .env 的 LLM key 未注入（线上将走兜底模式）")
+
+    # ── 3) 工程规模指标一致性（CI 阻断项）──
     ok, tail = run_check("scripts/verify_metrics.py")
     if not args.quiet:
-        print(f"\n[2/4] 工程规模指标（CI 阻断项）\n  {OK if ok else BLOCK} {tail}")
+        print(f"\n[3/5] 工程规模指标（CI 阻断项）\n  {OK if ok else BLOCK} {tail}")
     if not ok:
         blocked.append("verify_metrics 不一致（跑 python scripts/verify_metrics.py --update 同步）")
 
-    # ── 3) 诚实口径机检 ──
+    # ── 4) 诚实口径机检 ──
     ok, tail = run_check("scripts/pre-commit/honesty_scan.py")
     if not args.quiet:
-        print(f"\n[3/4] 诚实口径机检\n  {OK if ok else BLOCK} {tail}")
+        print(f"\n[4/5] 诚实口径机检\n  {OK if ok else BLOCK} {tail}")
     if not ok:
         blocked.append("诚实口径机检未通过")
 
-    # ── 4) 瘦包与源码一致性 ──
+    # ── 5) 瘦包与源码一致性 ──
     ok, tail = run_check("scripts/build_career_pilot_package.py", ["--check"])
     if not args.quiet:
-        print(f"\n[4/4] 瘦包与 py-server 源码一致性\n  {OK if ok else BLOCK} {tail}")
+        print(f"\n[5/5] 瘦包与 py-server 源码一致性\n  {OK if ok else BLOCK} {tail}")
     if not ok:
         blocked.append("瘦包与源码存在漂移（重跑 build_career_pilot_package.py）")
 
