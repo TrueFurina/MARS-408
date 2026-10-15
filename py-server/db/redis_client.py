@@ -3,6 +3,7 @@
 # 用途：LLM 响应缓存、会话状态、限流、Agent 权重缓存
 # ============================================================
 
+import heapq
 import json
 import logging
 import os
@@ -181,19 +182,34 @@ class RedisClient:
             return True
 
     def _evict_local_buckets(self, now: float, window: int) -> None:
-        """内存上界保护：清空过期桶，仍达上界则按「最久未活跃」淘汰。"""
+        """内存上界保护：清空过期桶，仍达上界则按「最久未活跃」成批淘汰。
+
+        淘汰是**摊销**的：一次清「当前规模 10%（至少补足空位所需）」个最旧桶，
+        把触顶后每次新建 key 的全表扫描成本摊薄 ~10 倍。详见方法内注释。
+        """
         cutoff = now - window
         stale = [k for k, dq in self._local_buckets.items() if not dq or dq[-1] <= cutoff]
         for k in stale:
             del self._local_buckets[k]
         # 仍达上界（窗口内活跃 key 过多）→ 淘汰最旧的一批，硬保证上界
         if len(self._local_buckets) >= self._LOCAL_MAX_KEYS:
+            # 摊销：一次淘汰「当前规模的 10%（至少 overflow 个）」最旧桶，
+            # 而非每插一个 key 就全表扫一次。否则 distinct-key 洪水下每次新建
+            # key 都付 O(N) 扫描 ⇒ O(N²)（实测 12800 次互异 key 灌入，
+            # 全量 sort 版裸跑 ~10s / nsmallest 版 ~5s，覆盖插桩下均超 30s
+            # 测试超时；且全程持 _local_lock——限流器自身成为延迟放大器）。
+            # 语义不变：仍是「最旧优先」，只是批量进行；上界不变：淘汰发生在
+            # 新建之前且批量 ≥ overflow，淘汰后必有空位。
             overflow = len(self._local_buckets) - self._LOCAL_MAX_KEYS + 1
-            oldest = sorted(
+            batch = max(overflow, len(self._local_buckets) // 10)
+            # nsmallest 与 sorted(...)[:batch] 结果等价（heapq 文档口径，
+            # 含同时间戳时按字典插入序的稳定次序）。
+            oldest = heapq.nsmallest(
+                batch,
                 self._local_buckets.items(),
                 key=lambda kv: kv[1][-1] if kv[1] else 0.0,
             )
-            for k, _ in oldest[:overflow]:
+            for k, _ in oldest:
                 del self._local_buckets[k]
 
     def check_rate_limit(self, key: str, max_requests: int, window: int = 60) -> bool:
