@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { ref, watch, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { probeBackend } from '@/utils/backendProbe'
 import { icons } from '@/components/icons'
 import { useModalFocus } from '@/composables/useModalFocus'
 
@@ -81,10 +82,21 @@ onUnmounted(() => {
   window.removeEventListener('scroll', onScroll)
 })
 
-// ── 展示站 / 本地跑 分流 ──
-// 公开展示站（GitHub Pages）只承载静态前端、无后端；完整功能需本地启动。
-// 本地（localhost / 127.0.0.1）→ 正常进入；公开站 → 弹出「本地运行说明」，不假装能直接进。
+// ── 「可直接进入」分流 ──
+// 判据 = 本机运行 或 **后端在线**（运行时探测 /api/status）。
+// ⚠️ 不能再用「hostname 是否 localhost」判断：后端已随平台发布上线到公网域名，
+//    按老逻辑公网访客会被引导去「本地运行」，看起来像必须下载源码才能用（实测 2026-10-15）。
+// 探测失败（例：只部署了静态前端的展示站）→ 才回退到「本地运行说明」，保持诚实。
 const isLocalRun = ref(['localhost', '127.0.0.1', '::1'].includes(window.location.hostname))
+const backendReady = ref<boolean | null>(isLocalRun.value ? true : null) // null=探测中
+const canEnterDirectly = computed(() => isLocalRun.value || backendReady.value === true)
+
+onMounted(async () => {
+  if (isLocalRun.value) return
+  // 与路由守卫共用同一探测（见 utils/backendProbe）——避免重复请求、判据统一
+  backendReady.value = await probeBackend()
+})
+
 const showRunGuide = ref(false)
 const runGuideRef = ref<HTMLDivElement | null>(null)
 const { activate, deactivate, trapTab } = useModalFocus(runGuideRef)
@@ -92,7 +104,7 @@ const { activate, deactivate, trapTab } = useModalFocus(runGuideRef)
 watch(showRunGuide, (on) => { if (on) activate(); else deactivate() })
 
 function routeOrGuide(target: string) {
-  if (isLocalRun.value) { router.push(target); return }
+  if (canEnterDirectly.value) { router.push(target); return }
   showRunGuide.value = true
 }
 function enterSystem() { routeOrGuide('/') }
@@ -118,7 +130,7 @@ function goLogin() { router.push('/login') }
         <span class="nav-text">芒得很职</span>
       </div>
       <div class="nav-links">
-        <button class="nav-link" @click="enterSystem">{{ isLocalRun ? '进入系统' : '本地运行' }}</button>
+        <button class="nav-link" @click="enterSystem">{{ canEnterDirectly ? '进入系统' : '本地运行' }}</button>
         <button class="nav-link" @click="goToGraph">知识图谱</button>
         <button class="nav-link" @click="goToSkills">技能平台</button>
         <button class="nav-link" @click="goToTraining">体验对抗实训</button>
@@ -151,7 +163,7 @@ function goLogin() { router.push('/login') }
       <!-- CTA -->
       <div class="hero-cta">
         <button class="cta-primary" @click="enterSystem">
-          <span>{{ isLocalRun ? '进入系统' : '本地运行 · 体验完整功能' }}</span>
+          <span>{{ canEnterDirectly ? '进入系统' : '本地运行 · 体验完整功能' }}</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </button>
         <button class="cta-secondary" @click="goToGraph">
@@ -159,7 +171,7 @@ function goLogin() { router.push('/login') }
           <span>探索知识图谱</span>
         </button>
       </div>
-      <p v-if="!isLocalRun" class="hero-notice">
+      <p v-if="backendReady === false" class="hero-notice">
         本站为<strong>公开展示版</strong>（静态前端，未部署后端）· 完整功能请在本地运行
         <button class="hero-notice-link" @click="showRunGuide = true">查看本地运行方式 →</button>
       </p>
@@ -227,7 +239,7 @@ function goLogin() { router.push('/login') }
         <h2 class="bottom-title">让每一道错题，都成为成长的起点</h2>
         <p class="bottom-desc">11 节点编排 · 10 项讯飞能力 · 无限可扩展教学技能 · 知识图谱可视化</p>
         <button class="cta-primary cta-large" @click="enterSystem">
-          <span>{{ isLocalRun ? '立即体验' : '本地运行 · 体验完整功能' }}</span>
+          <span>{{ canEnterDirectly ? '立即体验' : '本地运行 · 体验完整功能' }}</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </button>
       </div>

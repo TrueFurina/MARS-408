@@ -5,6 +5,7 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
+import { probeBackend } from './utils/backendProbe'
 import './assets/styles/main.css'
 // ⚠️ 不要在此处静态引入 highlight.js 主题 CSS：
 // 它属于 node_modules/highlight → 会被 manualChunks 归入 highlight chunk，
@@ -32,6 +33,9 @@ async function bootstrap() {
   }
   app.use(createPinia())
   app.use(router)
+  // 尽早开始探测后端可用性（不阻塞启动）：路由守卫与落地页共用这一判据，
+  // 决定「未登录访客该进登录页还是被引导去本地运行」。
+  probeBackend()
   app.mount('#app')
 }
 
