@@ -369,6 +369,33 @@ def test_task_stats_counts_people_not_sessions(client, teacher_id):
         "数人不数场：一名学生完成 2 场，已完成人数仍是 1（旧实现会虚高成 2）"
 
 
+def test_dashboard_hides_non_roster_sessions(client, teacher_id):
+    """看板可见性 parity：未入花名册的用户带 task_id 开局，不计入班级统计。
+
+    session/start 不校验花名册（任何登录用户可带 task_id 开局），但班级看板
+    只统计花名册内学生的会话。本断言锁死该边界——N+1 重构（单查询+Python 分组）
+    后不得把班外用户的会话带进班级视角。
+    """
+    cid, task = _setup_class_task(client, class_name="可见性边界班")
+    outsider = "stu_outsider_" + _RUN
+    _student_override(client, outsider)
+    try:
+        start = client.post("/api/career/session/start", json={
+            "scenario_id": task["scenario_id"], "max_turns": 4,
+            "task_id": task["task_id"]}).json()
+        sid = start["session_id"]
+        client.post(f"/api/career/session/{sid}/answer",
+                    json={"answer": "先看监控指标确认爆炸半径，再查最近发布记录，回滚后补压测与告警预案。"})
+        client.post(f"/api/career/session/{sid}/end", json={"force": True})
+    finally:
+        _restore_auth(client)
+    dash = client.get(f"/api/career/classes/{cid}/dashboard").json()
+    assert dash["student_count"] == 2, "花名册 2 人，班外用户的会话不得撑大学生数"
+    assert all(s["user_id"] != outsider for s in dash["students"])
+    assert dash["summary"]["started_count"] == 0 and dash["summary"]["finished_count"] == 0
+    assert {a["reason"] for a in dash["attention"]} == {"not_started"}
+
+
 def test_my_tasks_empty_before_join(client):
     """F3 边界：未加入任何班级的学生 → 任务中心为空列表（不报错、不编造）"""
     _student_override(client, "stu_no_class")
