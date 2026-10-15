@@ -177,6 +177,20 @@
 
 ## 已完成
 
+- [x] 2026-10-16 **全量测试异常查证 → 查出并修复「测试销毁真实向量库」事故**（`64994b2`，已 push）：
+      28 errors = 全量跑时本地后端并发争用夹具（停后端后单跑 16 passed，教训：二者不得同时跑）；
+      1 failed = `test_installed_hook_matches_canonical_source`（10-15 xargs 探针热修复只改进已装钩子、未回写真源）。
+      🔴 **重大发现**：可达性矩阵 17 个管理端条目 `needs_auth=False` + conftest `mock_auth`（autouse）
+      把 admin 依赖顶掉 ⇒ `/knowledge/reindex`、`/clear` 等**以 admin 真实执行**，两次全量跑各删一次
+      真实 `vectordb_data/netlearn_kb.json`（2245 条教材语料）+ `.emb.npy`。修复：矩阵引入 `GATE` 哨兵
+      （动态清 mock + 断言 401/403）。KB 已从 `vectordb_data_pre_multi_bak/` 备份完整恢复（2245 条验证可加载）；
+      该备份是 KB 唯一备份（`documents/` 教材 PDF 已不在仓内）⇒ **保留不删**。终验全量 1323 passed / 0 failed。
+- [x] 2026-10-16 **限流兜底淘汰算法 O(N²) → 摊销修复**（本次）：`test_concurrent_distinct_keys_respect_memory_bound`
+      在覆盖插桩下稳定超 30s 超时（前两次全量跑被迫 `-k` 排除）。根因：`_evict_local_buckets` 每次新建 key
+      全量 sort 4096 项，12800 次互异 key 灌入裸跑 9.99s 且全程持锁。修复：`heapq.nsmallest`（与 sorted[:n]
+      结果等价）+ 触顶一次淘汰 10% 最旧桶（摊销 ~10×）⇒ 裸跑 0.04s、带覆盖 15.16s 通过。
+      新增语义守护 `test_memory_bound_evicts_oldest_first`（原测试只断言上界不断言淘汰对象），
+      变异验证（nlargest → 红）。该 flaky 排除项已回收，全量不再 `-k` 排除。
 - [x] 2026-10-16 **push career-literacy 到远程**（`26f7139..781ed02`，SSH，ls-remote 权威核对）：
       含本轮三提交——`538db7e` 四通道回退链端到端实证（+xfyun 11200 实测发现）、
       `ec53cda` F4 六维缺维修复（看板/CSV/一页纸三处）、`781ed02` 回归测试。
