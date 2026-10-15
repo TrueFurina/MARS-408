@@ -33,7 +33,14 @@ async function submit() {
     // 口径实现在 src/router/landing.ts（纯函数，landing.spec.ts 守护防回归）。
     router.push(resolveLandingRoute(user))
   } catch (e: any) {
-    error.value = e?.message || (isRegister.value ? '注册失败' : '登录失败')
+    const base = e?.message || (isRegister.value ? '注册失败' : '登录失败')
+    // 公网环境补一句引导：线上与「本机运行/旧展示版」是**两套独立数据环境**，
+    // 在本机注册过的账号在线上并不存在 —— 只说「用户名或密码错误」会让用户反复试错。
+    const looksLikeCredential = /密码|账号|用户名|credential/i.test(base)
+    error.value =
+      !isRegister.value && !isLocalHost && looksLikeCredential
+        ? `${base}；若你曾在本机运行或更早版本注册过，线上是独立环境（账号不互通），请点下方「立即注册」新建。`
+        : base
   } finally { loading.value = false }
 }
 function toggleMode() { mode.value = isRegister.value ? 'login' : 'register'; error.value = '' }
