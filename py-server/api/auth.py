@@ -43,9 +43,15 @@ class TokenResponse(BaseModel):
 
 @router.post("/register", response_model=TokenResponse)
 async def register(req: RegisterRequest, request: Request):
-    """注册新用户，自动登录并返回 Token（限流：3 次/小时/IP）"""
+    """注册新用户，自动登录并返回 Token（限流：20 次/小时/IP）
+
+    阈值来历：原为 3 次/小时/IP，**实测卡死真实试用场景** —— 一个班 5–10 名学生
+    在同一教室、走同一校园网出口 IP 注册时，第 4 个人即被拦且要等满 1 小时
+    （2026-10-15 真人 UI 演练复现「操作过于频繁，请稍后再试」）。
+    20 次/小时可容纳一个班 + 重试余量，同时仍保留对批量刷号的约束。
+    """
     client_ip = request.client.host if request.client else "unknown"
-    _check_rate_limit(f"register:{client_ip}", max_requests=3, window=3600)
+    _check_rate_limit(f"register:{client_ip}", max_requests=20, window=3600)
     try:
         user = create_user(req.username, req.password, req.display_name)
     except ValueError as e:

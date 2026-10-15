@@ -6335,7 +6335,7 @@
           "auth"
         ],
         "summary": "Register",
-        "description": "注册新用户，自动登录并返回 Token（限流：3 次/小时/IP）",
+        "description": "注册新用户，自动登录并返回 Token（限流：20 次/小时/IP）\n\n阈值来历：原为 3 次/小时/IP，**实测卡死真实试用场景** —— 一个班 5–10 名学生\n在同一教室、走同一校园网出口 IP 注册时，第 4 个人即被拦且要等满 1 小时\n（2026-10-15 真人 UI 演练复现「操作过于频繁，请稍后再试」）。\n20 次/小时可容纳一个班 + 重试余量，同时仍保留对批量刷号的约束。",
         "operationId": "register_api_auth_register_post",
         "requestBody": {
           "content": {
