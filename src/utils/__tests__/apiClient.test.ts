@@ -16,15 +16,17 @@ describe('getAuthHeaders Token 注入', () => {
     delete (globalThis as any).localStorage
   })
 
-  it('有 token 时注入 Authorization Bearer', () => {
+  it('有 token 时注入 X-App-Token（沙箱网关会替换 Authorization，自定义头才透传）', () => {
     mockLocalStorage({ mangdehenzhi_token: 'tok-123' })
     const headers = getAuthHeaders()
+    expect(headers['X-App-Token']).toBe('tok-123')
     expect(headers['Authorization']).toBe('Bearer tok-123')
   })
 
   it('无 token 时返回空 headers', () => {
     mockLocalStorage({})
     const headers = getAuthHeaders()
+    expect(headers['X-App-Token']).toBeUndefined()
     expect(headers['Authorization']).toBeUndefined()
   })
 
