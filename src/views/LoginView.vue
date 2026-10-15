@@ -7,6 +7,9 @@ import { resolveLandingRoute } from '@/router/landing'
 const router = useRouter()
 const authStore = useAuthStore()
 
+// 本地开发环境（demo 账号仅在此可用；production 不播种）
+const isLocalHost = ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname)
+
 const mode = ref<'login' | 'register'>('login')
 const username = ref('')
 const password = ref('')
@@ -89,7 +92,9 @@ function toggleMode() { mode.value = isRegister.value ? 'login' : 'register'; er
         <span>{{ isRegister ? '已有账号？' : '还没有账号？' }}</span>
         <button class="bot-link" @click="toggleMode">{{ isRegister ? '去登录' : '立即注册' }}</button>
       </div>
-      <div class="demo"> 演示账号：<code>demo</code> / <code>demo123456</code></div>
+      <!-- 演示账号提示：仅本地开发显示 —— demo/demo123456 只在非生产模式播种，
+           production（公网部署）下该账号不存在，显示会让访客照着点却登录失败（实测 422）。 -->
+      <div v-if="isLocalHost" class="demo"> 演示账号：<code>demo</code> / <code>demo123456</code></div>
     </div>
   </div>
 </template>
