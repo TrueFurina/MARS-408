@@ -36,6 +36,8 @@ CREATE TABLE IF NOT EXISTS career_tasks (
     difficulty VARCHAR(16),
     max_turns INTEGER DEFAULT 8,
     due_at TIMESTAMP,
+    join_code VARCHAR(16),
+    status VARCHAR(16) DEFAULT 'open',
     created_at TIMESTAMP DEFAULT NOW()
 );
 CREATE TABLE IF NOT EXISTS career_sessions (
@@ -108,6 +110,8 @@ CREATE TABLE IF NOT EXISTS career_tasks (
     difficulty TEXT,
     max_turns INTEGER DEFAULT 8,
     due_at TEXT,
+    join_code TEXT,
+    status TEXT DEFAULT 'open',
     created_at TEXT DEFAULT (datetime('now'))
 );
 CREATE TABLE IF NOT EXISTS career_sessions (
@@ -177,6 +181,13 @@ def ensure_tables(force: bool = False) -> bool:
             pg_client.migrate_exec(
                 "ALTER TABLE career_tasks ADD COLUMN join_code VARCHAR(16)" if not pg_client.is_fallback
                 else "ALTER TABLE career_tasks ADD COLUMN join_code TEXT")
+        except Exception:
+            pass  # 列已存在
+        # F2: career_tasks 补 status 列（open/closed；旧库幂等迁移，默认 open 即历史任务全部开放）
+        try:
+            pg_client.migrate_exec(
+                "ALTER TABLE career_tasks ADD COLUMN status VARCHAR(16) DEFAULT 'open'" if not pg_client.is_fallback
+                else "ALTER TABLE career_tasks ADD COLUMN status TEXT DEFAULT 'open'")
         except Exception:
             pass  # 列已存在
         _TABLES_READY = True
@@ -461,10 +472,10 @@ def create_task(teacher_id: str, class_id: str, scenario_id: str,
     tid = new_id("task")
     code = uuid.uuid4().hex[:6].upper()  # 6 位任务码
     _exec("INSERT INTO career_tasks "
-          "(id,class_id,teacher_id,scenario_id,scenario_type,scenario_subtype,difficulty,max_turns,due_at,join_code) "
-          f"VALUES ({_ph(10)})",
+          "(id,class_id,teacher_id,scenario_id,scenario_type,scenario_subtype,difficulty,max_turns,due_at,join_code,status) "
+          f"VALUES ({_ph(11)})",
           (tid, class_id, teacher_id, scenario_id, scenario_type, scenario_subtype,
-           difficulty, int(max_turns), due_at, code))
+           difficulty, int(max_turns), due_at, code, "open"))
     return {"task_id": tid, "join_code": code, "class_id": class_id,
             "scenario_id": scenario_id, "difficulty": difficulty,
             "max_turns": int(max_turns), "due_at": due_at}
@@ -489,10 +500,10 @@ def list_tasks_by_teacher(teacher_id: str, class_id: Optional[str] = None) -> li
     ensure_tables()
     q = "?" if pg_client.is_fallback else "%s"
     if class_id:
-        return _query(f"SELECT id AS task_id,class_id,scenario_id,scenario_type,difficulty,max_turns,due_at,join_code,created_at "
+        return _query(f"SELECT id AS task_id,class_id,scenario_id,scenario_type,difficulty,max_turns,due_at,join_code,status,created_at "
                       f"FROM career_tasks WHERE teacher_id={q} AND class_id={q} ORDER BY created_at DESC",
                       (teacher_id, class_id))
-    return _query(f"SELECT id AS task_id,class_id,scenario_id,scenario_type,difficulty,max_turns,due_at,join_code,created_at "
+    return _query(f"SELECT id AS task_id,class_id,scenario_id,scenario_type,difficulty,max_turns,due_at,join_code,status,created_at "
                   f"FROM career_tasks WHERE teacher_id={q} ORDER BY created_at DESC", (teacher_id,))
 
 
@@ -636,3 +647,111 @@ def bind_student(class_id: str, user_id: str, name: str = "") -> Optional[dict]:
           (user_id, picked["id"]))
     return {"student_no": picked.get("student_no"), "name": picked.get("name"),
             "matched_by": matched_by}
+
+
+# ────────────────────────────────────────────────────────────
+# F1 学生个体下钻（2026-10-15）：教师查看班内单个学生的全部会话明细
+# ────────────────────────────────────────────────────────────
+def student_detail(cid: str, teacher_id: str, user_id: str) -> Optional[dict]:
+    """班级内单个学生的实训明细（教师下钻用）。
+
+    权限：班级必须属于该教师；学生必须在该班花名册内且已绑定账号。
+    返回该生**全部**会话（不受看板 5 条截断限制）+ 每场六维分 / overall / 轮数 / 起止时间。
+
+    诚实约束：只呈现真实落库数据；无评分会话的 dimension_scores 为 {}（不插值），
+    overall_best 仅在有真实 consistency_score 时给出。
+    """
+    cls = get_class(cid, teacher_id)
+    if not cls:
+        return None
+    roster = list_students(cid, teacher_id)
+    stu = next((s for s in roster if s.get("user_id") == user_id), None)
+    if not stu:
+        raise KeyError("学生不在该班花名册或未绑定账号")
+    q = "?" if pg_client.is_fallback else "%s"
+    rows = _query(
+        "SELECT s.id AS session_id, s.status, s.turn_count, s.started_at, s.finished_at, "
+        "s.scenario_id, s.difficulty, a.dimension_scores, a.consistency_score "
+        "FROM career_sessions s LEFT JOIN career_assessments a ON a.session_id = s.id "
+        f"WHERE s.user_id={q} AND s.task_id IN (SELECT id FROM career_tasks WHERE class_id={q}) "
+        "ORDER BY s.started_at DESC", (user_id, cid))
+    sessions = []
+    dim_acc: dict = {}
+    for r in rows:
+        # 与 class_dashboard 同口径：dimension_scores 存完整 assessment，六维在 "dimensions" 之下
+        raw = _loads(r.get("dimension_scores"), {}) or {}
+        dims = raw.get("dimensions") if isinstance(raw, dict) and isinstance(raw.get("dimensions"), dict) else raw
+        scores = {d: v.get("score") for d, v in dims.items()
+                  if isinstance(v, dict) and v.get("score") is not None}
+        for d, v in scores.items():
+            dim_acc.setdefault(d, []).append(float(v))
+        finished_at = r.get("finished_at")
+        sessions.append({
+            "session_id": r.get("session_id"), "status": r.get("status"),
+            "turn_count": r.get("turn_count"),
+            "started_at": str(r.get("started_at") or ""),
+            "finished_at": str(finished_at) if finished_at else None,
+            "scenario_id": r.get("scenario_id"), "difficulty": r.get("difficulty"),
+            "dimension_scores": scores, "overall": r.get("consistency_score"),
+        })
+    dim_avg = {d: round(sum(v) / len(v), 2) for d, v in dim_acc.items() if v}
+    overalls = [s["overall"] for s in sessions if s["overall"] is not None]
+    return {"student_no": stu.get("student_no"), "name": stu.get("name"),
+            "user_id": user_id, "session_count": len(sessions),
+            "finished_count": sum(1 for s in sessions if s.get("status") == "finished"),
+            "dimension_avg": dim_avg,
+            "overall_best": max(overalls) if overalls else None,
+            "sessions": sessions}
+
+
+# ────────────────────────────────────────────────────────────
+# F2 任务管理中心（2026-10-15）：任务参与进度 + 关闭任务
+# ────────────────────────────────────────────────────────────
+def task_stats(tid: str, teacher_id: str) -> Optional[dict]:
+    """任务参与进度：按该任务的**真实会话**计已开始/已完成人数。
+
+    诚实口径：只有真的建了会话的学生才计入"已开始"——没有"加入但未开始"的
+    Join 日志，就不虚构"已加入人数"这个数。
+    """
+    task = get_task_by_id(tid)
+    if not task or task.get("teacher_id") != teacher_id:
+        return None
+    q = "?" if pg_client.is_fallback else "%s"
+    rows = _query(f"SELECT user_id, status FROM career_sessions WHERE task_id={q}", (tid,))
+    started_users = {r.get("user_id") for r in rows if r.get("user_id")}
+    finished = sum(1 for r in rows if r.get("status") == "finished")
+    return {"task_id": tid, "started_count": len(started_users),
+            "finished_count": finished, "session_count": len(rows)}
+
+
+def close_task(tid: str, teacher_id: str) -> Optional[dict]:
+    """关闭任务：学生端"我的任务"不再出现；历史会话/评分数据保留不动（不删任何数据）。"""
+    ensure_tables()
+    task = get_task_by_id(tid)
+    if not task or task.get("teacher_id") != teacher_id:
+        return None
+    q = "?" if pg_client.is_fallback else "%s"
+    _exec(f"UPDATE career_tasks SET status='closed' WHERE id={q}", (tid,))
+    return {"task_id": tid, "status": "closed"}
+
+
+# ────────────────────────────────────────────────────────────
+# F3 学生任务中心（2026-10-15）：我已绑定班级的开放任务（免手输任务码）
+# ────────────────────────────────────────────────────────────
+def my_tasks(user_id: str) -> list[dict]:
+    """学生任务中心：该生已绑定班级的**开放**任务，按新到旧。
+
+    只列 open —— 已关闭任务不出现（close_task 的语义）；已绑定由 join 时
+    bind_student 落库。join_code 原样带回，前端一键加入走与手输相同的
+    POST /career/task/join 路径（不开第二条信任链）。
+    """
+    ensure_tables()
+    q = "?" if pg_client.is_fallback else "%s"
+    return _query(
+        "SELECT t.id AS task_id, t.join_code, t.scenario_id, t.difficulty, t.max_turns, "
+        "t.due_at, t.created_at, c.class_name "
+        "FROM career_tasks t "
+        "JOIN career_class_students s ON s.class_id = t.class_id "
+        "JOIN career_classes c ON c.id = t.class_id "
+        f"WHERE s.user_id={q} AND t.status='open' "
+        "ORDER BY t.created_at DESC LIMIT 50", (user_id,))

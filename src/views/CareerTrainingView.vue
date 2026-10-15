@@ -77,6 +77,27 @@ function quitTask() {
   joinedTask.value = null; joinCode.value = ''; scenarioId.value = ''
 }
 
+/* ===================== F3 学生任务中心（2026-10-15）=====================
+ * 我已绑定班级的开放任务：免手输任务码，一键加入。
+ * 一键加入仍走既有 POST /career/task/join（不开第二条信任链），
+ * 加入后场景/难度/轮数锁定逻辑与手输任务码完全一致。 */
+const myTasks = ref<any[]>([])
+
+async function loadMyTasks() {
+  try {
+    const res = await api.get<any>('/career/my-tasks')
+    myTasks.value = res.tasks || []
+  } catch {
+    myTasks.value = []  // 未加入任何班级等场景：静默为空，不打扰主流程
+  }
+}
+loadMyTasks()
+
+async function joinTaskDirect(t: any) {
+  joinCode.value = String(t.join_code || '')
+  await joinByCode()
+}
+
 /* ===================== 启动实训 ===================== */
 async function startTraining() {
   if (!scenarioId.value) { errorMsg.value = '请先选择一个实训情景'; return }
@@ -261,6 +282,19 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
           </span>
           <button class="ghost-btn" @click="quitTask">退出任务</button>
         </template>
+      </div>
+
+      <!-- F3 我的任务：老师布置给我班的任务，一键加入（与手输任务码同一加入路径） -->
+      <div v-if="!joinedTask && myTasks.length" class="my-tasks">
+        <span class="opt-label">老师布置的任务（{{ myTasks.length }}）</span>
+        <ul>
+          <li v-for="t in myTasks" :key="t.task_id">
+            <span class="mt-class">{{ t.class_name }}</span>
+            <span class="mt-title">{{ t.scenario_title || t.scenario_id }}</span>
+            <span class="mt-meta">{{ DIFF_LABEL[t.difficulty] || t.difficulty }} · {{ t.max_turns }} 轮 · 任务码 {{ t.join_code }}</span>
+            <button class="ghost-btn" :disabled="joining" @click="joinTaskDirect(t)">加入</button>
+          </li>
+        </ul>
       </div>
 
       <div v-if="joinedTask" class="task-locked">
@@ -470,6 +504,15 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
 .opt-bar { display: flex; gap: var(--space-6); flex-wrap: wrap; margin: 18px 0; }
 .opt-group { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
 .opt-label { font-size: var(--text-sm); color: var(--text-secondary); }
+
+/* F3 我的任务（2026-10-15） */
+.my-tasks { margin-bottom: var(--space-4); padding: .6rem .8rem; border: 1px dashed var(--border, var(--color-border)); border-radius: 10px; }
+.my-tasks ul { list-style: none; margin: .4rem 0 0; padding: 0; display: grid; gap: .4rem; }
+.my-tasks li { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; font-size: var(--text-sm); }
+.my-tasks li .ghost-btn { margin-left: auto; padding: 6px 14px; font-size: var(--text-sm); }
+.mt-class { font-weight: var(--weight-semibold); }
+.mt-title { color: var(--accent); }
+.mt-meta { color: var(--text-secondary); font-size: var(--text-sm); }
 .chip { padding: 5px 14px; border-radius: 16px; border: 1px solid var(--border-color);
   background: var(--bg-card); font-size: var(--text-sm); cursor: pointer; color: var(--text-primary); }
 .chip.on { background: var(--accent-primary); color: var(--color-text-on-accent); border-color: transparent; }

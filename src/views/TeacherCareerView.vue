@@ -1,14 +1,18 @@
 <script setup lang="ts">
 // P4 教师端：建班 → 导花名册 → 发任务（任务码）→ 班级学情看板
-import { ref, onMounted } from 'vue'
+// F1（2026-10-15）：学生个体下钻；F2：任务管理中心（进度 + 关闭）
+import { ref, onMounted, watch } from 'vue'
 import { api, friendlyError } from '@/utils/api'
 import { CAREER_DIM_LABEL } from '@/data/careerDimensions'
+import { useModalFocus } from '@/composables/useModalFocus'
 
 interface ClassItem { class_id: string; class_name: string; student_count: number }
 interface StudentItem { student_no: string; name: string; user_id: string | null; joined_at?: string }
+interface TaskStat { started_count: number; finished_count: number; session_count: number }
 interface TaskItem {
-  task_id: string; join_code: string; scenario_title?: string
+  task_id: string; join_code: string; scenario_id?: string; scenario_title?: string
   difficulty: string; max_turns: number; class_id: string
+  status?: string; stats?: TaskStat
 }
 interface DashSession { session_id: string; status: string; turn_count: number; overall: number | null }
 interface DashStudent {
@@ -33,11 +37,26 @@ interface Dash {
   attention?: DashAttention[]
 }
 interface ScenarioItem { id: string; title: string }
+/** F1 学生个体下钻响应（GET /career/classes/{cid}/students/{uid}/detail） */
+interface DetailSession {
+  session_id: string; status: string; turn_count: number
+  started_at: string; finished_at: string | null
+  scenario_id: string; difficulty: string
+  dimension_scores: Record<string, number>; overall: number | null
+}
+interface StudentDetail {
+  student_no: string; name: string; user_id: string
+  session_count: number; finished_count: number
+  dimension_avg: Record<string, number>; overall_best: number | null
+  sessions: DetailSession[]
+}
 
 /** attention.reason 的中文名（后端只给结构性事实标识，文案在前端） */
 const REASON_LABEL: Record<string, string> = {
   not_started: '未开始', unfinished: '未完成', no_score: '无评分', lowest_score: '得分靠后',
 }
+const DIFF_LABEL: Record<string, string> = { easy: '简单', medium: '中等', hard: '困难' }
+const STATUS_LABEL: Record<string, string> = { ongoing: '进行中', finished: '已完成' }
 
 /** 维度 key → 中文名（未收录时回落原 key，不隐藏异常） */
 function dimLabel(d: string) { return CAREER_DIM_LABEL[d] || d }
@@ -55,6 +74,18 @@ const lastTask = ref<TaskItem | null>(null)
 const dash = ref<Dash | null>(null)
 const loading = ref(false)
 const msg = ref('')
+
+/* ── F2 任务管理中心（2026-10-15）── */
+const tasks = ref<TaskItem[]>([])
+const closingTaskId = ref('')
+
+/* ── F1 学生个体下钻（2026-10-15）：焦点管理复用 P1-1 浮层 composable ── */
+const detail = ref<StudentDetail | null>(null)
+const detailLoading = ref(false)
+const detailRef = ref<HTMLElement | null>(null)
+const { activate: activateDetail, deactivate: deactivateDetail, trapTab: trapDetailTab } =
+  useModalFocus(detailRef)
+watch(detail, (d) => { if (d) activateDetail(); else deactivateDetail() })
 
 async function loadClasses() {
   const res = await api.get<{ classes: ClassItem[] }>('/career/classes')
@@ -115,6 +146,57 @@ async function selectClass(classId: string) {
   } catch (e) {
     msg.value = friendlyError(e, '操作失败')
   }
+  const cls = classes.value.find(c => c.class_id === classId)
+  if (cls) await loadTasks(cls)
+}
+
+/* ── F2 任务管理中心：本班任务列表（含参与进度）── */
+async function loadTasks(cls: ClassItem) {
+  try {
+    const res = await api.get<{ tasks: TaskItem[] }>(`/career/tasks?class_id=${cls.class_id}`)
+    tasks.value = res.tasks || []
+  } catch (e) {
+    tasks.value = []
+    msg.value = friendlyError(e, '任务列表加载失败')
+  }
+}
+
+/** 关闭任务：学生端不再出现；历史会话/评分不动（后端语义） */
+async function closeTask(t: TaskItem) {
+  closingTaskId.value = t.task_id
+  try {
+    await api.post(`/career/tasks/${t.task_id}/close`, {})
+    msg.value = `任务 ${t.join_code} 已关闭（已完成场次与评分保留）`
+    const cls = classes.value.find(c => c.class_id === activeClassId.value)
+    if (cls) await loadTasks(cls)
+  } catch (e) {
+    msg.value = friendlyError(e, '关闭失败')
+  } finally { closingTaskId.value = '' }
+}
+
+/* ── F1 学生个体下钻：看板点姓名 → 该生在班内全部会话明细 ── */
+async function openStudentDetail(s: DashStudent) {
+  if (!s.user_id) {
+    msg.value = '该学生尚未绑定账号（未加入），暂无实训明细'
+    return
+  }
+  detailLoading.value = true
+  try {
+    detail.value = await api.get<StudentDetail>(
+      `/career/classes/${activeClassId.value}/students/${s.user_id}/detail`)
+  } catch (e) {
+    msg.value = friendlyError(e, '明细加载失败')
+  } finally { detailLoading.value = false }
+}
+
+function closeStudentDetail() {
+  detail.value = null
+}
+
+/** ISO/SQLite 时间串 → 紧凑显示（PG 返 ISO、SQLite 返 'YYYY-MM-DD HH:MM:SS'） */
+function shortTime(ts: string | null): string {
+  if (!ts) return '—'
+  return ts.slice(0, 16).replace('T', ' ')
 }
 
 async function createTask() {
@@ -246,6 +328,31 @@ onMounted(() => {
           <span class="dim">{{ lastTask.scenario_title }}</span>
         </div>
 
+        <!-- F2 任务管理中心：本班任务 + 参与进度（按真实会话计，不虚构"已加入"） -->
+        <div v-if="tasks.length" class="task-mgmt">
+          <p class="agg-k">本班任务（{{ tasks.length }}）</p>
+          <ul class="task-list">
+            <li v-for="t in tasks" :key="t.task_id" :class="{ closed: t.status === 'closed' }">
+              <div class="tl-head">
+                <strong>{{ t.scenario_title || t.scenario_id }}</strong>
+                <span class="tl-code">码 {{ t.join_code }}</span>
+                <span class="tag" :class="t.status === 'closed' ? 'tag-closed' : 'tag-open'">
+                  {{ t.status === 'closed' ? '已关闭' : '进行中' }}
+                </span>
+              </div>
+              <div class="tl-meta">
+                {{ DIFF_LABEL[t.difficulty] || t.difficulty }} · {{ t.max_turns }} 轮 ·
+                已开始 {{ t.stats?.started_count ?? 0 }} 人 · 已完成 {{ t.stats?.finished_count ?? 0 }} 人
+              </div>
+              <button v-if="t.status !== 'closed'" class="link dim"
+                      :disabled="closingTaskId === t.task_id"
+                      @click="closeTask(t)">
+                {{ closingTaskId === t.task_id ? '关闭中…' : '关闭任务' }}
+              </button>
+            </li>
+          </ul>
+        </div>
+
         <ul v-if="students.length" class="roster">
           <li v-for="(s, i) in students" :key="i">
             {{ s.student_no || '—' }} · {{ s.name }}
@@ -304,7 +411,12 @@ onMounted(() => {
             <tbody>
               <tr v-for="(s, i) in dash.students" :key="i">
                 <td>{{ s.student_no || '—' }}</td>
-                <td>{{ s.name }}<span v-if="!s.bound" class="dim">（未加入）</span></td>
+                <td>
+                  <!-- F1：点姓名下钻该生全部会话明细（未绑定账号不可点） -->
+                  <button v-if="s.user_id" class="link" @click="openStudentDetail(s)">{{ s.name }}</button>
+                  <template v-else>{{ s.name }}</template>
+                  <span v-if="!s.bound" class="dim">（未加入）</span>
+                </td>
                 <td>{{ s.finished_count }} / {{ s.session_count }}</td>
                 <td>{{ s.overall_best ?? '—' }}</td>
                 <td>
@@ -317,6 +429,46 @@ onMounted(() => {
         </template>
       </div>
     </section>
+
+    <!-- F1 学生个体下钻抽屉（焦点圈闭 + Esc 关闭，复用 useModalFocus） -->
+    <div v-if="detail" class="drawer-mask" @click.self="closeStudentDetail">
+      <div ref="detailRef" class="drawer" tabindex="-1" role="dialog" aria-modal="true"
+           aria-label="学生实训明细" @keydown.esc="closeStudentDetail" @keydown.tab="trapDetailTab">
+        <div class="drawer-head">
+          <h3>{{ detail.name }}<span class="dim">（{{ detail.student_no || '无学号' }}）</span> · 实训明细</h3>
+          <button class="link" @click="closeStudentDetail" aria-label="关闭明细">×</button>
+        </div>
+        <p v-if="detailLoading" class="hint">加载中…</p>
+        <template v-else>
+          <p class="hint">
+            共 {{ detail.session_count }} 场（完成 {{ detail.finished_count }} 场）·
+            best overall {{ detail.overall_best ?? '—' }}
+          </p>
+          <p v-if="Object.keys(detail.dimension_avg).length" class="agg-line">
+            <span class="agg-k">六维均分</span>
+            <span v-for="(v, d) in detail.dimension_avg" :key="d" class="chip">{{ dimLabel(d) }} {{ v }}</span>
+          </p>
+          <table v-if="detail.sessions.length">
+            <thead>
+              <tr><th>开始时间</th><th>状态</th><th>轮数</th><th>overall</th><th>六维得分</th></tr>
+            </thead>
+            <tbody>
+              <tr v-for="s in detail.sessions" :key="s.session_id">
+                <td>{{ shortTime(s.started_at) }}</td>
+                <td>{{ STATUS_LABEL[s.status] || s.status }}</td>
+                <td>{{ s.turn_count }}</td>
+                <td>{{ s.overall ?? '—' }}</td>
+                <td>
+                  <span v-for="(v, d) in s.dimension_scores" :key="d" class="chip">{{ dimLabel(d) }} {{ v }}</span>
+                  <span v-if="!Object.keys(s.dimension_scores).length" class="dim">—</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p v-else class="hint">该生在班内还没有任何实训会话。</p>
+        </template>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -363,5 +515,27 @@ th, td { text-align: left; padding: .45rem .5rem; border-bottom: 1px solid var(-
 .tag { font-size: .75rem; padding: .1rem .45rem; border-radius: 999px; background: var(--accent-soft, var(--color-surface-2)); }
 .r-not_started, .r-unfinished { color: var(--color-warning, var(--accent)); }
 .r-no_score, .r-lowest_score { color: var(--text-dim, var(--color-text-3)); }
+
+/* F2 任务管理中心（2026-10-15） */
+.task-mgmt { margin-top: var(--space-4); }
+.task-list { list-style: none; padding: 0; margin: .35rem 0 0; display: grid; gap: .5rem; }
+.task-list li { padding: .5rem .65rem; border: 1px solid var(--border, var(--color-border)); border-radius: 10px; }
+.task-list li.closed { opacity: .55; }
+.tl-head { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; font-size: .92rem; }
+.tl-code { color: var(--text-dim, var(--color-text-3)); font-size: .82rem; }
+.tl-meta { margin: .25rem 0; font-size: .82rem; color: var(--text-dim, var(--color-text-3)); }
+.tag { font-size: .72rem; padding: .1rem .5rem; border-radius: 999px; }
+.tag-open { background: var(--accent-soft, var(--color-surface-2)); color: var(--accent); }
+.tag-closed { background: var(--color-surface-2, var(--bg-card)); color: var(--text-dim, var(--color-text-3)); }
+
+/* F1 学生个体下钻抽屉（2026-10-15） */
+.drawer-mask { position: fixed; inset: 0; background: var(--color-overlay); display: flex;
+  align-items: flex-start; justify-content: center; padding: 6vh var(--space-4) var(--space-4);
+  overflow-y: auto; z-index: 50; }
+.drawer { width: min(760px, 100%); background: var(--bg-card); color: var(--text-primary, inherit);
+  border: 1px solid var(--border, var(--color-border)); border-radius: 14px; padding: var(--space-4); }
+.drawer-head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-3); }
+.drawer-head h3 { margin: 0; font-size: 1.05rem; }
+.drawer table { margin-top: var(--space-3); }
 @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
 </style>

@@ -522,11 +522,56 @@ async def create_task(req: TaskCreateRequest, user: dict = Depends(get_current_u
         raise HTTPException(status_code=500, detail=f"发任务失败: {e}")
 
 
-# ── 我的任务列表（可按班级过滤）──
+# ── 我的任务列表（可按班级过滤；F2：附场景标题与参与进度）──
 @router.get("/tasks")
 async def list_tasks(class_id: Optional[str] = None, user: dict = Depends(get_current_user)):
     _require_teacher(user)
-    return {"tasks": career_store.list_tasks_by_teacher(user["user_id"], class_id)}
+    tasks = career_store.list_tasks_by_teacher(user["user_id"], class_id)
+    scenarios = {s.get("id"): s.get("title", "") for s in career_service.list_scenarios()}
+    for t in tasks:
+        t["scenario_title"] = scenarios.get(t.get("scenario_id"), "")
+        t["stats"] = career_store.task_stats(t["task_id"], user["user_id"])
+    return {"tasks": tasks}
+
+
+# ── 关闭任务（F2：历史数据不动，学生端不再出现）──
+@router.post("/tasks/{task_id}/close")
+async def close_task(task_id: str, user: dict = Depends(get_current_user)):
+    _require_teacher(user)
+    try:
+        res = career_store.close_task(task_id, user["user_id"])
+    except Exception as e:
+        logger.exception("关闭任务失败")
+        raise HTTPException(status_code=500, detail=f"关闭失败: {e}")
+    if not res:
+        raise HTTPException(status_code=404, detail="任务不存在或无权操作")
+    return res
+
+
+# ── 学生个体下钻（F1：班内单个学生的全部会话明细）──
+@router.get("/classes/{class_id}/students/{user_id}/detail")
+async def student_detail(class_id: str, user_id: str, user: dict = Depends(get_current_user)):
+    _require_teacher(user)
+    try:
+        detail = career_store.student_detail(class_id, user["user_id"], user_id)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.exception("学生明细查询失败")
+        raise HTTPException(status_code=500, detail=f"查询失败: {e}")
+    if not detail:
+        raise HTTPException(status_code=404, detail="班级不存在或无权查看")
+    return detail
+
+
+# ── 学生任务中心（F3：我已绑定班级的开放任务，免手输任务码）──
+@router.get("/my-tasks")
+async def my_tasks(user: dict = Depends(get_current_user)):
+    tasks = career_store.my_tasks(user["user_id"])
+    scenarios = {s.get("id"): s.get("title", "") for s in career_service.list_scenarios()}
+    for t in tasks:
+        t["scenario_title"] = scenarios.get(t.get("scenario_id"), "")
+    return {"tasks": tasks}
 
 
 # ── 班级学情看板 ──
