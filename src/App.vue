@@ -175,12 +175,12 @@ function toggleTheme() {
 // ── 导航：全部由 src/router/navConfig.ts 单一真值源派生 ────────────────
 // 此前侧栏 17 项 / 底部 5 项 / 更多菜单 14 项三处硬编码，新增页面极易漏改。
 // 2026-10-04：接通双场景过滤（useScene 注释承诺的 visibleGroups(role, scene) 此前漏接，
-// 导致 career 用户侧栏/底部混排 408 专属分组）。
+// 导致 career 用户侧栏/底部混排 kaoyan 专属分组）。
 const { scene, sceneFilter, setScene } = useScene()
 const navGroups = computed(() => visibleGroups(currentRole.value, sceneFilter.value))
 
 // URL → 场景状态同步：直链 / 刷新 / 兜底跳转进入某场景页面时，导航必须与页面同场景
-// （否则会出现"人在考研总览、底部导航却是 career 项"的错位）。前缀清单从 NAV_GROUPS 派生。
+// （否则会出现"人在专业总览、底部导航却是 career 项"的错位）。前缀清单从 NAV_GROUPS 派生。
 const KAOYAN_PREFIXES = kaoyanPathPrefixes()
 watch(
   () => route.path,

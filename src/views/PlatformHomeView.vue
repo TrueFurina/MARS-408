@@ -3,14 +3,14 @@
  * 平台首页（双场景入口）—— 单 main 合体 · F1
  *
  * 「芒得很职」= 一个平台、两个业务场景：
- *   · 专业能力训练（考研408）      —— 低年级，夯实专业功底
+ *   · 专业能力训练（专业核心四科）  —— 低年级，夯实专业功底
  *   · 职业素养实训（芒得很职主线）  —— 高年级，AI 对抗式软技能训练
  *
  * 本页是登录后的统一入口（2026-10-04 导师裁决正式接入）：
- *   路由 `/` = 本页；考研总览移至 `/kaoyan`（旧 `/dashboard` redirect 兼容）；
+ *   路由 `/` = 本页；专业总览移至 `/kaoyan`（旧 `/dashboard` redirect 兼容）；
  *   侧栏「我的 · 平台首页」提供回入口；场景跳转真值 = useScene.SCENE_META。
  * 体系定位（导师口径）：双场景都是同一个人才体系的组成部分——
- *   专业能力（考研408）夯实功底 → 职业素养实训完成就业衔接，
+ *   专业能力（核心四科）夯实功底 → 职业素养实训完成就业衔接，
  *   与统一能力画像（useAbilityProfile）贯通两场景。
  * 共用：单登录态（authStore）+ 统一能力画像（useAbilityProfile，F4 接入）。
  */
@@ -46,7 +46,7 @@ const cards: SceneCard[] = [
   {
     key: 'kaoyan',
     title: '专业能力训练',
-    sub: '考研408智能学习 · 低年级',
+    sub: '专业核心四科智能学习 · 低年级',
     points: ['学情诊断 → 个性化学习路径', '多智能体对话 · RAG 知识底座', '智能出题 · 错题复盘 · 能力画像'],
     icon: icons.graduation,
     accent: 'blue',
@@ -119,7 +119,7 @@ function enterScene(c: SceneCard) {
       </p>
       <div v-if="ability" class="ph-ability-grid">
         <div class="ph-ability-col">
-          <span class="ph-ability-label">专业能力（考研408）</span>
+          <span class="ph-ability-label">专业能力（核心四科）</span>
           <span class="ph-ability-value">{{ ability.professional ? '已构建' : '待诊断' }}</span>
         </div>
         <div class="ph-ability-col">

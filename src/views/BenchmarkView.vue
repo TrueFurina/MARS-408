@@ -417,7 +417,7 @@ watch(chartWidth, () => { /* trigger re-render via computed */ })
       <div class="methodology-grid">
         <div class="method-item">
           <div class="method-label">实验1 · 检索引擎对比</div>
-          <div class="method-desc">{{ summary?.nQueries ?? '—' }} 条 408 真题查询（top_k=5），对比 FrugalRAG（BM25+向量融合+阈值过滤+重排）与全量向量检索的 Top-5 召回率与精确率</div>
+          <div class="method-desc">{{ summary?.nQueries ?? '—' }} 条真题查询（top_k=5），对比 FrugalRAG（BM25+向量融合+阈值过滤+重排）与全量向量检索的 Top-5 召回率与精确率</div>
         </div>
         <div class="method-item">
           <div class="method-label">实验2 · 共识机制对比</div>

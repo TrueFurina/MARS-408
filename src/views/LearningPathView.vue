@@ -31,7 +31,7 @@ const llmAdjusted = ref(false)
 // BugFix 加固：API 失败时展示错误提示与重试，而非静默空白（避免误判为白屏）
 const error = ref<string | null>(null)
 
-// 408四科切换
+// 专业四科切换
 const subjectOptions = [
   { key: 'computer_network', label: '计算机网络' },
   { key: 'data_structures', label: '数据结构' },
@@ -159,7 +159,7 @@ const nextStepNode = computed<PathNode | null>(() => {
 
     <!-- 进度总览 -->
     <div class="card" style="margin-bottom:20px;text-align:center;padding:24px;">
-      <!-- 408四科切换 -->
+      <!-- 专业四科切换 -->
       <div class="subject-tabs">
         <button
           v-for="opt in subjectOptions" :key="opt.key"

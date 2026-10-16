@@ -71,7 +71,7 @@ onMounted(loadMemory)
 <template>
   <div class="page-section">
     <div class="section-title"> 学情记忆中心</div>
-    <div class="section-desc">L1/L2/L3 三层分级学情记忆 — 对标 HKU-DeepTutor 记忆解耦，全程垂直适配 408 考研</div>
+    <div class="section-desc">L1/L2/L3 三层分级学情记忆 — 对标 HKU-DeepTutor 记忆解耦，全程垂直适配专业课程学习</div>
 
     <!-- 加载 -->
     <div v-if="loading" class="empty-state">

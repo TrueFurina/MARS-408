@@ -291,7 +291,7 @@ onUnmounted(() => {
           <div class="edit-field">
             <label class="edit-label">目标分数</label>
             <input type="number" v-model.number="editTarget" min="0" max="150" class="edit-input" />
-            <span class="edit-hint">408 考研总分 150 分</span>
+            <span class="edit-hint">该科目满分 150 分</span>
           </div>
           <div class="edit-field">
             <label class="edit-label">目标院校</label>
@@ -325,10 +325,10 @@ onUnmounted(() => {
 
       <!-- 画像摘要卡片 -->
       <div class="profile-hero">
-        <div class="profile-avatar-large">408</div>
+        <div class="profile-avatar-large">专</div>
         <div class="profile-hero-body">
           <div class="profile-hero-top">
-            <div class="profile-name">408考研人</div>
+            <div class="profile-name">计算机专业学习者</div>
             <div class="profile-strength" :class="profileSummary.strength === '优势明显' ? 'strong' : profileSummary.strength === '稳步提升' ? 'stable' : 'weak'">{{ profileSummary.strength }}</div>
           </div>
           <div class="profile-meta-row">

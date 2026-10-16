@@ -15,7 +15,7 @@ const route = useRoute()
 const router = useRouter()
 const store = useStudyStore()
 const suggestedPrompts = [
-  '根据我的薄弱点，帮我定制本周的 408 四科复习计划',
+  '根据我的薄弱点，帮我定制本周的专业四科复习计划',
   '用思维导图帮我梳理操作系统「进程调度」的知识脉络',
   '出 5 道数据结构算法题，按我的错题难度逐题讲解',
   '用生活化的比喻讲清楚 TCP 三次握手和四次挥手的区别',
@@ -279,7 +279,7 @@ async function sendMessage(text: string) {
     // 检测视频生成指令
     const videoCmd = text.match(/^(生成|制作|创建)\s*(教学)?\s*视频[:：]?\s*(.+)?$/i)
     if (videoCmd) {
-      const topic = videoCmd[3]?.trim() || text.replace(/^(生成|制作|创建)\s*(教学)?\s*视频[:：]?\s*/i, '').trim() || '计算机408知识点'
+      const topic = videoCmd[3]?.trim() || text.replace(/^(生成|制作|创建)\s*(教学)?\s*视频[:：]?\s*/i, '').trim() || '计算机专业知识点'
       await store.sendMessageStream(` 正在生成「${topic}」的教学视频...`, () => { scrollToBottom() })
       try {
         const res: any = await api.post('/multimodal/generate-teaching-video', { topic, difficulty: 'medium', output_format: 'html' })
@@ -450,7 +450,7 @@ onBeforeUnmount(() => {
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
           </button>
         </div>
-        <EmptyState v-if="conversations.length === 0" :icon="icons.chat" title="暂无对话记录" description="开始一次 408 问答，对话会保存在这里" />
+        <EmptyState v-if="conversations.length === 0" :icon="icons.chat" title="暂无对话记录" description="开始一次专业问答，对话会保存在这里" />
       </div>
     </aside>
     <div class="chat-main">
@@ -475,8 +475,8 @@ onBeforeUnmount(() => {
       <div ref="messagesRef" class="chat-messages" @scroll="onScroll">
       <div v-if="currentMessages.length === 0" class="chat-greeting">
         <div class="greeting-icon" v-html="icons.chat"></div>
-        <h1>408考研智能学习助手</h1>
-        <p>输入你想学的408知识点，我来帮你讲解、分析和练习</p>
+        <h1>专业能力智能学习助手</h1>
+        <p>输入你想学的专业知识点，我来帮你讲解、分析和练习</p>
         <div class="greeting-powered">由 <strong>讯飞星火 X2</strong> 大模型驱动 · 融合 10 项讯飞开放平台能力</div>
         <div class="greeting-chips">
           <button v-for="q in suggestedPrompts" :key="q" class="greeting-chip" type="button" @click="sendMessage(q)">{{ q }}</button>

@@ -187,7 +187,7 @@ watch(currentSubject, () => {
 <template>
   <div class="page-section">
     <div class="section-title">知识图谱</div>
-    <div class="section-desc">408考研四科知识点之间的关联关系可视化</div>
+    <div class="section-desc">专业四科知识点之间的关联关系可视化</div>
 
     <!-- P3 归并：知识图谱页内 Tab（关系图谱 / 按科目浏览 / 从文本构建） -->
     <div class="tab-bar kg-tab-bar">

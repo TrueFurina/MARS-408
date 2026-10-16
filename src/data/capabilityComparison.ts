@@ -21,7 +21,7 @@ export const capabilityComparison: ComparisonItem[] = [
     category: 'GOMARL 共识引擎',
     items: [
       { other: '普通多Agent：简单投票或串联', ours: 'GoMARL：NeuralMixer神经网络加权 + 证据冲突消解 + Agent辩论协议', tag: '核心创新' },
-      { other: '无冲突检测机制', ours: '20类408矛盾对检测 + E5语义级冲突检测 + FrugalRAG证据检索验证', tag: '独创' },
+      { other: '无冲突检测机制', ours: '20类专业矛盾对检测 + E5语义级冲突检测 + FrugalRAG证据检索验证', tag: '独创' },
       { other: '固定权重', ours: '动态权重：EWMA历史表现 + 学生画像 + 教学规则引擎', tag: '创新' },
     ],
   },
@@ -43,7 +43,7 @@ export const capabilityComparison: ComparisonItem[] = [
   {
     category: '知识库规模',
     items: [
-      { other: '单科/少量数据', ours: '408四科全覆盖：620 chunks + 73题 + 知识图谱', tag: '壁垒' },
+      { other: '单科/少量数据', ours: '专业四科全覆盖：2015 chunks + 230题 + 知识图谱', tag: '壁垒' },
       { other: '无知识图谱', ours: '四科知识图谱 + 跨科目关联（如TCP→死锁→进程同步）', tag: '壁垒' },
     ],
   },

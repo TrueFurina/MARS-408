@@ -14,7 +14,7 @@ const loading = ref(true)
 const error = ref('')
 
 /**
- * 将后端按章节级 key 聚合的 by_subject 重新按「408 四科」聚合。
+ * 将后端按章节级 key 聚合的 by_subject 重新按「专业四科」聚合。
  * 后端 quiz_history 里 subject 字段是章节级 key（如 overview/ds_tree/cn_phys），
  * 直接展示会出现重复科目名或一堆章节名。这里用 SUBJECT_TO_COURSE 映射合并到四科。
  */
@@ -90,7 +90,7 @@ function goPractice(courseKey: string) {
   <div class="page-section">
     <ErrorBoundary title="错题复盘异常">
       <div class="section-title"> 错题复盘</div>
-    <div class="section-desc">按 408 四科统计错题情况，点击科目进入针对性练习</div>
+    <div class="section-desc">按专业四科统计错题情况，点击科目进入针对性练习</div>
 
     <!-- L1/L2/L3 三层学情记忆薄弱点提示（低侵入联动） -->
     <div v-if="memoryOverview?.weak_points?.length" class="memory-mini-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-size:12px;">
@@ -112,7 +112,7 @@ function goPractice(courseKey: string) {
         </div>
 
         <div class="dash-card" v-if="byCourse.length">
-          <div class="dash-card-title"> 408 四科统计</div>
+          <div class="dash-card-title"> 专业四科统计</div>
           <div v-for="s in byCourse" :key="s.subject" class="subject-row" role="button" tabindex="0" :aria-label="'复习 ' + s.subject_name" @click="goPractice(s.subject)" @keydown.enter="goPractice(s.subject)" @keydown.space.prevent="goPractice(s.subject)">
             <span class="subject-name">{{ s.subject_name }}</span>
             <span class="subject-accuracy" :style="{ color: s.accuracy >= 0.7 ? 'var(--accent-success)' : s.accuracy >= 0.4 ? 'var(--accent-warm)' : 'var(--accent-danger)' }">{{ (s.accuracy * 100).toFixed(0) }}%</span>

@@ -2,7 +2,7 @@
  * useAbilityProfile —— 统一能力画像的前端唯一入口（双场景集成 · F4）
  *
  * 一个账号、一份画像：后端 GET /api/profile/ability 聚合两个场景的产出：
- *   · professional  —— 场景A 考研408 学情诊断 / 画像
+ *   · professional  —— 场景A 专业核心四科学情诊断 / 画像
  *   · soft_skills   —— 场景B 职业素养实训六维评估
  *   · kaoyan_score / career_score —— 各自最近一次原始结果
  *
@@ -15,7 +15,7 @@ import { api } from '@/utils/api'
 
 export interface AbilityProfile {
   user_id?: string
-  /** 场景A：专业能力（考研408 诊断 / 画像） */
+  /** 场景A：专业能力（核心四科）诊断 / 画像 */
   professional?: Record<string, unknown>
   /** 场景B：软素养（职业素养实训六维评估） */
   soft_skills?: Record<string, unknown>

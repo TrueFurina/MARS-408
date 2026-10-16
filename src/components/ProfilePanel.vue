@@ -56,8 +56,8 @@ const profile = computed(() => {
   const p = store.studentProfile
   if (!p) return null
   return {
-    name: '408考研人',
-    target: '408计算机核心知识体系',
+    name: '计算机专业学习者',
+    target: '计算机核心知识体系',
     tags: getTags(p),
     avatar: 'Net',
   }
@@ -156,7 +156,7 @@ function priorityClass(p: string): string {
 }
 
 function daysText(): string {
-  return '408考研 · 四科知识体系'
+  return '专业能力 · 四科知识体系'
 }
 
 // 计算综合评分
@@ -189,8 +189,8 @@ const learningPhase = computed(() => {
       <div class="profile-compact-header">
         <div class="profile-avatar" v-html="icons.user"></div>
         <div class="profile-meta">
-          <h3>{{ profile?.name || '408考研人' }}</h3>
-          <p>{{ profile?.target || '408计算机核心知识体系' }}</p>
+          <h3>{{ profile?.name || '计算机专业学习者' }}</h3>
+          <p>{{ profile?.target || '计算机核心知识体系' }}</p>
           <div class="profile-tags">
             <span v-for="tag in profile?.tags || []" :key="tag" class="profile-tag">{{ tag }}</span>
           </div>
@@ -214,7 +214,7 @@ const learningPhase = computed(() => {
       <div class="profile-stats-grid">
         <div class="profile-stat-card">
           <div class="stat-value">{{ store.daysToExam }}</div>
-          <div class="stat-label">距考研</div>
+          <div class="stat-label">距考试</div>
         </div>
         <div class="profile-stat-card">
           <div class="stat-value">{{ store.studentProfile?.target_score || 120 }}</div>

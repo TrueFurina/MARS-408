@@ -174,7 +174,7 @@ async function loadMemoryOverview() {
           <textarea
             v-model="promptText"
             class="form-textarea code-textarea prompt-editor"
-            placeholder="你是一个 408 出题专家。请根据以下要求生成练习题..."
+            placeholder="你是一个专业出题专家。请根据以下要求生成练习题..."
             rows="14"
           ></textarea>
         </div>

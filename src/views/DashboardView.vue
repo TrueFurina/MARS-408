@@ -79,9 +79,9 @@ function subjectLabel(s: string): string {
   return store.subjects[s]?.name || s
 }
 
-const userName = computed(() => store.studentProfile ? '同学' : '408考研人')
+const userName = computed(() => store.studentProfile ? '同学' : '计算机专业学习者')
 
-// 408 考研倒计时（以 2026 年 12 月第三个周六为考研日 ≈ 12/19）
+// 考试倒计时（以 2026 年 12 月第三个周六为考试日 ≈ 12/19）
 const examDate = new Date('2026-12-19T08:30:00')
 const daysToExam = computed(() => {
   const now = new Date()
@@ -181,14 +181,14 @@ const portals = [
 // 可选加分项入口
 const bonusPortals = [
   { key: 'chat', icon: icons.chat, title: '智能辅导答疑', route: '/chat', color: 'var(--accent-success-20)', accent: 'var(--accent-success)' },
-  { key: 'knowledge', icon: icons.knowledge, title: '408知识图谱', route: '/knowledge', color: 'rgba(245, 158, 11, 0.15)', accent: 'var(--accent-warm)' },
+  { key: 'knowledge', icon: icons.knowledge, title: '专业四科知识图谱', route: '/knowledge', color: 'rgba(245, 158, 11, 0.15)', accent: 'var(--accent-warm)' },
 ]
 
 // 评审入口 — 引导评委看技术亮点
 const judgePortals = [
   { key: 'engine', icon: icons.engine, title: '算法引擎可视化', desc: 'FrugalRAG节俭检索 + GoMARL共识引擎 + Agent辩论协议 — 核心技术对比表', route: '/engine', color: 'rgba(124, 106, 242, 0.12)', accent: 'var(--accent)', tag: ' 评审推荐' },
   { key: 'resource', icon: icons.agent, title: '多智能体资源生成', desc: '11 节点 LangGraph StateGraph + SSE实时流 + 7种个性化资源', route: '/resource', color: 'rgba(59, 130, 246, 0.12)', accent: 'var(--accent-blue)', tag: '核心功能' },
-  { key: 'knowledge', icon: icons.knowledge, title: '408四科知识图谱', desc: '487知识点节点 + Canvas力导向图 + 四科分组聚合', route: '/knowledge', color: 'rgba(6, 182, 212, 0.12)', accent: 'var(--accent-cyan)', tag: '核心功能' },
+  { key: 'knowledge', icon: icons.knowledge, title: '专业四科知识图谱', desc: '643知识点节点 + Canvas力导向图 + 四科分组聚合', route: '/knowledge', color: 'rgba(6, 182, 212, 0.12)', accent: 'var(--accent-cyan)', tag: '核心功能' },
 ]
 
 function go(route: string) { router.push(route) }
@@ -260,17 +260,17 @@ onMounted(async () => {
           <div class="hero-badge">基于大模型的个性化资源生成与学习多智能体系统</div>
           <div class="exam-countdown">
             <span class="countdown-number">{{ daysToExam }}</span>
-            <span class="countdown-label">天后考研</span>
+            <span class="countdown-label">天后考试</span>
           </div>
         </div>
         <h1 class="hero-title">
-          408考研<span class="hero-title-accent">智能学习</span>中心
+          专业能力<span class="hero-title-accent">智能训练</span>中心
         </h1>
-        <p class="hero-tagline">你的专属 408 备考教练 · 八位 AI 助教 · 四科全覆盖</p>
+        <p class="hero-tagline">你的专属 AI 备考教练 · 八位 AI 助教 · 四科全覆盖</p>
         <div class="hero-stats-row" v-if="stats">
           <div class="hero-stat">
             <span class="hero-stat-value">4</span>
-            <span class="hero-stat-label">408科目覆盖</span>
+            <span class="hero-stat-label">专业科目覆盖</span>
           </div>
           <div class="hero-stat-divider"></div>
           <div class="hero-stat">
@@ -293,7 +293,7 @@ onMounted(async () => {
             <span class="hero-stat-label">学情记忆事件</span>
           </div>
         </div>
-        <!-- 408 四科标识 -->
+        <!-- 专业四科标识 -->
         <div class="subject-badges">
           <span class="subject-badge badge-ds">数据结构</span>
           <span class="subject-badge badge-cn">计算机网络</span>
@@ -321,7 +321,7 @@ onMounted(async () => {
       <div class="section-label"> 今日速览</div>
       <div class="dash-bento">
         <div class="bento-cell db-area-hero">
-          <div class="db-hero-eyebrow">距 2026 考研</div>
+          <div class="db-hero-eyebrow">距 2026 考试</div>
           <div class="db-hero-count"><span class="db-hero-num">{{ daysToExam }}</span><span class="db-hero-unit">天</span></div>
           <p class="db-hero-tip">{{ userName }}，今天也稳扎稳打。</p>
         </div>
@@ -574,7 +574,7 @@ onMounted(async () => {
   margin-bottom:var(--space-4);
 }
 
-/* 考研倒计时 */
+/* 考试倒计时 */
 .exam-countdown {
   display: flex;
   align-items: center;
@@ -710,7 +710,7 @@ onMounted(async () => {
 
 .hero-cta svg { width:1rem; height:1rem; }
 
-/* 408 四科标识 */
+/* 专业四科标识 */
 .subject-badges {
   display: flex;
   gap:var(--space-2);

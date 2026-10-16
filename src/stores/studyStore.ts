@@ -128,7 +128,7 @@ export interface SubjectsMap {
   [key: string]: { name: string; chapters: string[] }
 }
 
-/** 408 四科 → 章节级科目 key 映射 */
+/** 专业四科 → 章节级科目 key 映射 */
 export const COURSE_MAP: Record<string, { name: string; subjects: string[] }> = {
   computer_network: {
     name: '计算机网络',
@@ -209,7 +209,7 @@ export const useStudyStore = defineStore('study', () => {
 
   // ── 科目列表（延迟加载，多处视图依赖）──
   const subjects = ref<SubjectsMap>({})
-  /** 按 408 四科分组的课程列表：{ courseKey: { name, chapters: [{ key, name, subSubjects }] } } */
+  /** 按专业四科分组的课程列表：{ courseKey: { name, chapters: [{ key, name, subSubjects }] } } */
   const courses = computed(() => {
     const s = subjects.value
     const result: Record<string, { name: string; chapters: { key: string; name: string; subSubjects: string[] }[] }> = {}
@@ -232,7 +232,7 @@ export const useStudyStore = defineStore('study', () => {
     learningStyle: [] as any[],
   })
 
-// ── 距考研天数（2026 年考研为 12 月 26-27 日，首个考试日前一天为截止）──
+// ── 距考试天数（2026 年考试为 12 月 26-27 日，首个考试日前一天为截止）──
   const EXAM_DATE = new Date('2026-12-26')
   function calcDaysToExam(): number {
     const today = new Date()

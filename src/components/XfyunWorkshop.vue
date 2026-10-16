@@ -129,13 +129,13 @@ async function genXfResume() {
   const p: any = store.studentProfile || {}
   const info = [
     `姓名：${p.name || '张敏杰'}`,
-    `求职意向：计算机408考研复试 / 技术岗位`,
+    `求职意向：计算机专业深造 / 技术岗位`,
     `教育背景：${p.knowledge_base || '计算机相关专业本科'}`,
     `掌握科目：计算机网络、数据结构、操作系统、计算机组成原理`,
     `学习风格：${p.learning_style || '理论+实践结合'}`,
     `薄弱点：${p.weak_points || '待评估'}`,
     `目标方向：${p.goal || '985/211 计算机'}`,
-    `请生成1份专业考研复试简历。`,
+    `请生成1份专业技术求职简历。`,
   ].join('\n')
   await xfCall('resume', async () => {
     const d = await api.post<any>('/xfyun/resume', { info })
@@ -242,13 +242,13 @@ async function genXfResume() {
       <!-- 7. 角色模拟 -->
       <div class="xfyun-card xfyun-card-wide">
         <div class="xfyun-card-title"> 角色模拟·模拟面试官</div>
-        <div class="xfyun-card-desc">星火角色模拟：模拟考研面试官/导师与你多轮对话</div>
+        <div class="xfyun-card-desc">星火角色模拟：模拟面试官/导师与你多轮对话</div>
         <div class="xfyun-rp-controls">
           <select class="rag-select" v-model="rpPersona">
-            <option value="interviewer">通用考研模拟面试官</option>
+            <option value="interviewer">通用模拟面试官</option>
             <option value="interviewer_network">计网面试官</option>
             <option value="interviewer_os">操作系统面试官</option>
-            <option value="tutor">408一对一导师</option>
+            <option value="tutor">专业一对一导师</option>
           </select>
           <input v-model="rpTopic" placeholder="面试主题（可选）" class="xfyun-rp-topic" />
         </div>
@@ -271,7 +271,7 @@ async function genXfResume() {
       <!-- 8. 智能简历 -->
       <div class="xfyun-card">
         <div class="xfyun-card-title"> 智能简历</div>
-        <div class="xfyun-card-desc">生成可下载的考研复试简历（讯飞智能简历）</div>
+        <div class="xfyun-card-desc">生成可下载的求职/升学简历（讯飞智能简历）</div>
         <button class="rag-btn" :disabled="!!xfLoading" @click="genXfResume">
           {{ xfLoading==='resume' ? '生成中...' : '生成我的简历' }}
         </button>

@@ -29,7 +29,7 @@ const demoLoading = ref(false)
 const demoError = ref('')
 const demoReport = ref<EvidenceReport | null>(null)
 
-// 预置演示案例：匹配后端预定义矛盾对（408 高频，确保检出冲突）
+// 预置演示案例：匹配后端预定义矛盾对（专业高频，确保检出冲突）
 const DEMO_CASES = [
   {
     name: 'TCP 握手次数矛盾',

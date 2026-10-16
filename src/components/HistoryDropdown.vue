@@ -95,7 +95,7 @@ function formatDate(d: Date): string {
         </div>
         <button class="history-item-del" :aria-label="`删除对话 ${conv.title}`" @click="(e) => handleDelete(e, conv.id)" v-html="icons.close"></button>
       </div>
-      <EmptyState v-if="filteredConversations.length === 0" :icon="icons.history" :title="searchQuery ? '未找到匹配的对话' : '暂无对话'" description="开始一次 408 问答，历史会保存在这里" />
+      <EmptyState v-if="filteredConversations.length === 0" :icon="icons.history" :title="searchQuery ? '未找到匹配的对话' : '暂无对话'" description="开始一次专业问答，历史会保存在这里" />
     </div>
   </div>
 </template>

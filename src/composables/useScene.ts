@@ -2,7 +2,7 @@
  * 场景状态 —— 双场景集成（2026-09-15）
  *
  * 平台含两个业务场景：
- *   · kaoyan —— 场景A 专业能力训练（考研408）
+ *   · kaoyan —— 场景A 专业能力训练（专业核心四科）
  *   · career —— 场景B 职业素养实训（芒得很职主线）
  *
  * 当前场景由本 composable 统一持有，持久化到 localStorage['mangdehenzhi_scene']，
@@ -22,7 +22,7 @@ export type SelectableScene = (typeof SELECTABLE_SCENES)[number]
 
 /** 场景展示元数据（切换控件用） */
 export const SCENE_META: Record<SelectableScene, { label: string; sub: string; route: string }> = {
-  kaoyan: { label: '专业能力训练', sub: '考研408智能学习', route: '/kaoyan' },
+  kaoyan: { label: '专业能力训练', sub: '专业核心四科智能学习', route: '/kaoyan' },
   career: { label: '职业素养实训', sub: 'AI 对抗式能力训练', route: '/career/training' },
 }
 

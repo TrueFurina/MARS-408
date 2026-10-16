@@ -24,7 +24,7 @@ function hasLatex(text: string): boolean {
   return /\$\$[\s\S]*?\$\$|\$[^\s$][^$]*\$|\\\\\(|\\\\\[/.test(text)
 }
 
-// 按需注册 highlight.js 语言（仅注册 408 考研场景高频使用的语言）
+// 按需注册 highlight.js 语言（仅注册专业课程学习场景高频使用的语言）
 import python from 'highlight.js/lib/languages/python'
 import c from 'highlight.js/lib/languages/c'
 import cpp from 'highlight.js/lib/languages/cpp'

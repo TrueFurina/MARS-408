@@ -71,7 +71,7 @@ onMounted(async () => {
       messages.value.push({ role: 'assistant', content: data.reply })
     }
   } catch {
-    messages.value.push({ role: 'assistant', content: '你好！我是你的408考研学习助手。你之前学过计算机基础课程吗？' })
+    messages.value.push({ role: 'assistant', content: '你好！我是你的专业学习助手。你之前学过计算机基础课程吗？' })
   }
   scrollToBottom()
   setTimeout(() => inputRef.value?.focus(), 300)
@@ -91,7 +91,7 @@ function onKeydown(e: KeyboardEvent) {
     <div class="profile-builder-header">
       <div class="profile-builder-title"> 初次见面，先认识一下你</div>
       <div class="profile-builder-desc">
-        跟我聊几句，让我了解你的408基础，为你定制专属学习计划
+        跟我聊几句，让我了解你的专业基础，为你定制专属学习计划
         <span v-if="completed" style="color:var(--accent-success);font-weight:600;">
            已了解！正在跳转...
         </span>

@@ -233,7 +233,7 @@ async function refreshQuestions() { await generateQuestions() }
     <div v-else-if="!loading && questions.length === 0 && !error" class="empty-state">
       <div class="empty-quiz-icon" v-html="icons.quiz"></div>
       <div class="empty-title">选择课程开始练习</div>
-      <div class="empty-desc">选择 408 四科中的任一课程和章节，点击「生成题目」，AI 将自动生成练习题</div>
+      <div class="empty-desc">选择专业四科中的任一课程和章节，点击「生成题目」，AI 将自动生成练习题</div>
     </div>
 
     <!-- 题目列表 -->

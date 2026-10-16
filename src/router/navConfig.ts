@@ -25,7 +25,7 @@ export type UserRole = 'student' | 'teacher' | 'admin'
 
 /**
  * 场景域（双场景集成 · 2026-09-15）：
- *   · kaoyan  —— 场景A 专业能力训练（考研408）
+ *   · kaoyan  —— 场景A 专业能力训练（专业核心四科）
  *   · career  —— 场景B 职业素养实训（芒得很职主线）
  *   · common  —— 通用（两场景都显示）
  * 缺省（undefined）等价 common，保证旧数据零改动兼容。

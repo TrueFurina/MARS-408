@@ -1,8 +1,8 @@
 /** 芒得很职 SVG 图标系统 — 替代全部 emoji */
 
 export const icons = {
-  // 品牌 — 紫蓝渐变多智能体节点徽标（中心编排节点 + 408 四科节点）
-  logo: `<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="芒得很职 408">
+  // 品牌 — 紫蓝渐变多智能体节点徽标（中心编排节点 + 专业四科节点）
+  logo: `<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="芒得很职">
     <defs>
       <linearGradient id="nlGrad" x1="6" y1="6" x2="34" y2="34" gradientUnits="userSpaceOnUse">
         <stop style="stop-color: var(--color-accent)"/>

@@ -159,7 +159,7 @@ async function askAboutText(text: string) {
         <div style="font-size:2rem;"></div>
         <div style="flex:1;">
           <div style="font-size:1rem;font-weight:600;color:var(--color-text);">知识库文档</div>
-          <div style="font-size:0.875rem;color:var(--color-text-2);">共 <strong style="color:var(--accent-primary);">{{ ragStats.total_docs }}</strong> 条知识文档，覆盖 408 四科核心知识点</div>
+          <div style="font-size:0.875rem;color:var(--color-text-2);">共 <strong style="color:var(--accent-primary);">{{ ragStats.total_docs }}</strong> 条知识文档，覆盖专业四科核心知识点</div>
         </div>
         <div style="display:flex;gap:0.5rem;align-items:center;">
           <input v-model="ragSearchQuery" placeholder="搜索知识库..." @keyup.enter="searchRag" style="padding:6px 10px;border-radius:6px;border:1px solid var(--color-border);background:var(--color-surface-2);color:var(--color-text);font-size:13px;width:180px;" />

@@ -78,10 +78,10 @@ defineExpose({ focusInput })
     <textarea
       ref="textareaRef"
       v-model="inputText"
-      :placeholder="placeholder || '输入你的408问题，如「解释TCP三次握手」「二叉树遍历」「Cache映射」...'"
+      :placeholder="placeholder || '输入你的专业问题，如「解释TCP三次握手」「二叉树遍历」「Cache映射」...'"
       :disabled="disabled"
       rows="1"
-      aria-label="输入你的408考研问题，例如解释TCP三次握手、二叉树遍历、Cache映射"
+      aria-label="输入你的专业学习问题，例如解释TCP三次握手、二叉树遍历、Cache映射"
       @input="autoResize"
       @keydown="onKeydown"
     ></textarea>
