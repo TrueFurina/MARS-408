@@ -98,8 +98,8 @@ def measure() -> dict[str, tuple[int, str]]:
 
     return {
         "frontend_views": (len(views), "`git ls-files 'src/views/*.vue'` 计数"),
-        "frontend_vue_total": (len(vue), "`git ls-files 'src/**/*.vue'` 计数"),
-        "frontend_ts_total": (len(ts), "`git ls-files 'src/**/*.ts'` 计数"),
+        "frontend_vue_total": (len(vue), "`git ls-files 'src/*.vue' 'src/**/*.vue' | sort -u` 计数（含顶层 App.vue；勿单用 `src/**/*.vue`，git 的 `**` 不匹配顶层文件，会漏 1）"),
+        "frontend_ts_total": (len(ts), "`git ls-files 'src/*.ts' 'src/**/*.ts' | sort -u` 计数（含顶层 main.ts；勿单用 `src/**/*.ts`，git 的 `**` 不匹配顶层文件，会漏 1）"),
         "frontend_lines": (
             _lines(vue) + _lines(ts),
             "git 跟踪的 `.vue` + `.ts` 全部行数",
