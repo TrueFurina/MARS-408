@@ -2,6 +2,14 @@
 
 推送 `career-literacy` → `origin` 后触发的 CI 实测结果，用于回填交付文档的最后两项待核数字。
 
+## run `38942815598` — Backend Test (Linux) / pytest on ubuntu-latest（head `46b41b5`，success，2026-10-17）
+
+**HEAD 同源复证**：以下默认档摘要与 run `38938041036`（head `dc18dd2`）完全一致 —— 两 commit 之间仅动 `docs/` / `README` / `submission/` / `src/*.vue` 模板文案 / `py-server/tools/generate_demo_ppt.py`，未触任何测试文件，故测试数应为同值。
+
+| step | 命令 | 结果 |
+|---|---|---|
+| 1 默认离线集 | `pytest -q --tb=short` | **1524 passed, 38 skipped, 9 deselected, 1 xfailed, 0 failed** in 376.46s |
+
 ## run `38938041036` — Backend Test (Linux) / pytest on ubuntu-latest（head `dc18dd2`，success，2026-10-17）
 
 单 job，三步 pytest：
