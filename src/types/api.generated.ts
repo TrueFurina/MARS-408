@@ -124,7 +124,7 @@ export interface paths {
          *     读路径（M1 聚合表优先，未命中实时聚合后回写）：
          *       1. db.ability_store.get_profile —— ability_profiles 聚合表命中即返回
          *       2. 未命中 → 实时聚合两源（下述）并回写聚合表，供下次命中
-         *     两源：professional-场景A 考研408（db.memory_store）/ soft_skills-场景B 职业素养（db.career_store）。
+         *     两源：professional-场景A 专业核心四科（db.memory_store）/ soft_skills-场景B 职业素养（db.career_store）。
          *     任一源失败一律 **fail-open**，绝不 500；前端 useAbilityProfile 另有本地缓存回退。
          */
         get: operations["get_ability_profile_api_profile_ability_get"];
@@ -761,7 +761,7 @@ export interface paths {
         put?: never;
         /**
          * Get Learning Path
-         * @description 根据画像和学习进度生成个性化学习路径（408四科）
+         * @description 根据画像和学习进度生成个性化学习路径（专业四科）
          */
         post: operations["get_learning_path_api_learning_path_post"];
         delete?: never;
@@ -781,7 +781,7 @@ export interface paths {
         put?: never;
         /**
          * Get Learning Path With Resources
-         * @description 学习路径 + 资源推送联动（408四科，赛题功能3）
+         * @description 学习路径 + 资源推送联动（专业四科）
          */
         post: operations["get_learning_path_with_resources_api_learning_path_with_resources_post"];
         delete?: never;
@@ -1273,7 +1273,7 @@ export interface paths {
         };
         /**
          * Teaching Rules Stats
-         * @description 教学规则引擎统计 — 408知识点依赖+考查权重+Agent适配
+         * @description 教学规则引擎统计 — 知识点依赖+考查权重+Agent适配
          */
         get: operations["teaching_rules_stats_api_engine_teaching_rules_get"];
         put?: never;
@@ -1295,7 +1295,7 @@ export interface paths {
         put?: never;
         /**
          * Teaching Rules Validate
-         * @description 校验调度顺序是否符合408教学逻辑
+         * @description 校验调度顺序是否符合专业教学逻辑
          */
         post: operations["teaching_rules_validate_api_engine_teaching_rules_validate_post"];
         delete?: never;
@@ -1834,7 +1834,12 @@ export interface paths {
         put?: never;
         /**
          * Register
-         * @description 注册新用户，自动登录并返回 Token（限流：3 次/小时/IP）
+         * @description 注册新用户，自动登录并返回 Token（限流：20 次/小时/IP）
+         *
+         *     阈值来历：原为 3 次/小时/IP，**实测卡死真实试用场景** —— 一个班 5–10 名学生
+         *     在同一教室、走同一校园网出口 IP 注册时，第 4 个人即被拦且要等满 1 小时
+         *     （2026-10-15 真人 UI 演练复现「操作过于频繁，请稍后再试」）。
+         *     20 次/小时可容纳一个班 + 重试余量，同时仍保留对批量刷号的约束。
          */
         post: operations["register_api_auth_register_post"];
         delete?: never;
@@ -2341,7 +2346,7 @@ export interface paths {
         put?: never;
         /**
          * Api Resume
-         * @description 智能简历：生成可下载的考研复试/能力档案(word)
+         * @description 智能简历：生成可下载的求职/升学简历(word)
          */
         post: operations["api_resume_api_xfyun_resume_post"];
         delete?: never;
@@ -4410,6 +4415,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/career/tasks/{task_id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Close Task */
+        post: operations["close_task_api_career_tasks__task_id__close_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/career/classes/{class_id}/students/{user_id}/detail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Student Detail */
+        get: operations["student_detail_api_career_classes__class_id__students__user_id__detail_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/career/my-tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Tasks */
+        get: operations["my_tasks_api_career_my_tasks_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/career/classes/{class_id}/dashboard": {
         parameters: {
             query?: never;
@@ -4438,6 +4494,111 @@ export interface paths {
         put?: never;
         /** Join Task */
         post: operations["join_task_api_career_task_join_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/career/my-growth": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Growth
+         * @description 我的成长：全部已完成会话的六维趋势/均分、评估引用过的原话金句、
+         *     pre/post 前后测差值（仅两侧都有已评分会话时才给出，不插值）。
+         */
+        get: operations["my_growth_api_career_my_growth_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/career/consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Consent
+         * @description 当前用户的同意状态 + 同意书文本（前端据此渲染门禁）。
+         */
+        get: operations["get_consent_api_career_consent_get"];
+        put?: never;
+        /**
+         * Post Consent
+         * @description 记录知情同意（agreed=false 也如实记录，便于审计"看过但不同意"）。
+         */
+        post: operations["post_consent_api_career_consent_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/career/session/{session_id}/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Post Feedback
+         * @description 课后简评：仅会话本人可提交（教师代填无意义）；每场一条（重复提交更新）。
+         */
+        post: operations["post_feedback_api_career_session__session_id__feedback_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/career/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Feedback
+         * @description 教师查看本人班级学生的课后简评（按班级归属隔离；可按班级过滤）。
+         */
+        get: operations["list_feedback_api_career_feedback_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/career/classes/{class_id}/export-report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Class Report
+         * @description 导出班级学情一页纸（自包含 HTML，浏览器另存为 PDF 即得报告）。
+         */
+        get: operations["export_class_report_api_career_classes__class_id__export_report_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -5241,6 +5402,14 @@ export interface components {
              */
             course: string;
         };
+        /** ConsentRequest */
+        ConsentRequest: {
+            /**
+             * Agreed
+             * @default true
+             */
+            agreed: boolean;
+        };
         /** ConversationsPayload */
         ConversationsPayload: {
             /**
@@ -5478,6 +5647,19 @@ export interface components {
              * @default true
              */
             enhance: boolean;
+        };
+        /** FeedbackRequest */
+        FeedbackRequest: {
+            /**
+             * Rating
+             * @description 课后简评 1-5 分
+             */
+            rating: number;
+            /**
+             * Comment
+             * @default
+             */
+            comment: string;
         };
         /** FrugalRAGFullRequest */
         FrugalRAGFullRequest: {
@@ -6513,6 +6695,8 @@ export interface components {
             max_turns: number;
             /** Task Id */
             task_id?: string | null;
+            /** Phase */
+            phase?: string | null;
         };
         /**
          * StepAnswerRequest
@@ -6890,6 +7074,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -6925,6 +7110,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -6960,6 +7146,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -6995,6 +7182,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -7030,6 +7218,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -7065,6 +7254,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -7096,6 +7286,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -7133,6 +7324,7 @@ export interface operations {
             };
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -7164,6 +7356,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 question_id: string;
@@ -7197,6 +7390,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 question_id: string;
@@ -7236,6 +7430,7 @@ export interface operations {
             };
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -7269,6 +7464,7 @@ export interface operations {
             };
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -7300,6 +7496,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -7331,6 +7528,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -7366,6 +7564,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -7397,6 +7596,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -7432,6 +7632,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -7467,6 +7668,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -7502,6 +7704,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -7537,6 +7740,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -7572,6 +7776,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -7607,6 +7812,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -7642,6 +7848,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -7679,6 +7886,7 @@ export interface operations {
             };
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -7710,6 +7918,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -7745,6 +7954,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -7780,6 +7990,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -7815,6 +8026,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -7850,6 +8062,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -7885,6 +8098,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -7916,6 +8130,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -7947,6 +8162,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -7982,6 +8198,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -8017,6 +8234,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -8048,6 +8266,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 conv_id: string;
@@ -8081,6 +8300,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 conv_id: string;
@@ -8114,6 +8334,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -8149,6 +8370,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -8184,6 +8406,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -8219,6 +8442,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -8254,6 +8478,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -8285,6 +8510,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -8320,6 +8546,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -8351,6 +8578,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -8384,6 +8612,7 @@ export interface operations {
             };
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -8415,6 +8644,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -8450,6 +8680,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -8485,6 +8716,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -8522,6 +8754,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -8557,6 +8790,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -8596,6 +8830,7 @@ export interface operations {
             };
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -8627,6 +8862,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -8662,6 +8898,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -8697,6 +8934,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -8732,6 +8970,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -8763,6 +9002,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -8798,6 +9038,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -8829,6 +9070,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -8864,6 +9106,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -8895,6 +9138,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -8926,6 +9170,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -8957,6 +9202,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -8992,6 +9238,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -9027,6 +9274,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -9062,6 +9310,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 topic_id: string;
@@ -9095,6 +9344,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -9126,6 +9376,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 student_id: string;
@@ -9159,6 +9410,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -9190,6 +9442,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -9221,6 +9474,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -9252,6 +9506,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -9287,6 +9542,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 assignment_id: number;
@@ -9320,6 +9576,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 assignment_id: number;
@@ -9357,6 +9614,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 assignment_id: number;
@@ -9390,6 +9648,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -9425,6 +9684,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -9456,6 +9716,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -9491,6 +9752,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -9522,6 +9784,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -9557,6 +9820,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -9592,6 +9856,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -9627,6 +9892,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -9658,6 +9924,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -9693,6 +9960,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -9728,6 +9996,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -9763,6 +10032,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -9798,6 +10068,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -9899,6 +10170,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -9930,6 +10202,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -9961,6 +10234,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -9992,6 +10266,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -10027,6 +10302,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -10058,6 +10334,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -10093,6 +10370,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -10124,6 +10402,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -10159,6 +10438,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -10194,6 +10474,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -10225,6 +10506,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -10256,6 +10538,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -10287,6 +10570,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -10318,6 +10602,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -10349,6 +10634,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -10386,6 +10672,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -10417,6 +10704,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -10450,6 +10738,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -10481,6 +10770,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -10516,6 +10806,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -10551,6 +10842,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -10586,6 +10878,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 task_id: string;
@@ -10619,6 +10912,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -10654,6 +10948,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 task_id: string;
@@ -10687,6 +10982,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -10722,6 +11018,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -10757,6 +11054,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -10792,6 +11090,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -10827,6 +11126,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -10862,6 +11162,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -10899,6 +11200,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -10938,6 +11240,7 @@ export interface operations {
             };
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -10969,6 +11272,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 job_id: string;
@@ -11002,6 +11306,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 job_id: string;
@@ -11035,6 +11340,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -11066,6 +11372,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -11101,6 +11408,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 skill_id: string;
@@ -11134,6 +11442,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 skill_id: string;
@@ -11171,6 +11480,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 skill_id: string;
@@ -11204,6 +11514,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -11239,6 +11550,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -11270,6 +11582,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -11307,6 +11620,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 skill_id: string;
@@ -11340,6 +11654,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 skill_id: string;
@@ -11386,6 +11701,7 @@ export interface operations {
             };
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -11423,6 +11739,7 @@ export interface operations {
             };
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -11454,6 +11771,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -11485,6 +11803,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 skill_id: string;
@@ -11525,6 +11844,7 @@ export interface operations {
             };
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 skill_id: string;
@@ -11558,6 +11878,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 skill_id: string;
@@ -11591,6 +11912,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 skill_id: string;
@@ -11624,6 +11946,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -11655,6 +11978,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 skill_id: string;
@@ -11688,6 +12012,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -11719,6 +12044,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -11750,6 +12076,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 template_id: string;
@@ -11783,6 +12110,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 template_id: string;
@@ -11820,6 +12148,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -11851,6 +12180,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -11886,6 +12216,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 skill_id: string;
@@ -11923,6 +12254,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 skill_id: string;
@@ -11960,6 +12292,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 skill_id: string;
@@ -11993,6 +12326,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 skill_id: string;
@@ -12026,6 +12360,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 skill_id: string;
@@ -12063,6 +12398,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -12098,6 +12434,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -12133,6 +12470,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -12168,6 +12506,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -12199,6 +12538,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -12230,6 +12570,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -12265,6 +12606,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -12296,6 +12638,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 subject: string;
@@ -12329,6 +12672,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -12373,6 +12717,7 @@ export interface operations {
             };
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -12404,6 +12749,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -12435,6 +12781,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -12470,6 +12817,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -12505,6 +12853,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -12540,6 +12889,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -12571,6 +12921,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -12602,6 +12953,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -12637,6 +12989,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -12672,6 +13025,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -12709,6 +13063,7 @@ export interface operations {
             };
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 kg_id: string;
@@ -12745,6 +13100,7 @@ export interface operations {
             };
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -12776,6 +13132,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 word: string;
@@ -12812,6 +13169,7 @@ export interface operations {
             };
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -12843,6 +13201,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -12874,6 +13233,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 textbook_id: string;
@@ -12910,6 +13270,7 @@ export interface operations {
             };
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -12944,6 +13305,7 @@ export interface operations {
             };
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -12979,6 +13341,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -13014,6 +13377,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -13049,6 +13413,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -13084,6 +13449,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -13115,6 +13481,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -13150,6 +13517,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -13185,6 +13553,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -13216,6 +13585,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 resource_id: number;
@@ -13249,6 +13619,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -13284,6 +13655,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 session_id: string;
@@ -13317,6 +13689,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 session_id: string;
@@ -13350,6 +13723,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -13385,6 +13759,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -13420,6 +13795,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -13455,6 +13831,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -13486,6 +13863,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -13521,6 +13899,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -13555,6 +13934,7 @@ export interface operations {
             };
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -13586,6 +13966,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -13621,6 +14002,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -13652,6 +14034,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -13687,6 +14070,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -13721,6 +14105,7 @@ export interface operations {
             };
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -13757,6 +14142,7 @@ export interface operations {
             };
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -13788,6 +14174,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -13823,6 +14210,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -13854,6 +14242,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 qid: number;
@@ -13887,6 +14276,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 qid: number;
@@ -13920,6 +14310,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -13951,6 +14342,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -13982,6 +14374,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 qid: number;
@@ -14019,6 +14412,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 qid: number;
@@ -14058,6 +14452,7 @@ export interface operations {
             };
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -14091,6 +14486,7 @@ export interface operations {
             };
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -14122,6 +14518,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 pid: number;
@@ -14159,6 +14556,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 pid: number;
@@ -14192,6 +14590,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -14223,6 +14622,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -14258,6 +14658,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 session_id: string;
@@ -14295,6 +14696,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 session_id: string;
@@ -14332,6 +14734,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 session_id: string;
@@ -14365,6 +14768,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 session_id: string;
@@ -14398,6 +14802,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -14429,6 +14834,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -14460,6 +14866,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -14495,6 +14902,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 class_id: string;
@@ -14528,6 +14936,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 class_id: string;
@@ -14567,6 +14976,7 @@ export interface operations {
             };
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -14598,6 +15008,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -14628,11 +15039,113 @@ export interface operations {
             };
         };
     };
+    close_task_api_career_tasks__task_id__close_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "X-App-Token"?: string | null;
+            };
+            path: {
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    student_detail_api_career_classes__class_id__students__user_id__detail_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "X-App-Token"?: string | null;
+            };
+            path: {
+                class_id: string;
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_tasks_api_career_my_tasks_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "X-App-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     class_dashboard_api_career_classes__class_id__dashboard_get: {
         parameters: {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 class_id: string;
@@ -14666,6 +15179,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -14675,6 +15189,212 @@ export interface operations {
                 "application/json": components["schemas"]["TaskJoinRequest"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_growth_api_career_my_growth_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "X-App-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_consent_api_career_consent_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "X-App-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_consent_api_career_consent_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "X-App-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsentRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_feedback_api_career_session__session_id__feedback_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "X-App-Token"?: string | null;
+            };
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeedbackRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_feedback_api_career_feedback_get: {
+        parameters: {
+            query?: {
+                class_id?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+                "X-App-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_class_report_api_career_classes__class_id__export_report_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "X-App-Token"?: string | null;
+            };
+            path: {
+                class_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -14830,6 +15550,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -14865,6 +15586,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path: {
                 user_id: string;
@@ -14898,6 +15620,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "X-App-Token"?: string | null;
             };
             path?: never;
             cookie?: never;
