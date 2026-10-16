@@ -308,7 +308,7 @@ class GOMARLConsensus:
     def _validate_teaching_schedule(
         self, results: list[AgentResult], topic: str, student_profile: dict
     ) -> list[str]:
-        """教学规则校验——约束调度行为符合408业务逻辑
+        """教学规则校验——约束调度行为符合专业教学业务逻辑
 
         改进点:
         1. 校验Agent分配是否匹配知识点课程范围

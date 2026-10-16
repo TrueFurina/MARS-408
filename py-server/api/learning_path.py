@@ -1,5 +1,5 @@
 # ============================================================
-# API — 学习路径 + 资源推送（408四科全覆盖）
+# API — 学习路径 + 资源推送（专业四科全覆盖）
 # 赛题功能3：个性化学习路径规划和资源推送
 # ============================================================
 
@@ -19,7 +19,7 @@ logger = logging.getLogger("netlearn.learning_path")
 
 router = APIRouter(prefix="", tags=["learning-path"])
 
-# ── 408四科章节映射（subject key → 有序章节名列表） ──
+# ── 专业四科章节映射（subject key → 有序章节名列表） ──
 _SUBJECT_CHAPTERS = {
     "computer_network": [
         "计算机网络概述", "物理层", "数据链路层", "网络层", "运输层", "应用层", "网络安全",
@@ -73,7 +73,7 @@ def _resolve_subject(profile: dict, req_subject: str) -> str:
 
 @router.post("/learning-path", response_model=LearningPathResponse)
 async def get_learning_path(req: LearningPathRequest, user: dict = Depends(get_current_user)):
-    """根据画像和学习进度生成个性化学习路径（408四科）"""
+    """根据画像和学习进度生成个性化学习路径（专业四科）"""
     subject = _resolve_subject(req.profile or {}, req.subject)
     chapters_order = _get_chapters(subject)
 
@@ -107,7 +107,7 @@ async def get_learning_path(req: LearningPathRequest, user: dict = Depends(get_c
 
 @router.post("/learning-path-with-resources", response_model=LearningPathWithResourcesResponse)
 async def get_learning_path_with_resources(req: LearningPathRequest, user: dict = Depends(get_current_user)):
-    """学习路径 + 资源推送联动（408四科，赛题功能3）"""
+    """学习路径 + 资源推送联动（专业四科）"""
     from prompts import PATH_PLANNER_PROMPT
 
     subject = _resolve_subject(req.profile or {}, req.subject)

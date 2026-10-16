@@ -256,14 +256,14 @@ def _bucket_stats() -> dict:
 
 @router.get("/teaching-rules")
 async def teaching_rules_stats(user: dict = Depends(get_current_user)):
-    """教学规则引擎统计 — 408知识点依赖+考查权重+Agent适配"""
+    """教学规则引擎统计 — 知识点依赖+考查权重+Agent适配"""
     from engines.teaching_rules import teaching_rules
     return {"status": "ok", "stats": teaching_rules.get_stats()}
 
 
 @router.post("/teaching-rules/validate")
 async def teaching_rules_validate(req: TeachingRulesValidateRequest, user: dict = Depends(get_current_user)):
-    """校验调度顺序是否符合408教学逻辑"""
+    """校验调度顺序是否符合专业教学逻辑"""
     from engines.teaching_rules import teaching_rules
     result = teaching_rules.validate_schedule(req.topic_ids, req.student_profile)
     return {

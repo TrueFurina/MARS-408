@@ -154,7 +154,7 @@ async def _generate_code(req: GenerationRequest) -> dict:
 async def _generate_video_script(req: GenerationRequest) -> dict:
     """生成教学视频脚本（赛题多模态要求）"""
     video_prompt = (
-        "你是计算机408学习系统的「视频脚本Agent」。请为指定知识点生成教学视频脚本。\n\n"
+        "你是计算机专业学习系统的「视频脚本Agent」。请为指定知识点生成教学视频脚本。\n\n"
         "要求：\n"
         "1. 视频时长5-8分钟\n"
         "2. 包含：开场白、知识点讲解、动画/图表描述、案例演示、总结\n"
@@ -186,7 +186,7 @@ async def _generate_video_script(req: GenerationRequest) -> dict:
 async def _generate_infographic(req: GenerationRequest) -> dict:
     """生成信息图描述"""
     infographic_prompt = (
-        "你是计算机408学习系统的「信息图Agent」。请为指定知识点生成信息图设计方案。\n\n"
+        "你是计算机专业学习系统的「信息图Agent」。请为指定知识点生成信息图设计方案。\n\n"
         "要求：\n"
         "1. 用文字描述信息图的布局和内容\n"
         "2. 包含：标题、核心数据/对比、流程图描述、颜色建议\n"
@@ -214,7 +214,7 @@ async def _generate_infographic(req: GenerationRequest) -> dict:
 async def _generate_mindmap(req: GenerationRequest) -> dict:
     """生成思维导图（Markdown格式，前端渲染为D3.js图）"""
     mindmap_prompt = (
-        "你是计算机408学习系统的「思维导图Agent」。请用Markdown无序列表格式生成知识点思维导图。\n\n"
+        "你是计算机专业学习系统的「思维导图Agent」。请用Markdown无序列表格式生成知识点思维导图。\n\n"
         f"【知识点】{req.topic}\n"
         "格式要求：\n"
         "- 根节点\n"
@@ -484,7 +484,7 @@ async def _generate_narrated_video(req: GenerationRequest) -> dict:
         llm = LLMProvider()
         lecture_text = await llm.text_completion(TEACHER_AGENT_PROMPT, user_prompt, max_tokens=1000)
     except Exception:
-        lecture_text = f"今天我们来学习{req.topic}。这是计算机408考研中的核心知识点。"
+        lecture_text = f"今天我们来学习{req.topic}。这是计算机专业课程中的核心知识点。"
 
     # P1-7：输出内容安全审核
     lecture_text, _ = await audit_output(lecture_text, "multimodal/generate/narrated_video")

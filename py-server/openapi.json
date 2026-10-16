@@ -388,7 +388,7 @@
           "profile"
         ],
         "summary": "Get Ability Profile",
-        "description": "统一能力画像（双场景集成 · F4 + M1）—— 一个账号、一份画像。\n\n读路径（M1 聚合表优先，未命中实时聚合后回写）：\n  1. db.ability_store.get_profile —— ability_profiles 聚合表命中即返回\n  2. 未命中 → 实时聚合两源（下述）并回写聚合表，供下次命中\n两源：professional-场景A 考研408（db.memory_store）/ soft_skills-场景B 职业素养（db.career_store）。\n任一源失败一律 **fail-open**，绝不 500；前端 useAbilityProfile 另有本地缓存回退。",
+        "description": "统一能力画像（双场景集成 · F4 + M1）—— 一个账号、一份画像。\n\n读路径（M1 聚合表优先，未命中实时聚合后回写）：\n  1. db.ability_store.get_profile —— ability_profiles 聚合表命中即返回\n  2. 未命中 → 实时聚合两源（下述）并回写聚合表，供下次命中\n两源：professional-场景A 专业核心四科（db.memory_store）/ soft_skills-场景B 职业素养（db.career_store）。\n任一源失败一律 **fail-open**，绝不 500；前端 useAbilityProfile 另有本地缓存回退。",
         "operationId": "get_ability_profile_api_profile_ability_get",
         "parameters": [
           {
@@ -2695,7 +2695,7 @@
           "learning-path"
         ],
         "summary": "Get Learning Path",
-        "description": "根据画像和学习进度生成个性化学习路径（408四科）",
+        "description": "根据画像和学习进度生成个性化学习路径（专业四科）",
         "operationId": "get_learning_path_api_learning_path_post",
         "parameters": [
           {
@@ -2771,7 +2771,7 @@
           "learning-path"
         ],
         "summary": "Get Learning Path With Resources",
-        "description": "学习路径 + 资源推送联动（408四科，赛题功能3）",
+        "description": "学习路径 + 资源推送联动（专业四科）",
         "operationId": "get_learning_path_with_resources_api_learning_path_with_resources_post",
         "parameters": [
           {
@@ -4412,7 +4412,7 @@
           "engine"
         ],
         "summary": "Teaching Rules Stats",
-        "description": "教学规则引擎统计 — 408知识点依赖+考查权重+Agent适配",
+        "description": "教学规则引擎统计 — 知识点依赖+考查权重+Agent适配",
         "operationId": "teaching_rules_stats_api_engine_teaching_rules_get",
         "parameters": [
           {
@@ -4476,7 +4476,7 @@
           "engine"
         ],
         "summary": "Teaching Rules Validate",
-        "description": "校验调度顺序是否符合408教学逻辑",
+        "description": "校验调度顺序是否符合专业教学逻辑",
         "operationId": "teaching_rules_validate_api_engine_teaching_rules_validate_post",
         "parameters": [
           {
@@ -8350,7 +8350,7 @@
           "xfyun"
         ],
         "summary": "Api Resume",
-        "description": "智能简历：生成可下载的考研复试/能力档案(word)",
+        "description": "智能简历：生成可下载的求职/升学简历(word)",
         "operationId": "api_resume_api_xfyun_resume_post",
         "parameters": [
           {

@@ -12,7 +12,7 @@
 #   7. 公文校对            → 文档校对(同纠错，不同引擎)
 #   8. 文本合规            → 内容安全审核(防幻觉/违规)
 #   9. 角色模拟            → 模拟面试官/导师多轮对话
-#   10. 智能简历           → 生成可下载考研复试简历(word)
+#   10. 智能简历           → 生成可下载求职/升学简历(word)
 #
 # 控制台已开通的全部讯飞能力均已封装（TTI/星火LLM/向量化另见他处）。
 #
@@ -609,12 +609,12 @@ async def check_compliance(text: str,
 CHARACTER_HOST = "https://ai-character-v2.xfyun.cn"
 CHARACTER_WS = "wss://ai-character-v2.xfyun.cn"
 
-# 默认角色库：一键模拟不同面试/答疑场景（赛题面向408考研）
+# 默认角色库：一键模拟不同面试/答疑场景（面向专业核心四科）
 DEFAULT_PERSONAS = {
-    "interviewer_network": "你是严格的计算机网络考研面试官，会针对TCP/IP、拥塞控制、路由算法等考点连续追问，指出回答中的不足。",
-    "interviewer_os": "你是操作系统考研面试官，重点考察进程调度、内存管理、死锁、文件系统，要求用专业术语严谨作答。",
-    "tutor": "你是耐心的408考研一对一导师，用通俗类比解释数据结构、组成原理等难点，并给出复习建议。",
-    "mock_interviewer": "你是通用的计算机考研复试模拟面试官，综合408四科随机提问，评估知识掌握与表达。",
+    "interviewer_network": "你是严格的计算机网络面试官，会针对TCP/IP、拥塞控制、路由算法等考点连续追问，指出回答中的不足。",
+    "interviewer_os": "你是操作系统面试官，重点考察进程调度、内存管理、死锁、文件系统，要求用专业术语严谨作答。",
+    "tutor": "你是耐心的专业一对一导师，用通俗类比解释数据结构、组成原理等难点，并给出复习建议。",
+    "mock_interviewer": "你是通用的计算机模拟面试官，综合专业四科随机提问，评估知识掌握与表达。",
 }
 
 
@@ -675,7 +675,7 @@ async def roleplay_interview(persona: str, user_message: str, user_id: str = "",
             # 1. 注册玩家
             pres = await _character_post("/personality/open/player/register",
                                         {"playerName": "netlearn_user",
-                                         "playerIdentity": "408考研学习者"})
+                                         "playerIdentity": "计算机专业学习者"})
             pid = _extract_id(pres, "playerId")
             if not pid:
                 return RoleplayResult(success=False, error=pres.get("message", "玩家注册失败"))
@@ -691,7 +691,7 @@ async def roleplay_interview(persona: str, user_message: str, user_id: str = "",
             cres = await _character_post("/personality/open/chat/new-chat",
                                         {"playerId": pid, "agentId": aid,
                                          "mission": topic or persona_desc,
-                                         "conversationScene": "考研面试/答疑场景"})
+                                         "conversationScene": "专业面试/答疑场景"})
             cid = _extract_id(cres, "chatId")
             if not cid:
                 return RoleplayResult(success=False, error=cres.get("message", "会话创建失败"))
@@ -751,7 +751,7 @@ class ResumeResult:
 
 async def generate_resume(info_text: str) -> ResumeResult:
     """智能简历：输入个人信息文本，返回可下载 word 简历链接 word_url。
-    用于生成「408考研复试简历 / 能力档案」。"""
+    用于生成「求职/升学简历 / 能力档案」。"""
     if not has_credentials():
         return ResumeResult(success=False, error="讯飞凭证未配置")
     c = _get_cfg()

@@ -251,7 +251,7 @@ class FrugalRAG:
             "os_file", "os_io",
         ],
         # AI 科目独立成课：datawhale 注入的深度学习 / LLM-Agent 语料未映射到
-        # 408 四科，故单列一门 "ai"，使 course="ai" 可显式约束到 AI 内容。
+        # 专业四科，故单列一门 "ai"，使 course="ai" 可显式约束到 AI 内容。
         # （前端课程菜单是否暴露 "ai" 是产品决策，此处仅补齐后端过滤能力。）
         "ai": [
             "ai_deep_learning", "ai_llm_agent",

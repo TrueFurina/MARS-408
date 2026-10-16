@@ -560,7 +560,7 @@ KNOWLEDGE_GRAPH = {
         {"source": "app", "target": "security"},
         {"source": "security", "target": "tls"},
         {"source": "security", "target": "firewall"},
-        # 跨课程依赖关系（408学习路径）
+        # 跨课程依赖关系（专业学习路径）
         {"source": "ds_linear", "target": "co_overview"},
         {"source": "co_memory", "target": "os_mem"},
         {"source": "os_process", "target": "network"},

@@ -663,7 +663,7 @@ _BUILTIN_TEMPLATES: list[SkillTemplate] = [
         category=SkillCategory.QUIZ.value,
         icon="📝",
         system_prompt_template=(
-            "你是一个 408 {{subject}} 出题专家。\n"
+            "你是一个{{subject}} 出题专家。\n"
             "请根据以下要求生成一道练习题：\n"
             "- 知识点：{{knowledge_point}}\n"
             "- 难度：{{difficulty}}\n"
@@ -722,7 +722,7 @@ _BUILTIN_TEMPLATES: list[SkillTemplate] = [
         category=SkillCategory.TEACHING.value,
         icon="📊",
         system_prompt_template=(
-            "你是一个 408 {{subject}} 的资深讲师。\n"
+            "你是一个{{subject}} 的资深讲师。\n"
             "请用{{style}}的风格讲解{{knowledge_point}}。\n\n"
             "要求：\n"
             "1. 先给出核心概念\n"
@@ -765,7 +765,7 @@ _BUILTIN_TEMPLATES: list[SkillTemplate] = [
         category=SkillCategory.GUIDE.value,
         icon="📋",
         system_prompt_template=(
-            "你是一个考研学习规划师。\n"
+            "你是一个专业学习规划师。\n"
             "请根据以下信息制定一个可执行的学习计划：\n\n"
             "- 目标科目：{{subject}}\n"
             "- 当前掌握度：{{mastery}}\n"
@@ -788,7 +788,7 @@ _BUILTIN_TEMPLATES: list[SkillTemplate] = [
         category=SkillCategory.QUIZ.value,
         icon="📖",
         system_prompt_template=(
-            "你是一个 408 真题解析专家。\n"
+            "你是一个真题解析专家。\n"
             "请从以下三个维度深度解析这道 {{subject}} 真题：\n\n"
             "题目：{{question}}\n\n"
             "1. 考察知识点：\n"
@@ -826,21 +826,21 @@ _BUILTIN_TEMPLATES: list[SkillTemplate] = [
         default_config={"llm_channel": "auto", "temperature": 0.8, "max_tokens": 1536},
         sort_order=8,
     ),
-    # ── 408 垂直专属技能（"所有 Skill 专为 408 考研定制"的落地） ──
+    # ── 专业垂直专属技能（"所有 Skill 专为专业核心四科定制"的落地） ──
     SkillTemplate(
         id="tcp-handshake-guide",
         name="TCP 三次握手图解师",
-        description="图解 TCP 三次握手/四次挥手全过程，标注 SYN/ACK/FIN 标志位与状态转换（408 计网高频考点）",
+        description="图解 TCP 三次握手/四次挥手全过程，标注 SYN/ACK/FIN 标志位与状态转换（计网高频考点）",
         category=SkillCategory.TEACHING.value,
         icon="🔗",
         system_prompt_template=(
-            "你是 408 计算机网络专家，擅长图解 TCP 协议。\n"
+            "你是计算机网络专家，擅长图解 TCP 协议。\n"
             "请图解讲解 {{topic}}（默认 TCP 三次握手）。\n\n"
             "要求：\n"
             "1. 用文字+箭头图展示报文交换顺序（SYN → SYN+ACK → ACK）\n"
             "2. 标注每个报文段的 seq/ack 序号变化\n"
             "3. 画出客户端/服务端状态转换（CLOSED→SYN_SENT→ESTABLISHED）\n"
-            "4. 指出 408 常考易错点（如为什么不是两次/四次握手）\n"
+            "4. 指出常考易错点（如为什么不是两次/四次握手）\n"
             "5. 附一道历年真题风格的选择题并解析\n"
             "提示：握手/挥手报文交换过程可调用计算工具 simulate_tcp_handshake 自动演示（含 seq/ack 变化）"
         ),
@@ -850,16 +850,16 @@ _BUILTIN_TEMPLATES: list[SkillTemplate] = [
     SkillTemplate(
         id="sorting-comparator",
         name="排序算法对比大师",
-        description="对比 408 数据结构核心排序算法：稳定性/时间复杂度/空间复杂度/适用场景",
+        description="对比数据结构核心排序算法：稳定性/时间复杂度/空间复杂度/适用场景",
         category=SkillCategory.TEACHING.value,
         icon="⚖️",
         system_prompt_template=(
-            "你是 408 数据结构专家。\n"
+            "你是数据结构专家。\n"
             "请对比讲解排序算法：{{algorithms}}（默认：冒泡/快排/堆排/归并）。\n\n"
             "要求：\n"
             "1. 对比表：平均/最好/最坏时间复杂度 + 空间复杂度 + 稳定性\n"
             "2. 每种算法的核心思想一句话 + 伪代码要点\n"
-            "3. 408 常考：哪些是稳定排序？堆排为什么不稳定？\n"
+            "3. 常考：哪些是稳定排序？堆排为什么不稳定？\n"
             "4. 给定数据规模给出选型建议\n"
             "5. 附一道真题风格选择题并解析"
         ),
@@ -869,17 +869,17 @@ _BUILTIN_TEMPLATES: list[SkillTemplate] = [
     SkillTemplate(
         id="process-scheduler",
         name="进程调度分析师",
-        description="解析 408 操作系统进程调度算法（FCFS/SJF/RR/优先级），计算平均等待时间",
+        description="解析操作系统进程调度算法（FCFS/SJF/RR/优先级），计算平均等待时间",
         category=SkillCategory.QUIZ.value,
         icon="⏱️",
         system_prompt_template=(
-            "你是 408 操作系统专家，擅长进程调度分析。\n"
+            "你是操作系统专家，擅长进程调度分析。\n"
             "请分析进程调度：{{processes}}（格式：进程名,到达时间,服务时间）。\n\n"
             "要求：\n"
             "1. 用甘特图展示 FCFS / SJF / RR(时间片) / 优先级 四种调度结果\n"
             "2. 计算每种调度的平均等待时间与平均周转时间\n"
             "3. 对比各算法的优劣与适用场景\n"
-            "4. 指出 408 常考易错点（如抢占式 vs 非抢占式）\n"
+            "4. 指出常考易错点（如抢占式 vs 非抢占式）\n"
             "5. 附一道真题风格计算题并解析\n"
             "提示：各算法平均等待/周转时间可调用计算工具 calculate_scheduling 自动计算（arrivals 格式 进程:到达时间）"
         ),
@@ -889,11 +889,11 @@ _BUILTIN_TEMPLATES: list[SkillTemplate] = [
     SkillTemplate(
         id="cache-simulator",
         name="Cache 命中率模拟师",
-        description="模拟 408 计组 Cache 映射（直接/组相联/全相联），计算命中率",
+        description="模拟计组 Cache 映射（直接/组相联/全相联），计算命中率",
         category=SkillCategory.QUIZ.value,
         icon="💾",
         system_prompt_template=(
-            "你是 408 计算机组成原理专家，擅长 Cache 分析。\n"
+            "你是计算机组成原理专家，擅长 Cache 分析。\n"
             "请分析 Cache 映射：{{config}}（格式：容量,块大小,映射方式,访问序列）。\n\n"
             "要求：\n"
             "1. 画出 Cache 结构（组数/块数/标记位/组索引位/块内偏移位）\n"
@@ -914,7 +914,7 @@ _BUILTIN_TEMPLATES: list[SkillTemplate] = [
         category=SkillCategory.TEACHING.value,
         icon="🎯",
         system_prompt_template=(
-            "你是一个 408 考研薄弱点专项讲解专家。\n"
+            "你是一个专业薄弱点专项讲解专家。\n"
             "系统会注入学生的学情记忆（L1/L2/L3），其中包含薄弱知识点。\n\n"
             "请针对 {{subject}} 的薄弱知识点：\n"
             "1. 先用通俗语言讲清核心概念\n"
@@ -926,20 +926,20 @@ _BUILTIN_TEMPLATES: list[SkillTemplate] = [
         default_config={"llm_channel": "auto", "temperature": 0.6, "max_tokens": 1500},
         sort_order=13,
     ),
-    # ── 新P2：更多 408 垂直技能（高频考点全覆盖） ──
+    # ── 新P2：更多专业垂直技能（高频考点全覆盖） ──
     SkillTemplate(
         id="banker-algorithm",
         name="死锁银行家算法模拟师",
-        description="模拟 408 操作系统银行家算法：安全序列判定、资源分配与死锁避免",
+        description="模拟操作系统银行家算法：安全序列判定、资源分配与死锁避免",
         category=SkillCategory.QUIZ.value,
         icon="🏦",
         system_prompt_template=(
-            "你是 408 操作系统专家，擅长死锁与银行家算法。\n"
+            "你是操作系统专家，擅长死锁与银行家算法。\n"
             "请分析银行家算法场景：{{scenario}}（格式：Available,Max,Allocation 矩阵）。\n\n"
             "要求：\n"
             "1. 计算 Need 矩阵并说明判定过程\n"
             "2. 用安全序列判定算法逐步验证（找安全序列或说明不安全）\n"
-            "3. 指出 408 常考易错点（如安全状态 vs 死锁状态的区别）\n"
+            "3. 指出常考易错点（如安全状态 vs 死锁状态的区别）\n"
             "4. 给出资源分配建议（如存在安全序列则给出分配方案）\n"
             "5. 附一道真题风格计算题并解析\n"
             "提示：安全序列判定可调用计算工具 bankers_algorithm 自动校验（参数 available/allocation/max）"
@@ -950,17 +950,17 @@ _BUILTIN_TEMPLATES: list[SkillTemplate] = [
     SkillTemplate(
         id="http-protocol",
         name="HTTP 协议拆解师",
-        description="拆解 408 计网 HTTP/1.0-3.0：报文格式、状态码、连接管理与 HTTPS",
+        description="拆解计网 HTTP/1.0-3.0：报文格式、状态码、连接管理与 HTTPS",
         category=SkillCategory.TEACHING.value,
         icon="🌐",
         system_prompt_template=(
-            "你是 408 计算机网络专家，擅长 HTTP 协议。\n"
+            "你是计算机网络专家，擅长 HTTP 协议。\n"
             "请拆解讲解 {{topic}}（默认 HTTP 协议全貌）。\n\n"
             "要求：\n"
             "1. 报文结构：请求行/请求头/空行/请求体（附示例报文）\n"
-            "2. 常见状态码：1xx-5xx 含义与 408 常考场景（200/301/304/400/403/404/500）\n"
+            "2. 常见状态码：1xx-5xx 含义与常考场景（200/301/304/400/403/404/500）\n"
             "3. HTTP/1.0 无连接 vs HTTP/1.1 持久连接 vs HTTP/2 多路复用\n"
-            "4. HTTPS 握手与 TLS 加密过程（408 高频）\n"
+            "4. HTTPS 握手与 TLS 加密过程（高频考点）\n"
             "5. 附一道真题风格选择题并解析\n"
             "提示：IP 数据报分片计算可调用计算工具 calculate_ip_fragmentation 自动校验（参数 total/mtu/header）"
         ),
@@ -974,12 +974,12 @@ _BUILTIN_TEMPLATES: list[SkillTemplate] = [
         category=SkillCategory.TEACHING.value,
         icon="🔄",
         system_prompt_template=(
-            "你是操作系统内存管理专家，专讲 408 考研页面置换算法。\n"
+            "你是操作系统内存管理专家，专讲页面置换算法。\n"
             "任务：对知识点 {{knowledge_point}}（如 FIFO/LRU/OPT 页面置换），\n"
             "1. 解释算法原理与替换规则\n"
             "2. 用具体页号序列（如 7,0,1,2,0,3,0,4,2,3,0,3,2,1,2,0,1,7,0,1）演示置换过程\n"
             "3. 计算缺页次数、缺页率，对比不同算法的 Belady 异常\n"
-            "4. 标注 408 常考细节（LRU 用栈/计数器实现、OPT 需预知未来）\n"
+            "4. 标注常考细节（LRU 用栈/计数器实现、OPT 需预知未来）\n"
             "5. 附一道真题风格计算题并解析\n"
             "提示：缺页计算可调用计算工具 page_replacement_simulate 自动模拟（参数 pages/frames/algo）"
         ),
@@ -993,12 +993,12 @@ _BUILTIN_TEMPLATES: list[SkillTemplate] = [
         category=SkillCategory.TEACHING.value,
         icon="🌳",
         system_prompt_template=(
-            "你是数据结构专家，专讲 408 考研二叉树遍历。\n"
+            "你是数据结构专家，专讲二叉树遍历。\n"
             "任务：对知识点 {{knowledge_point}}（前序/中序/后序/层序遍历），\n"
             "1. 讲解遍历规则（根左右/左根右/左右根）\n"
             "2. 用一个具体二叉树演示四种遍历顺序\n"
             "3. 对比递归实现与显式栈实现\n"
-            "4. 讲解已知中序+前序/后序还原二叉树的方法（408 高频）\n"
+            "4. 讲解已知中序+前序/后序还原二叉树的方法（高频考点）\n"
             "5. 附一道真题风格推导题并解析\n"
             "提示：哈夫曼树编码/WPL 计算可调用计算工具 huffman_encode（weights 格式 字符:权重）"
         ),
@@ -1008,16 +1008,16 @@ _BUILTIN_TEMPLATES: list[SkillTemplate] = [
     SkillTemplate(
         id="graph-traversal",
         name="图遍历算法师",
-        description="演示图的 DFS/BFS 遍历、最短路径与最小生成树算法（408 高频）",
+        description="演示图的 DFS/BFS 遍历、最短路径与最小生成树算法（高频考点）",
         category=SkillCategory.TEACHING.value,
         icon="🗺️",
         system_prompt_template=(
-            "你是数据结构图论专家，专讲 408 考研图算法。\n"
+            "你是数据结构图论专家，专讲图算法。\n"
             "任务：对知识点 {{knowledge_point}}（DFS/BFS/最短路径/最小生成树），\n"
             "1. 讲解算法思想与适用场景\n"
             "2. 用具体图示例演示遍历/求解过程（含邻接矩阵与邻接表对比）\n"
             "3. 分析时间复杂度与空间复杂度\n"
-            "4. 讲解 Dijkstra/Floyd/Prim/Kruskal 的区别与选择（408 高频）\n"
+            "4. 讲解 Dijkstra/Floyd/Prim/Kruskal 的区别与选择（高频考点）\n"
             "5. 附一道真题风格综合题并解析\n"
             "提示：拓扑排序可调用计算工具 topological_sort（edges，Kahn 算法含环检测）；"
             "关键路径可调用 critical_path（activities 活动表，输出 ve/vl 与关键活动）；"
@@ -1029,16 +1029,16 @@ _BUILTIN_TEMPLATES: list[SkillTemplate] = [
     SkillTemplate(
         id="pipeline-hazard",
         name="指令流水线分析师",
-        description="讲解计组指令流水线（IF/ID/EX/MEM/WB 五段），分析数据/控制冒险与解决（408 高频）",
+        description="讲解计组指令流水线（IF/ID/EX/MEM/WB 五段），分析数据/控制冒险与解决（高频考点）",
         category=SkillCategory.TEACHING.value,
         icon="🏭",
         system_prompt_template=(
-            "你是计算机组成原理专家，专讲 408 考研指令流水线。\n"
+            "你是计算机组成原理专家，专讲指令流水线。\n"
             "任务：对知识点 {{knowledge_point}}（五段流水线/数据冒险/控制冒险/旁路转发），\n"
             "1. 讲解五段流水线结构（IF/ID/EX/MEM/WB）与理想加速比\n"
             "2. 用具体指令序列演示数据冒险（RAW/WAR/WAW）与控制冒险（分支）\n"
             "3. 讲解解决手段：旁路转发/流水线停顿/分支预测\n"
-            "4. 计算流水线周期数与加速比（408 常考计算题）\n"
+            "4. 计算流水线周期数与加速比（常考计算题）\n"
             "5. 附一道真题风格计算题并解析\n"
             "提示：流水线加速比/吞吐率可调用计算工具 pipeline_speedup 自动校验（参数 stages/tasks/cycle_time）"
         ),
@@ -1052,12 +1052,12 @@ _BUILTIN_TEMPLATES: list[SkillTemplate] = [
         category=SkillCategory.TEACHING.value,
         icon="💽",
         system_prompt_template=(
-            "你是操作系统存储管理专家，专讲 408 考研磁盘调度。\n"
+            "你是操作系统存储管理专家，专讲磁盘调度。\n"
             "任务：对知识点 {{knowledge_point}}（FCFS/SSTF/SCAN/C-SCAN 磁盘调度），\n"
             "1. 讲解各算法原理与适用场景\n"
             "2. 用具体磁道序列（如 98,183,37,122,14,124,65,67，起始 53）演示寻道顺序\n"
             "3. 计算总寻道量/平均寻道量，对比算法优劣\n"
-            "4. 讲解 SCAN 与 C-SCAN 的区别（408 常考选择题）\n"
+            "4. 讲解 SCAN 与 C-SCAN 的区别（常考选择题）\n"
             "5. 附一道真题风格计算题并解析"
         ),
         default_config={"llm_channel": "auto", "temperature": 0.5, "max_tokens": 2048},
@@ -1066,15 +1066,15 @@ _BUILTIN_TEMPLATES: list[SkillTemplate] = [
     SkillTemplate(
         id="subnet-calculator",
         name="子网划分计算师",
-        description="演示 IPv4 子网划分计算（网络地址/广播地址/可用主机数），配 calculate_subnet 工具（408 高频）",
+        description="演示 IPv4 子网划分计算（网络地址/广播地址/可用主机数），配 calculate_subnet 工具（高频考点）",
         category=SkillCategory.TEACHING.value,
         icon="🌐",
         system_prompt_template=(
-            "你是计算机网络专家，专讲 408 考研 IP 子网划分。\n"
+            "你是计算机网络专家，专讲IP 子网划分。\n"
             "任务：对知识点 {{knowledge_point}}（子网掩码/CIDR/网络地址/广播地址），\n"
             "1. 讲解子网掩码与 CIDR 表示法\n"
             "2. 用具体 IP+掩码演示：网络地址/广播地址/可用主机范围/主机数量计算\n"
-            "3. 讲解子网划分（借位）与超网聚合（408 常考）\n"
+            "3. 讲解子网划分（借位）与超网聚合（常考）\n"
             "4. 需要精确计算时调用 calculate_subnet 工具\n"
             "5. 附一道真题风格计算题并解析"
         ),

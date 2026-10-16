@@ -89,7 +89,7 @@ def _derive_weak_groups(profile: dict, diagnosis: dict, mindmap_weak_points: lis
 
 
 def _enrich_with_kg_dag(state: AgentState, profile: dict, diagnosis: dict, mindmap_weak_points: list):
-    """基于 408 四科知识图谱 DAG 生成拓扑有序的章节序列，写入 path_plan.kg_ordered_chapters。
+    """基于专业四科知识图谱 DAG 生成拓扑有序的章节序列，写入 path_plan.kg_ordered_chapters。
 
     画像弱项 group 置顶；LLM/规则路径字段保持不变（KG 路径作为增强/兜底，无 RL）。
     """

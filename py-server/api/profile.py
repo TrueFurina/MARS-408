@@ -151,7 +151,7 @@ async def get_ability_profile(user: dict = Depends(get_current_user)):
     读路径（M1 聚合表优先，未命中实时聚合后回写）：
       1. db.ability_store.get_profile —— ability_profiles 聚合表命中即返回
       2. 未命中 → 实时聚合两源（下述）并回写聚合表，供下次命中
-    两源：professional-场景A 考研408（db.memory_store）/ soft_skills-场景B 职业素养（db.career_store）。
+    两源：professional-场景A 专业核心四科（db.memory_store）/ soft_skills-场景B 职业素养（db.career_store）。
     任一源失败一律 **fail-open**，绝不 500；前端 useAbilityProfile 另有本地缓存回退。
     """
     user_id = user.get("user_id")
@@ -176,7 +176,7 @@ async def get_ability_profile(user: dict = Depends(get_current_user)):
     career_score = None
     updated_at = None
 
-    # 场景A：考研408 语义记忆（画像 + 掌握度）
+    # 场景A：专业核心四科 语义记忆（画像 + 掌握度）
     try:
         from db import memory_store
         sem = memory_store.get_semantic_memory(user_id) or {}

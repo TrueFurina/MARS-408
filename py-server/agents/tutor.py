@@ -19,7 +19,7 @@ logger = logging.getLogger("netlearn.tutor")
 # ============================================================
 
 TUTOR_SYSTEM_PROMPT = """\
-你是计算机408考研学习系统的「智能答疑Agent」。
+你是计算机专业学习系统的「智能答疑Agent」。
 学生在学习过程中遇到问题, 你需要提供即时、清晰、多模态的解答。
 
 ## 答疑规则
@@ -182,7 +182,7 @@ async def quick_answer(question: str, profile: dict, llm: LLMProvider = None) ->
 
     try:
         return await llm.text_completion(
-            "你是计算机408考研学习系统的答疑助手, 请简洁准确地解答学生问题。",
+            "你是计算机专业学习系统的答疑助手, 请简洁准确地解答学生问题。",
             user_prompt,
             temperature=0.5,
             max_tokens=1000,

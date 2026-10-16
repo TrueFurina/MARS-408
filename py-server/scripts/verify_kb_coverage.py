@@ -1,5 +1,5 @@
 # ============================================================
-# 408 四科知识库覆盖验收脚本（INC-03 / T04）
+# 专业四科知识库覆盖验收脚本（INC-03 / T04）
 #
 # 校验目标（设计文档 T04 验收）：
 #   ① 知识库 chunk 总数 >= 1800
@@ -52,7 +52,7 @@ def classify_subject(group: int) -> str:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="验证 408 四科知识库覆盖 (INC-03)")
+    parser = argparse.ArgumentParser(description="验证专业四科知识库覆盖 (INC-03)")
     parser.add_argument("--live", action="store_true", help="连接 vector_db 做真实检索校验")
     parser.add_argument("--min", type=int, default=1800, help="最小 chunk 数阈值")
     args = parser.parse_args()
@@ -135,7 +135,7 @@ def main():
             print(f"   - {e}")
         print("=" * 56)
         sys.exit(1)
-    print("✅ 验收通过：408 四科知识库覆盖满足 P0 要求（≥%d chunks，四科非空）。" % args.min)
+    print("✅ 验收通过：专业四科知识库覆盖满足 P0 要求（≥%d chunks，四科非空）。" % args.min)
     print("=" * 56)
     sys.exit(0)
 

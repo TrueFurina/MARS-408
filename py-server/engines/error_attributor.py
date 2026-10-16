@@ -141,7 +141,7 @@ async def attribute_error(
         opts_str = "；".join(str(o) for o in opts)
 
     system_prompt = (
-        "你是计算机专业考研（408）错题分析助手。给定一道题的题干、选项、"
+        "你是计算机专业错题分析助手。给定一道题的题干、选项、"
         "学生错误答案、正确答案与解析，请判断学生『为什么错』。"
         "只输出一个 JSON 对象，字段严格如下：\n"
         "{\n"

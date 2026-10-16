@@ -71,7 +71,7 @@ def _hash_text(text: str) -> str:
 
 
 # ── e5 官方前缀（intfloat/e5 系列的硬性要求）──
-# 实测（2026-09-02，2113 条真实 408 语料 / 30 题 gold）：
+# 实测（2026-09-02，2113 条真实语料 / 30 题 gold）：
 #   不加前缀时 E5 单路 Recall@5 仅 0.70，明显劣于 BM25 的 0.90；
 #   加 "query: "/"passage: " 后 groundedness 0.2933 → 0.3250、混合 0.5811 → 0.6011。
 # 逃生舱：E5_PREFIX=off 时退回无前缀行为（兼容基于无前缀向量训练的 NeuralMixer 权重）。

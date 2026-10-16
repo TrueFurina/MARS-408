@@ -23,7 +23,7 @@ async def subjects_list(user: dict = Depends(get_current_user)):
 @router.get("/knowledge-graph")
 async def knowledge_graph_get(subject: str = "all", user: dict = Depends(get_current_user)):
     """获取知识图谱数据，按科目过滤"""
-    # 408 四科 group 映射（与 seed_data.py 合并后的实际 group 编号一致）
+    # 专业四科 group 映射（与 seed_data.py 合并后的实际 group 编号一致）
     # 计网: groups 13-19 (seed_data KNOWLEDGE_GRAPH 原始编号)
     # DS:   groups 1-4 (原始) + 8-14 (调整 +7)
     # CO:   groups 5-7 (原始) + 15-21 (调整 +14)

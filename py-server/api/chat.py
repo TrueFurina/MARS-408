@@ -183,7 +183,7 @@ def _execute_tool(name: str, arguments: str) -> str:
         )
 
     if name == "calculate_crc":
-        # 循环32-P0：CRC 校验计算（408 数据链路层高频考点）
+        # 循环32-P0：CRC 校验计算（数据链路层高频考点）
         data = str(args.get("data", ""))
         poly = str(args.get("poly", "10011"))  # 默认 CRC-4（G(x)=x^4+x+1）
         try:
@@ -227,7 +227,7 @@ def _execute_tool(name: str, arguments: str) -> str:
             return f"CRC 计算失败: {e}"
 
     if name == "translate_page_address":
-        # 循环32-P0：页表地址转换（408 OS 内存管理高频考点）
+        # 循环32-P0：页表地址转换（OS 内存管理高频考点）
         try:
             logical = int(args.get("logical", 0))
             page_size_kb = int(args.get("page_size_kb", 4))
@@ -257,7 +257,7 @@ def _execute_tool(name: str, arguments: str) -> str:
             return f"地址转换失败: {e}"
 
     if name == "calculate_ip_checksum":
-        # 循环33-P0：IP 首部校验和计算（408 计网运输/网络层高频考点）
+        # 循环33-P0：IP 首部校验和计算（计网运输/网络层高频考点）
         try:
             hex_str = str(args.get("hex", "")).strip()
             if not hex_str:
@@ -283,7 +283,7 @@ def _execute_tool(name: str, arguments: str) -> str:
             return f"校验和计算失败: {e}"
 
     if name == "calculate_scheduling":
-        # 循环33-P0：进程调度时间计算（408 OS 进程管理高频考点）
+        # 循环33-P0：进程调度时间计算（OS 进程管理高频考点）
         try:
             raw = str(args.get("arrivals", ""))
             # 格式: "P1:0,P2:1,P3:2"（进程:到达时间），默认服务时间=1
@@ -322,7 +322,7 @@ def _execute_tool(name: str, arguments: str) -> str:
             return f"调度计算失败: {e}"
 
     if name == "dijkstra_shortest_path":
-        # 循环34-P0：Dijkstra 最短路径（408 数据结构图论高频考点）
+        # 循环34-P0：Dijkstra 最短路径（数据结构图论高频考点）
         try:
             nodes = str(args.get("nodes", ""))
             edges = str(args.get("edges", ""))
@@ -378,7 +378,7 @@ def _execute_tool(name: str, arguments: str) -> str:
             return f"Dijkstra 计算失败: {e}"
 
     if name == "huffman_encode":
-        # 循环34-P0：哈夫曼编码（408 数据结构树/编码高频考点）
+        # 循环34-P0：哈夫曼编码（数据结构树/编码高频考点）
         try:
             raw = str(args.get("weights", ""))
             if not raw:
@@ -423,7 +423,7 @@ def _execute_tool(name: str, arguments: str) -> str:
             return f"哈夫曼编码失败: {e}"
 
     if name == "kmp_match":
-        # 循环6：KMP 模式匹配（408 数据结构字符串匹配高频考点）
+        # 循环6：KMP 模式匹配（数据结构字符串匹配高频考点）
         try:
             text = str(args.get("text", ""))
             pattern = str(args.get("pattern", ""))
@@ -462,7 +462,7 @@ def _execute_tool(name: str, arguments: str) -> str:
             return f"KMP 匹配失败: {e}"
 
     if name == "calculate_cache_mapping":
-        # 循环6：Cache 映射计算（408 计组存储系统高频考点）
+        # 循环6：Cache 映射计算（计组存储系统高频考点）
         try:
             cache_kb = int(args.get("cache_kb", 64))
             block_b = int(args.get("block_b", 64))
@@ -488,7 +488,7 @@ def _execute_tool(name: str, arguments: str) -> str:
             return f"Cache 计算失败: {e}"
 
     if name == "calculate_ip_fragmentation":
-        # 循环6：IP 分片计算（408 计网网络层高频考点）
+        # 循环6：IP 分片计算（计网网络层高频考点）
         try:
             total = int(args.get("total", 4000))
             mtu = int(args.get("mtu", 1500))
@@ -530,7 +530,7 @@ def _execute_tool(name: str, arguments: str) -> str:
             return f"IP 分片计算失败: {e}"
 
     if name == "hash_conflict_resolve":
-        # 循环6：哈希冲突处理（408 数据结构查找高频考点）
+        # 循环6：哈希冲突处理（数据结构查找高频考点）
         try:
             keys_raw = str(args.get("keys", ""))
             table_size = int(args.get("size", 11))
@@ -573,7 +573,7 @@ def _execute_tool(name: str, arguments: str) -> str:
             return f"哈希冲突计算失败: {e}"
 
     if name == "bankers_algorithm":
-        # 任务4：银行家算法（408 死锁避免高频考点）
+        # 任务4：银行家算法（死锁避免高频考点）
         try:
             available = str(args.get("available", ""))          # "3,3,2"
             allocation = str(args.get("allocation", ""))        # "0,1,0;2,0,0;3,0,2;2,1,1;0,0,2"
@@ -618,7 +618,7 @@ def _execute_tool(name: str, arguments: str) -> str:
             return f"银行家算法计算失败: {e}"
 
     if name == "page_replacement_simulate":
-        # 任务4：页面置换模拟（408 OS 内存管理高频考点）
+        # 任务4：页面置换模拟（OS 内存管理高频考点）
         try:
             pages = str(args.get("pages", ""))     # "7,0,1,2,0,3,0,4,2,3,0,3,2"
             frames = int(args.get("frames", 3))
@@ -659,7 +659,7 @@ def _execute_tool(name: str, arguments: str) -> str:
             return f"页面置换模拟失败: {e}"
 
     if name == "topological_sort":
-        # 拓扑排序（408 图论高频考点）
+        # 拓扑排序（图论高频考点）
         try:
             edges_raw = str(args.get("edges", ""))   # "A,B;B,C;A,C;D,C"
             if not edges_raw:
@@ -700,7 +700,7 @@ def _execute_tool(name: str, arguments: str) -> str:
             return f"拓扑排序失败: {e}"
 
     if name == "critical_path":
-        # 关键路径（408 图论 AOE 网高频考点）
+        # 关键路径（图论 AOE 网高频考点）
         try:
             activities = str(args.get("activities", ""))   # "1,2,3;2,3,4;2,4,2;3,5,5;4,5,7"（start,end,weight）
             if not activities:
@@ -754,7 +754,7 @@ def _execute_tool(name: str, arguments: str) -> str:
             return f"关键路径计算失败: {e}"
 
     if name == "pipeline_speedup":
-        # 流水线加速比（408 计组流水线高频考点）
+        # 流水线加速比（计组流水线高频考点）
         try:
             stages = int(args.get("stages", 5))
             tasks = int(args.get("tasks", 100))

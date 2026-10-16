@@ -273,7 +273,7 @@ async def api_roleplay(req: RoleplayReq, user: dict = Depends(get_current_user))
 
 @router.post("/resume")
 async def api_resume(req: ResumeReq, user: dict = Depends(get_current_user)):
-    """智能简历：生成可下载的考研复试/能力档案(word)"""
+    """智能简历：生成可下载的求职/升学简历(word)"""
     # F-015：用户自由文本净化（直连讯飞智能简历 LLM 入口）
     safe_info = sanitize_user_input(req.info)
     r = await generate_resume(safe_info)

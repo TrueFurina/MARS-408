@@ -19,7 +19,7 @@ async def main():
 
     # 生成作品演示 PPT
     result = await generate_ppt(
-        query="芒得很职 基于GOMARL与FrugalRAG的408考研个性化学习多智能体系统\n\n"
+        query="芒得很职 基于GOMARL与FrugalRAG的计算机类学生职业素养对抗实训平台\n\n"
                "系统架构：10节点LangGraph多智能体流水线，包含coordinator/diagnostician/planner/"
                "retriever/generator_cluster/assessor/critic/path_planner\n\n"
                "核心技术：1.GOMARL共识引擎 - 加权投票+一致性校验+NeuralMixer神经网络\n"

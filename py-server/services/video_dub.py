@@ -78,7 +78,7 @@ def _create_default_bg():
                   extent=[0, 16, 0, 9])
         ax.text(8, 5.5, "芒得很职", fontsize=48, color="white",
                 ha="center", va="center", fontweight="bold", alpha=0.3)
-        ax.text(8, 4.2, "考研个性化学习系统", fontsize=20, color="white",
+        ax.text(8, 4.2, "专业能力智能学习", fontsize=20, color="white",
                 ha="center", va="center", alpha=0.2)
         ax.set_xlim(0, 16)
         ax.set_ylim(0, 9)

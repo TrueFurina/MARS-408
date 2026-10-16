@@ -200,7 +200,7 @@ async def competition_status():
             "agent_count": 11,
             "resource_types": 7,
             # 画像维度必须从唯一真值源派生：本分支权威定义在 agents.career_state.DIMENSIONS。
-            # 曾硬编码为 8（旧版 408 学情画像遗留），与本线口径不符 ⇒ 改为派生，杜绝再漂移。
+            # 曾硬编码为 8（旧版学情画像遗留），与本线口径不符 ⇒ 改为派生，杜绝再漂移。
             "profile_dimensions": _profile_dimension_count(),
         },
     }

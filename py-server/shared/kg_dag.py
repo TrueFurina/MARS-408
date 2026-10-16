@@ -1,5 +1,5 @@
 # ============================================================
-# 知识图谱 DAG（KG-DAG）— 408 四科 group(1-26) 拓扑排序
+# 知识图谱 DAG（KG-DAG）— 专业四科 group(1-26) 拓扑排序
 #
 # M-3：本模块原位于 agents/kg_dag.py，但 db/graph_db.py 需要引用其中的
 # 分组表（SUBJECT_GROUP_MAP / GROUP_PREREQS …），形成 db → agents 反向依赖，

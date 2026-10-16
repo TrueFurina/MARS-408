@@ -27,7 +27,7 @@ logger = logging.getLogger("netlearn.mindmap")
 # ============================================================
 
 SKELETON_GENERATION_PROMPT = """\
-你是计算机408考研(数据结构/计算机组成原理/操作系统/计算机网络)知识体系专家。
+你是计算机专业(数据结构/计算机组成原理/操作系统/计算机网络)知识体系专家。
 请为主题「{topic}」生成结构化的知识骨架树。
 
 ## 检索到的参考材料
@@ -41,7 +41,7 @@ SKELETON_GENERATION_PROMPT = """\
    - key_points: 核心考点列表 (2-4个, 每个不超过20字)
    - difficulty: 难度 (easy / medium / hard)
    - children: 子节点列表
-3. 覆盖408考研大纲要求的全部知识点, 不要遗漏
+3. 覆盖教学大纲要求的全部知识点, 不要遗漏
 4. 知识点粒度适中:
    - 不要太粗 (如只写"二叉树"不展开)
    - 不要太细 (如"BST第3种删除情况的LR旋转")
@@ -74,8 +74,8 @@ SKELETON_GENERATION_PROMPT = """\
 }}"""
 
 SKELETON_FALLBACK_PROMPT = """\
-你是计算机408考研知识体系专家。请凭你的知识为主题「{topic}」生成知识骨架树。
-{max_depth} 层深度, 覆盖考研大纲全部知识点。
+你是计算机专业知识体系专家。请凭你的知识为主题「{topic}」生成知识骨架树。
+{max_depth} 层深度, 覆盖教学大纲全部知识点。
 输出格式: title / level / key_points / difficulty / children 的嵌套JSON。
 只输出JSON, 不要其他文字。"""
 
@@ -174,7 +174,7 @@ async def _generate_skeleton(
         prompt += f"\n\n【学生历史学情记忆】\n{memory_context[:500]}\n请对其中标注的薄弱知识点在导图中重点突出。"
 
     response = await llm.text_completion(
-        system_prompt="你是计算机408考研知识体系专家, 只输出JSON。",
+        system_prompt="你是计算机专业知识体系专家, 只输出JSON。",
         user_prompt=prompt,
         temperature=0.3,    # 低温度保证结构稳定
         max_tokens=4096,

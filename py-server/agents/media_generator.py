@@ -17,7 +17,7 @@ logger = logging.getLogger("netlearn.media_generator")
 # ── 视频脚本生成（增强版，含多模态融合） ──
 
 VIDEO_SCRIPT_ENHANCED_PROMPT = """\
-你是计算机考研学习系统的「多模态视频制作Agent」。
+你是计算机专业学习系统的「多模态视频制作Agent」。
 你的任务是为学生生成一段完整的教学视频/动画制作方案，包含分镜脚本、视觉设计、动画效果说明。
 
 ## 核心要求

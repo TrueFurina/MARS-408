@@ -201,7 +201,7 @@ def generate_more_samples(n: int = 480) -> list[dict]:
     """程序化生成更多标注样本（达到500条目标）"""
     import random
 
-    topics_408 = [
+    topics_core = [
         ("computer_network", "TCP拥塞控制的四个算法", "慢启动、拥塞避免、快重传、快恢复"),
         ("computer_network", "RIP协议的最大跳数", "15跳，16跳表示不可达"),
         ("computer_network", "OSPF使用的算法", "Dijkstra最短路径算法"),
@@ -227,7 +227,7 @@ def generate_more_samples(n: int = 480) -> list[dict]:
     ]
 
     samples = list(LABELED_SAMPLES)  # 复制已有的20条
-    for i, (subj, query, answer) in enumerate(topics_408 * 25):  # 重复25次达到500+
+    for i, (subj, query, answer) in enumerate(topics_core * 25):  # 重复25次达到500+
         if len(samples) >= n:
             break
         sample = {

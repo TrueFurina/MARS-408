@@ -5,7 +5,7 @@
 # GET /api/profile/ability 读取（profile.py 优先读本表，未命中则实时聚合后回写）。
 #
 # 自包含幂等建表；复用全局 pg_client（PostgreSQL / SQLite 自动回退）。
-# 表名 ability_profiles —— 跨场景共享层（既非 career_* 、也不是 408 业务表）。
+# 表名 ability_profiles —— 跨场景共享层（既非 career_* 、也不是专业能力场景业务表）。
 #
 # 【纪律】只新增、不迁移旧数据；任何读写异常一律 fail-open（返回 None/False），
 # 由调用方回退到各源实时聚合，绝不让画像接口 500。

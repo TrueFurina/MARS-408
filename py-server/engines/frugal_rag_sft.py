@@ -40,7 +40,7 @@ class QueryPreprocessor:
         (r"\s{2,}", " "),
     ]
 
-    # 408 学科关键词词典
+    # 专业四科学科关键词词典
     _DOMAIN_KEYWORDS = {
         "data_structures": ["链表", "栈", "队列", "树", "图", "排序", "查找", "哈希", "堆", "二叉树", "AVL", "红黑树", "B树", "图遍历", "最短路径", "最小生成树"],
         "computer_network": ["TCP", "UDP", "HTTP", "HTTPS", "IP", "DNS", "ARP", "ICMP", "路由", "交换机", "网关", "三次握手", "四次挥手", "拥塞控制", "滑动窗口", "CSMA/CD", "MAC", "VLAN"],
@@ -127,7 +127,7 @@ _SFT_QUERY_PROMPT = """你是检索增强生成系统的「查询优化器」。
 """
 
 # 答案提取提示词
-_ANSWER_PROMPT = """你是408考研辅导老师。基于以下检索到的知识，回答学生的问题。
+_ANSWER_PROMPT = """你是专业辅导老师。基于以下检索到的知识，回答学生的问题。
 
 学生问题：{question}
 学科：{course}
@@ -139,7 +139,7 @@ _ANSWER_PROMPT = """你是408考研辅导老师。基于以下检索到的知识
 1. 回答必须基于检索到的知识，不要编造
 2. 使用清晰的 Markdown 格式
 3. 如果检索知识不足以完整回答，明确指出哪些部分需要补充
-4. 408考研重点知识要突出标注
+4. 重点知识要突出标注
 """
 
 
@@ -212,7 +212,7 @@ class LLMQueryOptimizer:
 
         try:
             answer = await self._llm.text_completion(
-                "你是408考研辅导老师，擅长用清晰的语言解释计算机概念。",
+                "你是专业辅导老师，擅长用清晰的语言解释计算机概念。",
                 prompt,
                 temperature=0.5,
                 max_tokens=1500,

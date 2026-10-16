@@ -311,7 +311,7 @@ async def lifespan(app: FastAPI):
     # ── 向量数据库（Milvus 优先，InMemoryVectorStore 回退）─ 同步，先完成 ──
     count = await _init_vector_db()
 
-    # ── 408 教材自动扩充（pending 标记；实际导入在 import_worker 启动后 enqueue）──
+    # ── 专业四科教材自动扩充（pending 标记；实际导入在 import_worker 启动后 enqueue）──
     # 旧实现：本阶段用子进程调 import_textbook.py，而该脚本 __main__ 已改为向本后端
     # HTTP 提交 job；但 lifespan 阶段后端尚未对外服务 → 导入必败、知识库卡在种子量、
     # 且每次冷启动都白跑一个必败子进程（约 30s 冷启动瓶颈之一）。
@@ -332,7 +332,7 @@ async def lifespan(app: FastAPI):
 
     cleanup_task = asyncio.create_task(_artifact_lifecycle_loop())
 
-    # ── 408 教材自动扩充：经进程内导入队列（ADR-007 单写者），非阻塞后台执行 ──
+    # ── 专业四科教材自动扩充：经进程内导入队列（ADR-007 单写者），非阻塞后台执行 ──
     if textbook_import_pending:
         try:
             job_id = await import_worker.submit("textbook", None, {})

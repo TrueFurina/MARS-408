@@ -72,7 +72,7 @@ class Skill:
     # SKILL.md 对齐字段（循环7-P1：调研 Claude Code Skills 结构化格式落地）
     #   allowed_tools: 技能运行期间预授权工具白名单（对应 allowed-tools，防越权）
     #   disable_model_invocation: 为 true 时仅手动触发，禁止模型自动调用
-    #   trigger_paths: 条件激活（gitignore 风格路径/知识点匹配，可对接 408 知识图谱）
+    #   trigger_paths: 条件激活（gitignore 风格路径/知识点匹配，可对接知识图谱）
     allowed_tools: list[str] = field(default_factory=list)
     disable_model_invocation: bool = False
     trigger_paths: list[str] = field(default_factory=list)

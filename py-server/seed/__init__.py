@@ -1,12 +1,12 @@
 # ============================================================
-# seed/ — 408 四科静态种子语料包（M-4 ③，自 seed_data.py 拆分）
+# seed/ — 专业四科静态种子语料包（M-4 ③，自 seed_data.py 拆分）
 #
 # 为什么拆：原 seed_data.py 1,527 行把四科语料、知识图谱、学习路径 DAG 与派生
 # 组装逻辑混装在一个文件里，改任何一科都要在巨型文件里翻找。
 #
 # 为什么是包而不是 scripts/：评审文档原建议「归入 scripts/（非运行时依赖）」经实测
 # 不成立 —— api/{knowledge,learning_path,rag,subjects,teacher}、engines/frugal_rag_sft
-# 与 app/lifespan 共 7 个**运行时**模块依赖它，且本文件尾部承载 408 四科 group 偏移
+# 与 app/lifespan 共 7 个**运行时**模块依赖它，且本文件尾部承载专业四科 group 偏移
 # 对齐的派生逻辑。塞进一次性脚本目录会迫使运行时依赖去 hack sys.path。
 #
 # ⚠️ 求值顺序敏感，勿重排：
@@ -198,7 +198,7 @@ SEED_KNOWLEDGE_CHUNKS.extend(CO_EXPANDED_CHUNKS)
 SEED_KNOWLEDGE_CHUNKS.extend(OS_EXPANDED_CHUNKS)
 
 # ============================================================
-# 合并科目定义、知识图谱、学习路径（408四科）
+# 合并科目定义、知识图谱、学习路径（专业四科）
 # ============================================================
 
 # 合并 subject 定义
@@ -391,7 +391,7 @@ for _chunk in SEED_KNOWLEDGE_CHUNKS:
 KNOWLEDGE_GRAPH["nodes"].extend(_FINE_KG_NODES)
 KNOWLEDGE_GRAPH["edges"].extend(_FINE_KG_EDGES)
 
-# ── 跨学科概念节点（408四科交叉知识点）──
+# ── 跨学科概念节点（专业四科交叉知识点）──
 _CROSS_NODES = [
     {"id": "cross_storage", "label": "存储层次", "group": 1},
     {"id": "cross_interrupt", "label": "中断机制", "group": 1},

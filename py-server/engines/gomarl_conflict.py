@@ -190,7 +190,7 @@ class ConsistencyChecker:
     _SEMANTIC_CONFLICT_THRESHOLD = 0.3  # 低于此值且共享领域实体才判为语义分歧
     _SEMANTIC_SAME_THRESHOLD = 0.85     # 高于此值认为内容相似（保留，供扩展）
 
-    # 领域实体锚定表：两 Agent 必须就同一 408 实体发言，才可能构成"冲突"。
+    # 领域实体锚定表：两 Agent 必须就同一专业领域实体发言，才可能构成"冲突"。
     # 词汇与 _FACTUAL_CONTRADICTIONS 的易错点对齐；命中即为"可比较话题"。
     _SEMANTIC_ANCHORS = frozenset({
         # ── 计算机网络 ──
@@ -412,7 +412,7 @@ class ConsistencyChecker:
         return None
 
     def _shared_anchors(self, text_a: str, text_b: str) -> set[str]:
-        """两文本共同提及的 408 领域实体（判断是否"同一话题、可比较"）。
+        """两文本共同提及的专业领域实体（判断是否"同一话题、可比较"）。
 
         纯文本/领域词表匹配，无外部依赖；用 frozenset 做 O(|anchors|) 子串扫描。
         """
@@ -426,7 +426,7 @@ class ConsistencyChecker:
 
         三重门，逐级短路，专治"不同主题/编码失败被误判为矛盾"：
           ① 长度门：内容过短信息不足，不判；
-          ② 实体锚定门：两 Agent 未就同一 408 实体发言 ⇒ 属互补分工，非冲突；
+          ② 实体锚定门：两 Agent 未就同一专业领域实体发言 ⇒ 属互补分工，非冲突；
           ③ 向量有效性门：E5 失败产生零向量时 sim≈0，不得据此判冲突。
         通过三重门后，才以"同话题但相似度过低"认定语义分歧。
         """

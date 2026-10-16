@@ -26,7 +26,7 @@ async def coordinator_node(state: AgentState) -> AgentState:
         state["topic"] = topic
 
     # 调用 LLM 解析请求
-    user_prompt = f"【用户请求】\n{user_request or topic}\n\n请解析以上请求，确定学习主题、所属408课程（computer_network/data_structures/computer_organization/operating_system）和难度等级。如果请求不明确涉及特定科目，留空course字段让后续逻辑自动判断。如果用户未指定科目，请根据内容自动推断最可能的科目。"
+    user_prompt = f"【用户请求】\n{user_request or topic}\n\n请解析以上请求，确定学习主题、所属专业课程（computer_network/data_structures/computer_organization/operating_system）和难度等级。如果请求不明确涉及特定科目，留空course字段让后续逻辑自动判断。如果用户未指定科目，请根据内容自动推断最可能的科目。"
 
     # L1/L2/L3 三层学情记忆（低侵入注入：协调阶段参考薄弱点/进度）
     memory_context = state.get("memory_context") or ""

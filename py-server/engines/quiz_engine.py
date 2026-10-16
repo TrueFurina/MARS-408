@@ -73,7 +73,7 @@ class WeakPoint:
 
 
 # ── 科目别名归一化 ──
-# 不同数据源使用的科目命名不统一（课程级 / 中文 408 科目 / 网络分层子主题），
+# 不同数据源使用的科目命名不统一（课程级 / 中文科目名 / 网络分层子主题），
 # 统一映射到 STEP_QUESTIONS 的 subject 取值，使"薄弱科目过滤"可跨数据源匹配。
 # 若不归一化，语义记忆 mastery 键（network/transport/…）与题库 subject（computer_network/…）
 # 永不相交，adaptive 模式会静默回退到常规选题。
@@ -83,13 +83,13 @@ SUBJECT_ALIASES = {
     "data_structures": "data_structures",
     "computer_organization": "computer_organization",
     "operating_system": "operating_system",
-    # 中文 408 科目
+    # 中文科目名
     "计算机网络": "computer_network",
     "数据结构": "data_structures",
     "计算机组成原理": "computer_organization",
     "计组": "computer_organization",
     "操作系统": "operating_system",
-    # 网络分层子主题 → 计算机网络（408 中"计算机网络"科目的子集）
+    # 网络分层子主题 → 计算机网络（"计算机网络"科目的子集）
     "overview": "computer_network",
     "physical": "computer_network",
     "datalink": "computer_network",
@@ -644,7 +644,7 @@ def filter_questions_for_weak_points(
     """
     if not weak_points:
         return []
-    # 归一化薄弱科目命名（network/transport/中文 408 科目等 → computer_network 等），
+    # 归一化薄弱科目命名（network/transport/中文科目名等 → computer_network 等），
     # 否则与题库 subject 词表错位会静默返回空。
     norm = {normalize_subject(w) for w in weak_points}
     candidates = [q for q in pool if getattr(q, "subject", None) in norm]

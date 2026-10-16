@@ -16,7 +16,7 @@ logger = logging.getLogger("netlearn.feedback_agent")
 # ── 评估 Prompt ──
 
 FEEDBACK_EVALUATE_PROMPT = """\
-你是计算机408考研学习系统的「学习效果评估Agent」。
+你是计算机专业学习系统的「学习效果评估Agent」。
 你的任务是根据学生的学习数据，进行多维度学习效果评估，并生成结构化的评估报告和调整建议。
 
 ## 评估维度
@@ -206,7 +206,7 @@ def _fallback_eval(quiz_history: list[dict]) -> dict:
 # ── 路径调整建议 ──
 
 PATH_ADJUST_PROMPT = """\
-你是计算机408考研学习系统的「学习路径调整Agent」。
+你是计算机专业学习系统的「学习路径调整Agent」。
 你的任务是根据学习效果评估报告，动态调整学习路径和资源推送策略。
 
 ## 输入
