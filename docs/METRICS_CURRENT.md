@@ -12,8 +12,8 @@
 | 字段 | 值 |
 | --- | --- |
 | 产物文件 | `py-server/experiments/results/benchmark_2026-09-18.json` |
-| sha256（前16位） | `0c17657a4d85e50f`（完整值见真产物文件，校验脚本只比前 16 位） |
-| 大小 | 261554 字节 |
+| sha256（前16位） | `3ffae12147dc2a8b`（完整值见真产物文件，校验脚本只比前 16 位） |
+| 大小 | 261558 字节 |
 | 生成时间 | 2026-09-18 00:52 |
 | 查询数 | 28（实验1）/ 30×3 重复（实验2） |
 | KB chunks | 2122（2026-09-18 实验时点口径；当前种子库已扩至 2015 chunks + 230 题，见 CLAUDE.md 数据层） |
@@ -70,7 +70,7 @@
 | 前端 .ts 总数 | 62 | `git ls-files 'src/**/*.ts'` 计数 |
 | 前端代码行数（.vue+.ts） | 53960 | git 跟踪的 `.vue` + `.ts` 全部行数 |
 | 后端 Python 文件数 | 362 | `git ls-files 'py-server/**/*.py'` 计数 |
-| 后端代码行数 | 85803 | git 跟踪的 `.py` 全部行数 |
+| 后端代码行数 | 85852 | git 跟踪的 `.py` 全部行数 |
 | API 路由模块数 | 42 | `git ls-files 'py-server/api/*.py'` 去 `__init__.py` |
 | API 路径数（/api） | 236 | `py-server/openapi.json` 中 `/api` 路径数 |
 | API 操作数（/api，method 级） | 254 | `py-server/openapi.json` 中 `/api` 操作数（method 级） |
@@ -81,7 +81,7 @@
 > **1389 通过 / 38 跳过 / 1 xfail（2026-10-09 CI run 37917008258，见 AGENTS.md；套件已增长，须由下一次 CI 全量回归刷新）**。
 >
 > **认证覆盖率**同理由独立脚本产出：`py-server/scripts/verify_auth_coverage.py`
-> （当前 total=245 / protected=232 / public=13 / coverage=**94.88%** / unregistered=0）。
+> （当前 total=254 / protected=241 / public=13 / coverage=**94.88%** / unregistered=0）。
 
 ## 漂移防护
 

@@ -1,6 +1,6 @@
 # 国创赛交付物（deliverables/）数字对齐核对清单
 
-> ⚠️ **当前真值（HEAD `01ba5e9`，2026-10-12 之后）**：本文 §一 / §三 为 10-09 时点快照，**以 §七 / §八 为准** —— API **245 ops / 228 paths**、认证覆盖率 **94.69%（232/245）**、测试 **1389 passed / 38 skipped / 1 xfailed**（1428 运行项 / 1436 collected）。改数请以 §八 与机器复算为唯一来源，禁止手抄旧值。
+> ⚠️ **当前真值（HEAD `a570d6c`，2026-10-17）**：本文 §一 / §三 为 10-09 时点快照，**以 §九 为准** —— API **254 ops / 236 paths**、认证覆盖率 **94.88%（241/254）**、测试 **1389 passed / 38 skipped / 1 xfailed**（1428 运行项 / 1436 collected）。改数请以 §九 与机器复算为唯一来源，禁止手抄旧值。
 
 > 生成时间：2026-10-09 ｜ 范围：`deliverables/` 下国创赛相关文档与 PPT 生成器
 > 方法：只读审计 + 机器复算（不手数）。本机实跑 `verify_metrics.py`（9/9 通过）、`openapi.json` 计数、CI run `37917008258` 实测摘要。
@@ -150,3 +150,24 @@
   - 路演与证据：`deliverables/build_roadshow_pptx.py`、`deliverables/芒得很职-国创赛证据页.md`
 - **历史行按设计保留**：上文各节（`§一`、`§三`、`§六`、`§七`）中出现的 `94.67%` / `231/244` / `244 operations / 227 paths` 等旧值一律**原样不动**，它们记录的是各自时点的核对事实，改写会摧毁台账的可追溯性。同理 `_archive_*` 快照与 `源码/` 冻结副本不在同步范围内。
 - **本次未改、留待决定**：三份 README（`README.md:83/:261`、`README_EN.md:57`、`py-server/README.md:74`）仍为旧形态 244/227，因不属本轮 12 文件清单；以及 `submission/00_提交清单.md:120/:134` 两条「应得 paths=227 / operations=244」的校验期望（OpenAPI 快照现值已为 228/245），属校验用例文本，需另行确认是否一并更新。
+
+---
+
+## 九、2026-10-17 覆盖率族同步至 94.88%（追加，不改上文历史行）
+
+> 本节为**新增记录**，不改动上文 §一 ~ §八 的历史快照行（保留可追溯）。
+
+- **§八 的 94.69%（232/245）已过期**。机器真值（HEAD `a570d6c`，2026-10-17 实跑）：
+  `cd py-server && env -u PYTHONPATH -u PYTHONSTARTUP -u NODE_OPTIONS -u ELECTRON_RUN_AS_NODE /d/miniconda3_new/python.exe scripts/verify_auth_coverage.py`
+  → `__SUMMARY__ total=254 protected=241 public=13 coverage=94.88 unregistered=0`，
+  即 **94.88%（241/254）**；`py-server/openapi.json` `/api` 子集 **236 paths / 254 operations**。
+- **方向**：受保护 232→241、总数 245→254、公开 13 不变 ⇒ 覆盖率 94.69% → 94.88% **上升**，非安全回归。
+- **本日同步范围（deliverables 侧）**：
+  - `deliverables/build_roadshow_pptx.py`：:15（口径铁律）、:65-69（METRICS 的 `api_operations` / `api_paths` / `auth_*`）、:173 / :174（Slide 4 正文）、:179（Slide 4 演讲备注）
+  - `deliverables/芒得很职-国创赛证据页.md`：:26（认证覆盖率）、:35（API 端点）
+- **全局侧同步（详见 `docs/submission-number-reconciliation-2026-10-09.md` §八 的 17 文件清单）**：`README.md` / `README_EN.md`、`py-server/README.md`、`src/views/ShowcaseView.vue`、`docs/ci-backend-test-result.md:32`、`submission/` 族（00 提交清单 + 5 份配套文档）、`plans/roadmap-2026-10-13.md`、`site/index.html`。
+- **测试数口径补订**：`site/index.html` 的 **1177 通过 / 227 跳过（2026-10-01 复核口径）** 已由 10-09 CI 默认档 **1389 / 38 / 1 xfail** 取代（§八 未覆盖该站点），本次一并订正，含 :216 的「API 端点（约）240 → 254」。
+- **本次未改、留待决定**：
+  - `deliverables/` 下 `源码/` 冻结副本与 `_archive_*` 快照：历史冻结物，不在同步范围。
+  - `deliverables/build_roadshow_pptx.py:13` 的 CI 测试数（**1503 run / 1464 passed / 38 skipped / 1 xfailed**）与 `:17` 禁用清单：与 README / 台账的 **1389 / 38 / 1** 口径不一致，但不属认证覆盖率族，本轮未动 —— **建议下一轮核一次该行来源**（疑为另一次 CI run 的快照）。
+- **SSOT 与机检（另笔提交）**：`docs/METRICS_CURRENT.md` sha256 → `3ffae12147dc2a8b`、大小 → 261558 字节、:84 → total=254 / protected=241；`scripts/verify_metrics.py --update` 仅动一行（后端代码行数 85803 → 85852）。
