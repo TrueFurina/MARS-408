@@ -869,26 +869,31 @@ class VectorDB:
             return []
         col = Collection(coll_name)
         col.load()
-        search_params = {"metric_type": "COSINE", "params": {"ef": 128}}
+        # HNSW 搜索参数 ef 必须 > top_k（Milvus 硬性约束）。FrugalRAG 为 rerank 取大候选池时
+        # top_k 可达 800（course_search_top_k 默认 800），固定 ef=128 会触发
+        # "ef(128) should be larger than k(800)" 导致整条检索 500。故 ef 随 top_k 动态抬升。
+        search_params = {"metric_type": "COSINE", "params": {"ef": max(128, int(top_k) + 1)}}
         results = col.search(
             data=[query_vector],
             anns_field="embedding",
             param=search_params,
             limit=top_k,
             expr=filter_expr,
-            output_fields=["text", "course", "chapter", "chapter_name", "type", "keywords"],
+            output_fields=["id_str", "text", "course", "chapter", "chapter_name", "type", "keywords"],
         )
         return [
             {
-                "id": hit.id,
-                "text": hit.entity.get("text", ""),
+                # 主键是 INT64 auto_id（hit.id 为无意义自增整数），逻辑 id 在 id_str 字段；
+                # 直接返回 hit.id 会因 RAGSearchResult.id:str 校验失败 500。
+                "id": str(hit.entity.get("id_str") or ""),
+                "text": hit.entity.get("text") or "",
                 "score": hit.score,
                 "metadata": {
-                    "course": hit.entity.get("course", ""),
-                    "chapter": hit.entity.get("chapter", ""),
-                    "chapter_name": hit.entity.get("chapter_name", ""),
-                    "type": hit.entity.get("type", ""),
-                    "keywords": hit.entity.get("keywords", ""),
+                    "course": hit.entity.get("course") or "",
+                    "chapter": hit.entity.get("chapter") or "",
+                    "chapter_name": hit.entity.get("chapter_name") or "",
+                    "type": hit.entity.get("type") or "",
+                    "keywords": hit.entity.get("keywords") or "",
                 },
             }
             for hit in results[0]
