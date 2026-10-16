@@ -226,7 +226,7 @@ function fmtDate(iso: string): string { return (iso || '').slice(0, 10) }
 .gs-phase.ph-pre { background: var(--accent-primary-10); color: var(--accent-primary); }
 .gs-phase.ph-post { background: var(--color-success-bg); color: var(--color-success); }
 .gs-status { font-size: var(--text-2xs); color: var(--text-secondary); }
-.gs-status.st-finished { color: #389e0d; }
+.gs-status.st-finished { color: var(--color-success); }
 .gs-line2 { display: flex; gap: 12px; flex-wrap: wrap; font-size: var(--text-2xs); color: var(--text-secondary); margin-top: 4px; }
 .g-empty { font-size: var(--text-sm); color: var(--text-secondary); padding: var(--space-4); text-align: center; }
 .dim { color: var(--text-secondary); }
