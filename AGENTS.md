@@ -26,7 +26,7 @@
 - 架构评审 M-1~M-5 全部修复并机验；全项目结构已落定：
   `py-server/app/`（装配层，main.py 只剩 85 行组装）、`py-server/seed/`（408 四科语料包，`seed_data.py` 变 38 行委托层）、`db/profile_store.py`（画像域）。
 - **兼容层是"动态委托"（PEP 562 `__getattr__`），不是静态重导出** —— 改成静态会让打桩监控失效。改前读文件头注释。
-- **覆盖率门禁 = `--cov-fail-under=50`**（CI 真值，见 `ci.yml:191` / `p0-regression.yml:65`；旧「54 门禁」作废）。本机实测 **53.31%**（过 50 门禁，但属本机值非 CI 全量口径，对外引用前需重测）。补测加了 9 个测试文件
+- **覆盖率门禁 = `--cov-fail-under=50`**（CI 真值，见 `ci.yml:191` / `p0-regression.yml:65`；旧「54 门禁」作废）。本机实测 **57.19%**（过 50 门禁，但属本机值非 CI 全量口径，对外引用前需重测；该值为 2026-10-16 qa-2 fresh 重测，较旧 53.31% 因新增测试推高覆盖）。补测加了 9 个测试文件
   （SSRF 守卫 / 页码对齐算法 / lifespan 守门 / 中间件矩阵 / 画像域契约 / DI 容器 / 内容安全 / SPA 挂载 / JWT 角色），
   并修复 1 个随 M-4 拆分失效的静态锚点测试。
 - ⚠️ **改动 `src/` 或 `py-server/` 代码后必须补跑 `python scripts/verify_metrics.py`**（不一致时用脚本 sanctioned 的 `--update` 重生成，**禁止手改表格**）。它是 CI `.github/workflows/verify-structural.yml:89` 的**阻断性**检查，而**本地 pre-commit 七道门禁不跑它** ⇒「家里全绿、CI 红」是常态失效形态（2026-10-13 实测：`a711ed7`+`36f08ed` 后三项漂移未被察觉）。
