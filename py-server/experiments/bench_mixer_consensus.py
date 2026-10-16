@@ -50,9 +50,19 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 import numpy as np  # noqa: E402
 
-DEFAULT_OUT = (
+# ⚠️ 对外基线（只读）：入仓数值 7.0446/0.2857 的权威落盘，任何复跑都不得覆盖它。
+BASELINE_OUT = (
     PROJECT_ROOT / "experiments" / "results" / "mixer_consensus_bench_2026-10-06.json"
 )
+
+
+def _default_out_path() -> Path:
+    """默认输出：带 UTC 时间戳的全新文件名，绝不指向已入仓基线。
+
+    这样「照抄命令、不带 --out」也只会生成一个新文件，不会污染入库基线。
+    """
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    return PROJECT_ROOT / "experiments" / "results" / f"mixer_consensus_bench_{stamp}.json"
 DEFAULT_SEED = 20261006
 DEFAULT_SAMPLES = 96
 DEFAULT_N_AGENTS = 6
@@ -161,6 +171,10 @@ async def run_distribution(
 
     return {
         "distribution": distribution,
+        # 该行口径标注：一眼看出看的是哪一组（分布 / 样本数 / seed / n_agents）
+        "samples": samples,
+        "seed": seed,
+        "n_agents": n_agents,
         # 输入侧基线：各样本「agent 评分算术平均」的统计，用于与共识分对照
         "input_mean_summary": summarize(input_means),
         "scores": scores,
@@ -236,11 +250,13 @@ async def main_async(args: argparse.Namespace) -> dict:
         },
         "runs": runs,
         "overall": summarize(all_scores),
+        # 固定为「对外唯一数值」的权威复跑命令：stratified / 96 样本 / seed 20261006 / n=6。
+        # 不带 --out ⇒ 落到带时间戳的新文件，绝不污染已入仓基线（见 DEFAULT_OUT 守卫）。
         "reproduce_command": (
             "cd py-server && env -u PYTHONPATH -u PYTHONSTARTUP -u NODE_OPTIONS "
             "-u ELECTRON_RUN_AS_NODE .venv/Scripts/python.exe "
-            f"experiments/bench_mixer_consensus.py --samples {args.samples} "
-            f"--seed {args.seed} --n-agents {args.n_agents} --distribution all"
+            "experiments/bench_mixer_consensus.py --distribution stratified "
+            "--samples 96 --seed 20261006 --n-agents 6"
         ),
     }
 
@@ -259,11 +275,19 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--distribution",
         choices=[*DISTRIBUTIONS, "all"],
-        default="all",
-        help="输入分布：stratified 分层 / uniform 均匀 / all 两者",
+        default="stratified",
+        help="输入分布：stratified 分层（对外唯一数值口径）/ uniform 均匀 / all 两者",
     )
     parser.add_argument(
-        "--out", type=str, default=str(DEFAULT_OUT), help="结果 JSON 输出路径"
+        "--out",
+        type=str,
+        default=str(_default_out_path()),
+        help="结果 JSON 输出路径（默认带 UTC 时间戳的全新文件，不会覆盖已入仓基线）",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="允许覆盖已存在的 --out 文件（默认拒绝，防止误伤入仓基线）",
     )
     return parser.parse_args(argv)
 
@@ -273,11 +297,22 @@ def main(argv: list[str] | None = None) -> int:
     payload = asyncio.run(main_async(args))
 
     out_path = Path(args.out)
+
+    # ── P1-2 守卫：已存在则拒绝覆盖，防止照抄命令误伤入仓基线 ──
+    if out_path.exists() and not args.force:
+        print(
+            f"❌ 拒绝写入：目标文件已存在 → {out_path}\n"
+            f"   若需覆盖请加 --force，或换一个 --out 路径（建议保留入仓基线不动）。",
+            file=sys.stderr,
+        )
+        return 2
+
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(
         json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
 
+    cfg = payload["config"]
     print(f"结果已写入: {out_path}")
     print(
         "mixer 状态: mode={mode}, trained_loaded={loaded}, "
@@ -288,19 +323,33 @@ def main(argv: list[str] | None = None) -> int:
             dim=payload["mixer_state"]["mixer_embed_dim"],
         )
     )
+    print(
+        f"口径: seed={cfg['seed']}  samples/分布={cfg['samples_per_distribution']}  "
+        f"n_agents={cfg['n_agents']}  embed_dim={cfg['embed_dim']}  "
+        f"分布={cfg['distributions']}"
+    )
+    print("各分布共识分（mean/std/min/max，饱和>=9.999 / 归零<=0.001）：")
+    is_multi = len(payload["runs"]) > 1
     for run in payload["runs"]:
         s = run["stats"]
+        tag = f"{run['distribution']} [n={run['samples']}, seed={run['seed']}, n_agents={run['n_agents']}]"
         print(
-            f"  [{run['distribution']:<10}] n={s['samples']:<4} "
-            f"mean={s['mean']:<8} std={s['std']:<8} "
+            f"  {tag:<48} mean={s['mean']:<8} std={s['std']:<8} "
             f"min={s['min']:<8} max={s['max']:<8} "
             f"saturated={s['saturated']} zeroed={s['zeroed']}"
         )
     o = payload["overall"]
+    note = "（跨两种分布合计，非对外引用口径）" if is_multi else ""
     print(
-        f"  [总体]        n={o['samples']:<4} mean={o['mean']:<8} std={o['std']:<8} "
+        f"  总体{'(单分布)' if not is_multi else ''}{note}\n"
+        f"    n={o['samples']:<4} mean={o['mean']:<8} std={o['std']:<8} "
         f"min={o['min']:<8} max={o['max']:<8} "
         f"saturated={o['saturated']} zeroed={o['zeroed']}"
+    )
+    print(
+        "对外唯一数值（stratified / 96 样本 / seed 20261006 / n=6）："
+        f" mean={payload['runs'][0]['stats']['mean']} "
+        f"std={payload['runs'][0]['stats']['std']}"
     )
     return 0
 
