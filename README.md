@@ -80,7 +80,7 @@
 ### 5. 全链路工程化与容灾
 
 - 前端 Vue 3 + TypeScript，**48 个页面（48 views）**，多端多角色（学生 / 教师看板）
-- 后端 FastAPI + LangGraph，**约 245 个 API 端点**（openapi.json 实测 `/api` 子集 228 路径 / 245 操作，42 路由模块），**1389 项测试通过 / 38 跳过 / 1 xfail**（CI 默认档，全量回归 0 失败）
+- 后端 FastAPI + LangGraph，**约 254 个 API 端点**（openapi.json 实测 `/api` 子集 236 路径 / 254 操作，42 路由模块），**1389 项测试通过 / 38 跳过 / 1 xfail**（CI 默认档，全量回归 0 失败）
 - **双通道大模型自动容灾**：DeepSeek（主）→ 讯飞星火 X2（兜底）
 - Milvus / PostgreSQL / Redis 缺失时逐级自动降级，单机即可完整运行
 
@@ -258,7 +258,7 @@ npm install && npm run dev                   # :5173，代理 /api → 8002
 | 维度 | 指标 |
 |------|------|
 | 前端 | Vue 3 + TypeScript · 48 个 views（87 个 .vue） · Vite 构建 |
-| 后端 | FastAPI + LangGraph · 约 245 个 API 端点（openapi.json 实测 `/api` 子集 228 路径 / 245 操作）· 11 Agent 节点 |
+| 后端 | FastAPI + LangGraph · 约 254 个 API 端点（openapi.json 实测 `/api` 子集 236 路径 / 254 操作）· 11 Agent 节点 |
 | 代码量 | 后端 361 个 Python 文件 / 约 8.3 万行 · 前端 148 文件 / 约 5.3 万行 |
 | 测试 | 1389 项测试通过 / 38 跳过 / 1 xfail（CI 默认档，全量回归 0 失败） |
 | LLM | DeepSeek（主）+ 讯飞星火 X2（兜底）双通道自动容灾 |

@@ -12,7 +12,7 @@
 口径铁律（改动前务必核对 submission/00_提交清单.md）：
 - 测试：CI 默认档 1503 run（1511 collected，addopts deselect 8）→ 1464 passed / 38 skipped / 1 xfailed / 0 failed（覆盖率 61% 达标）；CI p0 档 67 条
 - 覆盖率 61%（门禁 --cov-fail-under=50，余量 11pp）—— 全部数字单一真值源见模块级 METRICS（含 CI run 溯源）
-- API：245 operations / 228 paths（app.openapi() 运行时实测）；认证覆盖率 94.69%（232/245）
+- API：254 operations / 236 paths（app.openapi() 运行时实测）；认证覆盖率 94.88%（241/254）
 - 共识分 mean 7.0446 / std 0.2857 —— 必须同时标 stratified 分布 / 96 样本 / seed 20261006 / n=6
 - 禁用：451/243 端点、35 路由、1133/915/923/1139/1178/1177/1168/1389、54.08%、6.8413、旧品牌名与旧赛事名
 """
@@ -62,11 +62,11 @@ METRICS = {
     "tests_failed": 0,
     "coverage_pct": 61,         # CI TOTAL 行：21766 stmts / 8403 miss
     "cov_gate": 50,             # --cov-fail-under=50
-    "api_operations": 245,
-    "api_paths": 228,           # app.openapi() 运行时实测
-    "auth_coverage_pct": 94.69,
-    "auth_covered": 232,
-    "auth_total": 245,
+    "api_operations": 254,
+    "api_paths": 236,           # app.openapi() 运行时实测
+    "auth_coverage_pct": 94.88,
+    "auth_covered": 241,
+    "auth_total": 254,
 }
 
 prs = Presentation()
@@ -170,13 +170,13 @@ title(s, "核心闭环：6–8 轮对抗 → 6 维报告")
 body(s, [
     '• 选场景 → 2 问画像 → 6–8 轮对抗 → 6 维 ECD 评估 → 证据校验 → 提升路径 → 报告',
     '• 后端：5 张实训数据表 + 核心链路 API（含越权 403 拦截）已落地',
-    '    - 全站 API 规模：245 operations / 228 paths（app.openapi() 运行时实测）',
-    '    - 认证覆盖率 94.69%（232/245）',
+    '    - 全站 API 规模：254 operations / 236 paths（app.openapi() 运行时实测）',
+    '    - 认证覆盖率 94.88%（241/254）',
     '• 前端：四步状态机 + SVG 六维雷达 + 证据链回放',
     '• 状态：上述 ✅ 均已代码级验证',
 ], top=1.55)
 footer(s, 4)
-notes(s, '完整闭环已经跑通：选场景、两问画像、6 到 8 轮对抗、按 6 维 ECD 软素养评估、证据一致性校验、最后给出提升路径和报告。后端五张数据表、核心链路接口、包括越权拦截都已在代码级验证；全站 API 规模是 245 个操作、228 条路径，这是运行时 openapi 实测出来的，不是估的；认证覆盖率 94.69%。前端状态机、六维雷达和证据回放也都落地。这是演示里评委能直接看到的主路径。')
+notes(s, '完整闭环已经跑通：选场景、两问画像、6 到 8 轮对抗、按 6 维 ECD 软素养评估、证据一致性校验、最后给出提升路径和报告。后端五张数据表、核心链路接口、包括越权拦截都已在代码级验证；全站 API 规模是 254 个操作、236 条路径，这是运行时 openapi 实测出来的，不是估的；认证覆盖率 94.88%。前端状态机、六维雷达和证据回放也都落地。这是演示里评委能直接看到的主路径。')
 
 # ---------- Slide 5: ⭐ 鲶鱼加压 (highlight) ----------
 s = new_slide(AMBBG); band(s, AMBER)

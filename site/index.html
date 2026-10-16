@@ -213,8 +213,8 @@ footer a:hover{color:var(--orange2)}
       <div class="hero-stats">
         <div class="hstat"><b>11</b><span>LangGraph 编排节点</span></div>
         <div class="hstat"><b>45</b><span>前端教学视图</span></div>
-        <div class="hstat"><b>240</b><span>API 端点（约）</span></div>
-        <div class="hstat"><b>1177</b><span>测试通过（2026-10-01 口径）</span></div>
+        <div class="hstat"><b>254</b><span>API 端点（约）</span></div>
+        <div class="hstat"><b>1389</b><span>测试通过（2026-10-09 CI 口径）</span></div>
       </div>
     </div>
     <div class="hero-visual">
@@ -375,9 +375,9 @@ footer a:hover{color:var(--orange2)}
   <div class="wrap">
     <span class="sec-tag">04 · Evidence</span>
     <h2>可复跑的证据</h2>
-    <p class="subtitle">28 条查询、96 条样本、1177 条通过用例</p>
+    <p class="subtitle">28 条查询、96 条样本、1389 条通过用例</p>
 
-    <p>工程可信度不靠形容词。本页列出三组可直接复现的实测记录。<strong>检索对照实验</strong>：28 条查询，Recall@5 <strong>+7.14 pp</strong>、Precision@5 <strong>+15.71 pp</strong>、MRR <strong>+12.38 pp</strong>，结果文件 <code>py-server/experiments/results/benchmark_2026-09-18.json</code>，伴随 token 消耗<strong>上升 11.99%</strong>（未降反增）与单次延迟 <strong>574.36 ms</strong> 的诚实披露。<strong>共识评测</strong>：96 条样本下训练权重 <strong>80.2%</strong> 与规则基线 <strong>82.3%</strong> 持平，结论为「未观察到显著优势」。<strong>回归测试</strong>：<strong>1177</strong> 条用例通过、<strong>227</strong> 条跳过、<strong>0</strong> 失败（2026-10-01 复核口径；跳过项一般为依赖外部服务或需本地模型的用例，不计入通过率分母）。</p>
+    <p>工程可信度不靠形容词。本页列出三组可直接复现的实测记录。<strong>检索对照实验</strong>：28 条查询，Recall@5 <strong>+7.14 pp</strong>、Precision@5 <strong>+15.71 pp</strong>、MRR <strong>+12.38 pp</strong>，结果文件 <code>py-server/experiments/results/benchmark_2026-09-18.json</code>，伴随 token 消耗<strong>上升 11.99%</strong>（未降反增）与单次延迟 <strong>574.36 ms</strong> 的诚实披露。<strong>共识评测</strong>：96 条样本下训练权重 <strong>80.2%</strong> 与规则基线 <strong>82.3%</strong> 持平，结论为「未观察到显著优势」。<strong>回归测试</strong>：<strong>1389</strong> 条用例通过、<strong>38</strong> 条跳过、<strong>1</strong> xfail、<strong>0</strong> 失败（2026-10-09 CI 口径；跳过项一般为依赖外部服务或需本地模型的用例，不计入通过率分母）。</p>
 
     <div class="card reveal">
       <p class="card-title">检索对照实验（28 条查询标准口径）</p>
@@ -401,10 +401,10 @@ footer a:hover{color:var(--orange2)}
     </div>
 
     <div class="card reveal">
-      <p class="card-title">回归测试（2026-10-01 复核口径）</p>
+      <p class="card-title">回归测试（2026-10-09 CI 口径）</p>
       <ul class="metrics">
-        <li>通过用例　<b>1177</b> 条</li>
-        <li>跳过用例　<b>227</b> 条</li>
+        <li>通过用例　<b>1389</b> 条</li>
+        <li>跳过用例　<b>38</b> 条</li>
         <li>失败用例　<b>0</b> 条</li>
         <li>口径　跳过项一般为依赖外部服务或需本地模型的用例，不计入通过率分母</li>
       </ul>
