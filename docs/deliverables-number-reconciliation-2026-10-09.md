@@ -1,6 +1,6 @@
 # 国创赛交付物（deliverables/）数字对齐核对清单
 
-> ⚠️ **当前真值（HEAD `a570d6c`，2026-10-17）**：本文 §一 / §三 为 10-09 时点快照，**以 §九 为准** —— API **254 ops / 236 paths**、认证覆盖率 **94.88%（241/254）**、测试 **1389 passed / 38 skipped / 1 xfailed**（1428 运行项 / 1436 collected）。改数请以 §九 与机器复算为唯一来源，禁止手抄旧值。
+> ⚠️ **当前真值（HEAD `7700dce`，2026-10-17）**：本文 §一 / §三 为 10-09 时点快照，**以 §十 为准** —— API **254 ops / 236 paths**、认证覆盖率 **94.88%（241/254）**、测试 **1524 passed / 38 skipped / 1 xfailed / 0 失败**（1563 运行项 / 1572 collected，addopts deselect 9；CI run `38938041036`）。改数请以 §十 与机器复算为唯一来源，禁止手抄旧值。
 
 > 生成时间：2026-10-09 ｜ 范围：`deliverables/` 下国创赛相关文档与 PPT 生成器
 > 方法：只读审计 + 机器复算（不手数）。本机实跑 `verify_metrics.py`（9/9 通过）、`openapi.json` 计数、CI run `37917008258` 实测摘要。
@@ -171,3 +171,13 @@
   - `deliverables/` 下 `源码/` 冻结副本与 `_archive_*` 快照：历史冻结物，不在同步范围。
   - `deliverables/build_roadshow_pptx.py:13` 的 CI 测试数（**1503 run / 1464 passed / 38 skipped / 1 xfailed**）与 `:17` 禁用清单：与 README / 台账的 **1389 / 38 / 1** 口径不一致，但不属认证覆盖率族，本轮未动 —— **建议下一轮核一次该行来源**（疑为另一次 CI run 的快照）。
 - **SSOT 与机检（另笔提交）**：`docs/METRICS_CURRENT.md` sha256 → `3ffae12147dc2a8b`、大小 → 261558 字节、:84 → total=254 / protected=241；`scripts/verify_metrics.py --update` 仅动一行（后端代码行数 85803 → 85852）。
+
+## 十、2026-10-17 测试数族刷新至 CI 1524/38/1（追加，不改上文历史行）
+
+- **触发**：§九 遗留项「`build_roadshow_pptx.py:13` 的 1503/1464 与 README 的 1389/38 口径不一致」已核源 —— 该行来源为 **2026-10-13 CI run `38448377027`**（另一时点快照，非笔误）；TEST_TRUTH.md P1 要求的「跑一次 CI 全量回归」已执行。
+- **新 CI 真值**：run `38938041036`（head `dc18dd2`，2026-10-17，success，377.60s）默认档 **1524 passed / 38 skipped / 9 deselected / 1 xfailed / 0 failed**（`1572 collected`，运行项 1563；隔离档 `--noconftest` 另 36 passed）；覆盖率 TOTAL **22108 stmts / 8522 missed = 61%**（门禁 50，余量 11pp）。旧口径 1389/38/1（1428 运行项 / 1436 collected，run `37917008258`）作废。
+- **本节省同步范围（deliverables 侧）**：
+  - `deliverables/build_roadshow_pptx.py`：:13（口径铁律）、:17（禁用清单补入已退役的 1428/1436/1464/1503/1511）、:51-52（来源 run 指针）、:54-63（METRICS 测试/覆盖族）—— §九 遗留的 1503/1464 血缘至此核源并刷新，无需再议
+  - `deliverables/芒得很职-国创赛证据页.md`：:38（测试行 1436 collected/1389 → 1572 collected/1524，来源改注 run `38938041036`）
+- **SSOT 与机检（另笔提交）**：`docs/METRICS_CURRENT.md:81`、`docs/TEST_TRUTH.md`（权威口径 / 三层校准表 / P1 转 ✅ / P2 覆盖率分母错配订正）、`docs/ci-backend-test-result.md`（新增 run `38938041036` 节 + 结论表）、`AGENTS.md:11/33`。
+- **全局侧（详见 `docs/submission-number-reconciliation-2026-10-09.md` §九）**：`README.md` ×2、`README_EN.md` ×2、`submission/00` + 3 份配套文档、`site/index.html`、`website/index.html`、`py-server/tools/generate_demo_ppt.py`（Slide 10 数据行 281/30/571/21 → 1524/88/2015+230/94.88%，并清除 408 考研旧定位两处）。

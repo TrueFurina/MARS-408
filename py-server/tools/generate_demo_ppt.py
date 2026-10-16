@@ -90,7 +90,7 @@ _add_shape(slide, Inches(0), Inches(5.8), Inches(13.333), Inches(0.04), C_ACCENT
 _add_text(slide, Inches(1), Inches(1.5), Inches(11), Inches(1.2),
           "芒得很职", font_size=60, color=C_ACCENT, bold=True, alignment=PP_ALIGN.CENTER)
 _add_text(slide, Inches(1), Inches(2.5), Inches(11), Inches(0.6),
-          "基于 GOMARL 与 FrugalRAG 的 408 考研个性化学习多智能体系统",
+          "基于 GOMARL 与 FrugalRAG 的计算机类学生职业素养对抗实训平台",
           font_size=24, color=C_WHITE, alignment=PP_ALIGN.CENTER)
 _add_text(slide, Inches(1), Inches(3.6), Inches(11), Inches(0.5),
           "作品演示", font_size=20, color=C_ACCENT, alignment=PP_ALIGN.CENTER)
@@ -138,17 +138,17 @@ _add_text(slide, Inches(0.8), Inches(0.5), Inches(5), Inches(0.6),
 _add_shape(slide, Inches(0.8), Inches(1.2), Inches(12), Inches(0.03), C_ACCENT)
 
 _add_text(slide, Inches(0.8), Inches(1.6), Inches(5.5), Inches(0.5),
-          "408 考研的三大痛点", font_size=22, color=C_ACCENT, bold=True)
+          "职业素养实训的三大痛点", font_size=22, color=C_ACCENT, bold=True)
 _add_bullet_text(slide, Inches(0.8), Inches(2.2), Inches(5.5), Inches(3.5), [
-    "知识体系庞大：四门课程、数百个知识点",
-    "个性化需求高：每位学生基础和目标不同",
-    "资源质量参差不齐：难找到精准匹配的资源",
+    "能力体系庞大：专业课程 + 职业素养多维要求",
+    "个性化需求高：每位学生基础和职业目标不同",
+    "实训资源质量参差不齐：难找到精准匹配的对抗场景",
 ])
 
 _add_text(slide, Inches(6.8), Inches(1.6), Inches(5.5), Inches(0.5),
           "芒得很职 方案", font_size=22, color=C_ACCENT2, bold=True)
 _add_bullet_text(slide, Inches(6.8), Inches(2.2), Inches(5.5), Inches(3.5), [
-    "多智能体协同：13 个 Agent 各司其职",
+    "多智能体协同：10 节点流水线各司其职",
     "GOMARL 共识：质量保障与冲突消解",
     "FrugalRAG：高效精准的知识检索",
     "7 种资源并行生成：个性化学习包",
@@ -398,7 +398,7 @@ _add_bullet_text(slide, Inches(6.8), Inches(2.2), Inches(5.5), Inches(3), [
 
 # 数据
 _add_text(slide, Inches(0.8), Inches(5.5), Inches(11), Inches(0.8),
-          "后端：281 测试全绿  |  前端：30 组件零错误  |  知识库：571 chunks + 200 题  |  安全：21/21 项修复",
+          "后端：1524 测试全绿（CI 默认档）  |  前端：88 组件零错误  |  知识库：2015 chunks + 230 题  |  安全：94.88% 认证覆盖率",
           font_size=14, color=C_ACCENT3, alignment=PP_ALIGN.CENTER)
 
 # ════════════════════════════════════════════════════════════════
@@ -412,7 +412,7 @@ _add_text(slide, Inches(0.8), Inches(3.8), Inches(11), Inches(0.5),
           "感谢聆听！欢迎提问", font_size=24, color=C_WHITE, alignment=PP_ALIGN.CENTER)
 _add_shape(slide, Inches(5), Inches(4.8), Inches(3.333), Inches(0.06), C_ACCENT)
 _add_text(slide, Inches(0.8), Inches(5.2), Inches(11), Inches(0.5),
-          "基于 GOMARL 与 FrugalRAG 的 408 考研个性化学习多智能体系统",
+          "基于 GOMARL 与 FrugalRAG 的计算机类学生职业素养对抗实训平台",
           font_size=16, color=C_GRAY, alignment=PP_ALIGN.CENTER)
 
 # ── 保存 ──

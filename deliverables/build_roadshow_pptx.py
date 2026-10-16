@@ -10,11 +10,11 @@
 2. submission/01_演示PPT/作品演示PPT-最终版.pptx            —— 对外提交件
 
 口径铁律（改动前务必核对 submission/00_提交清单.md）：
-- 测试：CI 默认档 1503 run（1511 collected，addopts deselect 8）→ 1464 passed / 38 skipped / 1 xfailed / 0 failed（覆盖率 61% 达标）；CI p0 档 67 条
+- 测试：CI 默认档 1563 run（1572 collected，addopts deselect 9）→ 1524 passed / 38 skipped / 1 xfailed / 0 failed（覆盖率 61% 达标）；CI p0 档 67 条
 - 覆盖率 61%（门禁 --cov-fail-under=50，余量 11pp）—— 全部数字单一真值源见模块级 METRICS（含 CI run 溯源）
 - API：254 operations / 236 paths（app.openapi() 运行时实测）；认证覆盖率 94.88%（241/254）
 - 共识分 mean 7.0446 / std 0.2857 —— 必须同时标 stratified 分布 / 96 样本 / seed 20261006 / n=6
-- 禁用：451/243 端点、35 路由、1133/915/923/1139/1178/1177/1168/1389、54.08%、6.8413、旧品牌名与旧赛事名
+- 禁用：451/243 端点、35 路由、1133/915/923/1139/1178/1177/1168/1389/1428/1436/1464/1503/1511、54.08%、6.8413、旧品牌名与旧赛事名
 """
 import os
 
@@ -48,19 +48,19 @@ PALE  = RGBColor(0xB8, 0xC4, 0xCE)
 FONT  = "Microsoft YaHei"
 
 #: 权威测试/质量指标 —— 单一真值源（改动前必须先跑 CI 默认档复核，禁止手改）
-#: 来源：GitHub Actions backend-test.yml 默认档 run 38448377027（2026-10-13，success）
-#: 默认档命令：python -m pytest -q（pyproject addopts 排除 system/requires_milvus/slow，deselect 8）
+#: 来源：GitHub Actions backend-test.yml 默认档 run 38938041036（2026-10-17，success）
+#: 默认档命令：python -m pytest -q（pyproject addopts 排除 system/requires_milvus/slow，deselect 9）
 METRICS = {
-    "ci_run_id": "38448377027",
-    "ci_date": "2026-10-13",
-    "tests_collected": 1511,    # 1464 passed + 38 skipped + 1 xfailed + 8 deselected
-    "tests_deselected": 8,      # pyproject addopts 排除 system/requires_milvus/slow
-    "tests_run": 1503,          # collected - deselected
-    "tests_passed": 1464,
+    "ci_run_id": "38938041036",
+    "ci_date": "2026-10-17",
+    "tests_collected": 1572,    # 1524 passed + 38 skipped + 1 xfailed + 9 deselected
+    "tests_deselected": 9,      # pyproject addopts 排除 system/requires_milvus/slow
+    "tests_run": 1563,          # collected - deselected
+    "tests_passed": 1524,
     "tests_skipped": 38,
     "tests_xfailed": 1,
     "tests_failed": 0,
-    "coverage_pct": 61,         # CI TOTAL 行：21766 stmts / 8403 miss
+    "coverage_pct": 61,         # CI TOTAL 行：22108 stmts / 8522 miss
     "cov_gate": 50,             # --cov-fail-under=50
     "api_operations": 254,
     "api_paths": 236,           # app.openapi() 运行时实测

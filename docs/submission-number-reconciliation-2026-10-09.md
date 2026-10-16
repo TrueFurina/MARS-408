@@ -1,6 +1,6 @@
 # 提交包数字对齐核对清单（2026-10-09 预检）
 
-> ⚠️ **当前真值（HEAD `a570d6c`，2026-10-17）**：本文 §一 / §三 / §六 是 10-09 / 10-10 时点快照，**以 §八 为准** —— API **254 ops / 236 paths**、认证覆盖率 **94.88%（241/254）**、测试 **1389 passed / 38 skipped / 1 xfailed**（1428 运行项 / 1436 collected，addopts deselect 8）。改任何数字请以 §八 与机器复算（`scripts/verify_metrics.py` / `scripts/verify_auth_coverage.py`）为唯一来源，禁止手抄旧值。
+> ⚠️ **当前真值（HEAD `7700dce`，2026-10-17）**：本文 §一 / §三 / §六 是 10-09 / 10-10 时点快照，**以 §九 为准** —— API **254 ops / 236 paths**、认证覆盖率 **94.88%（241/254）**、测试 **1524 passed / 38 skipped / 1 xfailed / 0 失败**（1563 运行项 / 1572 collected，addopts deselect 9；CI run `38938041036`）。改任何数字请以 §九 与机器复算（`scripts/verify_metrics.py` / `scripts/verify_auth_coverage.py`）为唯一来源，禁止手抄旧值。
 
 > **性质**：只读审计 + diff 清单。**10-28 冻结窗口前不碰 `submission/` 实体**，本文件只列"到时改什么"。
 > **真值来源**（按可信度）：
@@ -140,3 +140,17 @@
   - `site/index.html:7` / `:244` / `:262` / `:269` 的「约 240 个 API 端点」近似表述未在派工单清单内，未改（口径为「约」，与 236/254 不构成硬冲突）。
   - `submission/00_提交清单.md:158` 的「覆盖率 61%」为**代码覆盖率**（pytest-cov），不属认证覆盖率族，未动。
 - **SSOT 与机检（另笔提交）**：`docs/METRICS_CURRENT.md` sha256 `0c17657a4d85e50f` → `3ffae12147dc2a8b`、大小 261554 → 261558 字节、:84 total/protected 245/232 → 254/241；`scripts/verify_metrics.py --update` 仅动一行（后端代码行数 85803 → 85852）。
+
+## 九、2026-10-17 测试数族刷新至 CI 1524/38/1（追加，不改上文历史行）
+
+- **新 CI 真值**：run `38938041036`（head `dc18dd2`，2026-10-17，success，377.60s）默认档 **1524 passed / 38 skipped / 9 deselected / 1 xfailed / 0 failed**（`1572 collected`，运行项 1563；隔离档另 36 passed）。旧口径 1389/38/1（1428 运行项 / 1436 collected，run `37917008258`，2026-10-09）作废；`submission/_archive_*` 快照不动。
+- **本节省同步范围（submission 侧）**：
+  - `submission/00_提交清单.md`：:50（测试行 1428/1389/1436/8 → 1563/1524/1572/9）、:53（覆盖率行 run `38006205976`/21473/8453 → run `38938041036`/22108/8522）、:114、:158、:183
+  - `submission/02_配套文档/测试说明书.md`：:17、:242
+  - `submission/02_配套文档/系统架构设计文档.md`：:7、:194
+  - `submission/02_配套文档/开发说明书.md`：:523（测试用例数行）；版本表追加 **v2.4** 行记录本次刷新（v2.2/v2.3 历史行不改写）
+- **§八 遗留项核销**：
+  - `deploy/career-pilot/backend/**`（绿色包/VPS 暂存副本）：已核实为 **VPS 生产部署暂存**（`deploy/vps/career-pilot.service` WorkingDirectory=/opt/career-pilot/backend），且按 2026-10-14 用户放行整目录 gitignore（不随仓库分发）。其 `scripts/verify_auth_coverage.py`、`tools/generate_demo_ppt.py` 两文件与权威源逐字节 diff 后确认**纯数字漂移、无本地改造**，已从 `py-server/` 覆盖同步；`site/assets/ShowcaseView-BAlW9mxR.js` 编译产物的两处陈旧 claim（卡片标题 + 统计条）已修补。**遗留项关闭。**
+  - `site/index.html` 的「约 240 个 API 端点」：§八 后已被 10-17 官网同步批处理为 254（:7/:216/:244/:262/:269 实测均为 254）。**遗留项关闭。**
+  - `submission/00_提交清单.md:158` 的「覆盖率 61%」为代码覆盖率（pytest-cov），不属认证覆盖率族，确认无需动（其 run 指针已在本节同步）。
+- **机检**：`scripts/verify_metrics.py` 9/9、`scan_metric_occurrences`、`brand_scan`、`honesty_scan --all`、`scan_stale_calibration`、`check_hardcoded_paths`、`token_scan`、`a11y_scan` 全绿。
