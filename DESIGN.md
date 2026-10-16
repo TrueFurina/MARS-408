@@ -32,7 +32,7 @@
 | 强调悬浮/按下 | `--color-accent-hover` / `--color-accent-active` / `--color-accent-text`（深底上的强调文字） | |
 | 白字（实底上） | `--color-text-on-accent`（= `#FFFFFF`） | 渐变/实底按钮、头像内的文字 |
 | 语义状态 | `--color-success/warning/danger/info`（含 `-bg`/`-border` 淡底变体） | 只表达状态 |
-| 408 四科（数据色） | `--subject-ds`(数据结构·紫) / `--subject-cn`(计网·蓝) / `--subject-co`(计组·青) / `--subject-os`(操作系统·粉) | 学科标签/图表/图谱；浅色主题自动压暗 |
+| 专业四科（数据色） | `--subject-ds`(数据结构·紫) / `--subject-cn`(计网·蓝) / `--subject-co`(计组·青) / `--subject-os`(操作系统·粉) | 学科标签/图表/图谱；浅色主题自动压暗 |
 | 掌握度 | `--mastery-low` / `--mastery-mid` / `--mastery-high` / `--mastery-none` | 知识图谱掌握度分段 |
 | 多智能体/流程 | `--agent-*` / `--flow-*` | 流程可视化，勿用于常规 UI |
 

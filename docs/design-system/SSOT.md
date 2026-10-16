@@ -16,7 +16,7 @@
 
 | 层 | 文件 | 角色 | 能否改 token |
 |----|------|------|--------------|
-| **权威源 (SSOT)** | `src/assets/styles/_variables.css` 的 `:root` + `[data-theme="light"]` | 应用真正在跑的令牌；语义层 `--color-*` + 兼容别名 + 品牌色 + 408 分色 + 浅色覆盖 | ✅ **唯一可改处** |
+| **权威源 (SSOT)** | `src/assets/styles/_variables.css` 的 `:root` + `[data-theme="light"]` | 应用真正在跑的令牌；语义层 `--color-*` + 兼容别名 + 品牌色 + 专业四科分色 + 浅色覆盖 | ✅ **唯一可改处** |
 | 文档派生 | `DESIGN_TOKENS.md` | 落地页原型生成规范 = `_variables.css` base **+ 落地页专用扩展**（`--space-*`/`--fs-*`/`--z-*`/组件令牌/`--container`/`--gradient-ds`） | ❌ 只读参考；来源须标注 `_variables.css` |
 | 可视化参考 | `design-system/showcase.html` | Living Style Guide，可视化全部令牌，双主题实时切换；**不参与构建** | ❌ 只读；其 `:root` 必须与权威源对齐 |
 | 消费者 | `public/showcase/*.html`（4 原型） | 内联 `_variables.css` 的 `:root` 拷贝 + 各自表面扩展 token | ❌ **严禁手改内联 token** |
