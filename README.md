@@ -4,7 +4,7 @@
 [![Python](https://img.shields.io/badge/Python-3.12-blue)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-Uvicorn-009688)](https://fastapi.tiangolo.com/)
 [![LangGraph](https://img.shields.io/badge/LangGraph-11--node%20pipeline-FF6F00)](https://github.com/langchain-ai/langgraph)
-[![Vue](https://img.shields.io/badge/Vue-48%20views-42B883)](https://vuejs.org)
+[![Vue](https://img.shields.io/badge/Vue-49%20views-42B883)](https://vuejs.org)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](https://github.com/TrueFurina/MARS-408)
 
 **芒得很职 (MangoCareer)** is a next-generation, multi-agent empowered career-literacy adversarial training platform for computer-science students, built on the **芒得很职** multi-agent technical base: an 11-node LangGraph pipeline (triage → coordinator → diagnostician → planner → retriever → generator → assessor → critic → evidence_check → quality_gate → path_planner) delivers a full *diagnose → plan → teach → practice → review* loop, with SSE streaming, three-tier degradation (Redis/PostgreSQL/Milvus), E5 vector retrieval, and MAPPO-trained teaching policy. On top of this shared base, 芒得很职 (MangoCareer) adds a scenario-driven adversarial training loop (画像 → 对抗实训 → 证据评估 → 提升) with six-dimension ECD-aligned assessment.
@@ -37,7 +37,7 @@
 | 真实对话生成 | ✅ 已实现 | `POST /api/chat/stream` → 200 / **5.4 s** / 有效 LLM 内容 |
 | 检索增强效果 | ✅ 已实现 | **Recall@5 +7.14pp / P@5 +15.71pp / MRR +12.38pp**（2026-09-18 benchmark 真实产出） |
 | 三级降级容灾 | ✅ 已实现 | Redis 未启用 / PostgreSQL→SQLite / Milvus→InMemory 逐级回退 |
-| 前端页面 | ✅ 已实现 | **48 个 views**（87 个 .vue 含组件），学生端 + 教师看板 |
+| 前端页面 | ✅ 已实现 | **49 个 views**（88 个 .vue 含组件），学生端 + 教师看板 |
 | 向量检索 | ✅ 已实现 | E5 已本地化（`models/e5-base-v2` 437MB / 768 维），`frugal_rag` 走真实向量检索，`_degraded` 关闭（2026-09-13 验证） |
 | 共识与冲突消解引擎 | ✅ 规则原型 + 三评审门禁 | M2 已实施：批评者结构化输出 + 共识证据门禁 + 置信度（tests/test_m2_review_gate.py 9 用例）；GoMARL 加权共识权重仍为规则设定 |
 | Triage 分级路由（M1） | ✅ 已实现 | 零 LLM 成本分类器 + low 短路快路径，tests/test_triage.py 18 用例通过 |
@@ -79,7 +79,7 @@
 
 ### 5. 全链路工程化与容灾
 
-- 前端 Vue 3 + TypeScript，**48 个页面（48 views）**，多端多角色（学生 / 教师看板）
+- 前端 Vue 3 + TypeScript，**49 个页面（49 views）**，多端多角色（学生 / 教师看板）
 - 后端 FastAPI + LangGraph，**约 254 个 API 端点**（openapi.json 实测 `/api` 子集 236 路径 / 254 操作，42 路由模块），**1389 项测试通过 / 38 跳过 / 1 xfail**（CI 默认档，全量回归 0 失败）
 - **双通道大模型自动容灾**：DeepSeek（主）→ 讯飞星火 X2（兜底）
 - Milvus / PostgreSQL / Redis 缺失时逐级自动降级，单机即可完整运行
@@ -89,7 +89,7 @@
 ## 二、系统架构
 
 ```
-┌─ 前端 Vue 3 + TypeScript (48 页面 / 48 views) ───────────────┐
+┌─ 前端 Vue 3 + TypeScript (49 页面 / 49 views) ───────────────┐
 │  Vite :5173 → 代理 → 后端 :8002                               │
 │  学生端：对话 / 学习路径 / 知识图谱 / 练习 / 评估 / 职业素养实训│
 │  教师端：班级学情看板                                          │
@@ -257,7 +257,7 @@ npm install && npm run dev                   # :5173，代理 /api → 8002
 
 | 维度 | 指标 |
 |------|------|
-| 前端 | Vue 3 + TypeScript · 48 个 views（87 个 .vue） · Vite 构建 |
+| 前端 | Vue 3 + TypeScript · 49 个 views（88 个 .vue） · Vite 构建 |
 | 后端 | FastAPI + LangGraph · 约 254 个 API 端点（openapi.json 实测 `/api` 子集 236 路径 / 254 操作）· 11 Agent 节点 |
 | 代码量 | 后端 361 个 Python 文件 / 约 8.3 万行 · 前端 148 文件 / 约 5.3 万行 |
 | 测试 | 1389 项测试通过 / 38 跳过 / 1 xfail（CI 默认档，全量回归 0 失败） |

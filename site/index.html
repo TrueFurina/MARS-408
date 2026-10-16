@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>芒得很职 · 职业素养对抗实训平台（技术底座 芒得很职）</title>
-<meta name="description" content="芒得很职：基于 芒得很职 多智能体底座的职业素养对抗实训平台，11 个 LangGraph 节点、45 个前端视图、约 240 个 API 端点，所有宣称均可追溯到可复跑脚本与留存实验结果文件。">
+<meta name="description" content="芒得很职：基于 芒得很职 多智能体底座的职业素养对抗实训平台，11 个 LangGraph 节点、49 个前端视图、约 254 个 API 端点，所有宣称均可追溯到可复跑脚本与留存实验结果文件。">
 <style>
 :root{
   --bg:#07090f;--bg2:#0d1117;--panel:rgba(255,255,255,.035);
@@ -240,8 +240,8 @@ footer a:hover{color:var(--orange2)}
         </div>
         <div class="stat-strip">
           <div class="mini"><div class="v">11</div><div class="k">编排节点</div></div>
-          <div class="mini"><div class="v">45</div><div class="k">前端视图</div></div>
-          <div class="mini"><div class="v">240</div><div class="k">API 端点(约)</div></div>
+          <div class="mini"><div class="v">49</div><div class="k">前端视图</div></div>
+          <div class="mini"><div class="v">254</div><div class="k">API 端点(约)</div></div>
         </div>
       </div>
     </div>
@@ -259,14 +259,14 @@ footer a:hover{color:var(--orange2)}
 
     <p>职业素养——技术判断的边界、对证据的尊重、在被追问时守住结论的能力——很难靠一次性讲授形成。「芒得很职」把这套训练放进一个可以多轮运行的对抗环境：学生在真实技术语境中完成任务、接受质疑、被要求举证，系统记录全过程并给出可回看的评价依据。</p>
 
-    <p>平台基于 芒得很职 多智能体底座，由 <strong>11</strong> 个职责分离的 LangGraph 节点协同驱动，覆盖问题受理、学情诊断、路径规划、生成、评核与质量把关的完整链路；前端 <strong>约 45</strong> 个视图把诊断、实训、复盘与证据回看组织成一条连贯的教学动线，后端以 Python FastAPI 提供约 <strong>240</strong> 个 API 端点。</p>
+    <p>平台基于 芒得很职 多智能体底座，由 <strong>11</strong> 个职责分离的 LangGraph 节点协同驱动，覆盖问题受理、学情诊断、路径规划、生成、评核与质量把关的完整链路；前端 <strong>约 49</strong> 个视图把诊断、实训、复盘与证据回看组织成一条连贯的教学动线，后端以 Python FastAPI 提供约 <strong>254</strong> 个 API 端点。</p>
 
     <p>我们的工程原则只有一条：<strong>每一个对外宣称的能力，都必须能被一组可复跑的脚本与一份留存的实验结果文件追溯到源头。</strong>本页所有数字均标注了出处与口径；没有达到显著性的结论，我们同样标注出来。</p>
 
     <div class="stats reveal">
       <div class="stat"><b>11</b><span>LangGraph 编排节点</span></div>
       <div class="stat"><b>45</b><span>前端教学视图</span></div>
-      <div class="stat"><b>240</b><span>后端 API 端点（约）</span></div>
+      <div class="stat"><b>254</b><span>后端 API 端点（约）</span></div>
     </div>
 
     <figure class="reveal">
@@ -304,10 +304,10 @@ footer a:hover{color:var(--orange2)}
       </div>
     </div>
 
-    <p>知识与检索层由三部分构成：本地部署的 <strong>E5-base-v2（768 维）</strong>嵌入模型负责向量化，知识库共 <strong>2122 个向量</strong>；知识图谱承载 <strong>86 个节点、82 条先修依赖边</strong>，用于约束推荐顺序与诊断归因；大模型通道采用 <strong>DeepSeek 主通道 + 讯飞 Spark generalv3.5 兜底</strong>的双路设计，主通道不可用时自动降级，保证实训过程不中断。</p>
+    <p>知识与检索层由三部分构成：本地部署的 <strong>E5-base-v2（768 维）</strong>嵌入模型负责向量化，知识库共 <strong>2245 个向量</strong>（2015 知识 chunk + 230 题目，2026-10-14 实测）；知识图谱承载 <strong>86 个节点、82 条先修依赖边</strong>，用于约束推荐顺序与诊断归因；大模型通道采用 <strong>DeepSeek 主通道 + 讯飞 Spark generalv3.5 兜底</strong>的双路设计，主通道不可用时自动降级，保证实训过程不中断。</p>
 
     <div class="stats reveal">
-      <div class="stat"><b>2122</b><span>知识库向量条目</span></div>
+      <div class="stat"><b>2245</b><span>知识库向量条目</span></div>
       <div class="stat"><b>768</b><span>嵌入向量维度（E5-base-v2）</span></div>
       <div class="stat"><b>86 / 82</b><span>知识图谱节点 / 先修依赖边</span></div>
     </div>

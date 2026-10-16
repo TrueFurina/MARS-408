@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>芒得很职 · 计算机类学生职业素养对抗实训平台</title>
-<meta name="description" content="芒得很职：计算机类学生职业素养对抗实训多智能体平台，11 个 LangGraph 节点、47 个前端视图、约 245 个 API 端点，所有宣称均可追溯到可复跑脚本与留存的实验结果文件。">
+<meta name="description" content="芒得很职：计算机类学生职业素养对抗实训多智能体平台，11 个 LangGraph 节点、49 个前端视图、约 254 个 API 端点，所有宣称均可追溯到可复跑脚本与留存的实验结果文件。">
 <style>
   :root {
     --bg: #f6f7f9;
@@ -396,14 +396,14 @@
 
       <p>职业素养——技术判断的边界、对证据的尊重、在被追问时守住结论的能力——很难靠一次性讲授形成。&#8220;芒得很职&#8221;把这套训练放进一个可以多轮运行的对抗环境：学生在真实技术语境中完成任务、接受质疑、被要求举证，系统记录全过程并给出可回看的评价依据。</p>
 
-      <p>平台由 <strong>11</strong> 个职责分离的 LangGraph 节点协同驱动，覆盖问题受理、学情诊断、路径规划、生成、评核与质量把关的完整链路；前端 <strong>47</strong> 个视图把诊断、实训、复盘与证据回看组织成一条连贯的教学动线，后端以 Python FastAPI 提供约 <strong>245</strong> 个 API 端点。</p>
+      <p>平台由 <strong>11</strong> 个职责分离的 LangGraph 节点协同驱动，覆盖问题受理、学情诊断、路径规划、生成、评核与质量把关的完整链路；前端 <strong>49</strong> 个视图把诊断、实训、复盘与证据回看组织成一条连贯的教学动线，后端以 Python FastAPI 提供约 <strong>254</strong> 个 API 端点。</p>
 
       <p>我们的工程原则只有一条：<strong>每一个对外宣称的能力，都必须能被一组可复跑的脚本与一份留存的实验结果文件追溯到源头。</strong>本页所有数字均标注了出处与口径；没有达到显著性的结论，我们同样标注出来。</p>
 
       <div class="stats">
         <div class="stat"><b>11</b><span>LangGraph 编排节点</span></div>
         <div class="stat"><b>45</b><span>前端教学视图</span></div>
-        <div class="stat"><b>240</b><span>后端 API 端点（约）</span></div>
+        <div class="stat"><b>254</b><span>后端 API 端点（约）</span></div>
       </div>
 
       <figure>
@@ -436,10 +436,10 @@
         <div class="node"><b>path_planner</b> <span>学习路径规划</span></div>
       </div>
 
-      <p>知识与检索层由三部分构成：本地部署的 <strong>E5-base-v2（768 维）</strong>嵌入模型负责向量化，知识库共 <strong>2122 个向量</strong>；知识图谱承载 <strong>86 个节点、82 条先修依赖边</strong>，用于约束推荐顺序与诊断归因；大模型通道采用 <strong>DeepSeek 主通道 + 讯飞 Spark generalv3.5 兜底</strong>的双路设计，主通道不可用时自动降级，保证实训过程不中断。</p>
+      <p>知识与检索层由三部分构成：本地部署的 <strong>E5-base-v2（768 维）</strong>嵌入模型负责向量化，知识库共 <strong>2245 个向量</strong>（2015 知识 chunk + 230 题目，2026-10-14 实测）；知识图谱承载 <strong>86 个节点、82 条先修依赖边</strong>，用于约束推荐顺序与诊断归因；大模型通道采用 <strong>DeepSeek 主通道 + 讯飞 Spark generalv3.5 兜底</strong>的双路设计，主通道不可用时自动降级，保证实训过程不中断。</p>
 
       <div class="stats">
-        <div class="stat"><b>2122</b><span>知识库向量条目</span></div>
+        <div class="stat"><b>2245</b><span>知识库向量条目</span></div>
         <div class="stat"><b>768</b><span>嵌入向量维度（E5-base-v2）</span></div>
         <div class="stat"><b>86 / 82</b><span>知识图谱节点 / 先修依赖边</span></div>
       </div>
@@ -503,9 +503,9 @@
     <div class="wrap">
       <span class="eyebrow">04 · EVIDENCE</span>
       <h2>可复跑的证据</h2>
-      <p class="subtitle">28 条查询、96 条样本、1211 条通过用例</p>
+      <p class="subtitle">28 条查询、96 条样本、1389 条通过用例</p>
 
-      <p>工程可信度不靠形容词。本页列出三组可直接复现的实测记录。<strong>检索对照实验</strong>：28 条查询，Recall@5 <strong>+7.14 pp</strong>、Precision@5 <strong>+15.71 pp</strong>、MRR <strong>+12.38 pp</strong>，结果文件 <code>py-server/experiments/results/benchmark_2026-09-18.json</code>，伴随 token 消耗<strong>上升 11.99%</strong>（未降反增）与单次延迟 <strong>574.36 ms</strong> 的诚实披露。<strong>共识评测</strong>：96 条样本下训练权重 <strong>80.2%</strong> 与规则基线 <strong>82.3%</strong> 持平，结论为&#8220;未观察到显著优势&#8221;。<strong>回归测试</strong>：本机 Windows 实跑 <strong>1211</strong> 条用例通过、<strong>208</strong> 条跳过（跳过项一般为依赖外部服务或需本地模型的用例，不计入通过率分母）。</p>
+      <p>工程可信度不靠形容词。本页列出三组可直接复现的实测记录。<strong>检索对照实验</strong>：28 条查询，Recall@5 <strong>+7.14 pp</strong>、Precision@5 <strong>+15.71 pp</strong>、MRR <strong>+12.38 pp</strong>，结果文件 <code>py-server/experiments/results/benchmark_2026-09-18.json</code>，伴随 token 消耗<strong>上升 11.99%</strong>（未降反增）与单次延迟 <strong>574.36 ms</strong> 的诚实披露。<strong>共识评测</strong>：96 条样本下训练权重 <strong>80.2%</strong> 与规则基线 <strong>82.3%</strong> 持平，结论为&#8220;未观察到显著优势&#8221;。<strong>回归测试</strong>：CI 全量回归 <strong>1389</strong> 条用例通过、<strong>38</strong> 条跳过、<strong>1</strong> xfail、<strong>0</strong> 失败（2026-10-09 CI 口径；套件已增长，以 CI 全量回归为准；跳过项一般为依赖外部服务或需本地模型的用例，不计入通过率分母）。</p>
 
       <div class="card">
         <p class="card-title">检索对照实验（28 条查询标准口径）</p>
@@ -528,10 +528,12 @@
       </div>
 
       <div class="card">
-        <p class="card-title">回归测试（本机 Windows 实跑口径）</p>
+        <p class="card-title">回归测试（2026-10-09 CI 口径）</p>
         <ul class="metrics">
-          <li>通过用例　<b>1211</b> 条</li>
-          <li>跳过用例　<b>208</b> 条</li>
+          <li>通过用例　<b>1389</b> 条</li>
+          <li>跳过用例　<b>38</b> 条</li>
+          <li>xfailed 用例　<b>1</b> 条</li>
+          <li>失败用例　<b>0</b> 条</li>
           <li>口径　跳过项一般为依赖外部服务或需本地模型的用例，不计入通过率分母</li>
         </ul>
       </div>
