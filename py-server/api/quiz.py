@@ -2,6 +2,7 @@
 # API — 答题（/api/quiz/*）
 # ============================================================
 
+import asyncio
 import random
 import logging
 import json as json_mod
@@ -180,8 +181,8 @@ async def _generate_remediation(user_id: str) -> list[RemediationItem]:
     # 3) 解析技能配置（官方技能优先，模板回退）
     skill_dict = _resolve_weak_expert_skill(get_skill, get_template)
 
-    results: list[RemediationItem] = []
-    for kp in weak_points:
+    async def _generate_one(kp: str) -> RemediationItem:
+        """单个薄弱点的讲解生成（严格可降级：任何失败 → explanation=None）。"""
         item = RemediationItem(knowledge_point=kp, explanation=None)
         try:
             if skill_dict is None:
@@ -211,8 +212,13 @@ async def _generate_remediation(user_id: str) -> list[RemediationItem]:
         except Exception as _e:
             logger.warning(f"薄弱点讲解生成失败(降级，不影响答题回写): kp={kp}, err={_e}")
             item.explanation = None
-        results.append(item)
-    return results
+        return item
+
+    # 4) 并发生成：N 个薄弱点若串行 await，总耗时≈N×单次 LLM 延迟
+    # （2026-10-17 冒烟实测 3 点串行 24.2s）；gather 保序（掌握度升序不变），
+    # 逐项降级语义不变（_generate_one 内部 catch，绝不向 gather 抛错）。
+    results = await asyncio.gather(*(_generate_one(kp) for kp in weak_points))
+    return list(results)
 
 
 @router.post("/submit", response_model=QuizSubmitResponse)
