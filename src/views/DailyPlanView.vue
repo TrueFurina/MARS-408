@@ -168,8 +168,8 @@ onMounted(() => {
 
     <!-- Tab -->
     <div class="tab-bar">
-      <button class="tab-btn" :class="{ active: activeTab === 'today' }" @click="activeTab = 'today'"> 今日计划</button>
-      <button class="tab-btn" :class="{ active: activeTab === 'history' }" @click="activeTab = 'history'"> 历史回顾</button>
+      <button class="tab-btn" :class="{ active: activeTab === 'today' }" :aria-selected="activeTab === 'today'" @click="activeTab = 'today'"> 今日计划</button>
+      <button class="tab-btn" :class="{ active: activeTab === 'history' }" :aria-selected="activeTab === 'history'" @click="activeTab = 'history'"> 历史回顾</button>
     </div>
 
     <!-- 今日计划 -->

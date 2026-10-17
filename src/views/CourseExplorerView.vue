@@ -171,7 +171,7 @@ onMounted(load)
               v-for="m in viewModes"
               :key="m.value"
               class="view-mode-tab"
-              :class="{ active: viewMode === m.value }"
+              :class="{ active: viewMode === m.value }" :aria-selected="viewMode === m.value"
               @click="viewMode = m.value"
             >{{ m.icon }} {{ m.label }}</button>
           </div>

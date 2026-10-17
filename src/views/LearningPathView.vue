@@ -164,7 +164,7 @@ const nextStepNode = computed<PathNode | null>(() => {
         <button
           v-for="opt in subjectOptions" :key="opt.key"
           class="subject-tab"
-          :class="{ active: activeSubject === opt.key }"
+          :class="{ active: activeSubject === opt.key }" :aria-selected="activeSubject === opt.key"
           @click="switchSubject(opt.key)"
         >{{ opt.label }}</button>
       </div>

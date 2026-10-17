@@ -206,8 +206,8 @@ watch(() => route.query.tab, syncTabFromRoute)
 
     <!-- Tab -->
     <div class="tab-bar">
-      <button class="tab-btn" :class="{ active: activeTab === 'list' }" @click="activeTab = 'list'"> 错题列表</button>
-      <button class="tab-btn" :class="{ active: activeTab === 'stats' }" @click="activeTab = 'stats'"> 统计分析</button>
+      <button class="tab-btn" :class="{ active: activeTab === 'list' }" :aria-selected="activeTab === 'list'" @click="activeTab = 'list'"> 错题列表</button>
+      <button class="tab-btn" :class="{ active: activeTab === 'stats' }" :aria-selected="activeTab === 'stats'" @click="activeTab = 'stats'"> 统计分析</button>
     </div>
 
     <!-- 列表视图 -->

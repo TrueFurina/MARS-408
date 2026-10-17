@@ -153,10 +153,10 @@ async function loadMemoryOverview() {
 
     <!-- 切换 Tab -->
     <div class="tab-bar">
-      <button class="tab-btn" :class="{ active: !showMySkills && !showFavorites }" @click="switchToMarket"> 市场</button>
-      <button class="tab-btn" :class="{ active: showMySkills && !showMyDrafts }" @click="switchToMySkills"> 我的技能</button>
-      <button class="tab-btn" :class="{ active: showMyDrafts }" @click="goToDrafts"> 草稿箱</button>
-      <button class="tab-btn" :class="{ active: showFavorites }" @click="switchToFavorites"> 收藏</button>
+      <button class="tab-btn" :class="{ active: !showMySkills && !showFavorites }" :aria-selected="!showMySkills && !showFavorites" @click="switchToMarket"> 市场</button>
+      <button class="tab-btn" :class="{ active: showMySkills && !showMyDrafts }" :aria-selected="showMySkills && !showMyDrafts" @click="switchToMySkills"> 我的技能</button>
+      <button class="tab-btn" :class="{ active: showMyDrafts }" :aria-selected="showMyDrafts" @click="goToDrafts"> 草稿箱</button>
+      <button class="tab-btn" :class="{ active: showFavorites }" :aria-selected="showFavorites" @click="switchToFavorites"> 收藏</button>
     </div>
 
     <!-- 搜索 & 过滤栏 -->

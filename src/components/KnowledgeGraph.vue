@@ -366,10 +366,10 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
           </div>
 
           <div class="kg-detail-tabs">
-            <button class="kg-tab" :class="{ active: detailTab === 'info' }" @click="detailTab = 'info'"> 信息</button>
-            <button class="kg-tab" :class="{ active: detailTab === 'relations' }" @click="detailTab = 'relations'"> 关联 ({{ relatedNodes.size - 1 }})</button>
-            <button class="kg-tab" :class="{ active: detailTab === 'mastery' }" @click="detailTab = 'mastery'"> 掌握</button>
-            <button class="kg-tab" :class="{ active: detailTab === 'resources' }" @click="detailTab = 'resources'"> 资源</button>
+            <button class="kg-tab" :class="{ active: detailTab === 'info' }" :aria-selected="detailTab === 'info'" @click="detailTab = 'info'"> 信息</button>
+            <button class="kg-tab" :class="{ active: detailTab === 'relations' }" :aria-selected="detailTab === 'relations'" @click="detailTab = 'relations'"> 关联 ({{ relatedNodes.size - 1 }})</button>
+            <button class="kg-tab" :class="{ active: detailTab === 'mastery' }" :aria-selected="detailTab === 'mastery'" @click="detailTab = 'mastery'"> 掌握</button>
+            <button class="kg-tab" :class="{ active: detailTab === 'resources' }" :aria-selected="detailTab === 'resources'" @click="detailTab = 'resources'"> 资源</button>
           </div>
 
           <div class="kg-detail-body">

@@ -191,9 +191,9 @@ watch(currentSubject, () => {
 
     <!-- P3 归并：知识图谱页内 Tab（关系图谱 / 按科目浏览 / 从文本构建） -->
     <div class="tab-bar kg-tab-bar">
-      <button class="tab-btn" :class="{ active: isGraph }" @click="activeTab = 'graph'"> 关系图谱</button>
-      <button class="tab-btn" :class="{ active: isCourse }" @click="activeTab = 'course'"> 按科目浏览</button>
-      <button class="tab-btn" :class="{ active: isBuild }" @click="activeTab = 'build'"> 从文本构建</button>
+      <button class="tab-btn" :class="{ active: isGraph }" :aria-selected="isGraph" @click="activeTab = 'graph'"> 关系图谱</button>
+      <button class="tab-btn" :class="{ active: isCourse }" :aria-selected="isCourse" @click="activeTab = 'course'"> 按科目浏览</button>
+      <button class="tab-btn" :class="{ active: isBuild }" :aria-selected="isBuild" @click="activeTab = 'build'"> 从文本构建</button>
     </div>
 
     <!-- 关系图谱（默认） -->

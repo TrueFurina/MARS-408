@@ -182,8 +182,8 @@ async function refreshQuestions() { await generateQuestions() }
     </div>
 
     <div class="mode-tabs" style="margin-bottom:14px;">
-      <button class="mode-tab" :class="{ active: !showStepQuiz }" @click="showStepQuiz = false"><span class="tab-ic" v-html="icons.edit"></span>普通出题</button>
-      <button class="mode-tab" :class="{ active: showStepQuiz }" @click="showStepQuiz = true"><span class="tab-ic" v-html="icons.clipboard"></span>步骤化答题</button>
+      <button class="mode-tab" :class="{ active: !showStepQuiz }" :aria-selected="!showStepQuiz" @click="showStepQuiz = false"><span class="tab-ic" v-html="icons.edit"></span>普通出题</button>
+      <button class="mode-tab" :class="{ active: showStepQuiz }" :aria-selected="showStepQuiz" @click="showStepQuiz = true"><span class="tab-ic" v-html="icons.clipboard"></span>步骤化答题</button>
       <router-link to="/quiz-history" class="mode-tab" style="text-decoration:none;margin-left:auto;"><span class="tab-ic" v-html="icons.chart"></span>答题历史</router-link>
     </div>
 

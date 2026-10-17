@@ -971,6 +971,7 @@ function parseWeakPoints(wpStr: string): string[] {
           :key="tab.key"
           class="rag-btn rv-tab"
           :class="{ 'is-active': activeTab === tab.key }"
+          :aria-selected="activeTab === tab.key"
           @click="activeTab = tab.key as any"
         ><span class="tab-ic" v-html="icons[tab.icon as keyof typeof icons]"></span>{{ tab.label }}</button>
         </div>

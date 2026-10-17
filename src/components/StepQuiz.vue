@@ -171,8 +171,8 @@ onUnmounted(() => {
     <div class="step-quiz-desc">复杂题目拆成多步，每步独立判断，系统分析错因并追踪薄弱点</div>
 
     <div class="step-mode-tabs">
-      <button class="step-mode-tab" :class="{ active: !adaptiveMode }" @click="setMode(false)">全部题目</button>
-      <button class="step-mode-tab" :class="{ active: adaptiveMode }" @click="setMode(true)">
+      <button class="step-mode-tab" :class="{ active: !adaptiveMode }" :aria-selected="!adaptiveMode" @click="setMode(false)">全部题目</button>
+      <button class="step-mode-tab" :class="{ active: adaptiveMode }" :aria-selected="adaptiveMode" @click="setMode(true)">
         智能针对薄弱点
       </button>
     </div>

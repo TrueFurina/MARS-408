@@ -190,7 +190,7 @@ onMounted(() => {
         <div class="panel-title-row">
           <div class="panel-title"> 知识图谱可视化</div>
           <div class="view-mode-tabs">
-            <button v-for="m in viewModes" :key="m.value" class="view-mode-tab" :class="{ active: viewMode === m.value }" @click="viewMode = m.value">
+            <button v-for="m in viewModes" :key="m.value" class="view-mode-tab" :class="{ active: viewMode === m.value }" :aria-selected="viewMode === m.value" @click="viewMode = m.value">
               {{ m.icon }} {{ m.label }}
             </button>
           </div>
