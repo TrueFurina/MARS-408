@@ -10,7 +10,7 @@ const props = defineProps<{
   result: any
 }>()
 
-// ── 讯飞AI工坊：集中调用控制台已开通的全部讯飞能力 ──
+// ── 讯飞AI工坊：集中调用已集成的讯飞能力（可用性以账号套餐开通状态为准，未开通项如实报错）──
 const xfLoading = ref<string | null>(null)
 const xfError = ref<string | null>(null)
 let _xfErrorTimer: ReturnType<typeof setTimeout> | null = null

@@ -1213,7 +1213,7 @@ function parseWeakPoints(wpStr: string): string[] {
       </div><!-- /.rv-col-main -->
     </div><!-- /.rv-workspace -->
 
-    <!-- 讯飞AI工坊：深度集成讯飞开放平台全部已开通能力（始终可见） -->
+    <!-- 讯飞AI工坊：深度集成讯飞开放平台已接入能力（始终可见；未开通项调用时如实报错） -->
     <XfyunWorkshop :topic="topic" :result="result" />
     </ErrorBoundary>
   </div>

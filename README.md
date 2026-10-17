@@ -81,7 +81,7 @@
 
 - 前端 Vue 3 + TypeScript，**49 个页面（49 views）**，多端多角色（学生 / 教师看板）
 - 后端 FastAPI + LangGraph，**约 254 个 API 端点**（openapi.json 实测 `/api` 子集 236 路径 / 254 操作，42 路由模块），**1524 项测试通过 / 38 跳过 / 1 xfail**（CI 默认档，全量回归 0 失败）
-- **双通道大模型自动容灾**：DeepSeek（主）→ 讯飞星火 X2（兜底）
+- **多通道大模型自动容灾**：DeepSeek（主）→ 智谱 GLM（兜底）；讯飞星火 X2/generalv3.5 账号未授权（11200，控制台开通后自动恢复优先级）、Qwen 欠费——按可用性自动跳过
 - Milvus / PostgreSQL / Redis 缺失时逐级自动降级，单机即可完整运行
 
 ---

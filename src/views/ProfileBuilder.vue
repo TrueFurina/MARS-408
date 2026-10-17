@@ -54,7 +54,7 @@ async function sendMessage() {
     }
   } catch (e: any) {
     const msg = e?.name === 'AbortError'
-      ? '讯飞星火响应超时（X2 深度推理较慢），请稍后重试，或在设置页切换到 DeepSeek 通道。'
+      ? '大模型响应超时（深度推理通道较慢），请稍后重试，或在设置页切换 LLM 通道。'
       : '抱歉，我现在有点卡顿，请稍后再试。'
     messages.value.push({ role: 'assistant', content: msg })
   } finally {

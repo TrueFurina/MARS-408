@@ -432,8 +432,8 @@ onBeforeUnmount(() => {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
           新对话
         </button>
-        <span class="xfyun-badge" title="本对话由讯飞星火 X2 大模型驱动">
-          <span v-html="icons.sparkle" class="xfyun-badge-icon"></span>讯飞星火 X2
+        <span class="xfyun-badge" title="本对话由多通道大模型容灾驱动（讯飞星火 / DeepSeek / 智谱 GLM 按可用性自动切换）">
+          <span v-html="icons.sparkle" class="xfyun-badge-icon"></span>多通道大模型
         </span>
         <button class="sidebar-toggle" @click="toggleSidebar" title="收起侧边栏">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -477,7 +477,7 @@ onBeforeUnmount(() => {
         <div class="greeting-icon" v-html="icons.chat"></div>
         <h1>专业能力智能学习助手</h1>
         <p>输入你想学的专业知识点，我来帮你讲解、分析和练习</p>
-        <div class="greeting-powered">由 <strong>讯飞星火 X2</strong> 大模型驱动 · 融合 10 项讯飞开放平台能力</div>
+        <div class="greeting-powered">由 <strong>多通道大模型</strong>容灾驱动 · 讯飞多模态服务加持</div>
         <div class="greeting-chips">
           <button v-for="q in suggestedPrompts" :key="q" class="greeting-chip" type="button" @click="sendMessage(q)">{{ q }}</button>
         </div>
