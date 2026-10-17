@@ -119,6 +119,19 @@ jobs:
           run_one "a11y gate-class a (浮层焦点管理)" "python scripts/a11y_scan.py --gate-class a" "."
           # 前端可访问性深度审计（咨询级，report-only，不阻断）：B/C/D 见 CI 日志。
           run_one "a11y_scan --audit (可访问性审计)" "python scripts/a11y_scan.py --audit" "."
+          # 前后端契约交叉审计（2026-10-17 新增，A 类阻断）：
+          # 前端每一个 api.* 调用都必须找得到 openapi.json 里的后端路由——
+          # 否则运行时必 404/405，而这类违约在类型检查/单测里都静默（前端
+          # api.generated.ts 只描述响应体，不断言路径存在性）。
+          # 匹配语义含前端惯用法容错（字面量填路径参数 / 模板 ${} / query 串拼接 /
+          # 泛型类型参数 / api.ts 全方法族），由 py-server/tests/test_api_contract_audit.py
+          # 锁定（15 例 + 三重变异验证）。openapi.json 的新鲜度由 ci.yml 的
+          # verify_openapi_snapshot.py 守护——前端调新路由而忘生快照时本闸会红，
+          # 这是预期（逼着同步快照而非绕过）。
+          # 只 gate A 类；B 类（后端孤儿端点）不阻断——legacy/admin/诊断面大量
+          # 合理存在，阻断会逼出"删端点"这类违反项目红线的通过方式。
+          # fail-closed：openapi 零路由 / 前端扫描面为零 → exit 2。
+          run_one "audit_api_contract (前后端契约 A 类闸)" "python scripts/audit_api_contract.py --gate" "."
 
           # 轻量结构守门：sqlite / numpy / fastapi / 内置语料，无需 Milvus
           run_one "verify_app_wiring"            "python scripts/verify_app_wiring.py"            "py-server"

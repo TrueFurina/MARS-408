@@ -191,6 +191,23 @@
 
 ## 已完成
 
+- [x] 2026-10-17 **前后端契约交叉审计（主动深审第三轮）** —— 新增
+      `scripts/audit_api_contract.py`（report-only / `--gate` 双模，纯 stdlib 1.2s）：
+      后端真值 = openapi.json（复跑确认 237 paths / 255 ops 与运行时一致），
+      前端面 = src/ 全量字面量+模板+api.ts 全方法族。**A 类（前端打到不存在的路由）= 0**
+      （从初版 79 处疑似逐类修正误报收敛而来：模板未采/泛型吞路径/四方法族漏采/
+      缺 /api 前缀/字面量填参数/query 拼接/跨盘符 relpath 崩溃——最后一条是测试
+      抓出的真 bug）。B 类 102 条孤儿逐条人工分类：9 状态诊断 + 2 客户端自处理 +
+      4 legacy 别名孪生 + 3 工具固有漏判（实为在用）+ 84 后端完整前端未接；
+      **零删除零改动**（红线 + BP 规模口径以 openapi 全量为真值源）。
+      鉴权面核验：254 操作 / 241 保护 / 13 公开（逐一附理由）/ unregistered=0 /
+      coverage 94.88%，与 METRICS_CURRENT 一致。CI 接入 verify-structural.yml
+      （只 gate A 类）；测试 15 例（`py-server/tests/test_api_contract_audit.py`，
+      按 TDD 纪律与实现分 commit）+ 三重变异验证（占位容错删→3 红 / gate 阻断删→1 红 /
+      fail-closed 放行→1 红；变异脚本经 heredoc 被吞反斜杠致「假存活」，已用文件级
+      行操作重做确证）。记录 `deliverables/engineering-assurance/api-contract-audit-2026-10-17.md`。
+      附带：仓库根 3 个未跟踪 scratch（`_md2docx.py` / `_xf_probe.py` / `_mut2.py`）
+      移入 `archive/scratch-2026-10-17/`（gitignored，仅移动零删除）。
 - [x] 2026-10-16 **全量测试异常查证 → 查出并修复「测试销毁真实向量库」事故**（`64994b2`，已 push）：
       28 errors = 全量跑时本地后端并发争用夹具（停后端后单跑 16 passed，教训：二者不得同时跑）；
       1 failed = `test_installed_hook_matches_canonical_source`（10-15 xargs 探针热修复只改进已装钩子、未回写真源）。
