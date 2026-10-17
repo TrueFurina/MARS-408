@@ -174,7 +174,7 @@ const nextStepNode = computed<PathNode | null>(() => {
         已完成 {{ completed }}/{{ total }} 章
       </div>
       <div style="margin-top:12px;height:8px;background:var(--bg-secondary);border-radius:var(--radius-full);overflow:hidden;max-width:400px;margin-left:auto;margin-right:auto;">
-        <div :style="{width:'100%', height:'100%', background:'var(--gradient-accent)', borderRadius:'var(--radius-full)', transform:'scaleX(' + (pct/100) + ')', transformOrigin:'left', transition:'transform 0.6s ease'}"></div>
+        <div :style="{width:'100%', height:'100%', background:'var(--gradient-accent)', borderRadius:'var(--radius-full)', transform:'scaleX(' + (pct/100) + ')', transformOrigin:'left', transition:'transform calc(0.6s * var(--motion-scale)) ease'}"></div>
       </div>
       <div v-if="!store.profileCompleted" style="margin-top:12px;font-size:13px;color:var(--accent-4);">
         建议先完成<a href="/profile/build" style="color:var(--accent-1);text-decoration:underline;">学生画像</a>，获取更精准的学习路径

@@ -864,7 +864,7 @@ function parseWeakPoints(wpStr: string): string[] {
             width: '100%', transform: 'scaleX(' + (progressPct / 100) + ')', transformOrigin: 'left',
             height: '100%',
             background: 'var(--gradient-primary)',
-            transition: 'transform 0.4s ease',
+            transition: 'transform calc(0.4s * var(--motion-scale)) ease',
             borderRadius: 'var(--radius-full)',
           }"></div>
         </div>

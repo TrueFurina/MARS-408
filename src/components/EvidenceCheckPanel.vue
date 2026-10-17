@@ -217,7 +217,7 @@ function agentName(a: string) {
           <!-- 数值弧（旋转角度由 gaugeAngle 控制） -->
           <path d="M 10 60 A 50 50 0 0 1 110 60" fill="none" stroke-width="8" stroke-linecap="round"
             :stroke-dasharray="157" :stroke-dashoffset="157 - (157 * gaugeAngle / 180)"
-            :style="{ stroke: gaugeColor, transition: 'stroke-dashoffset 0.8s ease' }"/>
+            :style="{ stroke: gaugeColor, transition: 'stroke-dashoffset calc(0.8s * var(--motion-scale)) ease' }"/>
         </svg>
         <div class="ev-gauge-num" :style="{ color: gaugeColor }">{{ confidencePercent }}<span class="ev-gauge-pct">%</span></div>
       </div>
