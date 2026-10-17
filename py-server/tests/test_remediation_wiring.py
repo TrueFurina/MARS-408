@@ -77,7 +77,11 @@ def _fake_template(system_prompt_template: str = "模板讲解 {{subject}} 的�
 
 
 class _FakeRuntime:
-    """替身技能运行时实例：记录 execute 调用，按预设行为返回/抛错。"""
+    """替身技能运行时实例：记录 execute 调用，按预设行为返回/抛错。
+
+    behavior 可为：异常实例（抛出）/ 可调用异步函数（await 后返回，
+    用于并发屏障测试）/ 其他值（作为讲解文本返回）。
+    """
 
     def __init__(self):
         self.calls: list[dict] = []
@@ -87,6 +91,8 @@ class _FakeRuntime:
         behavior = _FakeRuntimeCls.behavior
         if isinstance(behavior, BaseException):
             raise behavior
+        if callable(behavior):
+            return await behavior(**kwargs)
         return behavior
 
 
@@ -95,7 +101,7 @@ class _FakeRuntimeCls:
 
     _generate_remediation 以 `SkillPluginRuntime.get(id)` 类方法取实例，
     故替身同样提供类方法 get；behavior 为 BaseException 时 execute 抛出，
-    否则作为讲解文本返回。
+    为可调用异步函数时 await 调用，否则作为讲解文本返回。
     """
 
     behavior = "针对该薄弱知识点的标准讲解内容"
@@ -451,6 +457,60 @@ def test_extract_llm_text_helper_directly():
     assert f({"choices": [{"message": {"content": 42}}]}) is None
     assert f({"choices": "not-a-list"}) is None
     assert f([1, 2, 3]) is None  # 非 dict 非 str → 降级 None
+
+
+# ── 并发生成（2026-10-17 冒烟实测：3 薄弱点串行 await 实测 24.2s） ──
+# 串行实现下每个 execute 依次等待 LLM，N 个薄弱点耗时≈N×单次；
+# 并发实现下总耗时≈单次。用「同时在途屏障」做确定性判定（不依赖时钟）：
+# 全部 N 个 execute 同时在途才放行 —— 串行实现下首调用永久等待 →
+# wait_for 超时 → 红灯；并发实现下齐步放行 → 绿灯。
+
+async def test_remediation_generates_concurrently(monkeypatch):
+    """3 个薄弱点的讲解必须并发生成（屏障不到齐即超时）。"""
+    import asyncio
+
+    n_points = 3
+    in_flight = 0
+    release = asyncio.Event()
+
+    async def _barriered(**kwargs):
+        nonlocal in_flight
+        in_flight += 1
+        if in_flight >= n_points:
+            release.set()
+        await release.wait()  # 串行实现下此处永久挂起
+        return "并发讲解内容"
+
+    _patch_remediation_deps(
+        monkeypatch,
+        memory={"mastery": {"a": 0.1, "b": 0.2, "c": 0.3}},
+        skill=_fake_skill(), template=_fake_template(),
+        runtime_behavior=_barriered,
+    )
+    items = await asyncio.wait_for(quiz_api._generate_remediation("u1"), timeout=15)
+    # gather 保序：按掌握度升序
+    assert [it.knowledge_point for it in items] == ["a", "b", "c"]
+    assert all(it.explanation == "并发讲解内容" for it in items)
+
+
+async def test_concurrent_generation_keeps_per_item_degradation(monkeypatch):
+    """并发下一个 execute 抛错不影响其他项（逐项降级语义保持）。"""
+    import asyncio
+
+    async def _mixed(**kwargs):
+        if "「b」" in kwargs["user_input"]:
+            raise RuntimeError("单点失败")
+        return "正常讲解"
+
+    _patch_remediation_deps(
+        monkeypatch,
+        memory={"mastery": {"a": 0.1, "b": 0.2, "c": 0.3}},
+        skill=_fake_skill(), template=_fake_template(),
+        runtime_behavior=_mixed,
+    )
+    items = await asyncio.wait_for(quiz_api._generate_remediation("u1"), timeout=15)
+    assert [it.knowledge_point for it in items] == ["a", "b", "c"]
+    assert [it.explanation for it in items] == ["正常讲解", None, "正常讲解"]
 
 
 # ════════════════════════════════════════════════════════════
