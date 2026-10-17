@@ -403,6 +403,56 @@ async def test_empty_explanation_normalized_to_none(monkeypatch):
     assert items[0].explanation is None
 
 
+# ── OpenAI 格式 dict 响应提取（2026-10-17 实测事故修复） ──
+# SkillPluginRuntime.execute 透传 LLMProvider.chat 的原始响应 dict
+# （{"choices":[{"message":{"content": ...}}]}），而 RemediationItem.
+# explanation 类型为 Optional[str]。直赋会把整个 dict 塞进 API 响应
+# （Pydantic 序列化告警 + 前端拿到非字符串），必须在消费边界提取纯文本。
+# 本组用例对未修复实现应为红灯（test-first ground truth）。
+
+_OPENAI_STYLE = {
+    "choices": [{"message": {"role": "assistant", "content": "这是薄弱点讲解正文"}}]
+}
+
+
+async def test_dict_response_extracted_to_text(monkeypatch):
+    """execute 返回 OpenAI 格式 dict → explanation 提取为纯文本。"""
+    _patch_remediation_deps(
+        monkeypatch,
+        memory={"mastery": {"tcp": 0.2}},
+        skill=_fake_skill(), template=_fake_template(),
+        runtime_behavior=_OPENAI_STYLE,
+    )
+    items = await quiz_api._generate_remediation("u1")
+    assert items[0].explanation == "这是薄弱点讲解正文"
+
+
+async def test_malformed_dict_response_yields_none(monkeypatch):
+    """execute 返回结构不符的 dict → explanation=None（降级，不泄漏原始结构）。"""
+    _patch_remediation_deps(
+        monkeypatch,
+        memory={"mastery": {"tcp": 0.2}},
+        skill=_fake_skill(), template=_fake_template(),
+        runtime_behavior={"unexpected": "shape"},
+    )
+    items = await quiz_api._generate_remediation("u1")
+    assert items[0].explanation is None
+
+
+def test_extract_llm_text_helper_directly():
+    """_extract_llm_text 边界：None / str / 空串 / dict / 非 str content。"""
+    f = quiz_api._extract_llm_text
+    assert f(None) is None
+    assert f("文本") == "文本"
+    assert f("") is None
+    assert f(_OPENAI_STYLE) == "这是薄弱点讲解正文"
+    assert f({"unexpected": 1}) is None
+    assert f({"choices": [{"message": {"content": None}}]}) is None
+    assert f({"choices": [{"message": {"content": 42}}]}) is None
+    assert f({"choices": "not-a-list"}) is None
+    assert f([1, 2, 3]) is None  # 非 dict 非 str → 降级 None
+
+
 # ════════════════════════════════════════════════════════════
 # 3. quiz_submit 集成（api/quiz.py:298-311）
 # ════════════════════════════════════════════════════════════
