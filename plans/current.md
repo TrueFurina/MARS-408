@@ -90,9 +90,17 @@
         2026-10-15 实证 `538db7e`）——ADR-020 口径「四通道容灾：讯飞X2 → DeepSeek → Qwen → GLM」。
         `experiments/verify_llm_fallback_chain.py` 真实网络故障注入：s1 xfyun 故障→回退 deepseek 成功；
         s3 前三通道全故障→回落 GLM 成功；含恢复校验（退出码契约同 pilot_evidence_report）。
-        🔴 **当前实测：xfyun 两预设均 `AppIdNoAuthError (11200)`（账号授权问题，非暂时故障）⇒
-        真实可用通道 = DeepSeek + GLM（qwen 欠费真实失败）**。「四通道」是设计口径，可用性为 2 段，
-        对外叙述须区分；讯飞授权需用户侧核查。
+        🔴 **2026-10-17 复测（真实网络，双次验证）：xfyun 全部 5 个候选（当前 generalv3.5 /
+        4.0Ultra / spark_x2 / pro128k / pro-128k）均 `AppIdNoAuthError (11200)`
+        （HTTP 500，账号授权问题，非暂时故障）⇒ 真实可用通道 = DeepSeek + GLM
+        （qwen 欠费真实失败）**。「四通道」是设计口径，可用性为 2 段，
+        对外叙述须区分；讯飞 LLM 授权需用户侧到控制台开通。
+        🟢 **同日重大发现：TTI 图片生成 / TTS 语音合成均已开通且真实可用**
+        （HMAC 鉴权探活：TTI HTTP 200 code=0 + 183,500 字节真实图片；
+        TTS WS code=0 + 3,168 字节真实 MP3）——但 config 的
+        `tti_enabled`/`tts_enabled` 均为 False ⇒ 产品在跑 SVG/浏览器降级，
+        **可用能力被关着**。config.py 注释明示「开通后改为 True」，翻转即符合设计意图
+        （失败均优雅降级，无断链风险）；待用户拍板。探活脚本 `_xf_probe.py`（仓库根，未跟踪）。
   - [x] **查实并修复「开场问题被种子锁死」**（2026-10-13）——基线跑一次即暴露：4/4 场景两模式开场逐字相同，
         实证为 LLM 把提示词里的「参考开场」原样回填。改 `prompts_career.py` 3 处措辞（种子开场降级为"仅情境参考、必须重写"），
         复测 4/4 开场全部改写且质量提升；差异数 53 → 58。
