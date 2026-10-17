@@ -283,20 +283,21 @@ describe('MasteryMapView allZero 占位', () => {
     expect(w.findAll('.subject-tile')).toHaveLength(2)
   })
 
-  // 已知缺陷（设计师审计 #17，待 impl 单独提交修复）：masteryData 为空数组时，
-  // allZero 显式 return false（:57），于是既不走 :178 的占位分支，又被 :185 的
-  // v-else 渲染成「空网格 + 完整图例」—— 用户看到一张没有科目却带图例的空卡片。
-  // 本用例**锁定当前真实行为**（不是期望行为），修复落地后必须同步更新。
-  it('【现状锁定·缺陷 #17】空数组不触发占位：渲染空科目网格 + 完整图例', async () => {
+  // 缺陷 #17（设计师审计发现，impl 已修复）：masteryData 为空数组时，旧实现
+  // allZero 显式 return false，于是既不走进占位分支，又被 v-else 渲染成
+  // 「空网格 + 完整图例」—— 用户看到一张没有科目却带图例的空卡片。
+  // 修复后：空数组与「全零」语义合并（都表示没有真实掌握度），统一走占位引导。
+  it('空数组触发占位（不再渲染空网格 + 空图例）', async () => {
     const w = await mountLoaded({ mastery: [] })
-    expect(w.find('.map-placeholder').exists()).toBe(false)
-    expect(w.text()).not.toContain('还没有掌握度数据')
+    expect(w.find('.map-placeholder').exists()).toBe(true)
+    expect(w.find('.map-placeholder').text()).toContain('还没有掌握度数据')
     expect(w.findAll('.subject-tile')).toHaveLength(0)
-    // 当前真实行为：网格节点存在但为空，图例照常渲染
-    expect(w.find('.subject-grid').exists()).toBe(true)
-    expect(w.find('.tier-legend').exists()).toBe(true)
-    // 科目卡片区连「暂无数据」的提示都没有（提示只在 allZero 时出现）
-    expect(w.findAll('.map-card')[0]!.text()).not.toContain('暂无数据')
+    // 占位态下不应出现空网格与图例：先给占位（是），而不是先给一张空卡片
+    expect(w.find('.subject-grid').exists()).toBe(false)
+    expect(w.find('.tier-legend').exists()).toBe(false)
+    // 科目卡片标题栏也要有「暂无数据」提示（与全零态保持一致）
+    expect(w.findAll('.map-card')[0]!.text()).toContain('暂无数据')
+    expect(w.find('.map-hint').text()).toContain('暂无数据')
   })
 })
 
