@@ -78,7 +78,9 @@
 > 用 `/home/user/miniconda3/envs/all-in-rag/bin/python`（含 langgraph/fastapi；career 链路
 > 不依赖 Milvus/Redis，缺失时自动回退）。注意 `~/studyhelp-venv2` **缺 langgraph**。
 
-- [ ] ① **真实 LLM 接入**
+- [x] ① **真实 LLM 接入** —— 2026-10-17 收官：四通道设计口径 + 真实可用 2 段（DeepSeek/GLM）已实证；
+      讯飞 LLM 全候选 11200 确认未开通（需控制台操作，非代码项）；TTI/TTS 已开启并端到端实证
+      （详见 ① 节内记录与 engineering-assurance/number-drift-audit-2026-10-15.md §五）。
   - [x] 通道探活 + 项目侧端到端首验（本机，2026-10-13）
   - [x] 服务器配 key（`~/study-help-pro/py-server/.env`，2026-10-13，chmod 600）
   - [x] **4 场景 mock vs 真实对比基线已跑并落档**（2026-10-13）——
@@ -110,7 +112,9 @@
         `fail-after 4` 实测 4/4 场次跑完不崩；评估虽降级为 `rule_fallback`，但 overall 恢复区分度
         （2.78/4.54/3.17/4.12，而纯兜底恒 2.60）、有分维度 2→5~6、含原话链条 2→5~6。
         📌 **定位出真正的质量瓶颈 = 「证据采集」（每轮取证的 LLM 调用），不是评估器** —— 若降本，最该保住取证。
-- [ ] ② **教师侧最小教学闭环**
+- [x] ② **教师侧最小教学闭环** —— 2026-10-17 收官：学生侧断链已补齐（任务码加入+task_id 透传）、
+      班级聚合看板/CSV/F7 一页纸/F1 下钻/F2 任务中心/F3 学生任务中心/F4 成长页/F5 前后测/F6 同意+简评
+      全族落地并有测试守护（test_career_teacher.py 20 例）；剩余为拼图③的试用执行决策（见 ③）。
   - [x] **缺口盘点已完成**（2026-10-14）→ `plans/teacher-loop-gap-2026-10-14.md`。
         🔴 **结论：后端与教师端全齐，闭环断在学生侧最后一米** ——
         `POST /career/task/join` 已就绪但**前端零入口**，且学生发起实训**不传 `task_id`**；

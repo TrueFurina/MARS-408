@@ -788,11 +788,27 @@ async def generate_resume(info_text: str) -> ResumeResult:
 # ════════════════════════════════════════════════
 
 def get_all_status() -> dict:
-    """返回所有讯飞能力的可用状态"""
+    """返回所有讯飞能力的可用状态
+
+    ⚠️ 诚实口径：services 下各布尔值表示**凭证是否配置**，不等于**服务已开通**。
+    讯飞按服务单独授权/计费，凭证齐全但套餐未开通时调用仍会失败
+    （如内容合规返回「套餐时间超限」）。
+    2026-10-17 真实探活记录（experiments/probe_xfyun_capabilities.py）：
+      - 实测可用（7 项）：图像生成 TTI / 语音合成 TTS / 文本纠错 / 图片理解 /
+        万搜聚合搜索 / 角色模拟 / 智能简历；
+      - 实测当前不可用（2 项）：内容合规（套餐时间超限）、公文校对（licc failed，5 探 1 成）；
+      - 未探活（2 项，重任务计费）：智能 PPT、数字人视频；
+      - 星火 LLM（不属本枚举）：全候选 AppIdNoAuthError 11200，账号未开通。
+    消费方应以各能力端点实测结果为准，勿把本状态当可用性承诺。
+    """
     cred = has_credentials()
     c = _get_cfg()
     return {
         "credentials_configured": cred,
+        "caveat": (
+            "services 布尔值=凭证是否配置，≠服务已开通；2026-10-17 实测："
+            "内容合规(套餐时间超限)/公文校对(licc failed) 当前不可用，智能PPT/数字人视频未探活"
+        ),
         "services": {
             "image_generation": cred,                       # TTI
             "image_understanding": cred,                   # 图片理解 WS

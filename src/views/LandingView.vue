@@ -22,11 +22,11 @@ const innovations = [
   {
     id: 'xfyun',
     badge: '创新 01',
-    title: '讯飞 10 项能力集成',
+    title: '讯飞多模态能力集成',
     subtitle: 'XFYun Full-Stack Integration',
-    desc: '深度对接讯飞开放平台 10 项核心能力——图像生成、图片理解、聚合搜索、智能PPT、数字人视频、文本纠错、公文校对、文本合规、角色模拟、智能简历，构建多模态教学引擎。',
-    stat: '10',
-    statLabel: '项能力',
+    desc: '对接讯飞开放平台 10 项服务接口——图像生成、语音合成、图片理解、聚合搜索、文本纠错、角色模拟、智能简历已实测跑通（2026-10 真实调用验证）；智能PPT、数字人视频、公文校对、内容合规按讯飞账号套餐开通状态调用，未开通项自动降级不影响主流程。',
+    stat: '7',
+    statLabel: '项实测可用',
     accent: 'var(--accent-primary)',
     gradient: 'linear-gradient(135deg, color-mix(in srgb, var(--accent-primary) 12%, transparent), color-mix(in srgb, var(--accent-primary) 2%, transparent))',
     iconSvg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>`,
@@ -151,7 +151,7 @@ function goLogin() { router.push('/login') }
         <span class="hero-title-sub">计算机类学生职业素养对抗实训平台</span>
       </h1>
       <p class="hero-desc">
-        以 11 节点 LangGraph 流水线为核心引擎，深度融合讯飞开放平台 10 项能力、用户自定义 AI 教学技能平台，
+        以 11 节点 LangGraph 流水线为核心引擎，深度融合讯飞开放平台多模态服务（10 项接口集成、7 项实测可用）、用户自定义 AI 教学技能平台，
         与领域知识图谱，专注计算机类学生职业素养对抗实训——让同学既说得清、扛得住、有证据。
       </p>
 
@@ -240,7 +240,7 @@ function goLogin() { router.push('/login') }
     <section class="bottom-cta">
       <div class="bottom-cta-inner">
         <h2 class="bottom-title">让每一道错题，都成为成长的起点</h2>
-        <p class="bottom-desc">11 节点编排 · 10 项讯飞能力 · 无限可扩展教学技能 · 知识图谱可视化</p>
+        <p class="bottom-desc">11 节点编排 · 讯飞多模态服务（7 项实测可用）· 无限可扩展教学技能 · 知识图谱可视化</p>
         <button class="cta-primary cta-large" @click="enterSystem">
           <span>{{ canEnterDirectly ? '立即体验' : '本地运行 · 体验完整功能' }}</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
