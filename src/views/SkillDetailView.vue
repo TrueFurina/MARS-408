@@ -227,7 +227,7 @@ watch(chatMessages, () => {
       <!-- 评价表单 -->
       <div v-if="showRateForm" class="rate-form">
         <div class="star-picker">
-          <span v-for="i in 5" :key="i" class="star-option" :class="{ filled: i <= myRating }" role="button" tabindex="0" :aria-label="'评分 ' + i + ' 星'" @click="myRating = i" @keydown.enter="myRating = i" @keydown.space.prevent="myRating = i"></span>
+          <button v-for="i in 5" :key="i" type="button" class="star-option" :class="{ filled: i <= myRating }" :aria-label="'评分 ' + i + ' 星'" @click="myRating = i"></button>
         </div>
         <input v-model="myComment" class="rate-input" placeholder="写点评价（可选）" maxlength="200" />
         <div class="rate-actions">
@@ -408,7 +408,7 @@ watch(chatMessages, () => {
   margin-bottom:var(--space-4); display: flex; flex-direction: column; gap:0.625rem;
 }
 .star-picker { display: flex; gap:var(--space-1); }
-.star-option { font-size:var(--text-3xl); cursor: pointer; color: var(--text-muted); transition: color 0.15s; }
+.star-option { border: none; background: none; font: inherit; padding: 0; font-size:var(--text-3xl); cursor: pointer; color: var(--text-muted); transition: color 0.15s; }
 .star-option.filled { color: var(--accent-warm); }
 .star-option:hover { color: var(--accent-warm); }
 .rate-input {

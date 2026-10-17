@@ -490,7 +490,7 @@ onMounted(async () => {
         <div class="recent-col">
           <div class="recent-header">
             <span>最近学习</span>
-            <span class="recent-link" role="button" tabindex="0" @click="go('/chat')" @keydown.enter="go('/chat')" @keydown.space.prevent="go('/chat')">查看全部</span>
+            <button type="button" class="recent-link" @click="go('/chat')">查看全部</button>
           </div>
           <div v-for="s in sessions" :key="s.id" class="recent-session" role="button" tabindex="0" @click="go('/chat')" @keydown.enter="go('/chat')" @keydown.space.prevent="go('/chat')">
             <span class="session-subject-tag" :class="tagClass(s.subject)">{{ subjectLabel(s.subject) || s.subject }}</span>
@@ -504,7 +504,7 @@ onMounted(async () => {
         <div class="recent-col">
           <div class="recent-header">
             <span>推荐任务</span>
-            <span class="recent-link" role="button" tabindex="0" @click="go('/practice')" @keydown.enter="go('/practice')" @keydown.space.prevent="go('/practice')">更多</span>
+            <button type="button" class="recent-link" @click="go('/practice')">更多</button>
           </div>
           <div v-for="t in tasks" :key="t.id" class="recommend-card" role="button" tabindex="0" @click="go('/practice')" @keydown.enter="go('/practice')" @keydown.space.prevent="go('/practice')">
             <div class="recommend-icon" :style="{ background: 'rgba(124,106,242,0.12)' }">{{ t.icon }}</div>
@@ -929,6 +929,10 @@ onMounted(async () => {
 }
 
 .recent-link {
+  border: none;
+  background: none;
+  font: inherit;
+  padding: 0;
   font-size:var(--text-xs);
   color: var(--text-muted);
   cursor: pointer;
