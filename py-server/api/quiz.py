@@ -12,9 +12,9 @@ from models import QuizSubmitRequest, QuizSubmitResponse, RemediationItem
 from services.remediation import detect_weak_points
 from shared.auth import get_current_user
 from shared.ratelimit import require_llm_quota
-from services.user_service import save_profile, get_profile, add_wrong_question
+from services.user_service import save_profile, get_profile, add_wrong_question, append_quiz_history
 from db.llm_provider import LLMProvider
-from engines.quiz_engine import STEP_QUESTIONS, error_analyzer, weak_point_tracker, StepResult, filter_questions_for_weak_points, weak_points_from_history
+from engines.quiz_engine import STEP_QUESTIONS, error_analyzer, weak_point_tracker, StepResult, filter_questions_for_weak_points, weak_points_from_history, normalize_subject
 
 logger = logging.getLogger("netlearn.quiz")
 router = APIRouter(prefix="/quiz", tags=["quiz"])
@@ -256,6 +256,28 @@ async def quiz_submit(req: QuizSubmitRequest, user: dict = Depends(get_current_u
     except Exception as e:
         logger.warning(f"画像持久化失败: {e}")
 
+    # 答题历史落库（掌握度唯一数据源）。
+    # 2026-10-18 实证：本端点此前只写画像 / L2 语义记忆 / L3 情景 / 错题本，
+    # 从不写 user_quiz_history，而 GET /user/mastery 的唯一数据源就是答题历史
+    # ⇒ 真实用户做完题掌握度恒为 0（全 pct=0 → 掌握度地图只显示占位图）。
+    # subject 归一化为规范英文键：与薄弱点(computer_network…)、知识点同词表，
+    # 使掌握度地图的 `w.subject === m.subject` 联动可命中；前端按
+    # store.subjects 把规范键映射回中文展示名。落库失败不阻断答题（fail-open）。
+    try:
+        append_quiz_history(
+            user["user_id"],
+            [
+                {
+                    "subject": normalize_subject(r.subject or ""),
+                    "correct": bool(r.correct),
+                    "difficulty": getattr(r, "difficulty", "medium") or "medium",
+                }
+                for r in req.records
+            ],
+        )
+    except Exception as e:
+        logger.warning(f"答题历史落库失败(非阻塞): {e}")
+
     # L1/L2/L3 三层学情记忆回写（对标 HKU-DeepTutor 记忆解耦，低侵入）：
     # L2 掌握度按科目更新 + L3 情景记录答题事件（答题→记忆→画像→推送闭环）
     try:
@@ -472,6 +494,18 @@ async def submit_step_answer(question_id: str, req: StepAnswerRequest, user: dic
             )
         except Exception as _me:
             logger.debug("步骤化答题掌握度回写失败(忽略): %s", _me)
+
+        # 答题历史落库：与 /quiz/submit 同源（掌握度唯一数据源）。
+        # 此前步骤化答题只写 WeakPointTracker（无 redis 时仅进程内存、重启即丢）
+        # 与 L2 语义掌握度，从未写 user_quiz_history ⇒ 掌握度地图对步骤化练习不生效。
+        try:
+            append_quiz_history(
+                user["user_id"],
+                [{"subject": q.subject, "correct": bool(step_result.correct),
+                  "difficulty": q.difficulty}],
+            )
+        except Exception as _he:
+            logger.debug("步骤化答题历史落库失败(忽略): %s", _he)
 
     return StepAnswerResponse(
         correct=correct,
