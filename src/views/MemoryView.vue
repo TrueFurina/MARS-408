@@ -119,7 +119,7 @@ onMounted(loadMemory)
       <div class="memory-card glass-card">
         <div class="memory-card-title">知识点掌握度</div>
         <div v-if="overview.weak_points?.length" class="mem-tags">
-          <span v-for="w in overview.weak_points.slice(0, 8)" :key="w" class="mem-tag weak clickable" :title="'去巩固: ' + w" @click="goDrill(w)">{{ w }}</span>
+          <button v-for="w in overview.weak_points.slice(0, 8)" :key="w" type="button" class="mem-tag weak clickable" :title="'去巩固: ' + w" @click="goDrill(w)">{{ w }}</button>
           <span class="mem-tag-label">薄弱（点击可巩固）</span>
         </div>
         <div v-if="overview.mastered_points?.length" class="mem-tags">
@@ -213,6 +213,10 @@ onMounted(loadMemory)
   font-size: var(--text-2xs);
   padding: 3px 10px;
   border-radius: var(--radius-xs);
+  border: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
 }
 .mem-tag.weak { background: rgba(var(--danger-rgb),0.12); color: var(--accent-danger); }
 .mem-tag.mastered { background: rgba(var(--success-rgb),0.12); color: var(--accent-success); }

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useStudyStore, type MasteryItem, type WeakPoint, type KnowledgePoint } from '@/stores/studyStore'
-import { resolveToken } from '@/utils/themeTokens'
 import { icons } from '@/components/icons'
 import RingProgress from '@/components/RingProgress.vue'
 
@@ -47,10 +46,6 @@ function tierToken(pct: number): string {
 function tierLabel(pct: number): string {
   return TIER_LABEL[tierOf(pct)]
 }
-function tierColorResolved(pct: number): string {
-  // canvas 上下文无法解析 CSS 变量，需经 getComputedStyle 取实际值
-  return resolveToken(TIER_TOKEN[tierOf(pct)], '#7c6af2')
-}
 
 /**
  * 是否「没有真实掌握度数据」——展示占位引导。
@@ -74,9 +69,6 @@ function heatLevel(count: number): number {
 }
 function heatToken(count: number): string {
   return `var(--seq-${heatLevel(count)})`
-}
-function heatColorResolved(count: number): string {
-  return resolveToken(`--seq-${heatLevel(count)}`, 'rgba(124,106,242,0.3)')
 }
 
 /** 当前选中的科目筛选（点击科目卡片可联动薄弱点列表） */
@@ -231,9 +223,9 @@ onMounted(() => {
           <span v-html="icons.target" class="card-title-icon"></span>
           薄弱知识点
           <span class="map-count" v-if="weakTotal > 0">{{ weakTotal }} 个</span>
-          <span v-if="selectedSubject" class="map-filter" @click="selectedSubject = ''">
+          <button v-if="selectedSubject" type="button" class="map-filter" @click="selectedSubject = ''">
             已筛选：{{ masteryData.find((m) => m.subject === selectedSubject)?.label || selectedSubject }} ✕
-          </span>
+          </button>
         </div>
 
         <div v-if="filteredWeakPoints.length === 0" class="weak-empty">
@@ -264,7 +256,7 @@ onMounted(() => {
                 <span class="weak-tag weak-error" :style="{ color: 'var(--mastery-low)' }">{{ w.error_type }}</span>
               </div>
             </div>
-            <div class="weak-count" :style="{ color: tierColorResolved(0) }">
+            <div class="weak-count" :style="{ color: 'var(--mastery-low)' }">
               <span class="weak-count-num" :style="{ color: 'var(--mastery-low)' }">{{ w.count }}</span>
               <span class="weak-count-unit">次错</span>
             </div>
@@ -277,9 +269,9 @@ onMounted(() => {
         <div class="card-title">
           <span v-html="icons.barChart" class="card-title-icon"></span>
           知识点掌握度
-          <span v-if="selectedSubject" class="map-filter" @click="selectedSubject = ''">
+          <button v-if="selectedSubject" type="button" class="map-filter" @click="selectedSubject = ''">
             已筛选：{{ masteryData.find((m) => m.subject === selectedSubject)?.label || selectedSubject }} ✕
-          </span>
+          </button>
           <span v-else class="map-hint">（点击上方科目可下钻单个科目）</span>
         </div>
 
@@ -365,6 +357,9 @@ onMounted(() => {
 }
 .map-filter {
   margin-left: auto;
+  border: none;
+  font: inherit;
+  color: inherit;
   font-size: var(--text-xs);
   color: var(--text-secondary);
   cursor: pointer;

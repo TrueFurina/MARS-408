@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { SUBJECT_COLOR_TOKENS } from '@/data/subjectTokens'
 import { useRouter } from 'vue-router'
 import { useStudyStore, type StatData, type Session, type Task } from '@/stores/studyStore'
 import { icons } from '@/components/icons'
@@ -94,12 +95,8 @@ const subjectEntries = computed(() => {
 })
 
 // 学科掌握度：以最近学习记录的得分均值作为真实掌握度代理；无数据时优雅降级
-const subjectColorMap: Record<string, string> = {
-  data_structures: 'var(--subject-ds)',
-  computer_network: 'var(--subject-cn)',
-  computer_organization: 'var(--subject-co)',
-  operating_system: 'var(--subject-os)',
-}
+// 学科配色：收敛到权威映射（2026-10-18 P3），不再组件内定义第四套词表
+const subjectColorMap = SUBJECT_COLOR_TOKENS
 const subjectMastery = computed(() => {
   const entries = subjectEntries.value
   const acc: Record<string, { sum: number; n: number }> = {}

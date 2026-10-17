@@ -54,12 +54,6 @@
       "value": "#8b5cf6",
       "reason": "category-palette",
       "_note": "同上（:48）"
-    },
-    {
-      "file": "src/views/MasteryMapView.vue",
-      "value": "#7c6af2",
-      "reason": "canvas-fallback",
-      "_note": "tierColorResolved() 的 resolveToken 兜底（代码注释明写「canvas 上下文无法解析 CSS 变量」）"
     }
   ]
 }

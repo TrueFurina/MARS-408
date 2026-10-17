@@ -15,12 +15,11 @@ const emit = defineEmits<{
 
 const TRAIT_COLORS = ['var(--subject-ds)', 'var(--subject-cn)', 'var(--subject-co)', 'var(--subject-os)', 'var(--accent-primary)', 'var(--accent-warm)', 'var(--accent-success)', 'var(--accent-pink)']
 
-const subjectColors: Record<string, string> = {
-  ds: 'var(--subject-ds)',
-  cn: 'var(--subject-cn)',
-  co: 'var(--subject-co)',
-  os: 'var(--subject-os)',
-}
+// 学科配色：统一走权威映射（规范键 → 设计令牌）。
+// 【2026-10-18 修复 P3】原为短键 ds/cn/co/os，而 m.subject 是后端归一化后的
+// 规范键（data_structures 等），导致 subjectColors[m.subject] 永远匹配不上、
+// 配色恒走 fallback。现改为 import 共享常量，不再组件内定义映射。
+import { subjectColor } from '@/data/subjectTokens'
 
 // 从后端实时拉取掌握度数据
 const masteryDataFromApi = ref<{ subject: string; label: string; pct: number }[]>([])
@@ -261,7 +260,7 @@ const learningPhase = computed(() => {
               :style="{
                 width: '100%',
                 transform: 'scaleX(' + (m.pct / 100) + ')',
-                background: subjectColors[m.subject] || 'var(--accent-primary)',
+                background: subjectColor(m.subject),
               }"
             ></div>
           </div>
