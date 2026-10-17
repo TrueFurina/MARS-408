@@ -208,6 +208,24 @@
       行操作重做确证）。记录 `deliverables/engineering-assurance/api-contract-audit-2026-10-17.md`。
       附带：仓库根 3 个未跟踪 scratch（`_md2docx.py` / `_xf_probe.py` / `_mut2.py`）
       移入 `archive/scratch-2026-10-17/`（gitignored，仅移动零删除）。
+- [x] 2026-10-17 **生产调用点审计（孤儿函数 / stub 巡检，主动深审第四轮）** ——
+      新增 `scripts/audit_orphan_functions.py`（纯 stdlib AST 3.2s，report-only）：
+      生产面 202 文件 / 1501 函数定义，引用面全仓 483 文件（含别名导入 +
+      字符串动态分发 + 装饰器/dunder/抽象方法豁免）。T1 全仓零引用 40 个、
+      T2 仅测试/脚本引用 37 个、T3 入口豁免 603 个。**逐条人工 grep 反查裁定：
+      零删除零改动**。关键结论：① `db/graph_db.py` 全仓零 import = 整模块死亡
+      （NetLearn 时代 Neo4j 风格 KG 存储，已被 `agents/knowledge_graph.py`+
+      `api/knowledge_graph.py` 取代，保留）；② 死集中 `sanitize_input`↔
+      `filter_sensitive`+`ANTI_INJECTION_INSTRUCTION`、`run_semantic_check`↔
+      `should_run_semantic_check`+`classify_intent` 交叉核对 ⇒ **无安全缺口**；
+      ③ `get_llm_config` 冗余 helper、`init_db` NetLearn bootstrap 残留（career 经
+      `ensure_tables()` 惰性建表已证可用）⇒ 非 bug；④ 余 39 项 = 可选特性未接线 /
+      冗余 helper / 测试注入 / 运维 CLI，全保留。诚实裁定：**本轮未发现关键 gap**
+      （性质异于 SecAutoMind 的 CreateInstance/GetAccess 未调用——彼处是生产该调未调，
+      此处是功能由其他路径完整提供）。工具两轮缺陷修复（别名导入不可见 / T2 分层误判）
+      均有测试守护（5 例，含真仓库 T1=40 基线快照）。记录
+      `deliverables/engineering-assurance/orphan-function-audit-2026-10-17.md`。
+      未进 CI 阻塞门（T1 全为已裁定保留项，gate 会逼出违规删端点），作周期巡检。
 - [x] 2026-10-16 **全量测试异常查证 → 查出并修复「测试销毁真实向量库」事故**（`64994b2`，已 push）：
       28 errors = 全量跑时本地后端并发争用夹具（停后端后单跑 16 passed，教训：二者不得同时跑）；
       1 failed = `test_installed_hook_matches_canonical_source`（10-15 xargs 探针热修复只改进已装钩子、未回写真源）。
