@@ -185,6 +185,26 @@ describe('MasteryMapView 数据装载与状态机', () => {
     expect(w.findAll('.subject-tile')).toHaveLength(1)
   })
 
+  // D1 视图侧：知识点拉取失败必须冒泡到 error 态。
+  // 修复前 store 把它吞成 []，视图拿到"空数组"就渲染「暂无知识点掌握度数据…」，
+  // 把后端故障伪装成"用户还没练过"；修复后 store 抛出 → Promise.all reject →
+  // loadData 的 catch 生效 → 展示真实错误 + 重新加载入口。
+  it('知识点拉取失败必须渲染错误态，而不是「暂无知识点数据」的空态', async () => {
+    stubSuccess({ mastery: [mi('data_structures', '数据结构', 60)] })
+    store.fetchKnowledgeMastery.mockRejectedValue(new Error('知识点接口 503'))
+
+    const w = mount(MasteryMapView)
+    await flushPromises()
+    await nextTick()
+
+    expect(w.find('.empty-title').text()).toContain('知识点接口 503')
+    expect(w.find('button.engine-btn').text()).toContain('重新加载')
+    // 关键：不得出现知识点空态文案（那是"成功但真的没数据"才该出现的）
+    expect(w.text()).not.toContain('暂无知识点掌握度数据')
+    expect(w.find('.kp-list').exists()).toBe(false)
+    expect(w.find('.map-card').exists()).toBe(false)
+  })
+
   it('fetchMasteryData 返回 undefined 时不崩、渲染空态（绝不编造占位数据）', async () => {
     store.fetchMasteryData.mockResolvedValue(undefined)
     store.fetchWeakPoints.mockResolvedValue(null)

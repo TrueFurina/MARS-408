@@ -95,16 +95,35 @@ describe('studyStore.fetchKnowledgeMastery', () => {
     expect(store.knowledgePoints).toEqual([])
   })
 
-  it('【缺陷表征 D1】后端报错时静默返回空数组，store 保留旧值且无错误信号', async () => {
+  // D1：后端报错时必须**抛出**，不得吞成空数组 —— 否则调用方（MasteryMapView 的
+  // Promise.all）拿不到任何错误信号，只能把「请求失败」渲染成「暂无知识点掌握度数据」
+  // 的空态，把故障伪装成"用户还没练过"。失败时 store 里的旧值也不得被清空或改写成 []。
+  it('后端报错时必须抛出（不吞成空数组），且保留原有错误信息与旧值', async () => {
     const store = useStudyStore()
     store.knowledgePoints = [kp({ chapter: 'tree' })]
     get.mockRejectedValue(new Error('后端 500'))
 
-    const res = await store.fetchKnowledgeMastery()
-
-    // 当前实现：catch 后 `return []`，调用方无从区分「真的没有数据」与「请求失败」。
-    // 这不是期望行为 —— 修复（抛出 / 置 error 字段）后本断言必须改写。
-    expect(res).toEqual([])
+    // 原始错误信息必须透传出来（而不是被替换成一句无上下文的通用文案）
+    await expect(store.fetchKnowledgeMastery()).rejects.toThrow(/后端 500/)
+    // 失败不得破坏已有状态：既不打空，也不写成 []
     expect(store.knowledgePoints).toHaveLength(1)
+    expect(store.knowledgePoints[0]!.chapter).toBe('tree')
+  })
+
+  it('后端报错被抛出后，与「成功但确实没数据」必须可区分（后者 resolve 且清空）', async () => {
+    const store = useStudyStore()
+    store.knowledgePoints = [kp({ chapter: 'tree' })]
+
+    // 成功但无数据 → resolve 空数组，且 store 被同步清空
+    get.mockResolvedValue({ knowledge_points: [], total: 0 })
+    await expect(store.fetchKnowledgeMastery()).resolves.toEqual([])
+    expect(store.knowledgePoints).toEqual([])
+
+    // 失败 → reject，store 保持清空前的最后一次成功结果不动
+    store.knowledgePoints = [kp({ chapter: 'hash' })]
+    get.mockRejectedValue(new Error('连接被重置'))
+    await expect(store.fetchKnowledgeMastery()).rejects.toThrow()
+    expect(store.knowledgePoints).toHaveLength(1)
+    expect(store.knowledgePoints[0]!.chapter).toBe('hash')
   })
 })
