@@ -745,9 +745,13 @@ const userMsg: ChatMessage = {
         return data.knowledge_points
       }
       return []
-    } catch {
-      // 后端不可用时返回空，由视图展示空态；绝不填充占位数据
-      return []
+    } catch (e: any) {
+      // 后端不可用时必须抛出，不能吞成空数组：
+      // 吞掉之后调用方无从区分「请求失败」与
+      // 「确实没有知识点」，会把故障渲染成「暂无知识点掌握度数据」
+      // 的空态——把故障伪装成“用户还没练过”。
+      // 绝不填充占位数据：失败就是失败，由视图展示错误态 + 重新加载。
+      throw new Error(`知识点掌握度拉取失败: ${e?.message || e}`)
     }
   }
 
