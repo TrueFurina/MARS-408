@@ -711,8 +711,12 @@ const userMsg: ChatMessage = {
   async function fetchMasteryData(): Promise<MasteryItem[]> {
     try {
       return await api.get<MasteryItem[]>('/user/mastery')
-    } catch {
-      return []
+    } catch (e: any) {
+      // D1 范式：后端不可用时必须抛出，不能吞成空数组。
+      // 吞掉之后调用方无从区分「请求失败」与「确实没有掌握度」，
+      // 会把故障渲染成「暂无掌握度数据」的空态——把故障伪装成"用户还没练过"。
+      // 绝不填充占位数据：失败就是失败，由视图展示错误态 + 重新加载。
+      throw new Error(`掌握度数据拉取失败: ${e?.message || e}`)
     }
   }
 
@@ -728,9 +732,13 @@ const userMsg: ChatMessage = {
         weakPointsTotal.value = data.total ?? data.weak_points.length
       }
       return data
-    } catch {
-      // 后端不可用时返回 null，由视图展示空态；绝不填充占位数据
-      return null
+    } catch (e: any) {
+      // D1 范式：后端不可用时必须抛出，不能吞成 null。
+      // 与 fetchMasteryData / fetchKnowledgeMastery 同一范式——
+      // 调用方（MasteryMapView 的 Promise.all）的 catch 会把它渲染成错误态，
+      // 而不是「暂无薄弱知识点」的空态。
+      // 绝不填充占位数据：失败就是失败，由视图展示错误态 + 重新加载。
+      throw new Error(`薄弱点数据拉取失败: ${e?.message || e}`)
     }
   }
 
