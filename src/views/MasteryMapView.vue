@@ -183,7 +183,7 @@ onMounted(() => {
             v-for="m in masteryData"
             :key="m.subject"
             class="subject-tile"
-            :class="{ active: selectedSubject === m.subject }"
+            :class="{ active: selectedSubject === m.subject }" :aria-selected="selectedSubject === m.subject"
             :style="{ borderColor: selectedSubject === m.subject ? tierToken(m.pct) : 'var(--color-border)' }"
             @click="selectSubject(m.subject)"
           >

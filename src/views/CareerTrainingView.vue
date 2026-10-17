@@ -434,7 +434,7 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
       <div v-else-if="loadingScenarios" class="c-loading">正在加载实训情景…</div>
       <div v-else class="scenario-grid">
         <div v-for="s in scenarios" :key="s.id" class="scenario-card"
-             :class="{ active: scenarioId === s.id }" @click="scenarioId = s.id">
+             :class="{ active: scenarioId === s.id }" :aria-selected="scenarioId === s.id" @click="scenarioId = s.id">
           <div class="sc-type">{{ s.type_label }} · {{ s.subtype_label }}</div>
           <div class="sc-title">{{ s.title }}</div>
         </div>

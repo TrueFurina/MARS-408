@@ -83,9 +83,9 @@ const filteredHistory = computed(() => {
       </div>
 
       <div class="filter-bar">
-        <button class="filter-btn" :class="{ active: filter === 'all' }" @click="filter = 'all'">全部</button>
-        <button class="filter-btn" :class="{ active: filter === 'wrong' }" @click="filter = 'wrong'"> 错题</button>
-        <button class="filter-btn" :class="{ active: filter === 'correct' }" @click="filter = 'correct'"> 正确</button>
+        <button class="filter-btn" :class="{ active: filter === 'all' }" :aria-selected="filter === 'all'" @click="filter = 'all'">全部</button>
+        <button class="filter-btn" :class="{ active: filter === 'wrong' }" :aria-selected="filter === 'wrong'" @click="filter = 'wrong'"> 错题</button>
+        <button class="filter-btn" :class="{ active: filter === 'correct' }" :aria-selected="filter === 'correct'" @click="filter = 'correct'"> 正确</button>
       </div>
 
       <EmptyState v-if="history.length === 0" :icon="icons.history" title="暂无答题记录" description="去「智能出题」页面开始练习吧" />

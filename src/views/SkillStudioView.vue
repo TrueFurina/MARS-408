@@ -253,7 +253,7 @@ async function loadMemoryOverview() {
               v-for="t in store.templates"
               :key="t.id"
               class="template-btn"
-              :class="{ active: selectedTemplate === t.id }"
+              :class="{ active: selectedTemplate === t.id }" :aria-selected="selectedTemplate === t.id"
               @click="applyTemplate(t)"
             >
               <span class="tpl-icon">{{ t.icon }}</span>
@@ -280,7 +280,7 @@ async function loadMemoryOverview() {
                 v-for="opt in iconOptions"
                 :key="opt"
                 class="icon-opt"
-                :class="{ active: icon === opt }"
+                :class="{ active: icon === opt }" :aria-selected="icon === opt"
                 @click="icon = opt"
               >{{ opt }}</button>
             </div>
@@ -337,7 +337,7 @@ async function loadMemoryOverview() {
             v-for="opt in memoryAccessOptions"
             :key="opt.value"
             class="memory-access-opt"
-            :class="{ active: memoryAccess === opt.value }"
+            :class="{ active: memoryAccess === opt.value }" :aria-selected="memoryAccess === opt.value"
             @click="memoryAccess = opt.value"
           >
             <div class="ma-label">{{ opt.label }}</div>

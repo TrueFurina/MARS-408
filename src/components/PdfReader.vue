@@ -51,7 +51,7 @@ function selectChapter(i: number) {
       <div class="pdf-sidebar-title">{{ textbookName }}</div>
       <div class="pdf-chapter-list">
         <button v-for="(ch, i) in chapters" :key="ch.id" class="pdf-chapter-item"
-          :class="{ active: currentChapter === i }" @click="selectChapter(i)">
+          :class="{ active: currentChapter === i }" :aria-selected="currentChapter === i" @click="selectChapter(i)">
           <span class="pdf-chapter-num">{{ i + 1 }}</span>
           <span class="pdf-chapter-title">{{ ch.title }}</span>
         </button>

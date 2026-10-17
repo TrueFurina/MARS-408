@@ -79,7 +79,7 @@ function formatDate(d: Date): string {
         v-for="conv in filteredConversations"
         :key="conv.id"
         class="history-item"
-        :class="{ active: conv.id === store.currentConversationId }"
+        :class="{ active: conv.id === store.currentConversationId }" :aria-selected="conv.id === store.currentConversationId"
         role="button"
         tabindex="0"
         @click="select(conv.id)"

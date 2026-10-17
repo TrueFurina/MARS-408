@@ -442,7 +442,7 @@ onBeforeUnmount(() => {
       <div class="sidebar-conversations">
         <div v-for="conv in conversations" :key="conv.id"
              class="sidebar-conv-item"
-             :class="{ active: conv.id === currentConvId }"
+             :class="{ active: conv.id === currentConvId }" :aria-selected="conv.id === currentConvId"
              @click="selectConversation(conv.id)">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           <span class="conv-title">{{ conv.title || '新对话' }}</span>

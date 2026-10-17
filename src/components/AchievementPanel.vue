@@ -68,7 +68,7 @@ const sortedAchievements = computed(() => {
         v-for="cat in ['all', 'milestone', 'practice', 'knowledge', 'streak', 'master']"
         :key="cat"
         class="ach-filter-btn"
-        :class="{ active: activeCategory === cat }"
+        :class="{ active: activeCategory === cat }" :aria-selected="activeCategory === cat"
         @click="activeCategory = cat"
       >
         {{ cat === 'all' ? '全部' : CATEGORY_ICONS[cat] + ' ' + CATEGORY_LABELS[cat] }}

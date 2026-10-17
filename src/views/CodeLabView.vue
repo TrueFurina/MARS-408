@@ -228,12 +228,12 @@ onBeforeUnmount(() => {
       <div class="workspace-switch" aria-label="实验工作区">
         <button
           type="button"
-          :class="{ active: workspace === 'playground' }"
+          :class="{ active: workspace === 'playground' }" :aria-selected="workspace === 'playground'"
           @click="workspace = 'playground'"
         >自由编程</button>
         <button
           type="button"
-          :class="{ active: workspace === 'source' }"
+          :class="{ active: workspace === 'source' }" :aria-selected="workspace === 'source'"
           @click="workspace = 'source'"
         >Linux 0.11 源码</button>
       </div>
@@ -258,13 +258,13 @@ onBeforeUnmount(() => {
           <div class="lang-switch" aria-label="编程语言">
             <button
               type="button"
-              :class="{ active: language === 'c' }"
+              :class="{ active: language === 'c' }" :aria-selected="language === 'c'"
               :disabled="running"
               @click="switchLanguage('c')"
             >C</button>
             <button
               type="button"
-              :class="{ active: language === 'cpp' }"
+              :class="{ active: language === 'cpp' }" :aria-selected="language === 'cpp'"
               :disabled="running"
               @click="switchLanguage('cpp')"
             >C++</button>

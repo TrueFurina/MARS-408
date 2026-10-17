@@ -169,7 +169,7 @@ onBeforeUnmount(() => {
           v-for="ex in exercises"
           :key="ex.id"
           type="button"
-          :class="{ active: ex.id === activeId }"
+          :class="{ active: ex.id === activeId }" :aria-selected="ex.id === activeId"
           @click="selectExercise(ex.id)"
         >
           <span class="source-path">{{ ex.path }}</span>
@@ -191,13 +191,13 @@ onBeforeUnmount(() => {
           <div class="lang-switch" aria-label="代码视图">
             <button
               type="button"
-              :class="{ active: activeMode === 'source' }"
+              :class="{ active: activeMode === 'source' }" :aria-selected="activeMode === 'source'"
               :disabled="running"
               @click="switchMode('source')"
             >原始源码</button>
             <button
               type="button"
-              :class="{ active: activeMode === 'experiment' }"
+              :class="{ active: activeMode === 'experiment' }" :aria-selected="activeMode === 'experiment'"
               :disabled="running"
               @click="switchMode('experiment')"
             >可运行实验</button>

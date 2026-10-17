@@ -208,7 +208,7 @@ const hasStats = computed(
               v-for="s in showcaseItems"
               :key="s.id"
               class="sp-skill-slot"
-              :class="{ active: selectedSkillId === s.id }"
+              :class="{ active: selectedSkillId === s.id }" :aria-selected="selectedSkillId === s.id"
               @click="selectSkill(s.id)"
             >
               <SkillCard :skill="s" />

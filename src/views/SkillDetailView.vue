@@ -209,7 +209,7 @@ watch(chatMessages, () => {
             <span>· {{ skill.usage_count }} 次使用</span>
           </div>
         </div>
-        <button class="fav-btn" :class="{ active: isFav }" @click="toggleFav" :title="isFav ? '取消收藏' : '收藏'">
+        <button class="fav-btn" :class="{ active: isFav }" :aria-selected="isFav" @click="toggleFav" :title="isFav ? '取消收藏' : '收藏'">
           <span class="fav-ic" v-html="isFav ? icons.starFilled : icons.star"></span>
         </button>
       </div>

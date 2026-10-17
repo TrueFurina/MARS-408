@@ -114,7 +114,7 @@ function openNew() { window.open(iframeSrc.value, '_blank', 'noopener') }
         <div class="rail-sub">专业能力训练 + 职业素养实训 · 硬核技术全景</div>
       </div>
       <div class="rail-list">
-        <button v-for="(it, i) in items" :key="it.key" class="rail-item" :class="{ active: selected === i }" @click="select(i)">
+        <button v-for="(it, i) in items" :key="it.key" class="rail-item" :class="{ active: selected === i }" :aria-selected="selected === i" @click="select(i)">
           <span class="rail-icon" v-html="it.icon"></span>
           <div class="rail-text">
             <div class="rail-title-sm">{{ it.title }}</div>

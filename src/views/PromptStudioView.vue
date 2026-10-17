@@ -136,7 +136,7 @@ async function loadMemoryOverview() {
             v-for="t in store.templates"
             :key="t.id"
             class="strip-btn"
-            :class="{ active: selectedTemplate === t.id }"
+            :class="{ active: selectedTemplate === t.id }" :aria-selected="selectedTemplate === t.id"
             @click="applyTemplate(t)"
           >{{ t.icon }} {{ t.name }}</button>
         </div>

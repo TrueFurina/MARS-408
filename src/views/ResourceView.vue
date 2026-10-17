@@ -813,7 +813,7 @@ function parseWeakPoints(wpStr: string): string[] {
           :key="item.id"
           v-memo="[item, selectedHistory]"
           class="history-item"
-          :class="{ active: selectedHistory === item.id }"
+          :class="{ active: selectedHistory === item.id }" :aria-selected="selectedHistory === item.id"
           @click="loadFromHistory(item)"
         >
           <span class="history-topic">{{ item.topic || '(空)' }}</span>
@@ -839,7 +839,7 @@ function parseWeakPoints(wpStr: string): string[] {
           :key="item.id"
           v-memo="[item, selectedHistory]"
           class="history-item"
-          :class="{ active: selectedHistory === item.id }"
+          :class="{ active: selectedHistory === item.id }" :aria-selected="selectedHistory === item.id"
           @click="openPoolResource(item)"
         >
           <span class="history-topic">{{ item.title || '(未命名资源)' }}</span>

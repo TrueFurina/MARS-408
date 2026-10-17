@@ -109,7 +109,7 @@ onMounted(load)
         v-for="c in COURSES"
         :key="c.key"
         class="ce-course-pill"
-        :class="{ active: activeCourse === c.key }"
+        :class="{ active: activeCourse === c.key }" :aria-selected="activeCourse === c.key"
         :style="{ '--pill-color': c.color }"
         @click="activeCourse = c.key"
       >
