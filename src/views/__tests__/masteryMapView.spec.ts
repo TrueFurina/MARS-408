@@ -216,7 +216,9 @@ describe('MasteryMapView 数据装载与状态机', () => {
 
     expect(w.findAll('.skeleton')).toHaveLength(0)
     expect(w.findAll('.subject-tile')).toHaveLength(0)
-    expect(w.find('.map-placeholder').exists()).toBe(false)
+    // undefined ⇒ 空数据（不是错误，也不编造数据）：与空数组同语义，走占位引导
+    expect(w.find('.map-placeholder').exists()).toBe(true)
+    expect(w.find('.map-placeholder').text()).toContain('还没有掌握度数据')
     expect(w.find('.weak-empty').text()).toContain('暂无薄弱点数据')
   })
 })
