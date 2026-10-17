@@ -263,10 +263,20 @@ describe('MasteryMapView allZero 占位', () => {
     expect(w.findAll('.subject-tile')).toHaveLength(2)
   })
 
-  it('空数组不算「全零」——不渲染占位（避免无数据时误报引导）', async () => {
+  // 已知缺陷（设计师审计 #17，待 impl 单独提交修复）：masteryData 为空数组时，
+  // allZero 显式 return false（:57），于是既不走 :178 的占位分支，又被 :185 的
+  // v-else 渲染成「空网格 + 完整图例」—— 用户看到一张没有科目却带图例的空卡片。
+  // 本用例**锁定当前真实行为**（不是期望行为），修复落地后必须同步更新。
+  it('【现状锁定·缺陷 #17】空数组不触发占位：渲染空科目网格 + 完整图例', async () => {
     const w = await mountLoaded({ mastery: [] })
     expect(w.find('.map-placeholder').exists()).toBe(false)
+    expect(w.text()).not.toContain('还没有掌握度数据')
     expect(w.findAll('.subject-tile')).toHaveLength(0)
+    // 当前真实行为：网格节点存在但为空，图例照常渲染
+    expect(w.find('.subject-grid').exists()).toBe(true)
+    expect(w.find('.tier-legend').exists()).toBe(true)
+    // 科目卡片区连「暂无数据」的提示都没有（提示只在 allZero 时出现）
+    expect(w.findAll('.map-card')[0]!.text()).not.toContain('暂无数据')
   })
 })
 
@@ -386,6 +396,90 @@ describe('MasteryMapView 科目点击联动', () => {
 
     expect(w.findAll('.kp-item')).toHaveLength(1)
     expect(w.find('.kp-chapter').text()).toBe('树与二叉树')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 科目筛选口径：filteredWeakPoints / displayKnowledgePoints 都用严格 === 比较
+// （:82 / :91）。两侧 subject 的**来源不同**——科目卡片来自 /user/mastery，
+// 薄弱点来自答题记录——一旦口径不一致（全名 vs 简称），筛选会静默筛成空。
+describe('MasteryMapView 科目筛选口径匹配', () => {
+  it('两侧 subject 字符串完全相同时，筛选正常生效', async () => {
+    const w = await mountLoaded({
+      mastery: [
+        mi('computer_organization', '计算机组成原理', 40),
+        mi('operating_system', '操作系统', 20),
+      ],
+      weak: [
+        wp(4, { subject: 'computer_organization', concept: '流水线' }),
+        wp(6, { subject: 'computer_organization', concept: 'Cache 映射' }),
+        wp(2, { subject: 'operating_system', concept: '死锁' }),
+      ],
+      kps: [
+        kp(0.4, { subject: 'computer_organization', chapter: 'cache' }),
+        kp(0.2, { subject: 'operating_system', chapter: 'process' }),
+      ],
+      total: 3,
+    })
+
+    await w.findAll('.subject-tile')[0]!.trigger('click')
+    await nextTick()
+
+    expect(w.findAll('.weak-item')).toHaveLength(2)
+    expect(w.findAll('.kp-item')).toHaveLength(1)
+    expect(w.findAll('.weak-item').map((e) => e.find('.weak-concept').text())).toEqual([
+      '流水线', 'Cache 映射',
+    ])
+  })
+
+  // 疑似缺陷（口径失配，见设计师审计越界提示，待 investigator 复核）：
+  // deploy/career-pilot/backend/api/user.py:203-208 的 mastery 侧会把 subject/label
+  // 映射成简称（「计算机组成原理」→「计组」），而 weak_points 的 subject 来自原始
+  // 答题记录（很可能是全名）。两侧字符串不同 → 严格 === 筛不出任何东西。
+  // 本用例**锁定当前真实结果**，不是期望结果；若后续改为归一化匹配需同步更新。
+  it('【现状锁定·口径失配】卡片 subject 为简称「计组」而薄弱点为全名时，筛成空列表', async () => {
+    const w = await mountLoaded({
+      mastery: [mi('计组', '计组', 40)],
+      weak: [wp(4, { subject: '计算机组成原理', concept: '流水线' })],
+      kps: [kp(0.4, { subject: '计算机组成原理', chapter: 'cache' })],
+      total: 1,
+    })
+
+    expect(w.findAll('.weak-item')).toHaveLength(1) // 未筛选时全量展示
+
+    await w.find('.subject-tile').trigger('click')
+    await nextTick()
+
+    // 当前真实行为：严格 === 拿不到匹配 → 薄弱点与知识点都被筛空
+    expect(w.findAll('.weak-item')).toHaveLength(0)
+    expect(w.findAll('.kp-item')).toHaveLength(0)
+    expect(w.find('.weak-empty').text()).toContain('该科目暂无薄弱点记录')
+  })
+
+  // 给「严格 === 」这条契约装牙：近似但不全等的 subject 不得被算作同科。
+  // （上面那条真实失配用例两侧字符串互不包含，改模糊匹配也一样筛空，只有本条
+  //   能区分「严格相等」与「includes 模糊匹配」—— 未来若有人把 === 放宽成
+  //   模糊/前缀匹配，必须被这条拦下。）
+  it('严格相等：subject 前缀相同但不全等时不得被匹配进来', async () => {
+    const w = await mountLoaded({
+      mastery: [mi('data_structures', '数据结构', 60)],
+      weak: [
+        wp(3, { subject: 'data_structures', concept: '二叉树' }),
+        wp(5, { subject: 'data_structures_advanced', concept: '红黑树' }),
+      ],
+      kps: [
+        kp(0.8, { subject: 'data_structures', chapter: 'tree' }),
+        kp(0.5, { subject: 'data_structures_advanced', chapter: 'tree' }),
+      ],
+      total: 2,
+    })
+
+    await w.find('.subject-tile').trigger('click')
+    await nextTick()
+
+    expect(w.findAll('.weak-item')).toHaveLength(1)
+    expect(w.find('.weak-concept').text()).toBe('二叉树')
+    expect(w.findAll('.kp-item')).toHaveLength(1)
   })
 })
 
