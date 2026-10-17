@@ -52,9 +52,13 @@ function tierColorResolved(pct: number): string {
   return resolveToken(TIER_TOKEN[tierOf(pct)], '#7c6af2')
 }
 
-/** 是否全为 0（无真实掌握度数据）——展示占位引导 */
+/**
+ * 是否「没有真实掌握度数据」——展示占位引导。
+ * 空数组与「全为 0」语义等价（都没学到能统计的程度），必须统一走占位：
+ * 否则空数组会落进 v-else 渲染成「空科目网格 + 完整图例」的空卡片。
+ */
 const allZero = computed(() => {
-  if (masteryData.value.length === 0) return false
+  if (masteryData.value.length === 0) return true
   return masteryData.value.every((m) => !m.pct || m.pct <= 0)
 })
 
