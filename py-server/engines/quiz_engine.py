@@ -73,10 +73,12 @@ class WeakPoint:
 
 
 # ── 科目别名归一化 ──
-# 不同数据源使用的科目命名不统一（课程级 / 中文科目名 / 网络分层子主题），
+# 不同数据源使用的科目命名不统一（课程级 / 中文科目名 / 网络分层子主题 /
+# 章节级键 ds_tree·co_cpu·os_memory… / 短键 os·net·ds·co），
 # 统一映射到 STEP_QUESTIONS 的 subject 取值，使"薄弱科目过滤"可跨数据源匹配。
 # 若不归一化，语义记忆 mastery 键（network/transport/…）与题库 subject（computer_network/…）
-# 永不相交，adaptive 模式会静默回退到常规选题。
+# 永不相交，adaptive 模式会静默回退到常规选题；答题历史落库键与薄弱点键
+# 亦不相交，掌握度地图的科目联动筛选恒为空。
 SUBJECT_ALIASES = {
     # 课程级（已是规范值）
     "computer_network": "computer_network",
@@ -99,6 +101,27 @@ SUBJECT_ALIASES = {
     "传输层": "computer_network",
     "数据链路层": "computer_network",
     "物理层": "computer_network",
+    # 章节级键 → 所属科目。
+    # 依据 2026-10-18 实测 data/netlearn_users.db 的
+    # user_quiz_history.subject 真实取值补全（此前只有网络分层键被覆盖，
+    # ds_* / co_* / os_* 全部漏网，导致掌握度侧归一化后仍与题库不相交）。
+    "ds_linear": "data_structures",
+    "ds_tree": "data_structures",
+    "ds_graph": "data_structures",
+    "ds_sort": "data_structures",
+    "co_overview": "computer_organization",
+    "co_data": "computer_organization",
+    "co_memory": "computer_organization",
+    "co_cpu": "computer_organization",
+    "os_overview": "operating_system",
+    "os_process": "operating_system",
+    "os_memory": "operating_system",
+    # 短键 → 所属科目。os/net/ds 是 DB 里的多数派（各 50 条），
+    # co 见 seed_users.py:62,91,118（种子答题历史写入方）。
+    "ds": "data_structures",
+    "net": "computer_network",
+    "os": "operating_system",
+    "co": "computer_organization",
 }
 
 

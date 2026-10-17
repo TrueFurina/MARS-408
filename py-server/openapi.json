@@ -7212,7 +7212,7 @@
           "user"
         ],
         "summary": "Get User Mastery",
-        "description": "Dashboard 掌握度数据（按科目）",
+        "description": "Dashboard 掌握度数据（按科目）。\n\nsubject 与 label 分工（2026-10-18 口径统一）：\n  - subject = 规范英文键（STEP_QUESTIONS 的 subject 取值），用作筛选键。\n    掌握度地图以 `w.subject === m.subject` 严格相等联动薄弱点、以\n    `k.subject === m.subject` 联动知识点，两侧本来就输出规范英文键，\n    故掌握度侧必须归一化到同一套，否则点击科目卡片恒筛不出内容。\n  - label   = 中文展示名，仅用于卡片文案，不参与比较。",
         "operationId": "get_user_mastery_api_user_mastery_get",
         "parameters": [
           {

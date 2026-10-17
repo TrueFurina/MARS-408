@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
 from shared.auth import get_current_user
+from engines.quiz_engine import normalize_subject
 from services.user_service import (
     save_profile, get_profile,
     append_quiz_history, get_quiz_history,
@@ -195,36 +196,69 @@ async def get_user_recommended_tasks(user: dict = Depends(get_current_user)):
     return tasks[:5]
 
 
+def _subject_label(subj: str) -> str:
+    """规范英文 subject → 中文展示名（复用 api/review.py 的课程级映射）。
+
+    review.SUBJECT_NAMES 同时含章节级键（ds_tree→"数据结构-树与二叉树" 等），
+    但掌握度只按科目聚合，入参已是规范科目键，故只会命中课程级四项。
+    import 失败时退回原值：宁可显示英文键，也不留空字符串。
+    """
+    try:
+        from api.review import SUBJECT_NAMES
+        return SUBJECT_NAMES.get(subj, subj)
+    except Exception:
+        return subj
+
+
 @router.get("/mastery")
 async def get_user_mastery(user: dict = Depends(get_current_user)):
-    """Dashboard 掌握度数据（按科目）"""
+    """Dashboard 掌握度数据（按科目）。
+
+    subject 与 label 分工（2026-10-18 口径统一）：
+      - subject = 规范英文键（STEP_QUESTIONS 的 subject 取值），用作筛选键。
+        掌握度地图以 `w.subject === m.subject` 严格相等联动薄弱点、以
+        `k.subject === m.subject` 联动知识点，两侧本来就输出规范英文键，
+        故掌握度侧必须归一化到同一套，否则点击科目卡片恒筛不出内容。
+      - label   = 中文展示名，仅用于卡片文案，不参与比较。
+    """
     history = get_quiz_history(user["user_id"]) or []
 
+    # 历史遗留说明：本端点最初按中文科目名设计（下表的中文键），但落库方
+    # （seed_demo_data / seed_users / api.review.retry / POST /user/quiz-history）
+    # 实际写入的是英文/章节键——实测 data/netlearn_users.db 的
+    # user_quiz_history.subject 取值为 network / ds_tree / co_cpu / os / net / ds
+    # 等，中文键从未命中，故中文映射不可作为归一口径。现统一走
+    # normalize_subject；下表仅为中文入参保留的兜底（若将来有中文写入）。
     subject_map = {
-        "数据结构": "数据结构",
-        "计算机网络": "计算机网络",
-        "计算机组成原理": "计组",
-        "操作系统": "操作系统",
+        "数据结构": "data_structures",
+        "计算机网络": "computer_network",
+        "计算机组成原理": "computer_organization",
+        "操作系统": "operating_system",
     }
 
     by_subject = {}
     for r in history:
-        subj = r.get("subject", "unknown")
-        label = subject_map.get(subj, subj)
-        if label not in by_subject:
-            by_subject[label] = {"total": 0, "correct": 0}
-        by_subject[label]["total"] += 1
+        raw = r.get("subject", "")
+        subj = normalize_subject(subject_map.get(raw, raw))
+        # 空 subject 跳过：DB 实测存在 subject='' 的历史（50 条），
+        # 若计入会聚成一个空键科目，在卡片网格里显示为空标签。
+        if not subj:
+            continue
+        if subj not in by_subject:
+            by_subject[subj] = {"total": 0, "correct": 0}
+        by_subject[subj]["total"] += 1
         if r.get("correct"):
-            by_subject[label]["correct"] += 1
+            by_subject[subj]["correct"] += 1
 
     items = []
-    for label, counts in by_subject.items():
+    for subj, counts in by_subject.items():
         pct = round(counts["correct"] / max(counts["total"], 1) * 100)
-        items.append({"subject": label, "label": label, "pct": pct})
+        items.append({"subject": subj, "label": _subject_label(subj), "pct": pct})
 
-    # 如果没有答题历史，返回默认数据
+    # 如果没有有效答题历史，返回四科默认数据（同样遵守 subject/label 契约）
     if not items:
-        for subj, label in subject_map.items():
-            items.append({"subject": label, "label": label, "pct": 0})
+        for subj in ("computer_network", "data_structures",
+                     "computer_organization", "operating_system"):
+            items.append({"subject": subj, "label": _subject_label(subj), "pct": 0})
 
     return items
