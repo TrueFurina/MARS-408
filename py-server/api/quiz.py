@@ -69,6 +69,31 @@ def _merge_profile(profile: dict, records: list[dict]) -> dict:
 WEAK_POINT_EXPERT_ID = "weak-point-expert"
 
 
+def _extract_llm_text(response) -> Optional[str]:
+    """从 SkillPluginRuntime.execute 的返回值中提取讲解纯文本。
+
+    背景（2026-10-17 全量测试实测）：execute 透传 LLMProvider.chat 的
+    OpenAI 格式响应 dict（{"choices":[{"message":{"content": ...}}]}），
+    其 `-> str` 注解并未兑现；RemediationItem.explanation 类型为
+    Optional[str]，且 quiz 侧经属性直赋（不走 pydantic 校验），dict 会
+    原样进入 API 响应（触发 Pydantic 序列化告警、前端拿到非字符串）。
+    故在消费边界提取：
+      - str → 原样返回（空串归一化为 None）
+      - dict → 取 choices[0].message.content（非 str / 空 → None）
+      - 结构异常 / None → None（由调用方降级为 explanation=None）
+    """
+    if response is None:
+        return None
+    if isinstance(response, str):
+        return response or None
+    try:
+        content = response["choices"][0]["message"]["content"]
+    except (KeyError, IndexError, TypeError):
+        logger.debug(f"讲解响应结构无法解析(降级 explanation=None): {type(response).__name__}")
+        return None
+    return content if isinstance(content, str) and content else None
+
+
 def _resolve_weak_expert_skill(get_skill, get_template) -> Optional[dict]:
     """解析 weak-point-expert 技能配置：优先已 seed 的官方技能，缺失时回退模板。
 
@@ -126,6 +151,8 @@ async def _generate_remediation(user_id: str) -> list[RemediationItem]:
     严格可降级：任何异常（LLM 不可用、记忆/技能缺失、熔断器打开）都对应项
     explanation=None 并继续，绝不抛出、绝不改变 quiz_submit 的既有返回字段。
     mastery_json 缺失/空 → 返回空列表。
+    讲解文本经 _extract_llm_text 提取（execute 透传 OpenAI 格式 dict，
+    explanation 字段要的是纯文本）；无法解析 → explanation=None。
     """
     from config import get_remediation_threshold, get_remediation_max_points
     from db.memory_store import get_semantic_memory
@@ -180,7 +207,7 @@ async def _generate_remediation(user_id: str) -> list[RemediationItem]:
                 memory_access="read_write",
                 system_prompt_override=system_prompt,
             )
-            item.explanation = explanation or None
+            item.explanation = _extract_llm_text(explanation)
         except Exception as _e:
             logger.warning(f"薄弱点讲解生成失败(降级，不影响答题回写): kp={kp}, err={_e}")
             item.explanation = None
