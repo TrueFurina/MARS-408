@@ -35,7 +35,7 @@ onUnmounted(() => {
 
 <template>
   <div ref="menuRef" class="more-menu-container">
-    <button class="topbar-btn" :class="{ active: open }" @click.stop="toggle" title="更多功能" aria-label="更多功能" v-html="icons.menu"></button>
+    <button class="topbar-btn" :class="{ active: open }" :aria-expanded="open" @click.stop="toggle" title="更多功能" aria-label="更多功能" v-html="icons.menu"></button>
     <div v-if="open" class="more-dropdown" @click.stop>
       <template v-for="(item, idx) in menuItems" :key="idx">
         <div v-if="'divider' in item" class="more-menu-divider"></div>

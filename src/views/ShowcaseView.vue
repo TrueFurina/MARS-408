@@ -123,7 +123,7 @@ function openNew() { window.open(iframeSrc.value, '_blank', 'noopener') }
         </button>
       </div>
       <div class="rail-footer">
-        <button class="rail-tech-btn" :class="{ active: showTech }" @click="showTech = !showTech">
+        <button class="rail-tech-btn" :class="{ active: showTech }" :aria-expanded="showTech" @click="showTech = !showTech">
           {{ showTech ? ' 查看原型' : ' 硬核技术' }}
         </button>
       </div>

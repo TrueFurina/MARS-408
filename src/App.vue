@@ -347,6 +347,7 @@ function hoverPrefetch(routePath: string) {
           <button
             class="topbar-btn history-btn"
             :class="{ open: showHistory }"
+            :aria-expanded="showHistory"
             @click.stop="showHistory = !showHistory"
             title="对话历史"
           >
