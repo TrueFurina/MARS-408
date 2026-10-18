@@ -135,17 +135,51 @@ echo "✅ 七道门禁全部通过"
 
 # --- 树级质量机检（不依赖 diff，CI 与本地同跑；非「七道」diff 门禁之列）---
 #
-# 与 verify_metrics / check_hardcoded_paths 同类：扫整棵树、不按暂存文件判定。
-# 二者均为纯标准库、零依赖、毫秒级，挂本地提交无手感代价。
+# 均为扫整棵树 / 只读校验，不按暂存文件判定。除 vue-tsc 外都是纯标准库、
+# 零依赖、毫秒级，挂本地提交无手感代价。
 #   · token_scan：设计令牌硬编码颜色防回归。锁定 2026-10-09 基线（total 201 /
 #     brand 31 / known 57 / untracked 113），任一分类计数上升即拦截 —— 冻结期
 #     只许降不许升；10-28 紫族归一后跑 `--update-baseline` 重降基线。
 #   · a11y_scan：可访问性硬门禁（图标按钮可读名），当前 0 缺陷。深度审计用
 #     `python scripts/a11y_scan.py --audit`（咨询级，不阻断）。
+#   · verify_metrics：工程规模指标真值校验（只读，不 --update）。扫 git 跟踪树
+#     重算 views/.vue/.ts/.py 行数与 /api 操作数，与 docs/METRICS_CURRENT.md 比对，
+#     任一漂移即拦截 —— 这就是 README 数字反复漂移（45→46、414→374…）的根治闸。
+#   · vue-tsc：前端类型检查（`npm run type-check`）。需要 node_modules，故按改动
+#     范围触发（暂存命中 src/ 或 tsconfig/package/vite 配置时才跑），避免
+#     docs-only 提交过慢；CI 仍无条件执行 vue-tsc。
 echo "=== [树级] 设计令牌防回归 token_scan ==="
 "$PY" scripts/token_scan.py --baseline scripts/token_scan.baseline.json || exit 1
 
 echo "=== [树级] 前端可访问性 a11y 硬门禁 ==="
 "$PY" scripts/a11y_scan.py || exit 1
+
+echo "=== [树级] 工程规模指标 verify_metrics（只读） ==="
+"$PY" scripts/verify_metrics.py || exit 1
+
+# --- vue-tsc 前端类型检查（按改动范围触发，见文件头树级注）---
+#
+# 为什么条件触发：vue-tsc --build 要跑在装了 node_modules 的树上，冷启动数秒，
+# 且对纯后端 / 纯文档提交毫无意义。改动不命中前端类型相关文件时，类型**在
+# 数学上不可能变**，跳过是等价变换。而 CI 每次 push/PR 都无条件跑 vue-tsc，
+# 兜底路径不因本地跳过而失效 —— 不存在"绕过本地钩子让类型悄悄漂移"的路径。
+echo "=== [树级] 前端类型检查 vue-tsc（按改动范围触发） ==="
+TYPECHECK_TMP=$(mktemp 2>/dev/null || echo "${TMPDIR:-/tmp}/typecheck_$$")
+git -c core.quotePath=false diff --cached --name-only --diff-filter=ACM > "$TYPECHECK_TMP" 2>/dev/null || true
+# 命中判定：src/ 下任意文件 / 类型与构建配置 / 依赖清单（可能改依赖→改类型）。
+TYPECHECK_TRIGGERED=$(grep -E \
+    '^(src/|tsconfig|package|pnpm-lock\.yaml|yarn\.lock|vite\.config\.|.*\.d\.ts$)' \
+    "$TYPECHECK_TMP" 2>/dev/null | head -1)
+rm -f "$TYPECHECK_TMP" 2>/dev/null || true
+if [ -n "$TYPECHECK_TRIGGERED" ]; then
+    if command -v npm >/dev/null 2>&1; then
+        npm run type-check || exit 1
+    else
+        echo "❌ [门禁] 本次改动涉及前端文件，但未找到 npm；请先安装 Node.js/npm" >&2
+        exit 1
+    fi
+else
+    echo "  (本次改动不涉及前端类型相关文件，跳过；CI 仍无条件执行 vue-tsc)"
+fi
 
 echo "✅ 树级质量机检全部通过"
