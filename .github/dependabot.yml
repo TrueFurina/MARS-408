@@ -27,6 +27,24 @@ updates:
     open-pull-requests-limit: 5
     commit-message:
       prefix: "deps"
+    # ---------------------------------------------------------------------------
+    # ignore：对「版本号 <1.0 的依赖」，Dependabot 会把 minor 字段递增当成 minor/patch，
+    # 并顺手改写 package.json 里的 range 字符串 —— 于是 ^0.10.0 的保护形同虚设。
+    # PR #28 就是这样把 @wasmer/sdk 0.10.0 → 0.19.1、katex 0.16.10 → 0.19.0 带进来的，
+    # 结果 type-check 炸（Wasmer.fromFile / fromRegistry 不再存在）、npm install 直接 ERESOLVE
+    # （katex 撞 @sigodenjs/marked-katex-extension@1.0.0 的 peer `katex >=0.16 <0.17`）。
+    # 这里按「版本天花板」而不是按 update-types 来拦，避免同类再犯。
+    # ---------------------------------------------------------------------------
+    ignore:
+      - dependency-name: "@wasmer/sdk"
+        versions:
+          - ">=0.11.0"
+      - dependency-name: "katex"
+        versions:
+          - ">=0.17.0"
+      - dependency-name: "typescript"
+        versions:
+          - ">=7.0.0"
     groups:
       npm-minor-patch:
         applies-to: "version-updates"
