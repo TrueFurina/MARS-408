@@ -595,6 +595,16 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
           <span class="plan-do">{{ a.do }}</span>
           <span class="plan-freq">{{ a.frequency }}</span>
         </div>
+        <div v-if="improvement.learning_resources?.length" class="lr-block">
+          <div class="lr-title"> 学习资源 · 方法论卡</div>
+          <div v-for="(r, i) in improvement.learning_resources" :key="i" class="lr-card">
+            <div class="lr-head">
+              <span class="lr-dim">{{ DIM_LABEL[r.dimension] || r.dimension }}</span>
+              <span class="lr-name">{{ r.title }}</span>
+            </div>
+            <ul><li v-for="(p, j) in r.points" :key="j">{{ p }}</li></ul>
+          </div>
+        </div>
         <p class="plan-encourage">{{ improvement.encouragement }}</p>
       </div>
 
@@ -794,6 +804,16 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
 .plan-do { flex: 1; line-height: 1.5; }
 .plan-freq { flex-shrink: 0; font-size: var(--text-2xs); color: var(--text-secondary); }
 .plan-encourage { font-size: 12.5px; color: var(--text-secondary); margin: 10px 0 0; }
+.lr-block { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-color); }
+.lr-title { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--accent-primary); margin-bottom: 8px; }
+.lr-card { border: 1px solid var(--border-color); border-left: 3px solid var(--accent-success);
+  border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; }
+.lr-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+.lr-dim { font-size: var(--text-2xs); font-weight: var(--weight-semibold); color: var(--accent-success);
+  background: var(--accent-primary-10); padding: 1px 8px; border-radius: 9px; flex-shrink: 0; }
+.lr-name { font-size: var(--text-sm); font-weight: var(--weight-semibold); }
+.lr-card ul { margin: 4px 0 0; padding-left: 18px; }
+.lr-card li { font-size: 12.5px; color: var(--text-secondary); line-height: 1.6; margin: 2px 0; }
 .replay { background: var(--bg-card); border: 1px solid var(--border-color);
   border-radius: 12px; padding: 10px 14px; font-size: var(--text-sm); margin-bottom: 14px; }
 .replay summary { cursor: pointer; font-weight: var(--weight-semibold); }

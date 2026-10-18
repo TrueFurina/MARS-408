@@ -53,6 +53,8 @@ async def start_session(user_id: str, scenario_id: str,
     state["scenario_id"] = scenario_id
     state["title"] = seed.get("title", "")
     state["scenario_label"] = seed.get("type_label", SCENARIO_TYPE_LABELS.get(seed.get("type", ""), ""))
+    # ⑤ 回溯重评：记录会话开始时的 rubric 版本（改标准后可与当前版本对比）
+    state["rubric_version"] = seed.get("rubric_version", "1.0")
     if phase:
         state["phase"] = phase
 
@@ -279,31 +281,29 @@ def _find_by_label(label: str) -> Optional[str]:
         if s.get("type_label") == label:
             return s.get("id")
     return None
-async def _finish(state: dict) -> dict:
-    sid = state["session_id"]
-    turns = state.get("dialogue_turns", [])
-    script = state.get("scenario_script", {})
+def _build_evidence_chain(state: dict, assessment: dict) -> list[dict]:
+    """构建 ECD 证据链（维度 → 支撑轮次 + 原话引用 + 逐轮证据聚合）。
 
-    assessment = await nodes.assess_session(
-        script, state.get("scenario_label", ""), state.get("title", ""), turns,
-    )
-    improvement = await nodes.build_improvement_plan(assessment, state.get("scenario_label", ""))
+    真实溯源：BARS 锚点与重点考察取自情景种子；逐轮证据取自 dialogue_turns 的
+    collect_evidence.dimension_hits 与六维评估的 evidence_turns，绝不伪造检索来源。
+    本实训链路无 KB/向量库检索（career_nodes 全链路无 retrieve/FrugalRAG 调用），
+    故 chunk_ref 仅作「情景 rubric 段落 id」，source_type 恒为 "rule"。
 
-    # 真实溯源：从情景种子取 BARS 行为锚点（评分量表依据）与重点考察，绝不伪造检索来源。
-    # 本实训链路无 KB/向量库检索（career_nodes 全链路无 retrieve/FrugalRAG 调用），
-    # 故 chunk_ref 仅作为"情景 rubric 段落 id"，source_type 恒为 "rule"。
+    供 _finish 与 reassess_session 共用：重评时 evidence_chain 的 score/rubric_text
+    必须与重评后的 assessment 同源，避免「分数更新了但证据链还挂旧分」的漂移。
+    """
     seed = nodes.get_scenario(
         state.get("scenario_id") or _find_by_label(state.get("scenario_label", ""))
     )
     bars = (seed or {}).get("bars_anchor", {})
     seed_focus = (seed or {}).get("focus_points", [])
+    turns = state.get("dialogue_turns", [])
 
     # 逐轮学生原话映射（turn_index → 前 80 字），供溯源引用（取自真实 dialogue_turns）
     answer_by_turn = {
         t.get("turn_index"): (t.get("answer") or "")[:80] for t in turns
     }
 
-    # 证据链：维度 → 支撑轮次 + 原话引用 + 逐轮证据聚合（ECD Claim-Evidence 对齐）
     # 先从每轮 collect_evidence 的 dimension_hits 聚合该维度的所有证据 note
     per_dim_turn_evidence = {}
     for t in turns:
@@ -349,6 +349,20 @@ async def _finish(state: dict) -> dict:
             "rubric_text": (bars.get(dim) or {}).get("5") or (bars.get(dim) or {}).get("3") or "",
             "focus_points": seed_focus,
         })
+    return evidence_chain
+
+
+async def _finish(state: dict) -> dict:
+    sid = state["session_id"]
+    turns = state.get("dialogue_turns", [])
+    script = state.get("scenario_script", {})
+
+    assessment = await nodes.assess_session(
+        script, state.get("scenario_label", ""), state.get("title", ""), turns,
+    )
+    improvement = await nodes.build_improvement_plan(assessment, state.get("scenario_label", ""))
+
+    evidence_chain = _build_evidence_chain(state, assessment)
 
     overall = assessment.get("overall")
     store.save_assessment(
@@ -371,6 +385,75 @@ async def _finish(state: dict) -> dict:
         "assessment": assessment,
         "improvement": improvement,
         "evidence_chain": evidence_chain,
+    }
+
+
+def _overall_of(assessment) -> Optional[float]:
+    """从 assessment（可能为 None/非 dict）稳健取 overall，供重评对比。"""
+    if not isinstance(assessment, dict):
+        return None
+    return assessment.get("overall")
+
+
+async def reassess_session(session_id: str) -> dict:
+    """⑤ 回溯重评：用当前情景的 rubric（bars_anchor）对已完成会话重新跑六维评估，保留旧分对比。
+
+    诚实边界：
+    - 仅对 status=finished 且有对话的会话生效；重评是幂等纯函数调用（assess_session）；
+    - save_assessment 追加新记录，旧分仍可查（list_assessments_by_session），绝不覆盖历史；
+    - 只替换 script 的 bars_anchor（评分量表依据），对话与逐轮证据不变；
+    - 重评后的 evidence_chain 与新 assessment 同源重建（_build_evidence_chain），避免分/证据漂移。
+    """
+    state = store.get_session_state(session_id)
+    if not state:
+        raise KeyError(f"实训会话不存在: {session_id}")
+    turns = state.get("dialogue_turns", [])
+    if state.get("status") != "finished" or not turns:
+        raise ValueError("仅可对已完成的实训会话回溯重评")
+
+    seed = nodes.get_scenario(
+        state.get("scenario_id") or _find_by_label(state.get("scenario_label", ""))
+    )
+    if not seed:
+        raise ValueError("情景种子不存在，无法回溯重评")
+
+    current_version = seed.get("rubric_version", "1.0")
+    old_version = state.get("rubric_version", current_version)
+
+    # 用当前 rubric 重跑评估：只替换 script 的 bars_anchor，其余脚本不变
+    script = dict(state.get("scenario_script", {}))
+    script["bars_anchor"] = seed.get("bars_anchor", {})
+
+    new_assessment = await nodes.assess_session(
+        script, state.get("scenario_label", ""), state.get("title", ""), turns,
+    )
+    new_evidence_chain = _build_evidence_chain(state, new_assessment)
+
+    old_record = store.get_assessment_by_session(session_id) or {}
+    old_assessment = old_record.get("dimension_scores") or {}
+
+    # 追加新评估（不覆盖旧分）；improvement 沿用旧记录（提升路径不因 rubric 变化而失效）
+    store.save_assessment(
+        session_id=session_id, user_id=state.get("user_id", ""),
+        assessment=new_assessment,
+        improvement=old_record.get("improvement_plan") or {},
+        evidence_chain=new_evidence_chain,
+        consistency_score=new_assessment.get("overall"),
+        task_id=state.get("task_id"),
+    )
+    state["rubric_version"] = current_version
+    state["assessment_report"] = new_assessment
+    store.save_session_state(state, status="finished")
+
+    return {
+        "session_id": session_id,
+        "rubric_version_before": old_version,
+        "rubric_version_after": current_version,
+        "previous_overall": _overall_of(old_assessment),
+        "new_overall": new_assessment.get("overall"),
+        "assessment": new_assessment,
+        "evidence_chain": new_evidence_chain,
+        "reassessed": True,
     }
 
 

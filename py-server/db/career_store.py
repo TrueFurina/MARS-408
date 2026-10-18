@@ -110,6 +110,18 @@ CREATE TABLE IF NOT EXISTS career_feedback (
 );
 CREATE INDEX IF NOT EXISTS idx_career_feedback_session ON career_feedback(session_id);
 CREATE INDEX IF NOT EXISTS idx_career_feedback_user ON career_feedback(user_id);
+
+-- F8: 场景生成器产出的自定义场景（draft→人工审核→active 入库；黄金样本仍存 career_scenarios.json）
+CREATE TABLE IF NOT EXISTS career_scenarios_custom (
+    id VARCHAR(64) PRIMARY KEY,
+    scenario_json JSONB,
+    job_direction VARCHAR(32),
+    scenario_type VARCHAR(32),
+    difficulty VARCHAR(16),
+    status VARCHAR(16) DEFAULT 'draft',
+    created_by VARCHAR(64),
+    created_at TIMESTAMP DEFAULT NOW()
+);
 """
 
 # SQLite 建表脚本（TEXT 代替 JSONB，AUTOINCREMENT）
@@ -205,6 +217,18 @@ CREATE TABLE IF NOT EXISTS career_feedback (
 );
 CREATE INDEX IF NOT EXISTS idx_career_feedback_session ON career_feedback(session_id);
 CREATE INDEX IF NOT EXISTS idx_career_feedback_user ON career_feedback(user_id);
+
+-- F8: 场景生成器产出的自定义场景（draft→人工审核→active 入库；黄金样本仍存 career_scenarios.json）
+CREATE TABLE IF NOT EXISTS career_scenarios_custom (
+    id TEXT PRIMARY KEY,
+    scenario_json TEXT,
+    job_direction TEXT,
+    scenario_type TEXT,
+    difficulty TEXT,
+    status TEXT DEFAULT 'draft',
+    created_by TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+);
 """
 
 
@@ -435,6 +459,26 @@ def get_assessment_by_session(session_id: str) -> Optional[dict]:
         for k in ("dimension_scores", "evidence_chain", "improvement_plan"):
             result[k] = _loads(result.get(k))
     return result
+
+
+def list_assessments_by_session(session_id: str) -> list[dict]:
+    """返回该会话全部评估记录（按时间正序，最早在前），供回溯重评做新旧对比。"""
+    ensure_tables()
+    q = "?" if pg_client.is_fallback else "%s"
+    sql = f"SELECT * FROM career_assessments WHERE session_id={q} ORDER BY created_at ASC"
+    if pg_client.is_fallback:
+        with pg_client._lock:
+            rows = pg_client._conn.execute(sql, (session_id,)).fetchall()
+            results = [dict(r) for r in rows]
+    else:
+        with pg_client._conn.cursor() as cur:
+            cur.execute(sql, (session_id,))
+            cols = [d[0] for d in cur.description]
+            results = [dict(zip(cols, r)) for r in cur.fetchall()]
+    for r in results:
+        for k in ("dimension_scores", "evidence_chain", "improvement_plan"):
+            r[k] = _loads(r.get(k))
+    return results
 
 
 # ────────────────────────────────────────────────────────────
@@ -1008,3 +1052,61 @@ def list_feedback(teacher_id: str, class_id: Optional[str] = None, limit: int = 
         params.append(class_id)
     sql += f" ORDER BY f.created_at DESC LIMIT {int(limit)}"
     return _query(sql, tuple(params))
+
+
+# ────────────────────────────────────────────────────────────
+# F8 场景生成器（2026-10-18）：草稿 → 人工审核 → active 入库
+# ────────────────────────────────────────────────────────────
+def save_generated_scenario(scenario: dict, job_direction: str, scenario_type: str,
+                            difficulty: str, created_by: str = "",
+                            status: str = "draft") -> str:
+    """保存生成器产出的自定义场景（默认 draft，人工审核后 active）。"""
+    ensure_tables()
+    sid = scenario.get("id") or new_id("gensc")
+    _exec(
+        "INSERT INTO career_scenarios_custom "
+        "(id,scenario_json,job_direction,scenario_type,difficulty,status,created_by) "
+        f"VALUES ({_ph(7)})",
+        (sid, _dumps(scenario), job_direction, scenario_type, difficulty, status, created_by),
+    )
+    return sid
+
+
+def list_generated_scenarios(status: Optional[str] = None) -> list[dict]:
+    """列出生成场景（可过滤 status）；返回完整 scenario dict 列表。"""
+    ensure_tables()
+    q = "?" if pg_client.is_fallback else "%s"
+    sql = ("SELECT id, scenario_json, job_direction, scenario_type, difficulty, status, created_by, created_at "
+           "FROM career_scenarios_custom")
+    params: list = []
+    if status:
+        sql += f" WHERE status={q}"
+        params.append(status)
+    sql += " ORDER BY created_at DESC"
+    out = []
+    for r in _query(sql, tuple(params)):
+        sc = _loads(r.get("scenario_json"), {})
+        if isinstance(sc, dict):
+            out.append(sc)
+    return out
+
+
+def get_generated_scenario(scenario_id: str) -> Optional[dict]:
+    """按 id 取单个生成场景（任意 status）。"""
+    ensure_tables()
+    q = "?" if pg_client.is_fallback else "%s"
+    rows = _query(f"SELECT scenario_json FROM career_scenarios_custom WHERE id={q}", (scenario_id,))
+    if not rows:
+        return None
+    sc = _loads(rows[0].get("scenario_json"), {})
+    return sc if isinstance(sc, dict) else None
+
+
+def activate_generated_scenario(scenario_id: str) -> Optional[dict]:
+    """人工审核通过：draft → active。返回激活后的场景；不存在返回 None。"""
+    ensure_tables()
+    if get_generated_scenario(scenario_id) is None:
+        return None
+    q = "?" if pg_client.is_fallback else "%s"
+    _exec(f"UPDATE career_scenarios_custom SET status='active' WHERE id={q}", (scenario_id,))
+    return get_generated_scenario(scenario_id)

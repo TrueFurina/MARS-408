@@ -1,5 +1,6 @@
 {
   "version": "1.0",
+  "rubric_version": "1.0",
   "description": "芒得很职 职业素养对抗实训情景库种子（4大类各1个，P0最窄闭环用，后续扩到12子场景）",
   "scenarios": [
     {

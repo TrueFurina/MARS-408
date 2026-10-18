@@ -70,6 +70,12 @@ class TaskJoinRequest(BaseModel):
     join_code: str = Field(..., min_length=4, max_length=16)
 
 
+class ScenarioGenerateRequest(BaseModel):
+    job_direction: str = Field(..., description="岗位方向 frontend/backend/algorithm/product/ops")
+    scenario_type: Optional[str] = None   # 不传则用岗位默认情景类型
+    difficulty: str = "medium"
+
+
 def _check_owner(session_id: str, user: dict) -> dict:
     state = career_store.get_session_state(session_id)
     if not state:
@@ -107,6 +113,52 @@ def _parse_roster(text: str) -> list[dict]:
 @router.get("/scenarios")
 async def scenarios(user: dict = Depends(get_current_user)):
     return {"scenarios": career_service.list_scenarios()}
+
+
+# ────────────────────────────────────────────────────────────
+# F8 场景生成器（2026-10-18）：岗位方向 → 生成 draft → 人工审核 → active 入库
+# ────────────────────────────────────────────────────────────
+@router.get("/scenario-job-directions")
+async def scenario_job_directions(user: dict = Depends(get_current_user)):
+    """可选岗位方向（前端下拉）；生成器模板库单一真值源。"""
+    from agents import scenario_generator
+    return {"directions": scenario_generator.list_job_directions()}
+
+
+@router.post("/scenarios/generate")
+async def generate_scenario(req: ScenarioGenerateRequest, user: dict = Depends(get_current_user)):
+    """按岗位方向生成一个完整情景（draft，不入可选列表），人工审核后 activate 才可见。"""
+    _require_teacher(user)
+    try:
+        from agents import scenario_generator
+        sc = await scenario_generator.generate_scenario(
+            req.job_direction, req.scenario_type or "", req.difficulty)
+        sid = career_store.save_generated_scenario(
+            sc, req.job_direction, sc.get("type", ""), req.difficulty,
+            created_by=user["user_id"], status="draft")
+        return {"scenario_id": sid, "scenario": sc, "status": "draft"}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.exception("场景生成失败")
+        raise HTTPException(status_code=500, detail=f"生成失败: {e}")
+
+
+@router.get("/scenarios/drafts")
+async def list_scenario_drafts(user: dict = Depends(get_current_user)):
+    """待审核的生成场景草稿（draft）。"""
+    _require_teacher(user)
+    return {"drafts": career_store.list_generated_scenarios(status="draft")}
+
+
+@router.post("/scenarios/{scenario_id}/activate")
+async def activate_scenario(scenario_id: str, user: dict = Depends(get_current_user)):
+    """人工审核通过：draft → active（此后进入 /scenarios 可选列表）。"""
+    _require_teacher(user)
+    sc = career_store.activate_generated_scenario(scenario_id)
+    if not sc:
+        raise HTTPException(status_code=404, detail="场景不存在")
+    return {"scenario_id": scenario_id, "status": "active", "scenario": sc}
 
 
 # ── 启动一场实训 ──
@@ -161,6 +213,21 @@ async def report(session_id: str, user: dict = Depends(get_current_user)):
         return career_service.get_report(session_id)
     except KeyError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+# ── ⑤ 回溯重评（评分一致性，对标 Gradescope）：用当前 rubric 重评历史会话，保留旧分对比 ──
+@router.post("/session/{session_id}/reassess")
+async def reassess(session_id: str, user: dict = Depends(get_current_user)):
+    _check_owner(session_id, user)
+    try:
+        return await career_service.reassess_session(session_id)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.exception("回溯重评失败")
+        raise HTTPException(status_code=500, detail=f"重评失败: {e}")
 
 
 # ────────────────────────────────────────────────────────────

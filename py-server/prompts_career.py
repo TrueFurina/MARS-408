@@ -155,6 +155,7 @@ IMPROVEMENT_SYSTEM = """你是职业素养训练教练。根据学生一场对�
 {
   "priority_dimensions": ["最该提升的1-2个维度key"],
   "actions": [{"dimension": "维度key", "do": "具体可执行的练习动作", "frequency": "建议频率"}, "...共3-5条"],
+  "learning_resources": [{"dimension": "维度key", "title": "方法论/知识点卡标题(20字内)", "points": ["要点1", "要点2", "要点3"]}, "...针对priority_dimensions的1-2条，方法论要真实通用（如金字塔原理/STOP法则/MECE）"],
   "next_scenario": "建议下一次演练的场景类型key与理由",
   "encouragement": "一句具体、不鸡汤的鼓励"
 }
@@ -163,3 +164,34 @@ IMPROVEMENT_SYSTEM = """你是职业素养训练教练。根据学生一场对�
 IMPROVEMENT_USER_TMPL = """【六维评估结果】{assessment_json}
 【已演练场景】{scenario_label}
 请输出提升路径 JSON。"""
+
+
+# ────────────────────────────────────────────────────────────
+# 6) 场景生成器：从「岗位方向 × 情景类型」生成 scenario + rubric + probe tree
+# ────────────────────────────────────────────────────────────
+SCENARIO_GEN_SYSTEM = """你是职业素养对抗实训的情景设计专家，精通行为事件访谈(BEI)与情景模拟教学。
+根据给定的「岗位方向」与「情景类型」，生成一个真实、贴合计算机类学生、可用于多轮对抗演练的完整情景。
+要求：
+1. 情景真实具体，第二人称有代入感，避免与「毕业设计开题答辩 / 需求评审临时加需求 / 线上故障应急 / 代码评审冲突」四类黄金样本雷同；
+2. 开场问题要具体、有压迫感但符合身份，能立刻把学生带入情境；
+3. probe_tree 设计 5 条由浅入深、先常规后高压的追问方向；
+4. bars_anchor 给出 2 个最相关维度的 1/3/5 档行为锚点（评分量表依据，1=低分表现、3=中分表现、5=高分表现）；
+5. 严格输出 JSON，不要输出 JSON 以外的任何解释或 markdown 代码块标记。"""
+
+SCENARIO_GEN_USER_TMPL = """【岗位方向】{job_label}
+【情景类型】{type_label}
+【难度】{difficulty}
+请输出 JSON，结构：
+{{
+  "subtype": "情景子类型名(10字内)",
+  "title": "情景标题(30字内，含具体冲突)",
+  "setting": "场景背景(150字内，第二人称，有代入感)",
+  "student_role": "学生扮演角色",
+  "interviewer_role": "对手扮演角色",
+  "opening_question": "第一问(有压迫感但符合身份)",
+  "probe_tree": ["追问方向1", "追问方向2", "...共5条，由浅入深"],
+  "dimension_weights": {{"expression": 0.15, "stress": 0.15, "decompose": 0.2, "collab": 0.2, "presentation": 0.15, "problem_solving": 0.15}},
+  "focus_points": ["重点考察点3-5条"],
+  "bars_anchor": {{"维度key": {{"1": "低分表现", "3": "中分表现", "5": "高分表现"}}, "另一维度key": {{"1": "...", "3": "...", "5": "..."}}}}
+}}
+dimension_weights 六维权重之和应为 1.0；bars_anchor 只给 2 个最相关维度，维度 key 只能取 expression/stress/decompose/collab/presentation/problem_solving。不要输出 JSON 以外内容。"""

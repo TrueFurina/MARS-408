@@ -70,25 +70,47 @@ def _load_scenario_file() -> dict:
         return {"scenarios": []}
 
 
+def _scenario_display(s: dict) -> dict:
+    """从完整 scenario 提取展示字段（黄金样本与生成场景共用同一口径，不泄露完整脚本）"""
+    return {
+        "id": s["id"], "type": s["type"], "subtype": s.get("subtype", ""),
+        "type_label": s.get("type_label", s["type"]),
+        "subtype_label": s.get("subtype_label", ""),
+        "title": s["title"],
+        "difficulty_default": s.get("difficulty_default", "medium"),
+    }
+
+
+def _load_active_generated_scenarios() -> list[dict]:
+    """读取 DB 中已审核(active)的生成场景；DB 不可用时返回空（不影响黄金样本）。"""
+    try:
+        from db import career_store
+        return career_store.list_generated_scenarios(status="active")
+    except Exception as e:
+        logger.warning(f"读取生成场景失败（仅返回黄金样本）: {e}")
+        return []
+
+
 def list_scenarios() -> list[dict]:
-    """返回前端可选场景列表（只给展示字段，不泄露完整脚本）"""
-    out = []
-    for s in _load_scenario_file().get("scenarios", []):
-        out.append({
-            "id": s["id"], "type": s["type"], "subtype": s.get("subtype", ""),
-            "type_label": s.get("type_label", s["type"]),
-            "subtype_label": s.get("subtype_label", ""),
-            "title": s["title"],
-            "difficulty_default": s.get("difficulty_default", "medium"),
-        })
+    """返回前端可选场景列表（黄金样本 + 已审核生成场景；只给展示字段，不泄露完整脚本）"""
+    out = [_scenario_display(s) for s in _load_scenario_file().get("scenarios", [])]
+    out += [_scenario_display(s) for s in _load_active_generated_scenarios()]
     return out
 
 
 def get_scenario(scenario_id: str) -> Optional[dict]:
-    for s in _load_scenario_file().get("scenarios", []):
+    """取完整场景：先黄金样本（JSON），再已入库生成场景（DB）。"""
+    data = _load_scenario_file()
+    for s in data.get("scenarios", []):
         if s["id"] == scenario_id:
+            # rubric 版本：场景自身缺省时回退文件顶层（回溯重评⑤的版本来源）
+            s.setdefault("rubric_version", data.get("rubric_version", "1.0"))
             return s
-    return None
+    try:
+        from db import career_store
+        return career_store.get_generated_scenario(scenario_id)
+    except Exception:
+        return None
 
 
 # ────────────────────────────────────────────────────────────
@@ -519,10 +541,62 @@ async def build_improvement_plan(assessment: dict, scenario_label: str) -> dict:
         raw = await llm.text_completion(IMPROVEMENT_SYSTEM, user, temperature=0.5, max_tokens=700)
         data = extract_json(raw)
         if isinstance(data, dict) and data.get("actions"):
+            # 学习资源（⑥「学」环节）：LLM 输出优先，缺失/非法则规则兜底（内置方法论卡）
+            lr = data.get("learning_resources")
+            if not isinstance(lr, list) or not lr:
+                data["learning_resources"] = _derive_learning_resources(assessment)
             return data
     except Exception as e:
         logger.warning(f"提升路径生成失败，规则兜底: {e}")
     return fallback
+
+
+# 六维方法论/知识点卡（静态通用素材，规则兜底；真实方法论，不编造）
+_DIM_METHODOLOGY = {
+    "expression": {"title": "结构化表达：结论先行", "points": [
+        "用『结论-理由-例子』三段式复述同一问题",
+        "金字塔原理：先总后分，层层递进",
+        "一句话讲清核心观点，再展开论据"]},
+    "stress": {"title": "抗压应变：STOP 法则", "points": [
+        "被质疑先停 3 秒稳住情绪，再回应",
+        "区分事实与猜测，不盲目承诺",
+        "把压力问题转成可拆解的下一步动作"]},
+    "decompose": {"title": "方案拆解：目标-约束-子任务", "points": [
+        "先写『目标-约束-子任务-优先级』四行再作答",
+        "MECE 拆分：不重不漏地切分子问题",
+        "明确最小可行版本与验证点"]},
+    "collab": {"title": "协作沟通：先肯定后建议", "points": [
+        "先复述对方诉求，确认理解一致",
+        "对事不对人，用数据/场景而非主观偏好说服",
+        "给出两个可选项，推进共识而非对抗"]},
+    "presentation": {"title": "技术汇报：技术降维表达", "points": [
+        "先讲结论与影响，再讲实现细节",
+        "把技术术语翻译成业务语言",
+        "限时练习：同一方案分别讲给内行和外行"]},
+    "problem_solving": {"title": "问题解决：应急-风险-备选", "points": [
+        "写『应急步骤-风险-备选方案』清单并计时",
+        "5Why 追根因，不只处理表象",
+        "每一步都问『失败了怎么办』"]},
+}
+
+
+def _derive_learning_resources(assessment: dict) -> list[dict]:
+    """规则兜底：为最弱 1-2 个维度生成方法论/知识点卡（静态素材，不编造）。"""
+    dims = assessment.get("dimensions", {})
+    scored = [
+        (d, v.get("score") or 0) for d, v in dims.items()
+        if isinstance(v, dict) and v.get("score") is not None
+    ]
+    scored.sort(key=lambda x: x[1])
+    priority = [d for d, _ in scored[:2]]
+    if not priority:
+        priority = ["expression"]
+    out = []
+    for d in priority:
+        card = _DIM_METHODOLOGY.get(d)
+        if card:
+            out.append({"dimension": d, "title": card["title"], "points": list(card["points"])})
+    return out
 
 
 def _fallback_improvement(assessment: dict) -> dict:
@@ -544,6 +618,7 @@ def _fallback_improvement(assessment: dict) -> dict:
     return {
         "priority_dimensions": priority,
         "actions": actions or [{"dimension": "expression", "do": "完成下一场不同类型情景演练", "frequency": "每周2次"}],
+        "learning_resources": _derive_learning_resources(assessment),
         "next_scenario": "建议轮换到尚未演练的情景类型，补齐维度",
         "encouragement": "完成一次完整对抗本身就是进步，针对最弱维度刻意练习即可。",
     }
