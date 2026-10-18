@@ -53,6 +53,19 @@ updates:
       - dependency-name: "marked"
         versions:
           - ">=16.0.0"
+      # eslint / @eslint/js 9 → 10：实测不兼容，暂缓（2026-10-19 复现记录）
+      #   eslint 10 下 typescript-eslint 无法再从调用栈推断 tsconfigRootDir，
+      #   而本仓库同一份源码有三个 tsconfig 根（根 + submission/ + deliverables/ 镜像），
+      #   于是每个 .ts / .vue 都报 Parsing error: "multiple candidate TSConfigRootDirs"。
+      #   补 tsconfigRootDir 只能修根源码，两份镜像仍报 198 条解析错误；
+      #   typescript-eslint 目前最新就是 8.71.2（无 v9），没有上游修复可用。
+      #   等 typescript-eslint 跟到 eslint 10 再一起做。
+      - dependency-name: "eslint"
+        versions:
+          - ">=10.0.0"
+      - dependency-name: "@eslint/js"
+        versions:
+          - ">=10.0.0"
     groups:
       npm-minor-patch:
         applies-to: "version-updates"
