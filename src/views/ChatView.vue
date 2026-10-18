@@ -577,7 +577,7 @@ onBeforeUnmount(() => {
         <span class="image-preview-hint">将使用讯飞图片理解回答你的问题</span>
       </div>
       <div class="chat-mode-bar">
-        <button class="mode-toggle" :class="{ active: tutorMode, 'mode-tutor': tutorMode }" @click="tutorMode = !tutorMode" :title="tutorMode ? '切换为普通对话' : '切换为多模态导师答疑'">
+        <button class="mode-toggle" :class="{ active: tutorMode, 'mode-tutor': tutorMode }" :aria-pressed="tutorMode" @click="tutorMode = !tutorMode" :title="tutorMode ? '切换为普通对话' : '切换为多模态导师答疑'">
           <span v-html="icons.sparkle" class="mode-toggle-icon"></span>
           {{ tutorMode ? '多模态导师答疑' : '普通对话' }}
         </button>

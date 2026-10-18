@@ -296,6 +296,7 @@ const aiStateLabel: Record<AiState, string> = {
           <div class="bento-cell-title">收藏三态</div>
           <div class="micro-row">
             <button class="like-btn" :class="{ active: likeState === 'active', busy: likeState === 'busy', failed: likeState === 'failed' }"
+              :aria-pressed="likeState === 'active'"
               @click="toggleLike">
               <span v-html="likeState === 'active' ? icons.heart : icons.heartOutline"></span>
               <span v-if="likeState === 'idle'">收藏</span>

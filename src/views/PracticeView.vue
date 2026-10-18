@@ -253,6 +253,8 @@ async function refreshQuestions() { await generateQuestions() }
               correct: answers[idx]?.revealed && q.answer === oi,
               wrong: answers[idx]?.revealed && answers[idx]?.selected === oi && q.answer !== oi,
             }"
+            role="radio"
+            :aria-checked="answers[idx]?.selected === oi"
             @click="selectAnswer(idx, oi as number)">
             <span class="option-letter">{{ 'ABCDEFGH'[oi as number] }}</span>
             <span class="option-text">{{ opt }}</span>
