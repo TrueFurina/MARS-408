@@ -2,12 +2,18 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { getAuthHeaders, ApiError, friendlyError } from '@/utils/api'
 
 // getAuthHeaders 依赖 localStorage（vitest node 环境默认无），先 mock
+// 注意：happy-dom ≥21 的 GlobalWindow 把 localStorage 暴露为「仅有 getter」的属性，
+// 直接 `globalThis.localStorage = {...}` 会抛 TypeError，必须走 defineProperty。
 function mockLocalStorage(store: Record<string, string>) {
-  ;(globalThis as any).localStorage = {
-    getItem: (k: string) => store[k] ?? null,
-    setItem: (k: string, v: string) => { store[k] = v },
-    removeItem: (k: string) => { delete store[k] },
-  }
+  Object.defineProperty(globalThis, 'localStorage', {
+    configurable: true,
+    writable: true,
+    value: {
+      getItem: (k: string) => store[k] ?? null,
+      setItem: (k: string, v: string) => { store[k] = v },
+      removeItem: (k: string) => { delete store[k] },
+    },
+  })
 }
 
 describe('getAuthHeaders Token 注入', () => {
