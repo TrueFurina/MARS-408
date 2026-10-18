@@ -831,6 +831,57 @@ class VectorDB:
             return []
         return self._mem_store.query(coll_name, query_vector, top_k, filter_dict)
 
+    def _resolve_embeddings(self, chunks: list[dict], dim: int) -> list[list[float]]:
+        """为一批 chunk 解析入库向量 —— InMemory 与 Milvus 两条路径的**唯一**实现。
+
+        规则（与 D5 §2.1 一致）：
+
+        1. 任一 chunk 自带 ``embedding`` ⇒ 视为已预计算，不再调 E5；
+        2. 全都没有 ⇒ 整批调一次 ``embed_batch(prefix="passage")``；
+        3. E5 不可用（未装 sentence-transformers / 模型加载失败）或个别元素为
+           ``None`` ⇒ 该位置用**零向量**占位，``metadata.embedding_status`` 置为
+           ``"fallback_zero"``，并使 ``embedding_fallback_count`` 自增。
+
+        返回值与 ``chunks`` 等长、顺序一致，且**不含 None**（兜底元素是零向量）。
+        副作用：会就地写入 ``chunk["metadata"]["embedding_status"]``。
+
+        ── 为什么必须只有一份实现（2026-10-18）──────────────────────────────
+        此前 ``_mem_insert`` 与 ``_milvus_insert`` 各写一份。Milvus 路径写的是
+        ``c.get("embedding", [0.0] * dim)`` —— 既不尝试 E5、也不打 ``fallback_zero``
+        标记、更不计数。而检索侧只排除 ``embedding_status != "fallback_zero"``，
+        于是零向量会被当成正常向量参与 cosine 排序（相似度恒为 0，排名无意义，
+        且不会报任何错）。种子路径 ``app/lifespan.py::_seed_vector_db`` 与
+        ``rebuild_vectordb.py`` 都不预计算嵌入 ⇒「Milvus 已连接且集合为空」时
+        必然踩中。抽成单一实现，杜绝两条路径再次分叉。
+        守护：``tests/test_vector_db_embedding_fallback.py``。
+        """
+        precomputed: list = [c.get("embedding") for c in chunks]
+        if not any(e is not None for e in precomputed):
+            try:
+                from db.embedder import embed_batch
+
+                # 入库侧用 passage 前缀，与检索侧 query 前缀、netlearn_kb 向量库一致
+                precomputed = embed_batch([c["text"] for c in chunks], prefix="passage")
+                logger.info(f"E5 嵌入计算成功（{len(chunks)} 条文档）")
+            except Exception as e:  # noqa: BLE001 — 嵌入不可用必须降级而非中断入库
+                logger.warning(f"E5 嵌入失败({e})，使用零向量占位并标记 fallback_zero")
+
+        resolved: list[list[float]] = []
+        for i, c in enumerate(chunks):
+            # 用下标而不是 zip：embed_batch 少返几条时必须能逐条判 None 并兜底，
+            # 直接索引 precomputed[i] 会 IndexError 把整批入库打断。
+            emb = precomputed[i] if i < len(precomputed) else None
+            if emb is None:
+                emb = [0.0] * dim
+                meta = c.get("metadata")
+                if not isinstance(meta, dict):
+                    meta = {}
+                    c["metadata"] = meta
+                meta["embedding_status"] = "fallback_zero"
+                self._embedding_fallback_count += 1
+            resolved.append(emb)
+        return resolved
+
     def _mem_insert(self, coll_name, chunks, save: bool = True):
         """InMemoryVectorStore 批量插入（E5 失败时使用零向量占位）
 
@@ -841,46 +892,12 @@ class VectorDB:
             self._init_mem_store()
 
         dim = get_embedding_config().get("dimension", 768)
-        ids = []
-        docs = []
-        metas = []
-        embeddings_list = []
+        # 向量解析（含 E5 兜底计数）统一走 _resolve_embeddings，勿在此重复实现
+        embeddings_list = self._resolve_embeddings(chunks, dim)
 
-        # 尝试计算 E5 嵌入，失败则零向量占位
-        precomputed_embeddings = [c.get("embedding", None) for c in chunks]
-        has_precomputed = any(e is not None for e in precomputed_embeddings)
-
-        if not has_precomputed:
-            try:
-                from db.embedder import embed_batch
-                texts_for_embed = [c["text"] for c in chunks]
-                # 入库侧用 passage 前缀，与检索侧 query 前缀、netlearn_kb 向量库一致
-                computed = embed_batch(texts_for_embed, prefix="passage")
-                precomputed_embeddings = computed
-                has_precomputed = True
-                logger.info(f"E5 嵌入计算成功（{len(chunks)} 条文档）")
-            except Exception as e:
-                logger.warning(f"E5 嵌入失败({e})，使用零向量占位并标记 fallback_zero")
-
-        for i, c in enumerate(chunks):
-            ids.append(c.get("id", f"chunk_{i}"))
-            docs.append(c["text"])
-            meta = c.get("metadata", {})
-            if has_precomputed:
-                emb = precomputed_embeddings[i] if precomputed_embeddings[i] is not None else [0.0] * dim
-                if precomputed_embeddings[i] is None:
-                    meta["embedding_status"] = "fallback_zero"
-                    # D5 §2.1 要求「两处 fallback_zero 赋值点各 +1」；此处曾在 2026-09-23
-                    # 落地时漏掉，导致「批量里部分 embedding 为 None」的文档只打标不计数，
-                    # fallback_zero_docs 少报。2026-10-18 补齐。
-                    self._embedding_fallback_count += 1
-            else:
-                # P1-2: 零向量占位而非随机向量
-                emb = [0.0] * dim
-                meta["embedding_status"] = "fallback_zero"
-                self._embedding_fallback_count += 1
-            metas.append(meta)
-            embeddings_list.append(emb)
+        ids = [c.get("id", f"chunk_{i}") for i, c in enumerate(chunks)]
+        docs = [c["text"] for c in chunks]
+        metas = [c.get("metadata", {}) for c in chunks]
 
         self._mem_store.add(coll_name, ids=ids, texts=docs, metas=metas,
                             embeddings=embeddings_list, save=save)
@@ -953,18 +970,22 @@ class VectorDB:
             col = Collection(coll_name)
             col.load()
 
+        # 向量解析（含 E5 兜底计数）与 InMemory 路径共用同一实现 —— 此前这里写的是
+        # c.get("embedding", [0.0] * dim)，即「没有嵌入就静默当零向量」，既不调 E5、
+        # 也不打 fallback_zero 标记（检索侧因此不会排除它）、更不进计数器。
+        embeddings_col = self._resolve_embeddings(chunks, dim)
         entities = [
             [c["text"] for c in chunks],
-            [c.get("embedding", [0.0] * dim) for c in chunks],
+            embeddings_col,
             [c.get("id", "") for c in chunks],
-            [c.get("metadata", {}).get("subject", "") for c in chunks],
-            [c.get("metadata", {}).get("source", "") for c in chunks],
-            [c.get("metadata", {}).get("course", "") for c in chunks],
-            [c.get("metadata", {}).get("chapter", "") for c in chunks],
-            [c.get("metadata", {}).get("chapter_name", "") for c in chunks],
-            [c.get("metadata", {}).get("type", "") for c in chunks],
-            [c.get("metadata", {}).get("keywords", "") for c in chunks],
-            [c.get("metadata", {}).get("embedding_status", "") for c in chunks],
+            [(c.get("metadata") or {}).get("subject", "") for c in chunks],
+            [(c.get("metadata") or {}).get("source", "") for c in chunks],
+            [(c.get("metadata") or {}).get("course", "") for c in chunks],
+            [(c.get("metadata") or {}).get("chapter", "") for c in chunks],
+            [(c.get("metadata") or {}).get("chapter_name", "") for c in chunks],
+            [(c.get("metadata") or {}).get("type", "") for c in chunks],
+            [(c.get("metadata") or {}).get("keywords", "") for c in chunks],
+            [(c.get("metadata") or {}).get("embedding_status", "") for c in chunks],
         ]
         col.insert(entities)
         # Windows 上 milvus-lite 的 flush() 有文件重命名 bug (WinError 183)
