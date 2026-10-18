@@ -577,6 +577,17 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
         </div>
       </div>
 
+      <div v-if="assessment?.highlights?.length || assessment?.risk_flags?.length" class="hl-block">
+        <div v-if="assessment?.highlights?.length" class="hl-good">
+          <div class="hl-title">表现亮点</div>
+          <ul><li v-for="(h, i) in assessment.highlights" :key="i">{{ h }}</li></ul>
+        </div>
+        <div v-if="assessment?.risk_flags?.length" class="hl-risk">
+          <div class="hl-title">风险提示</div>
+          <ul><li v-for="(r, i) in assessment.risk_flags" :key="i">{{ r }}</li></ul>
+        </div>
+      </div>
+
       <div v-if="improvement" class="plan-block">
         <h3> 针对性提升路径</h3>
         <div v-for="(a, i) in improvement.actions" :key="i" class="plan-item">
@@ -764,6 +775,17 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
 .sw-strength, .sw-weak { background: var(--bg-card); border-radius: 12px; padding: var(--space-3) 14px;
   border: 1px solid var(--border-color); font-size: var(--text-sm); line-height: 1.6; }
 .sw-weak ul { margin: 6px 0 0; padding-left: 18px; }
+.hl-block { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin: 0 0 14px; }
+@media (max-width: 720px) { .hl-block { grid-template-columns: 1fr; } }
+.hl-good, .hl-risk { background: var(--bg-card); border-radius: 12px; padding: var(--space-3) 14px;
+  border: 1px solid var(--border-color); font-size: var(--text-sm); line-height: 1.6; }
+.hl-good { border-left: 3px solid var(--accent-success); }
+.hl-risk { border-left: 3px solid var(--accent-danger); }
+.hl-title { font-weight: var(--weight-semibold); margin-bottom: 6px; }
+.hl-good .hl-title { color: var(--accent-success); }
+.hl-risk .hl-title { color: var(--accent-danger); }
+.hl-good ul, .hl-risk ul { margin: 0; padding-left: 18px; }
+.hl-good li, .hl-risk li { margin: 3px 0; }
 .plan-block { background: var(--bg-card); border: 1px solid var(--border-color);
   border-radius: 14px; padding: var(--space-4); margin-bottom: 14px; }
 .plan-block h3 { margin: 0 0 10px; font-size: var(--text-md); }

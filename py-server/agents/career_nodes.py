@@ -139,6 +139,32 @@ async def build_scenario_script(scenario_seed: dict, difficulty: str) -> dict:
 # ────────────────────────────────────────────────────────────
 # 节点 2：单轮证据采集
 # ────────────────────────────────────────────────────────────
+def _derive_evidence_gap(evidence: dict, answer: str) -> dict:
+    """规则兜底：从单轮取证的结构化信号派生「证据缺口」（LLM 未输出 evidence_gap 时）。
+
+    缺口类型对齐牛客「动态取证式追问」的三类缺口：
+      - no_quantification：缺具体数字/时间/影响范围
+      - role_ambiguous：分不清团队参与还是个人主导
+      - vague：空泛总结无实质
+      - none：无缺口
+
+    仅供下一轮追问定向使用，不参与评分（评分仍以 dimension_hits + 原话为准）。
+    """
+    signals = evidence.get("signals") or {}
+    specificity = signals.get("specificity", "general")
+    template_suspect = bool(evidence.get("template_suspect"))
+    density = float(evidence.get("density", 0.5) or 0.5)
+    ans_len = len((answer or "").strip())
+
+    if template_suspect or specificity == "empty" or ans_len < 12:
+        return {"gap_type": "vague", "description": "回答疑似套话或几乎无实质内容",
+                "suggested_probe": "用反事实或具体场景逼出真实取舍，不接受空话"}
+    if specificity == "general" or density < 0.35:
+        return {"gap_type": "no_quantification", "description": "回答偏空泛，缺具体数字/步骤/影响范围",
+                "suggested_probe": "追问具体数字、时间、影响范围与个人分工"}
+    return {"gap_type": "none", "description": "", "suggested_probe": ""}
+
+
 async def collect_evidence(scenario_label: str, question: str, answer: str) -> dict:
     user = EVIDENCE_COLLECT_USER_TMPL.format(
         scenario_label=scenario_label, question=question, answer=answer,
@@ -155,6 +181,7 @@ async def collect_evidence(scenario_label: str, question: str, answer: str) -> d
                     "composure": "calm"},
         "density": fallback_density,
     }
+    fallback["evidence_gap"] = _derive_evidence_gap(fallback, answer)
     try:
         from db.llm_provider import LLMProvider
         llm = LLMProvider()
@@ -173,6 +200,10 @@ async def collect_evidence(scenario_label: str, question: str, answer: str) -> d
             data.setdefault("key_quotes", [answer[:40]] if answer else [])
             data.setdefault("template_suspect", False)
             data.setdefault("density", 0.5)
+            # 证据缺口：优先用 LLM 结构化输出，缺失/非法则规则兜底
+            gap = data.get("evidence_gap")
+            if not isinstance(gap, dict) or not gap.get("gap_type"):
+                data["evidence_gap"] = _derive_evidence_gap(data, answer)
             return data
     except Exception as e:
         logger.warning(f"证据采集失败，规则兜底: {e}")
@@ -239,11 +270,23 @@ def _dialogue_brief(turns: list[dict], keep: int = 4) -> str:
     return "\n".join(brief) if brief else "（这是第一轮，尚无历史）"
 
 
+def _format_evidence_gap(evidence: dict) -> str:
+    """把上轮取证的 evidence_gap 格式化成追问提示语（动态取证式追问的注入点）。"""
+    gap = (evidence or {}).get("evidence_gap") or {}
+    gt = gap.get("gap_type")
+    if not gt or gt == "none":
+        return "（上轮回答无明确证据缺口）"
+    desc = gap.get("description", "")
+    probe = gap.get("suggested_probe", "")
+    return f"{desc}；建议追问：{probe}" if probe else desc
+
+
 async def generate_adversary_question(script: dict, turns: list[dict], last_answer: str,
                                       mode: str, probe_dimension: str = "") -> dict:
     catfish_hint = ""
     if mode == "catfish":
         catfish_hint = "【特别提示】判定学生疑似套模板，请务必用反事实极端假设逼其给出具体取舍。"
+    last_evidence = turns[-1].get("evidence") if turns else {}
     user = ADVERSARY_USER_TMPL.format(
         setting=script.get("setting", ""),
         interviewer_role=script.get("interviewer_role", ""),
@@ -251,6 +294,7 @@ async def generate_adversary_question(script: dict, turns: list[dict], last_answ
         dialogue_brief=_dialogue_brief(turns),
         last_answer=last_answer or "（学生未作答）",
         probe_plan="；".join(script.get("probe_plan", [])),
+        evidence_gap=_format_evidence_gap(last_evidence),
         catfish_hint=catfish_hint,
     )
     fallback_q = _fallback_question(script, turns, mode)
@@ -324,6 +368,28 @@ async def assess_session(script: dict, scenario_label: str, title: str, turns: l
     return _rule_based_assessment(turns, script)
 
 
+def _derive_risk_flags(assessment: dict) -> list[str]:
+    """规则兜底：从评估结果派生风险预警（LLM 未输出 risk_flags 时）。
+
+    只依据可反查的结构性事实（证据不足/套模板/低分维度），不做能力定性。
+    """
+    flags = []
+    dims = assessment.get("dimensions") or {}
+    for d, v in dims.items():
+        label = DIMENSION_LABELS.get(d, d)
+        score = v.get("score") if isinstance(v, dict) else None
+        conf = v.get("confidence") if isinstance(v, dict) else None
+        if score is None:
+            flags.append(f"「{label}」维度证据不足，未评分")
+        elif conf is not None and conf < 0.5:
+            flags.append(f"「{label}」维度评分置信度偏低（{round(float(conf), 2)}）")
+        elif isinstance(score, (int, float)) and score <= 2.0:
+            flags.append(f"「{label}」维度得分偏低（{score}），建议重点训练")
+    if assessment.get("template_detected"):
+        flags.append("对话中存在疑似套模板/套话，需结合原话复核")
+    return flags
+
+
 def _normalize_assessment(data: dict, script: dict) -> dict:
     """规整评估结果：非法/中文维度键归一、补 overall"""
     # 维度键归一（兼容中文）
@@ -364,6 +430,11 @@ def _normalize_assessment(data: dict, script: dict) -> dict:
     data.setdefault("weaknesses", [])
     data.setdefault("template_detected", False)
     data.setdefault("summary", "")
+    data.setdefault("highlights", [])
+    # 风险预警：LLM 输出优先，缺失/空则规则兜底（只据结构性事实，不做能力定性）
+    rf = data.get("risk_flags")
+    if not isinstance(rf, list) or not rf:
+        data["risk_flags"] = _derive_risk_flags(data)
     data["assessment_source"] = "llm"
     return data
 
@@ -420,14 +491,17 @@ def _rule_based_assessment(turns: list[dict], script: dict) -> dict:
                    "evidence_turns": turns_used, "evidence_quotes": quotes,
                    "rationale": rationale}
         w = float(weights.get(d, 1.0)); ws += score * w; wt += w
-    return {
+    result = {
         "dimensions": dims,
         "overall": round(ws / wt, 2) if wt else None,
         "strength": "（规则评估，请以教师复核为准）",
         "weaknesses": [], "template_detected": any((t.get("evidence") or {}).get("template_suspect") for t in turns),
         "summary": f"共完成{len(turns)}轮对抗，本结果为LLM不可用时的规则兜底评估。",
+        "highlights": [],
         "assessment_source": "rule_fallback",
     }
+    result["risk_flags"] = _derive_risk_flags(result)
+    return result
 
 
 # ────────────────────────────────────────────────────────────
