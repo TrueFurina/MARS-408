@@ -1,0 +1,37 @@
+# Dependabot 配置（MARS-408 / study-help-pro）
+#
+# 为什么必须有这个文件：
+# 本仓库同一份源码存在三份镜像
+#   - 根源码（CI 真正跑的那一份）
+#   - submission/04_源码/MARS-408_source
+#   - deliverables/MARS-408 考研多智能体个性化学习系统/源码
+# Dependabot 的依赖图增量扫描只覆盖「它自己在跟踪的目录」；此前未声明 npm 子目录，
+# 导致两份归档副本的 package-lock.json 告警自 2026-10-17 起就再没被重新评估过
+# （改动已经提交到仓库，但告警面板停留在旧快照）。
+#
+# 这里显式声明三个 npm 目录，让 Dependabot 定期重新解析它们：
+#   - minor / patch 全部合并成一个 PR（避免每周几十条 PR 噪声）
+#   - major 单独出 PR，由人判断是否跨大版本（本轮 vitest 3→5、happy-dom 15→21 就是手动处理的）
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directories:
+      - "/"
+      - "/submission/04_源码/MARS-408_source"
+      - "/deliverables/MARS-408 考研多智能体个性化学习系统/源码"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "Asia/Shanghai"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps"
+    groups:
+      npm-minor-patch:
+        applies-to: "version-updates"
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
