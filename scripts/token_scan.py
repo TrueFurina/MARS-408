@@ -237,6 +237,14 @@ def main() -> int:
         return 0
     if args.baseline:
         rc = _check_baseline(args.baseline, by_cat)
+        # 2026-10-18: stale（僵尸豁免）非空时原实现静默 exit 1 —— 门禁输出全 ✓
+        # 却提交被拒且无线索（实测踩坑：删硬编码后豁免规则未同步清理即触发）。
+        # 补打印明细，退出码语义不变（stale 仍拦截，豁免应随代码清理）。
+        for r in stale:
+            print(f"[门禁] 僵尸豁免（规则已不命中任何 finding）：{r['file']} {r.get('value', '*')} "
+                  f"reason={r['reason']} → 请删除该规则或修代码")
+        if stale:
+            print(f"[门禁] --baseline 模式存在 {len(stale)} 条僵尸豁免 → exit 1")
         return rc or (1 if stale else 0)
 
     rc = 0
