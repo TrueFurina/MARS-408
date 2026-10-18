@@ -207,6 +207,10 @@ archive/
 # 向量数据（运行时生成）
 vectordb_data/
 py-server/vectordb_data/
+# 向量库历史备份目录同样禁止入库（2026-10-18 实测：py-server/vectordb_data_pre_multi_bak/
+# 51MB 此前未被任何规则覆盖，一旦误 add -A 就会把 38.8MB netlearn_kb.json 提交上去）
+py-server/vectordb_data*/
+vectordb_data*/
 
 # ── 2026-08-29 公开仓库净化 v2：内部/敏感/无关内容 ──
 # 泄露真实 PAT 的审计文档
