@@ -1,6 +1,7 @@
 import js from '@eslint/js'
 import tseslint from 'typescript-eslint'
 import pluginVue from 'eslint-plugin-vue'
+import globals from 'globals'
 
 export default [
   {
@@ -17,6 +18,16 @@ export default [
   js.configs.recommended,
   ...tseslint.configs.recommended,
   ...pluginVue.configs['flat/recommended'],
+  {
+    // eslint-plugin-vue v10 起 flat 配置不再内置 browser globals，需显式声明
+    name: 'app/globals',
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.es2021,
+      },
+    },
+  },
   {
     name: 'app/vue-parser',
     files: ['**/*.vue'],
