@@ -9,7 +9,12 @@ describe('api request 重试逻辑', () => {
   beforeEach(() => {
     fetchMock = vi.fn()
     ;(globalThis as any).fetch = fetchMock
-    ;(globalThis as any).localStorage = { getItem: () => null }
+    // happy-dom ≥21 的 GlobalWindow 上 localStorage 是「仅有 getter」的属性，需用 defineProperty 覆盖
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      writable: true,
+      value: { getItem: () => null },
+    })
     vi.useFakeTimers()
   })
 
