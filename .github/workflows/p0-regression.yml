@@ -10,6 +10,9 @@ on:
   push:
     branches: [main]
   pull_request:
+  # 手动补跑入口：本 workflow 在非 main 分支只靠 PR 触发，临时分支想单独验证
+  # P0 回归时没有别的路。2026-10-18 补。
+  workflow_dispatch:
   schedule:
     - cron: "0 2 * * *"   # nightly: 触发 slow 档
 

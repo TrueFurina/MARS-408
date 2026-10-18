@@ -23,6 +23,9 @@ on:
   pull_request:
   push:
     branches: [career-literacy, main]
+  # 手动补跑入口：push 事件未触发的 SHA（见 ci.yml 同名注释，2026-10-18 实测），
+  # 靠它才能拿到六道门的 CI 结论。
+  workflow_dispatch:
 
 permissions:
   contents: read

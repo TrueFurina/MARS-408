@@ -4,6 +4,10 @@ name: CI Security Gate (芒得很职 / study-help-pro)
 on:
   push:
   pull_request:
+  # 手动补跑入口。2026-10-18 实测：一次并发 push 撞锁后 ref 更新了但 GitHub
+  # 没有为那个 SHA 创建任何 run（head_sha 查询 total_count=0），而本 workflow
+  # 原本没有任何手动触发方式 ⇒ 那个提交永远拿不到 CI 结论，只能靠本地等价项。
+  workflow_dispatch:
 
 # 仅读权限，密钥不在此 workflow 暴露
 permissions:
