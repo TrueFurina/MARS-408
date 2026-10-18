@@ -45,6 +45,9 @@ updates:
       - dependency-name: "typescript"
         versions:
           - ">=7.0.0"
+      - dependency-name: "vue-router"
+        versions:
+          - ">=5.0.0"
     groups:
       npm-minor-patch:
         applies-to: "version-updates"
