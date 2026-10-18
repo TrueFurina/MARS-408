@@ -320,9 +320,80 @@ async function loadFeedback() {
   }
 }
 
+/* ── F8 场景生成器（2026-10-18）：岗位方向 → 生成 draft → 人工审核 → 激活入库 ── */
+interface JobDirection { key: string; label: string; default_scenario_type: string }
+interface GeneratedScenario {
+  id: string; type: string; subtype: string; type_label: string; subtype_label: string
+  title: string; difficulty_default: string; setting: string; student_role: string
+  interviewer_role: string; opening_question: string; probe_tree: string[]
+  dimension_weights: Record<string, number>; focus_points: string[]
+  bars_anchor: Record<string, Record<string, string>>; rubric_version: string
+  generated?: boolean; job_direction?: string
+}
+const SCENARIO_TYPE_LABEL: Record<string, string> = {
+  defense: '技术方案答辩', review: '需求评审质询', incident: '故障排查沟通', conflict: '团队冲突协调',
+}
+
+const jobDirections = ref<JobDirection[]>([])
+const genDirection = ref('')
+const genType = ref('')          // '' = 用岗位默认情景类型
+const genDifficulty = ref('medium')
+const genBusy = ref(false)
+const genResult = ref<GeneratedScenario | null>(null)
+const drafts = ref<GeneratedScenario[]>([])
+const activatingId = ref('')
+
+async function loadJobDirections() {
+  try {
+    const res = await api.get<{ directions: JobDirection[] }>('/career/scenario-job-directions')
+    jobDirections.value = res.directions || []
+  } catch { jobDirections.value = [] }
+}
+
+async function loadDrafts() {
+  try {
+    const res = await api.get<{ drafts: GeneratedScenario[] }>('/career/scenarios/drafts')
+    drafts.value = res.drafts || []
+  } catch { drafts.value = [] }
+}
+
+async function generateScenario() {
+  if (!genDirection.value || genBusy.value) return
+  genBusy.value = true; msg.value = ''
+  try {
+    const res = await api.post<{ scenario_id: string; scenario: GeneratedScenario; status: string }>(
+      '/career/scenarios/generate', {
+        job_direction: genDirection.value,
+        scenario_type: genType.value || undefined,
+        difficulty: genDifficulty.value,
+      })
+    genResult.value = res.scenario
+    await loadDrafts()
+    msg.value = '已生成草稿，请人工审核后激活入库'
+  } catch (e) {
+    msg.value = friendlyError(e, '场景生成失败')
+  } finally { genBusy.value = false }
+}
+
+async function activateDraft(id: string) {
+  if (!id || activatingId.value) return
+  activatingId.value = id; msg.value = ''
+  try {
+    await api.post(`/career/scenarios/${encodeURIComponent(id)}/activate`)
+    msg.value = '已激活入库，进入发任务可选场景列表'
+    genResult.value = null
+    await loadDrafts()
+    await loadScenarios()   // 刷新发任务下拉，让新场景可选
+  } catch (e) {
+    msg.value = friendlyError(e, '激活失败')
+  } finally { activatingId.value = '' }
+}
+
 onMounted(() => {
   loadClasses().catch(() => {})
   loadScenarios().catch(() => {})
+  loadJobDirections().catch(() => {})
+  loadDrafts().catch(() => {})
 })
 </script>
 
@@ -509,6 +580,76 @@ onMounted(() => {
           </div>
         </template>
       </div>
+
+      <!-- 4 · 场景生成器（F8：岗位方向 → 生成 draft → 人工审核 → 激活入库） -->
+      <div class="card wide">
+        <h2>4 · 场景生成器</h2>
+        <p class="hint">按岗位方向生成新对抗情景（草稿），人工审核后激活进入发任务可选列表。黄金样本保留不变。</p>
+        <div class="row">
+          <select v-model="genDirection">
+            <option value="" disabled>选择岗位方向</option>
+            <option v-for="d in jobDirections" :key="d.key" :value="d.key">{{ d.label }}</option>
+          </select>
+          <select v-model="genType">
+            <option value="">情景类型（默认岗位类型）</option>
+            <option v-for="(label, k) in SCENARIO_TYPE_LABEL" :key="k" :value="k">{{ label }}</option>
+          </select>
+          <select v-model="genDifficulty">
+            <option value="easy">简单</option>
+            <option value="medium">中等</option>
+            <option value="hard">困难</option>
+          </select>
+          <button :disabled="genBusy || !genDirection" @click="generateScenario">
+            {{ genBusy ? '生成中…' : '生成场景' }}
+          </button>
+        </div>
+
+        <!-- 生成结果预览（人工审核） -->
+        <div v-if="genResult" class="gen-preview">
+          <div class="gen-head">
+            <strong>{{ genResult.title }}</strong>
+            <span class="tag">{{ genResult.type_label }} · {{ genResult.subtype_label }} · {{ DIFF_LABEL[genResult.difficulty_default] || genResult.difficulty_default }}</span>
+          </div>
+          <p class="gen-setting">{{ genResult.setting }}</p>
+          <p class="gen-line"><b>学生角色</b>{{ genResult.student_role }}</p>
+          <p class="gen-line"><b>对手角色</b>{{ genResult.interviewer_role }}</p>
+          <p class="gen-line"><b>开场</b>“{{ genResult.opening_question }}”</p>
+          <div class="gen-line"><b>追问方向</b>
+            <ul class="gen-list"><li v-for="(p, i) in genResult.probe_tree" :key="i">{{ p }}</li></ul>
+          </div>
+          <div class="gen-line"><b>重点考察</b>
+            <span v-for="(f, i) in genResult.focus_points" :key="i" class="chip">{{ f }}</span>
+          </div>
+          <div class="gen-line"><b>BARS 锚点</b>
+            <div v-for="(levels, d) in genResult.bars_anchor" :key="d" class="gen-bars">
+              <span class="dim">{{ dimLabel(d) }}</span>
+              1分「{{ levels['1'] }}」 · 3分「{{ levels['3'] }}」 · 5分「{{ levels['5'] }}」
+            </div>
+          </div>
+          <div class="gen-actions">
+            <button class="link" @click="genResult = null">放弃</button>
+            <button :disabled="activatingId === genResult.id" @click="activateDraft(genResult.id)">
+              {{ activatingId === genResult.id ? '激活中…' : '审核通过并激活' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- 待审核草稿列表 -->
+        <div v-if="drafts.length" class="gen-drafts">
+          <p class="agg-k">待审核草稿（{{ drafts.length }}）</p>
+          <ul class="gen-draft-list">
+            <li v-for="d in drafts" :key="d.id">
+              <div class="tl-head">
+                <strong>{{ d.title }}</strong>
+                <span class="dim">{{ d.type_label }} · {{ d.job_direction }}</span>
+              </div>
+              <button :disabled="activatingId === d.id" @click="activateDraft(d.id)">
+                {{ activatingId === d.id ? '激活中…' : '激活入库' }}
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
     </section>
 
     <!-- F1 学生个体下钻抽屉（焦点圈闭 + Esc 关闭，复用 useModalFocus） -->
@@ -627,5 +768,21 @@ th, td { text-align: left; padding: .45rem .5rem; border-bottom: 1px solid var(-
 .drawer-head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-3); }
 .drawer-head h3 { margin: 0; font-size: 1.05rem; }
 .drawer table { margin-top: var(--space-3); }
+
+/* F8 场景生成器（2026-10-18） */
+.gen-preview { margin-top: var(--space-3); border: 1px solid var(--border, var(--color-border));
+  border-radius: 10px; padding: var(--space-3); background: var(--bg-secondary, var(--color-surface-1)); }
+.gen-head { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; margin-bottom: .5rem; }
+.gen-setting { font-size: .92rem; line-height: 1.6; margin: .4rem 0; }
+.gen-line { font-size: .9rem; margin: .35rem 0; }
+.gen-line b { color: var(--text-dim, var(--color-text-3)); margin-right: .35rem; }
+.gen-list { margin: .25rem 0 0; padding-left: 1.1rem; }
+.gen-bars { margin: .2rem 0; font-size: .85rem; color: var(--text-secondary); }
+.gen-actions { display: flex; gap: .75rem; justify-content: flex-end; margin-top: .5rem; }
+.gen-drafts { margin-top: var(--space-3); border-top: 1px dashed var(--border, var(--color-border)); padding-top: var(--space-3); }
+.gen-draft-list { list-style: none; padding: 0; margin: .35rem 0 0; display: grid; gap: .4rem; }
+.gen-draft-list li { display: flex; justify-content: space-between; align-items: center; gap: .5rem;
+  padding: .4rem .5rem; border: 1px dashed var(--border, var(--color-border)); border-radius: 8px; }
+
 @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
 </style>
