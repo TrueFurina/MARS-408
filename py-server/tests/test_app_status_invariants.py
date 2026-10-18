@@ -13,6 +13,10 @@
    直接出现在 /docs 与 openapi.json 上（对外契约），数字写错不会报任何错。
 5. 对外 OpenAPI 描述宣称的认证覆盖率必须等于从真实路由表重算的值 —— 同属对外契约，
    且历史包袱更重：97.8% 是 2026-07-10 一次性快照，此后路由一直变动而无人重算。
+6. status.py 通过 getattr 读取的 vector_db 属性必须真实存在，且回落计数必须能端到端
+   抵达探针 —— getattr 的默认值会把「读取方/实现方命名漂移」静默吞掉。
+   2026-10-18 实证：embedding_fallback_count 只有私有字段、公开属性从未落地
+   （D5 §2.1 的设计漏做），fallback_zero_docs 恒报 0，embedding 降级判定形同虚设。
 """
 
 import pytest
@@ -224,3 +228,108 @@ def test_head_status_endpoint_supported():
     assert resp.status_code == 200
     assert resp.headers.get("content-length") is not None, "HEAD 响应应带 content-length"
     assert resp.content == b"", "HEAD 响应不得带 body"
+
+
+# ── 不变量 6：status.py 读取的 vector_db 属性必须真实存在 ──────────────────
+
+
+def test_status_probe_reads_real_vector_db_attrs():
+    """status.py 通过 getattr 读的每个 vector_db 属性，必须在真实单例上存在。
+
+    ``getattr(obj, name, default)`` 的默认值会把「读取方与实现方命名漂移」**静默**吞掉：
+    读不到就用默认值，不报错、不告警，探针于是常年上报一个从未被赋过值的数。
+
+    2026-10-18 实证缺陷：``app/status.py`` 按公开名读
+    ``embedding_fallback_count``，而 ``db/milvus_client.py`` 只赋值私有字段
+    ``_embedding_fallback_count``（D5 §2.1 设计的只读属性漏做了）⇒
+    ``fallback_zero_docs`` 恒为 0，「embedding 降级」判定永不触发，
+    ``/api/status`` 在 2245 条文档全是零向量占位时照样报 ``status:"ok"``。
+    更隐蔽的是：本文件顶部的 ``_BoomVectorDb`` 替身桩恰好也用的公开名，
+    测试与实现同错，所以这条链路长期绿灯。
+
+    本测试把契约钉住：status.py 改读取名、或 VectorDB 改字段名，这里立刻红。
+    """
+    import inspect
+    import re
+
+    from db.milvus_client import vector_db
+
+    src = inspect.getsource(status_mod.status)
+    names = re.findall(r'getattr\(\s*vector_db\s*,\s*["\']([^"\']+)["\']', src)
+    assert names, (
+        "status.py 未按 getattr(vector_db, \"NAME\", default) 读取向量库属性 —— "
+        "本守护的提取正则已失效，请先更新它再改 status.py"
+    )
+
+    missing = [n for n in names if not hasattr(vector_db, n)]
+    assert not missing, (
+        f"status.py 读取的 vector_db 属性在真实单例上不存在: {missing} —— "
+        "getattr 的默认值会静默生效，探针将常年上报假值"
+        "（2026-10-18：embedding_fallback_count 就因私有/公开名不一致漏实现）"
+    )
+
+
+@pytest.mark.asyncio
+async def test_embedding_fallback_counter_reaches_status_probe(monkeypatch):
+    """E5 失败写零向量占位时，计数器必须自增，且 /api/status 如实上报。
+
+    端到端覆盖 ``db/milvus_client.py::_mem_insert`` 的**两处** fallback_zero 赋值点：
+
+    A. 整批无 embedding → 调 ``embed_batch`` 失败 → 全批零向量占位；
+    B. 批量里个别 ``embedding`` 为 None → 不重算，直接零向量占位。
+       （B 处曾在 2026-09-23 落地时漏记计数，2026-10-18 按 D5 §2.1「两处各 +1」补齐。）
+
+    断言一路打到 ``/api/status`` 的 ``fallback_zero_docs`` 与 ``degraded_reasons``，
+    证明的不只是「计数器自增」，而是「运维面真的看得见」。
+    """
+    from db import embedder as embedder_mod
+    from db.milvus_client import vector_db
+
+    dim = int(embedder_mod.get_embedding_config().get("dimension", 768))
+    coll = "netlearn_kb"
+
+    class _FakeMemStore:
+        """替身：只记账，绝不碰磁盘上的真实 vectordb_data。"""
+
+        def __init__(self):
+            self.n = 0
+
+        def add(self, coll_name, ids=None, texts=None, metas=None, embeddings=None, save=True):
+            self.n += len(texts or [])
+
+        def count(self, coll_name):
+            return self.n
+
+    def _boom(*args, **kwargs):
+        raise RuntimeError("simulated E5 outage")
+
+    # 隔离单例运行态：不走 Milvus、不落盘、计数器归零
+    monkeypatch.setattr(vector_db, "_milvus_connected", False)
+    monkeypatch.setattr(vector_db, "_mem_store", _FakeMemStore())
+    monkeypatch.setattr(vector_db, "_embedding_fallback_count", 0)
+    monkeypatch.setattr(embedder_mod, "embed_batch", _boom)
+
+    # A. 整批无 embedding → embed_batch 炸 → 全批零向量占位（计数 0 → 1）
+    n_a = vector_db._mem_insert(coll, [{"id": "a1", "text": "t1", "metadata": {}}])
+    assert n_a == 1
+    assert vector_db.embedding_fallback_count == 1, "整批兜底必须计数"
+
+    # B. 批量里个别 embedding 为 None → 同样必须计数（计数 1 → 2；b1 有真向量不计数）
+    n_b = vector_db._mem_insert(
+        coll,
+        [
+            {"id": "b1", "text": "t2", "metadata": {}, "embedding": [0.5] * dim},
+            {"id": "b2", "text": "t3", "metadata": {}, "embedding": None},
+        ],
+    )
+    assert n_b == 2
+    assert vector_db.embedding_fallback_count == 2, (
+        "个别 embedding 为 None 的文档也必须计入 fallback 计数（D5 §2.1「两处各 +1」）"
+    )
+
+    payload = await status_mod.status()
+    assert payload["health"]["embedding"]["fallback_zero_docs"] == 2, payload["health"]["embedding"]
+    assert payload["status"] == "degraded"
+    assert any(
+        "零向量占位" in r for r in payload["degraded_reasons"]
+    ), payload["degraded_reasons"]
