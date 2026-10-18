@@ -21,8 +21,15 @@
 | B. 局域网演示版 | 对外材料写"演示版，未开放试用"，拼图③继续等 | S | 拼图③继续冻结 |
 | C. 等云 BaaS 修复 | 平台方修复 401 后走托管 | 不可控 | 同 B |
 
-## 拍板前必须先清的前置（若选 A）
+## 拍板前前置项实测（2026-10-18，代码取证）
 
-1. 🔴 VPS 公网暴露前的安全检查清单（JWT_SECRET 非空 / admin 默认口令 / 速率限制开启）——记忆红线「14 个 P0 阻塞」中的安全项须逐条过；
-2. `.env` 凭据只放 VPS 侧（chmod 600），不入库；
-3. 验收命令：`curl -sI http://<vps>/api/status` 返回 200 且 `fallback_zero_docs` 如实上报。
+| 检查项 | 状态 | 证据 |
+|---|---|---|
+| 令牌签名密钥 | ✅ **已 fail-closed** | `shared/auth.py:19-32`（F-005）：硬编码旧密钥已移除；生产缺 `AUTH_SECRET`（<32 字符）直接 raise；开发随机生成+警告 |
+| admin 口令 | ✅ 环境注入 | `db/user_store.py:269 ensure_admin(username, password)`，无硬编码默认值；PBKDF2-HMAC + compare_digest |
+| 密钥不落盘 | ✅ 机制在位 | `config.py:401-420 _strip_secrets`：api_key 类字段 save_config 自动剥离 |
+| 速率限制 | ✅ 在位 | 注册 3 次/小时等（README:78 宣称与实现一致） |
+| `.env` 凭据 | ⬜ 部署时操作 | 只放 VPS 侧 chmod 600，不入库（gitignore 已覆盖） |
+| 验收命令 | ⬜ 部署后执行 | `curl -sI http://<vps>/api/status` 返回 200 且 `fallback_zero_docs` 如实上报 |
+
+> 结论：**旧「14 个 P0 阻塞」中的安全项（JWT_SECRET 为空等）已在代码层解决**——选 A 的前置主要是运维操作（VPS 主机 + .env + 验收），非代码改造。
