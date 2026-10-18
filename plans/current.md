@@ -252,3 +252,11 @@
 - [x] 2026-10-13 两项 P1 闭环（quality_gate fail-closed `2ce9154`；诚实红线扫描归一化 `cc31b74`）
 - [x] 2026-10-10 10-06 的 9 条 P0 全部闭合复测通过
 - [x] 2026-09-19 交付口径深度订正（docx 页脚 / 作品介绍 / 源码包全量对齐真值）
+
+## 已拍板（2026-10-17/18，详见 decisions.md）
+
+- [x] **P0-C 在飞部署物处置** —— `deploy/career-pilot/` 保留不删（本地唯一 VPS staging 快照；删除前须 SSH 核实 `/opt/career-pilot`）；`dist/` 保留（已重建为最新）。
+- [x] **P1-D review_intensity** —— 维持后置守卫方案不变，不接演示面板文案。
+- [x] **解冻令分类执行** —— 活文档层已清（`6a5c9d0`）；deliverables//submission/ 保持历史原样；docs/ 双分支治理事实保留。
+- [x] **P0-D 残余核查** —— README 已统一 49 views（2026-10-18 复核），build_roadshow_pptx.py 的旧数字均在"禁用守护清单"内，无残留。
+- [x] **P1-C 班级级导出** —— 已由功能拓展 Batch 2（`edf7e92`）闭环：看板 CSV + F7 一页纸（自包含 HTML→浏览器另存 PDF），前端已接线（TeacherCareerView:496-499）。
