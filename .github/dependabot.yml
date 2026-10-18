@@ -48,6 +48,11 @@ updates:
       - dependency-name: "vue-router"
         versions:
           - ">=5.0.0"
+      # marked 15 → 16+：@sigodenjs/marked-katex-extension@1.0.0（当前唯一可用版本）
+      # 的 peer 是 `marked >=4 <16`，越界即 ERESOLVE。除非该扩展发布新版，否则不动。
+      - dependency-name: "marked"
+        versions:
+          - ">=16.0.0"
     groups:
       npm-minor-patch:
         applies-to: "version-updates"
