@@ -2,6 +2,16 @@
 
 推送 `career-literacy` → `origin` 后触发的 CI 实测结果，用于回填交付文档的最后两项待核数字。
 
+## run `39101268904` — Backend Test (Linux) / pytest on ubuntu-latest（head `3bae4b9`，success，2026-10-18）
+
+**当前权威值**：教师端三方向（场景生成 / 回溯重评 / 学习资源）新测试并入后的首次全量回归。
+
+| step | 命令 | 结果 |
+|---|---|---|
+| 1 默认离线集 | `pytest -q --tb=short` | **1654 passed, 38 skipped, 9 deselected, 1 xfailed, 0 failed** in 412.70s |
+
+> collected = 1654+38+9+1 = **1702**。1524→1654 增量来自 2026-10-18 并入的教师端测试族。同步更新的活副本：`AGENTS.md:11/33`、`docs/METRICS_CURRENT.md:81`、`docs/TEST_TRUTH.md`、`README.md:83/261/262/263`、`README_EN.md:57/189/190`、`src/views/ShowcaseView.vue:156`（254→259）。
+
 ## run `38942815598` — Backend Test (Linux) / pytest on ubuntu-latest（head `46b41b5`，success，2026-10-17）
 
 **HEAD 同源复证**：以下默认档摘要与 run `38938041036`（head `dc18dd2`）完全一致 —— 两 commit 之间仅动 `docs/` / `README` / `submission/` / `src/*.vue` 模板文案 / `py-server/tools/generate_demo_ppt.py`，未触任何测试文件，故测试数应为同值。

@@ -153,7 +153,7 @@ function openNew() { window.open(iframeSrc.value, '_blank', 'noopener') }
         <!-- 数据总览 -->
         <div class="tech-stats-bar">
           <div class="tech-stat">
-            <span class="ts-value">254</span>
+            <span class="ts-value">259</span>
             <span class="ts-label">API 端点</span>
           </div>
           <div class="tech-stat">

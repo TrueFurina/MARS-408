@@ -1,20 +1,21 @@
 # 测试真值说明（TEST_TRUTH）
 
 > 由收尾阶段 team-lead 落盘（qa-2 因工具权限被拒未能写入，移交 team-lead），并经 qa-2 多次实测与最终裁定（2026-10-16）校正。
-> 目的：固化「测试数字」的权威来源，消除计数漂移（923/221 → 1139/0 → 1177/227 → 1178/208/3 → 1389/38/1 → 1524/38/1）带来的口径混乱。
+> 目的：固化「测试数字」的权威来源，消除计数漂移（923/221 → 1139/0 → 1177/227 → 1178/208/3 → 1389/38/1 → 1524/38/1 → 1654/38/1）带来的口径混乱。
 
 ## 1. 核心结论（权威口径以 SSOT 为准）
-**权威对外口径 = CI 全量回归 `1524 通过 / 38 跳过 / 1 xfailed / 0 失败`（1572 collected，addopts deselect 9）**，依据项目 SSOT `docs/METRICS_CURRENT.md:79-81` 明文裁定："测试数不在上表……其真值以 CI 全量回归为准（见 AGENTS.md）。标注来源时点：1524 通过 / 38 跳过 / 1 xfail / 0 失败（2026-10-17 CI run 38938041036，head dc18dd2；**并于 HEAD `46b41b5` 由 run `38942815598` 同源复证同值**，376.46s，success）；旧 1389/38/1（2026-10-09 run 37917008258）已作废。"
+**权威对外口径 = CI 全量回归 `1654 通过 / 38 跳过 / 1 xfailed / 0 失败`（约 1702 collected，addopts deselect 9）**，依据项目 SSOT `docs/METRICS_CURRENT.md:79-81` 明文裁定："测试数不在上表……其真值以 CI 全量回归为准（见 AGENTS.md）。标注来源时点：1654 通过 / 38 跳过 / 1 xfail / 0 失败（**2026-10-18 CI run 39101268904，head 3bae4b9**，412.70s，success；1524→1654 增量 = 教师端三方向新测试。前一权威 1524/38/1 为 2026-10-17 run 38938041036，已随本次作废；更早 1389/38/1（2026-10-09 run 37917008258）亦作废。）"
 
 三层校准（同代码库、不同平台剖面，非矛盾）：
 | 数字 | 性质 | 地位 |
 |---|---|---|
 | 1178/208/3（10-06 Windows） | 本机 Windows 剖面 | ❌ 已被 SSOT 订正为「标记剖面错位，非当前真值」 |
-| 1543 collected（docs/TEST_TRUTH.md / 本机 Windows 重跑） | 可独立复现的 collect 总数 | ⚠️ 1543 total 可复现（1325+208+1+9）；但 passed 随平台而异（Windows 1325 / CI 1524），**不能硬编码为 passed** |
-| **1524/38/1（CI run 38938041036）** | CI/Linux 全量回归 | ✅ **SSOT 指定对外权威口径** |
+| 1543 collected（docs/TEST_TRUTH.md / 本机 Windows 重跑） | 可独立复现的 collect 总数 | ⚠️ 1543 total 可复现（1325+208+1+9）；但 passed 随平台而异（Windows 1325 / CI 1524→1654），**不能硬编码为 passed** |
+| ~~1524/38/1（CI run 38938041036，2026-10-17）~~ | CI/Linux 全量回归 | ⬇️ 已被 2026-10-18 新权威取代 |
+| **1654/38/1（CI run 39101268904，head 3bae4b9）** | CI/Linux 全量回归 | ✅ **SSOT 指定对外权威口径** |
 
 - **本机 Windows 实测**（career-literacy @ de86da4，2026-10-16 重跑）：**1325 通过 / 208 跳过 / 1 xfailed / 0 失败 / 0 错误 / 9 未选中**；collect **1543**（=1325+208+1+9），默认集执行 **1534**（=1543−9 未选中，**≠ 通过**）。
-- **CI/Linux 默认档**（2026-10-17 run `38938041036`）：**1524 通过 / 38 跳过 / 1 xfailed**（1572 collected，9 deselected；隔离档 `--noconftest` 另 36 passed）。平台剖面差异（`segv_env` / `isolation` / win32-only 标记集）见 pyproject addopts。
+- **CI/Linux 默认档**（2026-10-18 run `39101268904`，head `3bae4b9`）：**1654 通过 / 38 跳过 / 1 xfailed**（约 1702 collected，9 deselected；1524→1654 增量 = 教师端三方向新测试）。前一权威（2026-10-17 run `38938041036`：1524/38/1，1572 collected；隔离档 `--noconftest` 另 36 passed）已作废。平台剖面差异（`segv_env` / `isolation` / win32-only 标记集）见 pyproject addopts。
 - **覆盖率**：本机 fresh 实测 **57.19%**（22587 stmt / 9670 missed），`--cov-fail-under=50` 过线（余量 7.19pp）。AGENTS.md:29 旧写 53.31% 已过时，应同步为 57.19%。
 - 历史快照（1178/208/3、923/221、1139/0、1177/227 等）已陈旧，**仅作 git 历史记录，不可作权威对外口径**。
 
@@ -27,7 +28,7 @@
 ## 3. 各模块权威真值来源
 | 模块 | 权威真值来源 | 负责人 |
 |---|---|---|
-| 测试计数 | **CI 全量回归 1524 通过/38 跳过/1 xfail/0 失败（run 38938041036，2026-10-17）**，SSOT METRICS_CURRENT.md:79-81 | qa-2 / SSOT |
+| 测试计数 | **CI 全量回归 1654 通过/38 跳过/1 xfail/0 失败（run 39101268904，2026-10-18）**，SSOT METRICS_CURRENT.md:79-81 | qa-2 / SSOT |
 | 覆盖率 | 57.19%（-cov-fail-under=50 过线） | qa-2 |
 | 工程规模（API/views 等） | verify_metrics.py --update 机检 | qa-2 |
 | OpenAPI 端点 | verify_openapi_snapshot.py（237 paths / 255 ops，机器门禁） | engineer-8 |
