@@ -516,6 +516,27 @@ class VectorDB:
         self._mem_store: Optional[InMemoryVectorStore] = None
         self._embedding_fallback_count = 0  # E5 嵌入失败（如 sentence-transformers 缺失）走零向量兜底的次数
 
+    @property
+    def embedding_fallback_count(self) -> int:
+        """E5 失败走零向量占位的累计文档数（只读）。
+
+        2026-10-18 修复：D5 设计（``deliverables/engineering-assurance/
+        D5-status-degradation-explicit-2026-09-23.md`` §2.1）明确要求「新增只读属性
+        ``embedding_fallback_count``」，但落地时只写了私有字段
+        ``_embedding_fallback_count`` —— 而 ``app/status.py`` 按**公开名**
+        ``getattr(vector_db, "embedding_fallback_count", 0)`` 读取，默认值 0 于是
+        恒生效：``/api/status`` 的 ``fallback_zero_docs`` 永远报 0，
+        「embedding 降级」判定（``embedding_fallback > 0``）形同虚设 ——
+        按本文件下方的降级判定逻辑，瘦包（无 E5、2245 条种子全零向量、其余组件无降级）
+        因此仍会报 ``status:"ok"``。
+
+        本属性落地后该缺口关闭。守护测试：
+        ``tests/test_app_status_invariants.py`` 的
+        ``test_status_probe_reads_real_vector_db_attrs``（契约：status.py 读的名字必须真实存在）
+        与 ``test_embedding_fallback_counter_reaches_status_probe``（行为：计数→探针端到端）。
+        """
+        return self._embedding_fallback_count
+
     # ── 公共接口 ──
 
     def connect(self) -> bool:
@@ -849,6 +870,10 @@ class VectorDB:
                 emb = precomputed_embeddings[i] if precomputed_embeddings[i] is not None else [0.0] * dim
                 if precomputed_embeddings[i] is None:
                     meta["embedding_status"] = "fallback_zero"
+                    # D5 §2.1 要求「两处 fallback_zero 赋值点各 +1」；此处曾在 2026-09-23
+                    # 落地时漏掉，导致「批量里部分 embedding 为 None」的文档只打标不计数，
+                    # fallback_zero_docs 少报。2026-10-18 补齐。
+                    self._embedding_fallback_count += 1
             else:
                 # P1-2: 零向量占位而非随机向量
                 emb = [0.0] * dim
