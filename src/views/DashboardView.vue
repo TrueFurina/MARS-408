@@ -96,7 +96,10 @@ const subjectEntries = computed(() => {
 
 // 学科掌握度：以最近学习记录的得分均值作为真实掌握度代理；无数据时优雅降级
 // 学科配色：收敛到权威映射（2026-10-18 P3），不再组件内定义第四套词表
-const subjectColorMap = SUBJECT_COLOR_TOKENS
+// 宽进严出：sessions 的 subject 是任意字符串（可能含中文名/短键），查不到就走兜底色。
+// 显式放宽为 Record<string, string>，否则 Record<SubjectKey, string> 被 string 索引
+// 会触发 TS7053（vue-tsc 严格档，本地 pre-commit 不跑 type-check，故此前漏到 CI）。
+const subjectColorMap: Record<string, string> = SUBJECT_COLOR_TOKENS
 const subjectMastery = computed(() => {
   const entries = subjectEntries.value
   const acc: Record<string, { sum: number; n: number }> = {}
