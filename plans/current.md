@@ -260,3 +260,8 @@
 - [x] **解冻令分类执行** —— 活文档层已清（`6a5c9d0`）；deliverables//submission/ 保持历史原样；docs/ 双分支治理事实保留。
 - [x] **P0-D 残余核查** —— README 已统一 49 views（2026-10-18 复核），build_roadshow_pptx.py 的旧数字均在"禁用守护清单"内，无残留。
 - [x] **P1-C 班级级导出** —— 已由功能拓展 Batch 2（`edf7e92`）闭环：看板 CSV + F7 一页纸（自包含 HTML→浏览器另存 PDF），前端已接线（TeacherCareerView:496-499）。
+- [x] **P1-E 系统理解遗留 3 风险** —— 2026-10-18 复核全部闭环：① gomarl_bridge 零引用已归档、
+      ② _build_networks 公开别名已解私有耦合（均为 `e4fa014`，2026-10-15）；
+      ③ "models 缺失致 CI 降级"风险实为已消解——conftest 以 `fake_embedder`+`isolate_vectordb`
+      全隔离（无任何测试依赖真实 E5 质量，不存在"降级假绿"面），且降级状态诚实性已由
+      `test_app_status_invariants` 机器锁（2026-10-18 `fallback_zero_docs` 真值修复 + 双不变量）。
