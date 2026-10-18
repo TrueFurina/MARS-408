@@ -52,23 +52,36 @@ describe('tab 类切换按钮必须带状态类 aria', () => {
     expect(files.length).toBeGreaterThan(20)
   })
 
-  it('class 含 tab 的 button 均有 aria-pressed/selected/current/expanded', () => {
+  it('互斥选中控件（@click + :class 单条件 active）均有状态类 aria', () => {
+    // 判据从「class 含 tab」推广到「有 @click 且 :class 单条件绑定 active/is-active」，
+    // 覆盖 tab 类 23 处（ca19add）+ 一般互斥选中 26 处（faae3f5）。
+    // 仍刻意不覆盖：nav 普通跳转（仅当前项才该用 aria-current）、
+    // 多条件 :class（COND 提取不完整，脚本亦保守跳过）、无 @click 的纯展示高亮。
+    // 注意 1：ACTIVE 不能用 /g —— 带 /g 的 test() 会记住 lastIndex，
+    // 循环里复用时后续调用恒返回 false（曾导致判据失效、扫到 0 个）。
+    // 注意 2：total 统计**所有**互斥选中控件（含已带 aria 的）；
+    // 若只统计缺 aria 的，修完一处少一处，全部修完后计数归零、断言误报失效。
+    const ACTIVE = /:class="\{\s*(?:'is-active'|active)\s*:\s*([^{}]+?)\s*\}"/
+    const CLASS_OBJ = /:class="\{([^}]*)\}"/
     const offenders: string[] = []
-    let checked = 0
+    let total = 0
     for (const f of files) {
       const src = stripStyles(readFileSync(f, 'utf-8'))
       for (const m of src.matchAll(TAB_BUTTON)) {
         const tag = m[0]
-        if (!/class="[^"]*\btab\b[^"]*"/.test(tag)) continue
-        checked += 1
-        if (!STATE_ARIA.test(tag)) {
-          const ln = src.slice(0, m.index).split('\n').length
-          offenders.push(`${relative(process.cwd(), f)}:${ln} → ${tag.trim().slice(0, 90)}`)
-        }
+        if (!tag.includes('@click')) continue
+        if (!ACTIVE.test(tag)) continue
+        total += 1
+        if (STATE_ARIA.test(tag)) continue
+        const cm = CLASS_OBJ.exec(tag)
+        // 多条件 :class 保守跳过（COND 提取会不完整）
+        if (cm && (cm[1]!.match(/['a-zA-Z_-]+\s*:/g) ?? []).length > 1) continue
+        const ln = src.slice(0, m.index).split('\n').length
+        offenders.push(`${relative(process.cwd(), f)}:${ln} → ${tag.trim().slice(0, 90)}`)
       }
     }
-    expect(checked, '应至少扫到若干 tab 按钮，否则判据失效').toBeGreaterThan(15)
-    expect(offenders, '以下 tab 按钮缺状态 aria，读屏无法得知当前选中档').toEqual([])
+    expect(total, '应至少扫到 40 个互斥选中控件，否则判据失效').toBeGreaterThan(40)
+    expect(offenders, '以下互斥选中控件缺状态 aria，读屏无法得知当前选中项').toEqual([])
   })
 
   it('aria-selected 的条件与 :class 的 active 条件一致（不是硬编码 false）', () => {
