@@ -429,7 +429,9 @@ async def reassess_session(session_id: str) -> dict:
     )
     new_evidence_chain = _build_evidence_chain(state, new_assessment)
 
-    old_record = store.get_assessment_by_session(session_id) or {}
+    # 重评前的全部历史评估（正序）：list_assessments_by_session 让「旧分可查」落地
+    history = store.list_assessments_by_session(session_id)
+    old_record = history[-1] if history else {}
     old_assessment = old_record.get("dimension_scores") or {}
 
     # 追加新评估（不覆盖旧分）；improvement 沿用旧记录（提升路径不因 rubric 变化而失效）
@@ -450,6 +452,7 @@ async def reassess_session(session_id: str) -> dict:
         "rubric_version_before": old_version,
         "rubric_version_after": current_version,
         "previous_overall": _overall_of(old_assessment),
+        "history_overalls": [_overall_of(r.get("dimension_scores")) for r in history],
         "new_overall": new_assessment.get("overall"),
         "assessment": new_assessment,
         "evidence_chain": new_evidence_chain,
