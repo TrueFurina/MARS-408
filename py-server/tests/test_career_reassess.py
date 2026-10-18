@@ -84,7 +84,8 @@ def reassess_env(monkeypatch):
     """构造可离线重评的替身环境：store 与 nodes 全部 monkeypatch。"""
     calls = {}
     monkeypatch.setattr("db.career_store.get_session_state", lambda sid: _FINISHED_STATE)
-    monkeypatch.setattr("db.career_store.get_assessment_by_session", lambda sid: {"dimension_scores": _OLD_ASSESSMENT, "improvement_plan": {}})
+    monkeypatch.setattr("db.career_store.list_assessments_by_session",
+                        lambda sid: [{"dimension_scores": _OLD_ASSESSMENT, "improvement_plan": {}}])
     monkeypatch.setattr("db.career_store.save_session_state", lambda state, **kw: calls.setdefault("saved_state", []).append(dict(state)))
     monkeypatch.setattr("agents.career_nodes.get_scenario", lambda sid: _NEW_SEED)
     _assess_stub.called_script = None
@@ -130,6 +131,7 @@ def test_reassess_uses_current_rubric_and_keeps_old_score(reassess_env):
     assert result["rubric_version_before"] == "1.0"
     assert result["rubric_version_after"] == "1.1"
     assert result["previous_overall"] == 3.0
+    assert result["history_overalls"] == [3.0]   # 重评前的历史各次 overall
     assert result["new_overall"] == 5.0
     assert result["reassessed"] is True
 
