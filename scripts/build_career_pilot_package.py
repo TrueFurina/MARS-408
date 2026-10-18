@@ -23,7 +23,49 @@
    （见 ``PRESERVE_TOP_NAMES``）——前端与后端同根，使 ``STATIC_DIR=site`` 相对包根
    恒定解析，**入口不依赖外部 CWD**（发布时 ``directory`` 即包根）。
 
-退出码：0=成功（或 --check 一致）；1=--check 发现漂移；2=环境错误（源目录缺失）。
+能力边界：本包**定型为 career-only**（2026-10-16 确认，勿再塞回 408 检索能力）
+--------------------------------------------------------------------------
+本包只承载**职业素养对抗实训**闭环，**刻意不含**向量库与 E5 嵌入模型：
+
+- **不含向量库产物**：``backend/vectordb_data/`` 下只允许运行时自建的 ``import_jobs/``
+  （``py-server/services/import_worker.py:140`` 处 ``JOURNAL_DIR.mkdir(parents=True,
+  exist_ok=True)`` 自行创建，无需预置）。``netlearn_kb.json`` / ``*.emb.npy`` /
+  ``e5_embed_cache.npz`` 等向量产物**一律不得出现**，由
+  :func:`_vectordb_offenders` 在 ``--check`` 中 **fail-closed 断言**（见
+  :data:`VECTORDB_ALLOWED_ENTRIES`）。原先随包的 51MB 预计算向量库已移到仓库内未跟踪目录
+  ``_removed_redundant_e5v2_20261015/``（不随包、不入库）。
+- **不含 E5 模型**：嵌入模型为 ``intfloat/multilingual-e5-base``（768 维，约 1.1GB，
+  见 ``py-server/db/embedder.py:5``），加载依赖 ``sentence-transformers``
+  （``py-server/db/embedder.py:167``），而瘦版 ``requirements.txt`` 明确剔除该依赖
+  ⇒ **拿不到真实向量**：调用方捕获时回落零向量占位（启动种子即如此，实测日志
+  ``E5 嵌入失败(No module named 'sentence_transformers')，使用零向量占位并标记
+  fallback_zero``，2245 条种子全部零向量），未捕获处直接抛错；**不会**给出看似正常的检索结果。
+
+⇒ **后果（如实声明，不掩饰）**：芒得很职 408 考研侧的**检索 / 画像类能力在本包内不可用**
+（无嵌入模型、向量全为零向量占位）；``/api/status`` 里 ``embedding.loaded=false``
+（``py-server/app/status.py:57-58``）如实反映这一点。
+⇒ **career 闭环不受影响**，因为该链路**本就不做 KB/向量检索**：
+  · ``py-server/api/career_training.py:267`` ——「本实训链路无 KB/向量库检索」
+  · ``py-server/api/career_training.py:419`` ——「未做任何 KB/向量库检索……未伪造任何
+    chunk 引用」
+  · 评估取自情景种子的静态 BARS 评分量表（``source_type=rule``），不依赖检索质量。
+
+✅ **健康探针现已如实计数（2026-10-18 修复，此前是已记录缺陷）**：``/api/status`` 的
+``fallback_zero_docs`` 会真实报出零向量占位文档数。修复前该字段**恒为 0**——
+``py-server/app/status.py:59`` 读公开名 ``vector_db.embedding_fallback_count``，而
+``py-server/db/milvus_client.py:517`` 只有私有字段 ``_embedding_fallback_count``
+（D5 §2.1 设计的只读属性漏做了），``getattr`` 默认值 0 恒生效，于是「embedding 降级」
+判定形同虚设、``status:"ok"`` 会掩盖「全部文档都是零向量」的事实。
+修复后瘦包启动可见 ``fallback_zero_docs=2245`` 且 ``status:"degraded"``（原因：
+``embedding: 2245 个文档因 E5 失败使用零向量占位，检索质量下降``）——这是**如实上报**，
+不是回归：瘦包本就未随附 E5，KB 检索确实不可用。守护见
+``tests/test_app_status_invariants.py`` 的两条新不变量。
+
+这条边界三处口径一致：本 docstring、随包 ``backend/README.md``
+（:func:`_overlay_files` 自持生成，``--check`` 字节校验）、仓库根 ``README.md``
+「发布包能力边界」小节。
+
+退出码：0=成功（或 --check 一致）；1=--check 发现漂移或能力边界被破坏；2=环境错误（源目录缺失）。
 """
 from __future__ import annotations
 
@@ -76,7 +118,21 @@ EXCLUDE_FILE_NAMES = {
 # 目标包内**由其它流程产出、不属于本脚本同步范围**的顶层条目，清理陈旧文件时必须保留。
 # ``site`` = 前端 SPA 产物（由 vite.deploy.config.ts 直接产出到 backend/site），
 # 与后端同根 → 使入口对 CWD 无关（STATIC_DIR=site 相对包根，恒定解析正确）。
-PRESERVE_TOP_NAMES = {"site"}
+# ``vectordb_data`` = **运行时**数据目录（import journal / 单写者锁 / 可能的嵌入缓存），
+# 源码树同名目录整体被 EXCLUDE_DIR_PREFIXES 剪掉、不参与同步；它由运行中的服务自己写，
+# 故不得被清理逻辑误删。「career-only 定型」要求它**不含向量库产物**，这条不变量由
+# --check 的 :func:`_vectordb_offenders` fail-closed 断言保证（build 不做静默删删）。
+PRESERVE_TOP_NAMES = {"site", "vectordb_data"}
+
+# ── career-only 定型：backend/vectordb_data 的白名单与向量库产物特征 ──────────
+# 只允许 import_worker 的 journal 目录（运行时自建，见 services/import_worker.py:140）。
+VECTORDB_ALLOWED_ENTRIES = {"import_jobs"}
+# 出现在 import_jobs/ **内部**也要拒收的向量库/模型产物特征（防把大文件挪进白名单目录规避）。
+VECTORDB_FORBIDDEN_SUFFIXES = (
+    ".npy", ".npz", ".index", ".db", ".sqlite", ".sqlite3",
+    ".safetensors", ".pt", ".pth", ".h5", ".bin", ".pkl", ".faiss",
+)
+VECTORDB_FORBIDDEN_NAMES = {"netlearn_kb.json", "e5_embed_cache.npz", ".import_writer.lock"}
 
 # ── 瘦版运行依赖（相对 py-server 全量删除了 torch 系 / 向量库 / 关系库客户端）──
 THIN_REQUIREMENTS = """\
@@ -132,6 +188,89 @@ AUTH_SECRET=REPLACE_WITH_RANDOM_SECRET_AT_LEAST_32_CHARS
 # 管理员口令（>=16 字符）；固定后 admin 账号跨重启确定。
 ADMIN_PASSWORD=REPLACE_WITH_RANDOM_ADMIN_PASSWORD_AT_LEAST_16
 DEEPSEEK_API_KEY=REPLACE_WITH_REAL_DEEPSEEK_API_KEY
+"""
+
+# ── 随包 README（脚本自持生成；--check 会做字节校验，防止口径漂移）────────────
+# 发布通道只上传本目录，评审/运维在目录里第一眼看到的就是这份文件，因此能力边界
+# 必须写在包内，而不是只留在仓库根 README 里。
+PACKAGE_README = """\
+# 芒得很职 · 职业素养对抗实训 试点包（career-pilot）
+
+单端口 Python 服务：前端 SPA（``site/``）与后端（``main.py``）**同根同源**，
+对外只有一个端口，``STATIC_DIR=site`` 相对包根解析，**启动不依赖外部 CWD**。
+
+## 1. 能力边界（career-only 定型，先读这一节）
+
+本包**只承载职业素养对抗实训闭环**，**刻意不含向量库与 E5 嵌入模型**：
+
+| 能力 | 本包内是否可用 | 依据 |
+| --- | --- | --- |
+| 职业素养对抗实训（情景对话 / 六维 ECD 评估 / 证据链回放） | ✅ 可用 | 规则+评分驱动，不依赖检索 |
+| 408 考研侧**检索 / 画像**类能力 | ❌ **不可用** | 向量库已裁空、无 E5 模型 |
+| LLM 对话生成（DeepSeek） | ✅ 可用（需 ``DEEPSEEK_API_KEY``） | ``LLM_PROVIDER=deepseek`` |
+
+- **为什么 408 检索不可用**：向量库产物未随包分发（``vectordb_data/`` 只允许运行时自建的
+  ``import_jobs/``），嵌入模型 ``intfloat/multilingual-e5-base``（``py-server/db/embedder.py:5``）
+  及其依赖 ``sentence-transformers``（``py-server/db/embedder.py:167``）也不在
+  ``requirements.txt`` 中 ⇒ **拿不到真实向量**：启动时 2245 条内置种子全部按零向量占位写入
+  （实测日志 ``E5 嵌入失败(No module named 'sentence_transformers')，使用零向量占位并标记
+  fallback_zero``），未捕获处直接抛错，**不会**给出看似正常的检索结果。
+- **为什么 career 闭环不受影响**：该链路**本就不做 KB/向量检索**
+  （``py-server/api/career_training.py:267``「本实训链路无 KB/向量库检索」、
+  ``:419``「未做任何 KB/向量库检索……未伪造任何 chunk 引用」）；评估取自情景种子的静态
+  BARS 评分量表（``source_type=rule``）。
+- **健康探针如实上报**：``GET /api/status`` 中 ``embedding_loaded`` 为 ``false``
+  （``py-server/app/status.py:57-58``）——未配置即不要求，不存在「假装可用」。
+- ✅ **健康探针如实计数（2026-10-18 修复）**：探针的 ``fallback_zero_docs`` 会真实报出
+  零向量占位文档数（修复前因公开/私有属性名不一致恒为 0，属已修复缺陷）。瘦包启动后该项
+  为 2245，且 ``status`` 为 ``degraded``（``embedding: 2245 个文档因 E5 失败使用零向量
+  占位，检索质量下降``）——如实反映「KB 检索在瘦包内不可用」，而非假装健康。
+
+## 2. 安装与启动
+
+```bash
+python -m pip install -r requirements.txt     # installCmd
+python main.py                                # startCmd（读取 PORT/HOST，默认 127.0.0.1:8002）
+```
+
+- ``PORT`` 设置后监听 ``0.0.0.0``（公网托管需要）；``HOST`` 可显式覆盖。
+- 单 worker 不可改：``vectordb_data/.import_writer.lock`` 单写者锁强制 ``workers=1``。
+- 首次启动约需数十秒（无模型加载，主要是依赖导入与种子写入）。
+
+## 3. 生产姿态必需的环境变量（无环境变量注入项，只能随 .env）
+
+| 变量 | 要求 | 缺失后果 |
+| --- | --- | --- |
+| ``NETLEARN_ENV`` | ``production`` | dev 下不校验密钥强度 |
+| ``AUTH_SECRET`` | ≥32 位随机串 | 启动即 fail-fast（token 不安全） |
+| ``ADMIN_PASSWORD`` | ≥16 位 | 启动即 fail-fast（拒绝默认口令） |
+| ``RATE_LIMIT_ALLOW_LOCAL_FALLBACK`` | **必须 =1** | 无 Redis 且为 production ⇒ 限流 fail-closed，**第 1 次登录即 422** |
+| ``STATIC_DIR`` | ``site`` | 前端 404 / 白屏 |
+| ``DEEPSEEK_API_KEY`` | 真实密钥 | LLM 能力不可用（career 规则链路仍可用） |
+
+> ``RATE_LIMIT_ALLOW_LOCAL_FALLBACK=1`` 是**显式降级开关**（默认关闭）：它把「Redis 不可用」
+> 从 fail-closed 拒绝改为**进程内滑动窗口限流**——**仍然强制限额，不是放行**。本部署被单写者锁
+> 约束为 ``workers=1``，进程内计数即全局计数，与 Redis 限流功能等价；改为多 worker 必须换回
+> Redis 等共享存储。
+
+## 4. 冒烟验收（本机实测通过）
+
+```bash
+curl -s http://127.0.0.1:8002/api/status          # 200 {"status":"ok", ...}
+curl -s http://127.0.0.1:8002/ | grep -o '<div id="app">'   # 200 SPA 挂载
+curl -s http://127.0.0.1:8002/career/scenarios    # 401（未带 token，鉴权生效）
+```
+
+## 5. 复现方式
+
+本目录由仓库根脚本生成/校验，**请勿手工编辑**：
+
+```bash
+python scripts/build_career_pilot_package.py          # 生成 / 刷新
+python scripts/build_career_pilot_package.py --check   # 校验一致性与能力边界（fail-closed）
+```
+
+口径与仓库根 ``README.md``「发布包能力边界」小节一致。
 """
 
 
@@ -231,6 +370,8 @@ def _overlay_files() -> dict[pathlib.PurePosixPath, bytes]:
         pathlib.PurePosixPath("requirements.txt"): THIN_REQUIREMENTS.encode("utf-8"),
         pathlib.PurePosixPath(".env.example"): ENV_TEMPLATE.encode("utf-8"),
         pathlib.PurePosixPath("config.json"): _sandbox_config_bytes(),
+        # 随包能力边界说明：发布通道只上传本目录，边界必须写在包内（见 PACKAGE_README 注释）。
+        pathlib.PurePosixPath("README.md"): PACKAGE_README.encode("utf-8"),
         # 解释器选择：pin 到 pyenv 已装版本，**不要**写 "system"（沙箱系统 Python 是
         # Debian externally-managed 环境，pip 装任何包都被 PEP 668 拒：exit 1），
         # 也不要沿用源码树的 3.12（实测沙箱 pyenv 未装）。
@@ -238,6 +379,41 @@ def _overlay_files() -> dict[pathlib.PurePosixPath, bytes]:
         pathlib.PurePosixPath(".python-version"): b"3.11\n",
     }
     return out
+
+
+def _vectordb_offenders() -> list[str]:
+    """列出 ``backend/vectordb_data/`` 下**违反 career-only 定型**的条目。
+
+    career-only 定型要求该目录下**只允许** ``import_jobs/``（import_worker 运行时自建的
+    journal 目录，见 ``py-server/services/import_worker.py:140``）。任何向量库产物
+    （``netlearn_kb.json`` / ``*.emb.npy`` / ``e5_embed_cache.npz`` / Milvus lite 数据等）
+    都意味着「408 检索能力被塞回包内」或「裁空状态被破坏」，与定型冲突。
+
+    白名单目录**内部**再按 :data:`VECTORDB_FORBIDDEN_SUFFIXES` /
+    :data:`VECTORDB_FORBIDDEN_NAMES` 扫一遍，防止把大文件挪进 ``import_jobs/`` 规避断言
+    （journal 本身是 ``<job_id>.json``，不会被误伤）。
+
+    目录不存在 → 返回空列表（已裁空，合法）。
+    """
+    root = DST / "vectordb_data"
+    if not root.is_dir():
+        return []
+    offenders: list[str] = []
+    for dirpath, dirnames, filenames in os.walk(root):
+        rel_dir = pathlib.Path(dirpath).relative_to(root)
+        top = rel_dir.parts[0] if rel_dir.parts else None
+        if top is not None and top not in VECTORDB_ALLOWED_ENTRIES:
+            # 白名单外的整棵子树：只报顶层目录并剪枝，避免一条断言刷屏上百行
+            offenders.append(f"目录: vectordb_data/{top}")
+            dirnames[:] = []
+            continue
+        for f in sorted(filenames):
+            rel_file = pathlib.PurePosixPath((rel_dir / f).as_posix())
+            if rel_file.name in VECTORDB_FORBIDDEN_NAMES or any(
+                rel_file.name.endswith(s) for s in VECTORDB_FORBIDDEN_SUFFIXES
+            ):
+                offenders.append(f"文件: vectordb_data/{rel_file.as_posix()}")
+    return sorted(set(offenders))
 
 
 def build() -> int:
@@ -300,6 +476,17 @@ def build() -> int:
             except OSError:
                 pass  # 保留名 / 占用中 → 跳过（不影响可运行性）
 
+    # career-only 定型提示：build 不静默删除运行时数据，但发现向量库产物必须**显式警告**
+    # （fail-closed 断言在 --check；此处只是把问题摆到台面上，避免「刷新一下就洗白」的错觉）
+    offenders = _vectordb_offenders()
+    if offenders:
+        print(
+            f"[build_career_pilot_package] ⚠️ backend/vectordb_data 检出 {len(offenders)} "
+            f"处违反 career-only 定型的条目（--check 将 fail-closed 退出 1）："
+        )
+        for o in offenders[:10]:
+            print(f"    - {o}")
+
     print(
         f"[build_career_pilot_package] ✅ 已刷新 {DST}\n"
         f"    复制/更新 {copied} · 未变 {unchanged} · 清理陈旧 {removed} · 目标文件合计 {len(expected)}"
@@ -308,7 +495,18 @@ def build() -> int:
 
 
 def check() -> int:
-    """校验目标瘦包与源树一致（对每份应拷贝文件做字节比对）。"""
+    """校验目标瘦包与源树一致（对每份应拷贝文件做字节比对）。
+
+    校验三件事，任一不过即 exit 1：
+    1. 源树应拷贝文件与包内**字节一致**（无漂移）；
+    2. 脚本自产文件（requirements.txt / .env.example / config.json / README.md）与包内
+       **字节一致**——此前只比对拷贝文件，自产文件被手工改过查不出来；
+    3. **career-only 能力边界未被破坏**：``backend/vectordb_data/`` 下不得出现向量库产物
+       （见 :func:`_vectordb_offenders`）。
+
+    ``.env`` **不参与**本校验：它含真实密钥，且是否注入由发布流程决定；比对它的内容
+    等于把密钥写进 CI 日志。
+    """
     if not SRC.is_dir():
         print(f"[build_career_pilot_package] ❌ 源目录不存在：{SRC}", file=sys.stderr)
         return 2
@@ -319,13 +517,42 @@ def check() -> int:
             drift.append(f"缺失: {rel}")
         elif src_file.read_bytes() != dst_file.read_bytes():
             drift.append(f"内容不一致: {rel}")
-    if drift:
-        print(f"[build_career_pilot_package] ❌ 瘦包与 py-server 漂移 {len(drift)} 处：")
-        for d in drift[:20]:
-            print(f"    - {d}")
-        print("    请跑 `python scripts/build_career_pilot_package.py` 刷新。")
+    for rel, data in _overlay_files().items():
+        dst_file = _dst_for(rel)
+        if not dst_file.is_file():
+            drift.append(f"缺失: {rel}（脚本自产文件）")
+        elif dst_file.read_bytes() != data:
+            drift.append(f"内容不一致: {rel}（脚本自产文件）")
+    offenders = _vectordb_offenders()
+
+    if drift or offenders:
+        if drift:
+            print(f"[build_career_pilot_package] ❌ 瘦包与 py-server 漂移 {len(drift)} 处：")
+            for d in drift[:20]:
+                print(f"    - {d}")
+            print("    请跑 `python scripts/build_career_pilot_package.py` 刷新。")
+        if offenders:
+            print(
+                f"[build_career_pilot_package] ❌ career-only 定型被破坏："
+                f"backend/vectordb_data 检出 {len(offenders)} 处向量库产物/越权条目。"
+            )
+            for o in offenders[:20]:
+                print(f"    - {o}")
+            print(
+                "    本包为 career-only：只允许 import_jobs/（运行时自建 journal 目录）。\n"
+                "    如需恢复 408 检索能力，请改回全量包，不要往瘦包里塞向量库产物。"
+            )
         return 1
-    print("[build_career_pilot_package] ✅ 瘦包与 py-server 源码一致（无漂移）")
+
+    vdb_note = (
+        "vectordb_data 不存在（已裁空）"
+        if not (DST / "vectordb_data").is_dir()
+        else "vectordb_data 仅含 import_jobs/（career-only 定型）"
+    )
+    print(
+        "[build_career_pilot_package] ✅ 瘦包与 py-server 源码一致（无漂移）；"
+        f"{vdb_note}"
+    )
     return 0
 
 

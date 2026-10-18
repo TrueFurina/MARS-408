@@ -259,7 +259,7 @@ npm install && npm run dev                   # :5173，代理 /api → 8002
 |------|------|
 | 前端 | Vue 3 + TypeScript · 49 个 views（88 个 .vue） · Vite 构建 |
 | 后端 | FastAPI + LangGraph · 约 254 个 API 端点（openapi.json 实测 `/api` 子集 236 路径 / 254 操作）· 11 Agent 节点 |
-| 代码量 | 后端 363 个 Python 文件 / 约 8.6 万行 · 前端 150 文件（88 .vue + 62 .ts）/ 约 5.5 万行 |
+| 代码量 | 后端 369 个 Python 文件 / 约 8.8 万行 · 前端 158 文件（88 .vue + 70 .ts）/ 约 5.6 万行 |
 | 测试 | 1524 项测试通过 / 38 跳过 / 1 xfail（CI 默认档，全量回归 0 失败） |
 | LLM | DeepSeek（主）+ 讯飞星火 X2（兜底）双通道自动容灾 |
 | 检索 | 向量检索主路径 · 约 2245 条条目 · E5 已本地化启用（768 维） |
@@ -283,6 +283,28 @@ npm install && npm run dev                   # :5173，代理 /api → 8002
 本项目为真实可运行的代码工程（Vue 3 + TypeScript 前端 / FastAPI + LangGraph 后端），代码仓库可直接打开、构建并运行。
 
 关键模块清单：`py-server/agents/graph.py`（多智能体流水线）、`py-server/engines/frugal_rag.py`（检索引擎）、`py-server/engines/gomarl.py`（共识引擎）、`py-server/agents/career_nodes.py`（职业素养对抗实训节点）、`src/`（前端页面）。
+
+---
+
+## 十一、发布包能力边界（`deploy/career-pilot`，career-only 定型）
+
+> 本节描述的是**对外发布的瘦包**（`deploy/career-pilot/backend/`，单端口服务：前端 SPA 与后端同根），
+> 与仓库内全量开发树（`py-server/`）**不是同一套能力口径**，请勿混用。
+
+**定型结论：瘦包为 career-only。** 它刻意不含向量库与 E5 嵌入模型，只承载职业素养对抗实训闭环。
+
+| 能力 | 瘦包内 | 全量开发树 |
+| --- | --- | --- |
+| 职业素养对抗实训（情景对话 / 六维 ECD 评估 / 证据链回放） | 可用 | 可用 |
+| 408 考研侧检索 / 画像 | **不可用** | 可用 |
+| LLM 对话生成（DeepSeek） | 可用（需注入 `DEEPSEEK_API_KEY`） | 可用 |
+
+- **为什么 408 检索不可用**：向量库产物未随包分发（`backend/vectordb_data/` 只允许运行时自建的 `import_jobs/`）；嵌入模型 `intfloat/multilingual-e5-base`（`py-server/db/embedder.py:5`）及其依赖 `sentence-transformers`（`py-server/db/embedder.py:167`）不在瘦版 `requirements.txt` 中 ⇒ **拿不到真实向量**：启动时 2245 条内置种子全部按零向量占位写入（实测日志 `E5 嵌入失败(No module named 'sentence_transformers')，使用零向量占位并标记 fallback_zero`），未捕获处直接抛错，**不会**给出看似正常的检索结果。
+- **为什么 career 闭环不受影响**：该链路本就不做 KB/向量检索——`py-server/api/career_training.py:267`「本实训链路无 KB/向量库检索」、`py-server/api/career_training.py:419`「未做任何 KB/向量库检索……未伪造任何 chunk 引用」；评估取自情景种子的静态 BARS 评分量表（`source_type=rule`），不依赖检索质量。
+- **健康探针如实上报**：`GET /api/status` 的 `embedding_loaded` 为 `false`（`py-server/app/status.py:57-58`）——未配置即不要求，不存在「假装可用」。
+- ✅ **健康探针如实计数（2026-10-18 修复）**：`GET /api/status` 的 `fallback_zero_docs` 会真实报出零向量占位文档数（此前恒为 0——`py-server/app/status.py:59` 读公开名 `embedding_fallback_count`，而 `py-server/db/milvus_client.py:517` 只有私有字段 `_embedding_fallback_count`，`getattr` 默认值恒生效，属已修复缺陷）。瘦包启动后该项为 2245，且 `status` 为 `degraded`（原因：`embedding: 2245 个文档因 E5 失败使用零向量占位，检索质量下降`）——如实反映「KB 检索在瘦包内不可用」，而非假装健康。守护见 `tests/test_app_status_invariants.py` 的两条新不变量。
+
+**这条边界由脚本保证，不靠人记**：`python scripts/build_career_pilot_package.py --check` 会 fail-closed 校验 `backend/vectordb_data/` 下无任何向量库产物（只允许 `import_jobs/`），并字节校验随包 `README.md` 中的同一份口径；三处（脚本 docstring / 随包 README / 本节）表述一致。
 
 ---
 
