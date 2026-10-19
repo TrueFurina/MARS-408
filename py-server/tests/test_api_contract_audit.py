@@ -125,7 +125,7 @@ def _run_gate(openapi: Path, src: Path) -> subprocess.CompletedProcess:
     return subprocess.run(
         [sys.executable, str(SCRIPT), "--gate",
          "--openapi", str(openapi), "--src", str(src)],
-        capture_output=True, text=True, timeout=120)
+        capture_output=True, text=True, encoding="utf-8", timeout=120)
 
 
 def test_gate_blocks_when_frontend_calls_missing_route(tmp_path):
