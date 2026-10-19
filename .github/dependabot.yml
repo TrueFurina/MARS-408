@@ -33,8 +33,12 @@ updates:
     # PR #28 就是这样把 @wasmer/sdk 0.10.0 → 0.19.1、katex 0.16.10 → 0.19.0 带进来的，
     # 结果 type-check 炸（Wasmer.fromFile / fromRegistry 不再存在）、npm install 直接 ERESOLVE
     # （katex 撞 @sigodenjs/marked-katex-extension@1.0.0 的 peer `katex >=0.16 <0.17`）。
-    # 这里按「版本天花板」而不是按 update-types 来拦，避免同类再犯。
-    # ---------------------------------------------------------------------------
+      # 这里按「版本天花板」而不是按 update-types 来拦，避免同类再犯。
+      #
+      # typescript >=6.0.0：openapi-typescript@7.13.0（当前最新版，服务 npm run
+      # types:generate，不能删）的 peer 是 typescript ^5.x，npm ci 严格校验直接 ERESOLVE。
+      # 2026-10-19 PR #66 已实测被 CI 抓到（Frontend + Docker 两个 job 双双 fail 在 npm ci）。
+      # ---------------------------------------------------------------------------
     ignore:
       - dependency-name: "@wasmer/sdk"
         versions:
@@ -44,7 +48,7 @@ updates:
           - ">=0.17.0"
       - dependency-name: "typescript"
         versions:
-          - ">=7.0.0"
+          - ">=6.0.0"
       - dependency-name: "vue-router"
         versions:
           - ">=5.0.0"
