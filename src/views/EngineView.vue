@@ -114,8 +114,8 @@ function formatModuleName(name: string): string {
         <table class="diff-table">
           <thead>
             <tr>
-              <th class="diff-th-other">普通方案</th>
-              <th class="diff-th-ours">本平台真版</th>
+              <th class="diff-th-other">{{ cat.otherLabel ?? '普通方案' }}</th>
+              <th class="diff-th-ours">{{ cat.oursLabel ?? '本平台真版' }}</th>
               <th class="diff-th-tag"></th>
             </tr>
           </thead>
