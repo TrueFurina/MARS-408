@@ -8,10 +8,16 @@ name: P0 Regression Gate (wave-1)
 
 on:
   push:
-    branches: [main]
+    # 2026-10-19 补 career-literacy：本 workflow 是全仓唯一含 windows-latest 矩阵的地方，
+    # 而此前 push 只配 [main] ⇒ career-literacy 上的每次 push 都不跑 Windows，
+    # 平台相关 bug 只有开 PR 时才暴露（实测：audit_api_contract 的 cp936 编码崩溃
+    # 在 career-literacy 存在多日，直到 PR #80 首次以 PR 触发跑满矩阵才被抓到）。
+    # career-literacy 是国创赛主线，与 gates.yml / verify-structural.yml 的既有
+    # 分支约定保持一致。
+    branches: [main, career-literacy]
   pull_request:
-  # 手动补跑入口：本 workflow 在非 main 分支只靠 PR 触发，临时分支想单独验证
-  # P0 回归时没有别的路。2026-10-18 补。
+  # 手动补跑入口：其余临时分支只靠 PR 触发，想单独验证 P0 回归时走这里。
+  # 2026-10-18 补。
   workflow_dispatch:
   schedule:
     - cron: "0 2 * * *"   # nightly: 触发 slow 档
