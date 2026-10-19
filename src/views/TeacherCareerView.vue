@@ -22,7 +22,10 @@ interface DashStudent {
   sessions: DashSession[]
 }
 interface DashSummary {
-  student_count: number; started_count: number; finished_count: number; assessed_count: number
+  student_count: number
+  /** 名册行已绑定账号的人数（凭码加入过）——与 started_count「已开练」是两个口径 */
+  joined_count: number
+  started_count: number; finished_count: number; assessed_count: number
   completion_rate: number
   dimension_avg: Record<string, number>
   weakest_dimensions: { dimension: string; avg: number }[]
@@ -268,6 +271,9 @@ function exportDashCsv() {
   a.download = `对抗实训看板_${d.class_name}.csv`
   a.click()
   URL.revokeObjectURL(a.href)
+  // 浏览器下载不进页面、也不报错：点了没反应时教师会以为导出坏了（2026-10-20 实测
+  // 点击后 .msg 仍是上一次操作的文案）。这里给一条显式回执。
+  msg.value = `已导出 CSV：${d.class_name}（${rows.length} 行，含表头与班级均分行）`
 }
 
 /** F7：导出班级学情一页纸（后端渲染自包含 HTML，浏览器另存为 PDF；镜像学生端证据一页纸） */
@@ -293,6 +299,9 @@ async function exportClassReport() {
       a.href = url
       a.download = `班级学情报告_${dash.value?.class_name || cid}.html`
       a.click()
+      msg.value = '弹窗被浏览器拦截，已改为下载 HTML 文件（浏览器打开后可另存为 PDF）'
+    } else {
+      msg.value = '班级报告已在新标签页打开，在浏览器中「打印/另存为 PDF」即可归档'
     }
     setTimeout(() => URL.revokeObjectURL(url), 60000)
   } catch (e) {
@@ -432,6 +441,11 @@ onMounted(() => {
         <p class="hint">当前班级：{{ classes.find(c => c.class_id === activeClassId)?.class_name || '（未选）' }}</p>
         <textarea v-model="rosterText" rows="5"
                   placeholder="每行一条：&#10;01 张三&#10;02 李四&#10;（也可只写姓名）"></textarea>
+        <!-- 操作口径：学生凭码加入时按**姓名**匹配花名册行，对不上会退回「第一个未绑定行」，
+             成绩会记到名单里的另一人名下（2026-10-20 浏览器 E2E 实测：名册写「张三」、
+             学生注册名「学生2」→ 后端 matched_by=first_unbound，看板上显示成"张三已绑定"）。
+             这条风险必须在导入前说清，不能等数据错位了才发现。 -->
+        <p class="hint">姓名请与学生注册时填写的姓名完全一致：加入时按姓名匹配花名册，对不上会按名单顺序绑定，看板上的姓名会与该生本人不符。</p>
         <button :disabled="loading || !activeClassId" @click="importRoster(classes.find(c => c.class_id === activeClassId)!)">
           导入花名册
         </button>
@@ -502,7 +516,11 @@ onMounted(() => {
           <!-- 班级级聚合：直接回答"这个班整体怎么样、哪里最弱、谁要关注" -->
           <div v-if="dash.summary" class="agg">
             <div class="stats">
-              <div class="stat"><span class="k">参与</span><span class="v">{{ dash.summary.started_count }}/{{ dash.summary.student_count }}</span></div>
+              <!-- 加入 / 开练 / 完成 是三个不同口径，别合并成一个"参与"：
+                   学生凭码加入只绑定花名册，不产生会话；合并会让"已加入但未开练"
+                   显示成参与 0，教师会误判成没人来（2026-10-20 浏览器 E2E 实测）。 -->
+              <div class="stat"><span class="k">已加入</span><span class="v">{{ dash.summary.joined_count ?? 0 }}/{{ dash.summary.student_count }}</span></div>
+              <div class="stat"><span class="k">已开练</span><span class="v">{{ dash.summary.started_count }}/{{ dash.summary.student_count }}</span></div>
               <div class="stat"><span class="k">完成</span><span class="v">{{ dash.summary.finished_count }}/{{ dash.summary.student_count }}</span></div>
               <div class="stat"><span class="k">完成率</span><span class="v">{{ Math.round(dash.summary.completion_rate * 100) }}%</span></div>
               <div class="stat"><span class="k">可评估</span><span class="v">{{ dash.summary.assessed_count }}</span></div>

@@ -642,7 +642,9 @@ def class_dashboard(cid: str, teacher_id: str) -> Optional[dict]:
     """班级学情看板：每生实训完成状态 + 六维均分 + overall（聚合 career_sessions/assessments）
 
     2026-10-14 新增**班级级聚合**（服务于"报告能回答教学问题"，见 plans/teacher-loop-gap-2026-10-14.md）：
-      - ``summary``：参与/完成人数、完成率、全班各维均分、**最弱维度**
+      - ``summary``：加入/参与/完成人数、完成率、全班各维均分、**最弱维度**
+      - 人数口径三分（勿混用）：``joined_count``=名册行已绑定账号（凭码加入过）、
+        ``started_count``=有会话记录（真正开练）、``finished_count``=有已完成会话。
       - ``attention``：需关注学生清单，每条带 ``reason``（**结构性事实，可反查**）
 
     诚实约束（本函数不做主观打分）：
@@ -707,7 +709,13 @@ def class_dashboard(cid: str, teacher_id: str) -> Optional[dict]:
         })
 
     # ── 班级级聚合 ──
+    # joined / started 是两个**不同口径**，必须分开统计（2026-10-20 浏览器 E2E 实测）：
+    # 学生凭任务码 join 时只写花名册的 user_id 绑定，**不创建会话**；
+    # 只有真正开局作答才有 session。试点首日教师最想问的是"多少人进来了"，
+    # 若只给 started_count，典型场景（学生已加入但还没开练）会显示"参与 0/3"，
+    # 教师会误判成"没人来"。故单独给出 joined_count（已绑定账号的名册行）。
     total = len(students)
+    joined = [s for s in students if s["bound"]]
     started = [s for s in students if s["session_count"] > 0]
     finished = [s for s in students if s["finished_count"] > 0]
     scored = [s for s in students if s["overall_best"] is not None]
@@ -738,6 +746,7 @@ def class_dashboard(cid: str, teacher_id: str) -> Optional[dict]:
             "student_count": total, "students": students,
             "summary": {
                 "student_count": total,
+                "joined_count": len(joined),
                 "started_count": len(started),
                 "finished_count": len(finished),
                 "assessed_count": len(scored),
