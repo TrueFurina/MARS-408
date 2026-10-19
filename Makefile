@@ -4,4 +4,8 @@
 test:
 	./scripts/test.sh $(ARGS)
 
-.PHONY: test
+# doctor：一键健康自检（只读聚合；--full 追加 npm run verify 全量门禁）
+doctor:
+	node scripts/doctor.mjs
+
+.PHONY: test doctor
