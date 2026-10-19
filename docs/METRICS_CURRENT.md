@@ -81,7 +81,7 @@
 > **1524 通过 / 38 跳过 / 1 xfail / 0 失败（2026-10-17 CI run 38938041036）** → **已更新（2026-10-18）：1654 通过 / 38 跳过 / 1 xfail / 0 失败（CI run 39101268904，head 3bae4b9，Backend Test Linux 默认档；约 1702 collected，`addopts` deselect 9。1524→1654 增量 = 教师端三方向新测试。旧 1389/38/1 为 2026-10-09 run 37917008258，已作废）**。
 >
 > **认证覆盖率**同理由独立脚本产出：`py-server/scripts/verify_auth_coverage.py`
-> （当前 total=259 / protected=246 / public=13 / coverage=**94.98%** / unregistered=0）。
+> （当前 total=261 / protected=248 / public=13 / coverage=**95.02%** / unregistered=0）。
 
 ## 漂移防护
 
