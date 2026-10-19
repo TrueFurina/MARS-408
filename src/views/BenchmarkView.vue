@@ -74,7 +74,10 @@ function barY(val: number): number {
 }
 
 function barHeight(val: number): number {
-  return innerHeight * (val / yMax)
+  // 纵深防御：SVG 的 height 不接受负值（给了就在控制台报错）。
+  // 即便上游进度被钳住，将来换成会 overshoot 的缓动（easeOutBack 类）也会再犯，
+  // 所以在渲染的最后一道守住「高度 >= 0」。
+  return Math.max(0, innerHeight * (val / yMax))
 }
 
 // ── 矛盾检测对比图（SVG 水平条形图）──
@@ -91,7 +94,11 @@ function startAnimation() {
   const duration = 1200
   function tick(now: number) {
     const elapsed = now - start
-    const t = Math.min(elapsed / duration, 1)
+    // rAF 回调的 now 是「该帧起始时间」，可能早于上面刚取的 performance.now()
+    // ⇒ elapsed 为负 ⇒ t 为负 ⇒ easeOutCubic(1-(1-t)^3) 产出负值 ⇒ 柱子高度为负，
+    // 控制台成片刷 <rect> attribute height: A negative value is not valid
+    //（线上实测 /benchmark 单页 44 条）。t 必须先钳到 [0,1]。
+    const t = Math.min(Math.max(elapsed / duration, 0), 1)
     // easeOutCubic
     animProgress.value = 1 - Math.pow(1 - t, 3)
     if (t < 1) {

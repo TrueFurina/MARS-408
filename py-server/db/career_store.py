@@ -512,6 +512,43 @@ def create_class(teacher_id: str, class_name: str) -> dict:
     return {"class_id": cid, "class_name": class_name, "student_count": 0}
 
 
+def delete_empty_class(cid: str, actor_id: str, is_admin: bool = False) -> dict:
+    """删除「空班级」：仅当该班下既无学生也无任务时才允许删除。
+
+    为什么只删空班：班级一旦有学生加入或任务发布，就关联了
+    career_class_students / career_tasks 乃至实训会话与评估报告——
+    那是试点的发生型证据，删了不可再生。强行级联删除等于
+    给线上装一个"一键毁证据"的开关，风险远大于收益。
+    所以非空一律拒绝（调用方必须先自行处理），由 API 层映射为 409。
+
+    归属：默认要求 actor_id 就是建班教师（与 get_class 同口径）；
+    is_admin=True 时放行到任意班级（管理员清理用），但空班约束照旧。
+
+    返回: {"class_id", "class_name"}；不存在/无权限抛 KeyError；
+    非空抛 ValueError。
+    """
+    ensure_tables()
+    q = "?" if pg_client.is_fallback else "%s"
+    if is_admin:
+        rows = _query(f"SELECT id, class_name FROM career_classes WHERE id={q}", (cid,))
+    else:
+        rows = _query(
+            f"SELECT id, class_name FROM career_classes WHERE id={q} AND teacher_id={q}",
+            (cid, actor_id))
+    if not rows:
+        raise KeyError("班级不存在或无权操作")
+
+    stu_n = int(_query(
+        f"SELECT COUNT(*) AS n FROM career_class_students WHERE class_id={q}", (cid,))[0]["n"])
+    task_n = int(_query(
+        f"SELECT COUNT(*) AS n FROM career_tasks WHERE class_id={q}", (cid,))[0]["n"])
+    if stu_n or task_n:
+        raise ValueError(f"班级非空：学生 {stu_n} 人 / 任务 {task_n} 个，拒绝删除")
+
+    _exec(f"DELETE FROM career_classes WHERE id={q}", (cid,))
+    return {"class_id": cid, "class_name": rows[0]["class_name"]}
+
+
 def get_class(cid: str, teacher_id: str) -> Optional[dict]:
     ensure_tables()
     q = "?" if pg_client.is_fallback else "%s"

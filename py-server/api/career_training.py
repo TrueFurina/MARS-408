@@ -7,11 +7,12 @@
 import logging
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, Field
 from typing import Optional
 
 from shared.auth import get_current_user
+from shared.audit import log_event
 from services import career_service
 from db import career_store
 from agents.career_state import DIMENSIONS, DIMENSION_LABELS
@@ -552,6 +553,43 @@ async def create_class(req: ClassCreateRequest, user: dict = Depends(get_current
     except Exception as e:
         logger.exception("建班失败")
         raise HTTPException(status_code=500, detail=f"建班失败: {e}")
+
+
+# ── 删除空班级 ──
+@router.delete("/classes/{class_id}")
+async def delete_class(class_id: str, req: Request,
+                       user: dict = Depends(get_current_user)):
+    """删除「空班级」（无学生、无任务）。
+
+    存在的理由：建班是一次性动作，点错/探测留下的空班会长期挂在
+    教师视图里干扰试点；而没有删除通道时，唯一的"清理"手段就是
+    直接改线上库——那更危险。
+
+    为什么限定空班：班级带了学生或任务后，下面挂着名册、任务码、
+    实训会话与评估报告，都是发生型证据，不可再生。级联删等于线上
+    装一个毁证据开关，所以非空一律 409 拒绝，不做级联。
+
+    权限：教师只能删自己建的班；admin 可清理任意班（空班约束照旧）。
+    """
+    _require_teacher(user)
+    is_admin = user.get("role") == "admin"
+    try:
+        deleted = career_store.delete_empty_class(
+            class_id, user.get("user_id", ""), is_admin=is_admin)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="班级不存在或无权操作")
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    except Exception as e:
+        logger.exception("删除班级失败")
+        raise HTTPException(status_code=500, detail=f"删除班级失败: {e}")
+
+    ip = req.client.host if req and req.client else "unknown"
+    log_event(action="class_delete", user_id=str(user.get("user_id", "")), ip=ip,
+              result="success",
+              detail=f"class_id={class_id} name={deleted.get('class_name', '')}")
+    return {"deleted": True, "class_id": class_id,
+            "class_name": deleted.get("class_name", "")}
 
 
 # ── 我的班级列表 ──

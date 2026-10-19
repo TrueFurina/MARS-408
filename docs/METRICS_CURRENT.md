@@ -72,8 +72,8 @@
 | 后端 Python 文件数 | 378 | `git ls-files 'py-server/**/*.py'` 计数 |
 | 后端代码行数 | 89903 | git 跟踪的 `.py` 全部行数 |
 | API 路由模块数 | 42 | `git ls-files 'py-server/api/*.py'` 去 `__init__.py` |
-| API 路径数（/api） | 241 | `py-server/openapi.json` 中 `/api` 路径数 |
-| API 操作数（/api，method 级） | 259 | `py-server/openapi.json` 中 `/api` 操作数（method 级） |
+| API 路径数（/api） | 243 | `py-server/openapi.json` 中 `/api` 路径数 |
+| API 操作数（/api，method 级） | 261 | `py-server/openapi.json` 中 `/api` 操作数（method 级） |
 <!-- METRICS_TABLE_END -->
 
 > **测试数不在上表**：passed / skipped / xfail 需真正跑一遍 pytest，耗时且依赖环境，
