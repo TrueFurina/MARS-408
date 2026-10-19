@@ -39,6 +39,11 @@ _SCENARIO_PATH = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), "app_config", "career_scenarios.json"
 )
 
+# 终评（六维 ECD）专用超时：实测免费档 glm-4-flash 单次 64.2s，默认 60s 必超时
+# ⇒ 静默退回规则兜底。终评走后台异步，不受发布平台 ~60s 网关超时限制，可放宽。
+ASSESS_TIMEOUT = float(os.getenv("CAREER_ASSESS_TIMEOUT", "150"))
+IMPROVEMENT_TIMEOUT = float(os.getenv("CAREER_IMPROVEMENT_TIMEOUT", "90"))
+
 
 # ────────────────────────────────────────────────────────────
 # 通用工具
@@ -380,7 +385,13 @@ async def assess_session(script: dict, scenario_label: str, title: str, turns: l
     try:
         from db.llm_provider import LLMProvider
         llm = LLMProvider()
-        raw = await llm.text_completion(CAREER_ASSESS_SYSTEM, user, temperature=0.2, max_tokens=2000)
+        # 超时必须比默认 60s 大（2026-10-20 实测）：本调用实测 64.2s（返回仅 2461 字符，
+        # 慢在免费档生成速度而非输出长度），60s 会稳定 ReadTimeout ⇒ 静默退回规则兜底，
+        # 而页面只显示"规则评估"标签、不报错 —— 是那种最难发现的退化。
+        # 终评已后台异步（不受发布平台 ~60s 网关超时约束），故这里可以给到 150s。
+        raw = await llm.text_completion(
+            CAREER_ASSESS_SYSTEM, user, temperature=0.2, max_tokens=2000, timeout=ASSESS_TIMEOUT,
+        )
         data = extract_json(raw)
         if isinstance(data, dict) and data.get("dimensions"):
             return _normalize_assessment(data, script)
@@ -538,7 +549,9 @@ async def build_improvement_plan(assessment: dict, scenario_label: str) -> dict:
     try:
         from db.llm_provider import LLMProvider
         llm = LLMProvider()
-        raw = await llm.text_completion(IMPROVEMENT_SYSTEM, user, temperature=0.5, max_tokens=700)
+        raw = await llm.text_completion(
+            IMPROVEMENT_SYSTEM, user, temperature=0.5, max_tokens=700, timeout=IMPROVEMENT_TIMEOUT,
+        )
         data = extract_json(raw)
         if isinstance(data, dict) and data.get("actions"):
             # 学习资源（⑥「学」环节）：LLM 输出优先，缺失/非法则规则兜底（内置方法论卡）

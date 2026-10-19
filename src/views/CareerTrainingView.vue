@@ -224,7 +224,7 @@ async function finishEarly() {
   const sid = session.value?.session_id
   if (!sid) return
   busy.value = true; errorMsg.value = ''
-  reportPending.value = true; progressMsg.value = '评估报告生成中（六维 ECD 评估 + 提升路径），约需 30 秒…'
+  reportPending.value = true; progressMsg.value = '评估报告生成中（六维 ECD 评估 + 提升路径），约需 1–2 分钟…'
   try {
     const res = await api.post<any>(`/career/session/${sid}/end`, { force: false })
     if (res.status === 'insufficient') {
@@ -242,9 +242,9 @@ async function finishEarly() {
   }
 }
 
-/* 轮询报告：后端报告落库后返回完整内容（最多等 90 秒） */
+/* 轮询报告：后端报告落库后返回完整内容（最多等 180 秒 —— 免费档 LLM 终评实测 ~65s）*/
 async function pollReport(sid: string, silentOnError = false): Promise<boolean> {
-  const deadline = Date.now() + 90_000
+  const deadline = Date.now() + 180_000
   while (Date.now() < deadline) {
     await new Promise(r => setTimeout(r, 3000))
     try {

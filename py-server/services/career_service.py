@@ -219,7 +219,8 @@ async def end_session(session_id: str, force: bool = False) -> dict:
     }
 
 
-_GENERATING_MSG = "评估报告生成中（六维 ECD 评估 + 提升路径），请稍候约 30 秒后查看报告"
+# 免费档 LLM 实测：六维评估单次 ~64s + 提升路径 ~15s ⇒ 提示必须写实，别承诺 30 秒
+_GENERATING_MSG = "评估报告生成中（六维 ECD 评估 + 提升路径），约需 1–2 分钟，请稍后查看报告"
 
 
 def _finished_payload(state: dict, turns_done: int) -> dict:
