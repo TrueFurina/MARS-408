@@ -181,7 +181,15 @@ function enterBattle() { step.value = 'battle' }
 async function submitAnswer() {
   const text = answerInput.value.trim()
   if (!text || busy.value) return
-  busy.value = true; errorMsg.value = ''
+  busy.value = true; errorMsg.value = ''; progressMsg.value = ''
+  // 末轮提交后不会再有「下一个问题」，后端会直接进入终评。
+  // 实测（2026-10-20 公网）：末轮 answer 请求本身要 ~10s，这段时间 busy=true，
+  // 若沿用默认提示，页面会显示「对手正在思考下一个问题…」——那是**错误反馈**，
+  // 用户会以为还在等追问，实际已经在生成报告。故末轮提前把提示改成报告文案。
+  const willFinish = turnsDone.value + 1 >= Number(session.value?.max_turns ?? maxTurns.value)
+  if (willFinish) {
+    progressMsg.value = '评估报告生成中（六维 ECD 评估 + 提升路径），约需 1–2 分钟…'
+  }
   turns.value.push({ role: 'student', text })
   answerInput.value = ''
   await scrollBottom()
@@ -512,7 +520,8 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
             </div>
           </template>
         </div>
-        <div v-if="busy && !reportPending" class="bubble interviewer typing">对手正在思考下一个问题…</div>
+        <!-- busy 期间若有明确的进度文案（末轮终评）就显示它，否则才是「等追问」 -->
+        <div v-if="busy && !reportPending" class="bubble interviewer typing">{{ progressMsg || '对手正在思考下一个问题…' }}</div>
         <div v-if="reportPending" class="bubble interviewer typing">{{ progressMsg || '评估报告生成中…' }}</div>
       </div>
 
