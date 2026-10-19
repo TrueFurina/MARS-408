@@ -83,9 +83,14 @@ DST = ROOT / "deploy" / "career-pilot" / "backend"
 
 # ── 排除规则（相对 py-server 的路径）─────────────────────────────────────────
 # 目录名（出现在路径中任一非末段即整棵剪枝）
+# 注：experiments 已移出本集合（2026-10-20）——它是 /benchmark 与 /evidence 两个对外
+# 页面的数据源。此前整棵剪枝 ⇒ 包内 experiments/results 为空 ⇒ 线上
+# GET /api/benchmark/results 与 /api/experiments/{name} 全部 404，而这两个页面
+# 承载 FrugalRAG 对外口径证据（真源 benchmark_2026-09-18.json）。
+# 瘦身改由下方 .jsonl 后缀承担（过程 trace 占 5.5M / 总 7.2M）。
 EXCLUDE_DIR_NAMES = {
     "models", ".venv", "venv", "tests", "documents", "data",
-    "experiments", "milvus_lite_data", "node_modules", ".git",
+    "milvus_lite_data", "node_modules", ".git",
     "__pycache__", ".pytest_cache", ".pytest_tmp", ".ruff_cache",
     "_scratch", "_debug_smoke",
 }
@@ -96,7 +101,9 @@ EXCLUDE_DIR_PREFIXES = ("vectordb_data", ".pytest_tmp", ".pytest_cache", ".ruff_
 # 目录/文件后缀（备份、旧版本残留）
 EXCLUDE_DIR_SUFFIXES = ("_bak", "_backup", "_old")
 # 文件后缀
-EXCLUDE_FILE_SUFFIXES = (".log", ".pyc", ".pyo", ".npz", ".lock")
+# .jsonl：experiments/results 下的 review_shadow_*.jsonl 是过程 trace（20 个 / 5.5M），
+# 前端页面从不消费它们；恢复 experiments 目录后靠这条把包体增量压到约 2M。
+EXCLUDE_FILE_SUFFIXES = (".log", ".pyc", ".pyo", ".npz", ".lock", ".jsonl")
 # 文件全名（精确匹配）
 EXCLUDE_FILE_NAMES = {
     "docker-entrypoint.sh", "uv.lock", "pyproject.toml",

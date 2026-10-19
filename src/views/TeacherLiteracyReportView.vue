@@ -19,7 +19,7 @@ interface ClassReport {
   dimensions: string[]
 }
 
-const className = ref('信息安全1班-实验组')
+const className = ref('')
 const report = ref<ClassReport | null>(null)
 const loading = ref(false)
 const errorMsg = ref('')
@@ -55,7 +55,13 @@ async function load() {
     queried.value = className.value.trim()
   } catch (e) {
     report.value = null
-    errorMsg.value = e instanceof ApiError ? e.message : '报告加载失败'
+    // 404 = 该班级尚无测评记录。试点启动前这是常态，不是故障：
+    // 报成"加载失败"会让老师以为系统坏了，报成"暂无数据"才是事实。
+    if (e instanceof ApiError && e.status === 404) {
+      errorMsg.value = `班级「${className.value.trim()}」暂无测评数据`
+    } else {
+      errorMsg.value = e instanceof ApiError ? e.message : '报告加载失败'
+    }
   } finally {
     loading.value = false
   }

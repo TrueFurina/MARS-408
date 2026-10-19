@@ -53,10 +53,19 @@ function scoreColor(score: number): string {
 }
 
 async function loadReport() {
+  // 身份必须来自学号而非写死的 demo：后端 submit 以请求体 user_id（学号后4位）为身份主键，
+  // 全班共用 demo 登录时 token 一律是 demo。此前这里写死 /report/demo ⇒
+  // 学生提交后查到的仍是 demo 的报告，自己的前后测永远读不到（数据串号），
+  // 且 demo 无记录时每进一次页面就打一发 404。
+  const uid = studentId.value.trim()
+  if (!uid) {
+    report.value = null // 未填学号：不查询，避免无谓 404
+    return
+  }
   try {
-    report.value = await api.get<Report>('/literacy/report/demo')
+    report.value = await api.get<Report>(`/literacy/report/${encodeURIComponent(uid)}`)
   } catch {
-    report.value = null // 无历史记录，正常（首次前测）
+    report.value = null // 该学号暂无记录，正常（首次前测）
   }
 }
 
