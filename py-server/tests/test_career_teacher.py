@@ -126,6 +126,37 @@ def test_dashboard_class_aggregation_empty_class(client, teacher_id):
     assert len(dash["attention"]) == 2
 
 
+def test_joined_without_starting_is_counted_separately(client, teacher_id):
+    """加入 ≠ 开练：凭码加入只绑定花名册行，**不产生会话**。
+
+    2026-10-20 浏览器 E2E 实测（教师端全流程脚本）：学生加入后教师看板显示
+    「参与 0/3」，而名册里该行已经是「已绑定」——教师据此会误判成"没人来"，
+    实际是"进来了还没开练"。故 summary 必须把 joined_count（已绑定名册）
+    与 started_count（有会话）**分开报**，不得用一个顶替另一个。
+    """
+    cls = client.post("/api/career/classes", json={"class_name": "加入未开练班"}).json()
+    client.post(f"/api/career/classes/{cls['class_id']}/students",
+                json={"roster": "01 甲\n02 乙"})
+    sc = client.get("/api/career/scenarios").json()["scenarios"]
+    task = client.post("/api/career/tasks", json={
+        "class_id": cls["class_id"], "scenario_id": sc[0]["id"],
+        "difficulty": "medium", "max_turns": 4}).json()
+    _student_override(client, "stu_join_only")
+    try:
+        joined = client.post("/api/career/task/join", json={"join_code": task["join_code"]})
+        assert joined.status_code == 200
+        assert joined.json()["roster_bound"] is True
+    finally:
+        _restore_auth(client)
+    dash = client.get(f"/api/career/classes/{cls['class_id']}/dashboard").json()
+    summ = dash["summary"]
+    assert summ["joined_count"] == 1, "凭码加入的学生必须计入「已加入」（不依赖其是否开练）"
+    assert summ["started_count"] == 0, "没开练就不能计入「已开练」"
+    assert summ["finished_count"] == 0 and summ["assessed_count"] == 0
+    bound = [s for s in dash["students"] if s["bound"]]
+    assert len(bound) == 1 and bound[0]["session_count"] == 0
+
+
 def test_student_forbidden_on_teacher_endpoints(client):
     """student 调教师端点 → 403（建班/列表/看板/发任务）"""
     _student_override(client, "stu_user_403")
