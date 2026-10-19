@@ -197,4 +197,15 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    # Windows 兼容：控制台/管道默认走 locale（cp936），脚本里的中文与 🔴/🟢 emoji 会触发
+    # UnicodeEncodeError 直接崩溃——CI windows-latest 实测命中（pytest 以 subprocess 调本脚本
+    # 并捕获 stderr，charmap 编码失败 ⇒ returncode=1 且断言 "A 类违约" in stderr 落空）。
+    # 本地不复现是因为开发机设了 PYTHONUTF8=1；CI 无该变量，Python 3.12 在 Windows 用 locale 编码。
+    # 显式重配为 UTF-8；Linux/macOS 上本即 UTF-8，无副作用。
+    for _stream in (sys.stdout, sys.stderr):
+        try:
+            _stream.reconfigure(encoding="utf-8")
+        except (AttributeError, ValueError):
+            # 流已被替换为非文本对象或不支持重配时保持原样，不影响主流程
+            pass
     main()
