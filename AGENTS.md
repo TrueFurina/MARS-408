@@ -35,6 +35,33 @@
 - 🔒 **`/api/agents/runtime` 判定为"不实现"（已裁决，勿再当缺口重提）**：本仓库**没有 per-agent 运行时状态源**（LangGraph 流事件是瞬时的、无持久化），造一个就等于编造数据，违反诚信红线；真实引擎/向量库/模型状态走 `GET /api/status`。前端 `DashboardView.vue` 已诚实降级（注释写明"待后端提供后再接入"），不渲染任何运行时状态。
 - 详细交接见 `deliverables/engineering-assurance/交接说明-2026-09-27.md`（含红线、可复现命令、踩坑表）。
 
+## 快照版本与合作纪律（2026-10-20，REA #89/#90/#91）
+
+**本文件是快照，不是实时真值。** 下面每类数字/结论都标注了 as-of 日期，引用前按顺序
+核对；对不上时以**命令输出**为准，改文档而不是改命令。
+
+| 内容 | 权威来源 | 核对方式 |
+|---|---|---|
+| 测试通过数 / 覆盖率 | CI 最近一次默认档 run | `make doctor --full` 或 CI run 页 |
+| 后端代码行数 / 路径数 | `scripts/verify_metrics.py` 实测 | `python scripts/verify_metrics.py`（不一致禁止手改，用 `--update`） |
+| 安全机制是否在位 | 代码 + 独立审计报告 | `deliverables/engineering-assurance/security-claims-audit-2026-10-19.md` |
+| 分支/工作区/端口状态 | `scripts/doctor.mjs` | `make doctor`（JSON：`node scripts/doctor.mjs --json`） |
+
+**doctor 不是仪式**：它输出带 `head` 与 `ran_at`（执行基线），判据是**当时那个提交**的
+状态。看到 `head` 与你要引用的版本不一致，等价于"没跑过"——重跑，不要沿用旧结论。
+
+**多会话协作字段**（同日多会话并发改同一仓时，先在 `plans/current.md` 顶部登记一行）：
+
+```
+- [会话] <会话标识> | 分支 <branch> | 占用 <文件/目录列表> | 开始 <HH:MM> | 退出条件 <可判定的完成态>
+```
+
+三条硬规则：
+1. **只提交自己占用的文件**——`git add` 逐文件显式列出，永不 `git add -A`。
+2. **别人占用的文件不"顺手格式化"**：行尾/缩进改动会让对方的 diff 变成噪音，也会
+   让 `git status` 常驻脏文件（本项目已因 `core.autocrlf` 踩过）。
+3. **收尾必须撤销登记**；未撤销的占用视为仍在使用，后续会话不得抢占。
+
 ## 项目级 skill（触发时读）
 - `.agents/skills/project-context/` `.agents/skills/arch-rules/` `.agents/skills/test-gate/` `.agents/skills/debug-playbook/`
 - 计划外脑：`plans/current.md` + `plans/decisions.md`

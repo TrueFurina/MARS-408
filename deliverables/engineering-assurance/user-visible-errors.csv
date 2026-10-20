@@ -1,0 +1,13 @@
+﻿id,endpoint,http_status,error_code,condition,user_message,internal_detail_location,test
+E-AUTH-001,POST /api/auth/register,422,VALIDATION_ERROR,用户名已存在,用户名已存在,auth.py:34-37 白名单（原文不落响应）,test_auth_error_classification.py::test_duplicate_username_message_passes_through
+E-AUTH-002,POST /api/auth/register,422,VALIDATION_ERROR,用户名或密码为空,用户名和密码不能为空,auth.py:34-37 白名单,test_auth_error_classification.py::test_empty_credentials_message_passes_through
+E-AUTH-003,POST /api/auth/register,422,VALIDATION_ERROR,密码长度不足,密码长度至少 N 位（N=MIN_PASSWORD_LENGTH 动态生成）,auth.py:48 前缀准入（N 由常量生成故不静态登记）,test_auth_error_classification.py::test_password_length_message_passes_through
+E-AUTH-004,POST /api/auth/register,422,VALIDATION_ERROR,未登记的 ValueError（内部异常被包装/驱动错误）,注册失败，请稍后重试,auth.py:51 通用文案兜底；原文进 logger.warning + log_event（响应不含）,test_auth_error_classification.py::test_internal_text_never_reaches_client
+E-AUTH-005,POST /api/auth/register,422,VALIDATION_ERROR,同 IP 超过 20 次/小时,操作过于频繁，请稍后再试,auth.py:24 抛出；阈值 auth.py:81（max_requests=20 / 3600s）,无（限流路径另有测试）
+E-AUTH-006,POST /api/auth/login,422,VALIDATION_ERROR,用户名不存在或密码错误,用户名或密码错误,auth.py:102（故意不区分两种原因，防用户名枚举）,无
+E-AUTH-007,POST /api/auth/login,422,VALIDATION_ERROR,同 IP 60 秒内超 10 次 / 同用户名 15 分钟超 5 次,操作过于频繁，请稍后再试,auth.py:97-98 阈值,无
+E-LLM-001,多个 LLM 依赖端点,503,LLM_UNAVAILABLE,所有 LLM 通道不可用,"LLM 调用失败，请稍后重试或在设置页切换通道: <原始异常>",errors.py:29（detail 由调用方传入；chat.py:83 目前拼入原文，待收窄）,无
+E-KG-001,知识问答端点,404,KNOWLEDGE_NOT_FOUND,知识库无匹配,未找到相关知识: <query>,errors.py:24（回显用户 query，非内部信息）,无
+E-VDB-001,检索相关端点,500,VECTOR_DB_ERROR,向量库操作失败,向量数据库操作失败,errors.py:34,无
+E-SBX-001,代码执行端点,400,SANDBOX_ERROR,沙箱执行失败,代码执行失败,errors.py:44,无
+E-RES-001,资源读取端点,404,RESOURCE_NOT_FOUND,资源不存在,<资源名>不存在,errors.py:49,无

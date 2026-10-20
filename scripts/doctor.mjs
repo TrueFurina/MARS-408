@@ -29,9 +29,46 @@ const require = createRequire(import.meta.url)
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
 
 const ARGS = process.argv.slice(2)
-const JSON_MODE = ARGS.includes('--json')
-const FULL = ARGS.includes('--full')
-const STRICT = ARGS.includes('--strict')
+
+// 选项单一真值源（REA #26）：解析、帮助文本、非法选项提示都从这张表生成。
+// 单一来源的意义不在省几行，而在「加一个选项不必改三处」——漏改一处就会出现
+// 文档承诺了但代码不认的选项（或反之），而这类偏差没人会去测。
+const OPTIONS = {
+  '--json': { key: 'json', desc: '机器可读输出（供 agent 读取，不打印表格）' },
+  '--full': { key: 'full', desc: '追加 npm run verify（7 门禁全量，分钟级）' },
+  '--strict': { key: 'strict', desc: 'unknown/WARN 也计失败' },
+  '--help': { key: 'help', desc: '显示本帮助' },
+  '-h': { key: 'help', desc: '显示本帮助（同 --help）' },
+}
+// 注意：多个别名可映射同一个 key（--help / -h），必须**或**起来——
+// 用 Object.fromEntries(map) 会让后写者覆盖前者（--help 曾被 -h 的 false 覆盖，实测踩到）。
+const FLAGS = {}
+for (const [flag, { key }] of Object.entries(OPTIONS)) {
+  FLAGS[key] = Boolean(FLAGS[key]) || ARGS.includes(flag)
+}
+const JSON_MODE = FLAGS.json
+const FULL = FLAGS.full
+const STRICT = FLAGS.strict
+
+function usage() {
+  const lines = ['用法: node scripts/doctor.mjs [选项]', '', '选项:']
+  for (const [flag, { desc }] of Object.entries(OPTIONS)) {
+    lines.push(`  ${flag.padEnd(9)} ${desc}`)
+  }
+  lines.push('', '退出码: 0 通过 / 1 存在失败（--strict 下 WARN 也失败）/ 2 用法错误')
+  return lines.join('\n')
+}
+
+// 拼错的选项必须炸，不能静默忽略（REA #101：静默降级比报错危险）。
+const unknown = ARGS.filter((a) => a.startsWith('-') && !(a in OPTIONS))
+if (unknown.length > 0) {
+  console.error(`未知选项: ${unknown.join(' ')}\n\n${usage()}`)
+  process.exit(2)
+}
+if (FLAGS.help) {
+  console.log(usage())
+  process.exit(0)
+}
 
 const results = []
 function record(name, ok, level, detail) {
