@@ -272,3 +272,27 @@
       ③ "models 缺失致 CI 降级"风险实为已消解——conftest 以 `fake_embedder`+`isolate_vectordb`
       全隔离（无任何测试依赖真实 E5 质量，不存在"降级假绿"面），且降级状态诚实性已由
       `test_app_status_invariants` 机器锁（2026-10-18 `fallback_zero_docs` 真值修复 + 双不变量）。
+
+---
+
+## 闭环判据表（REA #11：没有判据的"完成"不是完成）
+
+> 规则：每一项在开工前就把**判据**写死；判据必须是"一条命令 + 一个可读产出"，
+> 不能是"我觉得可以了"。状态三态：`closed`（判据已满足且证据在库）/ `open`（未满足）/
+> `unchecked`（没验过，不等于没问题）。新增项必须先补判据再动手。
+> 维护要求：每次闭环同时更新本表与证据落点，不接受只在聊天里说"做完了"。
+
+| 项 | 闭环判据（可执行） | 证据落点 | 状态 |
+|---|---|---|---|
+| 注册/登录限流边界 | `pytest tests/test_rate_limit_boundary.py` → 4 passed，且第 N+1 次返回「操作过于频繁」 | `py-server/tests/test_rate_limit_boundary.py` | closed |
+| 限流阈值单一真值源 | `shared/limits.py` 是唯一定义处；`api/auth.py` 无 `max_requests=20` 之类字面量（测试静态断言） | `py-server/shared/limits.py` | closed |
+| 班级看板覆盖率说明 | `pytest tests/test_dashboard_coverage_note.py` → 3 passed；导出 HTML 含「覆盖率：」且与 API 同源 | `py-server/tests/test_dashboard_coverage_note.py` | closed |
+| 关停有序（后台任务先退再放连接） | `pytest tests/test_lifespan_shutdown_order.py` → 3 passed；退出顺序为 `exit:cleanup` 早于三条 `disconnect:*` | `py-server/tests/test_lifespan_shutdown_order.py` | closed |
+| 流式回答来源可判 | `pytest tests/test_chat_stream_provenance.py` → 5 passed；provenance 事件先于 `[DONE]`/`error` | `py-server/tests/test_chat_stream_provenance.py` | closed |
+| 用户可见错误文案 | `python scripts/check_error_wording.py --root py-server` → 新增 0 处 | `scripts/error_wording_baseline.json` | closed |
+| 广告 schema 无可达递归 | `python scripts/check_schema_advertisement.py --gate` → exit 0；自测 7/7 | `scripts/check_schema_advertisement_test.py` | closed |
+| 克隆只增不改（新增闸） | `python scripts/dup_scan.py --gate` → 新增 0 处；自测 6/6 | `scripts/dup_scan.baseline.json` | closed |
+| 本地钩子分层 | `python scripts/install_hooks.py --check --quiet` → exit 0（pre-commit + pre-push 均与真源一致） | `scripts/pre-commit/pre-push.sh` | closed |
+| 资源分项基线 | `python scripts/resource_profile.py --write` 可复跑，`unknown` 项须写明原因 | `deliverables/engineering-assurance/resource-profile-2026-10-20.md` | closed |
+| 试点试用（5–10 人） | 有真实学生账号 + 会话记录 + `pilot_evidence_report` 产出（非演练数据） | 待建 | open（需用户拍板范围） |
+| 职业素养实训 v1 真 LLM 冒烟 | 单情景冒烟 JSON 存在、`overall` 有值（2026-10-20 复核：证据在 `py-server/experiments/results/`，不在根 `experiments/results/`） | `py-server/experiments/results/career_llm_smoke_20260913.json` | closed |
