@@ -806,6 +806,8 @@ h1 { font-size: 17px; margin: 0 0 4px; }
 .meta { color: #555; font-size: 11px; margin-bottom: 6px; }
 .banner { background: #fff7e6; border: 1px solid #ffd591; border-radius: 6px;
   padding: 6px 10px; font-size: 10.5px; color: #7a4b00; margin-bottom: 10px; }
+/* 覆盖率横幅：与口径说明区分（蓝底），避免教师把"覆盖率"误读成"注意事项" */
+.banner-cov { background: #f0f5ff; border-color: #adc6ff; color: #1d39c4; }
 .section { margin-top: 10px; }
 .section > h2 { font-size: 13px; border-left: 3px solid #1677ff; padding-left: 6px; margin: 0 0 6px; }
 .sw { display: flex; gap: 12px; flex-wrap: wrap; }
@@ -820,6 +822,19 @@ th { background: #fafafa; }
 .att-h { font-weight: 600; }
 .footer { margin-top: 10px; border-top: 1px solid #eee; padding-top: 6px; color: #999; font-size: 10px; }
 </style>"""
+
+
+def _coverage_banner(summary: dict) -> str:
+    """覆盖率横幅（REA #9）：把「谁没被算进比率」印在报告抬头。
+
+    与后端 db/career_store.class_dashboard 的 summary["coverage_note"] 同源，
+    本函数只做渲染，不重算任何数字——报告与看板永远说同一句话。
+    旧版本快照（无该字段）导出时整块省略，而不是补一句"覆盖完整"。
+    """
+    note = summary.get("coverage_note")
+    if not note:
+        return ""
+    return f'<div class="banner banner-cov">覆盖率：{_esc(note)}</div>'
 
 
 def _render_class_export_html(dash: dict) -> str:
@@ -890,6 +905,7 @@ def _render_class_export_html(dash: dict) -> str:
   数据来源：实训会话与系统自动评分记录（真实落库）</div>
 <div class="banner">口径说明：本报告为班级级汇总，仅呈现真实记录；未完成或无评分的项显示「缺失」，不作插值。
   如需引用成效数字，请先跑 pilot_evidence_report 取证闸（当前尚未开展真实试用前，不得引用任何条数）。</div>
+{_coverage_banner(summary)}
 <div class="section"><h2>班级概览</h2><div class="sw">{sw_html}</div></div>
 <div class="section"><h2>六维班级均分</h2><div>{dim_html}</div></div>
 <div class="section"><h2>需关注（结构性事实）</h2>{att_html}</div>

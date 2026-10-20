@@ -20,19 +20,25 @@
 #    用例之间清空进程内窗口，不放行、不打桩。
 # ============================================================
 
-import os
 import logging
 
 from fastapi import Depends, HTTPException
 
 from shared.auth import get_current_user
+# 边界常量单一真值源（REA #30）：数字与时间窗都在 shared/limits.py 具名，
+# 本模块只引用名字。此处保留同名再导出，历史 `from shared.ratelimit import
+# LLM_PER_MINUTE`（含 tests/test_ratelimit_circuit.py）不受影响。
+from shared.limits import (
+    LLM_PER_DAY,
+    LLM_PER_MINUTE,
+    WINDOW_LLM_DAY_SECONDS,
+    WINDOW_LLM_MINUTE_SECONDS,
+)
 
 logger = logging.getLogger("netlearn.ratelimit")
 
-# ── 每用户 LLM 配额上限（生产环境由 Redis 限流强制）──
-# 可通过环境变量覆盖：LLM_QUOTA_PER_MINUTE / LLM_QUOTA_PER_DAY
-LLM_PER_MINUTE = int(os.environ.get("LLM_QUOTA_PER_MINUTE", "20"))
-LLM_PER_DAY = int(os.environ.get("LLM_QUOTA_PER_DAY", "500"))
+# 每用户 LLM 配额上限（生产环境由 Redis 限流强制）。
+# 阈值定义与依据见 shared/limits.py；可用 LLM_QUOTA_PER_MINUTE / LLM_QUOTA_PER_DAY 覆盖。
 
 
 def _uid(user: dict) -> str:
@@ -48,13 +54,13 @@ def check_llm_quota(user: dict) -> None:
     from db.redis_client import redis_client
 
     uid = _uid(user)
-    if not redis_client.check_rate_limit(f"llm_min:{uid}", LLM_PER_MINUTE, 60):
+    if not redis_client.check_rate_limit(f"llm_min:{uid}", LLM_PER_MINUTE, WINDOW_LLM_MINUTE_SECONDS):
         logger.warning("LLM 每分钟配额超限 user=%s", uid)
         raise HTTPException(
             status_code=429,
             detail="LLM 调用过于频繁，请稍后再试（每分钟上限）",
         )
-    if not redis_client.check_rate_limit(f"llm_day:{uid}", LLM_PER_DAY, 86400):
+    if not redis_client.check_rate_limit(f"llm_day:{uid}", LLM_PER_DAY, WINDOW_LLM_DAY_SECONDS):
         logger.warning("LLM 每日配额超限 user=%s", uid)
         raise HTTPException(
             status_code=429,

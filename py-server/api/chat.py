@@ -1094,8 +1094,29 @@ async def chat_stream(req: ChatSendRequest, request: Request, user: dict = Depen
         current_messages = build_messages()
         finish = None
         active_tools = tools_def  # 工具定义仅首轮使用，避免 nonlocal 作用域问题
+        # ── provenance 采集（REA #22）──
+        # 一条流式回答可能来自：纯模型文本 / 模型+工具（多轮）/ 通道回退后的别的通道。
+        # 不给标记时，三者在前端长得一模一样，"这段答案到底谁生成的"只能靠日志考古。
+        rounds = 0
+        tools_used: list[str] = []
+        produced_text = False
+        outcome = "ok"
+
+        def _provenance_event() -> str:
+            """把本轮回答的来源如实报给客户端（不含任何密钥/内部端点）。"""
+            prov = {
+                "outcome": outcome,           # ok / llm_unavailable / internal_error
+                "channel": llm.last_channel,   # 实际服务通道；None = 一次都没成功
+                "rounds": rounds,              # LLM 往返轮数（工具循环会 >1）
+                "tools_used": tools_used,      # 按调用顺序去重前的真实序列
+                "agent_mode": bool(req.agent_mode),
+                "answer_source": ("model+tools" if tools_used
+                                  else "model" if produced_text else "none"),
+            }
+            return f"data: {json_mod.dumps({'type': 'provenance', 'provenance': prov})}\n\n"
 
         while not finished:
+            rounds += 1
             try:
                 async for raw in llm.stream_chat(
                     current_messages, temperature=0.7, tools=active_tools, thinking=has_thinking
@@ -1132,15 +1153,20 @@ async def chat_stream(req: ChatSendRequest, request: Request, user: dict = Depen
                     content = delta.get("content", "")
                     if content:
                         full_content += content
+                        produced_text = True
                         safe_content, _ = filter_sensitive(content)
                         yield f"data: {json_mod.dumps({'type': 'content', 'content': safe_content})}\n\n"
             except LLMUnavailable as e:
                 logger.error("流式 LLM 通道全部不可用: %s", e)
+                outcome = "llm_unavailable"
+                yield _provenance_event()
                 yield f"data: {json_mod.dumps({'type': 'error', 'content': 'LLM 服务暂时不可用，请稍后重试或切换通道'})}\n\n"
                 yield "data: [DONE]\n\n"
                 return
             except Exception as e:
                 logger.error("流式 LLM 调用失败: %s", e, exc_info=True)
+                outcome = "internal_error"
+                yield _provenance_event()
                 yield f"data: {json_mod.dumps({'type': 'error', 'content': '请求处理失败，请稍后重试'})}\n\n"
                 yield "data: [DONE]\n\n"
                 return
@@ -1150,6 +1176,7 @@ async def chat_stream(req: ChatSendRequest, request: Request, user: dict = Depen
                 tools_result_messages = []
                 for idx in sorted(collected_tool_calls.keys()):
                     tc = collected_tool_calls[idx]
+                    tools_used.append(tc["name"])
                     yield f"data: {json_mod.dumps({'type': 'tool_call', 'name': tc['name'], 'arguments': tc['arguments']})}\n\n"
                     result = _execute_tool(tc["name"], tc["arguments"])
 
@@ -1183,6 +1210,8 @@ async def chat_stream(req: ChatSendRequest, request: Request, user: dict = Depen
             if _final_notes:
                 yield f"data: {json_mod.dumps({'type': 'safety_alert', 'content': '; '.join(_final_notes)})}\n\n"
 
+        # provenance 放在 [DONE] 之前：客户端一定能收到，且与本次回答同批提交
+        yield _provenance_event()
         yield "data: [DONE]\n\n"
 
     return StreamingResponse(sse_disconnect_guard(request, event_stream()), media_type="text/event-stream")

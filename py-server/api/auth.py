@@ -9,6 +9,14 @@ from pydantic import BaseModel, Field
 
 from shared.auth import create_token, get_current_user
 from shared.errors import ValidationError, ResourceNotFoundError
+from shared.limits import (
+    LOGIN_PER_15MIN_PER_USER,
+    LOGIN_PER_MINUTE_PER_IP,
+    REGISTER_PER_HOUR_PER_IP,
+    WINDOW_LOGIN_IP_SECONDS,
+    WINDOW_LOGIN_USER_SECONDS,
+    WINDOW_REGISTER_SECONDS,
+)
 from services.user_service import create_user, authenticate, get_user_by_id
 from db.redis_client import redis_client
 from shared.audit import log_event
@@ -17,6 +25,9 @@ logger = logging.getLogger("netlearn.auth_api")
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 # ── 速率限制（Redis 回退）──
+# 阈值不在此处写字面量：统一取自 shared/limits.py 的具名常量（REA #30）。
+# 本函数只负责"超限怎么报错"，不负责"上限是多少"——两件事分开，
+# 测试才能断言"第 N+1 次被拦"而不用把 N 复制一遍。
 
 def _check_rate_limit(key: str, max_requests: int, window: int) -> None:
     """检查速率限制，超限时抛出 ValidationError"""
@@ -78,7 +89,11 @@ async def register(req: RegisterRequest, request: Request):
     20 次/小时可容纳一个班 + 重试余量，同时仍保留对批量刷号的约束。
     """
     client_ip = request.client.host if request.client else "unknown"
-    _check_rate_limit(f"register:{client_ip}", max_requests=20, window=3600)
+    _check_rate_limit(
+        f"register:{client_ip}",
+        max_requests=REGISTER_PER_HOUR_PER_IP,
+        window=WINDOW_REGISTER_SECONDS,
+    )
     try:
         user = create_user(req.username, req.password, req.display_name)
     except ValueError as e:
@@ -94,8 +109,16 @@ async def register(req: RegisterRequest, request: Request):
 async def login(req: LoginRequest, request: Request):
     """用户/管理员登录（限流：10 次/分钟/IP + 账户级 5 次/15 分钟）"""
     client_ip = request.client.host if request.client else "unknown"
-    _check_rate_limit(f"login:ip:{client_ip}", max_requests=10, window=60)
-    _check_rate_limit(f"login:user:{req.username}", max_requests=5, window=900)
+    _check_rate_limit(
+        f"login:ip:{client_ip}",
+        max_requests=LOGIN_PER_MINUTE_PER_IP,
+        window=WINDOW_LOGIN_IP_SECONDS,
+    )
+    _check_rate_limit(
+        f"login:user:{req.username}",
+        max_requests=LOGIN_PER_15MIN_PER_USER,
+        window=WINDOW_LOGIN_USER_SECONDS,
+    )
     user = authenticate(req.username, req.password)
     if not user:
         log_event("login", ip=client_ip, result="failure", detail=f"username={req.username}")

@@ -161,6 +161,10 @@ class LLMProvider:
         self._config = config
         # P1-5①: 语义级注入防护递归控制（语义分类器自身发起的 LLM 调用跳过语义检查）
         self._skip_semantic = False
+        # 实际服务本次请求的通道名（"xfyun"/"deepseek"/"qwen"/"glm"）；
+        # None = 还没成功过。供上层做 provenance 标记：用户看到的回答到底
+        # 出自哪个通道、有没有发生运行级回退，不能靠猜配置。
+        self.last_channel: Optional[str] = None
 
     # ── 公共 API（含运行级四通道回退） ──
 
@@ -177,9 +181,11 @@ class LLMProvider:
         调用失败时自动回退到下一可用通道（xfyun→deepseek→qwen→glm）"""
         if self._target != "auto":
             provider = self._resolve()
-            return await self._call_provider(
+            result = await self._call_provider(
                 provider, "chat", messages, temperature, max_tokens, tools, thinking, timeout
             )
+            self.last_channel = self._target
+            return result
         # auto: 逐通道尝试，失败回退（讯飞星火X2 第一优先级—赛题合规 → DeepSeek → Qwen → 智谱GLM 兜底）
         for name in ["xfyun", "deepseek", "qwen", "glm"]:
             provider_cfg = self._config.get(name, {})
@@ -199,6 +205,7 @@ class LLMProvider:
                 logger.info("LLM 调用成功: %s", name)
                 record_llm_call(name)
                 breaker.record_success()
+                self.last_channel = name
                 return result
             except Exception as e:
                 breaker.record_failure()
@@ -225,6 +232,7 @@ class LLMProvider:
             async for chunk in self._stream_provider(
                 provider, messages, temperature, tools, thinking, timeout
             ):
+                self.last_channel = self._target
                 yield chunk
             return
         # auto: 逐通道尝试，失败回退（讯飞星火X2 第一优先级 → DeepSeek → Qwen → 智谱GLM 兜底）
@@ -245,6 +253,7 @@ class LLMProvider:
                     provider, messages, temperature, tools, thinking, timeout
                 ):
                     yielded_any = True
+                    self.last_channel = name
                     yield chunk
                 logger.info("LLM 流式调用成功: %s", name)
                 record_llm_call(name)

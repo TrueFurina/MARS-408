@@ -742,6 +742,30 @@ def class_dashboard(cid: str, teacher_id: str) -> Optional[dict]:
             attention.append({**s, "reason": "lowest_score",
                               "detail": f"综合得分在已完成学生中相对靠后（第 {rank}/{len(scored)}）"})
 
+    # ── coverage_note：这张看板到底覆盖了谁、谁没被算进去（REA #9）──
+    # 只报比率不报分母构成，是把"没人来"与"来了没练"压成同一个 0%
+    # （2026-10-20 教师端全流程 E2E 已撞到过一次）。故把三类"没被计入的人"
+    # 显式列出来，数字全部由本次查询真实结果算出，不插值、不估计。
+    uncovered = []
+    unbound = [s for s in students if not s["bound"]]
+    if unbound:
+        uncovered.append(f"{len(unbound)} 人尚未加入")
+    started_unfinished = [s for s in started if s["finished_count"] == 0]
+    if started_unfinished:
+        uncovered.append(f"{len(started_unfinished)} 人已开练未完成")
+    finished_unscored = [s for s in finished if s["overall_best"] is None]
+    if finished_unscored:
+        uncovered.append(f"{len(finished_unscored)} 人已完成但无可评分结果")
+    if total == 0:
+        coverage_note = "名册为空：本页所有比率均不成立（0% 是占位，不是『0 人完成』），请先导入名册。"
+    else:
+        parts = [f"分母 = 名册 {total} 人；{len(joined)} 人已加入、{len(started)} 人已开练、"
+                 f"{len(finished)} 人已完成、{len(scored)} 人有可评分结果"]
+        if uncovered:
+            parts.append("未纳入完成率的：" + "、".join(uncovered))
+        parts.append("六维均分只统计有评分的学生，无数据维度不计入最弱排序")
+        coverage_note = "。".join(parts) + "。"
+
     return {"class_id": cid, "class_name": cls.get("class_name"),
             "student_count": total, "students": students,
             "summary": {
@@ -754,6 +778,7 @@ def class_dashboard(cid: str, teacher_id: str) -> Optional[dict]:
                 "dimension_avg": dimension_avg,
                 "weakest_dimensions": [{"dimension": d, "avg": v} for d, v in weakest],
                 "note": "最弱维度为全班均分的相对排序（升序），非绝对达标线；无数据维度不参与最弱排序（六维均分中显示为无数据）。",
+                "coverage_note": coverage_note,
             },
             "attention": attention}
 

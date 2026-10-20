@@ -239,6 +239,44 @@ def _assert_single_worker():
         )
 
 
+# 关停时等待后台任务退出的上限（秒）。有界是刻意的：宁可关停留一条 error 日志，
+# 也不能让进程卡在 shutdown 里被容器 SIGKILL —— 后者会跳过所有后续释放步骤。
+SHUTDOWN_TASK_TIMEOUT_SECONDS = float(os.environ.get("SHUTDOWN_TASK_TIMEOUT_SECONDS", "5"))
+
+
+async def _cancel_and_wait(task: "asyncio.Task", *, name: str,
+                           timeout: float | None = None) -> bool:
+    """取消后台任务并**等它真的退出**（REA #15 关停有序）。
+
+    为什么不能只 `task.cancel()`：cancel 只是"请求"，任务在下一个 await 点才
+    真正退出。不 await 就继续 disconnect 数据库/连接池，会出现
+    「任务还在用已释放的资源」的窗口；进程退出时还会打
+    "Task was destroyed but it is pending!"，把真实的关停问题淹在噪声里。
+
+    为什么不用 `asyncio.wait_for(task, timeout)`：wait_for 超时后走的是
+    "cancel 再等它结束"——若任务**吞掉取消**（同步 IO 卡住、清理器自行重试），
+    这个等待没有上界，整个关停就挂死在这里，后续 release 全部跳过。
+    故改用 `asyncio.wait({task}, timeout)`：超时即返回，不替我们等取消。
+
+    返回 True = 已退出；False = 超时仍未退出（已记 error，**不抛出**——
+    关停路径上抛异常会让后续释放步骤整段跳过，故障范围反而扩大）。
+    """
+    if task.done():
+        return True
+    task.cancel()
+    limit = timeout if timeout is not None else SHUTDOWN_TASK_TIMEOUT_SECONDS
+    done, _pending = await asyncio.wait({task}, timeout=limit)
+    if task in done:
+        if not task.cancelled():
+            exc = task.exception()   # 取回异常，避免 "never retrieved" 噪声
+            if exc is not None:
+                logger.warning("后台任务 %s 退出时抛错（已忽略）：%s", name, exc)
+        return True
+    logger.error("关停超时：后台任务 %s 在 %.1fs 内未响应取消（继续释放其余资源）",
+                 name, limit)
+    return False
+
+
 async def _artifact_lifecycle_loop():
     """OS_course artifact lifecycle cleanup — 周期性清理旧会话产物（>7 天）。
 
@@ -347,11 +385,8 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    # Cancel artifact cleanup task
-    try:
-        cleanup_task.cancel()
-    except Exception as _e:
-        logger.debug("取消 artifact 清理任务失败（忽略）: %s", _e)
+    # 取消并**等待** artifact 清理任务真正退出（顺序：先停任务，再放连接）
+    await _cancel_and_wait(cleanup_task, name="artifact_lifecycle")
     # 关闭连接
     await import_worker.stop()
     # P1：释放 httpx 连接池（避免未关闭客户端警告）

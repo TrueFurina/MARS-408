@@ -30,6 +30,8 @@ interface DashSummary {
   dimension_avg: Record<string, number>
   weakest_dimensions: { dimension: string; avg: number }[]
   note: string
+  /** 覆盖率说明：分母构成 + 谁没被计入（后端算，前端只渲染；旧响应无此字段） */
+  coverage_note?: string
 }
 interface DashAttention extends DashStudent { reason: string; detail: string }
 interface Dash {
@@ -544,6 +546,10 @@ onMounted(() => {
               <span v-else class="dim">暂无</span>
             </p>
             <p class="hint">{{ dash.summary.note }}</p>
+            <!-- 覆盖率：直接引用后端 coverage_note，不在此重算比率（单一真值源） -->
+            <p v-if="dash.summary.coverage_note" class="hint hint-cov">
+              {{ dash.summary.coverage_note }}
+            </p>
           </div>
 
           <!-- 需关注学生：只列结构性事实 + 可反查的明细 -->
@@ -747,6 +753,8 @@ table { width: 100%; border-collapse: collapse; }
 th, td { text-align: left; padding: .45rem .5rem; border-bottom: 1px solid var(--border, var(--color-border)); font-size: .92rem; }
 .chip { display: inline-block; margin-right: .35rem; padding: .1rem .4rem; border-radius: 999px; background: var(--accent-soft, var(--color-surface-2)); font-size: .8rem; }
 .hint { color: var(--text-dim, var(--color-text-3)); font-size: .9rem; }
+/* 覆盖率说明：与口径说明同字号但更强调（含分母与未纳入人数，教师引用数字前必读） */
+.hint-cov { margin-top: 2px; padding-left: 8px; border-left: 2px solid var(--color-warning, #d48806); }
 
 /* 班级级聚合 */
 .agg { margin-bottom: var(--space-4); padding-bottom: var(--space-3); border-bottom: 1px dashed var(--border, var(--color-border)); }
