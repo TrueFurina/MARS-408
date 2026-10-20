@@ -1,0 +1,30 @@
+{
+  "generated_at": "2026-10-20",
+  "note": "存量登记（REA #144/#170）：只拦新增；清零后改用 --strict 并删除本文件",
+  "entries": [
+    "py-server/api/benchmark.py#3dfc43c9d27f",
+    "py-server/api/career_training.py#1113537f0ffc",
+    "py-server/api/career_training.py#172ad2446f2f",
+    "py-server/api/career_training.py#2367eaad5a0c",
+    "py-server/api/career_training.py#5e5bc2836074",
+    "py-server/api/career_training.py#728df6314645",
+    "py-server/api/career_training.py#80cd489729f5",
+    "py-server/api/career_training.py#89671b714b9b",
+    "py-server/api/career_training.py#8d8ef047d5a3",
+    "py-server/api/career_training.py#9f420768703f",
+    "py-server/api/career_training.py#b8e0dff7edc9",
+    "py-server/api/career_training.py#c657ba49ff39",
+    "py-server/api/career_training.py#e2a839387468",
+    "py-server/api/career_training.py#e6469800eb2f",
+    "py-server/api/career_training.py#e954dfa09ccf",
+    "py-server/api/career_training.py#e9aafbe0088e",
+    "py-server/api/career_training.py#fbcee45e852e",
+    "py-server/api/chat.py#dd2a45250068",
+    "py-server/api/experiments.py#5a10c4f7eab2",
+    "py-server/api/profile.py#fbcee45e852e",
+    "py-server/api/skills.py#1240c7d01057",
+    "py-server/api/skills.py#42abc6ed4501",
+    "py-server/api/skills.py#5c317a55ccf1",
+    "py-server/api/skills.py#9f420768703f"
+  ]
+}

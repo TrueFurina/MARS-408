@@ -84,3 +84,10 @@ jobs:
             echo "ℹ️ 对比 base $BASE"
             python scripts/pre-commit/run_gates.py --diff "$BASE"
           fi
+
+      # 第 7 道：错误文案直出静态守卫（REA #170，2026-10-20 接入）
+      # 基线制：38 处存量登记在 scripts/error_wording_baseline.json，只拦**新增**。
+      # 为什么不做成 pre-commit 第 7 道：本地钩子要快，这道扫全树约 1 秒尚可，
+      # 但编排器把「6 道」写进了日志与文档；先以 CI 步骤落地，等债务清零再并入。
+      - name: 错误文案直出守卫（只拦新增）
+        run: python scripts/check_error_wording.py --root py-server
