@@ -78,7 +78,7 @@
 
 > **测试数不在上表**：passed / skipped / xfail 需真正跑一遍 pytest，耗时且依赖环境，
 > 其真值以 CI 全量回归为准（见 `AGENTS.md` 复核记录）。标注来源时点：
-> **1524 通过 / 38 跳过 / 1 xfail / 0 失败（2026-10-17 CI run 38938041036）** → **已更新（2026-10-18）：1654 通过 / 38 跳过 / 1 xfail / 0 失败（CI run 39101268904，head 3bae4b9，Backend Test Linux 默认档；约 1702 collected，`addopts` deselect 9。1524→1654 增量 = 教师端三方向新测试。旧 1389/38/1 为 2026-10-09 run 37917008258，已作废）**。
+> **1524 通过 / 38 跳过 / 1 xfail / 0 失败（2026-10-17 CI run 38938041036）** → **已更新（2026-10-18）：1654 通过 / 38 跳过 / 1 xfail / 0 失败（CI run 39101268904，head 3bae4b9，Backend Test Linux 默认档；约 1702 collected，`addopts` deselect 9。1524→1654 增量 = 教师端三方向新测试。旧 1389/38/1 为 2026-10-09 run 37917008258，已作废）** → **已更新（2026-10-20）：1693 通过 / 38 跳过 / 1 xfail / 0 失败（CI run 39467891052，head 22a7469，Backend Test Linux 默认档，384.74s；约 1741 collected。1654→1693 增量 = 教师端看板口径 + 错误文案分类 + 四组运行时契约测试）**。
 >
 > **认证覆盖率**同理由独立脚本产出：`py-server/scripts/verify_auth_coverage.py`
 > （当前 total=261 / protected=248 / public=13 / coverage=**95.02%** / unregistered=0）。

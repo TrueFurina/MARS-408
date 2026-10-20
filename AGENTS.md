@@ -8,7 +8,7 @@
 ## 命令
 - 后端: `cd py-server && pip install -e . && python main.py`（:8002）
 - 测试: `cd py-server && env -u PYTHONPATH -u PYTHONSTARTUP -u NODE_OPTIONS -u ELECTRON_RUN_AS_NODE .venv/Scripts/python.exe -m pytest tests/ -q --basetemp=.pytest_tmp --no-cov -p no:cacheprovider --continue-on-collection-errors`
-  - 2026-10-18 CI 权威真值（run `39101268904`，head `3bae4b9`，Backend Test Linux 默认档）：**1654 passed / 38 skipped / 1 xfailed / 0 failed**（约 1702 collected = 1654+38+1+9，`addopts` deselect 9；旧「1524/38/1（10-17 run 38938041036）」「1177/227」「923/1139」「1178/208」「1389/38/1（10-09）」作废——1524→1654 增量来自教师端三方向新测试）。注：本机 Windows 因 torch `c10.dll` SIGSEGV 会丢失部分用例，CI/Linux 全量为准；10-06 快照「1178 passed / 208 skipped」为标记剖面错位，非当前真值。
+  - 2026-10-20 CI 权威真值（run `39467891052`，head `22a7469`，Backend Test Linux 默认档）：**1693 passed / 38 skipped / 1 xfailed / 0 failed**（约 1741 collected = 1693+38+1+9，`addopts` deselect 9，384.74s；旧「1654/38/1（10-18 run 39101268904 @ 3bae4b9）」「1524/38/1（10-17）」「1389/38/1（10-09）」作废——1654→1693 增量来自教师端看板口径 + 错误文案分类（M01）+ 四组运行时契约测试）。注：本机 Windows 因 torch `c10.dll` SIGSEGV 会丢失部分用例，CI/Linux 全量为准；10-06 快照「1178 passed / 208 skipped」为标记剖面错位，非当前真值。
   - 前两个 `env -u` 是必需的：WorkBuddy shell 的注入会污染 pytest 子进程；`--continue-on-collection-errors` 用于跳过 torch c10.dll 的本机环境错误。
 - E5 模型恢复: `python scripts/fetch_e5_model.py`（模型不入库，会话重置后执行）
 - 机验（改动结构后跑）: `py-server/scripts/verify_{app_wiring,auth_coverage,core_lock_unification,kb_coverage,seed_data_split,user_store_split}.py`（轻量，CI 由 `.github/workflows/verify-structural.yml` 自动跑）；`verify_{gold_candidates,retrieval}.py` 依赖 Milvus+KB，仅手动 dispatch 触发；品牌/口径扫描 `scripts/brand_scan.py` + `scripts/scan_stale_calibration.py` 亦由该 workflow 接管。
@@ -30,7 +30,7 @@
   （SSRF 守卫 / 页码对齐算法 / lifespan 守门 / 中间件矩阵 / 画像域契约 / DI 容器 / 内容安全 / SPA 挂载 / JWT 角色），
   并修复 1 个随 M-4 拆分失效的静态锚点测试。
 - ⚠️ **改动 `src/` 或 `py-server/` 代码后必须补跑 `python scripts/verify_metrics.py`**（不一致时用脚本 sanctioned 的 `--update` 重生成，**禁止手改表格**）。它是 CI `.github/workflows/verify-structural.yml:89` 的**阻断性**检查，而**本地 pre-commit 七道门禁不跑它** ⇒「家里全绿、CI 红」是常态失效形态（2026-10-13 实测：`a711ed7`+`36f08ed` 后三项漂移未被察觉）。
-- **当前无阻塞项**（须每轮实测重确认，**勿当恒定真值**）：全量 **1654 passed / 38 skipped / 1 xfailed / 0 failed**（约 1702 collected，`addopts` deselect 9；2026-10-18 CI 默认档 run 39101268904 权威值）；唯一 error 是本机 torch `c10.dll` 加载失败（环境，CI/Linux 无此问题）。
+- **当前无阻塞项**（须每轮实测重确认，**勿当恒定真值**）：全量 **1693 passed / 38 skipped / 1 xfailed / 0 failed**（约 1741 collected，`addopts` deselect 9；2026-10-20 CI 默认档 run 39467891052 @ 22a7469 权威值）；唯一 error 是本机 torch `c10.dll` 加载失败（环境，CI/Linux 无此问题）。
 - ⚠️ **节点数两种口径（勿互相"修正"，改任一个都是错的）**：10 = Triage 之外的流水线本体；11 = 编译图业务节点数（10 + `triage` 节点）。对外述"图"用 11，述"Triage 之后的流水线"用 10。内部可视化组件 `LangGraphFlow.vue` 只画 10 个，**是对的，不要批量改 11**。
 - 🔒 **`/api/agents/runtime` 判定为"不实现"（已裁决，勿再当缺口重提）**：本仓库**没有 per-agent 运行时状态源**（LangGraph 流事件是瞬时的、无持久化），造一个就等于编造数据，违反诚信红线；真实引擎/向量库/模型状态走 `GET /api/status`。前端 `DashboardView.vue` 已诚实降级（注释写明"待后端提供后再接入"），不渲染任何运行时状态。
 - 详细交接见 `deliverables/engineering-assurance/交接说明-2026-09-27.md`（含红线、可复现命令、踩坑表）。

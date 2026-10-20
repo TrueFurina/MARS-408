@@ -8,9 +8,9 @@
 
 | step | 命令 | 结果 |
 |---|---|---|
-| 1 默认离线集 | `pytest -q --tb=short` | **1654 passed, 38 skipped, 9 deselected, 1 xfailed, 0 failed** in 412.70s |
+| 1 默认离线集 | `pytest -q --tb=short` | **1693 passed, 38 skipped, 9 deselected, 1 xfailed, 0 failed** in 384.74s（run 39467891052，head 22a7469，2026-10-20；前一权威 1654/38/1 @ run 39101268904 @ 3bae4b9 已随新权威作废） |
 
-> collected = 1654+38+9+1 = **1702**。1524→1654 增量来自 2026-10-18 并入的教师端测试族。同步更新的活副本：`AGENTS.md:11/33`、`docs/METRICS_CURRENT.md:81`、`docs/TEST_TRUTH.md`、`README.md:83/261/262/263`、`README_EN.md:57/189/190`、`src/views/ShowcaseView.vue:156`（254→259）。
+> collected = 1693+38+9+1 = **1741**。1654→1693 增量来自教师端看板口径 + 错误文案分类（M01）+ 四组运行时契约测试（2026-10-20 并入）。同步更新的活副本：`AGENTS.md:11/33`、`docs/METRICS_CURRENT.md:81`、`docs/TEST_TRUTH.md`、`README.md:83/261/262/263`、`README_EN.md:57/189/190`、`src/views/ShowcaseView.vue:156`（254→259）。
 
 ## run `38942815598` — Backend Test (Linux) / pytest on ubuntu-latest（head `46b41b5`，success，2026-10-17）
 
