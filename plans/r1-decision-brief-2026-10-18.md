@@ -28,7 +28,7 @@
 | 令牌签名密钥 | ✅ **已 fail-closed** | `shared/auth.py:19-32`（F-005）：硬编码旧密钥已移除；生产缺 `AUTH_SECRET`（<32 字符）直接 raise；开发随机生成+警告 |
 | admin 口令 | ✅ 环境注入 | `db/user_store.py:269 ensure_admin(username, password)`，无硬编码默认值；PBKDF2-HMAC + compare_digest |
 | 密钥不落盘 | ✅ 机制在位 | `config.py:401-420 _strip_secrets`：api_key 类字段 save_config 自动剥离 |
-| 速率限制 | ✅ 在位 | 注册 3 次/小时等（README:78 宣称与实现一致） |
+| 速率限制 | ✅ 在位 | ~~README:78 宣称与实现一致~~（2026-10-19 独立审计：该引用失实——README 无限流宣称，实际阈值 20 次/小时/IP，`api/auth.py:43`，10-15 真人演练校准；机制比原宣称更强） |
 | `.env` 凭据 | ⬜ 部署时操作 | 只放 VPS 侧 chmod 600，不入库（gitignore 已覆盖） |
 | 验收命令 | ⬜ 部署后执行 | `curl -sI http://<vps>/api/status` 返回 200 且 `fallback_zero_docs` 如实上报 |
 

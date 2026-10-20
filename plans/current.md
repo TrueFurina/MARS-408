@@ -191,6 +191,13 @@
 
 ## 已完成
 
+- [x] 2026-10-19 **P0 安全宣称独立审计（不采信文档、逐条代码取证）** —— 新增
+      `deliverables/engineering-assurance/security-claims-audit-2026-10-19.md`（只读审计，零改动）：
+      六项安全机制全部代码级证实（auth fail-closed 三态 / 启动 fail-fast 时序 / ensure_admin 无默认 /
+      PBKDF2 60 万次+防时序 / save_config 密钥剥离 / 密钥残留扫描 0 命中）；限流机制属实但简报
+      README:78 引用失实（已删线标注，真值 20 次/小时 @ `api/auth.py:43`）；旧「14 P0」中
+      区块链桩（0 命中）/AI 导师零调用（langgraph.py:63 已接线）/伪造证书（仅词库数据）三项
+      确认已消解 ⇒ **安全面宣布闭环，「14 P0」叙事建议退役**，对外改述「安全项 10-18 前闭环并经独立审计证实」。
 - [x] 2026-10-17 **前后端契约交叉审计（主动深审第三轮）** —— 新增
       `scripts/audit_api_contract.py`（report-only / `--gate` 双模，纯 stdlib 1.2s）：
       后端真值 = openapi.json（复跑确认 237 paths / 255 ops 与运行时一致），
