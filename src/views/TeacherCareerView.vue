@@ -754,7 +754,7 @@ th, td { text-align: left; padding: .45rem .5rem; border-bottom: 1px solid var(-
 .chip { display: inline-block; margin-right: .35rem; padding: .1rem .4rem; border-radius: 999px; background: var(--accent-soft, var(--color-surface-2)); font-size: .8rem; }
 .hint { color: var(--text-dim, var(--color-text-3)); font-size: .9rem; }
 /* 覆盖率说明：与口径说明同字号但更强调（含分母与未纳入人数，教师引用数字前必读） */
-.hint-cov { margin-top: 2px; padding-left: 8px; border-left: 2px solid var(--color-warning, #d48806); }
+.hint-cov { margin-top: 2px; padding-left: 8px; border-left: 2px solid var(--color-warning); }
 
 /* 班级级聚合 */
 .agg { margin-bottom: var(--space-4); padding-bottom: var(--space-3); border-bottom: 1px dashed var(--border, var(--color-border)); }
