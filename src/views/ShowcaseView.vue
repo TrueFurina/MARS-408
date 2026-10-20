@@ -165,13 +165,37 @@ function openNew() { window.open(iframeSrc.value, '_blank', 'noopener') }
             <span class="ts-label">资源类型</span>
           </div>
           <div class="tech-stat">
-            <span class="ts-value">94.98%</span>
+            <span class="ts-value">95.02%</span>
             <span class="ts-label">认证覆盖率</span>
           </div>
           <div class="tech-stat">
             <span class="ts-value">0</span>
             <span class="ts-label">失败用例</span>
           </div>
+        </div>
+
+        <!-- 为什么是现在（市场时机；招聘侧公开报道口径，本平台做训练侧） -->
+        <div class="why-now">
+          <div class="wn-title">为什么是现在 —— 求职侧「AI 筛人」已成行业基线，训练侧仍是空白</div>
+          <div class="wn-grid">
+            <div class="wn-item">
+              <span class="wn-num">63.4%</span>
+              <span class="wn-label">企业应用 AI 面试</span>
+            </div>
+            <div class="wn-item">
+              <span class="wn-num">70.4%</span>
+              <span class="wn-label">学生收到 AI 面试邀约</span>
+            </div>
+            <div class="wn-item">
+              <span class="wn-num">89.0%</span>
+              <span class="wn-label">受邀学生实际参与</span>
+            </div>
+            <div class="wn-item">
+              <span class="wn-num">37.56%</span>
+              <span class="wn-label">AI 相关新发校招岗位渗透率（同比 +543%）</span>
+            </div>
+          </div>
+          <div class="wn-src">口径：牛客 2026 春招白皮书（公开报道，未实测），为招聘侧数据；本平台做「练人」训练侧，与「筛人」错位互补。</div>
         </div>
       </div>
 
@@ -234,6 +258,15 @@ function openNew() { window.open(iframeSrc.value, '_blank', 'noopener') }
 .tech-stat { text-align: center; }
 .ts-value { display: block; font-size: var(--text-3xl); font-weight: 800; color: var(--accent); }
 .ts-label { display: block; font-size: var(--text-2xs); color: var(--color-text-3); margin-top: 2px; }
+
+/* 为什么是现在（市场时机） */
+.why-now { margin-top: var(--space-5); padding: var(--space-5); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; }
+.wn-title { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--color-text-1); margin-bottom: var(--space-3); }
+.wn-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--space-3); }
+.wn-item { text-align: center; padding: var(--space-2); background: var(--color-surface-2); border-radius: 8px; }
+.wn-num { display: block; font-size: var(--text-2xl); font-weight: 800; color: var(--accent); }
+.wn-label { display: block; font-size: var(--text-2xs); color: var(--color-text-3); margin-top: 2px; line-height: 1.4; }
+.wn-src { margin-top: var(--space-3); font-size: var(--text-2xs); color: var(--color-text-3); line-height: 1.5; }
 
 /* 原型展示 */
 .showcase-view { padding: var(--space-5); }
