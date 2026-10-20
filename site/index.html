@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>芒得很职 · 职业素养对抗实训平台（技术底座 芒得很职）</title>
-<meta name="description" content="芒得很职：基于 芒得很职 多智能体底座的职业素养对抗实训平台，11 个 LangGraph 节点、49 个前端视图、约 254 个 API 端点，所有宣称均可追溯到可复跑脚本与留存实验结果文件。">
+<meta name="description" content="芒得很职：基于 芒得很职 多智能体底座的职业素养对抗实训平台，11 个 LangGraph 节点、49 个前端视图、约 261 个 API 端点，所有宣称均可追溯到可复跑脚本与留存实验结果文件。">
 <style>
 :root{
   --bg:#07090f;--bg2:#0d1117;--panel:rgba(255,255,255,.035);
@@ -212,9 +212,9 @@ footer a:hover{color:var(--orange2)}
       <p class="cta-note">在线为静态前端预览（无后端）；完整实训功能按 <a href="#access">05 · Access</a> 本地运行。</p>
       <div class="hero-stats">
         <div class="hstat"><b>11</b><span>LangGraph 编排节点</span></div>
-        <div class="hstat"><b>45</b><span>前端教学视图</span></div>
-        <div class="hstat"><b>254</b><span>API 端点（约）</span></div>
-        <div class="hstat"><b>1524</b><span>测试通过（2026-10-17 CI 口径）</span></div>
+        <div class="hstat"><b>49</b><span>前端教学视图</span></div>
+        <div class="hstat"><b>261</b><span>API 端点（约）</span></div>
+        <div class="hstat"><b>1693</b><span>测试通过（2026-10-20 CI 口径）</span></div>
       </div>
     </div>
     <div class="hero-visual">
@@ -241,7 +241,7 @@ footer a:hover{color:var(--orange2)}
         <div class="stat-strip">
           <div class="mini"><div class="v">11</div><div class="k">编排节点</div></div>
           <div class="mini"><div class="v">49</div><div class="k">前端视图</div></div>
-          <div class="mini"><div class="v">254</div><div class="k">API 端点(约)</div></div>
+          <div class="mini"><div class="v">261</div><div class="k">API 端点(约)</div></div>
         </div>
       </div>
     </div>
@@ -259,14 +259,14 @@ footer a:hover{color:var(--orange2)}
 
     <p>职业素养——技术判断的边界、对证据的尊重、在被追问时守住结论的能力——很难靠一次性讲授形成。「芒得很职」把这套训练放进一个可以多轮运行的对抗环境：学生在真实技术语境中完成任务、接受质疑、被要求举证，系统记录全过程并给出可回看的评价依据。</p>
 
-    <p>平台基于 芒得很职 多智能体底座，由 <strong>11</strong> 个职责分离的 LangGraph 节点协同驱动，覆盖问题受理、学情诊断、路径规划、生成、评核与质量把关的完整链路；前端 <strong>约 49</strong> 个视图把诊断、实训、复盘与证据回看组织成一条连贯的教学动线，后端以 Python FastAPI 提供约 <strong>254</strong> 个 API 端点。</p>
+    <p>平台基于 芒得很职 多智能体底座，由 <strong>11</strong> 个职责分离的 LangGraph 节点协同驱动，覆盖问题受理、学情诊断、路径规划、生成、评核与质量把关的完整链路；前端 <strong>约 49</strong> 个视图把诊断、实训、复盘与证据回看组织成一条连贯的教学动线，后端以 Python FastAPI 提供约 <strong>261</strong> 个 API 端点。</p>
 
     <p>我们的工程原则只有一条：<strong>每一个对外宣称的能力，都必须能被一组可复跑的脚本与一份留存的实验结果文件追溯到源头。</strong>本页所有数字均标注了出处与口径；没有达到显著性的结论，我们同样标注出来。</p>
 
     <div class="stats reveal">
       <div class="stat"><b>11</b><span>LangGraph 编排节点</span></div>
-      <div class="stat"><b>45</b><span>前端教学视图</span></div>
-      <div class="stat"><b>254</b><span>后端 API 端点（约）</span></div>
+      <div class="stat"><b>49</b><span>前端教学视图</span></div>
+      <div class="stat"><b>261</b><span>后端 API 端点（约）</span></div>
     </div>
 
     <figure class="reveal">
@@ -304,7 +304,7 @@ footer a:hover{color:var(--orange2)}
       </div>
     </div>
 
-    <p>知识与检索层由三部分构成：本地部署的 <strong>E5-base-v2（768 维）</strong>嵌入模型负责向量化，知识库共 <strong>2245 个向量</strong>（2015 知识 chunk + 230 题目，2026-10-14 实测）；知识图谱承载 <strong>86 个节点、82 条先修依赖边</strong>，用于约束推荐顺序与诊断归因；大模型通道采用 <strong>DeepSeek 主通道 + 讯飞 Spark generalv3.5 兜底</strong>的双路设计，主通道不可用时自动降级，保证实训过程不中断。</p>
+    <p>知识与检索层由三部分构成：本地部署的 <strong>E5-base-v2（768 维）</strong>嵌入模型负责向量化，知识库共 <strong>2245 个向量</strong>（2015 知识 chunk + 230 题目，2026-10-14 实测）；知识图谱承载 <strong>86 个节点、82 条先修依赖边</strong>，用于约束推荐顺序与诊断归因；大模型通道采用 <strong>DeepSeek 主通道 + 智谱 GLM 兜底</strong>的双路设计（四通道容灾设计口径，回退链已真实网络故障注入实证），主通道不可用时自动降级，保证实训过程不中断。</p>
 
     <div class="stats reveal">
       <div class="stat"><b>2245</b><span>知识库向量条目</span></div>
@@ -375,9 +375,9 @@ footer a:hover{color:var(--orange2)}
   <div class="wrap">
     <span class="sec-tag">04 · Evidence</span>
     <h2>可复跑的证据</h2>
-    <p class="subtitle">28 条查询、96 条样本、1524 条通过用例</p>
+    <p class="subtitle">28 条查询、96 条样本、1693 条通过用例</p>
 
-    <p>工程可信度不靠形容词。本页列出三组可直接复现的实测记录。<strong>检索对照实验</strong>：28 条查询，Recall@5 <strong>+7.14 pp</strong>、Precision@5 <strong>+15.71 pp</strong>、MRR <strong>+12.38 pp</strong>，结果文件 <code>py-server/experiments/results/benchmark_2026-09-18.json</code>，伴随 token 消耗<strong>上升 11.99%</strong>（未降反增）与单次延迟 <strong>574.36 ms</strong> 的诚实披露。<strong>共识评测</strong>：96 条样本下训练权重 <strong>80.2%</strong> 与规则基线 <strong>82.3%</strong> 持平，结论为「未观察到显著优势」。<strong>回归测试</strong>：<strong>1524</strong> 条用例通过、<strong>38</strong> 条跳过、<strong>1</strong> xfail、<strong>0</strong> 失败（2026-10-17 CI run 38938041036 口径；跳过项一般为依赖外部服务或需本地模型的用例，不计入通过率分母）。</p>
+    <p>工程可信度不靠形容词。本页列出三组可直接复现的实测记录。<strong>检索对照实验</strong>：28 条查询，Recall@5 <strong>+7.14 pp</strong>、Precision@5 <strong>+15.71 pp</strong>、MRR <strong>+12.38 pp</strong>，结果文件 <code>py-server/experiments/results/benchmark_2026-09-18.json</code>，伴随 token 消耗<strong>上升 11.99%</strong>（未降反增）与单次延迟 <strong>574.36 ms</strong> 的诚实披露。<strong>共识评测</strong>：96 条样本下训练权重 <strong>80.2%</strong> 与规则基线 <strong>82.3%</strong> 持平，结论为「未观察到显著优势」。<strong>回归测试</strong>：CI 全量回归 <strong>1693</strong> 条用例通过、<strong>38</strong> 条跳过、<strong>1</strong> xfail、<strong>0</strong> 失败（2026-10-20 CI run 39467891052 口径；跳过项一般为依赖外部服务或需本地模型的用例，不计入通过率分母）。</p>
 
     <div class="card reveal">
       <p class="card-title">检索对照实验（28 条查询标准口径）</p>
@@ -401,10 +401,11 @@ footer a:hover{color:var(--orange2)}
     </div>
 
     <div class="card reveal">
-      <p class="card-title">回归测试（2026-10-09 CI 口径）</p>
+      <p class="card-title">回归测试（2026-10-20 CI 口径）</p>
       <ul class="metrics">
-        <li>通过用例　<b>1524</b> 条</li>
+        <li>通过用例　<b>1693</b> 条</li>
         <li>跳过用例　<b>38</b> 条</li>
+        <li>xfailed 用例　<b>1</b> 条</li>
         <li>失败用例　<b>0</b> 条</li>
         <li>口径　跳过项一般为依赖外部服务或需本地模型的用例，不计入通过率分母</li>
       </ul>
@@ -468,7 +469,7 @@ bash deploy/start_linux.sh</code></pre>
 
     <p><strong>能力边界</strong>：职业素养对抗实训模块为 v1 规则原型；MAPPO / 强化学习相关结论来自合成环境，不代表真实教学增益；本产品未提供任何用于高利害决策的评价结论。</p>
 
-    <p><strong>第三方组件</strong>：大模型通道使用 DeepSeek 与讯飞 Spark generalv3.5 的在线服务，嵌入模型 E5-base-v2 为本地部署；各组件的商标与服务条款归各自权利人所有。</p>
+    <p><strong>第三方组件</strong>：大模型与多模态通道使用 DeepSeek、智谱 GLM 与讯飞星火（图片生成/语音合成）的在线服务，嵌入模型 E5-base-v2 为本地部署；各组件的商标与服务条款归各自权利人所有。</p>
 
     <p><strong>反馈渠道</strong>：发现数据口径不一致或页面错误，请在 GitHub Issues 提交。</p>
   </div>
