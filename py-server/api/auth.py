@@ -24,6 +24,33 @@ def _check_rate_limit(key: str, max_requests: int, window: int) -> None:
         raise ValidationError(detail="操作过于频繁，请稍后再试")
 
 
+# ── 用户可见错误文案登记（REA 实践 #12：错误文案台账，禁内部原文直出）──
+# db 层 create_user 的 ValueError 业务文案在此登记；登记内的文案本就是
+# **写给用户看的**，可原样透出。未登记的 ValueError（内部异常被包装成
+# ValueError、未来新增分支、底层驱动错误串）一律按通用文案对外 ——
+# 内部表名/SQL/路径/驱动原文绝不随 HTTP 响应体外泄。
+# 可追溯性不降级：log_event(detail=str(e)) 与 logger.warning 仍保留完整
+# 原文（服务端审计可见），只是不再对用户展示。
+_REGISTER_SAFE_ERRORS = frozenset({
+    "用户名和密码不能为空",
+    "用户名已存在",
+})
+_REGISTER_GENERIC_ERROR = "注册失败，请稍后重试"
+
+
+def _user_safe_register_error(exc: ValueError) -> str:
+    """把 create_user 的 ValueError 映射为可对外的用户文案。
+
+    密码长度文案由 MIN_PASSWORD_LENGTH 动态生成（"密码长度至少 N 位"），
+    无法静态登记，按前缀准入；其余一律通用文案。
+    """
+    text = str(exc)
+    if text in _REGISTER_SAFE_ERRORS or text.startswith("密码长度至少"):
+        return text
+    logger.warning("注册失败（未登记文案，按通用文案对外）: %s", text)
+    return _REGISTER_GENERIC_ERROR
+
+
 class RegisterRequest(BaseModel):
     username: str = Field(..., min_length=2, max_length=64)
     password: str = Field(..., min_length=8, max_length=128, description="密码至少8位，建议包含字母和数字")
@@ -56,7 +83,7 @@ async def register(req: RegisterRequest, request: Request):
         user = create_user(req.username, req.password, req.display_name)
     except ValueError as e:
         log_event("register", ip=client_ip, result="failure", detail=str(e))
-        raise ValidationError(detail=str(e))
+        raise ValidationError(detail=_user_safe_register_error(e))
     token = create_token(user["id"], user["role"])
     log_event("register", user_id=user["id"], ip=client_ip, result="success", detail=f"username={req.username}")
     logger.info(f"新用户注册: {user['username']} (role={user['role']})")

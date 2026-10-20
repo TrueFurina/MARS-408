@@ -174,11 +174,17 @@ async function main() {
   const warns = results.filter((r) => r.ok === 'WARN').length
   const failed = fails + (STRICT ? warns : 0)
 
+  // 执行基线：pin HEAD + 运行时刻，供 CI 归因与历史对比（REA #134）
+  const head = run('git', ['rev-parse', 'HEAD'])
+  const headSha = head.status === 0 ? head.stdout.trim() : 'unknown'
+  const ranAt = new Date().toISOString()
+
   if (JSON_MODE) {
-    console.log(JSON.stringify({ tool: 'doctor', root: ROOT, full: FULL, strict: STRICT, results, summary: { pass: results.length - fails - warns, fail: fails, warn: warns } }, null, 2))
+    console.log(JSON.stringify({ tool: 'doctor', root: ROOT, full: FULL, strict: STRICT, head: headSha, ran_at: ranAt, results, summary: { pass: results.length - fails - warns, fail: fails, warn: warns } }, null, 2))
   } else {
     console.log('='.repeat(64))
     console.log('  芒得很职 · 健康自检（doctor）' + (FULL ? ' · --full' : ' · 快速档'))
+    console.log(`  基线 HEAD: ${headSha}  运行时刻: ${ranAt}`)
     console.log('='.repeat(64))
     printTable()
   }
