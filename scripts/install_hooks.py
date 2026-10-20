@@ -48,7 +48,12 @@ import sys
 from pathlib import Path
 
 CANONICAL_REL = Path("scripts") / "pre-commit" / "pre-commit.sh"
-BACKUP_NAME = "pre-commit.preinstall.bak"
+# 钩子分层（REA #43）：pre-commit 守手感（秒级、按范围触发重闸），
+# pre-push 补全量静态闸（无条件、收集全部失败）。两层都入库、都由本脚本安装。
+CANONICAL_HOOKS: dict[str, Path] = {
+    "pre-commit": CANONICAL_REL,
+    "pre-push": Path("scripts") / "pre-commit" / "pre-push.sh",
+}
 
 
 def repo_root() -> Path:
@@ -138,7 +143,7 @@ def diff_summary(want: str, got: str, limit: int = 20) -> str:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="安装 / 校验 pre-commit 门禁钩子")
+    ap = argparse.ArgumentParser(description="安装 / 校验本地门禁钩子（pre-commit + pre-push）")
     ap.add_argument("--check", action="store_true", help="只校验一致性，drift 则 exit 1")
     ap.add_argument("--dry-run", action="store_true", help="只展示将要做的动作")
     ap.add_argument("--quiet", action="store_true", help="仅输出必要的单行结果")
@@ -149,12 +154,26 @@ def main() -> int:
             print(msg)
 
     root = repo_root()
-    canonical = root / CANONICAL_REL
-    target = hooks_dir(root) / "pre-commit"
 
-    say(f"仓库根   : {root}")
-    say(f"真源     : {canonical}")
-    say(f"安装目标 : {target}")
+    def say_all(msg: str) -> None:
+        if not args.quiet:
+            print(msg)
+
+    say_all(f"仓库根   : {root}")
+    say_all(f"钩子目录 : {hooks_dir(root)}")
+    say_all(f"入库真源 : {', '.join(str(p) for p in CANONICAL_HOOKS.values())}")
+
+    rc = 0
+    for name, rel in CANONICAL_HOOKS.items():
+        hook_rc = _sync_one(root, name, rel, args, say)
+        rc = rc or hook_rc
+    return rc
+
+
+def _sync_one(root: Path, name: str, rel: Path, args, say) -> int:
+    """同步单个钩子：不存在则装、内容漂移则覆盖（先备份）、一致则只补执行位。"""
+    canonical = root / rel
+    target = hooks_dir(root) / name
 
     if not canonical.is_file():
         print(f"❌ 找不到门禁真源 {canonical}", file=sys.stderr)
@@ -166,15 +185,17 @@ def main() -> int:
     # ---- 情形一：目标不存在 ----
     if got_raw is None:
         if args.check:
-            print("❌ 未安装钩子：目标不存在（跑一次 `python scripts/install_hooks.py`）", file=sys.stderr)
+            print(f"❌ 未安装钩子 {name}：目标不存在"
+                  f"（跑一次 `python scripts/install_hooks.py`）", file=sys.stderr)
             return 1
         if args.dry_run:
-            say("DRY-RUN 将写入新钩子")
+            say(f"DRY-RUN 将写入新钩子 {name}")
             return 0
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(want, encoding="utf-8", newline="\n")
         make_executable(target)
-        say(f"✅ 已安装钩子（{len(want.encode('utf-8'))} 字节，LF）", always=args.quiet)
+        say(f"✅ 已安装钩子 {name}（{len(want.encode('utf-8'))} 字节，LF）",
+            always=args.quiet)
         return 0
 
     # ---- 情形二：目标已存在 ----
@@ -184,7 +205,7 @@ def main() -> int:
     exec_note = "内容 + 执行位" if CHECK_EXEC_BIT else "内容，本平台不校验执行位"
     if not same_content:
         if args.check:
-            print("❌ 钩子与真源不一致（drift）：", file=sys.stderr)
+            print(f"❌ 钩子 {name} 与真源不一致（drift）：", file=sys.stderr)
             print(diff_summary(want, got), file=sys.stderr)
             print(
                 "\n修复：python scripts/install_hooks.py（幂等，会先备份既有钩子）",
@@ -192,34 +213,34 @@ def main() -> int:
             )
             return 1
         if args.dry_run:
-            say("DRY-RUN 内容不一致，将覆盖")
+            say(f"DRY-RUN {name} 内容不一致，将覆盖")
             print(diff_summary(want, got))
             return 0
 
         # 覆盖前先备份"非本真源"的既有钩子（只备份一次，保住最早那份）。
-        backup = target.parent / BACKUP_NAME
+        backup = target.parent / f"{name}.preinstall.bak"
         if not backup.exists():
             shutil.copy2(target, backup)
-            say(f"ℹ️ 已备份既有钩子 → {backup.name}")
+            say(f"ℹ️ 已备份既有钩子 {name} → {backup.name}")
         else:
             say(f"ℹ️ 既有备份已存在，保留最早的 {backup.name}")
 
         target.write_text(want, encoding="utf-8", newline="\n")
         make_executable(target)
-        say("✅ 钩子已同步为真源内容（LF）", always=args.quiet)
+        say(f"✅ 钩子 {name} 已同步为真源内容（LF）", always=args.quiet)
         return 0
 
     # 内容一致，只剩执行位（仅 POSIX 有意义）
     if args.check and not exec_ok:
-        print("❌ 钩子缺少可执行位（POSIX 上 git 会拒绝执行）", file=sys.stderr)
-        print("修复：chmod +x .git/hooks/pre-commit", file=sys.stderr)
+        print(f"❌ 钩子 {name} 缺少可执行位（POSIX 上 git 会拒绝执行）", file=sys.stderr)
+        print(f"修复：chmod +x .git/hooks/{name}", file=sys.stderr)
         return 1
     if args.dry_run:
-        say(f"DRY-RUN 仅需补执行位（{exec_note}）")
+        say(f"DRY-RUN {name} 仅需补执行位（{exec_note}）")
         return 0
 
     make_executable(target)
-    say(f"✅ 钩子与真源一致（{exec_note}）", always=args.quiet)
+    say(f"✅ 钩子 {name} 与真源一致（{exec_note}）", always=args.quiet)
     return 0
 
 

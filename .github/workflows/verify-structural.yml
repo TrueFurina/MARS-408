@@ -132,6 +132,21 @@ jobs:
           # 合理存在，阻断会逼出"删端点"这类违反项目红线的通过方式。
           # fail-closed：openapi 零路由 / 前端扫描面为零 → exit 2。
           run_one "audit_api_contract (前后端契约 A 类闸)" "python scripts/audit_api_contract.py --gate" "."
+          # 广告 schema 可达递归检查（REA #31，2026-10-20 新增，阻断）：
+          # MCP/表单渲染这类"引用预算有限"的客户端必须递归展开 schema，遇到
+          # A→B→A 这类可达环就只能靠截断兜底（而截断规则不在任何契约里）。
+          # 现状 262 operation / 133 schema 全为 DAG（0 违规），故直接提为门禁；
+          # 今后新增树形/图状响应模型若成环，这里会红——正确修法是打断环
+          # （子节点改 id 引用），不是绕过。脚本自带 7 项自测（含 fail-closed）。
+          run_one "check_schema_advertisement (广告 schema 递归闸)" "python scripts/check_schema_advertisement.py --gate" "."
+          run_one "check_schema_advertisement 自测" "python scripts/check_schema_advertisement_test.py" "."
+          # 复制粘贴扫描（REA #20，2026-10-20 新增，只拦新增）：
+          # 本仓无 jscpd 依赖（离线装不上＝没有），故用标准库实现文本级行窗指纹。
+          # 存量 190 处 / 约 2554 行已登记在 scripts/dup_scan.baseline.json，
+          # 门禁只拦**新增**克隆——否则首日全红，大家会习惯性 --no-verify，
+          # 门禁退化成仪式。脚本口径与自测见 scripts/dup_scan.py 文件头。
+          run_one "dup_scan (克隆新增闸)" "python scripts/dup_scan.py --gate" "."
+          run_one "dup_scan 自测" "python scripts/dup_scan_test.py" "."
 
           # 轻量结构守门：sqlite / numpy / fastapi / 内置语料，无需 Milvus
           run_one "verify_app_wiring"            "python scripts/verify_app_wiring.py"            "py-server"

@@ -20,6 +20,8 @@
     "gate:perf": "python scripts/perf_scan.py",
     "gate:xss": "python scripts/xss_scan.py",
     "gate:brand": "python scripts/brand_scan.py",
+    "gate:dup": "python scripts/dup_scan.py --gate",
+    "gate:dup:selftest": "python scripts/dup_scan_test.py",
     "verify": "node scripts/verify_all.mjs",
     "types:generate": "openapi-typescript py-server/openapi.json -o src/types/api.generated.ts",
     "lint:errors": "eslint . --ext .vue,.js,.ts,.tsx --quiet"
