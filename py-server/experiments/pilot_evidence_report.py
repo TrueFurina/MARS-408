@@ -40,6 +40,11 @@ import sys
 TEST_ACCOUNT_PREFIXES = (
     "test_", "test_user", "smoke_", "smoke-", "e2e_", "u_test", "u_e2e",
     "baseline_", "journey_", "probe_", "pilot_demo", "tmp_", "demo_check",
+    # 2026-10-21 计算机模拟演练（用户拍板「真实试点不可能，纯按计算机模拟来」）：
+    # sim_ 前缀账号是脚本驱动的模拟学生，不是真实用户。不登记的话它们会把
+    # distinct_users_real / max_bound_class 撑成假阳性 —— 那正是制造"试用已开展"
+    # 假象的路径，与本闸门的存在目的相反。
+    "sim_", "sim-",
 )
 # 形如 u_<16位hex> 的匿名账号：多为程序生成的测试/冒烟用户（人工注册通常不用这种名字）
 _ANON_RE = re.compile(r"^u_[0-9a-f]{16}$")

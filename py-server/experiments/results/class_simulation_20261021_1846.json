@@ -1,0 +1,270 @@
+{
+  "meta": {
+    "kind": "SIMULATION_DRILL",
+    "generated_at": "2026-10-21T18:46:59",
+    "base": "http://127.0.0.1:8002",
+    "llm_provider": "deepseek",
+    "class_name": "信息安全1班-模拟演练",
+    "class_id": "cls_70381e510b134a44",
+    "join_code": "64541A",
+    "task_id": "task_b8fef1ee8b2a42fa",
+    "scenario": "毕业设计开题答辩：你的系统架构被评委质疑",
+    "roster_size": 47,
+    "roster_duplicates": {
+      "5129": [
+        "29",
+        "47"
+      ]
+    },
+    "note": "模拟学生账号均为 sim_ 前缀（已登记进证据闸门排除清单）；所有数字只能表述为「模拟演练」，不得当作试用成效引用。"
+  },
+  "summary": {
+    "student_count": 47,
+    "joined_count": 10,
+    "started_count": 8,
+    "finished_count": 6,
+    "assessed_count": 6,
+    "completion_rate": 0.13,
+    "dimension_avg": {
+      "expression": 1.5,
+      "stress": 2.0,
+      "decompose": 1.75,
+      "collab": 2.6,
+      "problem_solving": 1.25,
+      "presentation": 2.0
+    },
+    "weakest_dimensions": [
+      {
+        "dimension": "problem_solving",
+        "avg": 1.25
+      },
+      {
+        "dimension": "expression",
+        "avg": 1.5
+      },
+      {
+        "dimension": "decompose",
+        "avg": 1.75
+      }
+    ],
+    "note": "最弱维度为全班均分的相对排序（升序），非绝对达标线；无数据维度不参与最弱排序（六维均分中显示为无数据）。",
+    "coverage_note": "分母 = 名册 47 人；10 人已加入、8 人已开练、6 人已完成、6 人有可评分结果。未纳入完成率的：37 人尚未加入、2 人已开练未完成。六维均分只统计有评分的学生，无数据维度不计入最弱排序。"
+  },
+  "students": [
+    {
+      "user": "sim_stu01",
+      "name": "学生01",
+      "mode": "full",
+      "registered": true,
+      "join": {
+        "status": 200,
+        "roster_bound": true,
+        "bound_name": "学生01",
+        "matched_by": "name"
+      },
+      "session_id": "sess_718db6587a89474c",
+      "end": 200,
+      "report": {
+        "status": "ready",
+        "assessment_source": "llm",
+        "overall": 1.55,
+        "dimensions": [
+          "collab",
+          "decompose",
+          "expression",
+          "presentation",
+          "problem_solving",
+          "stress"
+        ]
+      }
+    },
+    {
+      "user": "sim_stu03",
+      "name": "学生03",
+      "mode": "full",
+      "registered": true,
+      "join": {
+        "status": 200,
+        "roster_bound": true,
+        "bound_name": "学生03",
+        "matched_by": "name"
+      },
+      "session_id": "sess_af48fc19d3ae4f4e",
+      "end": 200,
+      "report": {
+        "status": "ready",
+        "assessment_source": "llm",
+        "overall": 1.82,
+        "dimensions": [
+          "collab",
+          "decompose",
+          "expression",
+          "presentation",
+          "problem_solving",
+          "stress"
+        ]
+      }
+    },
+    {
+      "user": "sim_stu02",
+      "name": "学生02",
+      "mode": "full",
+      "registered": true,
+      "join": {
+        "status": 200,
+        "roster_bound": true,
+        "bound_name": "学生02",
+        "matched_by": "name"
+      },
+      "session_id": "sess_0462ae1b23f94a11",
+      "end": 200,
+      "report": {
+        "status": "ready",
+        "assessment_source": "llm",
+        "overall": 1.93,
+        "dimensions": [
+          "collab",
+          "decompose",
+          "expression",
+          "presentation",
+          "problem_solving",
+          "stress"
+        ]
+      }
+    },
+    {
+      "user": "sim_stu05",
+      "name": "学生05",
+      "mode": "full",
+      "registered": true,
+      "join": {
+        "status": 200,
+        "roster_bound": true,
+        "bound_name": "学生05",
+        "matched_by": "name"
+      },
+      "session_id": "sess_e7d4aaab9a344d16",
+      "end": 200,
+      "report": {
+        "status": "ready",
+        "assessment_source": "llm",
+        "overall": 1.89,
+        "dimensions": [
+          "collab",
+          "decompose",
+          "expression",
+          "presentation",
+          "problem_solving",
+          "stress"
+        ]
+      }
+    },
+    {
+      "user": "sim_stu06",
+      "name": "学生06",
+      "mode": "full",
+      "registered": true,
+      "join": {
+        "status": 200,
+        "roster_bound": true,
+        "bound_name": "学生06",
+        "matched_by": "name"
+      },
+      "session_id": "sess_33832602c6f34f91",
+      "end": 200,
+      "report": {
+        "status": "ready",
+        "assessment_source": "llm",
+        "overall": 1.82,
+        "dimensions": [
+          "collab",
+          "decompose",
+          "expression",
+          "presentation",
+          "problem_solving",
+          "stress"
+        ]
+      }
+    },
+    {
+      "user": "sim_stu04",
+      "name": "学生04",
+      "mode": "full",
+      "registered": true,
+      "join": {
+        "status": 200,
+        "roster_bound": true,
+        "bound_name": "学生04",
+        "matched_by": "name"
+      },
+      "session_id": "sess_7ef11e017fcd4e09",
+      "end": 200,
+      "report": {
+        "status": "ready",
+        "assessment_source": "llm",
+        "overall": 1.45,
+        "dimensions": [
+          "collab",
+          "decompose",
+          "expression",
+          "presentation",
+          "problem_solving",
+          "stress"
+        ]
+      }
+    },
+    {
+      "user": "sim_stu09",
+      "name": "学生09",
+      "mode": "join_only",
+      "registered": true,
+      "join": {
+        "status": 200,
+        "roster_bound": true,
+        "bound_name": "学生09",
+        "matched_by": "name"
+      }
+    },
+    {
+      "user": "sim_stu10",
+      "name": "学生10",
+      "mode": "join_only",
+      "registered": true,
+      "join": {
+        "status": 200,
+        "roster_bound": true,
+        "bound_name": "学生10",
+        "matched_by": "name"
+      }
+    },
+    {
+      "user": "sim_stu08",
+      "name": "学生08",
+      "mode": "unfinished",
+      "registered": true,
+      "join": {
+        "status": 200,
+        "roster_bound": true,
+        "bound_name": "学生08",
+        "matched_by": "name"
+      },
+      "session_id": "sess_0445033bba394b2e",
+      "left_unfinished": true
+    },
+    {
+      "user": "sim_stu07",
+      "name": "学生07",
+      "mode": "unfinished",
+      "registered": true,
+      "join": {
+        "status": 200,
+        "roster_bound": true,
+        "bound_name": "学生07",
+        "matched_by": "name"
+      },
+      "session_id": "sess_4fb2937800c94213",
+      "left_unfinished": true
+    }
+  ],
+  "elapsed_s": 543.7
+}
