@@ -278,10 +278,10 @@ export const api = {
    * 否则后端无法正确解析分块。
    */
   async upload<T>(path: string, formData: FormData): Promise<T> {
-    const token = getToken()
-    const headers: Record<string, string> = {}
-    if (token) headers['Authorization'] = `Bearer ${token}`
-    return requestForm<T>(path, formData, headers)
+    // 双头必须走 getAuthHeaders()：发布网关只透传自定义头 X-App-Token
+    // （Authorization 会被换成平台身份 token），漏一个头本地全绿、线上 401。
+    // Content-Type 不设置，由浏览器自动补全 boundary（见下方注释）。
+    return requestForm<T>(path, formData, getAuthHeaders())
   },
 
   /** 返回二进制 Blob（视频 / 音频 / 文件下载） */
@@ -305,10 +305,10 @@ export const api = {
 
   /** GET 二进制下载（如导出报告 HTML）；接 401 统一登出，契约同 postBlob：不抛异常、返回 ok/status */
   async getBlob(path: string): Promise<{ blob: Blob; ok: boolean; status: number }> {
-    const token = getToken()
-    const headers: Record<string, string> = {}
-    if (token) headers['Authorization'] = `Bearer ${token}`
-    const resp = await fetch(`${API_BASE}/api${path}`, { method: 'GET', headers })
+    // 双头必须走 getAuthHeaders()：CloudStudio 网关只透传自定义头 X-App-Token，
+    // 只带 Authorization 的请求在线上稳定 401（2026-10-21 线上巡检实测：
+    // 教师点「导出一页纸报告」→ 401 → handleUnauthorized 把用户踢回登录页）。
+    const resp = await fetch(`${API_BASE}/api${path}`, { method: 'GET', headers: getAuthHeaders() })
     handleUnauthorized(resp.status)
     return { blob: await resp.blob(), ok: resp.ok, status: resp.status }
   },
@@ -351,9 +351,10 @@ export async function ttsSynthesize(
   language = 'zh',
   engine = 'auto',
 ): Promise<Blob | null> {
-  const token = getToken()
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  if (token) headers['Authorization'] = `Bearer ${token}`
+  // 双头（X-App-Token + Authorization）缺一不可：发布网关只透传自定义头，
+  // 只带 Authorization 在线上 401 —— 而本函数吞错降级、不登出，错了也没人发现。
+  // getAuthHeaders() 在无 token 时返回 {}，未登录的匿名 TTS 调用不受影响。
+  const headers: Record<string, string> = { ...getAuthHeaders(), 'Content-Type': 'application/json' }
 
   const resp = await fetch(`${API_BASE}/api/tts/synthesize`, {
     method: 'POST',
