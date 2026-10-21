@@ -14,7 +14,7 @@
 
 | 序号 | 讯飞工具名称 | 用途 | 协议要求 | 来源 |
 |:----:|-------------|------|---------|------|
-| 1 | **讯飞星火 X2（Spark-X2-Flash）** | 核心大语言模型（LLM 三通道**第一优先级**），文本生成、推理、资源产出 | 商业 API（按量计费，遵守讯飞开放平台服务协议） | https://www.xfyun.cn/doc/spark/Web.html |
+| 1 | **讯飞星火 X2（Spark-X2-Flash）** | 核心大语言模型（LLM 四通道**第一优先级**），文本生成、推理、资源产出 | 商业 API（按量计费，遵守讯飞开放平台服务协议） | https://www.xfyun.cn/doc/spark/Web.html |
 | 2 | **TTI 图片生成** | 知识点→教学插图生成 | 商业 API | https://www.xfyun.cn/doc/ai-image-generation/api.html |
 | 3 | **图片理解** | 多模态问答（学生上传图片提问） | 商业 API | https://www.xfyun.cn/doc/vision/image-understanding/API.html |
 | 4 | **聚合搜索（万搜）** | RAG 联网检索增强 | 商业 API | https://www.xfyun.cn/doc/alisearch/api.html |
@@ -27,7 +27,7 @@
 | 11 | **智能简历** | 生成可下载考研复试简历（Word） | 商业 API | https://www.xfyun.cn/doc/conv/resume/api.html |
 | 12 | **TTS 语音合成（本地 MeloTTS，非讯飞）** | 视频脚本→语音旁白 | 本地开源 | https://github.com/myshell-ai/MeloTTS |
 
-**合规说明**：以上讯飞工具均通过讯飞开放平台正规渠道接入，遵守讯飞开放平台服务协议。星火 X2 为赛题合规要求的 LLM 工具，已接入三通道 LLM 路由作为核心通道之一。
+**合规说明**：以上讯飞工具均通过讯飞开放平台正规渠道接入，遵守讯飞开放平台服务协议。星火 X2 为赛题合规要求的 LLM 工具，已接入四通道 LLM 路由作为核心通道之一；另接入智谱 GLM（glm-4-flash）作第 4 兜底通道，商业 API（免费档），遵守智谱开放平台服务协议，来源 https://open.bigmodel.cn 。
 
 ---
 
@@ -78,9 +78,9 @@
 |------|------|--------|------|
 | **intfloat/e5-base-v2** | 文本嵌入模型（768 维向量） | MIT | https://huggingface.co/intfloat/e5-base-v2 |
 | **BAAI/bge-reranker-base** | Cross-encoder 检索重排序模型 | MIT | https://huggingface.co/BAAI/bge-reranker-base |
-| **讯飞星火 X2 (Spark-X2-Flash)** | 大语言模型（LLM 三通道**第一优先级**）+ 多模态（见上方讯飞声明） | 商业 API | https://www.xfyun.cn |
-| **DeepSeek (deepseek-chat)** | 大语言模型（LLM 三通道第二优先级，降级通道） | 商业 API | https://platform.deepseek.com |
-| **Qwen2.5 (qwen2.5-7b-instruct)** | 大语言模型（LLM 三通道第三优先级，备用通道） | 商业 API | https://tongyi.aliyun.com |
+| **讯飞星火 X2 (Spark-X2-Flash)** | 大语言模型（LLM 四通道**第一优先级**）+ 多模态（见上方讯飞声明） | 商业 API | https://www.xfyun.cn |
+| **DeepSeek (deepseek-chat)** | 大语言模型（LLM 四通道第二优先级，降级通道） | 商业 API | https://platform.deepseek.com |
+| **Qwen (qwen3.8-max)** | 大语言模型（LLM 四通道第三优先级，备用通道） | 商业 API | https://tongyi.aliyun.com |
 
 ## 四、开发工具
 
