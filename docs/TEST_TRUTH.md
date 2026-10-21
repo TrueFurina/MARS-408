@@ -17,7 +17,7 @@
 
 - **本机 Windows 实测**（career-literacy @ de86da4，2026-10-16 重跑）：**1325 通过 / 208 跳过 / 1 xfailed / 0 失败 / 0 错误 / 9 未选中**；collect **1543**（=1325+208+1+9），默认集执行 **1534**（=1543−9 未选中，**≠ 通过**）。
 - **CI/Linux 默认档**（2026-10-20 run `39467891052`，head `22a7469`）：**1693 通过 / 38 跳过 / 1 xfailed**（约 1741 collected，9 deselected，384.74s；1654→1693 增量 = 教师端看板口径 + 错误文案分类 + 四组运行时契约测试）。前一权威（2026-10-18 run `39101268904`：1654/38/1，1702 collected）已作废。平台剖面差异（`segv_env` / `isolation` / win32-only 标记集）见 pyproject addopts。
-- **覆盖率**：本机 fresh 实测 **57.19%**（22587 stmt / 9670 missed），`--cov-fail-under=50` 过线（余量 7.19pp）。AGENTS.md:29 旧写 53.31% 已过时，应同步为 57.19%。
+- **覆盖率**：两种平台剖面分别记账 —— **CI/Linux（run `39467891052` step1 TOTAL `22554 8439 63%`）63%**；**本机 fresh 57.19%**（22587 stmt / 9670 missed，2026-10-16 实测）。门禁 `--cov-fail-under=50` 均达标。对外引用必须带口径（CI 63% / 本机 57.19%），不得混用；AGENTS.md 的 57.19% 为**本机口径**，与 CI 值不矛盾。
 - 历史快照（1178/208/3、923/221、1139/0、1177/227 等）已陈旧，**仅作 git 历史记录，不可作权威对外口径**。
 
 ## 2. 收尾裁决（机制）
@@ -30,7 +30,7 @@
 | 模块 | 权威真值来源 | 负责人 |
 |---|---|---|
 | 测试计数 | **CI 全量回归 1693 通过/38 跳过/1 xfail/0 失败（run 39467891052，2026-10-20）**，SSOT METRICS_CURRENT.md:79-81 | qa-2 / SSOT |
-| 覆盖率 | 57.19%（-cov-fail-under=50 过线） | qa-2 |
+| 覆盖率 | 本机 57.19% / CI 63%（run 39467891052），门禁 -cov-fail-under=50 均达标 | qa-2 |
 | 工程规模（API/views 等） | verify_metrics.py --update 机检 | qa-2 |
 | OpenAPI 端点 | verify_openapi_snapshot.py（244 paths / 262 ops，机器门禁；/api 子集 243/261） | engineer-8 |
 | NeuralMixer | verify_mixer_prod.py（96 样本 / seed 20261006 / n=6） | engineer-2 |

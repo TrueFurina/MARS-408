@@ -69,6 +69,10 @@ BP 工程规模口径以 openapi 全量为真值源 + 大量端点系 main 分�
 coverage **94.88%**，与 `docs/METRICS_CURRENT.md` 记载一致（无漂移）。
 孤儿端点中无「未注册即公开」的暴露面。
 
+> 📌 **2026-10-21 补注**：上一段为 10-17 时点审计结论（当时准确）。此后教师端系列提交扩张了端点，
+> 现 SSOT 为 **261 操作 / 248 受保护 / 13 公开、95.02%（248/261）**，`unregistered` 仍为 **0**
+> （2026-10-21 `verify_auth_coverage.py` 机检复核）。引用本文数字务必带 as-of 日期。
+
 ## 四、门禁落地与测试（双向变异验证）
 
 - **CI**：`audit_api_contract.py --gate` 接入 `.github/workflows/verify-structural.yml`
