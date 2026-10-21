@@ -1,6 +1,8 @@
 # ============================================================
 # 思维导图 Agent (MindMap Generator)
-# 4步流水线: 检索参考 → Qwen2.5生成骨架 → 画像标注掌握度 → 多格式渲染
+# 4步流水线: 检索参考 → LLM生成骨架 → 画像标注掌握度 → 多格式渲染
+# 注: LLM 走四通道容灾路由（讯飞X2 → DeepSeek → Qwen → GLM），非固定单一模型；
+#     此处旧注释写死的「Qwen2.5」是 2026-10 前的架构残留，2026-10-21 纠正。
 #
 # 作为 generator_cluster 的子 Agent 被调用, 不直接暴露给学生。
 # 输出 weak_points 供路径规划 Agent 消费。
@@ -110,7 +112,7 @@ async def generate_mindmap(
     try:
         # Step 1: 已由 retriever 完成, knowledge_context 直接传入
 
-        # Step 2: Qwen2.5 生成知识骨架（注入三层学情记忆，薄弱点驱动标注）
+        # Step 2: LLM 生成知识骨架（注入三层学情记忆，薄弱点驱动标注）
         tree = await _generate_skeleton(topic, knowledge_context, llm, max_depth, memory_context)
         if tree is None:
             logger.warning(f"[MindMap] 骨架生成失败, 返回None")
@@ -146,7 +148,7 @@ async def generate_mindmap(
 
 
 # ============================================================
-# Step 2: Qwen2.5 生成知识骨架树
+# Step 2: LLM 生成知识骨架树
 # ============================================================
 
 async def _generate_skeleton(

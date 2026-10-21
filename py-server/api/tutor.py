@@ -42,7 +42,8 @@ class TutorResponse(BaseModel):
 async def tutor_endpoint(req: TutorRequest, user: dict = Depends(require_llm_quota)):
     """智能答疑: 学生提问 → 检索 + 多模态解答
 
-    完整流程: FrugalRAG检索 → Qwen2.5生成文字解答+图解说明+知识关联
+    完整流程: FrugalRAG检索 → LLM生成文字解答+图解说明+知识关联
+    （LLM 走四通道容灾路由：讯飞X2 → DeepSeek → Qwen → GLM，非固定单一模型）
     快速模式: 跳过检索, 直接LLM回答 (适合简单问题, 减少延迟)
     """
     logger.info(f"答疑请求: question={req.question[:50]}..., quick={req.quick_mode}")

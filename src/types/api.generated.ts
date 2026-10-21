@@ -1790,7 +1790,8 @@ export interface paths {
          * Tutor Endpoint
          * @description 智能答疑: 学生提问 → 检索 + 多模态解答
          *
-         *     完整流程: FrugalRAG检索 → Qwen2.5生成文字解答+图解说明+知识关联
+         *     完整流程: FrugalRAG检索 → LLM生成文字解答+图解说明+知识关联
+         *     （LLM 走四通道容灾路由：讯飞X2 → DeepSeek → Qwen → GLM，非固定单一模型）
          *     快速模式: 跳过检索, 直接LLM回答 (适合简单问题, 减少延迟)
          */
         post: operations["tutor_endpoint_api_tutor_answer_post"];
@@ -2032,7 +2033,14 @@ export interface paths {
         };
         /**
          * Get User Mastery
-         * @description Dashboard 掌握度数据（按科目）
+         * @description Dashboard 掌握度数据（按科目）。
+         *
+         *     subject 与 label 分工（2026-10-18 口径统一）：
+         *       - subject = 规范英文键（STEP_QUESTIONS 的 subject 取值），用作筛选键。
+         *         掌握度地图以 `w.subject === m.subject` 严格相等联动薄弱点、以
+         *         `k.subject === m.subject` 联动知识点，两侧本来就输出规范英文键，
+         *         故掌握度侧必须归一化到同一套，否则点击科目卡片恒筛不出内容。
+         *       - label   = 中文展示名，仅用于卡片文案，不参与比较。
          */
         get: operations["get_user_mastery_api_user_mastery_get"];
         put?: never;
@@ -2087,6 +2095,37 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/users/{username}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete User Endpoint
+         * @description 删除用户及其全部关联数据（级联）；仅限 admin，且禁止删除自己。
+         *
+         *     为什么现在才加：此前评估「造删除端点」收益为零风险不为零，
+         *     判断前提是「没有需要删的对象」。该前提已不成立——权限矩阵
+         *     探测时误用写端点，在线上留下了垃圾账号（其中一个是 role=admin
+         *     的弱密码探测账号，本身就是安全面扩大），而当时没有任何通道
+         *     能移除它、也没有改密通道能先废掉它。
+         *
+         *     护栏（缺一不可）：
+         *       1. 整路由 require_admin（与其他 admin 端点同口径）；
+         *       2. 禁止删除调用者自己——否则管理员一次手滑就锁死整站；
+         *       3. 不存在则 404（不静默成功，避免误以为删掉了）。
+         */
+        delete: operations["delete_user_endpoint_api_admin_users__username__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -4256,6 +4295,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/career/scenario-job-directions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Scenario Job Directions
+         * @description 可选岗位方向（前端下拉）；生成器模板库单一真值源。
+         */
+        get: operations["scenario_job_directions_api_career_scenario_job_directions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/career/scenarios/generate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Generate Scenario
+         * @description 按岗位方向生成一个完整情景（draft，不入可选列表），人工审核后 activate 才可见。
+         */
+        post: operations["generate_scenario_api_career_scenarios_generate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/career/scenarios/drafts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Scenario Drafts
+         * @description 待审核的生成场景草稿（draft）。
+         */
+        get: operations["list_scenario_drafts_api_career_scenarios_drafts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/career/scenarios/{scenario_id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Activate Scenario
+         * @description 人工审核通过：draft → active（此后进入 /scenarios 可选列表）。
+         */
+        post: operations["activate_scenario_api_career_scenarios__scenario_id__activate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/career/session/start": {
         parameters: {
             query?: never;
@@ -4324,6 +4443,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/career/session/{session_id}/reassess": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reassess */
+        post: operations["reassess_api_career_session__session_id__reassess_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/career/session/{session_id}/export-report": {
         parameters: {
             query?: never;
@@ -4374,6 +4510,36 @@ export interface paths {
         /** Create Class */
         post: operations["create_class_api_career_classes_post"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/career/classes/{class_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Class
+         * @description 删除「空班级」（无学生、无任务）。
+         *
+         *     存在的理由：建班是一次性动作，点错/探测留下的空班会长期挂在
+         *     教师视图里干扰试点；而没有删除通道时，唯一的"清理"手段就是
+         *     直接改线上库——那更危险。
+         *
+         *     为什么限定空班：班级带了学生或任务后，下面挂着名册、任务码、
+         *     实训会话与评估报告，都是发生型证据，不可再生。级联删等于线上
+         *     装一个毁证据开关，所以非空一律 409 拒绝，不做级联。
+         *
+         *     权限：教师只能删自己建的班；admin 可清理任意班（空班约束照旧）。
+         */
+        delete: operations["delete_class_api_career_classes__class_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -6603,6 +6769,21 @@ export interface components {
              * @default ok
              */
             status: string;
+        };
+        /** ScenarioGenerateRequest */
+        ScenarioGenerateRequest: {
+            /**
+             * Job Direction
+             * @description 岗位方向 frontend/backend/algorithm/product/ops
+             */
+            job_direction: string;
+            /** Scenario Type */
+            scenario_type?: string | null;
+            /**
+             * Difficulty
+             * @default medium
+             */
+            difficulty: string;
         };
         /** SearchReq */
         SearchReq: {
@@ -10699,6 +10880,42 @@ export interface operations {
             };
         };
     };
+    delete_user_endpoint_api_admin_users__username__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "X-App-Token"?: string | null;
+            };
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_users_endpoint_api_admin_users_list_get: {
         parameters: {
             query?: never;
@@ -14617,6 +14834,140 @@ export interface operations {
             };
         };
     };
+    scenario_job_directions_api_career_scenario_job_directions_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "X-App-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    generate_scenario_api_career_scenarios_generate_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "X-App-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScenarioGenerateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_scenario_drafts_api_career_scenarios_drafts_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "X-App-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    activate_scenario_api_career_scenarios__scenario_id__activate_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "X-App-Token"?: string | null;
+            };
+            path: {
+                scenario_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     start_api_career_session_start_post: {
         parameters: {
             query?: never;
@@ -14763,6 +15114,40 @@ export interface operations {
             };
         };
     };
+    reassess_api_career_session__session_id__reassess_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "X-App-Token"?: string | null;
+            };
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     export_report_api_career_session__session_id__export_report_get: {
         parameters: {
             query?: never;
@@ -14876,6 +15261,40 @@ export interface operations {
                 "application/json": components["schemas"]["ClassCreateRequest"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_class_api_career_classes__class_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "X-App-Token"?: string | null;
+            };
+            path: {
+                class_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {

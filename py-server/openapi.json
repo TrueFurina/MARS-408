@@ -6185,7 +6185,7 @@
           "tutor"
         ],
         "summary": "Tutor Endpoint",
-        "description": "智能答疑: 学生提问 → 检索 + 多模态解答\n\n完整流程: FrugalRAG检索 → Qwen2.5生成文字解答+图解说明+知识关联\n快速模式: 跳过检索, 直接LLM回答 (适合简单问题, 减少延迟)",
+        "description": "智能答疑: 学生提问 → 检索 + 多模态解答\n\n完整流程: FrugalRAG检索 → LLM生成文字解答+图解说明+知识关联\n（LLM 走四通道容灾路由：讯飞X2 → DeepSeek → Qwen → GLM，非固定单一模型）\n快速模式: 跳过检索, 直接LLM回答 (适合简单问题, 减少延迟)",
         "operationId": "tutor_endpoint_api_tutor_answer_post",
         "parameters": [
           {
