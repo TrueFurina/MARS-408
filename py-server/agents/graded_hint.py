@@ -111,8 +111,14 @@ def _build_hint_user_prompt(
     knowledge_context: str,
     learning_context: str,
     memory_context: str = "",
+    attempt_text: str = "",
 ) -> str:
-    """构建分级提示的用户提示词（风格与 tutor._build_tutor_prompt 对齐）"""
+    """构建分级提示的用户提示词（风格与 tutor._build_tutor_prompt 对齐）
+
+    先答后问 (attempt-before-asking, SAGE 任务设计第一条):
+    - 学生已交尝试 → 尝试内容注入 prompt, 供卡点定位使用;
+    - 学生未交尝试 → 本轮不展开任何题目提示, 只引导交出尝试。
+    """
     parts = [f"【学生问题】\n{question}"]
 
     level = profile.get("knowledge_base", "beginner")
@@ -131,7 +137,20 @@ def _build_hint_user_prompt(
         parts.append(f"【知识库检索结果】\n{knowledge_context}")
 
     lv = HINT_LEVELS[hint_level]
-    parts.append(f"\n请严格按「{lv['name']}」级提示规则输出——只给提示, 不给最终答案。")
+    if attempt_text.strip():
+        parts.append(f"【学生已尝试（先答后问提交）】\n{attempt_text.strip()}")
+        parts.append(
+            f"\n请结合学生的尝试按「{lv['name']}」级提示规则输出——"
+            "只给提示, 不给最终答案; 学生尝试中的错误不要直接纠正, 用提示引导他自己发现。"
+        )
+    else:
+        parts.append(
+            "\n【先答后问】学生尚未提交任何自己的尝试。本轮你的回应应："
+            "温和说明「先交尝试, 再给提示」的规则, 引导学生描述："
+            "① 已有思路或卡点位置 ② 至少一次具体的尝试（写到哪里/试过什么）"
+            "③ 卡住的具体报错或疑问。可给一个『怎样描述尝试』的简短示例, "
+            "但不要给这道题的任何提示本身。"
+        )
     return "\n\n".join(parts)
 
 
@@ -194,6 +213,7 @@ async def graded_hint_answer(
     learning_context: str = "",
     knowledge_context: str = "",
     memory_context: str = "",
+    attempt_text: str = "",
     llm=None,
 ) -> dict:
     """按指定提示层级生成支架式提示 (不直接给答案)。
@@ -206,6 +226,8 @@ async def graded_hint_answer(
         learning_context: 当前学习上下文 (可选)
         knowledge_context: 预取的知识库上下文 (可选; 为空则自行检索)
         memory_context: 学情记忆上下文 (可选, 低侵入注入)
+        attempt_text: 学生已提交的尝试（先答后问; 可选）。为空时本轮只引导
+            交出尝试, 不展开题目提示。
         llm: LLMProvider 实例 (可选; 为 None 则自建, 便于测试注入)
 
     Returns:
@@ -216,20 +238,24 @@ async def graded_hint_answer(
             "hint_level_name": "方向"|"前置"|"局部",
             "withheld": True,   # 恒为 True: 本模式不输出最终答案
             "retrieved_context": "检索到的知识上下文",
+            "attempt_required": bool,  # 本轮是否转入了「先答后问」引导
         }
     """
     if hint_level not in HINT_LEVELS:
         raise ValueError(f"hint_level 必须是 1/2/3, 收到 {hint_level!r}")
 
     logger.info(
-        "[GradedHint] 收到问题: %s... level=%s(%s)",
+        "[GradedHint] 收到问题: %s... level=%s(%s) attempt=%s",
         question[:50],
         hint_level,
         HINT_LEVELS[hint_level]["name"],
+        "yes" if attempt_text.strip() else "no",
     )
 
-    # Step 1: 检索 (与 tutor_answer 同源; 调用方已传入则跳过)
-    if not knowledge_context:
+    # Step 1: 检索 (与 tutor_answer 同源; 调用方已传入则跳过。
+    # 先答后问引导轮不检索——本轮不给题目提示, 无需知识上下文)
+    attempt_required = not attempt_text.strip()
+    if not knowledge_context and not attempt_required:
         try:
             from engines.frugal_rag import format_retrieval_for_llm, frugal_rag
 
@@ -245,7 +271,8 @@ async def graded_hint_answer(
     # Step 2: 构建提示
     system_prompt = build_hint_system_prompt(hint_level)
     user_prompt = _build_hint_user_prompt(
-        question, profile, hint_level, knowledge_context, learning_context, memory_context
+        question, profile, hint_level, knowledge_context, learning_context,
+        memory_context, attempt_text,
     )
 
     # Step 3: LLM 生成提示 (temperature 低于答疑: 提示要更收敛)
@@ -272,4 +299,5 @@ async def graded_hint_answer(
         "hint_level_name": HINT_LEVELS[hint_level]["name"],
         "withheld": True,
         "retrieved_context": knowledge_context,
+        "attempt_required": attempt_required,
     }

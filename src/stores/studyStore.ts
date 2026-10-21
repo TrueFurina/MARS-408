@@ -618,7 +618,7 @@ const userMsg: ChatMessage = {
   // hintLevel（1=方向/2=前置/3=局部）非空时改走 /tutor/answer 的分级提示模式
   // （SAGE 支架式引导：只给提示、保留最终答案；不走 enhanced 链路——其 SVG/视频
   //  生成不受分级提示约束，存在旁路泄露答案的风险）。
-  async function askTutor(question: string, hintLevel?: number): Promise<void> {
+  async function askTutor(question: string, hintLevel?: number, attemptText?: string): Promise<void> {
     const conv = getCurrentConversation()
     if (!conv) return
 
@@ -646,6 +646,7 @@ const userMsg: ChatMessage = {
           profile: studentProfile.value || {},
           course: 'computer_network',
           hint_level: hintLevel,
+          attempt_text: attemptText?.trim() || '',
         })
         const m = conv.messages.find(x => x.id === msgId)
         if (m) {
@@ -655,7 +656,9 @@ const userMsg: ChatMessage = {
           m.svgDiagram = ''
           m.videoScript = ''
           // 分级提示不产生 SVG/视频；保留答案时给用户一个明确交代
-          if (data.withheld) {
+          if (data.attempt_required) {
+            m.content += `\n\n> 🪜 先答后问：交出你的思路/卡点/至少一次尝试后，下一条就能拿到「${lvName}」级提示。`
+          } else if (data.withheld) {
             m.content += `\n\n> 🪜 分级提示（${lvName}级）：最后一步留给你完成。想升级提示级别或核对思路，直接继续对话。`
           }
         }

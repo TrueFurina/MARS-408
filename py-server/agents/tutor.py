@@ -64,9 +64,10 @@ async def tutor_answer(
     course: str = "computer_network",
     learning_context: str = "",
     generate_diagram: bool = True,
-    memory_context: str = "",
-    hint_level: int | None = None,
-) -> dict:
+        memory_context: str = "",
+        hint_level: int | None = None,
+        attempt_text: str = "",
+    ) -> dict:
     """智能答疑: 学生提问 → 检索 + 多模态解答
 
     Args:
@@ -79,6 +80,7 @@ async def tutor_answer(
         hint_level: 分级提示层级 1=方向/2=前置/3=局部（可选; None=普通答疑）。
             非 None 时路由到 agents.graded_hint（SAGE 支架式引导: 只给提示,
             保留最终答案）。注意与 memory_context 的学情记忆 L1/L2/L3 是两套体系。
+        attempt_text: 学生已提交的尝试（先答后问; 仅分级提示模式使用, 可选）。
 
     Returns:
         {
@@ -101,6 +103,7 @@ async def tutor_answer(
             course=course,
             learning_context=learning_context,
             memory_context=memory_context,
+            attempt_text=attempt_text,
         )
 
     logger.info(f"[Tutor] 收到问题: {question[:50]}...")

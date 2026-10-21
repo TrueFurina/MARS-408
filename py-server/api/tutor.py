@@ -32,6 +32,11 @@ class TutorRequest(BaseModel):
         le=3,
         description="分级提示层级 (1=方向/2=前置/3=局部, SAGE 支架式引导: 只给提示不给最终答案); 不传=普通答疑",
     )
+    attempt_text: str = Field(
+        default="",
+        max_length=4000,
+        description="学生已提交的尝试（先答后问）; 分级提示模式下为空时本轮只引导交出尝试",
+    )
 
 
 class TutorResponse(BaseModel):
@@ -43,6 +48,10 @@ class TutorResponse(BaseModel):
     hint_level: int | None = Field(default=None, description="分级提示层级 (仅分级提示模式返回)")
     hint_level_name: str = Field(default="", description="分级提示级别名 (方向/前置/局部)")
     withheld: bool | None = Field(default=None, description="是否保留最终答案 (分级提示模式恒为 true)")
+    attempt_required: bool | None = Field(
+        default=None,
+        description="本轮是否转入了先答后问引导 (仅分级提示模式返回; true=需先交尝试再取提示)",
+    )
 
 
 # ── 端点 ──
@@ -84,6 +93,7 @@ async def tutor_endpoint(req: TutorRequest, user: dict = Depends(require_llm_quo
         learning_context=req.learning_context,
         generate_diagram=req.generate_diagram,
         hint_level=req.hint_level,
+        attempt_text=req.attempt_text,
     )
     # P1-7：输出内容安全审核
     _safe_answer, _ = await audit_output(result["answer"], "tutor/answer")
@@ -111,6 +121,7 @@ async def tutor_endpoint(req: TutorRequest, user: dict = Depends(require_llm_quo
         hint_level=result.get("hint_level"),
         hint_level_name=result.get("hint_level_name", ""),
         withheld=result.get("withheld"),
+        attempt_required=result.get("attempt_required"),
     )
 
 

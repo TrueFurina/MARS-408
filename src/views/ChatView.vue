@@ -54,6 +54,8 @@ const profileWeakCount = computed(() => {
 const tutorMode = ref(false)
 // SAGE 分级提示级别：0=关（走多模态答疑），1=方向/2=前置/3=局部（走 /tutor/answer 分级提示）
 const hintLevel = ref(0)
+// 先答后问：hint 模式下学生可先交尝试（已有思路/卡点/试过什么），未交时首轮只收尝试
+const attemptText = ref('')
 const HINT_LEVELS_UI = [
   { level: 1, name: '方向', desc: '只帮你定位卡点' },
   { level: 2, name: '前置', desc: '补前置知识，不给解法' },
@@ -315,8 +317,9 @@ async function sendMessage(text: string) {
         router.replace('/c/' + conv.id)
       }
     } else if (tutorMode.value && hintLevel.value > 0) {
-      // SAGE 分级提示模式（功能④扩展：/tutor/answer + hint_level）
-      await store.askTutor(text, hintLevel.value)
+      // SAGE 分级提示模式（功能④扩展：/tutor/answer + hint_level + 先答后问）
+      await store.askTutor(text, hintLevel.value, attemptText.value)
+      attemptText.value = '' // 尝试提交后清空，下一轮重新收集
       const conv = store.getCurrentConversation()
       if (conv && conv.messages.length > 0 && !route.params.convId) {
         router.replace('/c/' + conv.id)
@@ -613,6 +616,16 @@ onBeforeUnmount(() => {
       <div v-if="sendError" class="chat-send-error" role="button" tabindex="0" aria-label="关闭错误提示" @click="sendError = null" @keydown.enter="sendError = null" title="点击关闭">
          {{ sendError }}
       </div>
+      <div v-if="tutorMode && hintLevel > 0" class="attempt-input-bar">
+        <span class="attempt-label">先答后问 · 我的尝试</span>
+        <input
+          v-model="attemptText"
+          class="attempt-input"
+          type="text"
+          placeholder="已有思路 / 卡点位置 / 试过什么（交了尝试才能拿到提示）"
+          maxlength="2000"
+        />
+      </div>
       <div class="chat-input-wrapper">
         <ChatInput ref="chatInputRef" :disabled="isLoading" @send="sendMessage" @image="onImageSelected" />
       </div>
@@ -824,6 +837,16 @@ onBeforeUnmount(() => {
 .mode-hint { font-size:var(--text-2xs); color: var(--text-muted); }
 .hint-level-toggle { font-size:var(--text-2xs); padding: 2px 8px; }
 .hint-level-toggle.active { box-shadow: inset 0 0 0 1px currentColor; }
+.attempt-input-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 10px; margin-bottom: 6px;
+  border: 1px dashed var(--border-secondary, #ccc); border-radius: 8px;
+}
+.attempt-label { font-size:var(--text-2xs); color: var(--text-muted); white-space: nowrap; }
+.attempt-input {
+  flex: 1; border: none; outline: none; background: transparent;
+  font-size: var(--text-2xs); color: var(--text-primary, #333);
+}
 
 /* ── 导师答疑多模态卡片 ── */
 .tutor-media-block {
