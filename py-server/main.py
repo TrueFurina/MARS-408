@@ -45,7 +45,7 @@ app = FastAPI(
                 "## 技术栈\n"
                 "后端: FastAPI + LangGraph + PyTorch + Milvus\n"
                 "前端: Vue 3 + TypeScript + Vite\n"
-                "LLM: DeepSeek / 讯飞星火 X2 两通道（P0 不接 Qwen2.5）\n\n"
+                "LLM: 四通道容灾 讯飞星火 X2 / DeepSeek / Qwen / 智谱 GLM（auto 按此优先级逐级回退，ADR-020）\n\n"
                 "## 安全\n"
                 "- 95.02% API 认证覆盖率（248/261 个 /api 端点；"
                 "scripts/verify_auth_coverage.py 可复现重算）\n"

@@ -275,7 +275,7 @@ npm install && npm run dev                   # :5173，代理 /api → 8002
 | 后端 | FastAPI + LangGraph · 约 261 个 API 端点（openapi.json 实测 `/api` 子集 243 路径 / 261 操作）· 11 Agent 节点 |
 | 代码量 | 后端 384 个 Python 文件 / 约 9.1 万行 · 前端 158 文件（88 .vue + 70 .ts）/ 约 5.6 万行 |
 | 测试 | 1693 项测试通过 / 38 跳过 / 1 xfail（CI 默认档，全量回归 0 失败） |
-| LLM | DeepSeek（主）+ 讯飞星火 X2（兜底）双通道自动容灾 |
+| LLM | 四通道自动容灾：讯飞星火 X2（主）→ DeepSeek → Qwen → 智谱 GLM（逐级回退，ADR-020） |
 | 检索 | 向量检索主路径 · 约 2245 条条目 · E5 已本地化启用（768 维） |
 | 容灾 | Milvus / PG / Redis 逐级降级 · 单机可完整运行 |
 | 数据 | 约 2100 条知识分片与练习题 · 26 知识群组 |

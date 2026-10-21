@@ -11,7 +11,7 @@
 #   - 冲突类型→严重度：factual→high, semantic→medium, keyword→low。
 #   - disposition 由 resolution 字符串映射：adopt/reject/human_review。
 #   - 收集顺序固定（设计 §7.4），保证 Conflict.id 稳定可复现。
-#   - LLM 通道沿用既有 LLMProvider（auto 优先级：DeepSeek→讯飞 X2），不接 Qwen。
+#   - LLM 通道沿用既有 LLMProvider（auto 优先级：讯飞 X2→DeepSeek→Qwen→智谱 GLM，ADR-020）。
 #
 # 防幻觉增强（F）：在原有「跨 Agent 一致性」之外，新增「知识支撑度」校验——
 #   将讲解文档（teacher_doc）逐句与检索知识库（retrieved_chunks）做余弦相似度，

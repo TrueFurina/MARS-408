@@ -11,7 +11,7 @@
 # 2. 支持按 session 灰度：resolve_version(state.get("algorithm_version")) 覆盖全局 flag，
 #    非法 / 缺失值一律回退 lite（异常即回退，不崩主流程）。
 # 3. 不改 10 节点图主流程，仅作为可插拔工厂被 retriever_node / evidence_consensus 节点调用。
-# 4. LLM 通道不替换（P0 不接 Qwen2.5）——本模块不涉及任何 LLM 调用。
+# 4. LLM 通道不在本模块选择（四通道链见 db/llm_provider.py，ADR-020）——本模块不涉及任何 LLM 调用。
 # ============================================================
 
 from __future__ import annotations

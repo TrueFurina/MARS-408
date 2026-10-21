@@ -109,7 +109,7 @@ triage → coordinator → diagnostician → planner → retriever
 
 ### LLM 通道优先级
 
-讯飞星火 X2 为第一优先级（赛题合规），DeepSeek 为第二。**P0 不接 Qwen2.5**。`llm_provider.py` 提供运行级三通道回退（xfyun → deepseek），每通道限流类错误指数退避重试 3 次。
+讯飞星火 X2 为第一优先级（赛题合规），DeepSeek 第二，Qwen 第三，智谱 GLM（`glm-4-flash`）第四兜底（ADR-020）。`llm_provider.py` 提供运行级四通道回退（xfyun → deepseek → qwen → glm），每通道限流类错误指数退避重试 3 次。
 
 ### 凭证管理（F-001）
 
