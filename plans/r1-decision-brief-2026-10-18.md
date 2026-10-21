@@ -4,6 +4,19 @@
 > 前置事实：取证闸 `experiments/pilot_evidence_report.py` 契约完好（2026-10-18 复验：裁决 ❌ + 真实退出码 1）；
 > 判据 = 单班 ≥3 非测试学生等四项，当前 max_bound_class=2（全部为开发/测试数据）。
 
+> 🔴 **2026-10-21 状态更新——本简报性质已变**
+> 1. 真实试点由用户明确**略过**（`plans/pilot-material-2026-10-21.md`）。所以 A/B/C 不再是「先有试点、再谈上线」的
+>    依赖链，而是**纯部署/演示决策**：拼图③ 已登记为文档化缺口，不再阻塞 R1 拍板。
+> 2. **新增硬前置**：`deploy/career-pilot/` 与 HEAD 存在 **13 处已知漂移**（`scripts/build_career_pilot_package.py --check`
+>    实测 exit 1：**12 个文件内容不一致** + `shared/limits.py` 缺失，含 `main.py` / `openapi.json` / `api/auth.py` /
+>    `api/chat.py` / `db/career_store.py` / `tools/generate_demo_ppt.py` 等）。其中 deploy 侧 `openapi.json` 的
+>    `info.description` 仍自称 **246/259**，而同一文件的 `paths`/操作数实测为 **244/262** —— 部署物内部自相矛盾。
+>    已核：这批漂移在**提交树**即存在（`git show HEAD:py-server/...` 与 deploy 副本字节比对不一致），非未提交改动所致。
+>    **执行 A 或 B 之前必须先跑打包脚本重建**，否则上线/演示的是旧包，数字与仓库 HEAD 不一致。
+> 3. **打包时机约束**：另一会话有未提交的 `py-server/services/import_worker.py` 等改动，此刻打包会把半成品带进部署包——
+>    须等那些改动提交后再打包。
+> 4. 下表 2026-10-18 的通道事实仍然有效，未变。
+
 ## 现状事实（2026-10-18 实测）
 
 | 通道 | 状态 | 证据 |
