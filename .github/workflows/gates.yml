@@ -91,3 +91,11 @@ jobs:
       # 但编排器把「6 道」写进了日志与文档；先以 CI 步骤落地，等债务清零再并入。
       - name: 错误文案直出守卫（只拦新增）
         run: python scripts/check_error_wording.py --root py-server
+
+      # 双落地页数字族一致性（2026-10-21 接入）
+      # 背景：Pages 部署 site/（deploy-pages.yml），website/ 为同源手工维护副本；
+      # 2026-10-21 实测 site/ 停在 10-17 族数日、两页 hero 与正文互矛盾（45 vs 49），
+      # 无机检则必然漂移。判据：两页数字族逐项相等 + API/视图对齐 verify_metrics 实测
+      # + 测试数对齐 TEST_TRUTH「权威对外口径」句。
+      - name: 双落地页数字族一致性
+        run: python scripts/check_landing_sync.py
