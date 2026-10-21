@@ -177,3 +177,68 @@ def test_cancel_and_wait_returns_false_on_timeout(monkeypatch):
     timed_out, already_done = asyncio.run(run())
     assert timed_out is False
     assert already_done is True
+
+
+def test_import_worker_stop_is_bounded(monkeypatch):
+    """stop() 必须有界：Worker 永不退出时不能把关停挂死。
+
+    事实分两层（2026-10-21 实机核实，勿凭印象表述）：
+      · 任务能响应取消 → 裸 `await task` 会等它真正退出（0.2s 清理实测等满
+        0.2s），旧实现这条路径**是对的**；
+      · 任务吞掉取消且永不退出 → 裸 `await task` 无上界（实测挂死 >2 分钟，
+        只能外部 kill），关停卡死、后续 httpx/向量库/PG/Redis 释放全跳过。
+
+    本用例钉的是第二层：超时后 stop() 必须返回（不抛异常）、清空 `_task`，
+    并留下 error 日志——否则这类挂死事后完全无法诊断。
+    """
+    pytest.importorskip("services.import_worker")
+    import logging
+    import services.import_worker as W
+
+    monkeypatch.setattr(W, "_STOP_TIMEOUT_SECONDS", 0.1, raising=True)
+
+    messages: list[str] = []
+
+    class _Collect(logging.Handler):
+        def emit(self, record):
+            messages.append(record.getMessage())
+
+    handler = _Collect(level=logging.DEBUG)
+    W.logger.addHandler(handler)
+    try:
+        async def run():
+            worker = W.ImportWorker()
+            allow_exit = {"v": False}
+
+            async def stubborn():
+                while True:
+                    try:
+                        await asyncio.sleep(3600)
+                    except asyncio.CancelledError:
+                        if allow_exit["v"]:
+                            raise
+                        # 吞掉取消，继续跑（模拟清理器自行重试 / 卡在同步 IO）
+
+            task = asyncio.create_task(stubborn())
+            await asyncio.sleep(0)
+            worker._task = task
+
+            t0 = asyncio.get_event_loop().time()
+            await worker.stop()          # 旧实现会在这里永久挂住
+            elapsed = asyncio.get_event_loop().time() - t0
+            still_running = not task.done()
+            cleared = worker._task is None
+
+            allow_exit["v"] = True       # 收尾：放它退出，避免孤儿任务卡住事件循环
+            task.cancel()
+            await asyncio.wait({task}, timeout=1)
+            return elapsed, still_running, cleared
+
+        elapsed, still_running, cleared = asyncio.run(run())
+    finally:
+        W.logger.removeHandler(handler)
+
+    assert elapsed < 2, f"stop() 未被有界化，耗时 {elapsed:.2f}s"
+    assert still_running is True, "超时路径应留下孤儿任务，不能假装它已退出"
+    assert cleared is True
+    assert any("关停超时" in m for m in messages), f"超时未留 error 日志，实收 {messages}"
