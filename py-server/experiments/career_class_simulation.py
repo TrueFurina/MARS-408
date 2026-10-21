@@ -25,8 +25,14 @@
     3. 跑完必须复跑 pilot_evidence_report.py，确认仍 exit 1（真实用户仍不足）。
 
 用法：
+    # 本地模式（直建 sim_teacher 教师账号）
     cd py-server && LLM_PROVIDER=deepseek .venv/Scripts/python.exe \\
         experiments/career_class_simulation.py [--base http://127.0.0.1:8002]
+    # 线上模式（用已有教师账号建班；无直连线上库通道，不新建教师）
+    cd py-server && .venv/Scripts/python.exe experiments/career_class_simulation.py \\
+        --base https://mangdehenzhi.app.workbuddy.host \\
+        --teacher-user teacher_zuo --teacher-pass <pw> \\
+        --class-name 信息安全1班-模拟演练
 """
 
 import argparse
@@ -213,6 +219,10 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="http://127.0.0.1:8002")
     ap.add_argument("--roster", default=ROSTER_CSV)
+    ap.add_argument("--class-name", default="信息安全1班-模拟演练")
+    ap.add_argument("--teacher-user", default="",
+                    help="已有教师账号（线上模式用，如 teacher_zuo）；不给则本地直建 sim_teacher")
+    ap.add_argument("--teacher-pass", default="")
     args = ap.parse_args()
     base = args.base.rstrip("/")
 
@@ -228,15 +238,23 @@ def main() -> int:
     log(f"花名册 {len(roster)} 条；重复学号：{dups or '无'}")
 
     # ── 1) 教师侧：建班 + 导名册 + 发任务 ──
-    tch_pw = "SimTch#" + uuid.uuid4().hex[:8]
-    tch = create_sim_teacher(tch_pw)
-    log(f"教师账号 sim_teacher 就绪（{tch['id'][:12]}…）")
-    st, body = api(base, "POST", "/api/auth/login",
-                   body={"username": "sim_teacher", "password": tch_pw})
-    assert st == 200, f"教师登录失败：{body}"
-    tch_token = body["token"]
+    if args.teacher_user and args.teacher_pass:
+        # 线上模式：用已有教师账号（无直连线上库的通道，不新建教师账号）
+        st, body = api(base, "POST", "/api/auth/login",
+                       body={"username": args.teacher_user, "password": args.teacher_pass})
+        assert st == 200, f"教师登录失败：{st} {body}"
+        tch_token = body["token"]
+        log(f"以已有教师账号 {args.teacher_user} 登录")
+    else:
+        tch_pw = "SimTch#" + uuid.uuid4().hex[:8]
+        tch = create_sim_teacher(tch_pw)
+        log(f"教师账号 sim_teacher 就绪（{tch['id'][:12]}…）")
+        st, body = api(base, "POST", "/api/auth/login",
+                       body={"username": "sim_teacher", "password": tch_pw})
+        assert st == 200, f"教师登录失败：{body}"
+        tch_token = body["token"]
 
-    cls_name = "信息安全1班-模拟演练"
+    cls_name = args.class_name
     st, cls = api(base, "POST", "/api/career/classes", token=tch_token,
                   body={"class_name": cls_name})
     assert st == 200, f"建班失败：{cls}"

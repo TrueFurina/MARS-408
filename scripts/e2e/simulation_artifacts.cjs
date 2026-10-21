@@ -17,12 +17,14 @@ const path = require('path')
 
 const BASE = process.env.E2E_BASE || 'http://127.0.0.1:5300/MARS-408/app/'
 const CHROME = process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe'
-const TCH = 'sim_teacher'
-const TCH_PASS = 'SimTch#1021aa'
-const STU = 'sim_stu01'
-const STU_PASS = 'SimStu#1021aa'
-const CLASS_NAME = '信息安全1班-模拟演练'
-const OUT = path.join(__dirname, '..', '..', '_e2e_tmp_mdhz', 'simulation')
+const TCH = process.env.E2E_TEACHER || 'sim_teacher'
+const TCH_PASS = process.env.E2E_TEACHER_PASS || 'SimTch#1021aa'
+const STU = process.env.E2E_STU || 'sim_stu01'
+const STU_PASS = process.env.E2E_STU_PASS || 'SimStu#1021aa'
+const CLASS_NAME = process.env.E2E_CLASS || '信息安全1班-模拟演练'
+const OUT = process.env.E2E_OUT
+  ? path.resolve(process.env.E2E_OUT)
+  : path.join(__dirname, '..', '..', '_e2e_tmp_mdhz', 'simulation')
 const sleep = ms => new Promise(r => setTimeout(r, ms))
 
 const consoleErrs = []
