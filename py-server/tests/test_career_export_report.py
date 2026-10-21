@@ -167,3 +167,35 @@ def test_class_export_renders_all_six_dimensions_with_nodata_marker():
         assert label in html, f"六维标签 {label} 不得从导出中消失"
     assert "技术汇报 无数据" in html, "无证据维度必须显式标注无数据，不得静默省略"
     assert "表达逻辑 2.0" in html, "有数据维度必须带真实分值"
+
+
+def test_class_export_stat_cards_carry_three_tier_joining_labels():
+    """一页纸统计卡必须带齐「加入/开练/完成」三档（2026-10-21 线上演练发现漏改）。
+
+    背景：教师端看板 2026-10-20 已把「参与」拆成 已加入/已开练/完成 三口径
+    （学生凭码加入只绑定名册、不产生会话），但**一页纸导出模板当时漏改**，
+    线上演练导出 HTML 里搜不到「已加入」——归档产物丢信息：
+    「已加入但未开练」的班在一页纸上看着像没人来，而它是过程性考核依据。
+
+    本用例锁：三档标签 + joined_count 真实值都在导出里；
+    且旧标签「已开始」不得残留（防回退）。
+    """
+    from api.career_training import _render_class_export_html
+
+    dash = {
+        "class_name": "三档口径班",
+        "summary": {
+            "student_count": 47, "joined_count": 10, "started_count": 8,
+            "finished_count": 6, "assessed_count": 6, "completion_rate": 6 / 47,
+            "dimension_avg": {}, "weakest_dimensions": [], "note": "",
+        },
+        "students": [], "attention": [],
+    }
+    html = _render_class_export_html(dash)
+    # 统计卡标签位（sw-h）必须三档齐全；正文备注里的散文用词不限
+    assert 'sw-h">已加入<' in html, "一页纸统计卡必须含「已加入」档（名册绑定口径）"
+    assert 'sw-h">已开练<' in html, "一页纸统计卡必须含「已开练」档（有会话口径）"
+    assert 'sw-h">已完成<' in html, "一页纸统计卡必须含「已完成」档"
+    assert 'sw-h">已开始<' not in html, "旧标签「已开始」不得留在统计卡位（会与看板口径不一致）"
+    # joined_count=10 必须作为真实值渲染出来（HTML 转义不影响纯数字）
+    assert ">10<" in html, "joined_count 真实值必须出现在统计卡中"
