@@ -641,12 +641,18 @@ const userMsg: ChatMessage = {
     try {
       if (hintLevel != null) {
         // SAGE 分级提示模式：只给提示，最终答案保留给学生
+        // 支架健康监测（λ 监测简化版）：把最近几轮学生消息一并送后端判失灵信号
+        const recentQuestions = conv.messages
+          .filter(x => x.role === 'user' && typeof x.content === 'string' && x.content.trim())
+          .slice(-8)
+          .map(x => x.content as string)
         const data = await api.post<any>('/tutor/answer', {
           question,
           profile: studentProfile.value || {},
           course: 'computer_network',
           hint_level: hintLevel,
           attempt_text: attemptText?.trim() || '',
+          recent_questions: recentQuestions,
         })
         const m = conv.messages.find(x => x.id === msgId)
         if (m) {
@@ -660,6 +666,12 @@ const userMsg: ChatMessage = {
             m.content += `\n\n> 🪜 先答后问：交出你的思路/卡点/至少一次尝试后，下一条就能拿到「${lvName}」级提示。`
           } else if (data.withheld) {
             m.content += `\n\n> 🪜 分级提示（${lvName}级）：最后一步留给你完成。想升级提示级别或核对思路，直接继续对话。`
+          }
+          // 支架健康异常 → 教师侧可见的应对建议（SAGE: 监测边界优于调向峰值）
+          const health = data.scaffold_health
+          if (health && health.status && health.status !== 'healthy' && health.advice) {
+            const icon = health.status === 'collapsed' ? '⚠️' : '👀'
+            m.content += `\n\n> ${icon} 支架健康（${health.status}）：${health.advice}`
           }
         }
       } else {

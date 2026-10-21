@@ -214,6 +214,7 @@ async def graded_hint_answer(
     knowledge_context: str = "",
     memory_context: str = "",
     attempt_text: str = "",
+    recent_questions: list[str] | None = None,
     llm=None,
 ) -> dict:
     """按指定提示层级生成支架式提示 (不直接给答案)。
@@ -228,6 +229,9 @@ async def graded_hint_answer(
         memory_context: 学情记忆上下文 (可选, 低侵入注入)
         attempt_text: 学生已提交的尝试（先答后问; 可选）。为空时本轮只引导
             交出尝试, 不展开题目提示。
+        recent_questions: 最近的（按时间正序）学生消息文本（可选）。非空时
+            运行支架健康监测（SAGE λ 监测的简化版: 检测反复索要答案的
+            失灵信号; 详见 agents.scaffold_monitor 的诚实性边界）。
         llm: LLMProvider 实例 (可选; 为 None 则自建, 便于测试注入)
 
     Returns:
@@ -239,6 +243,7 @@ async def graded_hint_answer(
             "withheld": True,   # 恒为 True: 本模式不输出最终答案
             "retrieved_context": "检索到的知识上下文",
             "attempt_required": bool,  # 本轮是否转入了「先答后问」引导
+            "scaffold_health": {...},  # 仅 recent_questions 非空时返回
         }
     """
     if hint_level not in HINT_LEVELS:
@@ -292,7 +297,7 @@ async def graded_hint_answer(
     # Step 4: 保留答案闸门
     answer = await enforce_withholding(raw, hint_level)
 
-    return {
+    result = {
         "answer": answer,
         "question": question,
         "hint_level": hint_level,
@@ -301,3 +306,9 @@ async def graded_hint_answer(
         "retrieved_context": knowledge_context,
         "attempt_required": attempt_required,
     }
+    # Step 5: 支架健康监测（SAGE λ 监测简化版; recent_questions 非空才运行）
+    if recent_questions:
+        from agents.scaffold_monitor import monitor_scaffold_health
+
+        result["scaffold_health"] = monitor_scaffold_health(recent_questions)
+    return result

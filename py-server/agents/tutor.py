@@ -67,6 +67,7 @@ async def tutor_answer(
         memory_context: str = "",
         hint_level: int | None = None,
         attempt_text: str = "",
+        recent_questions: list[str] | None = None,
     ) -> dict:
     """智能答疑: 学生提问 → 检索 + 多模态解答
 
@@ -81,6 +82,8 @@ async def tutor_answer(
             非 None 时路由到 agents.graded_hint（SAGE 支架式引导: 只给提示,
             保留最终答案）。注意与 memory_context 的学情记忆 L1/L2/L3 是两套体系。
         attempt_text: 学生已提交的尝试（先答后问; 仅分级提示模式使用, 可选）。
+        recent_questions: 最近学生消息（按时间正序; 仅分级提示模式使用, 可选）。
+            非空时运行支架健康监测（SAGE λ 监测简化版）。
 
     Returns:
         {
@@ -104,6 +107,7 @@ async def tutor_answer(
             learning_context=learning_context,
             memory_context=memory_context,
             attempt_text=attempt_text,
+            recent_questions=recent_questions,
         )
 
     logger.info(f"[Tutor] 收到问题: {question[:50]}...")

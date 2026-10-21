@@ -273,7 +273,7 @@ npm install && npm run dev                   # :5173，代理 /api → 8002
 |------|------|
 | 前端 | Vue 3 + TypeScript · 49 个 views（88 个 .vue） · Vite 构建 |
 | 后端 | FastAPI + LangGraph · 约 261 个 API 端点（openapi.json 实测 `/api` 子集 243 路径 / 261 操作）· 11 Agent 节点 |
-| 代码量 | 后端 387 个 Python 文件 / 约 9.1 万行 · 前端 158 文件（88 .vue + 70 .ts）/ 约 5.6 万行 |
+| 代码量 | 后端 388 个 Python 文件 / 约 9.1 万行 · 前端 158 文件（88 .vue + 70 .ts）/ 约 5.6 万行 |
 | 测试 | 1693 项测试通过 / 38 跳过 / 1 xfail（CI 默认档，全量回归 0 失败） |
 | LLM | 四通道自动容灾：讯飞星火 X2（主）→ DeepSeek → Qwen → 智谱 GLM（逐级回退，ADR-020） |
 | 检索 | 向量检索主路径 · 约 2245 条条目 · E5 已本地化启用（768 维） |

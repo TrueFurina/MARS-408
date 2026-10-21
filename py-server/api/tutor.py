@@ -37,6 +37,11 @@ class TutorRequest(BaseModel):
         max_length=4000,
         description="学生已提交的尝试（先答后问）; 分级提示模式下为空时本轮只引导交出尝试",
     )
+    recent_questions: list[str] = Field(
+        default_factory=list,
+        max_length=10,
+        description="最近的学生消息（按时间正序, 最多 10 条）; 分级提示模式下非空时运行支架健康监测",
+    )
 
 
 class TutorResponse(BaseModel):
@@ -51,6 +56,10 @@ class TutorResponse(BaseModel):
     attempt_required: bool | None = Field(
         default=None,
         description="本轮是否转入了先答后问引导 (仅分级提示模式返回; true=需先交尝试再取提示)",
+    )
+    scaffold_health: dict | None = Field(
+        default=None,
+        description="支架健康监测 (仅分级提示模式且 recent_questions 非空时返回): status/hits/signals/advice",
     )
 
 
@@ -94,6 +103,7 @@ async def tutor_endpoint(req: TutorRequest, user: dict = Depends(require_llm_quo
         generate_diagram=req.generate_diagram,
         hint_level=req.hint_level,
         attempt_text=req.attempt_text,
+        recent_questions=req.recent_questions,
     )
     # P1-7：输出内容安全审核
     _safe_answer, _ = await audit_output(result["answer"], "tutor/answer")
@@ -122,6 +132,7 @@ async def tutor_endpoint(req: TutorRequest, user: dict = Depends(require_llm_quo
         hint_level_name=result.get("hint_level_name", ""),
         withheld=result.get("withheld"),
         attempt_required=result.get("attempt_required"),
+        scaffold_health=result.get("scaffold_health"),
     )
 
 
