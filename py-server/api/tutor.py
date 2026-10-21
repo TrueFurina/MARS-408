@@ -26,6 +26,12 @@ class TutorRequest(BaseModel):
     learning_context: str = Field(default="", description="当前学习上下文 (正在学的知识点)")
     generate_diagram: bool = Field(default=True, description="是否生成图解说明")
     quick_mode: bool = Field(default=False, description="快速模式 (跳过检索, 纯LLM)")
+    hint_level: int | None = Field(
+        default=None,
+        ge=1,
+        le=3,
+        description="分级提示层级 (1=方向/2=前置/3=局部, SAGE 支架式引导: 只给提示不给最终答案); 不传=普通答疑",
+    )
 
 
 class TutorResponse(BaseModel):
@@ -34,6 +40,9 @@ class TutorResponse(BaseModel):
     question: str = Field(..., description="学生原始问题")
     retrieved_context: str = Field(default="", description="检索到的知识上下文")
     diagram_description: str = Field(default="", description="图解说明文本 (如有)")
+    hint_level: int | None = Field(default=None, description="分级提示层级 (仅分级提示模式返回)")
+    hint_level_name: str = Field(default="", description="分级提示级别名 (方向/前置/局部)")
+    withheld: bool | None = Field(default=None, description="是否保留最终答案 (分级提示模式恒为 true)")
 
 
 # ── 端点 ──
@@ -53,8 +62,9 @@ async def tutor_endpoint(req: TutorRequest, user: dict = Depends(require_llm_quo
     # 否则 import api.tutor 即加载向量/嵌入栈。
     from agents.tutor import quick_answer, tutor_answer
 
-    if req.quick_mode:
-        # 快速模式: 跳过检索
+    if req.quick_mode and req.hint_level is None:
+        # 快速模式: 跳过检索（仅普通答疑; 分级提示模式不受 quick_mode 影响——
+        # 学生要求分级提示时不得静默降级为直接给答案）
         llm = LLMProvider()
         answer = await quick_answer(req.question, req.profile, llm)
         # P1-7：输出内容安全审核
@@ -66,13 +76,14 @@ async def tutor_endpoint(req: TutorRequest, user: dict = Depends(require_llm_quo
             diagram_description="",
         )
 
-    # 完整流程: 检索 + 多模态解答
+    # 完整流程: 检索 + 多模态解答（hint_level 非 None 时为分级提示模式, 不给最终答案）
     result = await tutor_answer(
         question=req.question,
         profile=req.profile,
         course=req.course,
         learning_context=req.learning_context,
         generate_diagram=req.generate_diagram,
+        hint_level=req.hint_level,
     )
     # P1-7：输出内容安全审核
     _safe_answer, _ = await audit_output(result["answer"], "tutor/answer")
@@ -87,6 +98,7 @@ async def tutor_endpoint(req: TutorRequest, user: dict = Depends(require_llm_quo
                 "question_len": len(req.question),
                 "course": req.course,
                 "quick_mode": bool(req.quick_mode),
+                "hint_level": req.hint_level,
             })
     except Exception as _me:
         logger.debug(f"答疑记忆写入失败(忽略): {_me}")
@@ -95,7 +107,10 @@ async def tutor_endpoint(req: TutorRequest, user: dict = Depends(require_llm_quo
         answer=result["answer"],
         question=result["question"],
         retrieved_context=result["retrieved_context"],
-        diagram_description=result["diagram_description"],
+        diagram_description=result.get("diagram_description", ""),
+        hint_level=result.get("hint_level"),
+        hint_level_name=result.get("hint_level_name", ""),
+        withheld=result.get("withheld"),
     )
 
 

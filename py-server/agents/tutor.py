@@ -65,6 +65,7 @@ async def tutor_answer(
     learning_context: str = "",
     generate_diagram: bool = True,
     memory_context: str = "",
+    hint_level: int | None = None,
 ) -> dict:
     """智能答疑: 学生提问 → 检索 + 多模态解答
 
@@ -75,6 +76,9 @@ async def tutor_answer(
         learning_context: 当前学习上下文 (正在学的知识点, 可选)
         generate_diagram: 是否生成图解说明 (默认True)
         memory_context: L1/L2/L3 三层学情记忆上下文（可选，低侵入注入）
+        hint_level: 分级提示层级 1=方向/2=前置/3=局部（可选; None=普通答疑）。
+            非 None 时路由到 agents.graded_hint（SAGE 支架式引导: 只给提示,
+            保留最终答案）。注意与 memory_context 的学情记忆 L1/L2/L3 是两套体系。
 
     Returns:
         {
@@ -83,7 +87,22 @@ async def tutor_answer(
             "retrieved_context": "检索到的知识上下文",
             "diagram_description": "图解说明文本 (如有)",
         }
+        hint 模式下额外含: hint_level / hint_level_name / withheld=True,
+        且不含 diagram_description。
     """
+    # SAGE 分级提示模式: hint_level 非 None 时走支架式提示（不给最终答案）
+    if hint_level is not None:
+        from agents.graded_hint import graded_hint_answer
+
+        return await graded_hint_answer(
+            question=question,
+            profile=profile,
+            hint_level=hint_level,
+            course=course,
+            learning_context=learning_context,
+            memory_context=memory_context,
+        )
+
     logger.info(f"[Tutor] 收到问题: {question[:50]}...")
 
     # Step 1: 检索相关知识
