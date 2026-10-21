@@ -848,11 +848,17 @@ def _render_class_export_html(dash: dict) -> str:
     students = dash.get("students") or []
     attention = dash.get("attention") or []
 
+    # 统计卡与教师端看板**同口径同标签**（2026-10-21 对齐）：
+    # 加入/开练/完成是三个不同状态——学生凭码加入只绑定名册、不产生会话，
+    # 只报 started 会让「已加入但未开练」的班在一页纸上看着像没人来。
+    # 看板 2026-10-20 已改三口径，本导出模板当时漏改，线上演练时发现：
+    # 导出的 HTML 里搜不到「已加入」。归档产物必须带齐三档，否则过程性考核依据丢信息。
     stat_cards = [
         ("班级人数", summary.get("student_count", len(students))),
-        ("已开始", summary.get("started_count", 0)),
+        ("已加入", summary.get("joined_count", 0)),
+        ("已开练", summary.get("started_count", 0)),
         ("已完成", summary.get("finished_count", 0)),
-        ("已评分", summary.get("assessed_count", 0)),
+        ("可评估", summary.get("assessed_count", 0)),
         # completion_rate 是 0-1 小数率（db/career_store.class_dashboard），与前端 Math.round(rate*100) 同口径
         ("完成率", f"{round(float(summary.get('completion_rate') or 0) * 100)}%"),
     ]
