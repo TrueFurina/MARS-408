@@ -37,6 +37,10 @@ from config import load_config
 
 logger = logging.getLogger("netlearn.import_worker")
 
+# 关停时等待 Worker 退出的上限（秒）。与 app/lifespan.py 的 SHUTDOWN_TASK_TIMEOUT_SECONDS
+# 同名同默认值，但在此单独定义：lifespan 反过来 import 本模块，复用会形成循环导入。
+_STOP_TIMEOUT_SECONDS = float(os.environ.get("SHUTDOWN_TASK_TIMEOUT_SECONDS", "5"))
+
 
 # ── F6 辅助：解析启动命令的 uvicorn worker 数 ──
 # main.py 的硬约束守卫（UVICORN_WORKERS/WEB_CONCURRENCY 环境变量）覆盖不到
@@ -148,11 +152,28 @@ class ImportWorker:
                 pass
             self._writer_lock = None
         if self._task is not None:
-            self._task.cancel()
-            try:
-                await self._task
-            except asyncio.CancelledError:
-                pass
+            task = self._task
+            task.cancel()
+            # 有界等待。先厘清事实（2026-10-21 实机核实，勿凭印象改）：
+            #   · 任务**正常响应取消**时，裸 `await task` 会等它真正结束
+            #     （0.2s 清理任务实测等满 0.2s 才返回），这条路径没问题；
+            #   · 但任务**吞掉取消且永不退出**时，裸 `await task` 没有上界
+            #     （实测挂死 >2 分钟，只能外部 kill），关停卡死在此处，
+            #     后面的 httpx 池 / 向量库 / PG / Redis 释放全部跳过，
+            #     最终被容器 SIGKILL —— 且**不打任何日志**，事后无法诊断。
+            # 故与 lifespan._cancel_and_wait 同口径用 asyncio.wait：超时即返回、
+            # 记 error 不抛（关停路径抛异常会让故障面扩大），剩余任务成孤儿是
+            # 可接受代价——挂死不是。
+            done, _pending = await asyncio.wait({task}, timeout=_STOP_TIMEOUT_SECONDS)
+            if task in done and not task.cancelled():
+                exc = task.exception()      # 取回异常，避免 "never retrieved" 噪声
+                if exc is not None:
+                    logger.warning("[import] Worker 退出时抛错（已忽略）：%s", exc)
+            elif task not in done:
+                logger.error(
+                    "[import] 关停超时：Worker 在 %.1fs 内未响应取消（继续释放其余资源）",
+                    _STOP_TIMEOUT_SECONDS,
+                )
             self._task = None
         if self._executor is not None:
             self._executor.shutdown(wait=False)
