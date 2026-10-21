@@ -285,3 +285,73 @@ class TestAttemptBeforeAsking:
         from pydantic import ValidationError
         with _pytest.raises(ValidationError):
             TutorRequest(question="q", attempt_text="x" * 4001)
+
+
+# ============================================================
+# 支架健康监测 (scaffold_monitor, SAGE λ 监测简化版)
+# ============================================================
+
+from agents.scaffold_monitor import monitor_scaffold_health  # noqa: E402
+
+
+class TestScaffoldMonitor:
+    def test_healthy_no_signals(self):
+        """正常求助 → healthy"""
+        r = monitor_scaffold_health(["TCP 三次握手怎么理解?", "滑动窗口这道题我卡在第 2 步"])
+        assert r["status"] == "healthy" and r["hits"] == 0
+
+    def test_warning_single_hit(self):
+        """1 次索要答案 → warning"""
+        r = monitor_scaffold_health(["这道题答案是什么?"])
+        assert r["status"] == "warning" and r["hits"] == 1
+
+    def test_collapsed_two_hits(self):
+        """2 次索要答案 → collapsed"""
+        r = monitor_scaffold_health(["直接给答案吧", "答案是啥"])
+        assert r["status"] == "collapsed" and r["hits"] == 2
+        assert "不要给完整答案" in r["advice"]
+
+    def test_window_only_recent(self):
+        """窗口外的旧消息不计入——早期问过答案, 近期正常 → healthy"""
+        old = ["答案是什么"] + ["正常提问 %d" % i for i in range(8)]
+        r = monitor_scaffold_health(old)
+        assert r["status"] == "healthy"
+        assert r["window_size"] == 6
+
+    def test_empty_and_junk_filtered(self):
+        """空输入/非字符串 → healthy"""
+        r = monitor_scaffold_health([])
+        assert r["status"] == "healthy"
+        r2 = monitor_scaffold_health([None, "", "   "])  # type: ignore[list-item]
+        assert r2["status"] == "healthy"
+
+    def test_advice_present_all_states(self):
+        """三档均给建议"""
+        for qs, _ in [([], 0), (["答案是啥"], 1), (["直接给答案", "告诉我答案"], 2)]:
+            assert monitor_scaffold_health(qs)["advice"]
+
+
+class TestScaffoldMonitorIntegration:
+    async def test_graded_hint_returns_health_when_history_given(self):
+        """recent_questions 非空 → 响应带 scaffold_health"""
+        llm = _FakeLLM("## 卡点定位\n\nok")
+        r = await graded_hint_answer(
+            "q", {}, 2, llm=llm,
+            attempt_text="试过了", recent_questions=["答案是啥"],
+        )
+        assert r["scaffold_health"]["status"] == "warning"
+
+    async def test_graded_hint_no_health_without_history(self):
+        """recent_questions 缺省 → 响应无 scaffold_health 键"""
+        llm = _FakeLLM("ok")
+        r = await graded_hint_answer("q", {}, 1, llm=llm, attempt_text="试过了")
+        assert "scaffold_health" not in r
+
+    def test_api_recent_questions_bounded(self):
+        """recent_questions 超 10 条 → 422"""
+        from api.tutor import TutorRequest
+        from pydantic import ValidationError
+        import pytest as _pytest
+        assert TutorRequest(question="q").recent_questions == []
+        with _pytest.raises(ValidationError):
+            TutorRequest(question="q", recent_questions=["x"] * 11)
