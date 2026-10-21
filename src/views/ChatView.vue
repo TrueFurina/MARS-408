@@ -840,12 +840,12 @@ onBeforeUnmount(() => {
 .attempt-input-bar {
   display: flex; align-items: center; gap: 8px;
   padding: 4px 10px; margin-bottom: 6px;
-  border: 1px dashed var(--border-secondary, #ccc); border-radius: 8px;
+  border: 1px dashed var(--border-color); border-radius: 8px;
 }
 .attempt-label { font-size:var(--text-2xs); color: var(--text-muted); white-space: nowrap; }
 .attempt-input {
   flex: 1; border: none; outline: none; background: transparent;
-  font-size: var(--text-2xs); color: var(--text-primary, #333);
+  font-size: var(--text-2xs); color: var(--text-primary);
 }
 
 /* ── 导师答疑多模态卡片 ── */
