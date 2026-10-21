@@ -162,4 +162,4 @@
 - **本轮已同步（submission/ 实体）**：
   - `submission/00_提交清单.md`：§二真值表（端点 261/243、覆盖率 95.02%、测试 1732 项/1693 passed、覆盖率 61%→57.19% TEST_TRUTH 口径）、端点口径表与对外统一表述（→「261 个 API 操作（243 条路由路径）」）、复算命令注释（全量 244/262）、§四-2/权威口径行。带日期的历史复核行（2026-10-06/10-17）按约定未改。
   - `submission/02_配套文档/开发说明书.md`：§八 API 段 + 新增 v2.5 修订行；`技术方案说明书.md`：API 网关层段；`系统架构设计文档.md`：头部现状注。
-- **⚠️ 遗留事项（不掩盖）**：§五-5 等处「包内 `openapi.json` 与仓库逐字节一致」的 2026-10-17 复核结论基于当时快照；当前仓库快照已更新为 244/262，`deploy/career-pilot/backend/openapi.json` 口径一致（244/262）但与仓库文件**非逐字节相同**。**下次打包（`build_career_pilot_package.py`）时须重验字节一致性**，包内实体未重建前勿新增「逐字节一致」声称。
+- **⚠️ 遗留事项（不掩盖）**：2026-10-21 `build_career_pilot_package.py --check` 实测 `deploy/career-pilot/backend/` 与 `py-server/` 存在 **10 个文件内容不一致 + 缺失 `shared/limits.py`**（含 `api/auth.py`、`api/career_training.py`、`app/lifespan.py`、`db/career_store.py`、`shared/ratelimit.py` 等），其 `openapi.json` 描述仍停在 `246/259` 口径（paths 数与仓库同为 244/262）。**R1 部署或再次打包前必须跑 `python scripts/build_career_pilot_package.py` 刷新并重验字节一致**；本轮未刷新原因：工作区存在他会话未提交的 `services/import_worker.py`，同步会把半成品带入部署包。§五-5 / §六 的「逐字节一致」声称已按此标注为历史口径。
