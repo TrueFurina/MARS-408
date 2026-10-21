@@ -109,8 +109,12 @@ def extract_calls(text: str) -> list:
 
 
 def collect_frontend(src_root: str) -> list:
-    """扫 src/（排除 node_modules 与 __tests__）→ [(method, path, relpath)]。
+    """扫 src/（排除 node_modules / __tests__ / *.spec.* / *.test.*）→ [(method, path, relpath)]。
     测试内的假路径（/test、/retry 等）非生产契约，故排除。
+    ⚠️ 2026-10-21 修正：原实现只排 `__tests__` **目录**，漏了 vitest 的文件后缀约定
+    （`*.spec.ts` / `*.test.ts`）——首个 api 契约测试（src/utils/api.spec.ts）一落地，
+    里面的 `/x`、`/admin/import` 等假路径就被当成生产调用，A 类闸直接误报 7 处。
+    意图（注释里写明的"测试非生产契约"）没变，补的是实现漏的那半种约定。
     relpath 相对 src_root 计算；跨盘符等极端情形退化为绝对路径（不得抛错——
     报告路径只是给人定位，不能因为它让审计本身失败）。"""
     calls = []
@@ -118,6 +122,9 @@ def collect_frontend(src_root: str) -> list:
         dirs[:] = [d for d in dirs if d not in ("node_modules", "__tests__")]
         for fn in files:
             if not fn.endswith((".vue", ".ts", ".js")):
+                continue
+            # 测试文件不是调用点：vitest 用文件后缀而非目录约定（见上方 docstring）
+            if fn.endswith((".spec.ts", ".test.ts", ".spec.js", ".test.js", ".spec.jsx", ".test.jsx")):
                 continue
             fp = os.path.join(root, fn)
             try:
