@@ -52,6 +52,13 @@ const profileWeakCount = computed(() => {
 
 // ── 多模态导师答疑模式（功能④）──
 const tutorMode = ref(false)
+// SAGE 分级提示级别：0=关（走多模态答疑），1=方向/2=前置/3=局部（走 /tutor/answer 分级提示）
+const hintLevel = ref(0)
+const HINT_LEVELS_UI = [
+  { level: 1, name: '方向', desc: '只帮你定位卡点' },
+  { level: 2, name: '前置', desc: '补前置知识，不给解法' },
+  { level: 3, name: '局部', desc: '给子步，最后一步留给你' },
+]
 
 // ── TTS 语音朗读 ──
 const speakingId = ref<string | null>(null)
@@ -303,6 +310,13 @@ async function sendMessage(text: string) {
       const q = text
       clearPendingImage()
       await store.askImage(img, q)
+      const conv = store.getCurrentConversation()
+      if (conv && conv.messages.length > 0 && !route.params.convId) {
+        router.replace('/c/' + conv.id)
+      }
+    } else if (tutorMode.value && hintLevel.value > 0) {
+      // SAGE 分级提示模式（功能④扩展：/tutor/answer + hint_level）
+      await store.askTutor(text, hintLevel.value)
       const conv = store.getCurrentConversation()
       if (conv && conv.messages.length > 0 && !route.params.convId) {
         router.replace('/c/' + conv.id)
@@ -581,7 +595,20 @@ onBeforeUnmount(() => {
           <span v-html="icons.sparkle" class="mode-toggle-icon"></span>
           {{ tutorMode ? '多模态导师答疑' : '普通对话' }}
         </button>
-        <span v-if="tutorMode" class="mode-hint">提问将获得 文字解答 + SVG图解 + 短视频脚本 的多模态答疑</span>
+        <template v-if="tutorMode">
+          <button
+            v-for="h in HINT_LEVELS_UI" :key="h.level"
+            class="mode-toggle hint-level-toggle"
+            :class="{ active: hintLevel === h.level }"
+            :aria-pressed="hintLevel === h.level"
+            :title="h.desc + '（SAGE 分级提示：只给提示，最终答案保留给你）'"
+            @click="hintLevel = hintLevel === h.level ? 0 : h.level"
+          >
+            提示·{{ h.name }}
+          </button>
+          <span class="mode-hint">{{ hintLevel > 0 ? '分级提示：只给提示不给最终答案，最后一步由你完成' : '提问将获得 文字解答 + SVG图解 + 短视频脚本 的多模态答疑' }}</span>
+        </template>
+        <span v-else class="mode-hint">提问将获得 文字解答 + SVG图解 + 短视频脚本 的多模态答疑</span>
       </div>
       <div v-if="sendError" class="chat-send-error" role="button" tabindex="0" aria-label="关闭错误提示" @click="sendError = null" @keydown.enter="sendError = null" title="点击关闭">
          {{ sendError }}
@@ -795,6 +822,8 @@ onBeforeUnmount(() => {
 .mode-toggle-icon { display: inline-flex; }
 .mode-toggle-icon svg { width:0.875rem; height:0.875rem; }
 .mode-hint { font-size:var(--text-2xs); color: var(--text-muted); }
+.hint-level-toggle { font-size:var(--text-2xs); padding: 2px 8px; }
+.hint-level-toggle.active { box-shadow: inset 0 0 0 1px currentColor; }
 
 /* ── 导师答疑多模态卡片 ── */
 .tutor-media-block {

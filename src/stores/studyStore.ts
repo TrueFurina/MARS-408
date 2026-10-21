@@ -615,7 +615,10 @@ const userMsg: ChatMessage = {
 
   // ── 多模态导师答疑（功能④：/tutor/enhanced-answer）──
   // 学生提问 → 调 /tutor/enhanced-answer → 返回文字+SVG图解+短视频脚本
-  async function askTutor(question: string): Promise<void> {
+  // hintLevel（1=方向/2=前置/3=局部）非空时改走 /tutor/answer 的分级提示模式
+  // （SAGE 支架式引导：只给提示、保留最终答案；不走 enhanced 链路——其 SVG/视频
+  //  生成不受分级提示约束，存在旁路泄露答案的风险）。
+  async function askTutor(question: string, hintLevel?: number): Promise<void> {
     const conv = getCurrentConversation()
     if (!conv) return
 
@@ -633,24 +636,48 @@ const userMsg: ChatMessage = {
     conv.messages.push({ id: msgId, role: 'assistant', content: '', segments: [], timestamp: new Date() })
     saveConversations()
 
+    const LEVEL_NAMES: Record<number, string> = { 1: '方向', 2: '前置', 3: '局部' }
+
     try {
-      const data = await api.post<any>('/tutor/enhanced-answer', {
-        question,
-        profile: studentProfile.value || {},
-        course: 'computer_network',
-        generate_svg: true,
-        generate_video: true,
-      })
-      const m = conv.messages.find(x => x.id === msgId)
-      if (m) {
-        m.content = data.answer || '（无回答）'
-        m.segments = [{ type: 'content', content: m.content }]
-        m.svgDiagram = data.svg_diagram || ''
-        m.videoScript = data.video_script || ''
+      if (hintLevel != null) {
+        // SAGE 分级提示模式：只给提示，最终答案保留给学生
+        const data = await api.post<any>('/tutor/answer', {
+          question,
+          profile: studentProfile.value || {},
+          course: 'computer_network',
+          hint_level: hintLevel,
+        })
+        const m = conv.messages.find(x => x.id === msgId)
+        if (m) {
+          const lvName = data.hint_level_name || LEVEL_NAMES[hintLevel] || ''
+          m.content = data.answer || '（无提示）'
+          m.segments = [{ type: 'content', content: m.content }]
+          m.svgDiagram = ''
+          m.videoScript = ''
+          // 分级提示不产生 SVG/视频；保留答案时给用户一个明确交代
+          if (data.withheld) {
+            m.content += `\n\n> 🪜 分级提示（${lvName}级）：最后一步留给你完成。想升级提示级别或核对思路，直接继续对话。`
+          }
+        }
+      } else {
+        const data = await api.post<any>('/tutor/enhanced-answer', {
+          question,
+          profile: studentProfile.value || {},
+          course: 'computer_network',
+          generate_svg: true,
+          generate_video: true,
+        })
+        const m = conv.messages.find(x => x.id === msgId)
+        if (m) {
+          m.content = data.answer || '（无回答）'
+          m.segments = [{ type: 'content', content: m.content }]
+          m.svgDiagram = data.svg_diagram || ''
+          m.videoScript = data.video_script || ''
+        }
       }
     } catch (e: any) {
       const m = conv.messages.find(x => x.id === msgId)
-      const err = '导师答疑失败：' + (e?.message || '请检查后端 /tutor/enhanced-answer 接口')
+      const err = '导师答疑失败：' + (e?.message || '请检查后端 /tutor/answer 接口')
       if (m) { m.content = err; m.segments = [{ type: 'content', content: err }] }
     }
     conv.updatedAt = new Date()
