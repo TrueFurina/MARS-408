@@ -1,6 +1,6 @@
 # 国创赛交付物（deliverables/）数字对齐核对清单
 
-> ⚠️ **当前真值（2026-10-21 复核）**：本文 §一 / §三 为 10-09 时点快照，**以 §十一 为准** —— API **261 ops / 243 paths**（/api 口径，全量 262/244 含 `/metrics`）、认证覆盖率 **95.02%（248/261）**、测试 **1693 passed / 38 skipped / 1 xfailed / 0 失败**（1732 运行项 / 约 1741 collected，addopts deselect 9；CI run `39467891052`，2026-10-20）。改数请以 §十一 与机器复算为唯一来源，禁止手抄旧值。
+> ⚠️ **当前真值（2026-10-22 复核）**：本文 §一 / §三 为 10-09 时点快照，**以 §十二 为准** —— API **261 ops / 243 paths**（/api 口径，全量 262/244 含 `/metrics`）、认证覆盖率 **95.02%（248/261）**、测试 **1737 passed / 38 skipped / 1 xfailed / 0 失败**（1776 运行项 / 约 1785 collected，addopts deselect 9；CI run `39681618692`，2026-10-21）。改数请以 §十二 与机器复算为唯一来源，禁止手抄旧值。
 
 > 生成时间：2026-10-09 ｜ 范围：`deliverables/` 下国创赛相关文档与 PPT 生成器
 > 方法：只读审计 + 机器复算（不手数）。本机实跑 `verify_metrics.py`（9/9 通过）、`openapi.json` 计数、CI run `37917008258` 实测摘要。
@@ -191,3 +191,15 @@
   - 测试族 → CI run `39467891052`（head `22a7469`，2026-10-20，384.74s，success）：**1693 passed / 38 skipped / 9 deselected / 1 xfailed / 0 failed**（约 1741 collected）
 - **本轮已同步文件**：`deliverables/芒得很职-国创赛证据页.md`（覆盖率 26 行 / API 端点 35 行 / 测试用例 38 行）、`deliverables/build_roadshow_pptx.py`（METRICS 单一真值源 + docstring + slide 文本），并**重新生成**了两份 pptx（`deliverables/芒得很职-国创赛路演PPT-5分钟黄金路径.pptx`、`submission/01_演示PPT/作品演示PPT-最终版.pptx`）——此前 pptx 实为 10-06 旧族（1389/1428），10-17 轮只改了生成器未重生成，属「声称已同步但实体未刷」缺口，本轮闭合。
 - **同批同步（submission 侧详见对面文档 §十）**：`submission/00_提交清单.md`、`submission/02_配套文档/开发说明书.md`（新增 v2.5 修订行）、`技术方案说明书.md`、`系统架构设计文档.md`、`py-server/README.md`、`py-server/tools/generate_demo_ppt.py`、`docs/TEST_TRUTH.md`。
+
+---
+
+## 十二、2026-10-22 真值族刷新至 261/95.02%/1737（追加，不改上文历史行）
+
+- **触发**：SAGE 分级提示功能七提交（head `2ba7e6b`，新增 `agents/graded_hint.py` / `agents/scaffold_monitor.py` 两个 py 文件与 tutor API 的 SAGE 请求/响应字段）新增 44 条测试；10-20 轮（§十一）测试族作废。端点族与认证覆盖率不变（仍 261 ops / 243 paths、95.02%）。
+- **机器复算（2026-10-22，禁手抄）**：
+  - `py-server/scripts/verify_auth_coverage.py` → `total=261 protected=248 public=13 coverage=95.02 unregistered=0`（与 §十一 一致，未变）
+  - `openapi.json` 计数 → 全量 **244 paths / 262 ops**；`/api` 子集 **243 paths / 261 ops**（未变）
+  - 测试族 → CI run `39681618692`（head `2ba7e6b`，2026-10-21，266.31s，success）：**1737 passed / 38 skipped / 9 deselected / 1 xfailed / 0 failed**（约 1785 collected；step1 TOTAL `22666 8450 63%`）
+- **本轮已同步文件（deliverables 侧）**：`deliverables/build_roadshow_pptx.py`（docstring 口径铁律 + METRICS 单一真值源）、`deliverables/芒得很职-国创赛证据页.md`（:38 测试行），并**重新生成**了两份 pptx（`deliverables/芒得很职-国创赛路演PPT-5分钟黄金路径.pptx`、`submission/01_演示PPT/作品演示PPT-最终版.pptx`）——生成后对全部 slide XML 扫描验证 1737/1776/1785 在位、旧数零残留。
+- **同批同步（submission 侧详见对面文档 §十一）**：`AGENTS.md`、`README.md`、`README_EN.md`、`docs/METRICS_CURRENT.md`、`docs/TEST_TRUTH.md`、`docs/ci-backend-test-result.md`、`site/index.html`、`website/index.html`、`submission/00_提交清单.md`、`submission/02_配套文档/` 三份 md + 三份 docx 实体、`py-server/tools/generate_demo_ppt.py`、`plans/roadmap-2026-10-13.md` as-of 块。

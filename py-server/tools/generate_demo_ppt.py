@@ -398,7 +398,7 @@ _add_bullet_text(slide, Inches(6.8), Inches(2.2), Inches(5.5), Inches(3), [
 
 # 数据
 _add_text(slide, Inches(0.8), Inches(5.5), Inches(11), Inches(0.8),
-          "后端：1693 测试全绿（CI 默认档）  |  前端：88 组件零错误  |  知识库：2015 chunks + 230 题  |  安全：95.02% 认证覆盖率",
+          "后端：1737 测试全绿（CI 默认档）  |  前端：88 组件零错误  |  知识库：2015 chunks + 230 题  |  安全：95.02% 认证覆盖率",
           font_size=14, color=C_ACCENT3, alignment=PP_ALIGN.CENTER)
 
 # ════════════════════════════════════════════════════════════════

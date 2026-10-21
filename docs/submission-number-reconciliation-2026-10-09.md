@@ -1,6 +1,6 @@
 # 提交包数字对齐核对清单（2026-10-09 预检）
 
-> ⚠️ **当前真值（2026-10-21 复核）**：本文 §一 / §三 / §六 是 10-09 / 10-10 时点快照，**以 §十 为准** —— API **261 ops / 243 paths**（/api 口径，全量 262/244 含 `/metrics`）、认证覆盖率 **95.02%（248/261）**、测试 **1693 passed / 38 skipped / 1 xfailed / 0 失败**（1732 运行项 / 约 1741 collected，addopts deselect 9；CI run `39467891052`，2026-10-20）。改任何数字请以 §十 与机器复算（`scripts/verify_metrics.py` / `scripts/verify_auth_coverage.py`）为唯一来源，禁止手抄旧值。
+> ⚠️ **当前真值（2026-10-22 复核）**：本文 §一 / §三 / §六 是 10-09 / 10-10 时点快照，**以 §十一 为准** —— API **261 ops / 243 paths**（/api 口径，全量 262/244 含 `/metrics`）、认证覆盖率 **95.02%（248/261）**、测试 **1737 passed / 38 skipped / 1 xfailed / 0 失败**（1776 运行项 / 约 1785 collected，addopts deselect 9；CI run `39681618692`，2026-10-21）。改任何数字请以 §十一 与机器复算（`scripts/verify_metrics.py` / `scripts/verify_auth_coverage.py`）为唯一来源，禁止手抄旧值。
 
 > **性质**：只读审计 + diff 清单。**10-28 冻结窗口前不碰 `submission/` 实体**，本文件只列"到时改什么"。
 > **真值来源**（按可信度）：
@@ -163,3 +163,16 @@
   - `submission/00_提交清单.md`：§二真值表（端点 261/243、覆盖率 95.02%、测试 1732 项/1693 passed、覆盖率 61%→57.19% TEST_TRUTH 口径）、端点口径表与对外统一表述（→「261 个 API 操作（243 条路由路径）」）、复算命令注释（全量 244/262）、§四-2/权威口径行。带日期的历史复核行（2026-10-06/10-17）按约定未改。
   - `submission/02_配套文档/开发说明书.md`：§八 API 段 + 新增 v2.5 修订行；`技术方案说明书.md`：API 网关层段；`系统架构设计文档.md`：头部现状注。
 - **⚠️ 遗留事项（不掩盖）**：2026-10-21 `build_career_pilot_package.py --check` 实测 `deploy/career-pilot/backend/` 与 `py-server/` 存在 **10 个文件内容不一致 + 缺失 `shared/limits.py`**（含 `api/auth.py`、`api/career_training.py`、`app/lifespan.py`、`db/career_store.py`、`shared/ratelimit.py` 等），其 `openapi.json` 描述仍停在 `246/259` 口径（paths 数与仓库同为 244/262）。**R1 部署或再次打包前必须跑 `python scripts/build_career_pilot_package.py` 刷新并重验字节一致**；本轮未刷新原因：工作区存在他会话未提交的 `services/import_worker.py`，同步会把半成品带入部署包。§五-5 / §六 的「逐字节一致」声称已按此标注为历史口径。
+
+---
+
+## 十一、2026-10-22 真值族刷新至 261/95.02%/1737（追加，不改上文历史行）
+
+- **触发**：SAGE 分级提示功能七提交（head `2ba7e6b`，新增 `agents/graded_hint.py` / `agents/scaffold_monitor.py` 两个 py 文件与 tutor API 的 SAGE 请求/响应字段）新增 44 条测试；10-20 轮（§十）测试族作废。端点族与认证覆盖率不变（仍 261 ops / 243 paths、95.02%）。
+- **机器复算（2026-10-22，禁手抄）**：`verify_auth_coverage.py` → total=261 protected=248 public=13 coverage=95.02 unregistered=0；`openapi.json` 全量 244/262、/api 子集 243/261；测试 CI run `39681618692`（head `2ba7e6b`，2026-10-21，266.31s，success）→ 1737/38/1/0（约 1785 collected；step1 TOTAL `22666 8450 63%`）。
+- **本轮已同步（submission/ 实体）**：
+  - `submission/00_提交清单.md`：§二真值表（测试 1732 项/1693 → 1776 项/1737；覆盖率 run 指针 `39467891052`/22554/8439 → `39681618692`/22666/8450）、§五复算命令注释（默认测试集口径）、证据页权威口径行（1732 项 → 1776 项）、§五-3 孤儿 docx 对比行（当前 1693 → 1737）。带日期的历史复核行按约定未改。
+  - `submission/02_配套文档/`：`开发说明书.md`（测试用例数行 + 新增 v2.6 修订行）、`测试说明书.md`（总计行 + 运行时间行）、`系统架构设计文档.md`（头部现状注 + 测试全绿行）；对应三份 docx 实体（`docx/` 子目录）以相同锚串替换同步刷新，旧数零残留、zip 完整性已验证。
+- **⚠️ 遗留事项（不掩盖）**：
+  - `deploy/career-pilot/backend/`（本地暂存副本，`.gitignore:306` 整目录忽略、零 git 跟踪、不随仓库分发）落后一个 SAGE 世代：缺 `agents/graded_hint.py` 与 `agents/scaffold_monitor.py`；`agents/tutor.py`（35 行差异）与 `api/tutor.py`（55 行差异）为 SAGE 前旧版（2026-10-22 实测 diff；`agents/tutor_enhanced.py` 零差异）。刷新方式 = 重跑 `scripts/build_career_pilot_package.py`（复制逻辑为通用 walk+剪枝，新文件自动带入）；**按 SAGE 交接约定，须在浏览器端到端人确认后再打包**，本轮未执行。
+  - §十 记载的 10 文件不一致清单本轮**未复核**（仅 diff 了 SAGE 相关 4 文件）；R1 部署前仍须整目录 `--check`。

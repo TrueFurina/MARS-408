@@ -54,7 +54,7 @@ chain fails, the system **degrades to BM25-only** so demos and usage never break
 ### 5. Production-Grade Engineering and Graceful Degradation
 
 - Frontend: Vue 3 + TypeScript, **49 pages (49 views)**, multi-role (student / teacher dashboard)
-- Backend: FastAPI + LangGraph, **~261 API endpoints** (openapi.json `/api` subset: 243 paths / 261 operations), **1693 tests passing / 38 skipped / 1 xfail** (CI default profile, full regression, 0 failures)
+- Backend: FastAPI + LangGraph, **~261 API endpoints** (openapi.json `/api` subset: 243 paths / 261 operations), **1737 tests passing / 38 skipped / 1 xfail** (CI default profile, full regression, 0 failures)
 - **Multi-channel LLM failover**: DeepSeek (primary) → Zhipu GLM (working fallback); iFlytek Spark X2/generalv3.5 not authorized by the account (error 11200 — auto-skipped until enabled in the iFlytek console), Qwen out of credit
 - Milvus / PostgreSQL / Redis each degrade independently — a single machine runs the system end to end
 
@@ -187,7 +187,7 @@ core features still run.
 |-----------|--------|
 | Frontend | Vue 3 + TypeScript · 49 pages (49 views) · Vite build |
 | Backend | FastAPI + LangGraph · ~261 API endpoints (openapi.json: 243 paths / 261 ops) · 11 agent nodes |
-| Tests | 1693 tests passing / 38 skipped / 1 xfail (CI default profile, full regression, 0 failures) |
+| Tests | 1737 tests passing / 38 skipped / 1 xfail (CI default profile, full regression, 0 failures) |
 | LLM | DeepSeek (primary) → Zhipu GLM (working fallback); iFlytek Spark X2/generalv3.5 not authorized (11200), Qwen out of credit — multi-channel failover |
 | Retrieval | Real E5 768-dim embeddings · 2,245 vectors · BM25 degradation guard |
 | Resilience | Milvus / PG / Redis degrade independently · runs fully on one machine |

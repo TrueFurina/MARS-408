@@ -10,7 +10,7 @@
 2. submission/01_演示PPT/作品演示PPT-最终版.pptx            —— 对外提交件
 
 口径铁律（改动前务必核对 submission/00_提交清单.md）：
-- 测试：CI 默认档 1732 run（约 1741 collected，addopts deselect 9）→ 1693 passed / 38 skipped / 1 xfailed / 0 failed（覆盖率 57.19% 达标）；CI p0 档 67 条
+- 测试：CI 默认档 1776 run（约 1785 collected，addopts deselect 9）→ 1737 passed / 38 skipped / 1 xfailed / 0 failed（覆盖率 57.19% 达标）；CI p0 档 67 条
 - 覆盖率 57.19%（门禁 --cov-fail-under=50，余量 7.19pp）—— 全部数字单一真值源见模块级 METRICS（含 CI run 溯源）
 - API：261 operations / 243 paths（app.openapi() 运行时实测，/api 口径）；认证覆盖率 95.02%（248/261）
 - 共识分 mean 7.0446 / std 0.2857 —— 必须同时标 stratified 分布 / 96 样本 / seed 20261006 / n=6
@@ -48,15 +48,15 @@ PALE  = RGBColor(0xB8, 0xC4, 0xCE)
 FONT  = "Microsoft YaHei"
 
 #: 权威测试/质量指标 —— 单一真值源（改动前必须先跑 CI 默认档复核，禁止手改）
-#: 来源：GitHub Actions backend-test.yml 默认档 run 39467891052（2026-10-20，head 22a7469，success）
+#: 来源：GitHub Actions backend-test.yml 默认档 run 39681618692（2026-10-21，head 2ba7e6b，success）
 #: 默认档命令：python -m pytest -q（pyproject addopts 排除 system/requires_milvus/slow，deselect 9）
 METRICS = {
-    "ci_run_id": "39467891052",
-    "ci_date": "2026-10-20",
-    "tests_collected": 1741,    # 约；1693 passed + 38 skipped + 1 xfailed + 9 deselected
+    "ci_run_id": "39681618692",
+    "ci_date": "2026-10-21",
+    "tests_collected": 1785,    # 约；1737 passed + 38 skipped + 1 xfailed + 9 deselected
     "tests_deselected": 9,      # pyproject addopts 排除 system/requires_milvus/slow
-    "tests_run": 1732,          # collected - deselected
-    "tests_passed": 1693,
+    "tests_run": 1776,          # collected - deselected
+    "tests_passed": 1737,
     "tests_skipped": 38,
     "tests_xfailed": 1,
     "tests_failed": 0,
