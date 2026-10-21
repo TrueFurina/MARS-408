@@ -21,7 +21,7 @@
 - 历史快照（1178/208/3、923/221、1139/0、1177/227 等）已陈旧，**仅作 git 历史记录，不可作权威对外口径**。
 
 ## 2. 收尾裁决（机制）
-- **测试计数不进 `verify_metrics.py` 表**：SSOT 明确"测试数不在上表"，其真值以 CI 全量回归为准（指向 CI run id + 下一次 CI 刷新）。`verify_metrics.py` 仅锁死**工程规模指标**（API 236/254 路径/操作、49 views 等），不锁测试数。
+- **测试计数不进 `verify_metrics.py` 表**：SSOT 明确"测试数不在上表"，其真值以 CI 全量回归为准（指向 CI run id + 下一次 CI 刷新）。`verify_metrics.py` 仅锁死**工程规模指标**（API 243/261 路径/操作、49 views 等），不锁测试数。
 - 快照系列仅作 git 历史记录，不可作权威。
 - **硬编码计数一律改为动态派生**：移除 `tests/test_showcase_claim_invariants.py` 中的硬编码常量（1178/208/3 等），改为读取 CI 口径或动态统计。
 - **e2e marker 名存实亡**：全仓 `pytest.mark.e2e` 出现 0 次；「CI p0 档」实为 `-m p0_regression` = **67 用例**。对外材料写「默认集 1543 条 / CI p0 档 67 条」，勿提 e2e。
@@ -32,7 +32,7 @@
 | 测试计数 | **CI 全量回归 1693 通过/38 跳过/1 xfail/0 失败（run 39467891052，2026-10-20）**，SSOT METRICS_CURRENT.md:79-81 | qa-2 / SSOT |
 | 覆盖率 | 57.19%（-cov-fail-under=50 过线） | qa-2 |
 | 工程规模（API/views 等） | verify_metrics.py --update 机检 | qa-2 |
-| OpenAPI 端点 | verify_openapi_snapshot.py（237 paths / 255 ops，机器门禁） | engineer-8 |
+| OpenAPI 端点 | verify_openapi_snapshot.py（244 paths / 262 ops，机器门禁；/api 子集 243/261） | engineer-8 |
 | NeuralMixer | verify_mixer_prod.py（96 样本 / seed 20261006 / n=6） | engineer-2 |
 | submission 文档数 | 53 份迁移 + 口径脚本，由 PM/engineer-6 收口 | engineer-6 |
 
@@ -44,7 +44,7 @@
 ## 5. 收尾待决（P1/P2）
 - ~~**P1（必须，否则留 gap）**：当前 HEAD 的 1543 collected 已比 10-09 的 1436 多 7 条 → 1389/38/1 微陈旧。收尾动作：在 de86da4 跑一次 CI 全量回归 → 用新数回填 `METRICS_CURRENT.md:81` + `AGENTS.md:11/33` + `README:83/263` → 转 ✅。该动作依赖 CI（GitHub Actions），非本地可独立完成。~~ → ✅ **已闭环（2026-10-17）**：CI 全量回归已跑（run `38938041036`，head `dc18dd2`，success，377.60s）→ **1524 passed / 38 skipped / 9 deselected / 1 xfailed / 0 failed**（1572 collected）。新数已回填 `METRICS_CURRENT.md:81` + `AGENTS.md:11/33` + `README:83/263` + `README_EN:57/190` + `证据页:38` + `submission/00+02` + `site/website/index.html` + `build_roadshow_pptx.py` + `docs/ci-backend-test-result.md`（新增 run 节）。
 - **P2（格式锁 + 数字同步）**：
-  - 认证覆盖率：SSOT 现记 **94.88%（254 端点 / 241 受保护 / 13 公开，unregistered=0）**；旧值 94.69%（245/232/13）随端点 245→254 扩张作废，94.65%（243/230）为更早快照。README/AGENTS/ShowcaseView 等已同步至 94.88%（2026-10-17，commit `d7588cb`/`72d7b99`）。
+  - 认证覆盖率：SSOT 现记 **95.02%（261 端点 / 248 受保护 / 13 公开，unregistered=0）**（2026-10-20 `d8eeb3b` 起；2026-10-21 机检复核 total=261 protected=248）；旧值 94.88%（254/241/13，2026-10-17）与 94.69%（245/232/13）随端点扩张陆续作废。README/AGENTS/ShowcaseView/submission/证据页等已同步至 95.02%。
   - submission 文档数 sign-off：实质数（教学 DAG 86/82、seed KG 643/639、StateGraph 11、讯飞 10）已实测为真；commit `243fd3c` 已重同步 10 份 docx，但 zero-residual-drift 正式签核待 engineer-6/PM 回执。
 
 ## 6. qa-2 权限核查结论

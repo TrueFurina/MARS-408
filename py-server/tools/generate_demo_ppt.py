@@ -165,7 +165,7 @@ _add_shape(slide, Inches(0.8), Inches(1.2), Inches(12), Inches(0.03), C_ACCENT)
 
 # 三层架构
 layers = [
-    ("API 层", "254 个路由端点  |  94.88% 认证覆盖率  |  安全响应头", C_ACCENT2, Inches(0.8)),
+    ("API 层", "261 个路由端点  |  95.02% 认证覆盖率  |  安全响应头", C_ACCENT2, Inches(0.8)),
     ("Agent 层", "11 节点 LangGraph 流水线  |  GOMARL 共识  |  FrugalRAG 检索", C_ACCENT, Inches(2.8)),
     ("数据层", "E5 向量库  |  PostgreSQL  |  Redis  |  Milvus 抽象层", C_ACCENT3, Inches(4.8)),
 ]
@@ -398,7 +398,7 @@ _add_bullet_text(slide, Inches(6.8), Inches(2.2), Inches(5.5), Inches(3), [
 
 # 数据
 _add_text(slide, Inches(0.8), Inches(5.5), Inches(11), Inches(0.8),
-          "后端：1524 测试全绿（CI 默认档）  |  前端：88 组件零错误  |  知识库：2015 chunks + 230 题  |  安全：94.88% 认证覆盖率",
+          "后端：1693 测试全绿（CI 默认档）  |  前端：88 组件零错误  |  知识库：2015 chunks + 230 题  |  安全：95.02% 认证覆盖率",
           font_size=14, color=C_ACCENT3, alignment=PP_ALIGN.CENTER)
 
 # ════════════════════════════════════════════════════════════════

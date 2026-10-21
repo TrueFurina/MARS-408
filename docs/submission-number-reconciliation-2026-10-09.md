@@ -1,6 +1,6 @@
 # 提交包数字对齐核对清单（2026-10-09 预检）
 
-> ⚠️ **当前真值（HEAD `7700dce`，2026-10-17）**：本文 §一 / §三 / §六 是 10-09 / 10-10 时点快照，**以 §九 为准** —— API **254 ops / 236 paths**、认证覆盖率 **94.88%（241/254）**、测试 **1524 passed / 38 skipped / 1 xfailed / 0 失败**（1563 运行项 / 1572 collected，addopts deselect 9；CI run `38938041036`）。改任何数字请以 §九 与机器复算（`scripts/verify_metrics.py` / `scripts/verify_auth_coverage.py`）为唯一来源，禁止手抄旧值。
+> ⚠️ **当前真值（2026-10-21 复核）**：本文 §一 / §三 / §六 是 10-09 / 10-10 时点快照，**以 §十 为准** —— API **261 ops / 243 paths**（/api 口径，全量 262/244 含 `/metrics`）、认证覆盖率 **95.02%（248/261）**、测试 **1693 passed / 38 skipped / 1 xfailed / 0 失败**（1732 运行项 / 约 1741 collected，addopts deselect 9；CI run `39467891052`，2026-10-20）。改任何数字请以 §十 与机器复算（`scripts/verify_metrics.py` / `scripts/verify_auth_coverage.py`）为唯一来源，禁止手抄旧值。
 
 > **性质**：只读审计 + diff 清单。**10-28 冻结窗口前不碰 `submission/` 实体**，本文件只列"到时改什么"。
 > **真值来源**（按可信度）：
@@ -154,3 +154,12 @@
   - `site/index.html` 的「约 240 个 API 端点」：§八 后已被 10-17 官网同步批处理为 254（:7/:216/:244/:262/:269 实测均为 254）。**遗留项关闭。**
   - `submission/00_提交清单.md:158` 的「覆盖率 61%」为代码覆盖率（pytest-cov），不属认证覆盖率族，确认无需动（其 run 指针已在本节同步）。
 - **机检**：`scripts/verify_metrics.py` 9/9、`scan_metric_occurrences`、`brand_scan`、`honesty_scan --all`、`scan_stale_calibration`、`check_hardcoded_paths`、`token_scan`、`a11y_scan` 全绿。
+
+## 十、2026-10-21 真值族刷新至 261/95.02%/1693（追加，不改上文历史行）
+
+- **触发**：2026-10-20 教师端系列提交新增 2 个 py 文件 + 2 组 API 操作；10-17 轮（§八/§九）数字随之作废。
+- **机器复算（2026-10-21，禁手抄）**：`verify_auth_coverage.py` → total=261 protected=248 public=13 coverage=95.02 unregistered=0；`openapi.json` 全量 244/262、/api 子集 243/261；测试 CI run `39467891052`（2026-10-20）→ 1693/38/1/0（约 1741 collected）。
+- **本轮已同步（submission/ 实体）**：
+  - `submission/00_提交清单.md`：§二真值表（端点 261/243、覆盖率 95.02%、测试 1732 项/1693 passed、覆盖率 61%→57.19% TEST_TRUTH 口径）、端点口径表与对外统一表述（→「261 个 API 操作（243 条路由路径）」）、复算命令注释（全量 244/262）、§四-2/权威口径行。带日期的历史复核行（2026-10-06/10-17）按约定未改。
+  - `submission/02_配套文档/开发说明书.md`：§八 API 段 + 新增 v2.5 修订行；`技术方案说明书.md`：API 网关层段；`系统架构设计文档.md`：头部现状注。
+- **⚠️ 遗留事项（不掩盖）**：§五-5 等处「包内 `openapi.json` 与仓库逐字节一致」的 2026-10-17 复核结论基于当时快照；当前仓库快照已更新为 244/262，`deploy/career-pilot/backend/openapi.json` 口径一致（244/262）但与仓库文件**非逐字节相同**。**下次打包（`build_career_pilot_package.py`）时须重验字节一致性**，包内实体未重建前勿新增「逐字节一致」声称。

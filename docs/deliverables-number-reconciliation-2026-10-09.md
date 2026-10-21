@@ -1,6 +1,6 @@
 # 国创赛交付物（deliverables/）数字对齐核对清单
 
-> ⚠️ **当前真值（HEAD `7700dce`，2026-10-17）**：本文 §一 / §三 为 10-09 时点快照，**以 §十 为准** —— API **254 ops / 236 paths**、认证覆盖率 **94.88%（241/254）**、测试 **1524 passed / 38 skipped / 1 xfailed / 0 失败**（1563 运行项 / 1572 collected，addopts deselect 9；CI run `38938041036`）。改数请以 §十 与机器复算为唯一来源，禁止手抄旧值。
+> ⚠️ **当前真值（2026-10-21 复核）**：本文 §一 / §三 为 10-09 时点快照，**以 §十一 为准** —— API **261 ops / 243 paths**（/api 口径，全量 262/244 含 `/metrics`）、认证覆盖率 **95.02%（248/261）**、测试 **1693 passed / 38 skipped / 1 xfailed / 0 失败**（1732 运行项 / 约 1741 collected，addopts deselect 9；CI run `39467891052`，2026-10-20）。改数请以 §十一 与机器复算为唯一来源，禁止手抄旧值。
 
 > 生成时间：2026-10-09 ｜ 范围：`deliverables/` 下国创赛相关文档与 PPT 生成器
 > 方法：只读审计 + 机器复算（不手数）。本机实跑 `verify_metrics.py`（9/9 通过）、`openapi.json` 计数、CI run `37917008258` 实测摘要。
@@ -181,3 +181,13 @@
   - `deliverables/芒得很职-国创赛证据页.md`：:38（测试行 1436 collected/1389 → 1572 collected/1524，来源改注 run `38938041036`）
 - **SSOT 与机检（另笔提交）**：`docs/METRICS_CURRENT.md:81`、`docs/TEST_TRUTH.md`（权威口径 / 三层校准表 / P1 转 ✅ / P2 覆盖率分母错配订正）、`docs/ci-backend-test-result.md`（新增 run `38938041036` 节 + 结论表）、`AGENTS.md:11/33`。
 - **全局侧（详见 `docs/submission-number-reconciliation-2026-10-09.md` §九）**：`README.md` ×2、`README_EN.md` ×2、`submission/00` + 3 份配套文档、`site/index.html`、`website/index.html`、`py-server/tools/generate_demo_ppt.py`（Slide 10 数据行 281/30/571/21 → 1524/88/2015+230/94.88%，并清除 408 考研旧定位两处）。
+
+## 十一、2026-10-21 真值族刷新至 261/95.02%/1693（追加，不改上文历史行）
+
+- **触发**：2026-10-20 教师端两提交（`d8eeb3b` 前后系列）新增 2 个 py 文件 + 2 组 API 操作，端点族与测试族双双扩张；10-17 轮（§九/§十）数字随之作废。
+- **机器复算（2026-10-21，禁手抄）**：
+  - `py-server/scripts/verify_auth_coverage.py` → `total=261 protected=248 public=13 coverage=95.02 unregistered=0`
+  - `openapi.json` 计数 → 全量 **244 paths / 262 ops**；`/api` 子集 **243 paths / 261 ops**
+  - 测试族 → CI run `39467891052`（head `22a7469`，2026-10-20，384.74s，success）：**1693 passed / 38 skipped / 9 deselected / 1 xfailed / 0 failed**（约 1741 collected）
+- **本轮已同步文件**：`deliverables/芒得很职-国创赛证据页.md`（覆盖率 26 行 / API 端点 35 行 / 测试用例 38 行）、`deliverables/build_roadshow_pptx.py`（METRICS 单一真值源 + docstring + slide 文本），并**重新生成**了两份 pptx（`deliverables/芒得很职-国创赛路演PPT-5分钟黄金路径.pptx`、`submission/01_演示PPT/作品演示PPT-最终版.pptx`）——此前 pptx 实为 10-06 旧族（1389/1428），10-17 轮只改了生成器未重生成，属「声称已同步但实体未刷」缺口，本轮闭合。
+- **同批同步（submission 侧详见对面文档 §十）**：`submission/00_提交清单.md`、`submission/02_配套文档/开发说明书.md`（新增 v2.5 修订行）、`技术方案说明书.md`、`系统架构设计文档.md`、`py-server/README.md`、`py-server/tools/generate_demo_ppt.py`、`docs/TEST_TRUTH.md`。
