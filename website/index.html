@@ -436,7 +436,7 @@
         <div class="node"><b>path_planner</b> <span>学习路径规划</span></div>
       </div>
 
-      <p>知识与检索层由三部分构成：本地部署的 <strong>E5-base-v2（768 维）</strong>嵌入模型负责向量化，知识库共 <strong>2245 个向量</strong>（2015 知识 chunk + 230 题目，2026-10-14 实测）；知识图谱承载 <strong>86 个节点、82 条先修依赖边</strong>，用于约束推荐顺序与诊断归因；大模型通道采用 <strong>DeepSeek 主通道 + 智谱 GLM 兜底</strong>的双路设计（四通道容灾设计口径，回退链已真实网络故障注入实证），主通道不可用时自动降级，保证实训过程不中断。</p>
+      <p>知识与检索层由三部分构成：本地部署的 <strong>E5-base-v2（768 维）</strong>嵌入模型负责向量化，知识库共 <strong>2245 个向量</strong>（2015 知识 chunk + 230 题目，2026-10-14 实测）；知识图谱承载 <strong>86 个节点、82 条先修依赖边</strong>，用于约束推荐顺序与诊断归因；大模型通道为<strong>四路容灾</strong>（讯飞星火 X2 → DeepSeek → Qwen → 智谱 GLM 逐级回退，ADR-020；回退链已真实网络故障注入实证），任一路不可用时自动降级到下一可用通道，保证实训过程不中断。</p>
 
       <div class="stats">
         <div class="stat"><b>2245</b><span>知识库向量条目</span></div>
@@ -595,7 +595,7 @@ bash deploy/start_linux.sh</code></pre>
 
       <p><strong>能力边界</strong>：职业素养对抗实训模块为 v1 规则原型；MAPPO / 强化学习相关结论来自合成环境，不代表真实教学增益；本产品未提供任何用于高利害决策的评价结论。</p>
 
-      <p><strong>第三方组件</strong>：大模型与多模态通道使用 DeepSeek、智谱 GLM 与讯飞星火（图片生成/语音合成）的在线服务，嵌入模型 E5-base-v2 为本地部署；各组件的商标与服务条款归各自权利人所有。</p>
+      <p><strong>第三方组件</strong>：大模型与多模态通道使用 DeepSeek、Qwen、智谱 GLM 与讯飞星火（图片生成/语音合成）的在线服务，嵌入模型 E5-base-v2 为本地部署；各组件的商标与服务条款归各自权利人所有。</p>
 
       <p><strong>反馈渠道</strong>：发现数据口径不一致或页面错误，请在 GitHub Issues 提交。</p>
     </div>
