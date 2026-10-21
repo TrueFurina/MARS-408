@@ -247,3 +247,41 @@ class TestApiContract:
         assert req.hint_level is None
         req2 = TutorRequest(question="q", hint_level=2)
         assert req2.hint_level == 2
+
+# ============================================================
+# 先答后问 (attempt-before-asking, SAGE 任务设计第一条)
+# ============================================================
+
+class TestAttemptBeforeAsking:
+    async def test_attempt_empty_guides_first_answer(self):
+        """未交尝试 → prompt 含先答后问引导, 不含题目提示指令"""
+        llm = _FakeLLM("请先交出你的思路。")
+        r = await graded_hint_answer("如何证明 RSA?", {}, 2, llm=llm)
+        assert "尚未提交" in llm.calls[0]["user"]
+        assert r["attempt_required"] is True
+
+    async def test_attempt_injected_into_prompt(self):
+        """已交尝试 → 尝试内容进 prompt, 且要求不直接纠错"""
+        llm = _FakeLLM("## 卡点定位\n\n你的第 2 步方向偏了。")
+        r = await graded_hint_answer(
+            "如何证明 RSA?", {}, 2, llm=llm,
+            attempt_text="我先写了 n=pq, 然后卡在欧拉函数那一步",
+        )
+        assert "先写了 n=pq" in llm.calls[0]["user"]
+        assert "不要直接纠正" in llm.calls[0]["user"]
+        assert r["attempt_required"] is False
+
+    async def test_attempt_empty_no_retrieval_context(self):
+        """未交尝试 → 引导轮不带知识上下文（契约: retrieved_context 为空）"""
+        r = await graded_hint_answer("q", {}, 1, llm=_FakeLLM("ok"))
+        assert r["retrieved_context"] == ""
+        assert r["attempt_required"] is True
+
+    def test_api_attempt_text_optional_and_bounded(self):
+        """attempt_text 默认空、超长 422"""
+        from api.tutor import TutorRequest
+        assert TutorRequest(question="q").attempt_text == ""
+        import pytest as _pytest
+        from pydantic import ValidationError
+        with _pytest.raises(ValidationError):
+            TutorRequest(question="q", attempt_text="x" * 4001)
