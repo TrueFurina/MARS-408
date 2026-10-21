@@ -80,7 +80,7 @@ DEFAULTS = {
     "qwen": {
         "api_key": "",
         "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
-        "model": "qwen3.8-max",  # 优先级4a：Qwen3.8-Max 接入三通道（DashScope 兼容模式）
+        "model": "qwen3.8-max",  # 优先级4a：Qwen3.8-Max 接入四通道（DashScope 兼容模式）
         "supports_tools": True,
         "supports_streaming": True,
     },
