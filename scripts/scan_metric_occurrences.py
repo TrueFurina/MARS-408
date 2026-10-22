@@ -86,6 +86,7 @@ class Rule:
 #   - 路由模块：`42 路由模块`（README）/ 表格行 `后端路由模块 | 42 个`（提交清单）
 #   - 前端视图统计块：`<b>48</b><span>前端视图`
 #   - API 端点：`约 245 个 API 端点` / `~245 API endpoints`
+#   - 前端代码量格（README「代码量」行）：`88 .vue + 71 .ts` / `159 文件（`
 RULES: tuple[Rule, ...] = (
     Rule(
         "views 计数",
@@ -110,6 +111,18 @@ RULES: tuple[Rule, ...] = (
         r"(\d+)\s*个\s*`?\s*\.vue",
         "frontend_vue_total",
         ("README.md", "submission/00_提交清单.md"),
+    ),
+    Rule(
+        ".ts 计数（README「代码量」格句式）",
+        r"\.vue\s*\+\s*(\d+)\s*\.ts",
+        "frontend_ts_total",
+        ("README.md",),
+    ),
+    Rule(
+        "前端文件总数（README「代码量」格句式）",
+        r"(\d+)\s*文件（",
+        "frontend_file_total",
+        ("README.md",),
     ),
     Rule(
         "Python 文件计数",
@@ -163,8 +176,17 @@ def main() -> int:
         print(f"[scan_metric_occurrences] ❌ 无法计算 SSOT 真值（verify_metrics.measure）：{exc}")
         return 2
 
+    # `frontend_file_total` 不是 verify_metrics 的独立指标，而是 SSOT 两个键的派生值
+    # （.vue 总数 + .ts 总数，二者均按「含顶层 App.vue / main.ts」口径）——仍与 SSOT
+    # 同源，只是不必为文档里的一行去改动 verify_metrics 的口径与 METRICS 表。
+    truth["frontend_file_total"] = (
+        truth["frontend_vue_total"][0] + truth["frontend_ts_total"][0],
+        "SSOT 派生：.vue 总数 + .ts 总数（含顶层）",
+    )
+
     print("[scan_metric_occurrences] SSOT 真值（来源 scripts/verify_metrics.py::measure）：")
-    for key in ("frontend_views", "frontend_vue_total", "backend_py", "api_modules", "api_operations"):
+    for key in ("frontend_views", "frontend_vue_total", "frontend_ts_total",
+                "frontend_file_total", "backend_py", "api_modules", "api_operations"):
         print(f"    - {key} = {truth[key][0]}")
 
     # 2) 读目标文件（缺失即 fail-closed）。
