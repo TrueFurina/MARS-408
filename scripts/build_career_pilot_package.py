@@ -33,7 +33,9 @@
   ``e5_embed_cache.npz`` 等向量产物**一律不得出现**，由
   :func:`_vectordb_offenders` 在 ``--check`` 中 **fail-closed 断言**（见
   :data:`VECTORDB_ALLOWED_ENTRIES`）。原先随包的 51MB 预计算向量库已移到仓库内未跟踪目录
-  ``_removed_redundant_e5v2_20261015/``（不随包、不入库）。
+  ``_removed_redundant_e5v2_20261015/``（不随包、不入库）。该目录**不在**
+  ``PRESERVE_TOP_NAMES`` 内 ⇒ 服务从包目录跑过之后写入的零向量垃圾会被下次 build 清掉，
+  不变量自愈（2026-10-22：曾因 PRESERVE 它而永久误报，见 :data:`PRESERVE_TOP_NAMES` 注释）。
 - **不含 E5 模型**：嵌入模型为 ``intfloat/multilingual-e5-base``（768 维，约 1.1GB，
   见 ``py-server/db/embedder.py:5``），加载依赖 ``sentence-transformers``
   （``py-server/db/embedder.py:167``），而瘦版 ``requirements.txt`` 明确剔除该依赖
@@ -125,11 +127,18 @@ EXCLUDE_FILE_NAMES = {
 # 目标包内**由其它流程产出、不属于本脚本同步范围**的顶层条目，清理陈旧文件时必须保留。
 # ``site`` = 前端 SPA 产物（由 vite.deploy.config.ts 直接产出到 backend/site），
 # 与后端同根 → 使入口对 CWD 无关（STATIC_DIR=site 相对包根，恒定解析正确）。
-# ``vectordb_data`` = **运行时**数据目录（import journal / 单写者锁 / 可能的嵌入缓存），
-# 源码树同名目录整体被 EXCLUDE_DIR_PREFIXES 剪掉、不参与同步；它由运行中的服务自己写，
-# 故不得被清理逻辑误删。「career-only 定型」要求它**不含向量库产物**，这条不变量由
-# --check 的 :func:`_vectordb_offenders` fail-closed 断言保证（build 不做静默删删）。
-PRESERVE_TOP_NAMES = {"site", "vectordb_data"}
+#
+# ⚠️ ``vectordb_data`` **不在此列**（2026-10-22 从 PRESERVE 移除）：它是纯**运行时**
+# 目录，源码树同名目录整体被 EXCLUDE_DIR_PREFIXES 剪掉、不参与同步，且应用启动时会
+# 自建它（``db/milvus_client.py:100`` makedirs + ``services/import_worker.py:140``
+# mkdir import_jobs）⇒ 包内根本不需要预置。
+# 曾经的误判：把它当运行时状态 PRESERVE 起来不清理。实测服务只要从**包目录**跑过一次，
+# 就会往里写 ``netlearn_kb.json``(9.5MB) + ``.emb.npy``(6.9MB) = **16.4MB 零向量垃圾**，
+# 而 PRESERVE 让 build 永远清不掉它们 ⇒ 之后 ``--check`` 会**永久**报「career-only
+# 定型被破坏」，包体也从 16.8MiB 胀到约 33MiB。移除 PRESERVE 后 build 重置该目录，
+# 不变量自愈；「包内不得含向量库产物」由 :func:`_vectordb_offenders` fail-closed 断言
+# 保证，**不因本改动放松**。
+PRESERVE_TOP_NAMES = {"site"}
 
 # ── career-only 定型：backend/vectordb_data 的白名单与向量库产物特征 ──────────
 # 只允许 import_worker 的 journal 目录（运行时自建，见 services/import_worker.py:140）。

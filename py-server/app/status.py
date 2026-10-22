@@ -60,9 +60,17 @@ async def status():
 
     # ── LLM（核心能力，无可用凭证 → 资源生成不可用）──
     llm_provider_name = cfg.get("llm_provider", "auto")
+    # 四个通道的凭证**各自在场即判可用**，漏看任何一个都会造成假降级。
+    # 2026-10-22 补入 glm（智谱）：config.py 把 ZHIPU_API_KEY / GLM_API_KEY 映射到
+    # ("glm", "api_key")，而试点包 provider 早已切成 glm；此前探针只认 deepseek/xfyun，
+    # 于是 llm.available 的真假取决于 .env 里是否**遗留**一个不再调用的
+    # DEEPSEEK_API_KEY —— 清掉那个遗留 key（它本身还是泄露面）就会凭空多一条
+    # 「llm: 未配置任何可用供应商凭证」降级，与真实能力无关。
+    # 守护：tests/test_app_status_invariants.py::test_llm_available_covers_every_llm_channel
     llm_available = bool(
         cfg.get("deepseek", {}).get("api_key")
         or cfg.get("xfyun", {}).get("app_id")
+        or cfg.get("glm", {}).get("api_key")
     )
 
     # ── NeuralMixer（只读运行态，不在健康探针中触发重型模型初始化）──
