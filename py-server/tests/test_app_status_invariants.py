@@ -333,3 +333,57 @@ async def test_embedding_fallback_counter_reaches_status_probe(monkeypatch):
     assert any(
         "零向量占位" in r for r in payload["degraded_reasons"]
     ), payload["degraded_reasons"]
+
+
+# ── 不变量 7：llm_available 必须覆盖全部 LLM 通道 ────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_llm_available_covers_every_llm_channel(monkeypatch):
+    """四个通道的凭证各自在场时，``llm_available`` 都必须为真。
+
+    2026-10-22 实证缺陷：``app/status.py`` 的 ``llm_available`` 只认
+    ``deepseek.api_key`` 与 ``xfyun.app_id``，而试点包的 provider 早已切成
+    **glm**（packaged ``.env``：``LLM_PROVIDER=glm`` + ``ZHIPU_API_KEY``）——
+    ``config.py`` 的 ``ZHIPU_API_KEY → ("glm", "api_key")`` 映射探针根本不看。
+
+    后果不是「少算一个通道」而是**假降级**：``llm.available`` 的真假取决于
+    ``.env`` 里是否**遗留**一个早已不再调用的 ``DEEPSEEK_API_KEY``。那个遗留 key
+    本身就是泄露面，一旦有人清掉它，``/api/status`` 会凭空多一条
+    「llm: 未配置任何可用供应商凭证」而降级 —— 与真实 LLM 能力毫无关系。
+
+    本测试把契约钉住：任一通道凭证在场即可用；全部缺席才判不可用（否则这条
+    断言会退化成永远为真的废话）。
+    """
+    import config as config_mod
+
+    async def _probe(credentials: dict) -> dict:
+        cfg = {"llm_provider": "auto", "deepseek": {}, "xfyun": {}, "glm": {}, "qwen": {}}
+        cfg.update(credentials)
+        # status() 在函数体内 `from config import load_config`，故打桩在模块属性上即生效
+        monkeypatch.setattr(config_mod, "load_config", lambda: cfg)
+        return await status_mod.status()
+
+    # 1) 每个通道单独在场都必须判可用 —— 防「只认旧两通道」的漂移复发
+    channels = [
+        ("deepseek", {"deepseek": {"api_key": "sk-test"}}),
+        ("xfyun", {"xfyun": {"app_id": "xf-test"}}),
+        # 智谱 GLM：ZHIPU_API_KEY / GLM_API_KEY 均映射到 glm.api_key（config.py:503 一带）
+        ("glm", {"glm": {"api_key": "zk-test"}}),
+    ]
+    for label, creds in channels:
+        payload = await _probe(creds)
+        assert payload["health"]["llm"]["available"] is True, (
+            f"{label} 通道凭证在场却被判为不可用 —— llm_available 漏了该通道，"
+            f"会导致 /api/status 假降级: {payload['health']['llm']}"
+        )
+        assert not any(
+            "llm:" in r for r in payload["degraded_reasons"]
+        ), payload["degraded_reasons"]
+
+    # 2) 全部缺席才判不可用（保证上面那条循环有区分度）
+    payload = await _probe({})
+    assert payload["health"]["llm"]["available"] is False, payload["health"]["llm"]
+    assert any(
+        "llm:" in r for r in payload["degraded_reasons"]
+    ), payload["degraded_reasons"]
