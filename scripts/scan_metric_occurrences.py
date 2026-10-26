@@ -62,6 +62,10 @@ TARGET_FILES = (
     "submission/00_提交清单.md",
 )
 
+# SSOT 散文（**不在** TARGET_FILES 内 —— 它是权威源而不是"副本"，不能被当副本校验）。
+# 认证覆盖率分子 / CI 测试通过数的权威真值写在这里，本脚本只**解析**它，不重算。
+SSOT_DOC = "docs/METRICS_CURRENT.md"
+
 
 class Rule:
     """一条扫描规则：正则 + 期望值来源 + 必须命中的文件。
@@ -160,7 +164,106 @@ RULES: tuple[Rule, ...] = (
         "api_operations",
         ("README_EN.md",),
     ),
+    Rule(
+        "API 路径数（中文）",
+        r"(\d+)\s*(?:条\s*路由)?路径",
+        "api_paths",
+        ("README.md", "submission/00_提交清单.md"),
+    ),
+    Rule(
+        "API 路径数（英文）",
+        r"(\d+)\s*paths",
+        "api_paths",
+        ("README_EN.md",),
+    ),
+    Rule(
+        "CI 测试通过数（中文）",
+        r"(\d+)\s*项测试通过",
+        "ci_test_passed",
+        ("README.md",),
+    ),
+    Rule(
+        "CI 测试通过数（英文）",
+        r"(\d+)\s*tests passing",
+        "ci_test_passed",
+        ("README_EN.md",),
+    ),
+    Rule(
+        "CI 测试通过数（提交清单表格行）",
+        r"项：(\d+)\s*通过",
+        "ci_test_passed",
+        ("submission/00_提交清单.md",),
+    ),
+    # 认证覆盖率分子必须用「认证覆盖率」这个语义短语锚定，不能只写 `（(\d+)/(\d+)）`：
+    # 实测宽松写法会额外命中 `测试覆盖率 …（22587/9670）`（本机 fresh 覆盖率，不同指标）
+    # 与 `残留 … 94.69%（232/245）`（历史作废值的**记述**，不是当前值）——两者都会误判。
+    Rule(
+        "认证覆盖率分子（全角括号）",
+        r"认证覆盖率[^\n]{0,60}?（(\d+)/(\d+)）",
+        "auth_protected",
+        ("submission/00_提交清单.md",),
+    ),
+    Rule(
+        "认证覆盖率分子（提交清单表格行）",
+        r"\|\s*(\d+)/(\d{3})\s*\|",
+        "auth_protected",
+        ("submission/00_提交清单.md",),
+    ),
 )
+
+
+class SSOTParseError(Exception):
+    """SSOT 散文解析失败。
+
+    fail-closed：解析不到权威真值 = 无法守护，必须 exit 2，
+    绝不能当"没漂移"放行（"照不到" ≠ "干净"）。
+    """
+
+
+def _read_ssot_doc() -> str:
+    """读 SSOT 散文全文；文件缺失即 fail-closed。"""
+    p = ROOT / SSOT_DOC
+    if not p.is_file():
+        raise SSOTParseError(f"SSOT 文档不存在：{SSOT_DOC}")
+    return p.read_text(encoding="utf-8", errors="replace")
+
+
+def _parse_auth_protected(text: str) -> tuple[int, str]:
+    """解析认证覆盖率**分子**（protected 数），SSOT 派生、**非重算**。
+
+    code 级重算由 `py-server/scripts/verify_auth_coverage.py` 负责（已挂 CI），
+    本脚本只取它写进 SSOT 散文的权威值，再拿去校验活文档里的手抄副本。
+    """
+    hits = re.findall(r"protected=(\d+)", text)
+    if not hits:
+        raise SSOTParseError(
+            f"{SSOT_DOC} 未找到 `protected=<n>`（认证覆盖率段缺失或被改写）")
+    if len(set(hits)) > 1:
+        raise SSOTParseError(
+            f"{SSOT_DOC} 中 `protected=` 出现多个不同取值 {sorted(set(hits))}，口径不唯一")
+    return int(hits[0]), f"SSOT 派生（非重算）：{SSOT_DOC} 认证覆盖率段 protected="
+
+
+def _parse_ci_test_passed(text: str) -> tuple[int, str]:
+    """解析 CI 测试**通过数**，SSOT 派生、**非重算**。
+
+    code 级重算要真跑一遍 pytest，由 CI 的 Backend Test job 守护；本脚本只取
+    SSOT 散文里标注的最新时点值。
+
+    ⚠️ 必须按**日期**取最新的一条，不能用 `max(所有数字)`：
+      · 数字本身不单调（历史上既有增长也有因剖面错位回落）；
+      · 该段还混着「1776 运行项」「1785 collected」这类**同是数字却不是通过数**
+        的干扰项。故正则必须同时锚定日期 + `N 通过 / M 跳过` 句式。
+    """
+    pat = re.compile(
+        r"(\d{4}-\d{2}-\d{2})[^0-9]{0,120}?(\d+)\s*通过\s*/\s*(\d+)\s*跳过")
+    hits = pat.findall(text)
+    if not hits:
+        raise SSOTParseError(
+            f"{SSOT_DOC} 未找到「日期 + N 通过 / M 跳过」句式的测试真值")
+    # ISO 日期字符串比较 == 时间序比较；取时点最新的一条。
+    date, passed, _skipped = max(hits, key=lambda h: h[0])
+    return int(passed), f"SSOT 派生（非重算）：{SSOT_DOC} 测试数段 最新时点 {date}"
 
 
 def _line_of(text: str, pos: int) -> int:
@@ -184,9 +287,22 @@ def main() -> int:
         "SSOT 派生：.vue 总数 + .ts 总数（含顶层）",
     )
 
-    print("[scan_metric_occurrences] SSOT 真值（来源 scripts/verify_metrics.py::measure）：")
+    # `auth_protected` / `ci_test_passed` 同样与 SSOT 同源，但它们是**解析 SSOT 散文**
+    # 得到的权威值、**不是本脚本重算**（code 级重算分别由 verify_auth_coverage 与
+    # CI 的 Backend Test job 守护）。解析不到即 fail-closed exit 2。
+    try:
+        ssot_text = _read_ssot_doc()
+        truth["auth_protected"] = _parse_auth_protected(ssot_text)
+        truth["ci_test_passed"] = _parse_ci_test_passed(ssot_text)
+    except SSOTParseError as exc:
+        print(f"[scan_metric_occurrences] ❌ fail-closed：无法从 SSOT 取得权威真值：{exc}")
+        return 2
+
+    print("[scan_metric_occurrences] SSOT 真值（来源 scripts/verify_metrics.py::measure"
+          f" / {SSOT_DOC}）：")
     for key in ("frontend_views", "frontend_vue_total", "frontend_ts_total",
-                "frontend_file_total", "backend_py", "api_modules", "api_operations"):
+                "frontend_file_total", "backend_py", "api_modules",
+                "api_paths", "api_operations", "ci_test_passed", "auth_protected"):
         print(f"    - {key} = {truth[key][0]}")
 
     # 2) 读目标文件（缺失即 fail-closed）。
