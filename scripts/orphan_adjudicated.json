@@ -1,10 +1,11 @@
 {
-  "_doc": "孤儿函数闸门（scripts/audit_orphan_functions.py）的已裁定清单 + 已裁定基线。2026-10-26 落地，照 scripts/token_scan_exemptions.json 的先例（理由枚举 + 僵尸检测 + 拒绝刷新基线）。verdict 三选一：keep（保留：语义/契约/安全价值，不删，从 T1 跳过）/ planned-use（保留：已排期接入，暂未接线，从 T1 跳过）/ defer-delete（本轮裁定暂不删，仍计入 T1，其 (file,name) 登记进基线名册）。约束：① 本文件是门禁组成部分——缺失/JSON 错/字段缺/verdict 不在枚举/重复 (file,name,line)/baseline.t1 与 defer-delete 条目数不等 ⇒ exit 2（fail-closed，绝不静默当空清单放行）；② keep/planned-use 条目若指向的函数在文件里已不存在 = 僵尸条目 ⇒ exit 1；③ 脚本不提供任何刷新入口（--update 等一律 exit 2），要改基线必须人工编辑本文件并在提交信息里写明理由。",
+  "_doc": "孤儿函数闸门（scripts/audit_orphan_functions.py）的已裁定清单 + 已裁定基线。2026-10-26 落地，照 scripts/token_scan_exemptions.json 的先例（理由枚举 + 僵尸检测 + 拒绝刷新基线）。verdict 四选一：keep（保留：语义/契约/安全价值，不删，从 T1 跳过）/ planned-use（保留：已排期接入，暂未接线，从 T1 跳过）/ defer-delete（低风险可直接删，本轮不删，仍计入 T1 并登记进基线名册）/ pending-product（待产品确认：能力是永久不做还是暂缓属产品态判断，代码扫描无权裁定，仍计入 T1 并登记名册）。约束：① 本文件是门禁组成部分——缺失/JSON 错/字段缺/verdict 不在枚举/重复 (file,name,line)/baseline.t1 与名册条目数（defer-delete + pending-product）不等 ⇒ exit 2（fail-closed，绝不静默当空清单放行）；② keep/planned-use 条目若指向的函数在文件里已不存在 = 僵尸条目 ⇒ exit 1；③ 脚本不提供任何刷新入口（--update 等一律 exit 2），要改基线必须人工编辑本文件并在提交信息里写明理由。",
+  "_self_declaration": "⚠️ 自污染声明：本文件每条的 name 字段是**裁定台账登记**，**不构成引用证据**。人工复核某函数是否真零引用时，必须把本文件排除在 grep 面外，否则会命中本文件的登记行而误读为「有引用」（实测 4 项因此命中数 1→2）。复核命令固定写法：git grep -w <name> -- . ':(exclude)scripts/orphan_adjudicated.json'。对脚本判定无影响——audit_orphan_functions.py 的引用面只 walk .py，.json 不进引用面。",
   "baseline": {
     "t1": 32,
     "date": "2026-10-26",
     "adjudication_doc": "deliverables/engineering-assurance/orphan-function-adjudication-2026-10-26.md",
-    "note": "T1 已裁定基线 = 本轮逐项核完的 32 项（A群 15 + B群 2 + C群 15），统一裁定为「本轮不删，登记待后续阶段处置」。--gate 的红绿口径：T1 中出现基线名册未登记的项（即新增零引用函数）⇒ exit 1 并点名；基线内存量项不阻断。删除其中任一项会让计数下降（不红，但会打印「建议人工收紧基线」提示）。"
+    "note": "T1 已裁定基线 = 本轮逐项核完的 32 项（A群 15 + B群 2 + C群待删 11 + 待产品确认 4），全部裁定为「本轮不删」并登记：其中 defer-delete 28 项（低风险可直接删，待后续阶段处置）、pending-product 4 项（能力是永久不做还是暂缓 → 待产品确认，机检无权裁定）。--gate 的红绿口径：T1 中出现基线名册未登记的项（即新增零引用函数）⇒ exit 1 并点名；基线内存量项不阻断。删除其中任一项会让计数下降（不红，但会打印「建议人工收紧基线」提示）。"
   },
   "adjudicated": [
     {
@@ -223,7 +224,7 @@
       "line": 236,
       "verdict": "defer-delete",
       "group": "C",
-      "reason": "C群：活模块上的死方法——聚合打包函数（图片+音频+视频一把梭）从未接线，调用方走分步接口。无争议建议删，本轮不删（理由见裁定文档 §四）：删除收益是少一段未接线的编排代码，风险是媒体特性回归时无现成聚合入口；Git 历史可随时还原，故推迟到媒体特性专项。",
+      "reason": "C群：活模块上的死方法——聚合打包函数（图片+音频+视频一把梭）从未接线，调用方走分步接口。无争议建议删，本轮不删（理由见裁定文档 §六）：删除收益是少一段未接线的编排代码，风险是媒体特性回归时无现成聚合入口；Git 历史可随时还原，故推迟到媒体特性专项。",
       "date": "2026-10-26"
     },
     {
@@ -232,7 +233,7 @@
       "line": 204,
       "verdict": "defer-delete",
       "group": "C",
-      "reason": "C群：技能执行路径已统一走 skill_plugin_runtime，本方法未被任何调用方使用。无争议建议删，本轮不删（理由见裁定文档 §四）。",
+      "reason": "C群：技能执行路径已统一走 skill_plugin_runtime，本方法未被任何调用方使用。无争议建议删，本轮不删（理由见裁定文档 §六）。",
       "date": "2026-10-26"
     },
     {
@@ -241,7 +242,7 @@
       "line": 284,
       "verdict": "defer-delete",
       "group": "C",
-      "reason": "C群：冗余未用 helper；真实 LLM 通道经 _apply_env_overrides + config['llm_provider'] 直接读取。无争议建议删，本轮不删（理由见裁定文档 §四）。",
+      "reason": "C群：冗余未用 helper；真实 LLM 通道经 _apply_env_overrides + config['llm_provider'] 直接读取。无争议建议删，本轮不删（理由见裁定文档 §六）。",
       "date": "2026-10-26"
     },
     {
@@ -250,7 +251,7 @@
       "line": 10,
       "verdict": "defer-delete",
       "group": "C",
-      "reason": "C群：NetLearn 时代 bootstrap 残留（且不在 __all__ 内，非公开面）。career 分支表结构由 career_store/ability_store 的 ensure_tables() 惰性建表。无争议建议删，本轮不删（理由见裁定文档 §四）。",
+      "reason": "C群：NetLearn 时代 bootstrap 残留（且不在 __all__ 内，非公开面）。career 分支表结构由 career_store/ability_store 的 ensure_tables() 惰性建表。无争议建议删，本轮不删（理由见裁定文档 §六）。",
       "date": "2026-10-26"
     },
     {
@@ -259,7 +260,7 @@
       "line": 136,
       "verdict": "defer-delete",
       "group": "C",
-      "reason": "C群：LLM 响应缓存写入 helper 未接线（与 get_cached_llm_response / get_agent_weights 同批）。无争议建议删，本轮不删（理由见裁定文档 §四）。",
+      "reason": "C群：LLM 响应缓存写入 helper 未接线（与 get_cached_llm_response / get_agent_weights 同批）。无争议建议删，本轮不删（理由见裁定文档 §六）。",
       "date": "2026-10-26"
     },
     {
@@ -268,7 +269,7 @@
       "line": 140,
       "verdict": "defer-delete",
       "group": "C",
-      "reason": "C群：LLM 响应缓存读取 helper 未接线。无争议建议删，本轮不删（理由见裁定文档 §四）。",
+      "reason": "C群：LLM 响应缓存读取 helper 未接线。无争议建议删，本轮不删（理由见裁定文档 §六）。",
       "date": "2026-10-26"
     },
     {
@@ -277,16 +278,16 @@
       "line": 150,
       "verdict": "defer-delete",
       "group": "C",
-      "reason": "C群：多智能体权重读取 helper 未接线。无争议建议删，本轮不删（理由见裁定文档 §四）。",
+      "reason": "C群：多智能体权重读取 helper 未接线。无争议建议删，本轮不删（理由见裁定文档 §六）。",
       "date": "2026-10-26"
     },
     {
       "file": "py-server/db/skill_store.py",
       "name": "list_usage_logs",
       "line": 615,
-      "verdict": "defer-delete",
+      "verdict": "pending-product",
       "group": "C",
-      "reason": "C群：usage 日志查询未暴露端点（对应契约审计的孤儿端点之一，管理面）。无争议建议删，本轮不删：端点一旦补上就要现成查询函数（理由见裁定文档 §四）。",
+      "reason": "C群：零引用（git grep -w 源码面命中 1 = 只有 def 自己）。更硬的证据是「有写无读」——api/skills.py:517 的 POST /log-usage 是活的写入路径，但对应的读取/列举能力无人调用；删它等于正式确认「只写不读」是既定设计。而「是否永久不做读取侧」属产品态判断，grep 证明不了 → 待产品确认，本轮不删（理由见裁定文档 §六）。",
       "date": "2026-10-26"
     },
     {
@@ -295,16 +296,16 @@
       "line": 647,
       "verdict": "defer-delete",
       "group": "C",
-      "reason": "C群：缓存惰性，无需显式清理，故零调用。无争议建议删，本轮不删（理由见裁定文档 §四）。",
+      "reason": "C群：缓存惰性，无需显式清理，故零调用。无争议建议删，本轮不删（理由见裁定文档 §六）。",
       "date": "2026-10-26"
     },
     {
       "file": "py-server/engines/quiz_engine.py",
       "name": "get_recommended_questions",
       "line": 636,
-      "verdict": "defer-delete",
+      "verdict": "pending-product",
       "group": "C",
-      "reason": "C群：推荐函数未接到端点（对应契约审计的孤儿端点之一）。无争议建议删，本轮不删（理由见裁定文档 §四）。",
+      "reason": "C群：零引用（git grep -w 源码面命中 1）。该推荐能力是否要接端点、是永久不做还是暂缓，属产品态判断——grep 只能证明零引用，证明不了产品意图 → 待产品确认，本轮不删（理由见裁定文档 §六）。",
       "date": "2026-10-26"
     },
     {
@@ -313,7 +314,7 @@
       "line": 330,
       "verdict": "defer-delete",
       "group": "C",
-      "reason": "C群：规则引擎直接读配置，本读取函数未用（与 get_difficulty 同批）。无争议建议删，本轮不删（理由见裁定文档 §四）。",
+      "reason": "C群：规则引擎直接读配置，本读取函数未用（与 get_difficulty 同批）。无争议建议删，本轮不删（理由见裁定文档 §六）。",
       "date": "2026-10-26"
     },
     {
@@ -322,7 +323,7 @@
       "line": 337,
       "verdict": "defer-delete",
       "group": "C",
-      "reason": "C群：规则引擎直接读配置，本读取函数未用。无争议建议删，本轮不删（理由见裁定文档 §四）。",
+      "reason": "C群：规则引擎直接读配置，本读取函数未用。无争议建议删，本轮不删（理由见裁定文档 §六）。",
       "date": "2026-10-26"
     },
     {
@@ -331,25 +332,25 @@
       "line": 89,
       "verdict": "defer-delete",
       "group": "C",
-      "reason": "C群：缓存装饰器在用，本监控统计函数未接。无争议建议删，本轮不删（理由见裁定文档 §四）。",
+      "reason": "C群：缓存装饰器在用，本监控统计函数未接。无争议建议删，本轮不删（理由见裁定文档 §六）。",
       "date": "2026-10-26"
     },
     {
       "file": "py-server/services/video_generator.py",
       "name": "generate_scene_audio",
       "line": 677,
-      "verdict": "defer-delete",
+      "verdict": "pending-product",
       "group": "C",
-      "reason": "C群：低层未接线函数（视频特性部分停用，03 演示视频上锁）。无争议建议删，本轮不删（理由见裁定文档 §四）。",
+      "reason": "C群：低层未接线函数，零引用（git grep -w 源码面命中 1）。该媒体生成能力是永久不做还是暂缓，属产品态判断，代码扫描无权裁定 → 待产品确认，本轮不删（理由见裁定文档 §六）。",
       "date": "2026-10-26"
     },
     {
       "file": "py-server/services/video_generator.py",
       "name": "generate_video_from_topic",
       "line": 793,
-      "verdict": "defer-delete",
+      "verdict": "pending-product",
       "group": "C",
-      "reason": "C群：低层未接线函数，同上。无争议建议删，本轮不删（理由见裁定文档 §四）。",
+      "reason": "C群：低层未接线函数，零引用（git grep -w 源码面命中 1），与 generate_scene_audio 同批。该媒体生成能力是永久不做还是暂缓，属产品态判断，代码扫描无权裁定 → 待产品确认，本轮不删（理由见裁定文档 §六）。",
       "date": "2026-10-26"
     }
   ]

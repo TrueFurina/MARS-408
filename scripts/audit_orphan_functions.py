@@ -17,8 +17,8 @@
 「理由枚举 + 僵尸检测 + 拒绝刷新基线」）：
 - scripts/orphan_adjudicated.json = 已裁定清单 + 已裁定基线。
   · verdict=keep / planned-use → 人工裁定「保留，不删」，从 T1 跳过；
-  · verdict=defer-delete       → 人工裁定「本轮不删」，**仍计入 T1**，
-                                 但其 (file, name) 登记进基线名册；
+  · verdict=defer-delete（低风险可直接删）/ pending-product（是永久不做还是暂缓
+    → 待产品确认，机检无权裁定）→ **仍计入 T1**，其 (file, name) 登记进基线名册；
   · 清单缺失 / JSON 坏 / 字段缺 / verdict 不在枚举 / 重复条目 / 基线自相矛盾
     → **exit 2**（fail-closed：判据本身坏了必须响，绝不当空清单放行）；
   · 清单条目指向的函数在对应文件里已不存在 = 僵尸条目 → **exit 1**，
@@ -36,7 +36,7 @@
 - `__all__` 跨模块 `from m import *` 追踪：任一条 star-import 就能让整模块脱罪，
   公开面被无限放大，同样只增假阴性。T4 只认**同文件模块级** __all__。
 
-守卫自身曾失效的两个缺陷（2026-10-26 实测踩到，已修，留档——改这里前请先读一遍）：
+守卫自身曾失效 / 会骗人的三个坑（2026-10-26 实测踩到，已修，留档——改这里前请先读一遍）：
 - `rel()` 跨盘符抛 ValueError。Windows 下 pytest 的 tmp_path 在 C:、仓库在 E:，
   `os.path.relpath` 跨盘符必然抛错。后果不是「某次调用失败」这么轻：它发生在
   `_fail()` **格式化报错文案的路径上**，于是「已裁定清单坏了」这条 fail-closed 报错
@@ -49,6 +49,16 @@
   **当场把该函数从 T1 抹掉**（实测 allowlist 命中数 6→5）。故夹具必须用中性名
   （详见测试文件 `_valid_entry` 的 docstring）。这条同时是「不需要再补反射豁免」的
   反向证据：字符串层已经敏感到会被测试自己带偏，再放宽只会更假。
+- 本台账 JSON（scripts/orphan_adjudicated.json）的 `name` 字段会污染**人工 grep 复核**：
+  以后谁执行 `git grep -w generate_scene_audio` 都会命中本文件那条登记，很容易误读成
+  「有引用」。对**脚本判定无影响**（`iter_repo_py` 只 walk `.py`，`.json` 不进引用面），
+  但人工取证必须先把本文件排除掉：
+      git grep -w <name> -- . ':(exclude)scripts/orphan_adjudicated.json'
+  本文件顶部 `_self_declaration` 字段即为此声明。
+
+上面后两条是**同一类自污染的两个入口**——守卫把守卫自己骗了：
+一个走 `.py` 字符串（影响脚本判定），一个走治理 JSON（影响人工复核）。
+改任一侧都要回看另一侧。
 
 退出码：
   0 = 无新增未裁定孤儿、无僵尸条目；
@@ -84,9 +94,13 @@ SKIP_DIRS = {".venv", "__pycache__", ".pytest_cache", ".ruff_cache",
 ADJUDICATED_FILE = os.path.join(REPO, "scripts", "orphan_adjudicated.json")
 VERDICT_KEEP = "keep"            # 保留：语义/契约/安全价值，不删（跳过 T1）
 VERDICT_PLANNED = "planned-use"  # 保留：已排期接入，暂未接线（跳过 T1）
-VERDICT_DEFER = "defer-delete"   # 待删：本轮不删（仍计入 T1，登记进基线名册）
-SKIP_VERDICTS = {VERDICT_KEEP, VERDICT_PLANNED}
-ALLOWED_VERDICTS = SKIP_VERDICTS | {VERDICT_DEFER}
+VERDICT_DEFER = "defer-delete"   # 待删：本轮不删、低风险可直接删（仍计入 T1，登记名册）
+# 待产品确认：grep 只能证明「零引用」，证明不了「这个能力是永久不做还是暂缓」——
+# 那是产品态判断，不该由代码扫描裁定。故单列一档，不让机检替产品拍板。
+VERDICT_PENDING = "pending-product"
+SKIP_VERDICTS = {VERDICT_KEEP, VERDICT_PLANNED}          # 跳过 T1，不进名册
+ROSTER_VERDICTS = {VERDICT_DEFER, VERDICT_PENDING}       # 仍计入 T1，登记进基线名册
+ALLOWED_VERDICTS = SKIP_VERDICTS | ROSTER_VERDICTS
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 # 被禁的「一键洗白」参数：照 token_scan「拒绝刷新基线」口径，改基线只能人工编辑 JSON
 REFRESH_ARGS = ("--update", "--update-baseline", "--update-allowlist",
@@ -409,11 +423,13 @@ def load_adjudicated(path: str = ADJUDICATED_FILE) -> tuple[list[dict], dict]:
     base_date = str(base.get("date", "")).strip()
     if not DATE_RE.match(base_date):
         _fail(f"已裁定清单 baseline.date 必须是 YYYY-MM-DD：{base!r}")
-    # 基线名册由 defer-delete 条目推导 —— 两处数字必须一致，否则基线自相矛盾
-    defer_n = sum(1 for e in entries if e["verdict"] == VERDICT_DEFER)
-    if base_t1 != defer_n:
-        _fail(f"已裁定基线自相矛盾：baseline.t1={base_t1} 与 defer-delete 条目数 "
-              f"{defer_n} 不等（名册由后者推导，两者必须一致）→ 人工编辑修正")
+    # 基线名册由「仍计入 T1」的条目（defer-delete + pending-product）推导 ——
+    # 两处数字必须一致，否则基线自相矛盾
+    roster_n = sum(1 for e in entries if e["verdict"] in ROSTER_VERDICTS)
+    if base_t1 != roster_n:
+        _fail(f"已裁定基线自相矛盾：baseline.t1={base_t1} 与名册条目数 {roster_n}"
+              f"（defer-delete + pending-product）不等（名册由后者推导，两者必须一致）"
+              f"→ 人工编辑修正")
     baseline = {
         "t1": base_t1,
         "date": base_date,
@@ -469,7 +485,7 @@ def main() -> None:
     skip_map = {(e["file"], e["name"]): e for e in entries
                 if e["verdict"] in SKIP_VERDICTS}
     baseline_counts = Counter((e["file"], e["name"]) for e in entries
-                              if e["verdict"] == VERDICT_DEFER)
+                              if e["verdict"] in ROSTER_VERDICTS)
 
     t1, t2, t3 = [], [], []
     t4: list[tuple[FuncInfo, tuple]] = []
@@ -507,14 +523,14 @@ def main() -> None:
 
     # ── 僵尸检测（清单与代码不一致）──────────────────────────────────────
     skip_entries = [e for e in entries if e["verdict"] in SKIP_VERDICTS]
-    defer_entries = [e for e in entries if e["verdict"] == VERDICT_DEFER]
+    roster_entries = [e for e in entries if e["verdict"] in ROSTER_VERDICTS]
     zombies = [e for e in skip_entries
                if e["name"] not in defined_func_names(e["file"])]
     hit_keys = {(rel(d.file), d.name) for d, _ in allowed_hits}
     resolved_keep = [e for e in skip_entries
                      if e["name"] in defined_func_names(e["file"])
                      and (e["file"], e["name"]) not in hit_keys]
-    resolved_defer = [e for e in defer_entries
+    resolved_defer = [e for e in roster_entries
                       if e["name"] not in defined_func_names(e["file"])]
 
     # ── 报告 ────────────────────────────────────────────────────────────
@@ -594,8 +610,8 @@ def main() -> None:
             for d in unregistered:
                 print(f"    {rel(d.file)}:{d.line}  {d.name}", file=sys.stderr)
             print(f"🔴 [orphan] 新增孤儿须人工裁定后登记进 {rel(ADJUDICATED_FILE)}"
-                  f"（verdict={VERDICT_DEFER} 登记基线 / {VERDICT_KEEP} 保留）→ exit 1",
-                  file=sys.stderr)
+                  f"（{VERDICT_DEFER}=可直接删 / {VERDICT_PENDING}=待产品确认 / "
+                  f"{VERDICT_KEEP}=保留）→ exit 1", file=sys.stderr)
         else:
             print(f"\n🟢 [orphan] --gate：T1 {len(t1)} 项全部在已裁定基线内"
                   f"（无新增未裁定孤儿），allowlist 无僵尸 → 放行")
