@@ -164,6 +164,16 @@
   - `submission/02_配套文档/开发说明书.md`：§八 API 段 + 新增 v2.5 修订行；`技术方案说明书.md`：API 网关层段；`系统架构设计文档.md`：头部现状注。
 - **⚠️ 遗留事项（不掩盖）**：2026-10-21 `build_career_pilot_package.py --check` 实测 `deploy/career-pilot/backend/` 与 `py-server/` 存在 **10 个文件内容不一致 + 缺失 `shared/limits.py`**（含 `api/auth.py`、`api/career_training.py`、`app/lifespan.py`、`db/career_store.py`、`shared/ratelimit.py` 等），其 `openapi.json` 描述仍停在 `246/259` 口径（paths 数与仓库同为 244/262）。**R1 部署或再次打包前必须跑 `python scripts/build_career_pilot_package.py` 刷新并重验字节一致**；本轮未刷新原因：工作区存在他会话未提交的 `services/import_worker.py`，同步会把半成品带入部署包。§五-5 / §六 的「逐字节一致」声称已按此标注为历史口径。
 
+✅ **2026-10-26 复核：本遗留事项已闭环** —— 10-22 起先后按当时工作树重建了部署包
+（`6fb628e` 同时取消了 `vectordb_data` 的 PRESERVE，运行时零向量产物不再被算作包组成），
+10-26 又含入 `a03a585`/`010e5a3` 的零向量读写双侧过滤。今日实测：
+`python scripts/build_career_pilot_package.py --check` → exit 0，
+`✅ 瘦包与 py-server 源码一致（无漂移）；vectordb_data 仅含 import_jobs/（career-only 定型）`；
+源码与包内两份 `openapi.json` 的 `info.description` 均为 `95.02%（248/261 个 /api 端点）`、
+`paths` 均为 244 ⇒ 上文「描述仍停在 246/259」不再成立。
+现存风险只剩一条（结构性，非缺陷）：打包脚本以 `py-server/` **工作树**为源，未提交改动会被带进包，
+故每次打包前后必须分别确认 `git status` 干净与 `--check` 绿。
+
 ---
 
 ## 十一、2026-10-22 真值族刷新至 261/95.02%/1737（追加，不改上文历史行）
