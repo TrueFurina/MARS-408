@@ -53,8 +53,11 @@ import re
 import sqlite3
 import sys
 
-# 已知的测试/开发账号前缀（career 域）。新增测试夹具时请一并登记，
-# 否则它们会被当成"真实用户"，把裁决撑成假阳性。
+# 已知测试/开发账号前缀（career 域）—— 现在只是**两层中的第一层**，不再是唯一防线。
+# 2026-10-22 后的两层口径：① 本黑名单把**已知**夹具识别干净，抬高 distinct_users_real 的精度，
+# 新增夹具请一并登记（登记越全，第 1 条判据越准）；② 第 5 条判据（认不出 ⇒ 算不可信）兜住所有
+# **未登记**的命名，判为「数据源不可信」并隐藏统计明细 ⇒ 漏登记的夹具也**撑不绿**裁决。
+# 两层为何偏向第 5 条、以及 stu_/diag 为何刻意不登记，见本元组末尾注释。
 TEST_ACCOUNT_PREFIXES = (
     "test_", "test_user", "smoke_", "smoke-", "e2e_", "u_test", "u_e2e",
     "baseline_", "journey_", "probe_", "pilot_demo", "tmp_", "demo_check",
@@ -63,12 +66,9 @@ TEST_ACCOUNT_PREFIXES = (
     # distinct_users_real / max_bound_class 撑成假阳性 —— 那正是制造"试用已开展"
     # 假象的路径，与本闸门的存在目的相反。
     "sim_", "sim-",
-    # 2026-10-22 取证闸口径加固：本机 data/pg_fallback.db 的 139 个 distinct user_id 中，
-    # 有 124 个被误判成真实用户，它们百分之百是夹具 —— stu_ 前缀 121 个（career 路由/权限/
-    # 越权测试造的学生账号，如 stu_outsider_*、stu_feature_x、stu_bad_phase、stu_join_only、
-    # stu_no_name_p4）+ diag 1 个（诊断脚本账号）+ u_t / u_a 2 个（短匿名账号，由下方
-    # _ANON_RE 放宽后覆盖）。这两类前缀此前从未登记，是本闸门当时最大的假阳性来源。
-    "stu_", "diag",
+    # `stu_*` / `diag`：已确认的夹具命名（本机 139 个会话 user_id 里 122 个），**刻意不登记** ——
+    # 一旦登记，它们在黑名单层就被识别干净 ⇒ real_candidates_n 归 0 ⇒ 第 5 条判据永不触发 ⇒
+    # render() 照旧把 sessions_total 等可抄走的条数打出来；宁可让它显形并隐藏明细（2026-10-22 方案 A）。
 )
 # 形如 u_<小写字母数字短串> 的匿名账号：多为程序生成的测试/冒烟用户（人工注册通常不用这种名字）。
 #
