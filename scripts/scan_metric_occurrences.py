@@ -60,6 +60,11 @@ TARGET_FILES = (
     "README_EN.md",
     "src/views/PlatformHomeView.vue",
     "submission/00_提交清单.md",
+    # 2026-10-22 扩面：对外材料 + 两份真值记录。它们同样含现行值手抄副本，
+    # 其中证据页是**对外材料**——漂移不会有人发现，故必须纳管。
+    "deliverables/芒得很职-国创赛证据页.md",
+    "docs/ci-backend-test-result.md",
+    "docs/TEST_TRUTH.md",
 )
 
 # SSOT 散文（**不在** TARGET_FILES 内 —— 它是权威源而不是"副本"，不能被当副本校验）。
@@ -75,11 +80,15 @@ class Rule:
     `files` 为本规则**必须命中**的目标文件（相对仓库根）；任一文件命中 0 处即 fail-closed。
     """
 
-    def __init__(self, name: str, pattern: str, key: str, files: tuple[str, ...]) -> None:
+    def __init__(self, name: str, pattern: str, key: str, files: tuple[str, ...],
+                 as_str: bool = False) -> None:
         self.name = name
         self.regex = re.compile(pattern)
         self.key = key
         self.files = files
+        # True = 该指标不是整数（如认证覆盖率百分比 95.02），按**字符串**比对。
+        # 显式开关而非让 int() 抛错或做浮点近似——避免"小数进 int 键"的类型混淆。
+        self.as_str = as_str
 
 
 # 单位锚定规则集。每条都能同时吃到中/英两种写法：
@@ -209,6 +218,60 @@ RULES: tuple[Rule, ...] = (
         "auth_protected",
         ("submission/00_提交清单.md",),
     ),
+    # ==== 2026-10-22 扩面：对外材料（证据页）+ 两份真值记录 ==================
+    # 每条都先用实测收敛过：宁可窄、宁可少声明文件，也不误命中历史值。
+    Rule(
+        "认证覆盖率分子（分数写法，容空格）",
+        r"认证覆盖率[^\n]{0,80}?（(\d+)\s*/\s*(\d+)）",
+        "auth_protected",
+        ("deliverables/芒得很职-国创赛证据页.md", "docs/ci-backend-test-result.md"),
+    ),
+    # TEST_TRUTH 的覆盖率写成「（261 端点 / 248 受保护 / 13 公开）」——第 1 个数字是
+    # **分母**不是分子，分数写法必误抓，故该文件改用 `protected=` 写法单独守。
+    Rule(
+        "认证覆盖率分子（protected= 写法）",
+        r"protected=(\d+)",
+        "auth_protected",
+        ("docs/TEST_TRUTH.md",),
+    ),
+    Rule(
+        "认证覆盖率百分比",
+        r"认证覆盖率[^\n]{0,80}?\*\*(\d+\.\d+)%",
+        "auth_coverage_pct",
+        ("deliverables/芒得很职-国创赛证据页.md", "docs/ci-backend-test-result.md"),
+        as_str=True,
+    ),
+    Rule(
+        "API 操作数（表格 bold 写法）",
+        r"\*\*(\d+)\*\*（method 级",
+        "api_operations",
+        ("deliverables/芒得很职-国创赛证据页.md",),
+    ),
+    Rule(
+        "API 操作数（ops 写法）",
+        r"(\d+)\s*ops",
+        "api_operations",
+        ("docs/ci-backend-test-result.md",),
+    ),
+    # ci-backend-test-result.md 是**按 run 倒序的日志**：同一句式在历史段落里
+    # 还有 1524（:41）/ 1389（:52）两份，裸 `(\d+) passed, ... skipped` 会全抓。
+    # 该文件自带「**当前权威值**」标记（全文件唯一）且明写「只有本节第一段是当前权威」，
+    # 用它做锚才能只咬住当前那一行。（不是 max(数字)：数字不单调，且是显式禁止的假设。）
+    Rule(
+        "CI 测试通过数（英文句式，锚『当前权威值』）",
+        r"当前权威值(?:.|\n){0,240}?\*\*(\d+)\s*passed,\s*\d+\s*skipped",
+        "ci_test_passed",
+        ("docs/ci-backend-test-result.md",),
+    ),
+    # TEST_TRUTH.md:19 是「本机 Windows 实测」的 1325 —— 同一句式、不同平台剖面，
+    # 不是 CI 真值。故用口径短语锚定，只认「权威对外口径 / CI 默认档 / CI/Linux 默认档」。
+    Rule(
+        "CI 测试通过数（中文句式，锚口径短语）",
+        r"(?:权威对外口径|CI(?:/Linux)? 默认档)[^\n]{0,80}?"
+        r"(\d+)\s*通过\s*/\s*\d+\s*跳过\s*/\s*1\s*xfailed",
+        "ci_test_passed",
+        ("deliverables/芒得很职-国创赛证据页.md", "docs/TEST_TRUTH.md"),
+    ),
 )
 
 
@@ -242,6 +305,22 @@ def _parse_auth_protected(text: str) -> tuple[int, str]:
         raise SSOTParseError(
             f"{SSOT_DOC} 中 `protected=` 出现多个不同取值 {sorted(set(hits))}，口径不唯一")
     return int(hits[0]), f"SSOT 派生（非重算）：{SSOT_DOC} 认证覆盖率段 protected="
+
+
+def _parse_auth_coverage_pct(text: str) -> tuple[str, str]:
+    """解析认证覆盖率**百分比**（SSOT 派生、**非重算**）。
+
+    百分比是 248/261 的显示派生值，单独成键是为了让「只改百分比、不改分子分母」
+    这种文档内部自相矛盾的编辑也能被拦下（对外材料尤其需要）。
+    """
+    hits = re.findall(r"coverage=\*\*(\d+\.\d+)%\*\*", text)
+    if not hits:
+        raise SSOTParseError(
+            f"{SSOT_DOC} 未找到 `coverage=**<n.nn>%**`（认证覆盖率段缺失或被改写）")
+    if len(set(hits)) > 1:
+        raise SSOTParseError(
+            f"{SSOT_DOC} 中 `coverage=` 出现多个不同取值 {sorted(set(hits))}，口径不唯一")
+    return hits[0], f"SSOT 派生（非重算）：{SSOT_DOC} 认证覆盖率段 coverage="
 
 
 def _parse_ci_test_passed(text: str) -> tuple[int, str]:
@@ -293,6 +372,7 @@ def main() -> int:
     try:
         ssot_text = _read_ssot_doc()
         truth["auth_protected"] = _parse_auth_protected(ssot_text)
+        truth["auth_coverage_pct"] = _parse_auth_coverage_pct(ssot_text)
         truth["ci_test_passed"] = _parse_ci_test_passed(ssot_text)
     except SSOTParseError as exc:
         print(f"[scan_metric_occurrences] ❌ fail-closed：无法从 SSOT 取得权威真值：{exc}")
@@ -302,7 +382,8 @@ def main() -> int:
           f" / {SSOT_DOC}）：")
     for key in ("frontend_views", "frontend_vue_total", "frontend_ts_total",
                 "frontend_file_total", "backend_py", "api_modules",
-                "api_paths", "api_operations", "ci_test_passed", "auth_protected"):
+                "api_paths", "api_operations", "ci_test_passed",
+                "auth_protected", "auth_coverage_pct"):
         print(f"    - {key} = {truth[key][0]}")
 
     # 2) 读目标文件（缺失即 fail-closed）。
@@ -324,9 +405,11 @@ def main() -> int:
     mismatches: list[str] = []
     zero_hits: list[str] = []
     total_hits = 0
+    per_rule: list[str] = []
 
     for rule in RULES:
         expect = truth[rule.key][0]
+        rule_hits = 0
         for rel in rule.files:
             text = texts[rel]
             matches = list(rule.regex.finditer(text))
@@ -334,14 +417,21 @@ def main() -> int:
                 # fail-closed：规则在该文件里命中 0 处 → 这句要么被改写、要么扫描器坏了。
                 zero_hits.append(f"    - [{rule.name}] {rel}：命中 0 处（期望 ≥1）")
                 continue
+            rule_hits += len(matches)
             for m in matches:
                 total_hits += 1
-                got = int(m.group(1))
+                # as_str 规则（覆盖率百分比）按字符串比对，其余按 int 比对。
+                got: object = m.group(1) if rule.as_str else int(m.group(1))
                 if got != expect:
+                    # 定位到**数值所在行**（不是锚点所在行）：带前置锚的规则
+                    # 匹配起点在锚上，报锚的行号会让人找不到要改的数字。
                     mismatches.append(
-                        f"    {rel}:{_line_of(text, m.start())}  "
+                        f"    {rel}:{_line_of(text, m.start(1))}  "
                         f"[{rule.name}] 现值 {got} → 期望 {expect}"
                     )
+        # 逐条列出命中数：只报一个总数的话，无法分辨"每条规则都真的扫到了东西"
+        # 与"某条规则其实 0 命中、被总数掩盖"（后者正是零覆盖假绿）。
+        per_rule.append(f"    {rule.name}: {rule_hits} 处")
 
     if zero_hits:
         print("[scan_metric_occurrences] ❌ fail-closed：以下规则在目标文件里命中 0 处"
@@ -357,6 +447,8 @@ def main() -> int:
 
     print(f"[scan_metric_occurrences] ✅ 活文档面规模指标副本全部对齐 SSOT"
           f"（命中 {total_hits} 处 / {len(RULES)} 条规则 / {len(TARGET_FILES)} 个文件）")
+    print("逐条命中：")
+    print("\n".join(per_rule))
     return 0
 
 
