@@ -346,12 +346,65 @@ class InMemoryVectorStore:
                 self._save_unlocked(name)
 
     def _save_unlocked(self, name: str):
-        """实际写盘逻辑（调用方须已持有锁）"""
+        """实际写盘逻辑（调用方须已持有锁）
+
+        2026-10-22 起：**不落盘已知坏数据** —— ``embedding_status ==
+        "fallback_zero"`` 的文档在持久化时被跳过，``netlearn_kb.json`` 与
+        ``.emb.npy`` 一致处理。
+
+        为什么（career-only 瘦包双启动实证）：E5 不可用时种子全部以零向量占位
+        入库，若照常落盘，第二次启动会命中「二进制缓存 N 条、跳过 JSON 重建」
+        —— 而 :attr:`VectorDB.embedding_fallback_count` 只统计**本次新插入**、
+        读回不计 ⇒ ``/api/status`` 重启后低报 ``fallback_zero_docs:0`` /
+        ``status:"ok"``，库里却全是零向量。**首次启动诚实、重启后说谎。**
+
+        影响面（边界，勿扩大）：
+          - 真嵌入（408 主部署）非零即落盘，持久化行为**一字未改**；
+          - career-only 包因此什么都不落 ⇒ 每次启动重新播种、重新计数 ⇒ 探针
+            每次诚实报 2245/degraded；
+          - 检索侧本就排除 ``fallback_zero``（见 ``_norm_matrix`` 注释），
+            故不过滤也不会污染检索 —— 过滤只为「不把坏数据留在磁盘上」；
+          - 写侧只防未来：已被旧版本污染的目录由读取侧 ``_load_unlocked`` 的同名
+            过滤兜住（重启即自愈），两者必须成对存在。
+        """
         os.makedirs(self._persist_path, exist_ok=True)
         coll = self._collections[name]
         filepath = os.path.join(self._persist_path, f"{name}.json")
+        # ── 过滤已知坏数据：E5 失败产生的零向量占位文档 ──
+        # 列长一致性守卫：keep 由 metas 长度推出、却用于索引 ids/texts —— 三者错位
+        # （半截写入 / 外部编辑损坏）时会静默截断而非报错。错位即视为异常态：跳过
+        # 过滤、全部照写（保持旧行为），绝不因守卫本身抛错打断保存。
+        _emb = coll["embeddings"]
+        _n = len(coll["ids"])
+        _emb_aligned = _emb is not None and len(_emb) == _n
+        if len(coll["texts"]) == _n and len(coll["metas"]) == _n:
+            keep = [
+                i
+                for i, m in enumerate(coll["metas"])
+                if not (isinstance(m, dict) and m.get("embedding_status") == "fallback_zero")
+            ]
+        else:
+            keep = list(range(_n))
+            logger.warning(
+                "InMemoryVectorStore 列长不一致（ids=%d texts=%d metas=%d），"
+                "跳过 fallback_zero 过滤、按原样落盘: %s",
+                _n, len(coll["texts"]), len(coll["metas"]),
+                os.path.join(self._persist_path, f"{name}.json"),
+            )
+        # 条件里的 _n > 0 不可省：空集合必须继续走下面的空库覆盖守门与正常写盘
+        # （delete_by_ids 清空后要把磁盘旧内容覆盖成空），只有「有文档但全为坏数据」
+        # 才跳过落盘。
+        if _n > 0 and not keep:
+            logger.info(
+                "InMemoryVectorStore 无可持久化文档（%d 条全部为 E5 失败零向量占位），"
+                "跳过落盘: %s —— 下次启动将重新入库并重新计数，健康探针据此如实降级",
+                len(coll["ids"]),
+                filepath,
+            )
+            return
         # INC-2026-09-14 空库覆盖守门：内存集合为空而磁盘已存在实质数据时拒绝写入。
         # 这挡住「加载失败 → 空库启动 → _save 覆盖」这条把真库清零的链路。
+        # （有文档但全为坏数据时上面已提前返回，故此处只剩 _n == 0 的空集合场景。）
         if len(coll["ids"]) == 0 and os.path.exists(filepath):
             try:
                 _disk_size = os.path.getsize(filepath)
@@ -366,11 +419,12 @@ class InMemoryVectorStore:
                 )
                 return
         tmppath = filepath + f".tmp.{os.getpid()}"
+        _emb_rows = _emb[keep] if _emb_aligned else _emb
         data = {
-            "ids": coll["ids"],
-            "texts": coll["texts"],
-            "metas": coll["metas"],
-            "embeddings": coll["embeddings"].tolist() if coll["embeddings"] is not None else [],
+            "ids": [coll["ids"][i] for i in keep],
+            "texts": [coll["texts"][i] for i in keep],
+            "metas": [coll["metas"][i] for i in keep],
+            "embeddings": _emb_rows.tolist() if _emb_rows is not None else [],
         }
         # 先写临时文件
         with open(tmppath, "w", encoding="utf-8") as f:
@@ -390,8 +444,10 @@ class InMemoryVectorStore:
         # ── 二进制 embeddings 缓存（加速冷启动加载）──
         # JSON 仍是完整真源（含 embeddings），本缓存仅用于跳过 np.array 重建，
         # 缺失/损坏时自动回退 JSON，零数据风险。
+        # 与 JSON **同一份 keep 过滤**：否则读回时二进制缓存行数与 JSON 不一致，
+        # 维度校验失配后每次都要回退 JSON 全量重建，缓存等于白写。
         try:
-            if coll["embeddings"] is not None and len(coll["ids"]) > 0:
+            if _emb_rows is not None and len(keep) > 0:
                 emb_path = filepath + ".emb.npy"
                 # 原子写入：先写临时文件再 rename，防止崩溃残留半写文件
                 emb_tmp = emb_path + f".tmp.{os.getpid()}"
@@ -399,7 +455,7 @@ class InMemoryVectorStore:
                 # os.replace(emb_tmp, ...) 找不到文件，二进制缓存从未真正更新，
                 # 且每次保存遗留一个 6.5MB 垃圾文件。改用显式句柄写，路径可控。
                 with open(emb_tmp, "wb") as _emb_f:
-                    np.save(_emb_f, np.asarray(coll["embeddings"], dtype=np.float32))
+                    np.save(_emb_f, np.asarray(_emb_rows, dtype=np.float32))
                 os.replace(emb_tmp, emb_path)
         except Exception as e:  # noqa: BLE001
             logger.warning("embeddings 二进制缓存写入失败（非阻塞）: %s", e)
@@ -427,15 +483,80 @@ class InMemoryVectorStore:
         return self._load_unlocked(name, filepath)
 
     def _load_unlocked(self, name: str, filepath: str) -> bool:
-        """实际加载逻辑（与 _load 分离，便于日后单独加读锁或做落盘复算）"""
+        """实际加载逻辑（与 _load 分离，便于日后单独加读锁或做落盘复算）
+
+        2026-10-22 起：**读回时同样过滤已知坏数据** —— ``embedding_status ==
+        "fallback_zero"`` 的文档在加载阶段即被排除。
+
+        为什么写侧过滤不够（career-only 瘦包双启动实证）：``_save_unlocked`` 的写侧
+        过滤只保证「今后不再变脏」，治不了**已经被旧版本污染过**的目录（线上实例、
+        任何跑过旧包的副本）。这类目录重启后 ``count`` 非 0 ⇒ 跳过播种、计数器为 0
+        （``VectorDB.embedding_fallback_count`` 只统计本进程新插入、读回不计）⇒
+        ``/api/status`` 报 ``fallback_zero_docs:0`` / ``status:"ok"``，库里却全是零
+        向量。读取侧过滤让这类历史部署**重启即自愈**。
+
+        过滤**必须先于** ``.emb.npy`` 的行数比对：旧缓存是按未过滤的行数写的，过滤后
+        ``arr.shape[0] != len(coll["ids"])`` 自然失配 ⇒ 回退 JSON 全量重建，不会出现
+        「二进制缓存与 JSON 打架」的错位读取。过滤是幂等的 —— 即使陈旧文件永远不被
+        重写，每次启动读到的视图都诚实。
+
+        INC-2026-09-14 硬约束（**勿改为删除/移动/改名**）：旧实现在异常时用
+        ``os.rename`` 把主文件搬走，导致「主库被容错逻辑自己搞坏」。本函数对磁盘上的
+        污染文件**只读不写、不改名**：被过滤掉的文档的旧文件原样留着，等下一次合法
+        ``_save`` 自然把它重写成干净内容；永不重写也不影响正确性。
+
+        Returns:
+            True 表示读到可用文档；False 表示文件缺失 / 解析失败 / **过滤后无可用
+            文档** —— 调用方（``VectorDB._init_mem_store`` →
+            ``app/lifespan._init_vector_db``）据此看到 ``count == 0`` 并重新播种、
+            重新计数。
+        """
         try:
             with open(filepath, "r", encoding="utf-8") as f:
                 data = json.load(f)
+            raw_ids = data["ids"]
+            raw_texts = data["texts"]
+            raw_metas = data["metas"]
+            raw_embs = data.get("embeddings")
+            # 列长一致性守卫：三列错位（半截写入 / 人工编辑损坏）时按索引取子集才会真的
+            # 读错位，因此此时**不做过滤**、原样加载，保持旧行为，绝不因守卫本身抛错。
+            if len(raw_ids) == len(raw_texts) == len(raw_metas):
+                keep = [
+                    i
+                    for i, m in enumerate(raw_metas)
+                    if not (isinstance(m, dict) and m.get("embedding_status") == "fallback_zero")
+                ]
+            else:
+                keep = list(range(len(raw_ids)))
+                logger.warning(
+                    "InMemoryVectorStore 列长不一致（ids=%d texts=%d metas=%d），"
+                    "跳过 fallback_zero 过滤、按原样加载: %s",
+                    len(raw_ids), len(raw_texts), len(raw_metas), filepath,
+                )
+            if not keep:
+                logger.warning(
+                    "InMemoryVectorStore 加载 %s 时发现 %d 条文档全部为 E5 失败零向量占位，"
+                    "视为空库（返回 False）⇒ 调用方将重新播种并重新计数，健康探针据此如实降级。"
+                    "磁盘原文件保留未动（INC-2026-09-14：读路径绝不删除/改名主文件）。",
+                    filepath, len(raw_ids),
+                )
+                return False
+            filtered = len(keep) != len(raw_ids)
+            if filtered:
+                logger.warning(
+                    "InMemoryVectorStore 过滤 %d 条 fallback_zero 零向量占位文档（保留 %d 条）: %s",
+                    len(raw_ids) - len(keep), len(keep), filepath,
+                )
             self._ensure_collection(name)
             coll = self._collections[name]
-            coll["ids"] = data["ids"]
-            coll["texts"] = data["texts"]
-            coll["metas"] = data["metas"]
+            coll["ids"] = [raw_ids[i] for i in keep]
+            coll["texts"] = [raw_texts[i] for i in keep]
+            coll["metas"] = [raw_metas[i] for i in keep]
+            # JSON 里的 embeddings 与过滤同源处理：行数与原 ids 一致才按 keep 取，
+            # 否则视为残缺（None / 行数不符）→ 统一落到 None，绝不猜测对齐关系。
+            json_embs = None
+            if raw_embs and len(raw_embs) == len(raw_ids):
+                json_embs = [raw_embs[i] for i in keep] if filtered else raw_embs
             # 优先二进制 embeddings 缓存：np.load 二进制远快于 np.array(JSON tolist 重建)；
             # 仅当 .npy 存在且行数一致时复用，否则回退 JSON 全量重建（并回写缓存供下次命中）。
             emb_cache = filepath + ".emb.npy"
@@ -444,7 +565,7 @@ class InMemoryVectorStore:
                 try:
                     arr = np.load(emb_cache)
                     # 验证维度：行数一致 + 向量维度与已加载 JSON 数据一致
-                    json_dim = len(data["embeddings"][0]) if data.get("embeddings") and len(data["embeddings"]) > 0 else None
+                    json_dim = len(json_embs[0]) if json_embs and len(json_embs) > 0 else None
                     npy_dim_ok = (arr.ndim == 2 and arr.shape[0] == len(coll["ids"]))
                     if json_dim is not None:
                         npy_dim_ok = npy_dim_ok and arr.shape[1] == json_dim
@@ -458,12 +579,15 @@ class InMemoryVectorStore:
                 except Exception as e:  # noqa: BLE001
                     logger.warning("embeddings 二进制缓存读取失败，回退 JSON: %s", e)
             if not emb_loaded:
-                if data.get("embeddings"):
-                    coll["embeddings"] = np.array(data["embeddings"], dtype=np.float32)
+                if json_embs:
+                    coll["embeddings"] = np.array(json_embs, dtype=np.float32)
                 else:
                     coll["embeddings"] = None
-                # 首次/失配：回写二进制缓存，使下次冷启动命中
-                if coll["embeddings"] is not None:
+                # 首次/失配：回写二进制缓存，使下次冷启动命中。
+                # 本次加载发生过过滤时**不回写**：JSON 仍是脏的（写侧过滤只防未来），
+                # 把它的过滤视图固化进缓存会让「缓存 = JSON 的什么子集」变得不可核对；
+                # 读路径保持只读，脏目录每次都从 JSON 重建（幂等、成本可接受）。
+                if coll["embeddings"] is not None and not filtered:
                     try:
                         np.save(emb_cache, coll["embeddings"])
                     except Exception:  # noqa: BLE001
