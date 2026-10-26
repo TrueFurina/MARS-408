@@ -27,6 +27,15 @@
 3. `_milvus_insert` 真的把零向量与 `fallback_zero` 标记写进 entities 列；
 4. **结构守卫**：两条路径都必须调用 `_resolve_embeddings`，谁再自造一份
    零向量兜底就红 —— 这是防「同一个洞修一处、另一处再长出来」的关键。
+5. **持久化不落盘已知坏数据**（2026-10-22 新增）：``fallback_zero`` 文档不得写进
+   ``netlearn_kb.json`` / ``.emb.npy``。否则第二次启动会「命中二进制缓存、跳过
+   JSON 重建」，而 fallback 计数器只统计**本次新插入**、读回不计 ⇒
+   ``/api/status`` 重启后低报 ``fallback_zero_docs:0`` / ``status:"ok"``，
+   库里却全是零向量 —— **首次启动诚实、重启后说谎**。
+6. **读取侧同样过滤**（2026-10-22 新增）：写侧只防未来，治不了**已被旧版本污染**
+   的目录。``_load_unlocked`` 读到全零向量库时须返回 ``False``（调用方据此重新
+   播种、重新计数），读到混合库时须保住真向量、丢掉零向量 —— 且过滤先于
+   ``.emb.npy`` 行数比对，否则「缓存与 JSON 打架」。
 """
 
 import pytest
@@ -286,3 +295,213 @@ def test_resolution_is_the_only_fallback_counter_owner():
         assert "_embedding_fallback_count += 1" not in src, (
             f"{name} 里又有独立计数 —— 计数口径必须收敛到 _resolve_embeddings"
         )
+
+
+# ── 4. 持久化不得落盘已知坏数据（fallback_zero 不落盘）────────────────────
+
+
+def test_persist_skips_fallback_zero_documents(isolate_vectordb, dim):
+    """持久化必须跳过 ``embedding_status == "fallback_zero"`` 的文档。
+
+    2026-10-22 实证（career-only 瘦包，双启动）：E5 不可用时 2245 条种子全部以
+    零向量占位入库，**并照常落盘** ``netlearn_kb.json`` + ``.emb.npy``。第二次
+    启动于是命中「二进制缓存 2245 条、跳过 JSON 重建」——而 fallback 计数器只
+    统计**本次新插入**，读回不计 ⇒ ``/api/status`` 报 ``fallback_zero_docs:0`` /
+    ``status:"ok"``，库里 2245 条却仍全是零向量。**首次启动诚实、重启后低报**，
+    这是「绿灯说谎」，与 2026-10-18 的 ``881e0be``（探针不得掩盖降级）同 spirit。
+
+    修法（Y·不落盘已知坏数据）：持久化时按 ``embedding_status`` 过滤，且
+    ``netlearn_kb.json`` 与 ``.emb.npy`` **一致处理**。真嵌入（408 主部署）
+    非零即落盘、行为不变；career-only 包因此什么都不落 ⇒ 每次启动重新播种
+    ⇒ 探针每次诚实报 2245/degraded。
+    """
+    import json
+    import pathlib
+
+    import numpy as np
+
+    from db.milvus_client import InMemoryVectorStore
+
+    store = InMemoryVectorStore()
+    good = [0.5] * dim
+    store.add(
+        "netlearn_kb",
+        ids=["ok", "bad"],
+        texts=["good text", "bad text"],
+        metas=[
+            {"subject": "os"},
+            {"subject": "net", "embedding_status": "fallback_zero"},
+        ],
+        embeddings=[good, [0.0] * dim],
+    )
+
+    json_path = pathlib.Path(store._persist_path) / "netlearn_kb.json"
+    payload = json.loads(json_path.read_text(encoding="utf-8"))
+    assert payload["ids"] == ["ok"], (
+        f"fallback_zero 文档不得落盘，实测落盘 ids={payload['ids']}"
+    )
+    assert payload["metas"] == [{"subject": "os"}]
+    assert payload["embeddings"] == [good], "真向量必须原样落盘"
+
+    # .emb.npy 必须与 JSON 一致：同样只剩 1 行（否则读回时维度校验失配、
+    # 二进制缓存与 JSON 打架）
+    arr = np.load(json_path.with_name(json_path.name + ".emb.npy"))
+    assert arr.shape == (1, dim), f".emb.npy 与 JSON 不一致，实测 shape={arr.shape}"
+
+
+def test_all_fallback_zero_persists_nothing_and_second_boot_recounts(
+    isolate_vectordb, monkeypatch, e5_down, dim
+):
+    """双启动：全部零向量时什么都不落，第二次启动必须重新播种、重新计数。
+
+    集成级断言。上一条只证明「落盘内容不含坏数据」这 half；这里把两次启动串起来，
+    证明运维面（``/api/status`` 的 ``fallback_zero_docs``）在**每次**启动都反映
+    事实，而不是只有第一次。
+    """
+    import pathlib
+
+    from db.milvus_client import InMemoryVectorStore, vector_db
+
+    chunks = [{"id": f"c{i}", "text": f"t{i}", "metadata": {}} for i in range(3)]
+
+    # ── boot 1：E5 挂了 ⇒ 3 条全零向量占位 ──
+    monkeypatch.setattr(vector_db, "_milvus_connected", False)
+    monkeypatch.setattr(vector_db, "_mem_store", InMemoryVectorStore())
+    monkeypatch.setattr(vector_db, "_embedding_fallback_count", 0)
+
+    assert vector_db._mem_insert("netlearn_kb", chunks) == 3
+    assert vector_db.embedding_fallback_count == 3, "首次启动必须计入零向量"
+
+    persist_dir = pathlib.Path(vector_db._mem_store._persist_path)
+    assert not (persist_dir / "netlearn_kb.json").exists(), (
+        "全部为零向量时不得落盘 —— 否则下次启动'跳过 JSON 重建'，计数器不增，"
+        "健康探针会把 2245 条零向量库报成 ok"
+    )
+
+    # ── boot 2：全新实例、同一磁盘目录（等价于进程重启）──
+    boot2 = InMemoryVectorStore()
+    assert boot2._load("netlearn_kb") is False, "第二次启动不应读到上次的零向量库"
+    assert boot2.count("netlearn_kb") == 0
+
+    monkeypatch.setattr(vector_db, "_mem_store", boot2)
+    monkeypatch.setattr(vector_db, "_embedding_fallback_count", 0)
+    assert vector_db._mem_insert("netlearn_kb", chunks) == 3
+    assert vector_db.embedding_fallback_count == 3, (
+        "第二次启动必须重新计入零向量 —— 否则 /api/status 重启后低报成 ok"
+    )
+
+
+# ── 5. 读取侧过滤：已被旧版本污染的目录必须重启即自愈 ────────────────────
+
+
+def _write_polluted_store(persist_dir, dim, n: int, good_first: bool = False):
+    """手工造一份「旧版本留下的」污染库：n 条文档 + 行数匹配的 .emb.npy。
+
+    模拟的是**写侧过滤上线之前**已经落盘的目录（线上实例 / 跑过旧包的副本），
+    这是写侧过滤永远治不到的那一半病例。
+    """
+    import json
+    import pathlib
+
+    import numpy as np
+
+    persist_dir = pathlib.Path(persist_dir)
+    ids = [f"c{i}" for i in range(n)]
+    texts = [f"t{i}" for i in range(n)]
+    metas = [{"subject": "os", "embedding_status": "fallback_zero"} for _ in range(n)]
+    embs = [[0.0] * dim for _ in range(n)]
+    if good_first:
+        ids[0] = "ok"
+        texts[0] = "good text"
+        metas[0] = {"subject": "os"}
+        embs[0] = [0.5] * dim
+    payload = {"ids": ids, "texts": texts, "metas": metas, "embeddings": embs}
+    (persist_dir / "netlearn_kb.json").write_text(
+        json.dumps(payload, ensure_ascii=False), encoding="utf-8"
+    )
+    np.save(
+        persist_dir / "netlearn_kb.json.emb.npy",
+        np.asarray(embs, dtype=np.float32),
+    )
+    return persist_dir / "netlearn_kb.json"
+
+
+def test_polluted_disk_store_loads_as_empty_and_second_boot_recounts(
+    isolate_vectordb, tmp_path, monkeypatch, e5_down, dim
+):
+    """已被污染的历史目录：``_load`` 必须返回 False，且重新播种后重新计数。
+
+    只做写侧过滤（半成品补丁）时此用例转红：``_load`` 会把 3 条零向量当正常数据
+    读回（``count == 3``）⇒ 播种被 `count == 0` 跳过 ⇒ 计数器停在 0 ⇒
+    ``/api/status`` 报 ``fallback_zero_docs:0`` / ``status:"ok"``，库里全是零向量。
+    **首次启动诚实、重启后说谎** 的另一半洞就在这里。
+    """
+    from db.milvus_client import InMemoryVectorStore, vector_db
+
+    json_path = _write_polluted_store(tmp_path, dim, n=3)
+
+    # ── 重启：同一磁盘目录、全新实例 ──
+    store = InMemoryVectorStore()
+    assert store._load("netlearn_kb") is False, (
+        "过滤后无可用文档 ⇒ _load 必须返回 False，调用方才会重新播种"
+    )
+    assert store.count("netlearn_kb") == 0
+
+    # INC-2026-09-14：读路径只读不写不改名 —— 污染文件必须原样留着，
+    # 不得被删除、搬走或改名 .corrupted.*
+    assert json_path.exists(), "读路径不得删除主文件（INC-2026-09-14）"
+    assert not list(tmp_path.glob("netlearn_kb.json.corrupted.*")), (
+        "污染不是结构性损坏，不得产生 .corrupted 备份"
+    )
+
+    # ── 重新播种：全部重新计入 fallback_zero ──
+    chunks = [{"id": f"c{i}", "text": f"t{i}", "metadata": {}} for i in range(3)]
+    monkeypatch.setattr(vector_db, "_milvus_connected", False)
+    monkeypatch.setattr(vector_db, "_mem_store", store)
+    monkeypatch.setattr(vector_db, "_embedding_fallback_count", 0)
+
+    assert vector_db._mem_insert("netlearn_kb", chunks) == 3
+    assert vector_db.embedding_fallback_count == 3, (
+        "污染目录重启后必须重新计入零向量 —— 否则探针继续低报成 ok"
+    )
+
+    # 落盘仍被写侧过滤挡住：磁盘上那 3 条零向量留在原处（幂等，不改写）
+    import json as _json
+
+    payload = _json.loads(json_path.read_text(encoding="utf-8"))
+    assert payload["ids"] == ["c0", "c1", "c2"], (
+        "新数据全为零向量时不应覆盖磁盘内容；过滤幂等，下次启动照旧报降级"
+    )
+    assert all(
+        m.get("embedding_status") == "fallback_zero" for m in payload["metas"]
+    )
+
+
+def test_partially_polluted_disk_store_keeps_good_docs_drops_zero_vectors(
+    isolate_vectordb, tmp_path, dim
+):
+    """混合污染：真向量必须保住，零向量必须丢掉，且 embeddings 与 ids 同源对齐。
+
+    这条专门锁「过滤必须发生在 .emb.npy 行数比对之前」：旧缓存按未过滤行数
+    （3 行）写成，过滤后只剩 1 条 ⇒ 行数失配 ⇒ 回退 JSON 重建。
+    若比对先于过滤、或过滤后忘了同步过滤 JSON 里的 embeddings，这里会读到
+    3×dim 的矩阵配 1 个 id（错位读），断言随即失败。
+    """
+    import numpy as np
+
+    from db.milvus_client import InMemoryVectorStore
+
+    _write_polluted_store(tmp_path, dim, n=3, good_first=True)
+
+    store = InMemoryVectorStore()
+    assert store._load("netlearn_kb") is True, "还有可用文档时不应整库判空"
+    assert store.count("netlearn_kb") == 1
+
+    coll = store._collections["netlearn_kb"]
+    assert coll["ids"] == ["ok"]
+    assert coll["texts"] == ["good text"]
+    assert coll["metas"] == [{"subject": "os"}]
+    assert coll["embeddings"].shape == (1, dim), (
+        f"embeddings 必须随 ids 一起过滤，实测 shape={coll['embeddings'].shape}"
+    )
+    assert np.allclose(coll["embeddings"][0], [0.5] * dim), "真向量不得被改写"
