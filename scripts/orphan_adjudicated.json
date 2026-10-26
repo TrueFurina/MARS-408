@@ -1,0 +1,356 @@
+{
+  "_doc": "孤儿函数闸门（scripts/audit_orphan_functions.py）的已裁定清单 + 已裁定基线。2026-10-26 落地，照 scripts/token_scan_exemptions.json 的先例（理由枚举 + 僵尸检测 + 拒绝刷新基线）。verdict 三选一：keep（保留：语义/契约/安全价值，不删，从 T1 跳过）/ planned-use（保留：已排期接入，暂未接线，从 T1 跳过）/ defer-delete（本轮裁定暂不删，仍计入 T1，其 (file,name) 登记进基线名册）。约束：① 本文件是门禁组成部分——缺失/JSON 错/字段缺/verdict 不在枚举/重复 (file,name,line)/baseline.t1 与 defer-delete 条目数不等 ⇒ exit 2（fail-closed，绝不静默当空清单放行）；② keep/planned-use 条目若指向的函数在文件里已不存在 = 僵尸条目 ⇒ exit 1；③ 脚本不提供任何刷新入口（--update 等一律 exit 2），要改基线必须人工编辑本文件并在提交信息里写明理由。",
+  "baseline": {
+    "t1": 32,
+    "date": "2026-10-26",
+    "adjudication_doc": "deliverables/engineering-assurance/orphan-function-adjudication-2026-10-26.md",
+    "note": "T1 已裁定基线 = 本轮逐项核完的 32 项（A群 15 + B群 2 + C群 15），统一裁定为「本轮不删，登记待后续阶段处置」。--gate 的红绿口径：T1 中出现基线名册未登记的项（即新增零引用函数）⇒ exit 1 并点名；基线内存量项不阻断。删除其中任一项会让计数下降（不红，但会打印「建议人工收紧基线」提示）。"
+  },
+  "adjudicated": [
+    {
+      "file": "py-server/engines/agent_debate.py",
+      "name": "agent_reflection",
+      "line": 427,
+      "verdict": "keep",
+      "group": "C",
+      "reason": "AgentDebate 辩论协议的「内省」环节方法，不是死代码：宿主类在 :659 有模块级单例，且 api/agents.py:144 经 debate() 进入协议链。删除会拆掉「反思→交叉质询→共识」三段协议的一半，属对外可解释性契约。裁定保留。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/engines/agent_debate.py",
+      "name": "cross_examine",
+      "line": 486,
+      "verdict": "keep",
+      "group": "C",
+      "reason": "辩论协议的「交叉质询」环节方法，与 agent_reflection 成对存在（宿主 AgentDebate 活跃：:659 单例 + api/agents.py:144）。零调用是因为协议只在多智能体辩论开关打开时走，删掉会破坏协议对称性。裁定保留。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/engines/skill_plugin_runtime.py",
+      "name": "invalidate_cache",
+      "line": 334,
+      "verdict": "planned-use",
+      "group": "C",
+      "reason": "插件运行时的缓存显式失效入口。当前生产靠进程重启/TTL 自然过期，故零调用；但 skill 热加载一接线就必然需要显式失效路径，届时重写成本高于保留。登记为已排期接入（planned-use），接线上线后本条应改为删除并同步本文件。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/shared/container.py",
+      "name": "override",
+      "line": 74,
+      "verdict": "keep",
+      "group": "C",
+      "reason": "docstring 自陈「测试用：替换依赖实例」，git grep -nE '\\.override\\(' 全仓 0 命中——「零调用」但并非死代码：这是 DI 容器的测试替身入口，删掉会让后续所有依赖注入测试无法打桩。裁定保留。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/shared/semantic_guard.py",
+      "name": "run_semantic_check",
+      "line": 226,
+      "verdict": "keep",
+      "group": "C",
+      "reason": "是 should_run_semantic_check + classify_intent 两个原子函数的组合编排层；生产为了省一次分支直接调原子函数，故零调用。保留它作为对外可读的语义入口（可读性与教学价值），不是待删死码。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/utils/safety.py",
+      "name": "sanitize_input",
+      "line": 116,
+      "verdict": "keep",
+      "group": "C",
+      "reason": "安全域 helper：函数体对注入关键词只 logger.info 不剥离，防护实由 filter_sensitive（生产在用）+ ANTI_INJECTION_INSTRUCTION 覆盖。但它位于 utils/safety.py 安全工具集内，删它容易被后来者误读为「安全网被拆」而复制一份更弱的实现。裁定保留并在此登记。",
+      "date": "2026-10-26"
+    },
+
+    {
+      "file": "py-server/db/graph_db.py",
+      "name": "get_graph_db",
+      "line": 20,
+      "verdict": "defer-delete",
+      "group": "A",
+      "reason": "A群：db/graph_db.py 整个模块零 import（plans/current.md:264 同一结论）。本函数是模块级单例工厂，删它等于先拆模块入口。deliverables/408-kg/架构设计-408知识图谱导入.md:150,151,328,574 把 MemoryGraphDB 列为「未来考点级→章级上卷」的适配口并写明本期不改 graph_db.py → 本轮不删，随该阶段一并处置。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/db/graph_db.py",
+      "name": "get_dependents",
+      "line": 50,
+      "verdict": "defer-delete",
+      "group": "A",
+      "reason": "A群：基类 GraphDB(:43) 的接口声明（raise NotImplementedError）。整模块零 import；408-KG 上卷方案要的正是这张「后续知识点」依赖图 → 本轮不删，随模块一并处置。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/db/graph_db.py",
+      "name": "get_learning_path",
+      "line": 54,
+      "verdict": "defer-delete",
+      "group": "A",
+      "reason": "A群：基类 GraphDB 接口声明。整模块零 import；学习路径生成是 408-KG 上卷后的核心产出 → 本轮不删，随模块一并处置。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/db/graph_db.py",
+      "name": "search_by_keyword",
+      "line": 58,
+      "verdict": "defer-delete",
+      "group": "A",
+      "reason": "A群：基类 GraphDB 接口声明。整模块零 import → 本轮不删，随模块一并处置。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/db/graph_db.py",
+      "name": "get_all_topics",
+      "line": 62,
+      "verdict": "defer-delete",
+      "group": "A",
+      "reason": "A群：基类 GraphDB 接口声明。整模块零 import → 本轮不删，随模块一并处置。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/db/graph_db.py",
+      "name": "_topic_id_to_name",
+      "line": 99,
+      "verdict": "defer-delete",
+      "group": "A",
+      "reason": "A群：MemoryGraphDB(:71) 的 topic_id→可读名 私有 helper，模块内亦零调用（实现另有 _topic_id_to_group:181 走通）。整模块零 import → 本轮不删，随模块一并处置。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/db/graph_db.py",
+      "name": "get_dependents",
+      "line": 112,
+      "verdict": "defer-delete",
+      "group": "A",
+      "reason": "A群：MemoryGraphDB(:71) 的内存 DAG 实现。整模块零 import；408-KG 上卷方案的「考点级→章级」映射要复用此实现 → 本轮不删，随模块一并处置。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/db/graph_db.py",
+      "name": "get_learning_path",
+      "line": 120,
+      "verdict": "defer-delete",
+      "group": "A",
+      "reason": "A群：MemoryGraphDB 实现。整模块零 import → 本轮不删，随模块一并处置。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/db/graph_db.py",
+      "name": "search_by_keyword",
+      "line": 147,
+      "verdict": "defer-delete",
+      "group": "A",
+      "reason": "A群：MemoryGraphDB 实现。整模块零 import → 本轮不删，随模块一并处置。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/db/graph_db.py",
+      "name": "get_all_topics",
+      "line": 154,
+      "verdict": "defer-delete",
+      "group": "A",
+      "reason": "A群：MemoryGraphDB 实现。整模块零 import → 本轮不删，随模块一并处置。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/db/graph_db.py",
+      "name": "get_dependents",
+      "line": 220,
+      "verdict": "defer-delete",
+      "group": "A",
+      "reason": "A群：Neo4jGraphDB(:192) 的 Cypher 实现。整模块零 import（本机亦无 Neo4j）→ 本轮不删，随模块一并处置。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/db/graph_db.py",
+      "name": "get_learning_path",
+      "line": 229,
+      "verdict": "defer-delete",
+      "group": "A",
+      "reason": "A群：Neo4jGraphDB 的 Cypher 实现。整模块零 import → 本轮不删，随模块一并处置。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/db/graph_db.py",
+      "name": "search_by_keyword",
+      "line": 252,
+      "verdict": "defer-delete",
+      "group": "A",
+      "reason": "A群：Neo4jGraphDB 的 Cypher 实现。整模块零 import → 本轮不删，随模块一并处置。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/db/graph_db.py",
+      "name": "get_all_topics",
+      "line": 262,
+      "verdict": "defer-delete",
+      "group": "A",
+      "reason": "A群：Neo4jGraphDB 的 Cypher 实现。整模块零 import → 本轮不删，随模块一并处置。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/db/graph_db.py",
+      "name": "import_from_kg_dag",
+      "line": 281,
+      "verdict": "defer-delete",
+      "group": "A",
+      "reason": "A群：Neo4jGraphDB 的 kg_dag→Neo4j 灌库入口（from shared.kg_dag import GROUP_PREREQS）。整模块零 import；它是 408-KG 上卷方案里「章级 DAG 落图」的现成搬运口 → 本轮不删，随模块一并处置。",
+      "date": "2026-10-26"
+    },
+
+    {
+      "file": "py-server/import_pdfs.py",
+      "name": "import_all",
+      "line": 318,
+      "verdict": "defer-delete",
+      "group": "B",
+      "reason": "B群：已退役 CLI 的批量导入入口。模块 __main__ 已改成分发到 tools/import_client.py 并打印 DEPRECATED，故无调用路径。但 services/import_worker.py:368,393 仍 import 本模块的 semantic_chunk / detect_subject / process_file → 只能删函数不能删模块；与 import_worker 的收敛一并做，本轮不删。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/import_docling.py",
+      "name": "import_all",
+      "line": 61,
+      "verdict": "defer-delete",
+      "group": "B",
+      "reason": "B群：已退役 CLI 的批量导入入口，同上。但 services/import_worker.py:329,367 仍 import 本模块的 SCANNED_PDFS / convert_with_docling → 只能删函数不能删模块；与 import_worker 的收敛一并做，本轮不删。",
+      "date": "2026-10-26"
+    },
+
+    {
+      "file": "py-server/agents/media_generator.py",
+      "name": "generate_full_media_package",
+      "line": 236,
+      "verdict": "defer-delete",
+      "group": "C",
+      "reason": "C群：活模块上的死方法——聚合打包函数（图片+音频+视频一把梭）从未接线，调用方走分步接口。无争议建议删，本轮不删（理由见裁定文档 §四）：删除收益是少一段未接线的编排代码，风险是媒体特性回归时无现成聚合入口；Git 历史可随时还原，故推迟到媒体特性专项。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/agents/skill_agent.py",
+      "name": "execute_skill",
+      "line": 204,
+      "verdict": "defer-delete",
+      "group": "C",
+      "reason": "C群：技能执行路径已统一走 skill_plugin_runtime，本方法未被任何调用方使用。无争议建议删，本轮不删（理由见裁定文档 §四）。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/config.py",
+      "name": "get_llm_config",
+      "line": 284,
+      "verdict": "defer-delete",
+      "group": "C",
+      "reason": "C群：冗余未用 helper；真实 LLM 通道经 _apply_env_overrides + config['llm_provider'] 直接读取。无争议建议删，本轮不删（理由见裁定文档 §四）。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/db/__init__.py",
+      "name": "init_db",
+      "line": 10,
+      "verdict": "defer-delete",
+      "group": "C",
+      "reason": "C群：NetLearn 时代 bootstrap 残留（且不在 __all__ 内，非公开面）。career 分支表结构由 career_store/ability_store 的 ensure_tables() 惰性建表。无争议建议删，本轮不删（理由见裁定文档 §四）。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/db/redis_client.py",
+      "name": "cache_llm_response",
+      "line": 136,
+      "verdict": "defer-delete",
+      "group": "C",
+      "reason": "C群：LLM 响应缓存写入 helper 未接线（与 get_cached_llm_response / get_agent_weights 同批）。无争议建议删，本轮不删（理由见裁定文档 §四）。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/db/redis_client.py",
+      "name": "get_cached_llm_response",
+      "line": 140,
+      "verdict": "defer-delete",
+      "group": "C",
+      "reason": "C群：LLM 响应缓存读取 helper 未接线。无争议建议删，本轮不删（理由见裁定文档 §四）。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/db/redis_client.py",
+      "name": "get_agent_weights",
+      "line": 150,
+      "verdict": "defer-delete",
+      "group": "C",
+      "reason": "C群：多智能体权重读取 helper 未接线。无争议建议删，本轮不删（理由见裁定文档 §四）。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/db/skill_store.py",
+      "name": "list_usage_logs",
+      "line": 615,
+      "verdict": "defer-delete",
+      "group": "C",
+      "reason": "C群：usage 日志查询未暴露端点（对应契约审计的孤儿端点之一，管理面）。无争议建议删，本轮不删：端点一旦补上就要现成查询函数（理由见裁定文档 §四）。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/engines/frugal_rag.py",
+      "name": "clear_cache",
+      "line": 647,
+      "verdict": "defer-delete",
+      "group": "C",
+      "reason": "C群：缓存惰性，无需显式清理，故零调用。无争议建议删，本轮不删（理由见裁定文档 §四）。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/engines/quiz_engine.py",
+      "name": "get_recommended_questions",
+      "line": 636,
+      "verdict": "defer-delete",
+      "group": "C",
+      "reason": "C群：推荐函数未接到端点（对应契约审计的孤儿端点之一）。无争议建议删，本轮不删（理由见裁定文档 §四）。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/engines/teaching_rules.py",
+      "name": "get_exam_weight",
+      "line": 330,
+      "verdict": "defer-delete",
+      "group": "C",
+      "reason": "C群：规则引擎直接读配置，本读取函数未用（与 get_difficulty 同批）。无争议建议删，本轮不删（理由见裁定文档 §四）。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/engines/teaching_rules.py",
+      "name": "get_difficulty",
+      "line": 337,
+      "verdict": "defer-delete",
+      "group": "C",
+      "reason": "C群：规则引擎直接读配置，本读取函数未用。无争议建议删，本轮不删（理由见裁定文档 §四）。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/services/cache.py",
+      "name": "cache_stats",
+      "line": 89,
+      "verdict": "defer-delete",
+      "group": "C",
+      "reason": "C群：缓存装饰器在用，本监控统计函数未接。无争议建议删，本轮不删（理由见裁定文档 §四）。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/services/video_generator.py",
+      "name": "generate_scene_audio",
+      "line": 677,
+      "verdict": "defer-delete",
+      "group": "C",
+      "reason": "C群：低层未接线函数（视频特性部分停用，03 演示视频上锁）。无争议建议删，本轮不删（理由见裁定文档 §四）。",
+      "date": "2026-10-26"
+    },
+    {
+      "file": "py-server/services/video_generator.py",
+      "name": "generate_video_from_topic",
+      "line": 793,
+      "verdict": "defer-delete",
+      "group": "C",
+      "reason": "C群：低层未接线函数，同上。无争议建议删，本轮不删（理由见裁定文档 §四）。",
+      "date": "2026-10-26"
+    }
+  ]
+}
