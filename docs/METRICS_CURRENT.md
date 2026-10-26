@@ -70,7 +70,7 @@
 | 前端 .ts 总数 | 71 | `git ls-files 'src/*.ts' 'src/**/*.ts' | sort -u` 计数（含顶层 main.ts；勿单用 `src/**/*.ts`，git 的 `**` 不匹配顶层文件，会漏 1） |
 | 前端代码行数（.vue+.ts） | 56915 | git 跟踪的 `.vue` + `.ts` 全部行数 |
 | 后端 Python 文件数 | 388 | `git ls-files 'py-server/**/*.py'` 计数 |
-| 后端代码行数 | 92671 | git 跟踪的 `.py` 全部行数 |
+| 后端代码行数 | 92882 | git 跟踪的 `.py` 全部行数 |
 | API 路由模块数 | 42 | `git ls-files 'py-server/api/*.py'` 去 `__init__.py` |
 | API 路径数（/api） | 243 | `py-server/openapi.json` 中 `/api` 路径数 |
 | API 操作数（/api，method 级） | 261 | `py-server/openapi.json` 中 `/api` 操作数（method 级） |
