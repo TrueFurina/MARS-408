@@ -1,0 +1,14 @@
+{
+  "_doc": "dup_scan 豁免清单（2026-10-26 新增，与 scripts/token_scan_exemptions.json 同一范式）。每条规则：file 必填；range.start_marker / range.end_marker 必填（不允许整文件豁免，必须界定声明区间）；reason 只能取 declarative-rule-table（声明式规则/数据表：其重复是**表达需要**而非「该抽象没抽象」）。判定要求克隆区域的**每一处命中都落在区间内**才豁免，因此区间之外的复制粘贴照旧被抓。规则若不再命中任何区域 = 僵尸条目 → 门禁 exit 1（豁免过期不得静默放行）。**不提供**刷新入口：新增豁免必须手写进本文件并在提交信息里写明理由。",
+  "exemptions": [
+    {
+      "file": "scripts/scan_metric_occurrences.py",
+      "reason": "declarative-rule-table",
+      "range": {
+        "start_marker": "RULES: tuple[Rule, ...] = (",
+        "end_marker": ")"
+      },
+      "_note": "活文档面指标副本的守护规则表（26+ 条 Rule(...) 声明）。每加一条规则，文本级窗口指纹就会新增一批——实测 4 轮共 10 组指纹全部来自这一张表，纯噪声。该表是**数据**不是逻辑：改成元组生成式会降低可读性且无可抽公共函数。区间用标记串在运行时解析（不用硬编码行号），故表增长无需同步本文件。判据已实测：该文件 6 组克隆全在区间内被豁免，而 :304/:320 那组（_parse_* 解析函数，区间外）仍被拦 —— 证明豁免没有漏面。"
+    }
+  ]
+}

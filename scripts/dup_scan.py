@@ -175,6 +175,110 @@ def _sig(key: tuple[tuple[str, int], ...]) -> str:
     return hashlib.sha1(raw.encode("utf-8")).hexdigest()[:16]
 
 
+# ==== 豁免（2026-10-26 新增）================================================
+# 与 scripts/token_scan_exemptions.json 同一范式：**理由枚举 + 僵尸检测 + 不提供刷新入口**。
+#
+# 存在理由：声明式规则表（如 scan_metric_occurrences.py 的 RULES 元组）**天然就是重复的**，
+# 它不像业务代码里的复制粘贴那样代表"该抽象没抽象"。若每次加一条规则都去基线登记一批
+# 指纹，只会把真实克隆淹没在一串纯噪声提交里——实测 4 轮共 10 组指纹全来自同一处表。
+#
+# 范围如何保证窄：豁免按「**文件 + 声明区间**」生效，区间由**标记串**在运行时解析
+# （不用硬编码行号，避免行号漂移后要同步豁免清单）。判定要求克隆区域的**每一处命中
+# 都落在区间内**才豁免——因此区间之外（哪怕是同一个文件里）的复制粘贴照旧被抓。
+# 实测：该文件 6 组全在区间内被豁免，而 :304/:320 那组（解析函数）在区间外，仍被拦。
+EXEMPT_FILE = os.path.join(REPO, "scripts", "dup_scan_exemptions.json")
+EXEMPT_REASONS = {"declarative-rule-table"}
+
+
+def load_exemptions() -> list[dict]:
+    """读豁免清单。理由不在枚举内 / 缺 range 标记 → fail-closed。
+
+    刻意**不提供** `--update-exemptions` 之类的刷新入口：新增豁免必须手写进
+    JSON 并在提交信息里写明理由，与 token_scan 的处置一致。
+    """
+    if not os.path.isfile(EXEMPT_FILE):
+        return []
+    try:
+        with open(EXEMPT_FILE, encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, json.JSONDecodeError) as e:
+        print(f"[fail-closed] 豁免清单不可解析：{e}", file=sys.stderr)
+        sys.exit(2)
+
+    rules: list[dict] = []
+    for idx, r in enumerate(data.get("exemptions", []), 1):
+        if not r.get("file"):
+            print(f"[fail-closed] 豁免 #{idx} 缺 file", file=sys.stderr)
+            sys.exit(2)
+        if r.get("reason") not in EXEMPT_REASONS:
+            print(f"[fail-closed] 豁免 #{idx} 的 reason={r.get('reason')!r} 不在枚举 "
+                  f"{sorted(EXEMPT_REASONS)} 内（防止随手开万能豁免）", file=sys.stderr)
+            sys.exit(2)
+        if not (r.get("range") or {}).get("start_marker"):
+            print(f"[fail-closed] 豁免 #{idx} 缺 range.start_marker"
+                  f"（不允许整文件豁免，必须界定区间）", file=sys.stderr)
+            sys.exit(2)
+        rules.append(r)
+    return rules
+
+
+def _resolve_range(rel: str, spec: dict) -> tuple[int, int] | None:
+    """把「声明区间」解析成 (起始行, 结束行)，1 起、含端点。
+
+    用**标记串**而非硬编码行号：行号会随文件增删漂移，标记串不会；否则每次改
+    这个文件都要同步豁免清单，等于把噪声从一个地方搬到另一个地方。
+    """
+    path = os.path.join(REPO, rel)
+    try:
+        with open(path, encoding="utf-8", errors="replace") as f:
+            lines = f.read().splitlines()
+    except OSError:
+        return None
+    start_marker = spec["start_marker"]
+    end_marker = spec.get("end_marker", ")")
+    start = None
+    for i, ln in enumerate(lines, 1):
+        if start is None:
+            if start_marker in ln:
+                start = i
+        elif ln == end_marker:
+            return start, i
+    return None
+
+
+def apply_exemptions(regions: dict) -> tuple[dict, list[dict], list[dict]]:
+    """按豁免规则拆分区域 → (计入门禁的, 被豁免的, 僵尸规则)。"""
+    rules = load_exemptions()
+    if not rules:
+        return regions, [], []
+
+    resolved = [(r, _resolve_range(r["file"], r["range"])) for r in rules]
+    kept: dict = {}
+    exempted: list[dict] = []
+    used: set[int] = set()
+
+    for key, region in regions.items():
+        hits = region["hits"]
+        hit_rule = None
+        for r, rng in resolved:
+            if rng is None:
+                continue
+            s, e = rng
+            # 必须**每一处**命中都在区间内才豁免（窄的关键）。
+            if all(h[0] == r["file"] and s <= h[1] <= e for h in hits):
+                hit_rule = r
+                break
+        if hit_rule is not None:
+            used.add(id(hit_rule))
+            exempted.append({"sig": _sig(key), "hits": len(hits),
+                             "reason": hit_rule["reason"]})
+        else:
+            kept[key] = region
+
+    stale = [r for r, _ in resolved if id(r) not in used]
+    return kept, exempted, stale
+
+
 def _report(result: dict, top: int) -> tuple[int, int]:
     regions = result["regions"]
     total_dup_lines = sum(WINDOW + r["longest"] - 1 for r in regions.values())
@@ -207,6 +311,22 @@ def main(argv: list[str] | None = None) -> int:
     if result["files"] == 0:
         print("[fail-closed] 扫描面为 0 个文件（路径配错不能当作干净）", file=sys.stderr)
         return 2
+
+    # 豁免先于一切判定：被豁免的区域既不进报告、也不进基线比较。
+    kept, exempted, stale = apply_exemptions(result["regions"])
+    if stale:
+        # 僵尸检测：豁免规则不再命中任何东西 = 声明区间被改名/删除，或该文件已无克隆。
+        # 此时**不得**静默放行——继续豁免一个不存在的东西，等于豁免悄悄扩到了别处。
+        print("[僵尸豁免] 以下豁免规则已不命中任何克隆区域（区间被改名/删除？）——"
+              "豁免过期不得静默放行：", file=sys.stderr)
+        for r in stale:
+            print(f"    {r['file']}  reason={r['reason']}", file=sys.stderr)
+        return 1
+    if exempted:
+        reasons = ", ".join(f"{k}={sum(1 for e in exempted if e['reason'] == k)}"
+                            for k in sorted({e["reason"] for e in exempted}))
+        print(f"豁免（不计入门禁）：{len(exempted)} 组  [{reasons}]")
+    result = {"files": result["files"], "regions": kept}
 
     current = sorted(_sig(k) for k in result["regions"])
     baseline: list[str] = []
