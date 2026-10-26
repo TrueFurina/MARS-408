@@ -233,15 +233,15 @@ def test_looks_like_real_student(uid, expected):
     assert per.looks_like_real_student(uid) is expected
 
 
-@pytest.mark.parametrize("uid", [
-    "stu_outsider_021b1a", "stu_feature_x", "stu_bad_phase", "stu_join_only",
-    "stu_no_name_p4", "diag", "u_t", "u_a",
-])
+@pytest.mark.parametrize("uid", ["stu_outsider_021b1a", "stu_feature_x", "stu_bad_phase",
+                                 "stu_join_only", "stu_no_name_p4", "diag", "u_t", "u_a"])
 def test_repo_fixture_accounts_are_no_longer_real(uid):
-    """本机库里实际存在的夹具账号形态（2026-10-22 加固项）必须不再被当成真实用户。
+    """本机库实际存在的夹具真名，永不得被当成真实用户 —— 不论由哪一层判掉。
 
-    直接列出真名，是为了让这类"换前缀就漏"的事故只发生一次 —— 下一个新夹具前缀若
-    又被漏掉，应当在本条这里补上，而不是先回去现场取证。
+    2026-10-22 方案 A 修订：原断言 `is_test_account(uid) is True`（黑名单口径）守护的是**已被否决**
+    的做法 —— stu_* / diag 现已刻意不登记黑名单、留给第 5 条判据去抓并隐藏明细（见实现文件元组末尾
+    注释）。故改为断言结果不变量 `looks_like_real_student(uid) is False`；u_t / u_a 仍由放宽后的
+    `_ANON_RE` 判掉，最后一行一并钉住两者的分工。
     """
-    assert per.is_test_account(uid) is True
     assert per.looks_like_real_student(uid) is False
+    assert per.is_test_account(uid) is (uid in ("u_t", "u_a"))
