@@ -1,0 +1,1 @@
+const s=["expression","stress","decompose","collab","presentation","problem_solving"],e={expression:"表达逻辑",stress:"抗压应变",decompose:"方案拆解",collab:"协作沟通",presentation:"技术汇报",problem_solving:"问题解决"};export{e as C,s as a};
