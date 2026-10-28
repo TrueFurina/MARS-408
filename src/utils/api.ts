@@ -164,19 +164,67 @@ function handleUnauthorized(status: number): void {
 }
 
 /**
- * 单次请求默认超时（ms）。
+ * 分级超时（ms）—— 不同链路的时长语义不同，共用一个阈值必然误杀其中一类。
  *
  * 为什么必须有：`fetch` 在**服务端已建立连接但不返回**（后端卡在慢查询、
- * 网关半开连接、容器被挂起）时既不 resolve 也不 reject。此前 `request()`
- * 没有任何超时，表现是页面永久停在 loading、重试逻辑（只在下游抛错时触发）
- * 永远不生效 —— 用户只能刷新，且刷新后大概率复现。
+ * 网关半开连接、容器被挂起）时既不 resolve 也不 reject。没有超时的表现是
+ * 页面永久停在 loading、重试逻辑（只在下游抛错时触发）永远不生效。
  *
- * 取 30s 的依据：本仓库最慢的正常接口是带 LLM 生成的报告类调用，实测 P99
- * 在 10s 量级；30s 留 3 倍余量，不会误杀正常慢请求。
- * 注意：仅 `request()`（JSON 接口）接超时；`upload()`/`postStream()`/`postBlob()`
- * 分别涉及大文件上传、SSE 长连接与二进制下载，时长语义不同，不在本次范围。
+ * 取值依据（宁可偏松，因为超时误杀比慢更糟）：
+ *   · JSON 接口 30s：本仓库最慢的正常接口是带 LLM 生成的报告类调用，实测 P99
+ *     在 10s 量级，留 3 倍余量；
+ *   · SSE 连接 30s：**只约束「拿到响应头」这一段**，不是整个流。fetch 一 resolve
+ *     计时器即清除，后续逐 token 推送不受影响 —— 长对话不会被 30s 掐断；
+ *   · 上传 120s：多模态图片/文档，含服务端解析时间；
+ *   · 二进制下载 120s：报告导出与音视频，体积不可控。
  */
-const DEFAULT_TIMEOUT_MS = 30_000
+const TIMEOUT_JSON_MS = 30_000
+const TIMEOUT_STREAM_CONNECT_MS = 30_000
+const TIMEOUT_UPLOAD_MS = 120_000
+const TIMEOUT_BLOB_MS = 120_000
+
+/**
+ * 超时专用错误类型。
+ * 单独成类（而不是直接抛 ApiError）是为了让 `request()` 能区分「超时（可重试）」
+ * 与「4xx/5xx（按状态码决定是否重试）」，避免超时被误判成不可重试的 ApiError。
+ */
+class RequestTimeoutError extends Error {
+  constructor(public timeoutMs: number) {
+    super(`请求超时：${timeoutMs / 1000} 秒内无响应，请稍后重试`)
+    this.name = 'RequestTimeoutError'
+  }
+}
+
+/**
+ * 带超时的 fetch。返回 Response 即视为「已拿到响应头」，计时器随之清除。
+ *
+ * 调用方自带 signal（组件卸载取消、用户主动中断）时**不接管超时** ——
+ * 两个 AbortController 抢同一个请求会让「谁中止的」变得不可判定。
+ */
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+  timeoutMs: number,
+): Promise<Response> {
+  if (init.signal || typeof AbortController === 'undefined' || timeoutMs <= 0) {
+    return fetch(url, init)
+  }
+  const controller = new AbortController()
+  let timedOut = false
+  const timer = setTimeout(() => {
+    timedOut = true
+    controller.abort()
+  }, timeoutMs)
+  try {
+    return await fetch(url, { ...init, signal: controller.signal })
+  } catch (e) {
+    // 只有「自己掐的」才转成超时错误；外部原因导致的 AbortError 原样抛出
+    if (timedOut) throw new RequestTimeoutError(timeoutMs)
+    throw e
+  } finally {
+    clearTimeout(timer)
+  }
+}
 
 async function request<T>(
   path: string,
@@ -195,26 +243,13 @@ async function request<T>(
 
   let lastError: unknown
   for (let attempt = 0; attempt <= _retries; attempt++) {
-    // 每次尝试独立计时：超时归入「可重试的网络类失败」，与 502/503/504 同等对待。
-    // 调用方自带 signal（如组件卸载取消）时不接管超时，避免两个 AbortController 打架。
-    let didTimeout = false
-    let timer: ReturnType<typeof setTimeout> | undefined
-    let timeoutController: AbortController | undefined
-    if (!options.signal && typeof AbortController !== 'undefined') {
-      timeoutController = new AbortController()
-      const controller = timeoutController
-      timer = setTimeout(() => {
-        didTimeout = true
-        controller.abort()
-      }, DEFAULT_TIMEOUT_MS)
-    }
-
     try {
-      const resp = await fetch(`${API_BASE}/api${path}`, {
-        ...options,
-        headers,
-        ...(timeoutController ? { signal: timeoutController.signal } : {}),
-      })
+      // 每次尝试独立计时：超时归入「可重试的网络类失败」，与 502/503/504 同等对待。
+      const resp = await fetchWithTimeout(
+        `${API_BASE}/api${path}`,
+        { ...options, headers },
+        TIMEOUT_JSON_MS,
+      )
 
       if (!resp.ok) {
         let detail = `请求失败 (${resp.status})`
@@ -237,11 +272,9 @@ async function request<T>(
       return resp.json() as Promise<T>
     } catch (e: any) {
       if (e instanceof ApiError) throw e
-      // 超时（AbortController 触发）与网络错误同属可重试类：fetch 在超时路径上
-      // 抛的是 AbortError（DOMException），文案对用户无意义，统一换成可读提示。
-      const err = didTimeout
-        ? new ApiError(0, `请求超时：${DEFAULT_TIMEOUT_MS / 1000} 秒内无响应，请稍后重试`)
-        : e
+      // 超时（RequestTimeoutError）与网络错误同属可重试类。对调用方仍统一抛 ApiError，
+      // 保持「api.* 只会抛 ApiError」的既有契约，friendlyError 的映射链路不受影响。
+      const err = e instanceof RequestTimeoutError ? new ApiError(0, e.message) : e
       // 网络错误：TypeError "Failed to fetch" 等
       if (attempt < _retries) {
         lastError = err
@@ -249,8 +282,6 @@ async function request<T>(
         continue
       }
       throw err
-    } finally {
-      if (timer) clearTimeout(timer)
     }
   }
   throw lastError
@@ -288,12 +319,27 @@ export const api = {
       headers['Authorization'] = `Bearer ${token}`
     }
 
-    const resp = await fetch(`${API_BASE}/api${path}`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(body),
-      ...(signal ? { signal } : {}),
-    })
+    // 超时只约束「拿到响应头」这一段：fetch 一 resolve 计时器即清除，
+    // 后续逐 token 的流式推送不受影响（长对话不会被 30s 掐断）。
+    // 调用方传了 signal（用户主动中断）时不接管超时。
+    let resp: Response
+    try {
+      resp = await fetchWithTimeout(
+        `${API_BASE}/api${path}`,
+        {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body),
+          ...(signal ? { signal } : {}),
+        },
+        TIMEOUT_STREAM_CONNECT_MS,
+      )
+    } catch (e) {
+      // 统一成 ApiError（超时 status 记 0），与其它 api.* 的异常契约一致；
+      // 用户主动中断（AbortError）原样抛出，调用方据此区分「取消」与「失败」。
+      if (e instanceof RequestTimeoutError) throw new ApiError(0, e.message)
+      throw e
+    }
     if (!resp.ok) {
       // BugFix：原先一律抛 "流式请求失败"，把 401（登录过期）等真实状态码与
       // 后端错误详情全部吞掉，用户只看到无意义的提示。这里与 request() 对齐，
@@ -330,22 +376,39 @@ export const api = {
       headers['Authorization'] = `Bearer ${token}`
     }
 
-  const resp = await fetch(`${API_BASE}/api${path}`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(body),
-  })
-  // 401 → 统一自动登出；契约不变：仍然不抛异常，照旧返回 { blob, ok, status }
-  handleUnauthorized(resp.status)
-  return { blob: await resp.blob(), ok: resp.ok, status: resp.status }
-},
+    // 契约不变：本方法不抛异常，超时按「失败」返回 ok:false（status 0），
+    // 由调用方走既有的降级分支，不新增异常路径。
+    let resp: Response
+    try {
+      resp = await fetchWithTimeout(
+        `${API_BASE}/api${path}`,
+        { method: 'POST', headers, body: JSON.stringify(body) },
+        TIMEOUT_BLOB_MS,
+      )
+    } catch {
+      return { blob: new Blob(), ok: false, status: 0 }
+    }
+    // 401 → 统一自动登出；契约不变：仍然不抛异常，照旧返回 { blob, ok, status }
+    handleUnauthorized(resp.status)
+    return { blob: await resp.blob(), ok: resp.ok, status: resp.status }
+  },
 
   /** GET 二进制下载（如导出报告 HTML）；接 401 统一登出，契约同 postBlob：不抛异常、返回 ok/status */
   async getBlob(path: string): Promise<{ blob: Blob; ok: boolean; status: number }> {
     // 双头必须走 getAuthHeaders()：CloudStudio 网关只透传自定义头 X-App-Token，
     // 只带 Authorization 的请求在线上稳定 401（2026-10-21 线上巡检实测：
     // 教师点「导出一页纸报告」→ 401 → handleUnauthorized 把用户踢回登录页）。
-    const resp = await fetch(`${API_BASE}/api${path}`, { method: 'GET', headers: getAuthHeaders() })
+    // 契约同 postBlob：超时/网络异常不抛出，按 ok:false + status 0 返回
+    let resp: Response
+    try {
+      resp = await fetchWithTimeout(
+        `${API_BASE}/api${path}`,
+        { method: 'GET', headers: getAuthHeaders() },
+        TIMEOUT_BLOB_MS,
+      )
+    } catch {
+      return { blob: new Blob(), ok: false, status: 0 }
+    }
     handleUnauthorized(resp.status)
     return { blob: await resp.blob(), ok: resp.ok, status: resp.status }
   },
@@ -357,11 +420,22 @@ async function requestForm<T>(
   formData: FormData,
   authHeaders: Record<string, string>,
 ): Promise<T> {
-  const resp = await fetch(`${API_BASE}/api${path}`, {
-    method: 'POST',
-    headers: authHeaders,
-    body: formData,
-  })
+  let resp: Response
+  try {
+    resp = await fetchWithTimeout(
+      `${API_BASE}/api${path}`,
+      {
+        method: 'POST',
+        headers: authHeaders,
+        body: formData,
+      },
+      TIMEOUT_UPLOAD_MS,
+    )
+  } catch (e) {
+    // 统一成 ApiError，保持「api.* 只抛 ApiError」的契约（超时 status 记 0）
+    if (e instanceof RequestTimeoutError) throw new ApiError(0, e.message)
+    throw e
+  }
   let data: any
   try {
     data = await resp.json()
@@ -393,11 +467,22 @@ export async function ttsSynthesize(
   // getAuthHeaders() 在无 token 时返回 {}，未登录的匿名 TTS 调用不受影响。
   const headers: Record<string, string> = { ...getAuthHeaders(), 'Content-Type': 'application/json' }
 
-  const resp = await fetch(`${API_BASE}/api/tts/synthesize`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ text, language, engine }),
-  })
+  // 既有契约是「失败返回 null → 调用方降级到浏览器 SpeechSynthesis」，
+  // 因此超时/网络异常一律并入 null，不新增异常路径（否则降级逻辑会失效）。
+  let resp: Response
+  try {
+    resp = await fetchWithTimeout(
+      `${API_BASE}/api/tts/synthesize`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ text, language, engine }),
+      },
+      TIMEOUT_BLOB_MS,
+    )
+  } catch {
+    return null
+  }
   if (!resp.ok) return null
   return resp.blob()
 }
