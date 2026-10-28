@@ -21,7 +21,8 @@ _latency_count: Dict[str, int] = defaultdict(int)
 _in_flight: int = 0
 
 # D3：请求延迟直方图分桶（秒），用于计算 p95/p99（Prometheus histogram_quantile）
-_LATENCY_BUCKETS = (0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0)
+# 末桶 30.0 用于捕获慢请求尾部（>10s），让近似分位数对真实慢请求有意义。
+_LATENCY_BUCKETS = (0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0)
 _hist: Dict[str, list] = defaultdict(lambda: [0] * (len(_LATENCY_BUCKETS) + 1))
 
 # ── LLM 级指标 (P1-4) ──
@@ -79,6 +80,28 @@ def inc_inflight(delta: int) -> None:
         _in_flight = max(0, _in_flight + delta)
 
 
+def _approx_quantile(hist: list, total: int, buckets: tuple, q: float) -> float:
+    """由直方图分桶估算分位数（桶内线性插值）。
+
+    hist 长度 = len(buckets)+1（末桶为 +Inf）。返回近似秒数；
+    若目标计数落在 +Inf 桶（即尾部超过最大有限桶边界），返回 float('inf')，
+    调用方据此跳过该路径的暴露（避免把 ">30s" 误报成 30.0）。
+    """
+    target = q * total
+    cum = 0
+    prev_upper = 0.0
+    for i, b in enumerate(buckets):
+        cum += hist[i]
+        if cum >= target:
+            prev_count = cum - hist[i]
+            if hist[i] == 0:
+                return b
+            frac = (target - prev_count) / hist[i]
+            return prev_upper + frac * (b - prev_upper)
+        prev_upper = b
+    return float("inf")
+
+
 def render_prometheus() -> str:
     """渲染 Prometheus exposition 文本格式。"""
     with _lock:
@@ -129,6 +152,27 @@ def render_prometheus() -> str:
             lines.append(
                 f'http_request_duration_seconds_bucket{{path="{_esc(path)}",le="+Inf"}} {_cum}'
             )
+
+        # ── 近似分位数（p95/p99）：供"无 Prometheus 抓取"的独立部署直接读取 ──
+        # 由直方图分桶累计 + 桶内线性插值估算（histogram_quantile 同思路）。
+        # 落在 +Inf 桶（>30s）的路径跳过该指标，避免把尾部误报成 30.0。
+        for q, qname in ((0.95, "p95"), (0.99, "p99")):
+            lines.append(
+                f"# HELP http_request_duration_seconds_{qname} "
+                f"Approx {qname} latency by path (seconds, histogram-estimated)."
+            )
+            lines.append(f"# TYPE http_request_duration_seconds_{qname} gauge")
+            for path in sorted(_hist):
+                _h = _hist[path]
+                total = sum(_h)
+                if total == 0:
+                    continue
+                val = _approx_quantile(_h, total, _LATENCY_BUCKETS, q)
+                if val == float("inf"):
+                    continue
+                lines.append(
+                    f'http_request_duration_seconds_{qname}{{path="{_esc(path)}"}} {val:.6f}'
+                )
 
         # ── LLM 级指标 (P1-4) ──
         lines.append("# HELP llm_calls_total Total LLM calls by channel.")

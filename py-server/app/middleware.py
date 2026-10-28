@@ -67,6 +67,10 @@ PERMISSIONS_POLICY = (
 # 仅拦截带 Content-Length 且超标的请求；chunked/流式（无 Content-Length）不受影响。
 MAX_REQUEST_BYTES = int(os.environ.get("MAX_REQUEST_BYTES", str(50 * 1024 * 1024)))
 
+# WS4：慢请求告警阈值（毫秒）。超过即以 WARNING 记录，便于无 Prometheus 抓取时
+# 直接定位性能回归（默认 2000ms；可用 SLOW_REQUEST_MS 环境变量调整/关闭）。
+SLOW_REQUEST_MS = float(os.environ.get("SLOW_REQUEST_MS", "2000"))
+
 # ── API 速率限制 (#11: 防高成本 LLM/生成端点滥用 · 成本失控 · DoS) ──
 # 进程内滑动窗口计数器（单进程部署，无需 Redis）。按 (客户端 IP, 路由组) 限流。
 # 仅对高成本生成/LLM 端点（chat/agents/langgraph/xfyun/sandbox/multimodal/skills）
@@ -164,6 +168,11 @@ async def metrics_middleware(request: Request, call_next):
             "request %s %s -> %s (%.0fms)",
             request.method, request.url.path, status, latency * 1000,
         )
+        if latency * 1000 >= SLOW_REQUEST_MS:
+            logger.warning(
+                "SLOW request %s %s -> %s (%.0fms, 超过阈值 %.0fms)",
+                request.method, request.url.path, status, latency * 1000, SLOW_REQUEST_MS,
+            )
 
 
 async def security_headers_middleware(request: Request, call_next) -> Response:
