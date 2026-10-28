@@ -24,8 +24,9 @@
 | `package.json` / `package-lock.json` | 依赖升级 + 瘦身 | 见第 3 节 |
 | `src/utils/__tests__/globalErrorHandler.test.ts` | **新增 11 用例** | 文案归一 / 节流语义 / 装与卸 |
 | `src/utils/__tests__/apiTimeout.test.ts` | **新增 4 用例** | 超时重试 / 文案可读 / 计时器清理 / 可恢复 |
+| `src/utils/__tests__/helpers/apiTestEnv.ts` | **新增** | API 测试公共桩（fetch / localStorage / 假定时器），消除与 `apiRetry.test.ts` 的重复样板 |
 | `docs/dependency-audit-20261029.md` | **新增** | 依赖审计明细与豁免依据 |
-| `docs/METRICS_CURRENT.md` | 脚本重生成 | 前端 `.ts` 71→74、代码行数 56915→57343（`verify_metrics.py --update`，未手改） |
+| `docs/METRICS_CURRENT.md` | 脚本重生成 | 前端 `.ts` 71→75、代码行数 56915→57363（`verify_metrics.py --update`，未手改） |
 
 ---
 
@@ -64,6 +65,18 @@
 
 - `python scripts/xss_scan.py`：**PASS**（所有 `v-html` 绑定均为净化函数或本地可信字面量；本次未新增任何 `v-html`）
 - `python scripts/verify_metrics.py`：**✅ 9 项一致**（中途两次因新增文件导致行数漂移，均用 `--update` 重生成，**未手改表格**）
+
+pre-push 五道门禁（推送前实跑，首次**未通过**，逐条修好后才推）：
+
+| 门禁 | 首次结果 | 处置 |
+|---|---|---|
+| [1] 钩子自身漂移 | ✅ 通过 | — |
+| [2] OpenAPI 契约快照 | ❌ 环境错误：`No module named 'fastapi'` | 不是契约漂移。独立 worktree 没有 `py-server/.venv`，改用主仓虚拟环境解释器后复跑：**244 paths / 262 operations 快照一致 ✅** |
+| [3] 广告 schema 可达递归 | ✅ DAG 无环 | — |
+| [4] 克隆新增 | ❌ 新增 1 组（我的新测试与 `apiRetry.test.ts` 的 beforeEach 样板逐字重复） | 抽 `helpers/apiTestEnv.ts` 公共桩，两边复用；复跑 **新增 0 组 ✅**（基线 189 → 当前 188） |
+| [5] 错误文案直出 | ✅ 无新增 | — |
+
+> 记录这两条的意义：**「本地 pre-commit 全绿」不等于「能推上去」**。第 2 条是环境问题（不是代码问题），第 4 条是真重复——如果当时直接往基线加豁免，就会把一处可以消除的重复永久固化。
 - 测试数**未硬编码**在任何文档里；后端测试真值（CI run `39681618692`）本次**未改动、未复述为本地实测**
 
 ---
@@ -76,6 +89,7 @@
 | `0939759` | `feat(frontend)` 全局异步错误兜底 + 请求超时 + 任务码/花名册输入边界 |
 | `6e39361` | `docs(frontend)` 修正全局错误钩子的资源错误注释准确性 |
 | `9677ffa` | `test(frontend)` 覆盖全局错误兜底与请求超时（+2 文件 15 用例） |
+| `4520491` | `test(frontend)` 抽取 API 测试公共桩，消除新增克隆段 |
 | （本文） | `docs(ws6)` 审计报告 + 优化总结 |
 
 实现与测试**刻意分开提交**：`test_file_guard` 把「测试与实现同 commit」当作逃逸信号，合在一起会被门禁拦下。
