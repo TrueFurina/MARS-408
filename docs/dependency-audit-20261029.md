@@ -51,6 +51,20 @@
 **这三条 critical 的解除条件（写死在这里，避免以后被当成"已经没事了"）**：
 当且仅当 `vite` 升到 7.x 时，同批升 `vitest@5` + `happy-dom@21`，一次清掉 `vitest` / `tinypool` / `@vitest/mocker` / `happy-dom` 四条。届时必须重跑：`vue-tsc --build`、`vitest run`、`vite build`、`vite preview` 冒烟。
 
+### 3.1 关于「GitHub 提示 62 个 CVE」的口径说明
+
+推送本分支时远端回显：`GitHub found 62 vulnerabilities on TrueFurina/MARS-408's default branch (9 critical, 32 high, 18 moderate, 3 low)`。
+
+这个 **62 与本文的 19（修复后 6）不是同一口径的两个值**，不能互相"修正"：
+
+| | Dependabot（62） | 本文 npm audit（19 → 6） |
+|---|---|---|
+| 扫描对象 | **默认分支**（本仓库默认分支是 `main`，即 408 那条线） | 当前分支 `opt/frontend-security-20261029` 的 `package-lock.json` 解析结果 |
+| 计数单位 | 每条 advisory 计一次（同一包的多条公告分别计数） | 每个受影响**包节点**计一次（`via` 里挂着该包的全部公告） |
+| 是否含 dev 依赖 | 含 | 含，但已按可达性分级 |
+
+所以对外**不要**写「项目有 62 个 CVE」，也不要写「已清零」——正确的说法是：**当前分支的 npm audit 从 19 项降到 6 项，其中生产包内可达项为 0**；默认分支（`main`）的 Dependabot 计数（62）本轮未处理，因为 `main` 不在本 agent 的改动范围内（分支同步方向唯一：`main` → `career-literacy`，禁止反向）。
+
 ---
 
 ## 4. 复现命令
