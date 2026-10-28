@@ -19,9 +19,9 @@
  *     `preventDefault()` 掩盖浏览器原生报错。
  *   · **不重复轰炸**：同一文案 5s 内只提示一次。并发请求同时失败时，若不节流
  *     会叠出十几条一模一样的 toast，反而盖住真正有用的信息。
- *   · **资源加载错误不提示**：`window.error` 的冒泡阶段会收到 `<img>`/`<script>`
- *     等资源 404 事件（`event.target` 不是 window），那属于降级而非崩溃，
- *     提示给用户没有可操作价值，只在控制台留痕。
+ *   · **资源加载错误不提示**：`<img>`/`<script>` 等资源 404 属降级而非崩溃，
+ *     提示给用户没有可操作价值。这类事件规范上不冒泡，当前冒泡阶段监听本就
+ *     收不到；处理函数里仍保留 target 判断，作为将来改 capture 监听时的护栏。
  */
 
 import type { App } from 'vue'
@@ -84,8 +84,10 @@ export function installGlobalErrorHandlers(app: App): () => void {
   }
 
   const onWindowError = (event: ErrorEvent) => {
-    // 资源加载失败（img/script/link 404）在冒泡阶段表现为 target 非 window，
-    // 属降级不属崩溃：只留痕，不弹提示。
+    // 防御性判断：资源加载失败（img/script/link 404）在规范里**不冒泡**，
+    // 当前以冒泡阶段注册的监听器收不到它们，所以正常情况下走不到这个分支。
+    // 保留判断是为了「将来若改成 capture 监听」时也不会把资源 404 弹给用户 ——
+    // 那属于降级不属崩溃，只在控制台留痕。
     if (event.target && event.target !== window) {
       console.warn('[global-error:resource]', (event.target as EventTarget & { src?: string }).src || event.target)
       return
