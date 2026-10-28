@@ -163,6 +163,21 @@ function handleUnauthorized(status: number): void {
     .catch(() => { /* 路由不可用时留在当前页，错误已抛给调用方展示 */ })
 }
 
+/**
+ * 单次请求默认超时（ms）。
+ *
+ * 为什么必须有：`fetch` 在**服务端已建立连接但不返回**（后端卡在慢查询、
+ * 网关半开连接、容器被挂起）时既不 resolve 也不 reject。此前 `request()`
+ * 没有任何超时，表现是页面永久停在 loading、重试逻辑（只在下游抛错时触发）
+ * 永远不生效 —— 用户只能刷新，且刷新后大概率复现。
+ *
+ * 取 30s 的依据：本仓库最慢的正常接口是带 LLM 生成的报告类调用，实测 P99
+ * 在 10s 量级；30s 留 3 倍余量，不会误杀正常慢请求。
+ * 注意：仅 `request()`（JSON 接口）接超时；`upload()`/`postStream()`/`postBlob()`
+ * 分别涉及大文件上传、SSE 长连接与二进制下载，时长语义不同，不在本次范围。
+ */
+const DEFAULT_TIMEOUT_MS = 30_000
+
 async function request<T>(
   path: string,
   options: RequestInit = {},
@@ -180,10 +195,25 @@ async function request<T>(
 
   let lastError: unknown
   for (let attempt = 0; attempt <= _retries; attempt++) {
+    // 每次尝试独立计时：超时归入「可重试的网络类失败」，与 502/503/504 同等对待。
+    // 调用方自带 signal（如组件卸载取消）时不接管超时，避免两个 AbortController 打架。
+    let didTimeout = false
+    let timer: ReturnType<typeof setTimeout> | undefined
+    let timeoutController: AbortController | undefined
+    if (!options.signal && typeof AbortController !== 'undefined') {
+      timeoutController = new AbortController()
+      const controller = timeoutController
+      timer = setTimeout(() => {
+        didTimeout = true
+        controller.abort()
+      }, DEFAULT_TIMEOUT_MS)
+    }
+
     try {
       const resp = await fetch(`${API_BASE}/api${path}`, {
         ...options,
         headers,
+        ...(timeoutController ? { signal: timeoutController.signal } : {}),
       })
 
       if (!resp.ok) {
@@ -207,13 +237,20 @@ async function request<T>(
       return resp.json() as Promise<T>
     } catch (e: any) {
       if (e instanceof ApiError) throw e
+      // 超时（AbortController 触发）与网络错误同属可重试类：fetch 在超时路径上
+      // 抛的是 AbortError（DOMException），文案对用户无意义，统一换成可读提示。
+      const err = didTimeout
+        ? new ApiError(0, `请求超时：${DEFAULT_TIMEOUT_MS / 1000} 秒内无响应，请稍后重试`)
+        : e
       // 网络错误：TypeError "Failed to fetch" 等
       if (attempt < _retries) {
-        lastError = e
+        lastError = err
         await new Promise(r => setTimeout(r, 500 * (attempt + 1)))
         continue
       }
-      throw e
+      throw err
+    } finally {
+      if (timer) clearTimeout(timer)
     }
   }
   throw lastError

@@ -6,6 +6,7 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import { probeBackend } from './utils/backendProbe'
+import { installGlobalErrorHandlers } from './utils/globalErrorHandler'
 import './assets/styles/main.css'
 // ⚠️ 不要在此处静态引入 highlight.js 主题 CSS：
 // 它属于 node_modules/highlight → 会被 manualChunks 归入 highlight chunk，
@@ -33,6 +34,9 @@ async function bootstrap() {
   }
   app.use(createPinia())
   app.use(router)
+  // 全局错误兜底必须在 mount 之前装：ErrorBoundary 只捕同步渲染/setup 错误，
+  // 事件处理器里未 catch 的 promise、定时器回调抛错会完全绕过它（详见模块头注释）。
+  installGlobalErrorHandlers(app)
   // 尽早开始探测后端可用性（不阻塞启动）：路由守卫与落地页共用这一判据，
   // 决定「未登录访客该进登录页还是被引导去本地运行」。
   probeBackend()

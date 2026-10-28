@@ -121,9 +121,31 @@ async function createClass() {
   }
 }
 
+/**
+ * 花名册导入上限（前端守卫）。
+ *
+ * 后端 `StudentsImportRequest.roster` 是裸 `str`、**没有 max_length**，
+ * `_parse_roster` 逐行 split 后直接落库；此前前端 textarea 也不设限，
+ * 一次误粘贴整份 Excel（几万行）会让请求体过大、后端逐行解析长时间占住
+ * 事件循环，且失败后没有任何「太大了」的提示，用户只会看到超时。
+ * 这里按「一个教学班」的真实规模设界：500 行 / 20000 字符。
+ * 注：只在前端拦，不改后端契约（后端属主 agent 域，见交接说明）。
+ */
+const ROSTER_MAX_LINES = 500
+const ROSTER_MAX_CHARS = 20_000
+
 async function importRoster(cls: ClassItem) {
   if (!rosterText.value.trim()) {
     msg.value = '请先粘贴花名册（每行：学号 姓名）'
+    return
+  }
+  if (rosterText.value.length > ROSTER_MAX_CHARS) {
+    msg.value = `花名册过长（${rosterText.value.length} 字符，上限 ${ROSTER_MAX_CHARS}），请分批导入`
+    return
+  }
+  const lineCount = rosterText.value.split('\n').filter(l => l.trim()).length
+  if (lineCount > ROSTER_MAX_LINES) {
+    msg.value = `花名册行数超出上限（${lineCount} 行，上限 ${ROSTER_MAX_LINES} 行），请分批导入`
     return
   }
   loading.value = true
@@ -442,7 +464,10 @@ onMounted(() => {
         <h2>2 · 花名册与任务</h2>
         <p class="hint">当前班级：{{ classes.find(c => c.class_id === activeClassId)?.class_name || '（未选）' }}</p>
         <textarea v-model="rosterText" rows="5"
+                  :maxlength="ROSTER_MAX_CHARS"
+                  aria-label="花名册文本（每行：学号 姓名）"
                   placeholder="每行一条：&#10;01 张三&#10;02 李四&#10;（也可只写姓名）"></textarea>
+        <p class="hint">单次上限 {{ ROSTER_MAX_LINES }} 行 / {{ ROSTER_MAX_CHARS }} 字符；超出请分批导入。</p>
         <!-- 操作口径：学生凭码加入时按**姓名**匹配花名册行，对不上会退回「第一个未绑定行」，
              成绩会记到名单里的另一人名下（2026-10-20 浏览器 E2E 实测：名册写「张三」、
              学生注册名「学生2」→ 后端 matched_by=first_unbound，看板上显示成"张三已绑定"）。
