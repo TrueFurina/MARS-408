@@ -231,3 +231,7 @@ py-server/experiments/results/review_mappo_real_eval_20260914_214450.json
 
 # ── 2026-09-15 设计系统卫生：陈旧 CSS 备份（保留磁盘，不入库）──
 *.css.bak
+
+# ── 测试配置（含弱口令示例，不应入库）──────────────────────
+.env.test
+**/iq_run_tmp/.env*
