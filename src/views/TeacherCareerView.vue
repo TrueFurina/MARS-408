@@ -422,11 +422,29 @@ async function activateDraft(id: string) {
   } finally { activatingId.value = '' }
 }
 
+/**
+ * 首屏加载失败态。
+ *
+ * 此前 onMounted 里四个 load 全部 `.catch(() => {})` 静默吞掉：后端未启动时
+ * 教师看到的是「班级列表为空、任务列表为空」——与「本班确实还没建班」完全
+ * 无法区分，也没有任何重试入口，只能自己猜着刷新页面。这里把失败显式化。
+ */
+const loadError = ref('')
+
+async function reloadAll() {
+  loadError.value = ''
+  loading.value = true
+  try {
+    await Promise.all([loadClasses(), loadScenarios(), loadJobDirections(), loadDrafts()])
+  } catch (e) {
+    loadError.value = friendlyError(e, '数据加载失败，请确认后端服务已启动后重试')
+  } finally {
+    loading.value = false
+  }
+}
+
 onMounted(() => {
-  loadClasses().catch(() => {})
-  loadScenarios().catch(() => {})
-  loadJobDirections().catch(() => {})
-  loadDrafts().catch(() => {})
+  void reloadAll()
 })
 </script>
 
@@ -438,6 +456,14 @@ onMounted(() => {
     </header>
 
     <p v-if="msg" class="msg" role="status">{{ msg }}</p>
+
+    <!-- 首屏加载失败：明确告知 + 一键重试（不要让教师对着空列表猜） -->
+    <div v-if="loadError" class="load-error" role="alert">
+      <span>{{ loadError }}</span>
+      <button class="retry-btn" :disabled="loading" @click="reloadAll">
+        {{ loading ? '重试中…' : '重试' }}
+      </button>
+    </div>
 
     <section class="grid">
       <!-- 建班 -->
@@ -748,6 +774,13 @@ onMounted(() => {
 .page-head h1 { margin: 0 0 .25rem; font-size: 1.4rem; }
 .sub { color: var(--text-dim, var(--color-text-3)); margin: 0 0 var(--space-4); }
 .msg { background: var(--accent-soft, var(--color-surface-2)); padding: .5rem .75rem; border-radius: 8px; }
+/* 加载失败条：文案 + 重试按钮同行，窄屏自动换行 */
+.load-error { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap;
+  margin: 0 0 var(--space-3); padding: .5rem .75rem; border-radius: 8px;
+  background: var(--color-danger-bg); border: 1px solid var(--color-danger-border); color: var(--text-danger); }
+.retry-btn { padding: 4px 12px; border-radius: 6px; border: 1px solid var(--color-danger-border);
+  background: transparent; color: var(--text-danger); font-size: var(--text-sm); cursor: pointer; }
+.retry-btn:disabled { opacity: .6; cursor: not-allowed; }
 .grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: var(--space-4); }
 .card { border: 1px solid var(--border, var(--color-border)); border-radius: 12px; padding: var(--space-4); background: var(--bg-card); }
 .card.wide { grid-column: 1 / -1; }

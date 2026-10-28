@@ -470,6 +470,12 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
         <div class="tl-title">{{ currentScenario?.title || '（任务指定场景）' }}</div>
       </div>
       <div v-else-if="loadingScenarios" class="c-loading">正在加载实训情景…</div>
+      <!-- 加载失败时 scenarios 为空：此前会渲染成一片空白网格，用户看不出是
+           「加载失败」还是「本来就没有情景」，也没有重试入口，只能刷新整页 -->
+      <div v-else-if="!scenarios.length" class="c-empty" role="alert">
+        <p class="c-empty-text">{{ errorMsg || '暂时没有可用的实训情景' }}</p>
+        <button class="ghost-btn" :disabled="loadingScenarios" @click="loadScenarios">重新加载</button>
+      </div>
       <div v-else class="scenario-grid">
         <div v-for="s in scenarios" :key="s.id" class="scenario-card"
              :class="{ active: scenarioId === s.id }" :aria-selected="scenarioId === s.id" @click="scenarioId = s.id">
@@ -692,6 +698,10 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
 .c-loading, .c-error { padding: 14px; border-radius: 10px; font-size: var(--text-sm); margin: var(--space-3) 0; }
 .c-loading { background: var(--bg-secondary); }
 .c-error { background: var(--accent-danger-10); color: var(--accent-danger); }
+/* 情景列表空/失败态：给文案 + 重试按钮，替代此前的一片空白网格 */
+.c-empty { padding: 18px 14px; border-radius: 10px; margin: var(--space-3) 0; text-align: center;
+  background: var(--bg-secondary); border: 1px dashed var(--border-color); }
+.c-empty-text { margin: 0 0 var(--space-3); font-size: var(--text-sm); color: var(--text-secondary); }
 
 /* 教师任务码 / 任务锁定态 */
 .join-bar { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
