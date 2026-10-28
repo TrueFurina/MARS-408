@@ -78,6 +78,7 @@ def _reset_metrics():
     metrics._request_errors.clear()
     metrics._latency_sum.clear()
     metrics._latency_count.clear()
+    metrics._hist.clear()
     metrics._in_flight = 0
 
 
@@ -119,6 +120,32 @@ class TestPrometheusRender:
         assert metrics._in_flight == 0
         out = metrics.render_prometheus()
         assert "http_requests_in_flight 0" in out
+
+    def test_percentile_estimate_present_and_sane(self):
+        _reset_metrics()
+        for _ in range(90):
+            metrics.record_request("/api/x", 200, 0.1)
+        for _ in range(9):
+            metrics.record_request("/api/x", 200, 1.0)
+        metrics.record_request("/api/x", 200, 5.0)
+        out = metrics.render_prometheus()
+        p95 = [l for l in out.splitlines()
+               if l.startswith('http_request_duration_seconds_p95{path="/api/x"}')]
+        p99 = [l for l in out.splitlines()
+               if l.startswith('http_request_duration_seconds_p99{path="/api/x"}')]
+        assert p95 and p99, "必须暴露 p95/p99 分位数"
+        p95_val = float(p95[0].split()[-1])
+        p99_val = float(p99[0].split()[-1])
+        assert 0.5 < p95_val < 1.0, f"p95 估算应≈0.778，实得 {p95_val}"
+        assert p99_val == 1.0, f"p99 估算应=1.0，实得 {p99_val}"
+
+    def test_percentile_skips_inf_tail(self):
+        _reset_metrics()
+        for _ in range(10):
+            metrics.record_request("/api/slow", 200, 40.0)  # 全落 +Inf 桶(>30s)
+        out = metrics.render_prometheus()
+        assert 'http_request_duration_seconds_p95{path="/api/slow"}' not in out
+        assert 'http_request_duration_seconds_p99{path="/api/slow"}' not in out
 
 
 # ============================================================
