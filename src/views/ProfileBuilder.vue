@@ -2,7 +2,7 @@
 import { ref, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStudyStore, type StudentProfile } from '@/stores/studyStore'
-import { api } from '@/utils/api'
+import { api, friendlyError } from '@/utils/api'
 import { icons } from '@/components/icons'
 import { renderMarkdownSafe } from '@/utils/markdown'
 
@@ -24,6 +24,15 @@ function scrollToBottom() {
   })
 }
 
+/**
+ * 画像构建对话的输入上限 —— 与后端契约对齐，不是自造数字：
+ * `models.py` 里 `ProfileBuildRequest.message = Field(..., max_length=5000)`。
+ *
+ * 此前 textarea 无 maxlength：粘贴超过 5000 字会被后端 422 拒掉，而 catch 分支
+ * 一律显示「抱歉，我现在有点卡顿」，用户完全看不出是自己贴太长了。
+ */
+const MESSAGE_MAX_CHARS = 5000
+
 // 发送消息
 async function sendMessage() {
   const text = inputText.value.trim()
@@ -35,13 +44,14 @@ async function sendMessage() {
 
   loading.value = true
   try {
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 60000)
+    // 超时走 api 层显式放宽到 60s：本接口是带 LLM 深度推理的慢链路，
+    // 默认 30s 会把「慢但能成」的调用判成失败。
+    // 原先这里自建了一个 AbortController + 60s 定时器，但**从未把 signal 传给请求**，
+    // 属于「看起来有超时保护、实际没有」的假超时；现由 api 层真实生效。
     const data = await api.post<any>('/profile/build', {
       message: text,
       history: messages.value.slice(0, -1).map(m => ({ role: m.role, content: m.content })),
-    })
-    clearTimeout(timeoutId)
+    }, { timeoutMs: 60_000 })
 
     messages.value.push({ role: 'assistant', content: data.reply })
 
@@ -52,11 +62,9 @@ async function sendMessage() {
       // 延迟后跳转到聊天页
       setTimeout(() => router.push('/kaoyan'), 1500)
     }
-  } catch (e: any) {
-    const msg = e?.name === 'AbortError'
-      ? '大模型响应超时（深度推理通道较慢），请稍后重试，或在设置页切换 LLM 通道。'
-      : '抱歉，我现在有点卡顿，请稍后再试。'
-    messages.value.push({ role: 'assistant', content: msg })
+  } catch (e) {
+    // 让真实原因浮出来（超时 / 422 超长 / 后端未启动），不再一律「有点卡顿」
+    messages.value.push({ role: 'assistant', content: friendlyError(e, '抱歉，我现在有点卡顿，请稍后再试。') })
   } finally {
     loading.value = false
     scrollToBottom()
@@ -132,6 +140,8 @@ function onKeydown(e: KeyboardEvent) {
           ref="inputRef"
           v-model="inputText"
           placeholder="输入你的回答..."
+          :maxlength="MESSAGE_MAX_CHARS"
+          aria-label="输入你的回答"
           :disabled="loading || completed"
           rows="1"
           @keydown="onKeydown"

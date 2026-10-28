@@ -226,10 +226,26 @@ async function fetchWithTimeout(
   }
 }
 
+/**
+ * 单次请求的可选项。
+ *
+ * `timeoutMs` 的存在理由：默认 30s 是按「普通接口」定的，但仓库里确实有
+ * 明确更慢的调用（画像构建这类带 LLM 深度推理的接口，原作者按 60s 设计）。
+ * 一刀切会让这类接口从「慢但能成」变成「必然超时」——那是比不加超时更糟的回归。
+ * 所以给调用方一个显式放宽的出口：默认收紧，例外必须写明理由。
+ */
+export interface RequestOptions {
+  /** 覆盖默认超时（ms）；传 0 表示不设超时，完全交给调用方 signal 控制 */
+  timeoutMs?: number
+  /** 调用方中断信号（组件卸载 / 用户主动取消） */
+  signal?: AbortSignal
+}
+
 async function request<T>(
   path: string,
   options: RequestInit = {},
   _retries = 2,
+  timeoutMs: number = TIMEOUT_JSON_MS,
 ): Promise<T> {
   const token = getToken()
   const headers: Record<string, string> = {
@@ -248,7 +264,7 @@ async function request<T>(
       const resp = await fetchWithTimeout(
         `${API_BASE}/api${path}`,
         { ...options, headers },
-        TIMEOUT_JSON_MS,
+        timeoutMs,
       )
 
       if (!resp.ok) {
@@ -288,26 +304,48 @@ async function request<T>(
 }
 
 export const api = {
-  get<T>(path: string): Promise<T> {
-    return request<T>(path, { method: 'GET' })
+  get<T>(path: string, opts?: RequestOptions): Promise<T> {
+    return request<T>(
+      path,
+      { method: 'GET', ...(opts?.signal ? { signal: opts.signal } : {}) },
+      2,
+      opts?.timeoutMs ?? TIMEOUT_JSON_MS,
+    )
   },
 
-  post<T>(path: string, body?: unknown): Promise<T> {
-    return request<T>(path, {
-      method: 'POST',
-      body: body ? JSON.stringify(body) : undefined,
-    })
+  post<T>(path: string, body?: unknown, opts?: RequestOptions): Promise<T> {
+    return request<T>(
+      path,
+      {
+        method: 'POST',
+        body: body ? JSON.stringify(body) : undefined,
+        ...(opts?.signal ? { signal: opts.signal } : {}),
+      },
+      2,
+      opts?.timeoutMs ?? TIMEOUT_JSON_MS,
+    )
   },
 
-  put<T>(path: string, body?: unknown): Promise<T> {
-    return request<T>(path, {
-      method: 'PUT',
-      body: body ? JSON.stringify(body) : undefined,
-    })
+  put<T>(path: string, body?: unknown, opts?: RequestOptions): Promise<T> {
+    return request<T>(
+      path,
+      {
+        method: 'PUT',
+        body: body ? JSON.stringify(body) : undefined,
+        ...(opts?.signal ? { signal: opts.signal } : {}),
+      },
+      2,
+      opts?.timeoutMs ?? TIMEOUT_JSON_MS,
+    )
   },
 
-  delete<T>(path: string): Promise<T> {
-    return request<T>(path, { method: 'DELETE' })
+  delete<T>(path: string, opts?: RequestOptions): Promise<T> {
+    return request<T>(
+      path,
+      { method: 'DELETE', ...(opts?.signal ? { signal: opts.signal } : {}) },
+      2,
+      opts?.timeoutMs ?? TIMEOUT_JSON_MS,
+    )
   },
 
   /** 流式 POST — 返回 Response 对象用于 SSE 读取；signal 用于中断（AbortController） */
