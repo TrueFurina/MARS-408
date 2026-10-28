@@ -489,7 +489,13 @@ onBeforeUnmount(() => {
           {{ skillInfo.icon }} {{ skillInfo.name }}
         </button>
       </div>
-      <div ref="messagesRef" class="chat-messages" @scroll="onScroll">
+      <!-- role=log + aria-live=polite：助手回复经 studyStore.sendMessage 的 SSE 流
+           逐 token 追加（流式实现不在本文件，故静态扫描按关键词没识别到），
+           没有 live region 时读屏用户感知不到内容在增长（WCAG 4.1.3）。
+           已知局限：本列表启用了虚拟滚动，只有可视区内的消息真实存在于 DOM，
+           因此 live region 的播报可能不完整。彻底解决需要独立的 visually-hidden
+           播报区（流结束时一次性播报整段），属后续项；此处先补齐基础语义。 -->
+      <div ref="messagesRef" class="chat-messages" role="log" aria-live="polite" aria-relevant="additions text" @scroll="onScroll">
       <div v-if="currentMessages.length === 0" class="chat-greeting">
         <div class="greeting-icon" v-html="icons.chat"></div>
         <h1>专业能力智能学习助手</h1>
