@@ -22,6 +22,9 @@
 | `src/views/CareerTrainingView.vue` | 校验 + a11y + 空态重试 | ① 模板写死 `maxlength="12"`，后端契约是 `min_length=4, max_length=16` ⇒ **13–16 位任务码被输入框静默截断**，用户只看到「任务码无效」。改为按后端契约校验 4–16 位 + `[A-Z0-9]`（对齐 `uuid4().hex[:6].upper()` 的实际字符集），加 `aria-invalid` / `role="alert"` / 行内提示；② 情景加载失败时渲染成一片空白网格，改为显式空态 +「重新加载」 |
 | `src/views/TeacherCareerView.vue` | 上界 + a11y + 失败可见化 | ① 后端 `roster` 是裸 `str` 无 `max_length`，前端 textarea 也无限制 ⇒ 误粘贴整份 Excel 会让请求体过大、失败无提示。按单班真实规模设界 500 行 / 20000 字符；② `onMounted` 四个 load 全被空 catch 吞掉，后端未启动时教师看到「班级列表为空」与「还没建班」无法区分 —— 改为 `reloadAll()` + 错误条 + 重试按钮 |
 | `src/views/LiteracyAssessmentView.vue` | 失败可重试 | 题库加载失败只显示一行错误、只能刷新整页。抽出 `loadQuestions()`，错误卡片补「重新加载题库」 |
+| `src/views/ProfileBuilder.vue` | 假超时 + 输入边界 | ① 自建 `AbortController` + 60s 定时器，但 **`signal` 从未传给请求** ⇒ 定时器 abort 的是一个没接线的 controller，属「看起来有超时保护、实际没有」；② `textarea` 无上限，而后端 `ProfileBuildRequest.message` 是 `max_length=5000` ⇒ 超长必然 422，catch 却一律显示「有点卡顿」；③ catch 改为 `friendlyError`，让超时 / 422 / 后端未启动各自可读 |
+| `scripts/xss_scan.py` | 门禁扩面 + 自检 | 只扫 `.vue` 的 `v-html`，而 `.ts` 与 SFC 的 `<script>` 里可直接 `el.innerHTML = ...`，**完全绕过**。现覆盖 `innerHTML`/`outerHTML`/`insertAdjacentHTML`/`document.write`，并加 `--selftest`（内存样本断言 6 类注入点全命中、2 类安全写法放行） |
+| `.github/workflows/verify-structural.yml` | 接入 CI | `xss_scan.py` **此前没有任何 workflow 或钩子调用**，只挂在 `package.json` 的 `gate:xss` 上 ⇒ 从未真正执行过。现接入（与 a11y 门禁同一处），并同时跑自检 |
 | `package.json` / `package-lock.json` | 依赖升级 + 瘦身 | 见第 3 节 |
 | `src/utils/__tests__/globalErrorHandler.test.ts` | **新增 11 用例** | 文案归一 / 节流语义 / 装与卸 |
 | `src/utils/__tests__/apiTimeout.test.ts` | **新增 10 用例** | JSON 接口超时重试 + 四条链路各自的超时契约 |
@@ -39,7 +42,7 @@
 | high 级 | 8 | **0** | 同上 |
 | critical 级 | 5 | 3（**全部为测试工具链**） | 同上 |
 | 生产包内可达漏洞 | 5（含 dompurify critical） | **0** | 逐条可达性分级见审计报告第 2/3 节 |
-| 前端单测 | 31 文件 / 220 用例 | **33 文件 / 241 用例**（+21） | `npx vitest run` |
+| 前端单测 | 31 文件 / 220 用例 | **33 文件 / 244 用例**（+24） | `npx vitest run` |
 | `vue-tsc --build` | 0 error | **0 error** | 命令输出 |
 | `vite build` | 成功 | 成功 | 产物 `dist/` |
 | `vite preview` 资源可达性 | — | **5/5 全 200**（首页 / JS / CSS / ico / webmanifest，无 404） | `curl -o /dev/null -w "%{http_code}"` |
@@ -64,7 +67,13 @@
 ✅ 树级质量机检全部通过                        （含 vue-tsc）
 ```
 
-- `python scripts/xss_scan.py`：**PASS**（所有 `v-html` 绑定均为净化函数或本地可信字面量；本次未新增任何 `v-html`）
+- `python scripts/xss_scan.py`：**PASS**（129 文件，`v-html` + `innerHTML`/`outerHTML`/`insertAdjacentHTML`/`document.write` 共 0 注入点）
+- `python scripts/xss_scan.py --selftest`：**PASS**（内存样本 6 类注入点全命中、2 类安全写法放行）
+
+> 关于这道门禁的两个「看起来有、实际没有」：① 它原先只扫 `v-html`，`.ts` 与 SFC 的
+> `<script>` 里写 `el.innerHTML = ...` 完全绕过；② 它**从未被任何 workflow 或钩子调用**，
+> 只挂在 `package.json` 的 `gate:xss` 上等人手动跑。两条都已修（`35ecd2e`）。
+> 另外加了 `--selftest`：永远绿的闸门比没有闸门更危险，自检让「门禁被改坏」自己变红。
 - `python scripts/verify_metrics.py`：**✅ 9 项一致**（中途两次因新增文件导致行数漂移，均用 `--update` 重生成，**未手改表格**）
 
 pre-push 五道门禁（推送前实跑，首次**未通过**，逐条修好后才推）：
@@ -94,6 +103,9 @@ pre-push 五道门禁（推送前实跑，首次**未通过**，逐条修好后�
 | `137ab92` | `feat(frontend)` 流式/上传/二进制/TTS 四条链路补分级超时 |
 | `5cec3e1` | `test(frontend)` 覆盖四条链路的超时契约（+6 用例） |
 | `f3cd88c` | `feat(frontend)` 三个关键视图补「加载失败 → 可重试」出口 |
+| `35ecd2e` | `fix(gate)` XSS 门禁补 innerHTML 盲区 + 接入 CI + 加自检 |
+| `1c8e148` | `feat(frontend)` 单次请求可覆盖超时 + 修画像构建的「假超时」 |
+| `c9ee295` | `test(frontend)` 覆盖「单次请求可覆盖超时」（+3 用例） |
 | （本文） | `docs(ws6)` 审计报告 + 优化总结 |
 
 实现与测试**刻意分开提交**：`test_file_guard` 把「测试与实现同 commit」当作逃逸信号，合在一起会被门禁拦下。
@@ -121,7 +133,8 @@ pre-push 五道门禁（推送前实跑，首次**未通过**，逐条修好后�
 2. **【需主 agent 决策】前端 3 条 critical 的解除窗口**：`vitest` / `tinypool` / `@vitest/mocker` / `happy-dom` 只能随 `vite 7` 一次性升。已实测 `happy-dom@21` 在 `vitest 3.2.7` 下直接 OOM 崩溃，不是"没试"而是"试过不通"。
 3. **~~未做~~ 已补：四条链路的分级超时**（`137ab92` + `5cec3e1`）。阈值按语义分级而非硬套 30s：JSON 30s / SSE **建连** 30s（拿到响应头即清除计时器，长对话不会被掐断）/ 上传 120s / 二进制 120s。各链路按**既有异常契约**落地：`postStream`、`upload` 抛 `ApiError(status 0)`；`getBlob`、`postBlob` 保持「不抛异常、返回 `ok:false`」；`ttsSynthesize` 保持「返回 `null` 让调用方降级浏览器语音」。6 条用例逐条锁住这四种契约。
 4. **未做**：CSP / 安全响应头的网关侧核查。提示词要求"只读核查，不擅改网关"，本轮未拿到网关配置的读取入口，故**没有结论**——不写成"已确认配置正确"。
-5. **未做（评估后放弃）**：`any` 全局收敛。全仓 `src/` 仍有 366 处 `any`/`as any`，一次性替换的爆炸半径远大于收益，且 `vue-tsc` 当前 0 error 说明类型层面没有阻塞性错误。若要做，应按视图分批（`KnowledgeBaseView` 12 处、`KnowledgeGraphView` 10 处为首批），每批单独验证。
+5. **未做（评估后放弃）**：`any` 全局收敛。全仓 `src/` 仍有 366 处 `any`/`as any`，其中 68 处是 `catch (e: any)`。一次性替换的爆炸半径远大于收益，且 `vue-tsc` 当前 0 error 说明类型层面没有阻塞性错误。若要做，按视图分批（`KnowledgeBaseView` 12 处、`KnowledgeGraphView` 10 处为首批），**每批单独提交并跑 vue-tsc**——`catch (e: any)` → `unknown` 会立刻暴露出「catch 里直接访问 e.xxx」的地方，那些正是真正需要修的空安全问题。
+6. **已排查、无问题**：`SkillDetailView` 与 `CloudLabView` 的 `AbortController` 都正确把 `signal` 传进了 `postStream` / `askTutor`，不存在 `ProfileBuilder` 那种假超时。全仓 `new AbortController` 共 5 处，逐处核对过。
 
 ---
 
