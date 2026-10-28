@@ -44,7 +44,8 @@
 
 - 测试数**禁硬编码**：改动若影响测试计数，必须跑 `python scripts/verify_metrics.py --update` 动态生成（勿手写 1737）。
 - **禁** Windows 冒充 CI：本机只做门禁/代码/文档/前端；重算力上服务器 `172.16.222.99`（SSH 免密，career 链路 `/home/user/miniconda3/envs/all-in-rag/bin/python`）。
-- NeuralMixer 样本数 n≠6 须显式降级；FrugalRAG 是**质量组件非降本**，对外口径固定为 Recall@5 +7.14pp / P@5 +15.71pp / MRR +12.38pp / token 反增 −11.99%，**禁改此口径**。
+- NeuralMixer 样本数 n≠6 须显式降级；FrugalRAG 是**质量组件非降本**，对外口径固定为 Recall@5 +7.14pp / P@5 +15.71pp / MRR +12.38pp / token 消耗**上升 11.99%**（未降反增；
+真源字段 `token_reduction_pct = -11.99` 的负号意为"上升"，对外禁写裸「−11.99%」），**禁改此口径**。
 - 禁「生态 / 国内首个 / 新文科」等夸大词；校名一律=闽江大学。
 - 禁伪造发生型证据；改动影响测试计数时必跑 `scripts/pre-commit/honesty_scan.py`（豁免 deliverables/submission/.workbuddy）。
 
