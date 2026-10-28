@@ -82,11 +82,16 @@ function goHome() {
           <div class="q-number">第 {{ i + 1 }} 题</div>
           <div class="q-subject">{{ q.subject_name }} · {{ q.topic }}</div>
           <div class="q-text">{{ q.question }}</div>
-          <div class="q-options">
+          <div class="q-options" role="radiogroup" aria-label="选项">
             <div v-for="opt in q.options" :key="opt"
                  class="q-option"
                  :class="{ selected: answers[q.id] === opt[0] }"
-                 @click="selectAnswer(q.id, opt[0])">
+                 role="radio"
+                 :aria-checked="answers[q.id] === opt[0]"
+                 tabindex="0"
+                 @click="selectAnswer(q.id, opt[0])"
+                 @keydown.enter.prevent="selectAnswer(q.id, opt[0])"
+                 @keydown.space.prevent="selectAnswer(q.id, opt[0])">
               {{ opt }}
             </div>
           </div>

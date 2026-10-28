@@ -333,7 +333,11 @@ const aiStateLabel: Record<AiState, string> = {
       </div>
 
       <div class="motion-card" :class="{ open: motionOpen }" style="position:relative;min-height:120px">
-        <div class="motion-card-summary motion-card-trigger" @click="motionOpen = !motionOpen">
+        <div class="motion-card-summary motion-card-trigger"
+             role="button" tabindex="0" :aria-expanded="motionOpen"
+             @click="motionOpen = !motionOpen"
+             @keydown.enter.prevent="motionOpen = !motionOpen"
+             @keydown.space.prevent="motionOpen = !motionOpen">
           <div>
             <div class="motion-title">学习路径 · 进程同步专项</div>
             <div class="motion-sub">概念回顾 → 例题精练 → 自测，预计 45 分钟</div>

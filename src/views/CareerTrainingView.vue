@@ -476,9 +476,13 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
         <p class="c-empty-text">{{ errorMsg || '暂时没有可用的实训情景' }}</p>
         <button class="ghost-btn" :disabled="loadingScenarios" @click="loadScenarios">重新加载</button>
       </div>
-      <div v-else class="scenario-grid">
+      <div v-else class="scenario-grid" role="radiogroup" aria-label="实训情景">
         <div v-for="s in scenarios" :key="s.id" class="scenario-card"
-             :class="{ active: scenarioId === s.id }" :aria-selected="scenarioId === s.id" @click="scenarioId = s.id">
+             :class="{ active: scenarioId === s.id }" role="radio" :aria-checked="scenarioId === s.id"
+             tabindex="0"
+             @click="scenarioId = s.id"
+             @keydown.enter.prevent="scenarioId = s.id"
+             @keydown.space.prevent="scenarioId = s.id">
           <div class="sc-type">{{ s.type_label }} · {{ s.subtype_label }}</div>
           <div class="sc-title">{{ s.title }}</div>
         </div>

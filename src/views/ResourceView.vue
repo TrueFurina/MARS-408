@@ -813,8 +813,11 @@ function parseWeakPoints(wpStr: string): string[] {
           :key="item.id"
           v-memo="[item, selectedHistory]"
           class="history-item"
-          :class="{ active: selectedHistory === item.id }" :aria-selected="selectedHistory === item.id"
+          :class="{ active: selectedHistory === item.id }"
+          role="button" tabindex="0" :aria-pressed="selectedHistory === item.id"
           @click="loadFromHistory(item)"
+          @keydown.enter.prevent="loadFromHistory(item)"
+          @keydown.space.prevent="loadFromHistory(item)"
         >
           <span class="history-topic">{{ item.topic || '(空)' }}</span>
           <span class="history-meta">{{ item.timestamp }}</span>
@@ -839,8 +842,11 @@ function parseWeakPoints(wpStr: string): string[] {
           :key="item.id"
           v-memo="[item, selectedHistory]"
           class="history-item"
-          :class="{ active: selectedHistory === item.id }" :aria-selected="selectedHistory === item.id"
+          :class="{ active: selectedHistory === item.id }"
+          role="button" tabindex="0" :aria-pressed="selectedHistory === item.id"
           @click="openPoolResource(item)"
+          @keydown.enter.prevent="openPoolResource(item)"
+          @keydown.space.prevent="openPoolResource(item)"
         >
           <span class="history-topic">{{ item.title || '(未命名资源)' }}</span>
           <span class="history-meta">{{ item.resource_type }} · {{ item.created_at }}</span>

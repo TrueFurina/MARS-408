@@ -287,7 +287,10 @@ function agentName(a: string) {
         v-for="c in activeDemo.conflicts"
         :key="c.id"
         class="ev-card"
+        role="button" tabindex="0" :aria-label="'查看冲突详情：' + c.description"
         @click="openDrawer(c)"
+        @keydown.enter.prevent="openDrawer(c)"
+        @keydown.space.prevent="openDrawer(c)"
       >
         <!-- 类型 pill -->
         <span class="ev-pill" :style="{ background: 'color-mix(in srgb, ' + (SEVERITY_COLOR[c.severity] || 'var(--accent-primary)') + ' 16%, transparent)', color: SEVERITY_COLOR[c.severity] || 'var(--accent-primary)' }">

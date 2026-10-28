@@ -456,11 +456,15 @@ onBeforeUnmount(() => {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
       </div>
-      <div class="sidebar-conversations">
+      <div class="sidebar-conversations" role="list">
         <div v-for="conv in conversations" :key="conv.id"
              class="sidebar-conv-item"
-             :class="{ active: conv.id === currentConvId }" :aria-selected="conv.id === currentConvId"
-             @click="selectConversation(conv.id)">
+             :class="{ active: conv.id === currentConvId }"
+             role="button" tabindex="0"
+             :aria-current="conv.id === currentConvId ? 'true' : undefined"
+             @click="selectConversation(conv.id)"
+             @keydown.enter.prevent="selectConversation(conv.id)"
+             @keydown.space.prevent="selectConversation(conv.id)">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           <span class="conv-title">{{ conv.title || '新对话' }}</span>
           <button class="conv-delete" @click="removeConversation(conv.id, $event)" title="删除对话">

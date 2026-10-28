@@ -245,7 +245,7 @@ async function refreshQuestions() { await generateQuestions() }
           <span class="quiz-source">{{ q.source || q.subject || '' }}</span>
         </div>
         <div class="quiz-stem">{{ q.text }}</div>
-        <div v-if="(q.type === 'choice' || q.type === 'single_choice') && q.options" class="quiz-options">
+        <div v-if="(q.type === 'choice' || q.type === 'single_choice') && q.options" class="quiz-options" role="radiogroup" :aria-label="'第' + (idx + 1) + '题选项'">
           <div v-for="(opt, oi) in q.options" :key="oi"
             class="quiz-option"
             :class="{
@@ -255,7 +255,10 @@ async function refreshQuestions() { await generateQuestions() }
             }"
             role="radio"
             :aria-checked="answers[idx]?.selected === oi"
-            @click="selectAnswer(idx, oi as number)">
+            tabindex="0"
+            @click="selectAnswer(idx, oi as number)"
+            @keydown.enter.prevent="selectAnswer(idx, oi as number)"
+            @keydown.space.prevent="selectAnswer(idx, oi as number)">
             <span class="option-letter">{{ 'ABCDEFGH'[oi as number] }}</span>
             <span class="option-text">{{ opt }}</span>
             <span v-if="answers[idx]?.revealed && q.answer === oi" class="option-correct"></span>
