@@ -142,3 +142,40 @@ describe('api 各链路超时契约', () => {
     expect(vi.getTimerCount()).toBe(0)
   })
 })
+
+// 防回归：默认 30s 是按普通接口定的，带 LLM 深度推理的慢接口必须能显式放宽。
+// 若这条能力失效，那些接口会从「慢但能成」变成「必然超时」——比不加超时更糟。
+describe('单次请求可覆盖超时', () => {
+  it('timeoutMs 覆盖默认值：阈值与文案同步变化', async () => {
+    let caught: unknown = null
+    const promise = api.get('/slow', { timeoutMs: 10_000 }).catch((e: unknown) => { caught = e })
+
+    await vi.runAllTimersAsync()
+    await promise
+
+    expect(caught).toBeInstanceOf(ApiError)
+    // 文案里的秒数取自实际生效的阈值，不是写死的 30
+    expect((caught as ApiError).message).toContain('10 秒')
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+  })
+
+  it('timeoutMs=0 表示不设超时，长任务完全交给调用方 signal', async () => {
+    const ac = new AbortController()
+    let settled = false
+    void api.get('/long', { timeoutMs: 0, signal: ac.signal }).catch(() => { settled = true })
+
+    await vi.advanceTimersByTimeAsync(300_000)
+
+    expect(settled).toBe(false) // 5 分钟也不超时
+    expect(fetchMock.mock.calls[0][1].signal).toBe(ac.signal)
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('传 signal 时不叠加内部计时器（避免两个 AbortController 抢同一请求）', async () => {
+    const ac = new AbortController()
+    void api.get('/with-signal', { signal: ac.signal }).catch(() => { /* 只验接线 */ })
+
+    expect(fetchMock.mock.calls[0][1].signal).toBe(ac.signal)
+    expect(vi.getTimerCount()).toBe(0)
+  })
+})
