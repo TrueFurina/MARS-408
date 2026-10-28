@@ -42,6 +42,8 @@ import re
 import sys
 from pathlib import Path
 
+from _gate_selftest import report_selftest
+
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "src"
 
@@ -350,20 +352,14 @@ _SELFTEST_EXPECTED_LINES = [3, 4, 9]
 
 def selftest() -> int:
     hits = _scan_clickable_text(_SELFTEST_SAMPLE, "selftest")
-    got = [int(re.search(r":(\d+)", h).group(1)) for h in hits if re.search(r":(\d+)", h)]
-
-    print("=" * 72)
-    print("可访问性门禁 · 自检（C 类键盘可达检测器）")
-    print("=" * 72)
-    print(f"样本应拦下行号: {_SELFTEST_EXPECTED_LINES}")
-    print(f"实际拦下行号  : {got}")
-
-    if got == _SELFTEST_EXPECTED_LINES:
-        print("[PASS] 3 类残缺形态全部命中；完整写法 / @click.self / @click.stop 正确放行。")
-        return 0
-
-    print("[FAIL] 自检不符：C 类检测器已失效（可能漏报，也可能误报），不要相信它的 PASS。")
-    return 1
+    got = [int(m.group(1)) for h in hits if (m := re.search(r":(\d+)", h))]
+    return report_selftest(
+        title="可访问性门禁 · 自检（C 类键盘可达检测器）",
+        expected=_SELFTEST_EXPECTED_LINES,
+        got=got,
+        ok_msg="3 类残缺形态全部命中；完整写法 / @click.self / @click.stop 正确放行。",
+        fail_msg="自检不符：C 类检测器已失效（可能漏报，也可能误报），不要相信它的 PASS。",
+    )
 
 
 def main() -> int:

@@ -51,6 +51,8 @@ import re
 import sys
 from pathlib import Path
 
+from _gate_selftest import report_selftest
+
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "src"
 
@@ -213,18 +215,13 @@ def selftest() -> int:
     scan_imperative(_SELFTEST_SAMPLE, "selftest", hits)
     got = sorted(line for _rel, line, _sink, _expr in hits)
 
-    print("=" * 72)
-    print("HTML 注入门禁 · 自检（验证门禁本身没被改坏）")
-    print("=" * 72)
-    print(f"样本应拦下行号: {_SELFTEST_EXPECTED_LINES}")
-    print(f"实际拦下行号  : {got}")
-
-    if got == _SELFTEST_EXPECTED_LINES:
-        print("[PASS] 6 类注入点全部命中，2 类安全写法正确放行。")
-        return 0
-
-    print("[FAIL] 自检不符：门禁已失效（可能漏报，也可能误报），不要相信它的 PASS。")
-    return 1
+    return report_selftest(
+        title="HTML 注入门禁 · 自检（验证门禁本身没被改坏）",
+        expected=_SELFTEST_EXPECTED_LINES,
+        got=got,
+        ok_msg="6 类注入点全部命中，2 类安全写法正确放行。",
+        fail_msg="自检不符：门禁已失效（可能漏报，也可能误报），不要相信它的 PASS。",
+    )
 
 
 if __name__ == "__main__":
