@@ -303,49 +303,44 @@ async function request<T>(
   throw lastError
 }
 
+/**
+ * 四个动词的公共派发：拼 RequestInit、透传 signal、套用超时。
+ *
+ * 抽出来的原因不是「少写几行」，而是四个方法各自展开 10 行后会被 pre-push 的
+ * 克隆检测判为新增重复块（实测命中）。这类样板一旦复制，后续给 request()
+ * 加参数就得改四处、漏一处就是行为不一致。
+ *
+ * body 判空沿用既有语义（`body ? JSON.stringify(body) : undefined`）：
+ * 改成 `!== undefined` 会让 `0` / `''` / `false` 从「不发 body」变成「发字面量」，
+ * 那是没经过验证的行为变更。
+ */
+function send<T>(
+  path: string,
+  method: string,
+  body: unknown,
+  opts?: RequestOptions,
+): Promise<T> {
+  const init: RequestInit = { method }
+  if (body) init.body = JSON.stringify(body)
+  if (opts?.signal) init.signal = opts.signal
+  return request<T>(path, init, 2, opts?.timeoutMs ?? TIMEOUT_JSON_MS)
+}
+
 export const api = {
   get<T>(path: string, opts?: RequestOptions): Promise<T> {
-    return request<T>(
-      path,
-      { method: 'GET', ...(opts?.signal ? { signal: opts.signal } : {}) },
-      2,
-      opts?.timeoutMs ?? TIMEOUT_JSON_MS,
-    )
+    return send<T>(path, 'GET', undefined, opts)
   },
 
   post<T>(path: string, body?: unknown, opts?: RequestOptions): Promise<T> {
-    return request<T>(
-      path,
-      {
-        method: 'POST',
-        body: body ? JSON.stringify(body) : undefined,
-        ...(opts?.signal ? { signal: opts.signal } : {}),
-      },
-      2,
-      opts?.timeoutMs ?? TIMEOUT_JSON_MS,
-    )
+    return send<T>(path, 'POST', body, opts)
   },
 
   put<T>(path: string, body?: unknown, opts?: RequestOptions): Promise<T> {
-    return request<T>(
-      path,
-      {
-        method: 'PUT',
-        body: body ? JSON.stringify(body) : undefined,
-        ...(opts?.signal ? { signal: opts.signal } : {}),
-      },
-      2,
-      opts?.timeoutMs ?? TIMEOUT_JSON_MS,
-    )
+    return send<T>(path, 'PUT', body, opts)
   },
 
   delete<T>(path: string, opts?: RequestOptions): Promise<T> {
-    return request<T>(
-      path,
-      { method: 'DELETE', ...(opts?.signal ? { signal: opts.signal } : {}) },
-      2,
-      opts?.timeoutMs ?? TIMEOUT_JSON_MS,
-    )
+    return send<T>(path, 'DELETE', undefined, opts)
   },
 
   /** 流式 POST — 返回 Response 对象用于 SSE 读取；signal 用于中断（AbortController） */
