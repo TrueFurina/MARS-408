@@ -16,6 +16,22 @@ export interface ApiTestEnv {
 }
 
 /**
+ * 永不返回、只在 abort 时 reject 的 fetch 实现 —— 模拟「连上了但服务端不响应」。
+ *
+ * 单列在公共桩里而不是各测试内联：两个超时测试文件都需要它，内联会构成
+ * 逐字重复（pre-push gate [4] 会判为新增克隆块）。
+ */
+export function hangingFetchImpl(_url: string, init?: RequestInit): Promise<Response> {
+  return new Promise((_resolve, reject) => {
+    init?.signal?.addEventListener('abort', () => {
+      const err = new Error('The operation was aborted.')
+      err.name = 'AbortError'
+      reject(err)
+    })
+  })
+}
+
+/**
  * @param useFakeTimers 是否需要假定时器。重试退避与超时都依赖 setTimeout，
  *   不装假定时器会让用例真的等 30s。
  */
