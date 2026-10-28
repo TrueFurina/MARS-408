@@ -50,6 +50,25 @@ A_RE = re.compile(r"<a\b([^>]*)>([\s\S]*?)</a>", re.M)
 
 NAMING_ATTRS = re.compile(r"aria-label|aria-labelledby|title=")
 
+# ── C 类：可点击但非原生交互元素（WCAG 2.1.1 键盘可达）──────────────────
+# 必须**跨行**匹配开标签：这些 @click 常写在多行属性块里，单行正则会整片漏掉
+# （2026-10-29 实测：单行 grep 只找到 2 处，跨行扫描找到 13 处）。
+# 上限 800 字符是为了防止模板里没有闭合的 `<` 导致回溯爆炸。
+CLICKABLE_TAG_RE = re.compile(r"<(div|span|li|td|th|tr)\b([^>]{0,800}?)>", re.S)
+CLICK_ATTR_RE = re.compile(r"@click|v-on:click")
+# 键盘事件：@keydown / @keyup / v-on:keydown（含 .enter/.space 修饰符写法）
+KEYBOARD_ATTR_RE = re.compile(r"@key(?:down|up)|v-on:key(?:down|up)")
+TABINDEX_ATTR_RE = re.compile(r"\btabindex\s*=")
+
+# 显式豁免：非交互目标，或键盘用户另有可达路径。每条都必须写理由，
+# 不允许"因为改不动"而登记——豁免没有理由，等于门禁没做。
+CLICKABLE_ALLOWLIST: dict[str, str] = {
+    "src/views/DesignSystemView.vue": (
+        "遮罩层 .panel-overlay 的点击关闭是鼠标便利；抽屉内部有可聚焦的「关闭」按钮，"
+        "键盘用户可正常关闭。给遮罩加 tabindex 反而是反模式（会多出一个无意义的 Tab 停留点）"
+    ),
+}
+
 
 def has_visible_text(inner: str) -> bool:
     """剥离标签/注释/插值后，是否还有静态可见文本。"""
@@ -166,22 +185,56 @@ def audit_streaming() -> list[str]:
     return hits
 
 
+def _scan_clickable_text(text: str, rel: str) -> list[str]:
+    """在一段模板文本里找「可点击但键盘不可达」的元素（供审计与自检共用）。"""
+    hits: list[str] = []
+    for m in CLICKABLE_TAG_RE.finditer(text):
+        attrs = m.group(2)
+        if not CLICK_ATTR_RE.search(attrs):
+            continue
+        # `.self` / `.stop` 是「点自己才触发」「阻止冒泡」的容器写法，不是交互目标
+        if re.search(r"@click\.(?:self|stop)\b", attrs):
+            continue
+        has_tab = bool(TABINDEX_ATTR_RE.search(attrs))
+        has_kbd = bool(KEYBOARD_ATTR_RE.search(attrs))
+        if has_tab and has_kbd:
+            continue
+        missing = []
+        if not has_tab:
+            missing.append("tabindex")
+        if not has_kbd:
+            missing.append("键盘事件")
+        line = text[: m.start()].count("\n") + 1
+        cls = re.search(r'class="([^"]{0,40})', attrs)
+        hits.append(
+            f"  [C] {rel}:{line}  <{m.group(1)} class=\"{(cls.group(1) if cls else '')}\"> "
+            f"缺 {'/'.join(missing)}，仅鼠标可达，WCAG 2.1.1"
+        )
+    return hits
+
+
 def audit_custom_clickable() -> list[str]:
-    """C. 自定义可点击元素是否配套键盘事件（WCAG 2.1.1）。"""
+    """C. 可点击的非原生交互元素是否键盘可达（WCAG 2.1.1）。
+
+    判定单位是**元素**，不是文件。旧实现「文件里出现过 CLICKABLE 且没出现过 KEYBOARD
+    就报一条」，两个方向都错：
+      · 漏报——文件里只要任意位置有一个 @keydown，整篇可点击 div 全部放行；
+      · 误报——文件里根本没有可点击元素，只因文案含"对话/流式"就被报。
+    2026-10-29 实测：旧实现报的 8 条全假，真问题 11 处一个没报（因为 @click 写在
+    跨行属性块里，单行正则看不见）。现改为跨行匹配开标签后逐元素判定。
+
+    同时要求 tabindex **与** 键盘事件都在：
+    只有 tabindex → 能聚焦但按 Enter 没反应；只有键盘事件 → 根本聚焦不到。两者缺一即残。
+    """
     hits: list[str] = []
     for f in VUE_FILES:
         text = _read(f)
         if not text:
             continue
-        if not CLICKABLE.search(text):
-            continue
-        if KEYBOARD.search(text):
-            continue
         rel = f.relative_to(ROOT).as_posix()
-        hits.append(
-            f"  [C] {rel}  —— 含自定义可点击元素(role=button/<div @click)但全文件无键盘事件，"
-            f"仅鼠标可达，WCAG 2.1.1"
-        )
+        if rel in CLICKABLE_ALLOWLIST:
+            continue
+        hits.extend(_scan_clickable_text(text, rel))
     return hits
 
 
@@ -269,9 +322,58 @@ def run_gate(classes: list[str]) -> int:
     return rc
 
 
+# ============================================================================
+# 自检（--selftest）
+# ============================================================================
+# C 类检测器是纯正则，最容易在"优化一下"之后悄悄失效：改成只匹配单行、
+# 或者把 tabindex/键盘事件改成"或"关系，都会让它继续输出 PASS 而实际放行。
+# 自检用内存样本钉死语义，不依赖仓库当前状态。
+_SELFTEST_SAMPLE = """<template>
+  <div>
+    <div class="bad-1" @click="go">x</div>
+    <div
+      class="bad-2"
+      :class="{ on: x }"
+      @click="go"
+    >y</div>
+    <li class="bad-3" tabindex="0" @click="go">z</li>
+    <div class="ok-1" role="button" tabindex="0" @click="go" @keydown.enter="go">a</div>
+    <div class="ok-2" @click.self="close"></div>
+    <div class="ok-3" @click.stop></div>
+  </div>
+</template>
+"""
+# bad-1: 完全无键盘支持；bad-2: 跨行属性块（旧单行正则漏报的形态）；
+# bad-3: 有 tabindex 但没键盘事件（能聚焦、按 Enter 无反应）
+_SELFTEST_EXPECTED_LINES = [3, 4, 9]
+
+
+def selftest() -> int:
+    hits = _scan_clickable_text(_SELFTEST_SAMPLE, "selftest")
+    got = [int(re.search(r":(\d+)", h).group(1)) for h in hits if re.search(r":(\d+)", h)]
+
+    print("=" * 72)
+    print("可访问性门禁 · 自检（C 类键盘可达检测器）")
+    print("=" * 72)
+    print(f"样本应拦下行号: {_SELFTEST_EXPECTED_LINES}")
+    print(f"实际拦下行号  : {got}")
+
+    if got == _SELFTEST_EXPECTED_LINES:
+        print("[PASS] 3 类残缺形态全部命中；完整写法 / @click.self / @click.stop 正确放行。")
+        return 0
+
+    print("[FAIL] 自检不符：C 类检测器已失效（可能漏报，也可能误报），不要相信它的 PASS。")
+    return 1
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="扫描无可读名称的交互元素（可访问性门禁）")
     ap.add_argument("--strict", action="store_true", help="同时检查无文本的 <a> 链接")
+    ap.add_argument(
+        "--selftest",
+        action="store_true",
+        help="只跑检测器自检（验证门禁本身没被改坏），不扫仓库",
+    )
     ap.add_argument(
         "--audit",
         action="store_true",
@@ -289,6 +391,10 @@ def main() -> int:
         ),
     )
     args = ap.parse_args()
+
+    # 自检优先于一切：门禁自己被改坏时，先红再说
+    if args.selftest:
+        return selftest()
 
     gate_classes: list[str] = []
     for item in args.gate_class:

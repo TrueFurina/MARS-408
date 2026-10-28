@@ -174,7 +174,10 @@ onMounted(load)
             </thead>
             <tbody>
               <template v-for="u in users" :key="u.id">
-                <tr class="user-row" @click="toggleExpand(u.id)">
+                <tr class="user-row" role="button" tabindex="0" :aria-expanded="expandedUser === u.id"
+                    @click="toggleExpand(u.id)"
+                    @keydown.enter.prevent="toggleExpand(u.id)"
+                    @keydown.space.prevent="toggleExpand(u.id)">
                   <td>
                     <div class="u-name">{{ u.display_name || u.username }}</div>
                     <div class="u-uname">@{{ u.username }}</div>

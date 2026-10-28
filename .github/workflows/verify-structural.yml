@@ -125,6 +125,13 @@ jobs:
           # 浮层会直接阻断 merge。脚本 fail-closed：扫描面为 0 个 .vue 时 exit 2
           # （"照不到"不得当作"干净"，否则改坏扫描器会静默放行）。
           run_one "a11y gate-class a (浮层焦点管理)" "python scripts/a11y_scan.py --gate-class a" "."
+          # 键盘可达硬门禁（2026-10-29 提升）：C 类原先只是 report-only，且实现是
+          # 「文件里出现过 @keydown 就整篇放行」的粗判 —— 实测报的 8 条全假、
+          # 真问题 11 处一个没报（@click 写在跨行属性块里，单行正则看不见）。
+          # 现改为跨行匹配开标签、逐元素判定（tabindex 与键盘事件缺一即拦），
+          # 并配 --selftest 钉死语义：门禁被改坏时必须自己变红。
+          run_one "a11y --selftest (键盘可达检测器自检)" "python scripts/a11y_scan.py --selftest" "."
+          run_one "a11y gate-class c (键盘可达)" "python scripts/a11y_scan.py --gate-class c" "."
           # 前端可访问性深度审计（咨询级，report-only，不阻断）：B/C/D 见 CI 日志。
           run_one "a11y_scan --audit (可访问性审计)" "python scripts/a11y_scan.py --audit" "."
           # 前后端契约交叉审计（2026-10-17 新增，A 类阻断）：
