@@ -49,6 +49,7 @@
 | `vite preview` 资源可达性 | — | **5/5 全 200**（首页 / JS / CSS / ico / webmanifest，无 404） | `curl -o /dev/null -w "%{http_code}"` |
 | 依赖包数量 | — | −1（`lucide-vue-next` 确证未使用） | 移除后产物 hash 不变 |
 | a11y `--audit` [B] 流式 aria-live | 8 处待查 | **5 处**（真实 3 项已修，其余 5 项经核对为误报） | `python scripts/a11y_scan.py --audit` |
+| 键盘可达的可点击 div（跨行扫描） | 13 处 | **0 处**（11 处已补 role/tabindex/Enter/Space，2 处确认为非交互元素） | 自写跨行扫描脚本，见 4.1 节说明 |
 
 > 注意：**不要把「19→6」当成"修了 13 个漏洞"对外讲**。其中 12 条是传递依赖随直接依赖一并升级的附带结果，真正的直接依赖安全补丁是 4 个（dompurify / vue / vite / postcss）。
 
@@ -100,8 +101,13 @@ pre-push 五道门禁（推送前实跑，首次**未通过**，逐条修好后�
 |---|---|---|---|
 | [A] 浮层焦点管理 | 0 | 0 | 2026-10-14 已提为硬门禁（`--gate-class a`），当前干净 |
 | [B] 流式输出 aria-live | 8 | **3** | 已修（`afdc87f`）：`ChatView`（流式在 store 里，启发式没识别到，是人工追链路发现的）、`SkillDetailView`、`ResourceView`。其余 5 个（`ChatInput`/`DashboardView`/`EngineView`/`DesignUpgradeView`/`ShowcaseView`）**不渲染任何流式消息**，是文件里出现「对话/流式」字样触发的误判 |
-| [C] 自定义可点击键盘可达 | 8 | **0** | 8 个文件里 `role="button"` 出现次数**均为 0**；命中的是遮罩层 `@click.self` 与容器 `@click.stop`（用于阻止冒泡，本身不是交互元素） |
+| [C] 自定义可点击键盘可达 | 8 | **8 条报告全是误报，但另有 11 处真缺口** | 报告的 8 个文件里 `role="button"` 出现次数**均为 0**，命中的是遮罩层 `@click.self` 与容器 `@click.stop`（非交互元素）。**改判**：用跨行标签扫描（`<div`→`>` 最多 600 字符）另查出 **13 处**真正缺键盘支持的可点击 div，人工核对后 **11 处为真**、已修（`07efc53`）；剩 2 处非交互元素（`@click.stop` 容器、遮罩层——抽屉内有可聚焦的关闭按钮） |
 | [D] reduced-motion 守卫 | 19 | **0** | 全局守卫已存在：`_components.css` 的 `@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;...}}`，经 `main.css` 的 `@import './_components.css'` 加载，**覆盖全部 19 个文件** |
+
+> **关键教训**：[C] 这一行我一开始判的是「0 真」，那是**只信了脚本的误报清单**。
+> 真相是脚本的启发式（逐文件、按 `role="button"` 关键词）既漏报又误报 ——
+> 它报的 8 条全是假的，而真问题（11 处）它一个没报，因为那些 `@click` 写在**跨行属性块**里，
+> 单行 grep 和逐文件匹配都看不见。**「脚本说没问题」不等于「查过了」。**
 
 > 换句话说：19 + 8 + 5 = 32 条报告里只有 3 条是真的。这不是脚本写得差——
 > 静态文本匹配本来就做不到区分「真流式」和「文案里有流式二字」。
@@ -126,6 +132,7 @@ pre-push 五道门禁（推送前实跑，首次**未通过**，逐条修好后�
 | `1c8e148` | `feat(frontend)` 单次请求可覆盖超时 + 修画像构建的「假超时」 |
 | `c9ee295` | `test(frontend)` 覆盖「单次请求可覆盖超时」（+3 用例） |
 | `afdc87f` | `feat(a11y)` 三处流式输出容器补 role=log + aria-live（WCAG 4.1.3） |
+| `07efc53` | `feat(a11y)` 11 处可点击 div 补键盘可达（WCAG 2.1.1） |
 | （本文） | `docs(ws6)` 审计报告 + 优化总结 |
 
 实现与测试**刻意分开提交**：`test_file_guard` 把「测试与实现同 commit」当作逃逸信号，合在一起会被门禁拦下。
