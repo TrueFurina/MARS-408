@@ -22,6 +22,7 @@
 | `src/views/CareerTrainingView.vue` | 校验 + a11y + 空态重试 | ① 模板写死 `maxlength="12"`，后端契约是 `min_length=4, max_length=16` ⇒ **13–16 位任务码被输入框静默截断**，用户只看到「任务码无效」。改为按后端契约校验 4–16 位 + `[A-Z0-9]`（对齐 `uuid4().hex[:6].upper()` 的实际字符集），加 `aria-invalid` / `role="alert"` / 行内提示；② 情景加载失败时渲染成一片空白网格，改为显式空态 +「重新加载」 |
 | `src/views/TeacherCareerView.vue` | 上界 + a11y + 失败可见化 | ① 后端 `roster` 是裸 `str` 无 `max_length`，前端 textarea 也无限制 ⇒ 误粘贴整份 Excel 会让请求体过大、失败无提示。按单班真实规模设界 500 行 / 20000 字符；② `onMounted` 四个 load 全被空 catch 吞掉，后端未启动时教师看到「班级列表为空」与「还没建班」无法区分 —— 改为 `reloadAll()` + 错误条 + 重试按钮 |
 | `src/views/LiteracyAssessmentView.vue` | 失败可重试 | 题库加载失败只显示一行错误、只能刷新整页。抽出 `loadQuestions()`，错误卡片补「重新加载题库」 |
+| `src/views/ChatView.vue` / `SkillDetailView.vue` / `ResourceView.vue` | a11y 语义 | 三处**确实在流式**的容器补 `role="log"` + `aria-live="polite"`：逐 token 追加的内容对读屏用户此前完全不可感知（WCAG 4.1.3）。ChatView 的流式实现不在本文件（走 store），静态扫描识别不到，是人工追链路发现的 |
 | `src/views/ProfileBuilder.vue` | 假超时 + 输入边界 | ① 自建 `AbortController` + 60s 定时器，但 **`signal` 从未传给请求** ⇒ 定时器 abort 的是一个没接线的 controller，属「看起来有超时保护、实际没有」；② `textarea` 无上限，而后端 `ProfileBuildRequest.message` 是 `max_length=5000` ⇒ 超长必然 422，catch 却一律显示「有点卡顿」；③ catch 改为 `friendlyError`，让超时 / 422 / 后端未启动各自可读 |
 | `scripts/xss_scan.py` | 门禁扩面 + 自检 | 只扫 `.vue` 的 `v-html`，而 `.ts` 与 SFC 的 `<script>` 里可直接 `el.innerHTML = ...`，**完全绕过**。现覆盖 `innerHTML`/`outerHTML`/`insertAdjacentHTML`/`document.write`，并加 `--selftest`（内存样本断言 6 类注入点全命中、2 类安全写法放行） |
 | `.github/workflows/verify-structural.yml` | 接入 CI | `xss_scan.py` **此前没有任何 workflow 或钩子调用**，只挂在 `package.json` 的 `gate:xss` 上 ⇒ 从未真正执行过。现接入（与 a11y 门禁同一处），并同时跑自检 |
@@ -47,6 +48,7 @@
 | `vite build` | 成功 | 成功 | 产物 `dist/` |
 | `vite preview` 资源可达性 | — | **5/5 全 200**（首页 / JS / CSS / ico / webmanifest，无 404） | `curl -o /dev/null -w "%{http_code}"` |
 | 依赖包数量 | — | −1（`lucide-vue-next` 确证未使用） | 移除后产物 hash 不变 |
+| a11y `--audit` [B] 流式 aria-live | 8 处待查 | **5 处**（真实 3 项已修，其余 5 项经核对为误报） | `python scripts/a11y_scan.py --audit` |
 
 > 注意：**不要把「19→6」当成"修了 13 个漏洞"对外讲**。其中 12 条是传递依赖随直接依赖一并升级的附带结果，真正的直接依赖安全补丁是 4 个（dompurify / vue / vite / postcss）。
 
@@ -89,6 +91,23 @@ pre-push 五道门禁（推送前实跑，首次**未通过**，逐条修好后�
 > 记录这两条的意义：**「本地 pre-commit 全绿」不等于「能推上去」**。第 2 条是环境问题（不是代码问题），第 4 条是真重复——如果当时直接往基线加豁免，就会把一处可以消除的重复永久固化。
 - 测试数**未硬编码**在任何文档里；后端测试真值（CI run `39681618692`）本次**未改动、未复述为本地实测**
 
+### 4.1 `a11y_scan --audit` 的人工 triage（下一个人不必重做）
+
+该审计是**文件级关键词启发式**，噪声很大（脚本自己的输出也写了"可能含误报"）。
+逐条核对结果：
+
+| 类别 | 报告数 | 真实问题 | 处置与依据 |
+|---|---|---|---|
+| [A] 浮层焦点管理 | 0 | 0 | 2026-10-14 已提为硬门禁（`--gate-class a`），当前干净 |
+| [B] 流式输出 aria-live | 8 | **3** | 已修（`afdc87f`）：`ChatView`（流式在 store 里，启发式没识别到，是人工追链路发现的）、`SkillDetailView`、`ResourceView`。其余 5 个（`ChatInput`/`DashboardView`/`EngineView`/`DesignUpgradeView`/`ShowcaseView`）**不渲染任何流式消息**，是文件里出现「对话/流式」字样触发的误判 |
+| [C] 自定义可点击键盘可达 | 8 | **0** | 8 个文件里 `role="button"` 出现次数**均为 0**；命中的是遮罩层 `@click.self` 与容器 `@click.stop`（用于阻止冒泡，本身不是交互元素） |
+| [D] reduced-motion 守卫 | 19 | **0** | 全局守卫已存在：`_components.css` 的 `@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;...}}`，经 `main.css` 的 `@import './_components.css'` 加载，**覆盖全部 19 个文件** |
+
+> 换句话说：19 + 8 + 5 = 32 条报告里只有 3 条是真的。这不是脚本写得差——
+> 静态文本匹配本来就做不到区分「真流式」和「文案里有流式二字」。
+> 但**如果没人做这一步 triage，下一个人会以为有 32 个待修项**，然后花大量时间
+> 在误报上，或者更糟：为了让计数归零而去改本来正确的代码。
+
 ---
 
 ## 5. 提交清单
@@ -106,6 +125,7 @@ pre-push 五道门禁（推送前实跑，首次**未通过**，逐条修好后�
 | `35ecd2e` | `fix(gate)` XSS 门禁补 innerHTML 盲区 + 接入 CI + 加自检 |
 | `1c8e148` | `feat(frontend)` 单次请求可覆盖超时 + 修画像构建的「假超时」 |
 | `c9ee295` | `test(frontend)` 覆盖「单次请求可覆盖超时」（+3 用例） |
+| `afdc87f` | `feat(a11y)` 三处流式输出容器补 role=log + aria-live（WCAG 4.1.3） |
 | （本文） | `docs(ws6)` 审计报告 + 优化总结 |
 
 实现与测试**刻意分开提交**：`test_file_guard` 把「测试与实现同 commit」当作逃逸信号，合在一起会被门禁拦下。
@@ -132,7 +152,25 @@ pre-push 五道门禁（推送前实跑，首次**未通过**，逐条修好后�
 1. **【需主 agent 决策】后端 3 个未声明下限的包**：`filelock`（9 条，修复需 4.x 大版本）、`certifi`（2 条，补下限即可）、`setuptools`（1 条，构建工具可不动）。详见 `docs/dependency-audit-20261029.md` 第 5 节。**未擅自修改**——按分工后端属主 agent 域。
 2. **【需主 agent 决策】前端 3 条 critical 的解除窗口**：`vitest` / `tinypool` / `@vitest/mocker` / `happy-dom` 只能随 `vite 7` 一次性升。已实测 `happy-dom@21` 在 `vitest 3.2.7` 下直接 OOM 崩溃，不是"没试"而是"试过不通"。
 3. **~~未做~~ 已补：四条链路的分级超时**（`137ab92` + `5cec3e1`）。阈值按语义分级而非硬套 30s：JSON 30s / SSE **建连** 30s（拿到响应头即清除计时器，长对话不会被掐断）/ 上传 120s / 二进制 120s。各链路按**既有异常契约**落地：`postStream`、`upload` 抛 `ApiError(status 0)`；`getBlob`、`postBlob` 保持「不抛异常、返回 `ok:false`」；`ttsSynthesize` 保持「返回 `null` 让调用方降级浏览器语音」。6 条用例逐条锁住这四种契约。
-4. **未做**：CSP / 安全响应头的网关侧核查。提示词要求"只读核查，不擅改网关"，本轮未拿到网关配置的读取入口，故**没有结论**——不写成"已确认配置正确"。
+4. **~~未做~~ 已核查：CSP / 安全响应头（结论：已配置，且链路完整）**。
+   **更正**：上一版本文档在这里写的是「未拿到网关配置读取入口，故没有结论」——那是没查到底就下结论。实际核查结果：
+   - `py-server/app/middleware.py` 的 `security_headers_middleware` 已下发全套头：
+     `Content-Security-Policy`（生产/开发两套）、`X-Frame-Options: SAMEORIGIN`、
+     `X-Content-Type-Options: nosniff`、`Referrer-Policy: no-referrer`、
+     `Permissions-Policy`（禁摄像头/麦克风/地理/支付等）、`COOP`+`COEP`（WASM 编译实验室需要跨源隔离）、
+     生产才发的 `Strict-Transport-Security`（开发不发，避免本地 http 被浏览器拒掉）
+   - 生产 CSP 为 `script-src 'self'`（**无 `unsafe-inline`**），`style-src` 保留 `unsafe-inline`
+     （Vue scoped style 必需），`connect-src 'self' ws: wss:`，`frame-ancestors 'self'`
+   - `deploy/vps/nginx.conf` **只反代、不托管静态**（`location /` 全部转发给后端），
+     所以 SPA 的 `index.html` 也由后端返回、同样带上 CSP —— **不存在「静态资源没有安全头」的缺口**
+   - 前端没有任何直连外部域名的 fetch（全部走同源 `/api`），与 `connect-src 'self'` 自洽；
+     图片走 `image_base64` → `data:` 或 `blob:`，都在 `img-src` 白名单内
+   - 已有机器检查：`py-server/scripts/verify_app_wiring.py` 断言这些头存在（含「开发环境不发 HSTS」）
+   **两处已知的、有意为之的放宽**（不是缺陷，但必须写明，否则会被当成"已全绿"）：
+   ① `/showcase` 路径在生产环境降级用 `CSP_DEV`（放行 `script-src 'unsafe-inline'`），
+   因为评委展示用的原型 HTML 含内联脚本 —— 该路径是攻击面更宽的一处；
+   ② markdown 渲染器会输出 `<img src="远程URL">`，而 `img-src` 不含远程 `https:`，
+   故 LLM 生成内容里的外链图片在生产会被 CSP 拦掉（**功能降级，非安全问题**）。
 5. **未做（评估后放弃）**：`any` 全局收敛。全仓 `src/` 仍有 366 处 `any`/`as any`，其中 68 处是 `catch (e: any)`。一次性替换的爆炸半径远大于收益，且 `vue-tsc` 当前 0 error 说明类型层面没有阻塞性错误。若要做，按视图分批（`KnowledgeBaseView` 12 处、`KnowledgeGraphView` 10 处为首批），**每批单独提交并跑 vue-tsc**——`catch (e: any)` → `unknown` 会立刻暴露出「catch 里直接访问 e.xxx」的地方，那些正是真正需要修的空安全问题。
 6. **已排查、无问题**：`SkillDetailView` 与 `CloudLabView` 的 `AbortController` 都正确把 `signal` 传进了 `postStream` / `askTutor`，不存在 `ProfileBuilder` 那种假超时。全仓 `new AbortController` 共 5 处，逐处核对过。
 
