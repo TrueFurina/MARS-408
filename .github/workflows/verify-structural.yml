@@ -111,6 +111,14 @@ jobs:
           run_one "token_scan (设计令牌防回归)" "python scripts/token_scan.py --baseline scripts/token_scan.baseline.json" "."
           # 前端可访问性硬门禁（图标按钮可读名）：当前 0 缺陷，发现即阻断。
           run_one "a11y_scan (可访问性硬门禁)" "python scripts/a11y_scan.py" "."
+          # 前端 HTML 注入门禁（v-html + innerHTML/outerHTML/insertAdjacentHTML/
+          # document.write）。2026-10-29 前本脚本只扫 .vue 的 v-html，且**从未被任何
+          # workflow 调用**（只在 package.json 的 gate:xss 里挂着，无人自动执行）——
+          # 即"存在但没跑"的装饰品。此处接入并同时跑自检：
+          # 自检用内存样本断言 6 类注入点全部命中、2 类安全写法放行，
+          # 防止门禁自己被改坏后仍输出 PASS（永远绿的闸门比没有闸门更危险）。
+          run_one "xss_scan --selftest (注入门禁自检)" "python scripts/xss_scan.py --selftest" "."
+          run_one "xss_scan (HTML 注入门禁)" "python scripts/xss_scan.py" "."
           # 浮层焦点管理硬门禁（2026-10-14 由 report-only 升为阻断，P1-1）：
           # VideoPlayer / LandingView 两处浮层补齐焦点圈闭（打开聚焦 / Tab 圈闭 /
           # 关闭归还 opener）后 A 类违规归零，故把该类提为门禁——今后新增无焦点管理的

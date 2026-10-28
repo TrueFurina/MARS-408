@@ -18,7 +18,7 @@
     "gate:calibration": "python scripts/scan_stale_calibration.py",
     "gate:a11y": "python scripts/a11y_scan.py",
     "gate:perf": "python scripts/perf_scan.py",
-    "gate:xss": "python scripts/xss_scan.py",
+    "gate:xss": "python scripts/xss_scan.py --selftest && python scripts/xss_scan.py",
     "gate:brand": "python scripts/brand_scan.py",
     "gate:dup": "python scripts/dup_scan.py --gate",
     "gate:dup:selftest": "python scripts/dup_scan_test.py",
