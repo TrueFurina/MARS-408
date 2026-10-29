@@ -132,6 +132,11 @@ jobs:
           # 并配 --selftest 钉死语义：门禁被改坏时必须自己变红。
           run_one "a11y --selftest (键盘可达检测器自检)" "python scripts/a11y_scan.py --selftest" "."
           run_one "a11y gate-class c (键盘可达)" "python scripts/a11y_scan.py --gate-class c" "."
+          # `any` 棘轮门禁（2026-10-29 新增）：catch (x: any) 零容忍 + any 总量只降不升。
+          # 为什么是棘轮而不是清零：剩下约 300 处多是 api.get<any>() 的响应体未定型，
+          # 强制清零只会逼出 `as unknown as T` 这种更糟的绕过写法（连搜索都搜不到）。
+          # 基线在 scripts/any_ratchet.baseline.json，只允许往下调。
+          run_one "any_ratchet (catch any 零容忍 + 总量棘轮)" "python scripts/any_ratchet.py" "."
           # 前端可访问性深度审计（咨询级，report-only，不阻断）：B/C/D 见 CI 日志。
           run_one "a11y_scan --audit (可访问性审计)" "python scripts/a11y_scan.py --audit" "."
           # 前后端契约交叉审计（2026-10-17 新增，A 类阻断）：
