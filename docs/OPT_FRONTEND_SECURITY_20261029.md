@@ -168,6 +168,27 @@ D 的守卫是全局的、逐文件判定天然误报，两者都不适合直接
 
 **遗留影响**：主树 `node_modules` 曾被我升到较新版本，随后 lock 已回滚 ⇒ 主树的 `node_modules` 与 `package-lock.json` 暂时不一致。对方会话若要做依赖相关校验，需先 `npm ci` 复原。这是我的操作副作用，如实记录。
 
+### 6.1 我的验证循环缺了 lint，导致一个缺陷在分支上躺了 6 个提交
+
+`SkillPlatformView.vue` 的 `@keydown.space.prevent="selectSkill(s.id)""` 多了一个尾引号
+（第 4 轮做键盘可达性时批量替换脚本的 `\"` 转义多写了一个），是 `c8f9cc6` 才修的。
+
+为什么一直没发现：我每轮的验证循环是 **vue-tsc + vitest + vite build + python 门禁**，
+**从来没跑过 `npm run lint`**。而这个缺陷恰好落在三者的盲区里：
+- `vue-tsc` 不校验模板属性名合法性（Vue 编译器容忍多余引号）；
+- `vitest` 没有渲染该视图的用例；
+- `vite build` 也能过（产物里该属性被静默丢弃）。
+
+只有 ESLint 的 `vue/valid-attribute-name` 能抓到，而 ESLint 只在 CI 里跑。
+于是 CI 红了 6 个提交，我一直以为分支是绿的 —— **直到主动去查 `gh run list` 才发现**。
+
+**修正**：提交前必须自己补 `npx eslint . --quiet`。本项目 pre-push 的五道门
+（密钥/诚实口径/品牌/克隆/OpenAPI）里**没有 lint**，lint 只在 CI 的
+`Frontend lint + test + type-check + build` 步骤里跑 —— 这条差异不写下来，下一个人会踩同一脚。
+
+> 这条和 4.1 节那句「『脚本说没问题』不等于『查过了』」是同一类错误：
+> 我把"我跑过的那几项绿了"当成了"整体绿了"。
+
 ---
 
 ## 7. 遗留项（按优先级）
