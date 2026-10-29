@@ -47,7 +47,8 @@
 | 生产包内可达漏洞 | 5（含 dompurify critical） | **0** | 逐条可达性分级见审计报告第 2/3 节 |
 | 前端单测 | 31 文件 / 220 用例 | **34 文件 / 256 用例**（+36） | `npx vitest run` |
 | `catch (e: any)` 注解 | 67 处 | **0 处**（全部收敛为 `unknown`） | `grep -rn "catch (e: any)" src/` 计数为 0 |
-| `any` 总量 | 366 处 | **299 处**（本轮 −67） | 同上，`grep ": any|<any>|as any"` |
+| `any` 总量（出现次数） | 366 处 | **308 处**（本轮 −58） | `python scripts/any_ratchet.py`（基线 `scripts/any_ratchet.baseline.json`） |
+| `any` 总量（命中行数） | 366 行 | **299 行** | `grep -c` 按行计；与上行的差异见下方口径说明 |
 | `vue-tsc --build` | 0 error | **0 error** | 命令输出 |
 | `vite build` | 成功 | 成功 | 产物 `dist/` |
 | `vite preview` 资源可达性 | — | **5/5 全 200**（首页 / JS / CSS / ico / webmanifest，无 404） | `curl -o /dev/null -w "%{http_code}"` |
@@ -76,6 +77,7 @@
 
 - `python scripts/xss_scan.py`：**PASS**（129 文件，`v-html` + `innerHTML`/`outerHTML`/`insertAdjacentHTML`/`document.write` 共 0 注入点）
 - `python scripts/xss_scan.py --selftest`：**PASS**（内存样本 6 类注入点全命中、2 类安全写法放行）
+- `python scripts/any_ratchet.py`：**PASS**（catch any 0 处；any 总量 308 = 基线 308）
 
 > 关于这道门禁的两个「看起来有、实际没有」：① 它原先只扫 `v-html`，`.ts` 与 SFC 的
 > `<script>` 里写 `el.innerHTML = ...` 完全绕过；② 它**从未被任何 workflow 或钩子调用**，
@@ -146,6 +148,7 @@ D 的守卫是全局的、逐文件判定天然误报，两者都不适合直接
 | `05b933f` | `feat(a11y)` C 类键盘可达改为逐元素精判并升为硬门禁（+自检） |
 | `471571c` | `refactor(frontend)` 67 处 catch (e: any) 收敛为 unknown（WS5-3.3） |
 | `0658f48` | `test(frontend)` 覆盖 errMessage / isAbortError 取值边界（+12 用例） |
+| `6a80b31` | `feat(gate)` 新增 any 棘轮门禁（catch any 零容忍 + 总量只降不升） |
 | （本文） | `docs(ws6)` 审计报告 + 优化总结 |
 
 实现与测试**刻意分开提交**：`test_file_guard` 把「测试与实现同 commit」当作逃逸信号，合在一起会被门禁拦下。
@@ -191,10 +194,13 @@ D 的守卫是全局的、逐文件判定天然误报，两者都不适合直接
    因为评委展示用的原型 HTML 含内联脚本 —— 该路径是攻击面更宽的一处；
    ② markdown 渲染器会输出 `<img src="远程URL">`，而 `img-src` 不含远程 `https:`，
    故 LLM 生成内容里的外链图片在生产会被 CSP 拦掉（**功能降级，非安全问题**）。
-5. **部分完成：`any` 收敛**。`catch (e: any)` **已全部清零**（67 → 0，`471571c`），全仓 `any`/`as any` 从 366 降到 299。
-   剩下 299 处主要是 `api.get<any>(...)` 这类**响应体未定型**的位置（`openapi-typescript` 已生成 `src/types/api.generated.ts`，但大量调用点没接）。这批不能机械替换：
+5. **部分完成：`any` 收敛**。`catch (e: any)` **已全部清零**（67 → 0，`471571c`），并由棘轮门禁守着（`6a80b31`，零容忍）。
+   全仓 `any`/`as any` 从 366 降到 308（按出现次数；按命中行数算是 299，差 9 是因为同一行可能出现两次）。
+   剩下这批主要是 `api.get<any>(...)` 这类**响应体未定型**的位置（`openapi-typescript` 已生成 `src/types/api.generated.ts`，但大量调用点没接）。这批不能机械替换：
    换类型要逐个核对后端响应结构，改错就是运行时崩，而 `vue-tsc` 现在 0 error 说明没有阻塞性错误。
-   建议按视图分批接 `api.generated.ts`（首批 `KnowledgeBaseView` 12 处、`KnowledgeGraphView` 10 处），**每批单独提交并跑 vue-tsc + vitest**。
+   **门禁口径是棘轮**：只降不升，`--update` 拒绝抬高基线。所以后续任何新增 `any` 都会被 CI 拦下，
+   要么先降别处、要么在提交信息里写明理由并手工改基线 —— 两条路都强制留痕。
+   建议按视图分批接 `api.generated.ts`（首批 `KnowledgeBaseView` 9 处、`KnowledgeGraphView` 10 处），**每批单独提交并跑 vue-tsc + vitest**。
 6. **已排查、无问题**：`SkillDetailView` 与 `CloudLabView` 的 `AbortController` 都正确把 `signal` 传进了 `postStream` / `askTutor`，不存在 `ProfileBuilder` 那种假超时。全仓 `new AbortController` 共 5 处，逐处核对过。
 
 ---
