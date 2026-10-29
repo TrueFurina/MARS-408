@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { errMessage } from '@/utils/errorMessage'
 import { ref, computed, watch } from 'vue'
 import { api, hasAuthToken } from '@/utils/api'
 import { useAuthStore } from '@/stores/authStore'
@@ -605,9 +606,9 @@ const userMsg: ChatMessage = {
         m.content = data.text || '（无回答）'
         m.segments = [{ type: 'content', content: m.content }]
       }
-    } catch (e: any) {
+    } catch (e) {
       const m = conv.messages.find(x => x.id === msgId)
-      const err = '图片理解失败：' + (e?.message || '请检查后端')
+      const err = '图片理解失败：' + (errMessage(e, '请检查后端'))
       if (m) { m.content = err; m.segments = [{ type: 'content', content: err }] }
     }
     saveConversations()
@@ -690,9 +691,9 @@ const userMsg: ChatMessage = {
           m.videoScript = data.video_script || ''
         }
       }
-    } catch (e: any) {
+    } catch (e) {
       const m = conv.messages.find(x => x.id === msgId)
-      const err = '导师答疑失败：' + (e?.message || '请检查后端 /tutor/answer 接口')
+      const err = '导师答疑失败：' + (errMessage(e, '请检查后端 /tutor/answer 接口'))
       if (m) { m.content = err; m.segments = [{ type: 'content', content: err }] }
     }
     conv.updatedAt = new Date()
@@ -753,12 +754,12 @@ const userMsg: ChatMessage = {
   async function fetchMasteryData(): Promise<MasteryItem[]> {
     try {
       return await api.get<MasteryItem[]>('/user/mastery')
-    } catch (e: any) {
+    } catch (e) {
       // D1 范式：后端不可用时必须抛出，不能吞成空数组。
       // 吞掉之后调用方无从区分「请求失败」与「确实没有掌握度」，
       // 会把故障渲染成「暂无掌握度数据」的空态——把故障伪装成"用户还没练过"。
       // 绝不填充占位数据：失败就是失败，由视图展示错误态 + 重新加载。
-      throw new Error(`掌握度数据拉取失败: ${e?.message || e}`)
+      throw new Error(`掌握度数据拉取失败: ${errMessage(e, String(e))}`)
     }
   }
 
@@ -774,13 +775,13 @@ const userMsg: ChatMessage = {
         weakPointsTotal.value = data.total ?? data.weak_points.length
       }
       return data
-    } catch (e: any) {
+    } catch (e) {
       // D1 范式：后端不可用时必须抛出，不能吞成 null。
       // 与 fetchMasteryData / fetchKnowledgeMastery 同一范式——
       // 调用方（MasteryMapView 的 Promise.all）的 catch 会把它渲染成错误态，
       // 而不是「暂无薄弱知识点」的空态。
       // 绝不填充占位数据：失败就是失败，由视图展示错误态 + 重新加载。
-      throw new Error(`薄弱点数据拉取失败: ${e?.message || e}`)
+      throw new Error(`薄弱点数据拉取失败: ${errMessage(e, String(e))}`)
     }
   }
 
@@ -795,13 +796,13 @@ const userMsg: ChatMessage = {
         return data.knowledge_points
       }
       return []
-    } catch (e: any) {
+    } catch (e) {
       // 后端不可用时必须抛出，不能吞成空数组：
       // 吞掉之后调用方无从区分「请求失败」与
       // 「确实没有知识点」，会把故障渲染成「暂无知识点掌握度数据」
       // 的空态——把故障伪装成“用户还没练过”。
       // 绝不填充占位数据：失败就是失败，由视图展示错误态 + 重新加载。
-      throw new Error(`知识点掌握度拉取失败: ${e?.message || e}`)
+      throw new Error(`知识点掌握度拉取失败: ${errMessage(e, String(e))}`)
     }
   }
 

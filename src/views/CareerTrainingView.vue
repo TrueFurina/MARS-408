@@ -1,11 +1,17 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
 import { api, friendlyError } from '@/utils/api'
+import type { operations } from '@/types/api.generated'
 import { CAREER_DIM_LABEL as DIM_LABEL, CAREER_DIM_ORDER as DIM_ORDER } from '@/data/careerDimensions'
 
 /* ===================== 类型与常量 ===================== */
 type Step = 'select' | 'briefing' | 'battle' | 'report'
-interface Scenario { id: string; type: string; subtype: string; type_label: string; subtype_label: string; title: string; difficulty_default: string }
+// 情景展示字段直接绑后端契约（py-server/api/career_training.py 的 CareerScenarioItem）。
+// 2026-10-29 起该路由有了 response_model，生成类型才真正可用 —— 此前它是裸 dict，
+// 前端只能手写一份"看着对"的接口，后端改名时 tsc 抓不到。
+type ScenarioListResponse =
+  operations['scenarios_api_career_scenarios_get']['responses'][200]['content']['application/json']
+type Scenario = ScenarioListResponse['scenarios'][number]
 interface Turn { role: 'interviewer' | 'student'; text: string; mode?: string; dimension?: string; evidence?: any }
 
 const MODE_LABEL: Record<string, string> = { normal: '常规追问', escalating: '逐步加压', catfish: '鲶鱼反诘' }
@@ -47,11 +53,35 @@ const currentScenario = computed(() => scenarios.value.find(s => s.id === scenar
 const turnsDone = computed(() => turns.value.filter(t => t.role === 'student').length)
 const progressText = computed(() => `${turnsDone.value}/${session.value?.max_turns ?? maxTurns.value}`)
 
+/**
+ * 任务码前端校验 —— 与后端契约对齐，不是自造规则：
+ *   · 长度：后端 `TaskJoinRequest.join_code = Field(..., min_length=4, max_length=16)`
+ *   · 字符：后端生成侧是 `uuid.uuid4().hex[:6].upper()`，即大写十六进制；
+ *     用户手输时统一大写并只接受 [A-Z0-9]，能挡住空格/中文/标点这类
+ *     「必然匹配不到」的输入，避免把无意义请求打到后端再吃一个 404。
+ *
+ * 此前模板写死 `maxlength="12"`，与后端 16 的上限不一致：13–16 位的码
+ * 会被输入框静默截断，用户看到「任务码无效」却看不出是自己少输了后 4 位。
+ */
+const JOIN_CODE_MIN = 4
+const JOIN_CODE_MAX = 16
+const JOIN_CODE_PATTERN = /^[A-Z0-9]+$/
+
+const joinCodeError = computed(() => {
+  const code = joinCode.value.trim().toUpperCase()
+  if (!code) return ''
+  if (code.length < JOIN_CODE_MIN || code.length > JOIN_CODE_MAX) {
+    return `任务码应为 ${JOIN_CODE_MIN}–${JOIN_CODE_MAX} 位（当前 ${code.length} 位）`
+  }
+  if (!JOIN_CODE_PATTERN.test(code)) return '任务码只能包含字母和数字'
+  return ''
+})
+
 /* ===================== 拉取场景 ===================== */
 async function loadScenarios() {
   loadingScenarios.value = true
   try {
-    const res = await api.get<any>('/career/scenarios')
+    const res = await api.get<ScenarioListResponse>('/career/scenarios')
     scenarios.value = res.scenarios || []
   } catch (e) {
     errorMsg.value = friendlyError(e, '场景加载失败')
@@ -65,6 +95,8 @@ loadScenarios()
 async function joinByCode() {
   const code = joinCode.value.trim().toUpperCase()
   if (!code || joining.value) return
+  // 前端先挡：格式必然无效的码不发给后端（省一次往返，也给用户即时反馈）
+  if (joinCodeError.value) { errorMsg.value = joinCodeError.value; return }
   joining.value = true; errorMsg.value = ''
   try {
     const res = await api.post<any>('/career/task/join', { join_code: code })
@@ -316,7 +348,7 @@ async function exportEvidenceOnePager() {
       a.click()
     }
     setTimeout(() => URL.revokeObjectURL(url), 60000)
-  } catch (e: any) {
+  } catch (e) {
     exportError.value = friendlyError(e, '导出证据一页纸失败')
   } finally {
     busyExport.value = false
@@ -397,14 +429,18 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
             v-model="joinCode"
             class="join-input"
             type="text"
-            maxlength="12"
+            :maxlength="JOIN_CODE_MAX"
             placeholder="输入任务码，例如 A1B2C3"
             :disabled="joining"
+            :aria-invalid="!!joinCodeError"
+            aria-describedby="join-code-hint"
             @keydown.enter="joinByCode"
           >
-          <button class="ghost-btn" :disabled="joining || !joinCode.trim()" @click="joinByCode">
+          <button class="ghost-btn" :disabled="joining || !joinCode.trim() || !!joinCodeError" @click="joinByCode">
             {{ joining ? '加入中…' : '加入实训' }}
           </button>
+          <!-- 错误提示放在 v-if 分支内部：插在 v-if / v-else 两个 template 之间会打断配对 -->
+          <p v-if="joinCodeError" id="join-code-hint" class="join-code-error" role="alert">{{ joinCodeError }}</p>
         </template>
         <template v-else>
           <span class="join-badge">教师任务已加入</span>
@@ -440,9 +476,19 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
         <div class="tl-title">{{ currentScenario?.title || '（任务指定场景）' }}</div>
       </div>
       <div v-else-if="loadingScenarios" class="c-loading">正在加载实训情景…</div>
-      <div v-else class="scenario-grid">
+      <!-- 加载失败时 scenarios 为空：此前会渲染成一片空白网格，用户看不出是
+           「加载失败」还是「本来就没有情景」，也没有重试入口，只能刷新整页 -->
+      <div v-else-if="!scenarios.length" class="c-empty" role="alert">
+        <p class="c-empty-text">{{ errorMsg || '暂时没有可用的实训情景' }}</p>
+        <button class="ghost-btn" :disabled="loadingScenarios" @click="loadScenarios">重新加载</button>
+      </div>
+      <div v-else class="scenario-grid" role="radiogroup" aria-label="实训情景">
         <div v-for="s in scenarios" :key="s.id" class="scenario-card"
-             :class="{ active: scenarioId === s.id }" :aria-selected="scenarioId === s.id" @click="scenarioId = s.id">
+             :class="{ active: scenarioId === s.id }" role="radio" :aria-checked="scenarioId === s.id"
+             tabindex="0"
+             @click="scenarioId = s.id"
+             @keydown.enter.prevent="scenarioId = s.id"
+             @keydown.space.prevent="scenarioId = s.id">
           <div class="sc-type">{{ s.type_label }} · {{ s.subtype_label }}</div>
           <div class="sc-title">{{ s.title }}</div>
         </div>
@@ -662,6 +708,10 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
 .c-loading, .c-error { padding: 14px; border-radius: 10px; font-size: var(--text-sm); margin: var(--space-3) 0; }
 .c-loading { background: var(--bg-secondary); }
 .c-error { background: var(--accent-danger-10); color: var(--accent-danger); }
+/* 情景列表空/失败态：给文案 + 重试按钮，替代此前的一片空白网格 */
+.c-empty { padding: 18px 14px; border-radius: 10px; margin: var(--space-3) 0; text-align: center;
+  background: var(--bg-secondary); border: 1px dashed var(--border-color); }
+.c-empty-text { margin: 0 0 var(--space-3); font-size: var(--text-sm); color: var(--text-secondary); }
 
 /* 教师任务码 / 任务锁定态 */
 .join-bar { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
@@ -672,6 +722,9 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
   background: var(--accent-primary-10); padding: 3px 10px; border-radius: 10px; }
 .join-desc { font-size: var(--text-sm); color: var(--text-secondary); }
 .join-warn { flex-basis: 100%; font-size: var(--text-2xs); color: var(--color-warning); }
+/* 任务码校验失败：独占一行 + 红边输入框（不只靠颜色传达，文案本身已说明原因） */
+.join-code-error { flex-basis: 100%; margin: 0; font-size: var(--text-2xs); color: var(--text-danger); }
+.join-input[aria-invalid="true"] { border-color: var(--color-danger-border); }
 .join-ok { font-size: var(--text-2xs); color: var(--accent-success); }
 .task-locked { border: 1.5px solid var(--accent-primary); border-radius: 14px; padding: 14px;
   background: var(--bg-card); box-shadow: 0 0 0 3px var(--accent-primary-15); }

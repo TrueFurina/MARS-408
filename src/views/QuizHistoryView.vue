@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { errMessage } from '@/utils/errorMessage'
 import { ref, onMounted, computed } from 'vue'
 import { api } from '@/utils/api'
 import Skeleton from '@/components/Skeleton.vue'
@@ -30,8 +31,8 @@ onMounted(async () => {
       accuracy: data?.accuracy ?? 0,
     }
     history.value = (data?.records || []).reverse()
-  } catch (e: any) {
-    error.value = e?.message || '加载失败'
+  } catch (e) {
+    error.value = errMessage(e, '加载失败')
   } finally {
     loading.value = false
   }

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { errMessage } from '@/utils/errorMessage'
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '@/utils/api'
@@ -63,8 +64,8 @@ onMounted(async () => {
   try {
     const res = await api.get<any>('/review/summary')
     summary.value = res
-  } catch (e: any) {
-    error.value = e?.message || '加载失败'
+  } catch (e) {
+    error.value = errMessage(e, '加载失败')
   } finally {
     loading.value = false
   }

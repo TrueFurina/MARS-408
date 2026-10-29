@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { errMessage } from '@/utils/errorMessage'
 import { ref, onMounted, onUnmounted, computed, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStudyStore } from '@/stores/studyStore'
@@ -106,8 +107,8 @@ async function loadAssessment() {
     if (quizHistory.value.length > 0) {
       loadPathFeedback()
     }
-  } catch (e: any) {
-    const msg = e?.message || '加载失败'
+  } catch (e) {
+    const msg = errMessage(e, '加载失败')
     // 401 认证错误提示重新登录
     if (msg.includes('401') || msg.includes('Unauthorized') || msg.includes('登录')) {
       error.value = '登录已过期，请重新登录'
@@ -169,8 +170,8 @@ async function loadPathFeedback() {
     if (data?.evaluation) {
       evalReport.value = data.evaluation
     }
-  } catch (e: any) {
-    feedbackError.value = e?.message || '路径调整建议加载失败'
+  } catch (e) {
+    feedbackError.value = errMessage(e, '路径调整建议加载失败')
   } finally {
     feedbackLoading.value = false
   }

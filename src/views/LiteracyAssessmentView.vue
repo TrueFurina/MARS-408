@@ -69,7 +69,10 @@ async function loadReport() {
   }
 }
 
-onMounted(async () => {
+/** 题库加载抽成独立函数：失败态需要一个「重试」入口，不能只挂在 onMounted 里 */
+async function loadQuestions() {
+  loading.value = true
+  errorMsg.value = ''
   try {
     const data = await api.get<{ total: number; dimensions: string[]; questions: Question[] }>('/literacy/questions')
     questions.value = data.questions
@@ -80,6 +83,10 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+}
+
+onMounted(() => {
+  void loadQuestions()
 })
 
 function pick(optionIndex: number) {
@@ -129,7 +136,10 @@ function restart(nextPhase: 'pre' | 'post') {
 
     <!-- 加载/错误态 -->
     <div v-if="loading" class="state-card">题库加载中…</div>
-    <div v-else-if="errorMsg && !questions.length" class="state-card error">{{ errorMsg }}</div>
+    <div v-else-if="errorMsg && !questions.length" class="state-card error" role="alert">
+      <p class="state-error-text">{{ errorMsg }}</p>
+      <button class="state-retry" :disabled="loading" @click="loadQuestions">重新加载题库</button>
+    </div>
 
     <template v-else>
       <!-- 结果页 -->
@@ -223,6 +233,10 @@ function restart(nextPhase: 'pre' | 'post') {
 .page-head .sub { color: var(--text-muted); font-size: var(--text-sm); margin: 0 0 var(--space-5); }
 .state-card { padding: var(--space-10); text-align: center; background: var(--surface); border-radius: 12px; border: 1px solid var(--border); }
 .state-card.error { color: var(--color-danger); }
+.state-error-text { margin: 0 0 var(--space-4); }
+.state-retry { padding: 8px 20px; border-radius: 8px; cursor: pointer; font-size: var(--text-sm);
+  border: 1px solid var(--color-danger-border); background: transparent; color: var(--color-danger); }
+.state-retry:disabled { opacity: .6; cursor: not-allowed; }
 
 .quiz-card, .result-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: var(--space-6); }
 .quiz-meta { display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-sm); color: var(--text-muted); margin-bottom: var(--space-2); flex-wrap: wrap; }

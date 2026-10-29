@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { errMessage } from '@/utils/errorMessage'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useStudyStore } from '@/stores/studyStore'
@@ -250,9 +251,9 @@ async function generateMultimodal() {
       mmAudioFallbackText.value = audioData.fallback_text || null
       mmAudioSource.value = audioData.source || 'none'
     }
-  } catch (e: any) {
-    console.warn('多模态生成失败:', e?.message)
-    mmError.value = '多模态资源生成失败: ' + (e?.message || '请检查后端服务是否运行')
+  } catch (e) {
+    console.warn('多模态生成失败:', errMessage(e))
+    mmError.value = '多模态资源生成失败: ' + (errMessage(e, '请检查后端服务是否运行'))
   } finally {
     mmLoading.value = false
   }
@@ -302,7 +303,7 @@ async function generateTeachingVideo() {
       teachingVideoHtml.value = res.html
       showTeachingVideo.value = true
     }
-  } catch (e: any) {
+  } catch (e) {
     videoError.value = friendlyError(e, '教学视频生成失败')
   } finally {
     teachingVideoLoading.value = false
@@ -813,8 +814,11 @@ function parseWeakPoints(wpStr: string): string[] {
           :key="item.id"
           v-memo="[item, selectedHistory]"
           class="history-item"
-          :class="{ active: selectedHistory === item.id }" :aria-selected="selectedHistory === item.id"
+          :class="{ active: selectedHistory === item.id }"
+          role="button" tabindex="0" :aria-pressed="selectedHistory === item.id"
           @click="loadFromHistory(item)"
+          @keydown.enter.prevent="loadFromHistory(item)"
+          @keydown.space.prevent="loadFromHistory(item)"
         >
           <span class="history-topic">{{ item.topic || '(空)' }}</span>
           <span class="history-meta">{{ item.timestamp }}</span>
@@ -839,8 +843,11 @@ function parseWeakPoints(wpStr: string): string[] {
           :key="item.id"
           v-memo="[item, selectedHistory]"
           class="history-item"
-          :class="{ active: selectedHistory === item.id }" :aria-selected="selectedHistory === item.id"
+          :class="{ active: selectedHistory === item.id }"
+          role="button" tabindex="0" :aria-pressed="selectedHistory === item.id"
           @click="openPoolResource(item)"
+          @keydown.enter.prevent="openPoolResource(item)"
+          @keydown.space.prevent="openPoolResource(item)"
         >
           <span class="history-topic">{{ item.title || '(未命名资源)' }}</span>
           <span class="history-meta">{{ item.resource_type }} · {{ item.created_at }}</span>
@@ -920,7 +927,9 @@ function parseWeakPoints(wpStr: string): string[] {
           <span class="rv-mon-time">最后更新 {{ lastEventLabel }}</span>
         </div>
         <StallBanner :loading="loading" :last-event-at="lastEventAt" />
-        <ul v-if="eventLog.length" class="rv-mon-log">
+        <!-- 事件流是逐条追加的：给容器 role=log + aria-live，让读屏用户也能感知
+             「又推进了一步」；polite 避免打断当前朗读（WCAG 4.1.3）。 -->
+        <ul v-if="eventLog.length" class="rv-mon-log" role="log" aria-live="polite" aria-relevant="additions">
           <li v-for="(e, i) in eventLog.slice(0, 8)" :key="i" :class="'ev-' + e.kind">
             <span class="ev-time">{{ e.t }}</span>
             <span class="ev-label">{{ e.label }}</span>

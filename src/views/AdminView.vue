@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { errMessage } from '@/utils/errorMessage'
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStudyStore } from '@/stores/studyStore'
@@ -66,8 +67,8 @@ async function load() {
     if (!s || !u) throw new Error('无权限或请求失败')
     stats.value = s
     users.value = u.users || []
-  } catch (e: any) {
-    error.value = e?.message || '加载管理员数据失败，请确认使用管理员账号登录'
+  } catch (e) {
+    error.value = errMessage(e, '加载管理员数据失败，请确认使用管理员账号登录')
   } finally {
     loading.value = false
   }
@@ -174,7 +175,10 @@ onMounted(load)
             </thead>
             <tbody>
               <template v-for="u in users" :key="u.id">
-                <tr class="user-row" @click="toggleExpand(u.id)">
+                <tr class="user-row" role="button" tabindex="0" :aria-expanded="expandedUser === u.id"
+                    @click="toggleExpand(u.id)"
+                    @keydown.enter.prevent="toggleExpand(u.id)"
+                    @keydown.space.prevent="toggleExpand(u.id)">
                   <td>
                     <div class="u-name">{{ u.display_name || u.username }}</div>
                     <div class="u-uname">@{{ u.username }}</div>

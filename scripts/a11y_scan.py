@@ -42,6 +42,8 @@ import re
 import sys
 from pathlib import Path
 
+from _gate_selftest import report_selftest
+
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "src"
 
@@ -49,6 +51,25 @@ BTN_RE = re.compile(r"<button\b([^>]*)>([\s\S]*?)</button>", re.M)
 A_RE = re.compile(r"<a\b([^>]*)>([\s\S]*?)</a>", re.M)
 
 NAMING_ATTRS = re.compile(r"aria-label|aria-labelledby|title=")
+
+# ── C 类：可点击但非原生交互元素（WCAG 2.1.1 键盘可达）──────────────────
+# 必须**跨行**匹配开标签：这些 @click 常写在多行属性块里，单行正则会整片漏掉
+# （2026-10-29 实测：单行 grep 只找到 2 处，跨行扫描找到 13 处）。
+# 上限 800 字符是为了防止模板里没有闭合的 `<` 导致回溯爆炸。
+CLICKABLE_TAG_RE = re.compile(r"<(div|span|li|td|th|tr)\b([^>]{0,800}?)>", re.S)
+CLICK_ATTR_RE = re.compile(r"@click|v-on:click")
+# 键盘事件：@keydown / @keyup / v-on:keydown（含 .enter/.space 修饰符写法）
+KEYBOARD_ATTR_RE = re.compile(r"@key(?:down|up)|v-on:key(?:down|up)")
+TABINDEX_ATTR_RE = re.compile(r"\btabindex\s*=")
+
+# 显式豁免：非交互目标，或键盘用户另有可达路径。每条都必须写理由，
+# 不允许"因为改不动"而登记——豁免没有理由，等于门禁没做。
+CLICKABLE_ALLOWLIST: dict[str, str] = {
+    "src/views/DesignSystemView.vue": (
+        "遮罩层 .panel-overlay 的点击关闭是鼠标便利；抽屉内部有可聚焦的「关闭」按钮，"
+        "键盘用户可正常关闭。给遮罩加 tabindex 反而是反模式（会多出一个无意义的 Tab 停留点）"
+    ),
+}
 
 
 def has_visible_text(inner: str) -> bool:
@@ -166,22 +187,56 @@ def audit_streaming() -> list[str]:
     return hits
 
 
+def _scan_clickable_text(text: str, rel: str) -> list[str]:
+    """在一段模板文本里找「可点击但键盘不可达」的元素（供审计与自检共用）。"""
+    hits: list[str] = []
+    for m in CLICKABLE_TAG_RE.finditer(text):
+        attrs = m.group(2)
+        if not CLICK_ATTR_RE.search(attrs):
+            continue
+        # `.self` / `.stop` 是「点自己才触发」「阻止冒泡」的容器写法，不是交互目标
+        if re.search(r"@click\.(?:self|stop)\b", attrs):
+            continue
+        has_tab = bool(TABINDEX_ATTR_RE.search(attrs))
+        has_kbd = bool(KEYBOARD_ATTR_RE.search(attrs))
+        if has_tab and has_kbd:
+            continue
+        missing = []
+        if not has_tab:
+            missing.append("tabindex")
+        if not has_kbd:
+            missing.append("键盘事件")
+        line = text[: m.start()].count("\n") + 1
+        cls = re.search(r'class="([^"]{0,40})', attrs)
+        hits.append(
+            f"  [C] {rel}:{line}  <{m.group(1)} class=\"{(cls.group(1) if cls else '')}\"> "
+            f"缺 {'/'.join(missing)}，仅鼠标可达，WCAG 2.1.1"
+        )
+    return hits
+
+
 def audit_custom_clickable() -> list[str]:
-    """C. 自定义可点击元素是否配套键盘事件（WCAG 2.1.1）。"""
+    """C. 可点击的非原生交互元素是否键盘可达（WCAG 2.1.1）。
+
+    判定单位是**元素**，不是文件。旧实现「文件里出现过 CLICKABLE 且没出现过 KEYBOARD
+    就报一条」，两个方向都错：
+      · 漏报——文件里只要任意位置有一个 @keydown，整篇可点击 div 全部放行；
+      · 误报——文件里根本没有可点击元素，只因文案含"对话/流式"就被报。
+    2026-10-29 实测：旧实现报的 8 条全假，真问题 11 处一个没报（因为 @click 写在
+    跨行属性块里，单行正则看不见）。现改为跨行匹配开标签后逐元素判定。
+
+    同时要求 tabindex **与** 键盘事件都在：
+    只有 tabindex → 能聚焦但按 Enter 没反应；只有键盘事件 → 根本聚焦不到。两者缺一即残。
+    """
     hits: list[str] = []
     for f in VUE_FILES:
         text = _read(f)
         if not text:
             continue
-        if not CLICKABLE.search(text):
-            continue
-        if KEYBOARD.search(text):
-            continue
         rel = f.relative_to(ROOT).as_posix()
-        hits.append(
-            f"  [C] {rel}  —— 含自定义可点击元素(role=button/<div @click)但全文件无键盘事件，"
-            f"仅鼠标可达，WCAG 2.1.1"
-        )
+        if rel in CLICKABLE_ALLOWLIST:
+            continue
+        hits.extend(_scan_clickable_text(text, rel))
     return hits
 
 
@@ -209,6 +264,7 @@ def run_audit() -> None:
     b = audit_streaming()
     c = audit_custom_clickable()
     d = audit_reduced_motion()
+    e = audit_focus_visibility()
     print()
     print("=" * 72)
     print("可访问性深度审计（--audit · 咨询级 · 不阻断 CI）")
@@ -225,21 +281,120 @@ def run_audit() -> None:
     print(f"\n[D] reduced-motion 守卫 待人工走查: {len(d)}")
     for x in d:
         print(x)
+    print(f"\n[E] 焦点可见性（outline 未被掐掉） 命中: {len(e)}")
+    for x in e:
+        print(x)
     print(
         "\n说明：以上为静态初筛，可能含误报（如全局守卫或运行时处理），需人工走查确认；"
     )
     print(
-        "      A 类（浮层焦点管理）已于 2026-10-14 提升为硬门禁："
-        "`--gate-class a`，见 verify-structural.yml。"
+        "      A 类（浮层焦点管理）2026-10-14、C 类（键盘可达）2026-10-29、"
+        "E 类（焦点可见性）2026-10-29 已提升为硬门禁："
+        "`--gate-class a` / `c` / `e`，见 verify-structural.yml。"
     )
 
 
 # `--gate-class` 的类 → (标签, 扫描器)。A 类已转硬门禁；B/C/D 仍是 report-only。
+# ── E 类：焦点可见性（WCAG 2.4.7）──────────────────────────────────────
+# 全局兜底在 src/assets/styles/main.css 的 `:focus-visible { outline: 2px solid ... }`。
+# 这条链是"一处覆盖全局"的脆弱结构：任何人在卡片/按钮上加一句 `outline:none`，
+# 键盘用户就再也看不到焦点在哪，而**其他门禁都不会红**（元素照样能聚焦、
+# 照样能按 Enter 触发）。所以把"除白名单外零 outline:none"钉成门禁。
+OUTLINE_KILL_RE = re.compile(r"outline\s*:\s*(?:none|0)\b")
+FOCUS_STYLE_FILES = ("*.vue", "*.css")
+
+# 豁免：`outline:none` 本身不是罪 —— 罪在"掐掉之后没有替代的可见指示"。
+# 表单控件用 box-shadow 替代轮廓是业界标准做法（见 main.css 的
+# `input:focus-visible { outline:none; box-shadow: 0 0 0 3px ... }`）。
+# 每条必须写理由；新增豁免要能说清"替代指示是什么"。
+# 用 (文件, 行内可识别片段) 而非行号做键 —— 行号会随编辑漂移，片段不会。
+OUTLINE_ALLOWLIST: list[tuple[str, str, str]] = [
+    ("src/assets/styles/main.css", "input, textarea, select",
+     "表单控件默认轮廓由 main.css 的 input:focus-visible 用 box-shadow 3px 环替代"),
+    ("src/assets/styles/main.css", "input:focus-visible",
+     "同上，这条就是替代指示本身（outline:none + box-shadow）"),
+    ("src/assets/styles/_components.css", ".rag-select,.answer-input",
+     "select/input 控件，焦点指示由全局 input:focus-visible 的 box-shadow 提供"),
+    ("src/assets/styles/_components.css", ".conv-search-input",
+     "同上，输入框走全局 input:focus-visible 的 box-shadow"),
+    # 以下四处均为 `<input>`（已逐个核对宿主元素），:focus 时用 border-color 变化 +
+    # 全局 input:focus-visible 的 box-shadow 3px 环提供指示，不是"掐掉就完"。
+    ("src/views/SkillDetailView.vue", ".rate-input:focus",
+     "宿主是 <input class=\"rate-input\">，指示由 border-color + 全局 box-shadow 提供"),
+    ("src/views/SkillDetailView.vue", ".chat-input-field:focus",
+     "宿主是 <input class=\"chat-input-field\">，同上"),
+    ("src/views/SkillMarketView.vue", ".search-input:focus",
+     "宿主是 <input class=\"search-input\">，同上"),
+    ("src/views/SkillStudioView.vue", ".form-input:focus",
+     "宿主是 <input class=\"form-input\">（form-select/form-textarea 同类），同上"),
+]
+
+
+def _enclosing_rule(text: str, pos: int) -> str:
+    """取 `pos` 所在的 CSS 规则块内容（最近的 `{` 到其后第一个 `}`）。
+
+    用途：判断 `outline:none` 是否**在同一规则块里**给出了替代的焦点指示
+    （box-shadow / border-color / border）。只看单行会把
+    `.x:focus { outline:none; border-color: var(--focus) }` 这类合法写法误判。
+    """
+    start = text.rfind("{", 0, pos)
+    if start < 0:
+        return ""
+    end = text.find("}", pos)
+    if end < 0:
+        end = len(text)
+    return text[start + 1 : end]
+
+
+# 替代焦点指示的特征：同规则块里出现任一，就不算"掐掉之后什么都不留"
+FOCUS_REPLACEMENT_RE = re.compile(r"box-shadow|border-color|border\s*:|background\s*:")
+
+
+def audit_focus_visibility() -> list[str]:
+    """E. 是否有 `outline:none` 在**无替代指示**的情况下掐掉焦点环（WCAG 2.4.7）。
+
+    判定：命中 `outline:none/0` 后，再看它所在的规则块里有没有
+    `box-shadow` / `border-color` / `border` / `background` 变化 ——
+    有则视为提供了替代焦点指示（业界标准做法），无则报警。
+    """
+    hits: list[str] = []
+    for pattern in FOCUS_STYLE_FILES:
+        for f in sorted(SRC.rglob(pattern)):
+            if "__tests__" in f.parts:
+                continue
+            text = _read(f)
+            if not text:
+                continue
+            rel = f.relative_to(ROOT).as_posix()
+            offset = 0
+            for i, line in enumerate(text.splitlines(), 1):
+                line_start = offset
+                offset += len(line) + 1
+                if line.lstrip().startswith(("//", "*", "/*")):
+                    continue
+                if not OUTLINE_KILL_RE.search(line):
+                    continue
+                if any(
+                    rel == allow_rel and frag in line
+                    for allow_rel, frag, _reason in OUTLINE_ALLOWLIST
+                ):
+                    continue
+                block = _enclosing_rule(text, line_start)
+                if FOCUS_REPLACEMENT_RE.search(block):
+                    continue
+                hits.append(
+                    f"  [E] {rel}:{i}  出现 outline:none/0 且同规则块内无替代焦点指示 —— "
+                    f"键盘用户会失去位置感，WCAG 2.4.7"
+                )
+    return hits
+
+
 GATE_FUNCS: dict[str, tuple[str, object]] = {
     "a": ("浮层/沙箱焦点管理 (WCAG 2.4.3)", audit_overlays),
     "b": ("流式输出 aria-live (WCAG 4.1.3)", audit_streaming),
     "c": ("自定义可点击键盘可达 (WCAG 2.1.1)", audit_custom_clickable),
     "d": ("reduced-motion 守卫 (WCAG 2.3.3)", audit_reduced_motion),
+    "e": ("焦点可见性 / outline 未被掐掉 (WCAG 2.4.7)", audit_focus_visibility),
 }
 
 
@@ -269,9 +424,52 @@ def run_gate(classes: list[str]) -> int:
     return rc
 
 
+# ============================================================================
+# 自检（--selftest）
+# ============================================================================
+# C 类检测器是纯正则，最容易在"优化一下"之后悄悄失效：改成只匹配单行、
+# 或者把 tabindex/键盘事件改成"或"关系，都会让它继续输出 PASS 而实际放行。
+# 自检用内存样本钉死语义，不依赖仓库当前状态。
+_SELFTEST_SAMPLE = """<template>
+  <div>
+    <div class="bad-1" @click="go">x</div>
+    <div
+      class="bad-2"
+      :class="{ on: x }"
+      @click="go"
+    >y</div>
+    <li class="bad-3" tabindex="0" @click="go">z</li>
+    <div class="ok-1" role="button" tabindex="0" @click="go" @keydown.enter="go">a</div>
+    <div class="ok-2" @click.self="close"></div>
+    <div class="ok-3" @click.stop></div>
+  </div>
+</template>
+"""
+# bad-1: 完全无键盘支持；bad-2: 跨行属性块（旧单行正则漏报的形态）；
+# bad-3: 有 tabindex 但没键盘事件（能聚焦、按 Enter 无反应）
+_SELFTEST_EXPECTED_LINES = [3, 4, 9]
+
+
+def selftest() -> int:
+    hits = _scan_clickable_text(_SELFTEST_SAMPLE, "selftest")
+    got = [int(m.group(1)) for h in hits if (m := re.search(r":(\d+)", h))]
+    return report_selftest(
+        title="可访问性门禁 · 自检（C 类键盘可达检测器）",
+        expected=_SELFTEST_EXPECTED_LINES,
+        got=got,
+        ok_msg="3 类残缺形态全部命中；完整写法 / @click.self / @click.stop 正确放行。",
+        fail_msg="自检不符：C 类检测器已失效（可能漏报，也可能误报），不要相信它的 PASS。",
+    )
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="扫描无可读名称的交互元素（可访问性门禁）")
     ap.add_argument("--strict", action="store_true", help="同时检查无文本的 <a> 链接")
+    ap.add_argument(
+        "--selftest",
+        action="store_true",
+        help="只跑检测器自检（验证门禁本身没被改坏），不扫仓库",
+    )
     ap.add_argument(
         "--audit",
         action="store_true",
@@ -289,6 +487,10 @@ def main() -> int:
         ),
     )
     args = ap.parse_args()
+
+    # 自检优先于一切：门禁自己被改坏时，先红再说
+    if args.selftest:
+        return selftest()
 
     gate_classes: list[str] = []
     for item in args.gate_class:

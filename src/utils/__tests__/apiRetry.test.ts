@@ -1,23 +1,20 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { api } from '@/utils/api'
+import { setupApiTestEnv, type ApiTestEnv } from './helpers/apiTestEnv'
 
 // 防回归：request 重试逻辑是前端容错核心。
 // 502/503/504 重试（指数退避）、4xx 不重试（立即抛错）、网络错误重试。
 describe('api request 重试逻辑', () => {
+  let env: ApiTestEnv
   let fetchMock: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
-    fetchMock = vi.fn()
-    ;(globalThis as any).fetch = fetchMock
-    ;(globalThis as any).localStorage = { getItem: () => null }
-    vi.useFakeTimers()
+    env = setupApiTestEnv()
+    fetchMock = env.fetchMock
   })
 
   afterEach(() => {
-    vi.useRealTimers()
-    vi.restoreAllMocks()
-    delete (globalThis as any).fetch
-    delete (globalThis as any).localStorage
+    env.cleanup()
   })
 
   function jsonResponse(status: number, body: unknown) {

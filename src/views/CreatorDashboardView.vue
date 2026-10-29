@@ -146,7 +146,11 @@ async function loadMemoryOverview() {
             v-for="skill in store.mySkills.slice(0, 10)"
             :key="skill.id"
             class="skill-row"
+            role="button" tabindex="0"
+            :aria-label="'打开技能 ' + skill.name"
             @click="router.push(`/skills/${skill.id}`)"
+            @keydown.enter.prevent="router.push(`/skills/${skill.id}`)"
+            @keydown.space.prevent="router.push(`/skills/${skill.id}`)"
           >
             <span class="skill-row-icon">{{ skill.icon }}</span>
             <span class="skill-row-name">{{ skill.name }}</span>

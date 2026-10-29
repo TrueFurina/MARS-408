@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { errMessage } from '@/utils/errorMessage'
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStudyStore } from '@/stores/studyStore'
@@ -76,9 +77,9 @@ async function loadPath() {
       total.value = data2.total
       completed.value = data2.completed
       pct.value = data2.pct
-    } catch (e2: any) {
+    } catch (e2) {
       nodes.value = []
-      error.value = e2?.message || '学习路径加载失败，请稍后重试'
+      error.value = errMessage(e2, '学习路径加载失败，请稍后重试')
     }
   } finally {
     loading.value = false

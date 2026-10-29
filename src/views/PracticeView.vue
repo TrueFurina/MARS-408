@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { errMessage } from '@/utils/errorMessage'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useStudyStore } from '@/stores/studyStore'
@@ -106,8 +107,8 @@ async function generateQuestions() {
     if (questions.value.length === 0) {
       error.value = (result && result.message) || '未找到匹配的题目，请调整筛选条件'
     }
-  } catch (e: any) {
-    const msg = e?.message || '获取题目失败'
+  } catch (e) {
+    const msg = errMessage(e, '获取题目失败')
     error.value = msg.includes('401') || msg.includes('Unauthorized') || msg.includes('登录')
       ? '登录已过期，请重新登录后使用智能出题功能'
       : msg
@@ -151,7 +152,7 @@ async function submitAnswers() {
     }
     const result = await store.submitQuiz(payload)
     feedback.value = result
-  } catch (e: any) {
+  } catch (e) {
     feedback.value = {
       total: questions.value.length,
       correct: 0,
@@ -245,7 +246,7 @@ async function refreshQuestions() { await generateQuestions() }
           <span class="quiz-source">{{ q.source || q.subject || '' }}</span>
         </div>
         <div class="quiz-stem">{{ q.text }}</div>
-        <div v-if="(q.type === 'choice' || q.type === 'single_choice') && q.options" class="quiz-options">
+        <div v-if="(q.type === 'choice' || q.type === 'single_choice') && q.options" class="quiz-options" role="radiogroup" :aria-label="'第' + (idx + 1) + '题选项'">
           <div v-for="(opt, oi) in q.options" :key="oi"
             class="quiz-option"
             :class="{
@@ -255,7 +256,10 @@ async function refreshQuestions() { await generateQuestions() }
             }"
             role="radio"
             :aria-checked="answers[idx]?.selected === oi"
-            @click="selectAnswer(idx, oi as number)">
+            tabindex="0"
+            @click="selectAnswer(idx, oi as number)"
+            @keydown.enter.prevent="selectAnswer(idx, oi as number)"
+            @keydown.space.prevent="selectAnswer(idx, oi as number)">
             <span class="option-letter">{{ 'ABCDEFGH'[oi as number] }}</span>
             <span class="option-text">{{ opt }}</span>
             <span v-if="answers[idx]?.revealed && q.answer === oi" class="option-correct"></span>

@@ -93,7 +93,7 @@ async function loadPlan(date?: string) {
   try {
     const url = date && date !== formatToday() ? `/daily-plan?date=${date}` : '/daily-plan'
     plan.value = await api.get<DailyPlan>(url)
-  } catch (e: any) {
+  } catch (e) {
     error.value = friendlyError(e, '加载计划失败')
   } finally {
     loading.value = false
@@ -119,7 +119,7 @@ async function toggleTask(task: DailyTask) {
     })
     plan.value = updated
     if (!task.completed) toast('success', `已完成: ${task.title}`)
-  } catch (e: any) {
+  } catch (e) {
     toast('error', friendlyError(e, '操作失败'))
   }
 }
@@ -132,7 +132,7 @@ async function updateProgress(task: DailyTask, newProgress: number) {
       progress: newProgress,
     })
     plan.value = updated
-  } catch (e: any) {
+  } catch (e) {
     toast('error', friendlyError(e, '更新进度失败'))
   }
 }
@@ -143,7 +143,7 @@ async function resetPlan() {
   try {
     plan.value = await api.post<DailyPlan>(`/daily-plan/${plan.value.id}/reset`)
     toast('success', '计划已重置')
-  } catch (e: any) {
+  } catch (e) {
     toast('error', friendlyError(e, '重置失败'))
   }
 }

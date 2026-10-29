@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { errMessage } from '@/utils/errorMessage'
 import { ref } from 'vue'
 import { api } from '@/utils/api'
 import { useStudyStore } from '@/stores/studyStore'
@@ -31,8 +32,11 @@ const rpMessages = ref<{ role: string; content: string }[]>([])
 async function xfCall(key: string, fn: () => Promise<void>) {
   xfLoading.value = key
   try { await fn() }
-  catch (e: any) {
-    const detail = e?.response?.data?.detail || e?.message || '调用失败'
+  catch (e) {
+    // 讯飞 SDK/axios 风格错误会把后端 detail 挂在 e.response.data.detail 上。
+    // catch 变量是 unknown，必须显式窄化——原先 e?.response 能写是因为 catch 标了 any。
+    const respDetail = (e as { response?: { data?: { detail?: unknown } } } | null)?.response?.data?.detail
+    const detail = (typeof respDetail === 'string' && respDetail) || errMessage(e, '调用失败')
     xfError.value = `讯飞工坊「${key}」出错：${detail}`
     console.error('讯飞工坊调用失败:', key, e)
     if (_xfErrorTimer) clearTimeout(_xfErrorTimer)

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { errMessage } from '@/utils/errorMessage'
 // ============================================================
 // 证据校验可视化面板（INC-02 · 玻璃态发光）
 // 复用 DESIGN_TOKENS 的 --color-glass / --glow-primary / 学科色 / 状态色，
@@ -95,8 +96,8 @@ async function runDemo(idx: number) {
       course: demo.course,
     })
     demoReport.value = normalizeDemoResult((res as any)?.result || res || {})
-  } catch (e: any) {
-    demoError.value = e?.message || '演示失败，请检查后端服务'
+  } catch (e) {
+    demoError.value = errMessage(e, '演示失败，请检查后端服务')
   } finally {
     demoLoading.value = false
   }
@@ -287,7 +288,10 @@ function agentName(a: string) {
         v-for="c in activeDemo.conflicts"
         :key="c.id"
         class="ev-card"
+        role="button" tabindex="0" :aria-label="'查看冲突详情：' + c.description"
         @click="openDrawer(c)"
+        @keydown.enter.prevent="openDrawer(c)"
+        @keydown.space.prevent="openDrawer(c)"
       >
         <!-- 类型 pill -->
         <span class="ev-pill" :style="{ background: 'color-mix(in srgb, ' + (SEVERITY_COLOR[c.severity] || 'var(--accent-primary)') + ' 16%, transparent)', color: SEVERITY_COLOR[c.severity] || 'var(--accent-primary)' }">
