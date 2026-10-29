@@ -1,11 +1,17 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
 import { api, friendlyError } from '@/utils/api'
+import type { operations } from '@/types/api.generated'
 import { CAREER_DIM_LABEL as DIM_LABEL, CAREER_DIM_ORDER as DIM_ORDER } from '@/data/careerDimensions'
 
 /* ===================== 类型与常量 ===================== */
 type Step = 'select' | 'briefing' | 'battle' | 'report'
-interface Scenario { id: string; type: string; subtype: string; type_label: string; subtype_label: string; title: string; difficulty_default: string }
+// 情景展示字段直接绑后端契约（py-server/api/career_training.py 的 CareerScenarioItem）。
+// 2026-10-29 起该路由有了 response_model，生成类型才真正可用 —— 此前它是裸 dict，
+// 前端只能手写一份"看着对"的接口，后端改名时 tsc 抓不到。
+type ScenarioListResponse =
+  operations['scenarios_api_career_scenarios_get']['responses'][200]['content']['application/json']
+type Scenario = ScenarioListResponse['scenarios'][number]
 interface Turn { role: 'interviewer' | 'student'; text: string; mode?: string; dimension?: string; evidence?: any }
 
 const MODE_LABEL: Record<string, string> = { normal: '常规追问', escalating: '逐步加压', catfish: '鲶鱼反诘' }
@@ -75,7 +81,7 @@ const joinCodeError = computed(() => {
 async function loadScenarios() {
   loadingScenarios.value = true
   try {
-    const res = await api.get<any>('/career/scenarios')
+    const res = await api.get<ScenarioListResponse>('/career/scenarios')
     scenarios.value = res.scenarios || []
   } catch (e) {
     errorMsg.value = friendlyError(e, '场景加载失败')

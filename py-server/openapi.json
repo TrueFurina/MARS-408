@@ -15950,7 +15950,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/CareerScenarioListResponse"
+                }
               }
             }
           },
@@ -19232,6 +19234,66 @@
         ],
         "title": "Body_knowledge_upload_api_knowledge_upload_post"
       },
+      "CareerScenarioItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "subtype": {
+            "type": "string",
+            "title": "Subtype",
+            "default": ""
+          },
+          "type_label": {
+            "type": "string",
+            "title": "Type Label"
+          },
+          "subtype_label": {
+            "type": "string",
+            "title": "Subtype Label",
+            "default": ""
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "difficulty_default": {
+            "type": "string",
+            "title": "Difficulty Default",
+            "default": "medium"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "type_label",
+          "title"
+        ],
+        "title": "CareerScenarioItem",
+        "description": "情景展示字段。\n\n与 `agents/career_nodes.py::_scenario_display` 的白名单**严格对齐**——\n那里刻意只暴露展示字段、不泄露完整脚本（rubric/追问树等）。模型必须同步收窄，\n不能顺手加字段，否则等于把\"不泄露完整脚本\"的设计意图从 API 层撤销。"
+      },
+      "CareerScenarioListResponse": {
+        "properties": {
+          "scenarios": {
+            "items": {
+              "$ref": "#/components/schemas/CareerScenarioItem"
+            },
+            "type": "array",
+            "title": "Scenarios"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scenarios"
+        ],
+        "title": "CareerScenarioListResponse"
+      },
       "ChatSendRequest": {
         "properties": {
           "conv_id": {
@@ -22113,6 +22175,36 @@
             "title": "Quick Mode",
             "description": "快速模式 (跳过检索, 纯LLM)",
             "default": false
+          },
+          "hint_level": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 3.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hint Level",
+            "description": "分级提示层级 (1=方向/2=前置/3=局部, SAGE 支架式引导: 只给提示不给最终答案); 不传=普通答疑"
+          },
+          "attempt_text": {
+            "type": "string",
+            "maxLength": 4000,
+            "title": "Attempt Text",
+            "description": "学生已提交的尝试（先答后问）; 分级提示模式下为空时本轮只引导交出尝试",
+            "default": ""
+          },
+          "recent_questions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "title": "Recent Questions",
+            "description": "最近的学生消息（按时间正序, 最多 10 条）; 分级提示模式下非空时运行支架健康监测"
           }
         },
         "type": "object",
@@ -22145,6 +22237,61 @@
             "title": "Diagram Description",
             "description": "图解说明文本 (如有)",
             "default": ""
+          },
+          "hint_level": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hint Level",
+            "description": "分级提示层级 (仅分级提示模式返回)"
+          },
+          "hint_level_name": {
+            "type": "string",
+            "title": "Hint Level Name",
+            "description": "分级提示级别名 (方向/前置/局部)",
+            "default": ""
+          },
+          "withheld": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Withheld",
+            "description": "是否保留最终答案 (分级提示模式恒为 true)"
+          },
+          "attempt_required": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attempt Required",
+            "description": "本轮是否转入了先答后问引导 (仅分级提示模式返回; true=需先交尝试再取提示)"
+          },
+          "scaffold_health": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scaffold Health",
+            "description": "支架健康监测 (仅分级提示模式且 recent_questions 非空时返回): status/hits/signals/advice"
           }
         },
         "type": "object",

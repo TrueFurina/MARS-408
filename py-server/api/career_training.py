@@ -110,8 +110,34 @@ def _parse_roster(text: str) -> list[dict]:
     return out
 
 
+# ── 响应模型 ──
+# 2026-10-29 起逐步补齐。背景：本文件 30 个路由此前**全部没有 response_model**，
+# 响应是裸 dict ⇒ openapi-typescript 生成不出 schema ⇒ 前端只能写 `api.get<any>`。
+# 全仓实测 254 个路由仅 20 个有 response_model（7.9%），这是前端 any 的根因。
+# 注意：补 response_model 会**收窄**响应形状，模型外的字段会被 FastAPI 过滤掉，
+# 所以每个模型都必须与产出方（service/nodes 里的 dict 构造）逐字段对齐，不能凭印象写。
+class CareerScenarioItem(BaseModel):
+    """情景展示字段。
+
+    与 `agents/career_nodes.py::_scenario_display` 的白名单**严格对齐**——
+    那里刻意只暴露展示字段、不泄露完整脚本（rubric/追问树等）。模型必须同步收窄，
+    不能顺手加字段，否则等于把"不泄露完整脚本"的设计意图从 API 层撤销。
+    """
+    id: str
+    type: str
+    subtype: str = ""
+    type_label: str
+    subtype_label: str = ""
+    title: str
+    difficulty_default: str = "medium"
+
+
+class CareerScenarioListResponse(BaseModel):
+    scenarios: list[CareerScenarioItem]
+
+
 # ── 场景列表 ──
-@router.get("/scenarios")
+@router.get("/scenarios", response_model=CareerScenarioListResponse)
 async def scenarios(user: dict = Depends(get_current_user)):
     return {"scenarios": career_service.list_scenarios()}
 

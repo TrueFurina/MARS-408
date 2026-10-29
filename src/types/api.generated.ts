@@ -5464,6 +5464,44 @@ export interface components {
             /** File */
             file: string;
         };
+        /**
+         * CareerScenarioItem
+         * @description 情景展示字段。
+         *
+         *     与 `agents/career_nodes.py::_scenario_display` 的白名单**严格对齐**——
+         *     那里刻意只暴露展示字段、不泄露完整脚本（rubric/追问树等）。模型必须同步收窄，
+         *     不能顺手加字段，否则等于把"不泄露完整脚本"的设计意图从 API 层撤销。
+         */
+        CareerScenarioItem: {
+            /** Id */
+            id: string;
+            /** Type */
+            type: string;
+            /**
+             * Subtype
+             * @default
+             */
+            subtype: string;
+            /** Type Label */
+            type_label: string;
+            /**
+             * Subtype Label
+             * @default
+             */
+            subtype_label: string;
+            /** Title */
+            title: string;
+            /**
+             * Difficulty Default
+             * @default medium
+             */
+            difficulty_default: string;
+        };
+        /** CareerScenarioListResponse */
+        CareerScenarioListResponse: {
+            /** Scenarios */
+            scenarios: components["schemas"]["CareerScenarioItem"][];
+        };
         /** ChatSendRequest */
         ChatSendRequest: {
             /**
@@ -7083,6 +7121,22 @@ export interface components {
              * @default false
              */
             quick_mode: boolean;
+            /**
+             * Hint Level
+             * @description 分级提示层级 (1=方向/2=前置/3=局部, SAGE 支架式引导: 只给提示不给最终答案); 不传=普通答疑
+             */
+            hint_level?: number | null;
+            /**
+             * Attempt Text
+             * @description 学生已提交的尝试（先答后问）; 分级提示模式下为空时本轮只引导交出尝试
+             * @default
+             */
+            attempt_text: string;
+            /**
+             * Recent Questions
+             * @description 最近的学生消息（按时间正序, 最多 10 条）; 分级提示模式下非空时运行支架健康监测
+             */
+            recent_questions?: string[];
         };
         /**
          * TutorResponse
@@ -7111,6 +7165,34 @@ export interface components {
              * @default
              */
             diagram_description: string;
+            /**
+             * Hint Level
+             * @description 分级提示层级 (仅分级提示模式返回)
+             */
+            hint_level?: number | null;
+            /**
+             * Hint Level Name
+             * @description 分级提示级别名 (方向/前置/局部)
+             * @default
+             */
+            hint_level_name: string;
+            /**
+             * Withheld
+             * @description 是否保留最终答案 (分级提示模式恒为 true)
+             */
+            withheld?: boolean | null;
+            /**
+             * Attempt Required
+             * @description 本轮是否转入了先答后问引导 (仅分级提示模式返回; true=需先交尝试再取提示)
+             */
+            attempt_required?: boolean | null;
+            /**
+             * Scaffold Health
+             * @description 支架健康监测 (仅分级提示模式且 recent_questions 非空时返回): status/hits/signals/advice
+             */
+            scaffold_health?: {
+                [key: string]: unknown;
+            } | null;
         };
         /** UpdateSkillRequest */
         UpdateSkillRequest: {
@@ -14820,7 +14902,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CareerScenarioListResponse"];
                 };
             };
             /** @description Validation Error */
