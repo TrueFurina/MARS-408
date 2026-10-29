@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { errMessage } from '@/utils/errorMessage'
 import { ref, computed, watch, onMounted, onBeforeUnmount, shallowReactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStudyStore } from '@/stores/studyStore'
@@ -267,8 +268,8 @@ onMounted(async () => {
           conv.messages.push({ role: 'assistant', content: msg, id: Date.now().toString(), segments: [], timestamp: new Date() })
         }
       }
-    } catch (e: any) {
-      console.warn('加载技能信息失败:', e?.message)
+    } catch (e) {
+      console.warn('加载技能信息失败:', errMessage(e, String(e)))
     }
   }
 })
@@ -297,8 +298,8 @@ async function sendMessage(text: string) {
           teachingVideoTopic.value = topic
           showTeachingVideo.value = true
         }
-      } catch (e: any) {
-        await store.sendMessageStream(` 视频生成失败: ${e?.message || '未知错误'}`, () => { scrollToBottom() })
+      } catch (e) {
+        await store.sendMessageStream(` 视频生成失败: ${errMessage(e, '未知错误')}`, () => { scrollToBottom() })
       }
       const conv = store.getCurrentConversation()
       if (conv && conv.messages.length > 0 && !route.params.convId) {
@@ -338,7 +339,7 @@ async function sendMessage(text: string) {
         router.replace('/c/' + conv.id)
       }
     }
-  } catch (e: any) {
+  } catch (e) {
     // BugFix：原 catch {} 静默吞掉异常，导致「发不出消息却无任何反馈」。
     // 现在将错误打到控制台并展示给用户，便于定位（后端恢复后此处自然恢复）。
     // friendlyError 把裸状态码/网络错误翻译成可操作提示（如 401 → 重新登录）。

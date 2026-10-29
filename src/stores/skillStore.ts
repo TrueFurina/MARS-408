@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { errMessage } from '@/utils/errorMessage'
 import { ref, shallowRef } from 'vue'
 import { api, friendlyError } from '@/utils/api'
 
@@ -99,7 +100,7 @@ export const useSkillStore = defineStore('skills', () => {
       const res: any = await api.get(`/skills/market?${q}`)
       marketItems.value = res.items || []
       marketTotal.value = res.total || 0
-    } catch (e: any) {
+    } catch (e) {
       error.value = friendlyError(e, '加载市场失败')
     } finally {
       loading.value = false
@@ -116,7 +117,7 @@ export const useSkillStore = defineStore('skills', () => {
       const res: any = await api.get(`/skills/my?${q}`)
       mySkills.value = res.items || []
       mySkillsTotal.value = res.total || 0
-    } catch (e: any) {
+    } catch (e) {
       error.value = friendlyError(e, '加载我的技能失败')
     } finally {
       loading.value = false
@@ -128,8 +129,8 @@ export const useSkillStore = defineStore('skills', () => {
     try {
       const res: any = await api.get('/skills/official')
       officialSkills.value = res.items || []
-    } catch (e: any) {
-      console.warn('获取官方技能失败:', e?.message)
+    } catch (e) {
+      console.warn('获取官方技能失败:', errMessage(e, String(e)))
     }
   }
 
@@ -140,7 +141,7 @@ export const useSkillStore = defineStore('skills', () => {
     try {
       const res: any = await api.get(`/skills/get/${id}`)
       currentSkill.value = res.skill || null
-    } catch (e: any) {
+    } catch (e) {
       error.value = friendlyError(e, '加载技能失败')
     } finally {
       loading.value = false
@@ -165,8 +166,8 @@ export const useSkillStore = defineStore('skills', () => {
     try {
       const res: any = await api.post('/skills/create', data)
       return res.skill || null
-    } catch (e: any) {
-      error.value = e?.message || '创建失败'
+    } catch (e) {
+      error.value = errMessage(e, '创建失败')
       return null
     } finally {
       loading.value = false
@@ -180,8 +181,8 @@ export const useSkillStore = defineStore('skills', () => {
       const res: any = await api.post(`/skills/update/${id}`, data)
       if (res.skill) currentSkill.value = res.skill
       return true
-    } catch (e: any) {
-      error.value = e?.message || '更新失败'
+    } catch (e) {
+      error.value = errMessage(e, '更新失败')
       return false
     }
   }
@@ -191,8 +192,8 @@ export const useSkillStore = defineStore('skills', () => {
     try {
       await api.post(`/skills/delete/${id}`)
       return true
-    } catch (e: any) {
-      error.value = e?.message || '删除失败'
+    } catch (e) {
+      error.value = errMessage(e, '删除失败')
       return false
     }
   }
@@ -202,8 +203,8 @@ export const useSkillStore = defineStore('skills', () => {
     try {
       await api.post(`/skills/publish/${id}`)
       return true
-    } catch (e: any) {
-      error.value = e?.message || '发布失败'
+    } catch (e) {
+      error.value = errMessage(e, '发布失败')
       return false
     }
   }
@@ -212,8 +213,8 @@ export const useSkillStore = defineStore('skills', () => {
     try {
       await api.post(`/skills/archive/${id}`)
       return true
-    } catch (e: any) {
-      error.value = e?.message || '归档失败'
+    } catch (e) {
+      error.value = errMessage(e, '归档失败')
       return false
     }
   }
@@ -223,8 +224,8 @@ export const useSkillStore = defineStore('skills', () => {
     try {
       await api.post(`/skills/rate/${skillId}`, { rating, comment: comment || '' })
       return true
-    } catch (e: any) {
-      error.value = e?.message || '评价失败'
+    } catch (e) {
+      error.value = errMessage(e, '评价失败')
       return false
     }
   }
@@ -233,8 +234,8 @@ export const useSkillStore = defineStore('skills', () => {
     try {
       const res: any = await api.get(`/skills/ratings/${skillId}`)
       ratings.value = res.items || []
-    } catch (e: any) {
-      console.warn('获取评价失败:', e?.message)
+    } catch (e) {
+      console.warn('获取评价失败:', errMessage(e, String(e)))
     }
   }
 
@@ -243,8 +244,8 @@ export const useSkillStore = defineStore('skills', () => {
     try {
       const res: any = await api.get('/skills/templates')
       templates.value = res.items || []
-    } catch (e: any) {
-      console.warn('获取模板失败:', e?.message)
+    } catch (e) {
+      console.warn('获取模板失败:', errMessage(e, String(e)))
     }
   }
 
@@ -254,7 +255,7 @@ export const useSkillStore = defineStore('skills', () => {
     try {
       const res: any = await api.post(`/skills/from-template/${templateId}`, { name, description: description || '', icon: icon || '' })
       return res.skill || null
-    } catch (e: any) {
+    } catch (e) {
       error.value = friendlyError(e, '从模板创建失败')
       return null
     } finally {
@@ -267,8 +268,8 @@ export const useSkillStore = defineStore('skills', () => {
     try {
       const res: any = await api.get('/skills/stats')
       creatorStats.value = res.stats || null
-    } catch (e: any) {
-      console.warn('获取创作者统计失败:', e?.message)
+    } catch (e) {
+      console.warn('获取创作者统计失败:', errMessage(e, String(e)))
     }
   }
 

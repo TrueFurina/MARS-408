@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { errMessage } from '@/utils/errorMessage'
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { icons } from '@/components/icons'
@@ -58,8 +59,8 @@ async function runTest() {
       temperature: temperature.value,
     })
     testOutput.value = res?.response || '(无响应)'
-  } catch (e: any) {
-    const msg = String(e?.message || e || '调用失败')
+  } catch (e) {
+    const msg = String(errMessage(e) || e || '调用失败')
     if (/Failed to fetch|NetworkError|ECONNREFUSED|ERR_/i.test(msg)) {
       testError.value = '后端服务未连接，请先运行后端服务'
     } else if (/LLM .* 通道.*不可用|quota|limit|rate/i.test(msg)) {

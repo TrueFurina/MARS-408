@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { errMessage } from '@/utils/errorMessage'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
@@ -32,8 +33,8 @@ async function submit() {
     // 修复前未判角色，教师登录后直接落到 /diagnostic/start（浏览器走查实测）。
     // 口径实现在 src/router/landing.ts（纯函数，landing.spec.ts 守护防回归）。
     router.push(resolveLandingRoute(user))
-  } catch (e: any) {
-    const base = e?.message || (isRegister.value ? '注册失败' : '登录失败')
+  } catch (e) {
+    const base = errMessage(e) || (isRegister.value ? '注册失败' : '登录失败')
     // 公网环境补一句引导：线上与「本机运行/旧展示版」是**两套独立数据环境**，
     // 在本机注册过的账号在线上并不存在 —— 只说「用户名或密码错误」会让用户反复试错。
     const looksLikeCredential = /密码|账号|用户名|credential/i.test(base)

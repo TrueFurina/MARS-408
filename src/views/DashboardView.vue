@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { errMessage } from '@/utils/errorMessage'
 import { ref, onMounted, computed } from 'vue'
 import { SUBJECT_COLOR_TOKENS } from '@/data/subjectTokens'
 import { useRouter } from 'vue-router'
@@ -219,16 +220,16 @@ onMounted(async () => {
         quiz_history: [], // 答题历史由 AssessmentView 统一拉取；此处仅以画像驱动推荐
       })
       recommendations.value = recRes?.recommendations || []
-    } catch (e: any) {
-      console.warn('获取推荐失败:', e?.message)
+    } catch (e) {
+      console.warn('获取推荐失败:', errMessage(e))
     }
     // L1/L2/L3 三层学情记忆健康度（低侵入联动，失败不影响主流程）
     try {
       const memRes: any = await api.get('/memory/overview')
       if (memRes?.status === 'ok') memoryOverview.value = memRes
     } catch { /* 记忆服务不可用时不阻塞 Dashboard */ }
-  } catch (e: any) {
-    console.warn('Dashboard 数据加载失败:', e?.message)
+  } catch (e) {
+    console.warn('Dashboard 数据加载失败:', errMessage(e))
   } finally {
     loading.value = false
   }

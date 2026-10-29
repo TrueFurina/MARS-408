@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { errMessage } from '@/utils/errorMessage'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useStudyStore } from '@/stores/studyStore'
@@ -250,9 +251,9 @@ async function generateMultimodal() {
       mmAudioFallbackText.value = audioData.fallback_text || null
       mmAudioSource.value = audioData.source || 'none'
     }
-  } catch (e: any) {
-    console.warn('多模态生成失败:', e?.message)
-    mmError.value = '多模态资源生成失败: ' + (e?.message || '请检查后端服务是否运行')
+  } catch (e) {
+    console.warn('多模态生成失败:', errMessage(e))
+    mmError.value = '多模态资源生成失败: ' + (errMessage(e, '请检查后端服务是否运行'))
   } finally {
     mmLoading.value = false
   }
@@ -302,7 +303,7 @@ async function generateTeachingVideo() {
       teachingVideoHtml.value = res.html
       showTeachingVideo.value = true
     }
-  } catch (e: any) {
+  } catch (e) {
     videoError.value = friendlyError(e, '教学视频生成失败')
   } finally {
     teachingVideoLoading.value = false

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { errMessage } from '@/utils/errorMessage'
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '@/utils/api'
@@ -55,8 +56,8 @@ async function extractGraph() {
     })
     graphData.value = res.vis || { nodes: [], edges: [] }
     stats.value = res.stats || null
-  } catch (e: any) {
-    error.value = e?.message || '提取失败'
+  } catch (e) {
+    error.value = errMessage(e, '提取失败')
   } finally {
     loading.value = false
   }
@@ -80,8 +81,8 @@ async function loadGraph(id: string) {
       // 这里简化处理，实际应该从文件加载
       inputText.value = `加载图谱: ${graph.subject} (${graph.entity_count} 实体)`
     }
-  } catch (e: any) {
-    error.value = e?.message || '加载失败'
+  } catch (e) {
+    error.value = errMessage(e, '加载失败')
   } finally {
     loading.value = false
   }

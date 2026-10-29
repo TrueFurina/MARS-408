@@ -32,7 +32,7 @@ onMounted(async () => {
       textbooks.value = list
     }
     ragStats.value = { total_docs: ragRes.total_docs || 0 }
-  } catch (e: any) {
+  } catch (e) {
     console.warn(friendlyError(e, '加载数据失败'))
   } finally {
     loading.value = false
@@ -55,7 +55,7 @@ async function searchRag() {
   try {
     const res = await api.post<{ results: any[] }>('/rag/search', { query: ragSearchQuery.value, top_k: 20 })
     ragSearchResults.value = res.results || []
-  } catch (e: any) {
+  } catch (e) {
     console.warn(friendlyError(e, '搜索知识库失败'))
   } finally {
     ragSearching.value = false
@@ -72,7 +72,7 @@ async function loadTextbook(id: string) {
   try {
     const res: any = await api.get(`/knowledge-base/textbook/${id}`)
     selectedTextbook.value = res.textbook || null
-  } catch (e: any) {
+  } catch (e) {
     console.warn(friendlyError(e, '加载教材失败'))
   }
 }
@@ -87,7 +87,7 @@ async function doSearch() {
     if (searchResults.value.length === 0) {
       searchSeedTextbooks()
     }
-  } catch (e: any) {
+  } catch (e) {
     console.warn(friendlyError(e, '搜索失败'))
     // API 不可用时在种子教材中搜索
     searchSeedTextbooks()
@@ -123,7 +123,7 @@ async function askAboutText(text: string) {
       question: '请解释这段内容的含义',
     })
     askAnswer.value = res.answer || ''
-  } catch (e: any) {
+  } catch (e) {
     askAnswer.value = friendlyError(e, '提问失败，请稍后重试')
   }
   askLoading.value = false

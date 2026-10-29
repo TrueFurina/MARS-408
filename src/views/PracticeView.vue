@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { errMessage } from '@/utils/errorMessage'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useStudyStore } from '@/stores/studyStore'
@@ -106,8 +107,8 @@ async function generateQuestions() {
     if (questions.value.length === 0) {
       error.value = (result && result.message) || '未找到匹配的题目，请调整筛选条件'
     }
-  } catch (e: any) {
-    const msg = e?.message || '获取题目失败'
+  } catch (e) {
+    const msg = errMessage(e, '获取题目失败')
     error.value = msg.includes('401') || msg.includes('Unauthorized') || msg.includes('登录')
       ? '登录已过期，请重新登录后使用智能出题功能'
       : msg
@@ -151,7 +152,7 @@ async function submitAnswers() {
     }
     const result = await store.submitQuiz(payload)
     feedback.value = result
-  } catch (e: any) {
+  } catch (e) {
     feedback.value = {
       total: questions.value.length,
       correct: 0,

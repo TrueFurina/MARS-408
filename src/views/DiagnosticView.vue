@@ -30,7 +30,7 @@ async function fetchQuestions() {
     const res = await api.get<any>('/diagnostic/start')
     questions.value = res.questions || []
     step.value = 'doing'
-  } catch (e: any) {
+  } catch (e) {
     console.error('获取诊断题失败:', e)
   } finally {
     loading.value = false
@@ -47,7 +47,7 @@ async function submit() {
     const res = await api.post<any>('/diagnostic/submit', { answers: answers.value })
     result.value = res
     step.value = 'result'
-  } catch (e: any) {
+  } catch (e) {
     console.error('提交诊断失败:', e)
   } finally {
     loading.value = false

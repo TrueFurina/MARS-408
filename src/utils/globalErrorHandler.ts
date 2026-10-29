@@ -26,6 +26,7 @@
 
 import type { App } from 'vue'
 import { toast } from './toast'
+import { errMessage } from './errorMessage'
 
 /** 同一文案的提示节流窗口（ms） */
 const DEDUPE_WINDOW_MS = 5000
@@ -34,15 +35,18 @@ const DEDUPE_MAX_ENTRIES = 50
 
 const lastShownAt = new Map<string, number>()
 
-/** 把任意抛出物转成一句可展示的文案 */
+/**
+ * 把任意抛出物转成一句可展示的文案。
+ *
+ * 与 `errMessage` 的**刻意差异**：这里保留「裸字符串直接当文案」的行为。
+ * 全局错误提示是最后一道兜底，此时 `throw '后端 502'` 里的字符串往往就是
+ * 唯一线索，显示它比显示「页面出现异常」有用；
+ * 而页面内嵌的错误态（走 `errMessage`）面对的是普通用户，裸调试串不如中文兜底。
+ * 两处语义不同是**有意为之**，各自有用例锁定，改动前先看对应用例。
+ */
 export function describeError(err: unknown, fallback = '页面出现异常，请重试'): string {
-  if (err instanceof Error && err.message) return err.message
   if (typeof err === 'string' && err.trim()) return err.trim()
-  if (err && typeof err === 'object') {
-    const maybeMessage = (err as { message?: unknown }).message
-    if (typeof maybeMessage === 'string' && maybeMessage.trim()) return maybeMessage.trim()
-  }
-  return fallback
+  return errMessage(err, fallback)
 }
 
 /**

@@ -128,7 +128,7 @@ async function loadList() {
     const res: any = await api.get(`/wrong-questions?${params.toString()}`)
     questions.value = res.items || []
     total.value = res.total || 0
-  } catch (e: any) {
+  } catch (e) {
     error.value = friendlyError(e, '加载错题失败')
   } finally {
     loading.value = false
@@ -141,7 +141,7 @@ async function toggleMastered(q: WrongQuestion) {
     q.mastered = !q.mastered
     toast('success', q.mastered ? '已标记为掌握' : '已取消掌握标记')
     loadStats()
-  } catch (e: any) {
+  } catch (e) {
     toast('error', friendlyError(e, '操作失败'))
   }
 }
@@ -153,7 +153,7 @@ async function deleteQ(q: WrongQuestion) {
     toast('success', '已删除')
     loadList()
     loadStats()
-  } catch (e: any) {
+  } catch (e) {
     toast('error', friendlyError(e, '删除失败'))
   }
 }

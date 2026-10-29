@@ -5,6 +5,7 @@ import { icons } from '@/components/icons'
 import Skeleton from '@/components/Skeleton.vue'
 import { useSkillStore } from '@/stores/skillStore'
 import { api } from '@/utils/api'
+import { errMessage, isAbortError } from '@/utils/errorMessage'
 
 const route = useRoute()
 const router = useRouter()
@@ -95,9 +96,10 @@ async function sendChat() {
         } catch { /* ignore parse errors */ }
       }
     }
-  } catch (e: any) {
-    if (e.name !== 'AbortError') {
-      aiMsg.content = `调用失败: ${e.message}`
+  } catch (e) {
+    // 用户主动中断（关弹窗会 abort）不该显示成「调用失败」
+    if (!isAbortError(e)) {
+      aiMsg.content = `调用失败: ${errMessage(e)}`
     }
   } finally {
     chatLoading.value = false

@@ -286,7 +286,7 @@ async function request<T>(
       }
 
       return resp.json() as Promise<T>
-    } catch (e: any) {
+    } catch (e) {
       if (e instanceof ApiError) throw e
       // 超时（RequestTimeoutError）与网络错误同属可重试类。对调用方仍统一抛 ApiError，
       // 保持「api.* 只会抛 ApiError」的既有契约，friendlyError 的映射链路不受影响。

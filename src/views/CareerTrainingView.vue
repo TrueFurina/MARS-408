@@ -342,7 +342,7 @@ async function exportEvidenceOnePager() {
       a.click()
     }
     setTimeout(() => URL.revokeObjectURL(url), 60000)
-  } catch (e: any) {
+  } catch (e) {
     exportError.value = friendlyError(e, '导出证据一页纸失败')
   } finally {
     busyExport.value = false

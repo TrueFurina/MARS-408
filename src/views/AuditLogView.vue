@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { errMessage } from '@/utils/errorMessage'
 // ============================================================
 // 安全审计日志页 — 展示近期内容安全拦截/告警事件
 // 玻璃态风格，admin/teacher 可查
@@ -89,8 +90,8 @@ async function loadLogs() {
     if (filterResult.value) params.set('result', filterResult.value)
     const data = await api.get<{ logs: AuditEvent[]; count: number }>(`/audit/logs?${params.toString()}`)
     logs.value = data.logs || []
-  } catch (e: any) {
-    error.value = e?.message || '加载审计日志失败'
+  } catch (e) {
+    error.value = errMessage(e, '加载审计日志失败')
   } finally {
     loading.value = false
   }

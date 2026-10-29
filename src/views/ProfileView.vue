@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { errMessage } from '@/utils/errorMessage'
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStudyStore } from '@/stores/studyStore'
@@ -36,9 +37,9 @@ async function saveProfile() {
     saveOk.value = true
     saveMsg.value = ' 保存成功'
     setTimeout(() => { showEdit.value = false; saveMsg.value = '' }, 2000)
-  } catch (e: any) {
+  } catch (e) {
     saveOk.value = false
-    saveMsg.value = ' ' + (e?.message || '保存失败')
+    saveMsg.value = ' ' + (errMessage(e, '保存失败'))
   } finally {
     saving.value = false
   }
