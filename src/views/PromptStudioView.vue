@@ -60,7 +60,10 @@ async function runTest() {
     })
     testOutput.value = res?.response || '(无响应)'
   } catch (e) {
-    const msg = String(errMessage(e) || e || '调用失败')
+    // 这里取的是**用于正则匹配**的原始错误文本，不能只靠 errMessage：
+    // SDK 可能直接 `throw 'Failed to fetch'`，而 errMessage 刻意不把裸字符串
+    // 当作文案（见 utils/errorMessage 的契约），那样下面的连通性正则就匹配不上了。
+    const msg = typeof e === 'string' && e.trim() ? e.trim() : errMessage(e, '调用失败')
     if (/Failed to fetch|NetworkError|ECONNREFUSED|ERR_/i.test(msg)) {
       testError.value = '后端服务未连接，请先运行后端服务'
     } else if (/LLM .* 通道.*不可用|quota|limit|rate/i.test(msg)) {

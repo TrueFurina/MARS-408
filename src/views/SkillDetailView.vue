@@ -99,7 +99,7 @@ async function sendChat() {
   } catch (e) {
     // 用户主动中断（关弹窗会 abort）不该显示成「调用失败」
     if (!isAbortError(e)) {
-      aiMsg.content = `调用失败: ${errMessage(e)}`
+      aiMsg.content = `调用失败: ${errMessage(e, '未知错误')}`
     }
   } finally {
     chatLoading.value = false
