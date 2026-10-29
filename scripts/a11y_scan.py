@@ -264,6 +264,7 @@ def run_audit() -> None:
     b = audit_streaming()
     c = audit_custom_clickable()
     d = audit_reduced_motion()
+    e = audit_focus_visibility()
     print()
     print("=" * 72)
     print("可访问性深度审计（--audit · 咨询级 · 不阻断 CI）")
@@ -280,21 +281,120 @@ def run_audit() -> None:
     print(f"\n[D] reduced-motion 守卫 待人工走查: {len(d)}")
     for x in d:
         print(x)
+    print(f"\n[E] 焦点可见性（outline 未被掐掉） 命中: {len(e)}")
+    for x in e:
+        print(x)
     print(
         "\n说明：以上为静态初筛，可能含误报（如全局守卫或运行时处理），需人工走查确认；"
     )
     print(
-        "      A 类（浮层焦点管理）已于 2026-10-14 提升为硬门禁："
-        "`--gate-class a`，见 verify-structural.yml。"
+        "      A 类（浮层焦点管理）2026-10-14、C 类（键盘可达）2026-10-29、"
+        "E 类（焦点可见性）2026-10-29 已提升为硬门禁："
+        "`--gate-class a` / `c` / `e`，见 verify-structural.yml。"
     )
 
 
 # `--gate-class` 的类 → (标签, 扫描器)。A 类已转硬门禁；B/C/D 仍是 report-only。
+# ── E 类：焦点可见性（WCAG 2.4.7）──────────────────────────────────────
+# 全局兜底在 src/assets/styles/main.css 的 `:focus-visible { outline: 2px solid ... }`。
+# 这条链是"一处覆盖全局"的脆弱结构：任何人在卡片/按钮上加一句 `outline:none`，
+# 键盘用户就再也看不到焦点在哪，而**其他门禁都不会红**（元素照样能聚焦、
+# 照样能按 Enter 触发）。所以把"除白名单外零 outline:none"钉成门禁。
+OUTLINE_KILL_RE = re.compile(r"outline\s*:\s*(?:none|0)\b")
+FOCUS_STYLE_FILES = ("*.vue", "*.css")
+
+# 豁免：`outline:none` 本身不是罪 —— 罪在"掐掉之后没有替代的可见指示"。
+# 表单控件用 box-shadow 替代轮廓是业界标准做法（见 main.css 的
+# `input:focus-visible { outline:none; box-shadow: 0 0 0 3px ... }`）。
+# 每条必须写理由；新增豁免要能说清"替代指示是什么"。
+# 用 (文件, 行内可识别片段) 而非行号做键 —— 行号会随编辑漂移，片段不会。
+OUTLINE_ALLOWLIST: list[tuple[str, str, str]] = [
+    ("src/assets/styles/main.css", "input, textarea, select",
+     "表单控件默认轮廓由 main.css 的 input:focus-visible 用 box-shadow 3px 环替代"),
+    ("src/assets/styles/main.css", "input:focus-visible",
+     "同上，这条就是替代指示本身（outline:none + box-shadow）"),
+    ("src/assets/styles/_components.css", ".rag-select,.answer-input",
+     "select/input 控件，焦点指示由全局 input:focus-visible 的 box-shadow 提供"),
+    ("src/assets/styles/_components.css", ".conv-search-input",
+     "同上，输入框走全局 input:focus-visible 的 box-shadow"),
+    # 以下四处均为 `<input>`（已逐个核对宿主元素），:focus 时用 border-color 变化 +
+    # 全局 input:focus-visible 的 box-shadow 3px 环提供指示，不是"掐掉就完"。
+    ("src/views/SkillDetailView.vue", ".rate-input:focus",
+     "宿主是 <input class=\"rate-input\">，指示由 border-color + 全局 box-shadow 提供"),
+    ("src/views/SkillDetailView.vue", ".chat-input-field:focus",
+     "宿主是 <input class=\"chat-input-field\">，同上"),
+    ("src/views/SkillMarketView.vue", ".search-input:focus",
+     "宿主是 <input class=\"search-input\">，同上"),
+    ("src/views/SkillStudioView.vue", ".form-input:focus",
+     "宿主是 <input class=\"form-input\">（form-select/form-textarea 同类），同上"),
+]
+
+
+def _enclosing_rule(text: str, pos: int) -> str:
+    """取 `pos` 所在的 CSS 规则块内容（最近的 `{` 到其后第一个 `}`）。
+
+    用途：判断 `outline:none` 是否**在同一规则块里**给出了替代的焦点指示
+    （box-shadow / border-color / border）。只看单行会把
+    `.x:focus { outline:none; border-color: var(--focus) }` 这类合法写法误判。
+    """
+    start = text.rfind("{", 0, pos)
+    if start < 0:
+        return ""
+    end = text.find("}", pos)
+    if end < 0:
+        end = len(text)
+    return text[start + 1 : end]
+
+
+# 替代焦点指示的特征：同规则块里出现任一，就不算"掐掉之后什么都不留"
+FOCUS_REPLACEMENT_RE = re.compile(r"box-shadow|border-color|border\s*:|background\s*:")
+
+
+def audit_focus_visibility() -> list[str]:
+    """E. 是否有 `outline:none` 在**无替代指示**的情况下掐掉焦点环（WCAG 2.4.7）。
+
+    判定：命中 `outline:none/0` 后，再看它所在的规则块里有没有
+    `box-shadow` / `border-color` / `border` / `background` 变化 ——
+    有则视为提供了替代焦点指示（业界标准做法），无则报警。
+    """
+    hits: list[str] = []
+    for pattern in FOCUS_STYLE_FILES:
+        for f in sorted(SRC.rglob(pattern)):
+            if "__tests__" in f.parts:
+                continue
+            text = _read(f)
+            if not text:
+                continue
+            rel = f.relative_to(ROOT).as_posix()
+            offset = 0
+            for i, line in enumerate(text.splitlines(), 1):
+                line_start = offset
+                offset += len(line) + 1
+                if line.lstrip().startswith(("//", "*", "/*")):
+                    continue
+                if not OUTLINE_KILL_RE.search(line):
+                    continue
+                if any(
+                    rel == allow_rel and frag in line
+                    for allow_rel, frag, _reason in OUTLINE_ALLOWLIST
+                ):
+                    continue
+                block = _enclosing_rule(text, line_start)
+                if FOCUS_REPLACEMENT_RE.search(block):
+                    continue
+                hits.append(
+                    f"  [E] {rel}:{i}  出现 outline:none/0 且同规则块内无替代焦点指示 —— "
+                    f"键盘用户会失去位置感，WCAG 2.4.7"
+                )
+    return hits
+
+
 GATE_FUNCS: dict[str, tuple[str, object]] = {
     "a": ("浮层/沙箱焦点管理 (WCAG 2.4.3)", audit_overlays),
     "b": ("流式输出 aria-live (WCAG 4.1.3)", audit_streaming),
     "c": ("自定义可点击键盘可达 (WCAG 2.1.1)", audit_custom_clickable),
     "d": ("reduced-motion 守卫 (WCAG 2.3.3)", audit_reduced_motion),
+    "e": ("焦点可见性 / outline 未被掐掉 (WCAG 2.4.7)", audit_focus_visibility),
 }
 
 

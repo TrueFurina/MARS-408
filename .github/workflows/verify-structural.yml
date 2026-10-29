@@ -132,6 +132,12 @@ jobs:
           # 并配 --selftest 钉死语义：门禁被改坏时必须自己变红。
           run_one "a11y --selftest (键盘可达检测器自检)" "python scripts/a11y_scan.py --selftest" "."
           run_one "a11y gate-class c (键盘可达)" "python scripts/a11y_scan.py --gate-class c" "."
+          # 焦点可见性硬门禁（2026-10-29 新增）：全局 :focus-visible 是"一处覆盖全局"的
+          # 脆弱结构 —— 任何人在卡片/按钮上加一句 outline:none，键盘用户就看不到焦点在哪，
+          # 而**其他门禁全都不红**（元素照样能聚焦、照样能按 Enter）。
+          # 判定不是"零 outline:none"（那会把表单控件用 box-shadow 替代轮廓的标准做法误杀），
+          # 而是"同规则块内没有替代指示"才算违规。
+          run_one "a11y gate-class e (焦点可见性)" "python scripts/a11y_scan.py --gate-class e" "."
           # `any` 棘轮门禁（2026-10-29 新增）：catch (x: any) 零容忍 + any 总量只降不升。
           # 为什么是棘轮而不是清零：剩下约 300 处多是 api.get<any>() 的响应体未定型，
           # 强制清零只会逼出 `as unknown as T` 这种更糟的绕过写法（连搜索都搜不到）。
