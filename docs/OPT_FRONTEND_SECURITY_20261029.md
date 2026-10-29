@@ -230,6 +230,48 @@ D 的守卫是全局的、逐文件判定天然误报，两者都不适合直接
 
 ---
 
+## 7.5 根因：后端响应契约缺口（跨域，需主 agent 决策）
+
+前端 `any` 收敛做了两批之后，遇到一个反复出现的墙：**接不上 `api.generated.ts`**。
+查下去发现这不是个别接口的问题，是系统性的：
+
+| 指标 | 实测 |
+|---|---|
+| `py-server/api/` 路由总数 | **254** |
+| 带 `response_model` 的 | **20（7.9%）** |
+| 只有请求模型、响应是裸 dict 的 | **234** |
+
+无响应模型最集中的文件：`skills.py`（30/30）、`career_training.py`（30/30）、
+`memory.py`（14/14）、`engine.py`（13/13）、`xfyun.py`（12/12）、
+`user.py`（11/11）、`teacher.py`（11/11）、`wrong_questions.py`（9/9）。
+
+**这直接解释了前端为什么有 299 处 `any`**：`openapi-typescript` 只能为声明了
+`response_model` 的路由生成 schema，剩下 234 个接口在 `api.generated.ts` 里
+根本没有类型可绑。前端不是"偷懒写 any"，是**没有类型可接**。
+
+两个具体例子（本轮实际遇到）：
+- `/knowledge-base/textbook/{id}` 把导入时的 JSON **原样返回**，字段由 PDF 解析器决定；
+- `/knowledge-graph/*` 的节点是 LLM 抽取的动态实体，`vis.nodes` 的字段不固定。
+
+### 为什么我不改后端
+
+按分工后端属主 agent 域（`AGENTS.md` 协作纪律），本轮**未擅自添加 `response_model`**。
+但这件事的性价比值得主 agent 评估：
+
+- 每给一个路由补 `response_model`，前端对应那批 `any` 就**自动**有了绑定来源，
+  且能同时获得：OpenAPI 快照校验（`verify_openapi_snapshot.py` 已就位）、
+  契约漂移门禁（`test_api_contract_audit.py` 已就位）、前端 tsc 保护。
+- 优先级建议按前端 `any` 密度排：`career_training.py`（对应前端 18 处）、
+  `skills.py`（对应 `skillStore` 10 处）、`memory.py`。
+- 注意：补 `response_model` 会**收窄**响应形状，若现有实现返回了模型外的字段，
+  上线后会被 FastAPI 过滤掉 —— 这不是纯类型改动，需要逐个核对，不能一把梭。
+
+> 换句话说：前端这 299 处 `any` 里，**相当一部分不该在前端解决**。
+> 我在前端做的两批（`catch` 67 处、`KnowledgeBaseView` 9 处）是能自己收口的；
+> 剩下的主要卡在这道跨域契约上。
+
+---
+
 ## 8. 合并建议
 
 - 目标分支 `career-literacy`，**建议等主 agent 的 WS1–WS4 收工后再合并**，避免两边的 `docs/METRICS_CURRENT.md` 互相覆盖（该文件由脚本生成，冲突后必须重跑 `--update` 而不是手工解冲突）。
