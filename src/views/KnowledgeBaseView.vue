@@ -5,18 +5,74 @@ import { api, friendlyError } from '@/utils/api'
 import PdfReader from '@/components/PdfReader.vue'
 import { SEED_TEXTBOOK_LIST, getSeedTextbook, isSeedTextbook } from '@/data/seedTextbooks'
 
+/**
+ * 教材与检索相关类型。
+ *
+ * **来源说明（重要）**：后端 `/knowledge-base/textbooks` 返回的是 `list_textbooks()`
+ * 拼出的 dict，`/knowledge-base/textbook/{id}` 则把导入时的 JSON **原样返回** ——
+ * 两个接口都**没有 `response_model`**，所以 `src/types/api.generated.ts` 里没有
+ * 可绑定的 schema（这也是本文件此前用 `any` 的原因）。
+ * 下面的接口是按「前端实际用到的字段 + 后端 dict 构造处（pdf_reader.list_textbooks）」
+ * 反推的契约，**不是从 OpenAPI 生成的**：后端改字段名时 tsc 抓不到，需同步维护。
+ */
+interface TextbookSummary {
+  id: string
+  name: string
+  subject: string
+  chapter_count: number
+  total_chars: number
+  created_at: string
+}
+
+interface TextbookChapter {
+  id?: string
+  title: string
+  content: string
+}
+
+/** 详情 = 导入时的原始 JSON；种子教材字段更全，故除 id/name 外均按可选处理 */
+interface TextbookDetail {
+  id: string
+  name: string
+  subject?: string
+  chapters?: TextbookChapter[]
+  total_chars?: number
+  chapter_count?: number
+  status?: string
+  created_at?: string
+}
+
+/** 教材内搜索命中（后端无结果时前端在种子教材里拼出来的） */
+interface SearchHit {
+  source: string
+  content: string
+}
+
+/** `/rag/search` 的单条结果（模板只渲染 content / distance / metadata.subject / metadata.topic） */
+interface RagHit {
+  content?: string
+  distance?: number
+  metadata?: { subject?: string; topic?: string }
+}
+
+/** `/memory/overview`（只用到 status 与 weak_points，其余字段不参与渲染） */
+interface MemoryOverview {
+  status?: string
+  weak_points?: string[]
+}
+
 const router = useRouter()
-const textbooks = ref<any[]>(SEED_TEXTBOOK_LIST)
-const selectedTextbook = ref<any>(null)
+const textbooks = ref<TextbookSummary[]>(SEED_TEXTBOOK_LIST)
+const selectedTextbook = ref<TextbookDetail | null>(null)
 const searchQuery = ref('')
-const searchResults = ref<any[]>([])
+const searchResults = ref<SearchHit[]>([])
 const showSearch = ref(false)
 const askAnswer = ref('')
 const askLoading = ref(false)
 const askText = ref('')
 const loading = ref(false)
 const ragStats = ref({ total_docs: 0 })
-const ragSearchResults = ref<any[]>([])
+const ragSearchResults = ref<RagHit[]>([])
 const ragSearchQuery = ref('')
 const ragSearching = ref(false)
 
@@ -24,7 +80,7 @@ onMounted(async () => {
   loading.value = true
   try {
     const [textbookRes, ragRes] = await Promise.all([
-      api.get<{ textbooks: any[] }>('/knowledge-base/textbooks'),
+      api.get<{ textbooks: TextbookSummary[] }>('/knowledge-base/textbooks'),
       api.get<{ total_docs: number }>('/rag/status'),
     ])
     const list = textbookRes.textbooks || []
@@ -41,10 +97,10 @@ onMounted(async () => {
 })
 
 // L1/L2/L3 三层学情记忆（低侵入联动：知识库页展示记忆薄弱点，失败不影响主流程）
-const memoryOverview = ref<any>(null)
+const memoryOverview = ref<MemoryOverview | null>(null)
 async function loadMemoryOverview() {
   try {
-    const memRes: any = await api.get('/memory/overview')
+    const memRes = await api.get<MemoryOverview>('/memory/overview')
     if (memRes?.status === 'ok') memoryOverview.value = memRes
   } catch { /* 记忆服务不可用时不阻塞知识库页 */ }
 }
@@ -53,7 +109,7 @@ async function searchRag() {
   if (!ragSearchQuery.value.trim()) return
   ragSearching.value = true
   try {
-    const res = await api.post<{ results: any[] }>('/rag/search', { query: ragSearchQuery.value, top_k: 20 })
+    const res = await api.post<{ results: RagHit[] }>('/rag/search', { query: ragSearchQuery.value, top_k: 20 })
     ragSearchResults.value = res.results || []
   } catch (e) {
     console.warn(friendlyError(e, '搜索知识库失败'))
@@ -70,7 +126,7 @@ async function loadTextbook(id: string) {
     return
   }
   try {
-    const res: any = await api.get(`/knowledge-base/textbook/${id}`)
+    const res = await api.get<{ textbook?: TextbookDetail }>(`/knowledge-base/textbook/${id}`)
     selectedTextbook.value = res.textbook || null
   } catch (e) {
     console.warn(friendlyError(e, '加载教材失败'))
@@ -81,7 +137,7 @@ async function doSearch() {
   if (!searchQuery.value.trim()) return
   showSearch.value = true
   try {
-    const res: any = await api.post('/knowledge-base/search', { query: searchQuery.value })
+    const res = await api.post<{ results?: SearchHit[] }>('/knowledge-base/search', { query: searchQuery.value })
     searchResults.value = res.results || []
     // 后端无结果时，在种子教材中搜索兜底
     if (searchResults.value.length === 0) {
@@ -97,7 +153,7 @@ async function doSearch() {
 /** 在种子教材中搜索关键词 */
 function searchSeedTextbooks() {
   const q = searchQuery.value.trim().toLowerCase()
-  const results: any[] = []
+  const results: SearchHit[] = []
   for (const tb of SEED_TEXTBOOK_LIST) {
     const seed = getSeedTextbook(tb.id)
     if (!seed) continue
@@ -118,7 +174,7 @@ async function askAboutText(text: string) {
   askAnswer.value = ''
   askLoading.value = true
   try {
-    const res: any = await api.post('/knowledge-base/ask', {
+    const res = await api.post<{ answer?: string }>('/knowledge-base/ask', {
       selected_text: text,
       question: '请解释这段内容的含义',
     })
