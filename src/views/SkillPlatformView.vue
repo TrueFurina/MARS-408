@@ -212,7 +212,7 @@ const hasStats = computed(
               role="button" tabindex="0" :aria-pressed="selectedSkillId === s.id"
               @click="selectSkill(s.id)"
               @keydown.enter.prevent="selectSkill(s.id)"
-              @keydown.space.prevent="selectSkill(s.id)""
+              @keydown.space.prevent="selectSkill(s.id)"
             >
               <SkillCard :skill="s" />
             </div>
