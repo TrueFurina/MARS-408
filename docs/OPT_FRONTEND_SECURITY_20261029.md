@@ -78,6 +78,7 @@
 - `python scripts/xss_scan.py`：**PASS**（129 文件，`v-html` + `innerHTML`/`outerHTML`/`insertAdjacentHTML`/`document.write` 共 0 注入点）
 - `python scripts/xss_scan.py --selftest`：**PASS**（内存样本 6 类注入点全命中、2 类安全写法放行）
 - `python scripts/any_ratchet.py`：**PASS**（catch any 0 处；any 总量 308 = 基线 308）
+- `python scripts/a11y_scan.py --gate-class e`：**PASS**（焦点可见性 0 命中，36 处 outline:none 均有替代指示）
 
 > 关于这道门禁的两个「看起来有、实际没有」：① 它原先只扫 `v-html`，`.ts` 与 SFC 的
 > `<script>` 里写 `el.innerHTML = ...` 完全绕过；② 它**从未被任何 workflow 或钩子调用**，
@@ -109,6 +110,7 @@ pre-push 五道门禁（推送前实跑，首次**未通过**，逐条修好后�
 | [B] 流式输出 aria-live | 8 | **3** | 已修（`afdc87f`）：`ChatView`（流式在 store 里，启发式没识别到，是人工追链路发现的）、`SkillDetailView`、`ResourceView`。其余 5 个（`ChatInput`/`DashboardView`/`EngineView`/`DesignUpgradeView`/`ShowcaseView`）**不渲染任何流式消息**，是文件里出现「对话/流式」字样触发的误判 |
 | [C] 自定义可点击键盘可达 | 8 | **8 条报告全是误报，但另有 11 处真缺口** | 报告的 8 个文件里 `role="button"` 出现次数**均为 0**，命中的是遮罩层 `@click.self` 与容器 `@click.stop`（非交互元素）。**改判**：用跨行标签扫描（`<div`→`>` 最多 600 字符）另查出 **13 处**真正缺键盘支持的可点击 div，人工核对后 **11 处为真**、已修（`07efc53`）；剩 2 处非交互元素（`@click.stop` 容器、遮罩层——抽屉内有可聚焦的关闭按钮）。**并且**：检测器已重写为逐元素跨行判定并升为硬门禁（`05b933f`，`--gate-class c` + `--selftest`），新门禁当场又抓出第 12 处（`AdminView` 的可点击 `<tr>`） |
 | [D] reduced-motion 守卫 | 19 | **0** | 全局守卫已存在：`_components.css` 的 `@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;...}}`，经 `main.css` 的 `@import './_components.css'` 加载，**覆盖全部 19 个文件** |
+| [E] 焦点可见性（outline 未被掐掉） | 36 | **0** | 36 处 `outline:none` **全部有替代指示**（同规则块内有 `box-shadow`/`border-color`，宿主已逐个核对为 `<input>`）。该判定已升为硬门禁 `--gate-class e`（`1a7374e`） |
 
 > **关键教训**：[C] 这一行我一开始判的是「0 真」，那是**只信了脚本的误报清单**。
 > 真相是脚本的启发式（逐文件、按 `role="button"` 关键词）既漏报又误报 ——
@@ -120,7 +122,13 @@ pre-push 五道门禁（推送前实跑，首次**未通过**，逐条修好后�
 > 但**如果没人做这一步 triage，下一个人会以为有 32 个待修项**，然后花大量时间
 > 在误报上，或者更糟：为了让计数归零而去改本来正确的代码。
 
-**A、C 两类的现状**：A 类自 2026-10-14、C 类自 2026-10-29 起都是硬门禁
+> **第五次同类错误（记在这里提醒自己）**：我曾据
+> `grep "outline://s*none"` 无输出，在文档里写下「全仓 0 处 `outline:none`」——
+> **那是错的**，实际有 36 处。原因是 `\s` 在 BRE 下不生效，而实际文本多为
+> `outline: none`（带空格），两个分支都没匹配上。**「grep 没输出」不等于「不存在」**，
+> 与前面几条教训同源：把「我这个检查方式没发现」当成了「事实」。
+
+**A、C、E 三类的现状**：A 类自 2026-10-14、C 类自 2026-10-29 起都是硬门禁
 （`verify-structural.yml` 里的 `--gate-class a` / `--gate-class c`），且各自配了
 `--selftest` —— 门禁被改坏时必须自己变红，否则「永远绿」比「没有」更危险。
 B、D 两类仍是 report-only，理由：B 的误报来自「文案里有流式二字」，
