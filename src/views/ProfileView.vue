@@ -234,14 +234,30 @@ async function loadMemoryOverview() {
   } catch { /* 记忆服务不可用时不阻塞画像页 */ }
 }
 
+/**
+ * 拉取真实答题历史（替代已移除的 store.quizHistory），供「答题准确率」计算。
+ *
+ * 失败必须显式化：此前是 `.catch(() => {})` 静默吞掉，`quizHistory` 保持空数组，
+ * `calculateAccuracy()` 于是算出 0% —— 用户看到「答题准确率 0%」会以为自己
+ * 从来没答过题，而真实原因是接口挂了。这是"错得像个正常结果"的典型。
+ */
+const historyError = ref('')
+async function loadQuizHistory() {
+  historyError.value = ''
+  try {
+    const r = await api.get<{ records?: { subject?: string; correct?: boolean }[] }>('/quiz/history')
+    quizHistory.value = (r?.records ?? []).map(x => ({
+      subject: x.subject || 'unknown',
+      correct: !!x.correct,
+    }))
+  } catch (e) {
+    historyError.value = errMessage(e, '答题历史加载失败')
+  }
+}
+
 onMounted(() => {
   loadMemoryOverview()
-  // 拉取真实答题历史（替代已移除的 store.quizHistory），供准确率计算
-  api.get<any>('/quiz/history').then((r: any) => {
-    if (r?.records?.length) {
-      quizHistory.value = r.records.map((x: any) => ({ subject: x.subject || 'unknown', correct: !!x.correct }))
-    }
-  }).catch(() => {}).finally(() => {
+  loadQuizHistory().finally(() => {
     loading.value = false
     // loading 变 false 后 canvas 才会渲染，必须等 DOM 更新再画雷达图
     nextTick(() => setTimeout(drawRadar, 50))
@@ -421,6 +437,11 @@ onUnmounted(() => {
         </div>
         <div class="card">
           <div class="card-header"><span class="card-title"> 学习评估</span></div>
+          <!-- 历史拉取失败时准确率会按 0% 显示，必须说明原因，否则看起来像「从没答过题」 -->
+          <p v-if="historyError" class="history-error" role="alert">
+            <span>{{ historyError }}（答题准确率暂按 0% 显示，可能偏低）</span>
+            <button class="history-retry" @click="loadQuizHistory">重试</button>
+          </p>
           <div class="assessment-stats">
             <div class="assessment-stat">
               <span class="stat-value" style="color:var(--accent-primary)">{{ calculateAccuracy() }}%</span>
@@ -544,6 +565,12 @@ onUnmounted(() => {
 .save-msg { font-size:var(--text-sm); }
 .save-msg.success { color:var(--accent-success); }
 .save-msg.error { color:var(--accent-danger); }
+/* 答题历史加载失败提示：与卡片头同行，窄屏换行 */
+.history-error { display:flex; align-items:center; gap:var(--space-3); flex-wrap:wrap;
+  margin:0 0 var(--space-3); padding:6px 10px; border-radius:8px; font-size:var(--text-sm);
+  background:var(--color-danger-bg); border:1px solid var(--color-danger-border); color:var(--text-danger); }
+.history-retry { padding:2px 10px; border-radius:6px; cursor:pointer; font-size:var(--text-sm);
+  border:1px solid var(--color-danger-border); background:transparent; color:var(--text-danger); }
 .btn-link { background:none; border:none; color:var(--accent-primary); cursor:pointer; font-size:var(--text-sm); padding:0; text-decoration:underline; }
 .btn-link:hover { color:var(--accent-primary-hover); }
 
