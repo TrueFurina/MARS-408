@@ -23,6 +23,8 @@
 | `src/views/TeacherCareerView.vue` | 上界 + a11y + 失败可见化 | ① 后端 `roster` 是裸 `str` 无 `max_length`，前端 textarea 也无限制 ⇒ 误粘贴整份 Excel 会让请求体过大、失败无提示。按单班真实规模设界 500 行 / 20000 字符；② `onMounted` 四个 load 全被空 catch 吞掉，后端未启动时教师看到「班级列表为空」与「还没建班」无法区分 —— 改为 `reloadAll()` + 错误条 + 重试按钮 |
 | `src/views/LiteracyAssessmentView.vue` | 失败可重试 | 题库加载失败只显示一行错误、只能刷新整页。抽出 `loadQuestions()`，错误卡片补「重新加载题库」 |
 | `src/views/ChatView.vue` / `SkillDetailView.vue` / `ResourceView.vue` | a11y 语义 | 三处**确实在流式**的容器补 `role="log"` + `aria-live="polite"`：逐 token 追加的内容对读屏用户此前完全不可感知（WCAG 4.1.3）。ChatView 的流式实现不在本文件（走 store），静态扫描识别不到，是人工追链路发现的 |
+| `src/utils/errorMessage.ts` | **新增** | 全仓唯一的「从 unknown 取错误文案」出口（`errMessage` / `isAbortError`）。与 `friendlyError` 分工写进模块头：前者只取值不改写，后者负责把技术错误翻译成人话 |
+| 67 处 `catch (e: any)` → `catch (e)` | 类型安全 | `strict: true` 本就把 `catch (e)` 推成 `unknown`，是这些 `: any` 注解把它按了回去。去掉后 tsc 一次性报出 47 处「Property 'message' does not exist」——那 47 处正是过去可能静默失效的地方（抛出物不是 Error 时 `e.message` 得 undefined） |
 | `src/views/ProfileBuilder.vue` | 假超时 + 输入边界 | ① 自建 `AbortController` + 60s 定时器，但 **`signal` 从未传给请求** ⇒ 定时器 abort 的是一个没接线的 controller，属「看起来有超时保护、实际没有」；② `textarea` 无上限，而后端 `ProfileBuildRequest.message` 是 `max_length=5000` ⇒ 超长必然 422，catch 却一律显示「有点卡顿」；③ catch 改为 `friendlyError`，让超时 / 422 / 后端未启动各自可读 |
 | `scripts/xss_scan.py` | 门禁扩面 + 自检 | 只扫 `.vue` 的 `v-html`，而 `.ts` 与 SFC 的 `<script>` 里可直接 `el.innerHTML = ...`，**完全绕过**。现覆盖 `innerHTML`/`outerHTML`/`insertAdjacentHTML`/`document.write`，并加 `--selftest`（内存样本断言 6 类注入点全命中、2 类安全写法放行） |
 | `.github/workflows/verify-structural.yml` | 接入 CI | `xss_scan.py` **此前没有任何 workflow 或钩子调用**，只挂在 `package.json` 的 `gate:xss` 上 ⇒ 从未真正执行过。现接入（与 a11y 门禁同一处），并同时跑自检 |
@@ -43,7 +45,9 @@
 | high 级 | 8 | **0** | 同上 |
 | critical 级 | 5 | 3（**全部为测试工具链**） | 同上 |
 | 生产包内可达漏洞 | 5（含 dompurify critical） | **0** | 逐条可达性分级见审计报告第 2/3 节 |
-| 前端单测 | 31 文件 / 220 用例 | **33 文件 / 244 用例**（+24） | `npx vitest run` |
+| 前端单测 | 31 文件 / 220 用例 | **34 文件 / 256 用例**（+36） | `npx vitest run` |
+| `catch (e: any)` 注解 | 67 处 | **0 处**（全部收敛为 `unknown`） | `grep -rn "catch (e: any)" src/` 计数为 0 |
+| `any` 总量 | 366 处 | **299 处**（本轮 −67） | 同上，`grep ": any|<any>|as any"` |
 | `vue-tsc --build` | 0 error | **0 error** | 命令输出 |
 | `vite build` | 成功 | 成功 | 产物 `dist/` |
 | `vite preview` 资源可达性 | — | **5/5 全 200**（首页 / JS / CSS / ico / webmanifest，无 404） | `curl -o /dev/null -w "%{http_code}"` |
@@ -140,6 +144,8 @@ D 的守卫是全局的、逐文件判定天然误报，两者都不适合直接
 | `afdc87f` | `feat(a11y)` 三处流式输出容器补 role=log + aria-live（WCAG 4.1.3） |
 | `07efc53` | `feat(a11y)` 11 处可点击 div 补键盘可达（WCAG 2.1.1） |
 | `05b933f` | `feat(a11y)` C 类键盘可达改为逐元素精判并升为硬门禁（+自检） |
+| `471571c` | `refactor(frontend)` 67 处 catch (e: any) 收敛为 unknown（WS5-3.3） |
+| `0658f48` | `test(frontend)` 覆盖 errMessage / isAbortError 取值边界（+12 用例） |
 | （本文） | `docs(ws6)` 审计报告 + 优化总结 |
 
 实现与测试**刻意分开提交**：`test_file_guard` 把「测试与实现同 commit」当作逃逸信号，合在一起会被门禁拦下。
@@ -185,7 +191,10 @@ D 的守卫是全局的、逐文件判定天然误报，两者都不适合直接
    因为评委展示用的原型 HTML 含内联脚本 —— 该路径是攻击面更宽的一处；
    ② markdown 渲染器会输出 `<img src="远程URL">`，而 `img-src` 不含远程 `https:`，
    故 LLM 生成内容里的外链图片在生产会被 CSP 拦掉（**功能降级，非安全问题**）。
-5. **未做（评估后放弃）**：`any` 全局收敛。全仓 `src/` 仍有 366 处 `any`/`as any`，其中 68 处是 `catch (e: any)`。一次性替换的爆炸半径远大于收益，且 `vue-tsc` 当前 0 error 说明类型层面没有阻塞性错误。若要做，按视图分批（`KnowledgeBaseView` 12 处、`KnowledgeGraphView` 10 处为首批），**每批单独提交并跑 vue-tsc**——`catch (e: any)` → `unknown` 会立刻暴露出「catch 里直接访问 e.xxx」的地方，那些正是真正需要修的空安全问题。
+5. **部分完成：`any` 收敛**。`catch (e: any)` **已全部清零**（67 → 0，`471571c`），全仓 `any`/`as any` 从 366 降到 299。
+   剩下 299 处主要是 `api.get<any>(...)` 这类**响应体未定型**的位置（`openapi-typescript` 已生成 `src/types/api.generated.ts`，但大量调用点没接）。这批不能机械替换：
+   换类型要逐个核对后端响应结构，改错就是运行时崩，而 `vue-tsc` 现在 0 error 说明没有阻塞性错误。
+   建议按视图分批接 `api.generated.ts`（首批 `KnowledgeBaseView` 12 处、`KnowledgeGraphView` 10 处），**每批单独提交并跑 vue-tsc + vitest**。
 6. **已排查、无问题**：`SkillDetailView` 与 `CloudLabView` 的 `AbortController` 都正确把 `signal` 传进了 `postStream` / `askTutor`，不存在 `ProfileBuilder` 那种假超时。全仓 `new AbortController` 共 5 处，逐处核对过。
 
 ---
