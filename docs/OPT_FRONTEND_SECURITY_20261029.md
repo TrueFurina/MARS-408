@@ -359,5 +359,28 @@ D 的守卫是全局的、逐文件判定天然误报，两者都不适合直接
 本地全量门禁复核（全部 exit 0）：pre-commit 七道 + tree 级四项、`a11y_scan` 四类
 （默认/a/c/e）、`xss_scan`、`any_ratchet`、`audit_api_contract --gate`、`verify_openapi_snapshot`。
 
-**合并前唯一未决**：`main → career-literacy` 尚有积压提交待同步（方向唯一，禁止反向），
-建议先同步再合本 PR，避免 `METRICS_CURRENT.md` 与指标口径二次冲突。
+### 9.2 合并可行性（只读模拟实测，2026-11-01 16:25）
+
+用 `git merge-tree --write-tree`（只读，不改工作树）模拟了两个方向：
+
+| 模拟 | 结果 |
+|---|---|
+| **本 PR → `career-literacy`** | **exit 0，零冲突**（产出干净 tree） |
+| `main → career-literacy`（积压 47 提交） | **exit 1，72 个冲突文件** |
+
+冲突文件里除 `deliverables/` 与 `submission/` 的冻结副本外，实质冲突包括：
+`.github/workflows/ci.yml`、`p0-regression.yml`、`.gitattributes`、`.gitignore`、`README.md`、
+`py-server/api/__init__.py`、`py-server/config.py`、`py-server/main.py`、
+`py-server/engines/gomarl_mixer.py`、`py-server/tests/test_engine_modules.py`、
+`src/assets/styles/main.css`、`src/views/LiteracyAssessmentView.vue`、
+`src/views/TeacherLiteracyReportView.vue`。
+
+> ⚠️ **更正我先前的建议**。我此前写过「先同步 main 再合本 PR，避免指标口径冲突」——
+> 实测后这条是**错的**，原因有二：
+> 1. 本 PR 合进 `career-literacy` **本来就零冲突**，不存在需要先同步的前提；
+> 2. `main → career-literacy` 的整包合并会产生 72 个冲突，且冲突面覆盖 CI 配置与后端核心。
+> 这与「新代码一律 `career_*` 前缀零侵入 408」的设计一致 —— 两分支本就是**有意分叉**，
+> 同步应走按需挑选（cherry-pick / 单文件对齐），而不是整包 merge。
+>
+> **结论：本 PR 可直接合并，不要为了合它去做整包同步。**
+> 若确实需要同步，那是一件独立的、需要分支 owner 决策的事，不应捆绑在本 PR 上。
