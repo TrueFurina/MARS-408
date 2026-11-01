@@ -7459,7 +7459,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformStats"
+                }
               }
             }
           },
@@ -19693,6 +19695,24 @@
         "title": "CreateUserRequest",
         "description": "创建用户请求体。\n\nrole 默认 \"student\"，也可传 \"teacher\"/\"admin\"。\n角色合法性校验在端点内完成（非法返回 400）。"
       },
+      "DailyQuizPoint": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "count"
+        ],
+        "title": "DailyQuizPoint"
+      },
       "DiagnosticResult": {
         "properties": {
           "subject": {
@@ -20872,6 +20892,66 @@
         ],
         "title": "PlanTaskUpdateRequest"
       },
+      "PlatformStats": {
+        "properties": {
+          "user_count": {
+            "type": "integer",
+            "title": "User Count"
+          },
+          "student_count": {
+            "type": "integer",
+            "title": "Student Count"
+          },
+          "admin_count": {
+            "type": "integer",
+            "title": "Admin Count"
+          },
+          "active_users": {
+            "type": "integer",
+            "title": "Active Users"
+          },
+          "total_quiz": {
+            "type": "integer",
+            "title": "Total Quiz"
+          },
+          "correct_quiz": {
+            "type": "integer",
+            "title": "Correct Quiz"
+          },
+          "overall_accuracy": {
+            "type": "number",
+            "title": "Overall Accuracy"
+          },
+          "by_subject": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/SubjectStat"
+            },
+            "type": "object",
+            "title": "By Subject"
+          },
+          "daily_quiz": {
+            "items": {
+              "$ref": "#/components/schemas/DailyQuizPoint"
+            },
+            "type": "array",
+            "title": "Daily Quiz"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_count",
+          "student_count",
+          "admin_count",
+          "active_users",
+          "total_quiz",
+          "correct_quiz",
+          "overall_accuracy",
+          "by_subject",
+          "daily_quiz"
+        ],
+        "title": "PlatformStats",
+        "description": "平台级看板统计。\n\n`by_subject` 的**键是科目名**（动态，随题库变化），故用 `dict[str, SubjectStat]`\n而不是固定字段；`daily_quiz` 固定 7 个点（近 7 日）。"
+      },
       "ProfileBuildRequest": {
         "properties": {
           "message": {
@@ -22021,6 +22101,29 @@
           "roster"
         ],
         "title": "StudentsImportRequest"
+      },
+      "SubjectStat": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "correct": {
+            "type": "integer",
+            "title": "Correct"
+          },
+          "accuracy": {
+            "type": "number",
+            "title": "Accuracy"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "correct",
+          "accuracy"
+        ],
+        "title": "SubjectStat"
       },
       "SyllabusImportRequest": {
         "properties": {

@@ -5753,6 +5753,13 @@ export interface components {
              */
             role: string;
         };
+        /** DailyQuizPoint */
+        DailyQuizPoint: {
+            /** Date */
+            date: string;
+            /** Count */
+            count: number;
+        };
         /**
          * DiagnosticResult
          * @description 单科目诊断结果
@@ -6410,6 +6417,35 @@ export interface components {
             /** Progress */
             progress?: number | null;
         };
+        /**
+         * PlatformStats
+         * @description 平台级看板统计。
+         *
+         *     `by_subject` 的**键是科目名**（动态，随题库变化），故用 `dict[str, SubjectStat]`
+         *     而不是固定字段；`daily_quiz` 固定 7 个点（近 7 日）。
+         */
+        PlatformStats: {
+            /** User Count */
+            user_count: number;
+            /** Student Count */
+            student_count: number;
+            /** Admin Count */
+            admin_count: number;
+            /** Active Users */
+            active_users: number;
+            /** Total Quiz */
+            total_quiz: number;
+            /** Correct Quiz */
+            correct_quiz: number;
+            /** Overall Accuracy */
+            overall_accuracy: number;
+            /** By Subject */
+            by_subject: {
+                [key: string]: components["schemas"]["SubjectStat"];
+            };
+            /** Daily Quiz */
+            daily_quiz: components["schemas"]["DailyQuizPoint"][];
+        };
         /** ProfileBuildRequest */
         ProfileBuildRequest: {
             /**
@@ -7007,6 +7043,15 @@ export interface components {
              * @description 粘贴文本，每行『学号 姓名』或『姓名』，空格分隔
              */
             roster: string;
+        };
+        /** SubjectStat */
+        SubjectStat: {
+            /** Total */
+            total: number;
+            /** Correct */
+            correct: number;
+            /** Accuracy */
+            accuracy: number;
         };
         /** SyllabusImportRequest */
         SyllabusImportRequest: {
@@ -11010,7 +11055,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["PlatformStats"];
                 };
             };
             /** @description Validation Error */

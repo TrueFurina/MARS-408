@@ -4,6 +4,11 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStudyStore } from '@/stores/studyStore'
 import { api } from '@/utils/api'
+import type { operations } from '@/types/api.generated'
+
+// 平台统计响应类型直接绑后端契约（py-server/api/admin.py 的 PlatformStats）。
+type PlatformStats =
+  operations['admin_stats_api_admin_stats_get']['responses'][200]['content']['application/json']
 import { icons } from '@/components/icons'
 import ErrorBoundary from '@/components/ErrorBoundary.vue'
 
@@ -12,7 +17,7 @@ const store = useStudyStore()
 
 const loading = ref(true)
 const error = ref('')
-const stats = ref<any>(null)
+const stats = ref<PlatformStats | null>(null)
 const users = ref<any[]>([])
 const expandedUser = ref<string | null>(null)
 
@@ -61,7 +66,7 @@ async function load() {
   error.value = ''
   try {
     const [s, u] = await Promise.all([
-      api.get<any>('/admin/stats'),
+      api.get<PlatformStats>('/admin/stats'),
       api.get<{ users: any[] }>('/admin/users'),
     ])
     if (!s || !u) throw new Error('无权限或请求失败')
@@ -96,7 +101,10 @@ onMounted(load)
       <button class="btn btn-soft" @click="load">重试</button>
     </div>
 
-    <template v-else>
+    <!-- 用 v-else-if="stats" 而不是 v-else：让模板编译器把 stats 收窄为非空，
+         否则 `ref<PlatformStats | null>` 在模板里每条访问都要 `?.`（10 处）。
+         语义上也更准：没 loading、没 error 但也没数据时，什么都不渲染比抛渲染错误好。 -->
+    <template v-else-if="stats">
       <!-- 平台级统计卡片 -->
       <div class="stat-grid">
         <div class="stat-card glass-card">
