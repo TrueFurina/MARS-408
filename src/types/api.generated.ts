@@ -5465,6 +5465,36 @@ export interface components {
             file: string;
         };
         /**
+         * BreakerStats
+         * @description 单个熔断器快照（shared/circuit_breaker.py::CircuitBreaker.stats）。
+         */
+        BreakerStats: {
+            /** Name */
+            name: string;
+            /** State */
+            state: string;
+            /** Failures */
+            failures: number;
+            /** Failure Threshold */
+            failure_threshold: number;
+            /** Open Timeout */
+            open_timeout: number;
+        };
+        /**
+         * BucketStats
+         * @description 单个令牌桶快照（shared/token_bucket.py::TokenBucket.stats）。
+         */
+        BucketStats: {
+            /** Name */
+            name: string;
+            /** Tokens */
+            tokens: number;
+            /** Capacity */
+            capacity: number;
+            /** Rate Per Sec */
+            rate_per_sec: number;
+        };
+        /**
          * CareerConsentAck
          * @description POST /career/consent 的回执：只有三个字段，**没有 agreed_at**。
          *
@@ -5870,6 +5900,33 @@ export interface components {
              * @default false
              */
             force: boolean;
+        };
+        /** EngineStatusResponse */
+        EngineStatusResponse: {
+            /**
+             * Status
+             * @constant
+             */
+            status: "ok";
+            /** Modules */
+            modules: {
+                [key: string]: boolean;
+            };
+            /** Torch Available */
+            torch_available: boolean;
+            /** Stop Decision Stats */
+            stop_decision_stats: {
+                [key: string]: unknown;
+            };
+            /** Mixer Stats */
+            mixer_stats: {
+                [key: string]: unknown;
+            };
+            /** Teaching Rules Stats */
+            teaching_rules_stats: {
+                [key: string]: unknown;
+            };
+            reliability: components["schemas"]["ReliabilityStats"];
         };
         /**
          * EnhancedTutorRequest
@@ -6845,6 +6902,21 @@ export interface components {
              * @description 质量评分（可选）
              */
             quality_score?: number | null;
+        };
+        /**
+         * ReliabilityStats
+         * @description 可靠性面板数据。这两组前端要逐字段渲染（进度条、徽标），所以必须精确建模 ——
+         *     用 `dict[str, Any]` 会让生成类型退化成 `unknown`，模板里 v-for 推成 never。
+         */
+        ReliabilityStats: {
+            /** Breakers */
+            breakers: {
+                [key: string]: components["schemas"]["BreakerStats"];
+            };
+            /** Token Buckets */
+            token_buckets: {
+                [key: string]: components["schemas"]["BucketStats"];
+            };
         };
         /**
          * RemediationItem
@@ -9597,7 +9669,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["EngineStatusResponse"];
                 };
             };
             /** @description Validation Error */

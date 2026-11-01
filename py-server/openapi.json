@@ -4391,7 +4391,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/EngineStatusResponse"
+                }
               }
             }
           },
@@ -19248,6 +19250,69 @@
         ],
         "title": "Body_knowledge_upload_api_knowledge_upload_post"
       },
+      "BreakerStats": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "failures": {
+            "type": "integer",
+            "title": "Failures"
+          },
+          "failure_threshold": {
+            "type": "integer",
+            "title": "Failure Threshold"
+          },
+          "open_timeout": {
+            "type": "number",
+            "title": "Open Timeout"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "state",
+          "failures",
+          "failure_threshold",
+          "open_timeout"
+        ],
+        "title": "BreakerStats",
+        "description": "单个熔断器快照（shared/circuit_breaker.py::CircuitBreaker.stats）。"
+      },
+      "BucketStats": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "tokens": {
+            "type": "number",
+            "title": "Tokens"
+          },
+          "capacity": {
+            "type": "integer",
+            "title": "Capacity"
+          },
+          "rate_per_sec": {
+            "type": "number",
+            "title": "Rate Per Sec"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "tokens",
+          "capacity",
+          "rate_per_sec"
+        ],
+        "title": "BucketStats",
+        "description": "单个令牌桶快照（shared/token_bucket.py::TokenBucket.stats）。"
+      },
       "CareerConsentAck": {
         "properties": {
           "user_id": {
@@ -19938,6 +20003,55 @@
         },
         "type": "object",
         "title": "EndRequest"
+      },
+      "EngineStatusResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status"
+          },
+          "modules": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "type": "object",
+            "title": "Modules"
+          },
+          "torch_available": {
+            "type": "boolean",
+            "title": "Torch Available"
+          },
+          "stop_decision_stats": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Stop Decision Stats"
+          },
+          "mixer_stats": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Mixer Stats"
+          },
+          "teaching_rules_stats": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Teaching Rules Stats"
+          },
+          "reliability": {
+            "$ref": "#/components/schemas/ReliabilityStats"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "modules",
+          "torch_available",
+          "stop_decision_stats",
+          "mixer_stats",
+          "teaching_rules_stats",
+          "reliability"
+        ],
+        "title": "EngineStatusResponse"
       },
       "EnhancedTutorRequest": {
         "properties": {
@@ -21702,6 +21816,31 @@
         },
         "type": "object",
         "title": "RegisterResourceRequest"
+      },
+      "ReliabilityStats": {
+        "properties": {
+          "breakers": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/BreakerStats"
+            },
+            "type": "object",
+            "title": "Breakers"
+          },
+          "token_buckets": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/BucketStats"
+            },
+            "type": "object",
+            "title": "Token Buckets"
+          }
+        },
+        "type": "object",
+        "required": [
+          "breakers",
+          "token_buckets"
+        ],
+        "title": "ReliabilityStats",
+        "description": "可靠性面板数据。这两组前端要逐字段渲染（进度条、徽标），所以必须精确建模 ——\n用 `dict[str, Any]` 会让生成类型退化成 `unknown`，模板里 v-for 推成 never。"
       },
       "RemediationItem": {
         "properties": {
