@@ -1,8 +1,15 @@
 <script setup lang="ts">
+import { errMessage } from '@/utils/errorMessage'
 import { ref, onMounted, onUnmounted, computed, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStudyStore } from '@/stores/studyStore'
 import { api } from '@/utils/api'
+import type { operations } from '@/types/api.generated'
+
+// 答题历史响应类型直接绑后端契约（py-server/api/quiz.py 的 QuizHistoryResponse）。
+// 2026-10-29 该路由补了 response_model，三处调用点才真正有类型可绑。
+type QuizHistoryResponse =
+  operations['get_quiz_history_api_quiz_history_get']['responses'][200]['content']['application/json']
 import { renderMarkdownSafe } from '@/utils/markdown'
 import { withAlpha } from '@/utils/themeTokens'
 import { icons } from '@/components/icons'
@@ -58,9 +65,9 @@ async function loadAssessment() {
   try {
     // 从后端拉取真实答题历史（修复 quizHistory 为空的问题）
     try {
-      const histData = await api.get<any>('/quiz/history')
+      const histData = await api.get<QuizHistoryResponse>('/quiz/history')
       if (histData?.records?.length) {
-        quizHistory.value = histData.records.map((r: any) => ({
+        quizHistory.value = histData.records.map((r) => ({
           subject: r.subject || 'unknown',
           correct: !!r.correct,
           difficulty: r.difficulty,
@@ -106,8 +113,8 @@ async function loadAssessment() {
     if (quizHistory.value.length > 0) {
       loadPathFeedback()
     }
-  } catch (e: any) {
-    const msg = e?.message || '加载失败'
+  } catch (e) {
+    const msg = errMessage(e, '加载失败')
     // 401 认证错误提示重新登录
     if (msg.includes('401') || msg.includes('Unauthorized') || msg.includes('登录')) {
       error.value = '登录已过期，请重新登录'
@@ -169,8 +176,8 @@ async function loadPathFeedback() {
     if (data?.evaluation) {
       evalReport.value = data.evaluation
     }
-  } catch (e: any) {
-    feedbackError.value = e?.message || '路径调整建议加载失败'
+  } catch (e) {
+    feedbackError.value = errMessage(e, '路径调整建议加载失败')
   } finally {
     feedbackLoading.value = false
   }

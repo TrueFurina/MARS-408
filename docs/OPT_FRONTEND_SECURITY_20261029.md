@@ -1,0 +1,386 @@
+# WS5 前端健壮性 + WS6 安全/依赖治理 · 优化总结（2026-10-29）
+
+- **分支**：`opt/frontend-security-20261029`（从 `94ef6e7` = `career-literacy` tip 切出）
+- **工作目录**：`E:/Program/MARL/mars-opt-fs`（独立 worktree，原因见第 6 节）
+- **口径**：以下所有数字均为**本机 Windows 实测**，非 CI 口径；未跑后端全量 pytest（原因见第 7 节）
+
+---
+
+## 1. 一句话结论
+
+前端在**不跨大版本、零回归**的前提下，把依赖漏洞从 **19 项压到 6 项（high 清零；2026-11-01 复查为 26 项，增量全是新披露的 advisory，见第 3 节口径说明）**，并补上了三处此前完全不存在的健壮性缺口：**全局异步错误兜底、请求超时、输入边界校验**。所有门禁（pre-commit 七道 + tree 级四项）全绿。
+
+---
+
+## 2. 改了什么（逐文件）
+
+| 文件 | 变更 | 解决的真实问题 |
+|---|---|---|
+| `src/utils/globalErrorHandler.ts` | **新增** | `ErrorBoundary` 的 `onErrorCaptured` 只捕同步渲染/setup 错误；事件处理器里未 catch 的 promise、定时器回调抛错**完全绕过它**，表现为「点了没反应」且除控制台外无迹可循。补 `app.config.errorHandler` + `unhandledrejection` + `window.error` 三处钩子，同文案 5s 节流，返回卸载函数 |
+| `src/main.ts` | +2 行 | 在 `mount` 前装配上述钩子 |
+| `src/utils/api.ts` | 分级超时 | `fetch` 在「连上了但服务端不返回」时既不 resolve 也不 reject ⇒ 页面永久 loading、重试逻辑（只在下游抛错时触发）**永不生效**。抽出 `fetchWithTimeout()`：JSON 接口 30s（可重试）/ SSE 建连 30s（拿到响应头即清除，长对话不被掐断）/ 上传 120s / 二进制 120s；各链路按**既有异常契约**落地（该抛的抛 `ApiError`，该返回 `ok:false` / `null` 的不新增异常路径） |
+| `src/views/CareerTrainingView.vue` | 校验 + a11y + 空态重试 | ① 模板写死 `maxlength="12"`，后端契约是 `min_length=4, max_length=16` ⇒ **13–16 位任务码被输入框静默截断**，用户只看到「任务码无效」。改为按后端契约校验 4–16 位 + `[A-Z0-9]`（对齐 `uuid4().hex[:6].upper()` 的实际字符集），加 `aria-invalid` / `role="alert"` / 行内提示；② 情景加载失败时渲染成一片空白网格，改为显式空态 +「重新加载」 |
+| `src/views/TeacherCareerView.vue` | 上界 + a11y + 失败可见化 | ① 后端 `roster` 是裸 `str` 无 `max_length`，前端 textarea 也无限制 ⇒ 误粘贴整份 Excel 会让请求体过大、失败无提示。按单班真实规模设界 500 行 / 20000 字符；② `onMounted` 四个 load 全被空 catch 吞掉，后端未启动时教师看到「班级列表为空」与「还没建班」无法区分 —— 改为 `reloadAll()` + 错误条 + 重试按钮 |
+| `src/views/LiteracyAssessmentView.vue` | 失败可重试 | 题库加载失败只显示一行错误、只能刷新整页。抽出 `loadQuestions()`，错误卡片补「重新加载题库」 |
+| `src/views/ChatView.vue` / `SkillDetailView.vue` / `ResourceView.vue` | a11y 语义 | 三处**确实在流式**的容器补 `role="log"` + `aria-live="polite"`：逐 token 追加的内容对读屏用户此前完全不可感知（WCAG 4.1.3）。ChatView 的流式实现不在本文件（走 store），静态扫描识别不到，是人工追链路发现的 |
+| `src/utils/errorMessage.ts` | **新增** | 全仓唯一的「从 unknown 取错误文案」出口（`errMessage` / `isAbortError`）。与 `friendlyError` 分工写进模块头：前者只取值不改写，后者负责把技术错误翻译成人话 |
+| 67 处 `catch (e: any)` → `catch (e)` | 类型安全 | `strict: true` 本就把 `catch (e)` 推成 `unknown`，是这些 `: any` 注解把它按了回去。去掉后 tsc 一次性报出 47 处「Property 'message' does not exist」——那 47 处正是过去可能静默失效的地方（抛出物不是 Error 时 `e.message` 得 undefined） |
+| `src/views/ProfileBuilder.vue` | 假超时 + 输入边界 | ① 自建 `AbortController` + 60s 定时器，但 **`signal` 从未传给请求** ⇒ 定时器 abort 的是一个没接线的 controller，属「看起来有超时保护、实际没有」；② `textarea` 无上限，而后端 `ProfileBuildRequest.message` 是 `max_length=5000` ⇒ 超长必然 422，catch 却一律显示「有点卡顿」；③ catch 改为 `friendlyError`，让超时 / 422 / 后端未启动各自可读 |
+| `scripts/xss_scan.py` | 门禁扩面 + 自检 | 只扫 `.vue` 的 `v-html`，而 `.ts` 与 SFC 的 `<script>` 里可直接 `el.innerHTML = ...`，**完全绕过**。现覆盖 `innerHTML`/`outerHTML`/`insertAdjacentHTML`/`document.write`，并加 `--selftest`（内存样本断言 6 类注入点全命中、2 类安全写法放行） |
+| `.github/workflows/verify-structural.yml` | 接入 CI | `xss_scan.py` **此前没有任何 workflow 或钩子调用**，只挂在 `package.json` 的 `gate:xss` 上 ⇒ 从未真正执行过。现接入（与 a11y 门禁同一处），并同时跑自检 |
+| `package.json` / `package-lock.json` | 依赖升级 + 瘦身 | 见第 3 节 |
+| `src/utils/__tests__/globalErrorHandler.test.ts` | **新增 11 用例** | 文案归一 / 节流语义 / 装与卸 |
+| `src/utils/__tests__/apiTimeout.test.ts` | **新增 10 用例** | JSON 接口超时重试 + 四条链路各自的超时契约 |
+| `src/utils/__tests__/helpers/apiTestEnv.ts` | **新增** | API 测试公共桩（fetch / localStorage / 假定时器 / hanging fetch），消除重复样板 |
+| `docs/dependency-audit-20261029.md` | **新增** | 依赖审计明细与豁免依据 |
+| `docs/METRICS_CURRENT.md` | 脚本重生成 | 前端 `.ts` 71→75、代码行数按实测同步（`verify_metrics.py --update`，未手改） |
+
+---
+
+## 3. 量化收益
+
+| 指标 | 改前 | 改后 | 证据 |
+|---|---|---|---|
+| npm 漏洞总数（2026-10-29 修复后） | 19 | **6** | `npm audit --json` |
+| npm 漏洞总数（2026-11-01 复查） | — | **26**（3 critical / 0 high / 21 moderate / 2 low） | `npm audit --json`；增量来自新 advisory，非代码回退，见下方口径说明 |
+| high 级 | 8 | **0** | 同上 |
+| critical 级 | 5 | 3（**全部为测试工具链**） | 同上 |
+| 生产包内可达漏洞 | 5（含 dompurify critical） | **0** | 逐条可达性分级见审计报告第 2/3 节 |
+| 前端单测 | 31 文件 / 220 用例 | **34 文件 / 256 用例**（+36） | `npx vitest run` |
+| `catch (e: any)` 注解 | 67 处 | **0 处**（全部收敛为 `unknown`） | `grep -rn "catch (e: any)" src/` 计数为 0 |
+| `any` 总量（出现次数） | 366 处 | **280 处**（本轮 −86） | `python scripts/any_ratchet.py`（基线 `scripts/any_ratchet.baseline.json`） |
+| `any` 总量（命中行数） | 366 行 | **271 行** | `grep -rn ... \| wc -l` 按行计；与上行的差异见下方口径说明 |
+| `vue-tsc --build` | 0 error | **0 error** | 命令输出 |
+| `vite build` | 成功 | 成功 | 产物 `dist/` |
+| `vite preview` 资源可达性 | — | **5/5 全 200**（首页 / JS / CSS / ico / webmanifest，无 404） | `curl -o /dev/null -w "%{http_code}"` |
+| 依赖包数量 | — | −1（`lucide-vue-next` 确证未使用） | 移除后产物 hash 不变 |
+| a11y `--audit` [B] 流式 aria-live | 8 处待查 | **5 处**（真实 3 项已修，其余 5 项经核对为误报） | `python scripts/a11y_scan.py --audit` |
+| 键盘可达的可点击 div | 13 处 | **0 处**（12 处已补 role/tabindex/Enter/Space，1 处豁免有理由） | `a11y_scan --gate-class c`（**已是硬门禁**，非一次性脚本） |
+
+> 注意：**不要把「19→6」当成"修了 13 个漏洞"对外讲**。其中 12 条是传递依赖随直接依赖一并升级的附带结果，真正的直接依赖安全补丁是 4 个（dompurify / vue / vite / postcss）。
+
+
+> **时效性口径（2026-11-01 补）**：`npm audit` 的结果随**上游 advisory 库**变化，
+> 不随代码变化。10-29 修复后实测 6 项，11-01 复查为 26 项 —— 差异全部来自
+> 此后新披露的 advisory，其中 3 条 critical 仍是同一组被 `vite 7` 阻塞的包
+> （`vitest` / `tinypool` / `happy-dom`，本次新增了 RCE 类通告），
+> 不是代码回退。**引用这个数字必须带日期**，否则会和当时的 `npm audit` 对不上。
+---
+
+## 4. 门禁证据
+
+每一次提交都本地跑过 `bash scripts/pre-commit/pre-commit.sh`：
+
+```
+✅ 密钥扫描通过
+✅ 诚实口径扫描通过
+✅ 结构守卫通过
+✅ 七道门禁全部通过
+[门禁] 未检测到回归（任一分类计数未上升）
+[PASS] 硬门禁：未发现无可读名称的按钮/链接   （a11y）
+[verify_metrics] ✅ 9 项工程规模指标全部与真值一致
+✅ 树级质量机检全部通过                        （含 vue-tsc）
+```
+
+- `python scripts/xss_scan.py`：**PASS**（129 文件，`v-html` + `innerHTML`/`outerHTML`/`insertAdjacentHTML`/`document.write` 共 0 注入点）
+- `python scripts/xss_scan.py --selftest`：**PASS**（内存样本 6 类注入点全命中、2 类安全写法放行）
+- `python scripts/any_ratchet.py`：**PASS**（catch any 0 处；any 总量 308 = 基线 308）
+- `python scripts/a11y_scan.py --gate-class e`：**PASS**（焦点可见性 0 命中，36 处 outline:none 均有替代指示）
+
+> 关于这道门禁的两个「看起来有、实际没有」：① 它原先只扫 `v-html`，`.ts` 与 SFC 的
+> `<script>` 里写 `el.innerHTML = ...` 完全绕过；② 它**从未被任何 workflow 或钩子调用**，
+> 只挂在 `package.json` 的 `gate:xss` 上等人手动跑。两条都已修（`35ecd2e`）。
+> 另外加了 `--selftest`：永远绿的闸门比没有闸门更危险，自检让「门禁被改坏」自己变红。
+- `python scripts/verify_metrics.py`：**✅ 9 项一致**（中途两次因新增文件导致行数漂移，均用 `--update` 重生成，**未手改表格**）
+
+pre-push 五道门禁（推送前实跑，首次**未通过**，逐条修好后才推）：
+
+| 门禁 | 首次结果 | 处置 |
+|---|---|---|
+| [1] 钩子自身漂移 | ✅ 通过 | — |
+| [2] OpenAPI 契约快照 | ❌ 环境错误：`No module named 'fastapi'` | 不是契约漂移。独立 worktree 没有 `py-server/.venv`，改用主仓虚拟环境解释器后复跑：**244 paths / 262 operations 快照一致 ✅** |
+| [3] 广告 schema 可达递归 | ✅ DAG 无环 | — |
+| [4] 克隆新增 | ❌ 新增 1 组（我的新测试与 `apiRetry.test.ts` 的 beforeEach 样板逐字重复） | 抽 `helpers/apiTestEnv.ts` 公共桩，两边复用；复跑 **新增 0 组 ✅**（基线 189 → 当前 188） |
+| [5] 错误文案直出 | ✅ 无新增 | — |
+
+> 记录这两条的意义：**「本地 pre-commit 全绿」不等于「能推上去」**。第 2 条是环境问题（不是代码问题），第 4 条是真重复——如果当时直接往基线加豁免，就会把一处可以消除的重复永久固化。
+- 测试数**未硬编码**在任何文档里；后端测试真值（CI run `39681618692`）本次**未改动、未复述为本地实测**
+
+### 4.1 `a11y_scan --audit` 的人工 triage（下一个人不必重做）
+
+该审计是**文件级关键词启发式**，噪声很大（脚本自己的输出也写了"可能含误报"）。
+逐条核对结果：
+
+| 类别 | 报告数 | 真实问题 | 处置与依据 |
+|---|---|---|---|
+| [A] 浮层焦点管理 | 0 | 0 | 2026-10-14 已提为硬门禁（`--gate-class a`），当前干净 |
+| [B] 流式输出 aria-live | 8 | **3** | 已修（`afdc87f`）：`ChatView`（流式在 store 里，启发式没识别到，是人工追链路发现的）、`SkillDetailView`、`ResourceView`。其余 5 个（`ChatInput`/`DashboardView`/`EngineView`/`DesignUpgradeView`/`ShowcaseView`）**不渲染任何流式消息**，是文件里出现「对话/流式」字样触发的误判 |
+| [C] 自定义可点击键盘可达 | 8 | **8 条报告全是误报，但另有 11 处真缺口** | 报告的 8 个文件里 `role="button"` 出现次数**均为 0**，命中的是遮罩层 `@click.self` 与容器 `@click.stop`（非交互元素）。**改判**：用跨行标签扫描（`<div`→`>` 最多 600 字符）另查出 **13 处**真正缺键盘支持的可点击 div，人工核对后 **11 处为真**、已修（`07efc53`）；剩 2 处非交互元素（`@click.stop` 容器、遮罩层——抽屉内有可聚焦的关闭按钮）。**并且**：检测器已重写为逐元素跨行判定并升为硬门禁（`05b933f`，`--gate-class c` + `--selftest`），新门禁当场又抓出第 12 处（`AdminView` 的可点击 `<tr>`） |
+| [D] reduced-motion 守卫 | 19 | **0** | 全局守卫已存在：`_components.css` 的 `@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;...}}`，经 `main.css` 的 `@import './_components.css'` 加载，**覆盖全部 19 个文件** |
+| [E] 焦点可见性（outline 未被掐掉） | 36 | **0** | 36 处 `outline:none` **全部有替代指示**（同规则块内有 `box-shadow`/`border-color`，宿主已逐个核对为 `<input>`）。该判定已升为硬门禁 `--gate-class e`（`1a7374e`） |
+
+> **关键教训**：[C] 这一行我一开始判的是「0 真」，那是**只信了脚本的误报清单**。
+> 真相是脚本的启发式（逐文件、按 `role="button"` 关键词）既漏报又误报 ——
+> 它报的 8 条全是假的，而真问题（11 处）它一个没报，因为那些 `@click` 写在**跨行属性块**里，
+> 单行 grep 和逐文件匹配都看不见。**「脚本说没问题」不等于「查过了」。**
+
+> 换句话说：19 + 8 + 5 = 32 条报告里只有 3 条是真的。这不是脚本写得差——
+> 静态文本匹配本来就做不到区分「真流式」和「文案里有流式二字」。
+> 但**如果没人做这一步 triage，下一个人会以为有 32 个待修项**，然后花大量时间
+> 在误报上，或者更糟：为了让计数归零而去改本来正确的代码。
+
+> **第五次同类错误（记在这里提醒自己）**：我曾据
+> `grep "outline://s*none"` 无输出，在文档里写下「全仓 0 处 `outline:none`」——
+> **那是错的**，实际有 36 处。原因是 `\s` 在 BRE 下不生效，而实际文本多为
+> `outline: none`（带空格），两个分支都没匹配上。**「grep 没输出」不等于「不存在」**，
+> 与前面几条教训同源：把「我这个检查方式没发现」当成了「事实」。
+
+**A、C、E 三类的现状**：A 类自 2026-10-14、C 类自 2026-10-29 起都是硬门禁
+（`verify-structural.yml` 里的 `--gate-class a` / `--gate-class c`），且各自配了
+`--selftest` —— 门禁被改坏时必须自己变红，否则「永远绿」比「没有」更危险。
+B、D 两类仍是 report-only，理由：B 的误报来自「文案里有流式二字」，
+D 的守卫是全局的、逐文件判定天然误报，两者都不适合直接阻断。
+
+---
+
+## 5. 提交清单
+
+| 提交 | 内容 |
+|---|---|
+| `1ec7402` | `chore(deps)` 安全补丁升级 + 移除未使用依赖（19→6） |
+| `0939759` | `feat(frontend)` 全局异步错误兜底 + 请求超时 + 任务码/花名册输入边界 |
+| `6e39361` | `docs(frontend)` 修正全局错误钩子的资源错误注释准确性 |
+| `9677ffa` | `test(frontend)` 覆盖全局错误兜底与请求超时（+2 文件 15 用例） |
+| `4520491` | `test(frontend)` 抽取 API 测试公共桩，消除新增克隆段 |
+| `137ab92` | `feat(frontend)` 流式/上传/二进制/TTS 四条链路补分级超时 |
+| `5cec3e1` | `test(frontend)` 覆盖四条链路的超时契约（+6 用例） |
+| `f3cd88c` | `feat(frontend)` 三个关键视图补「加载失败 → 可重试」出口 |
+| `35ecd2e` | `fix(gate)` XSS 门禁补 innerHTML 盲区 + 接入 CI + 加自检 |
+| `1c8e148` | `feat(frontend)` 单次请求可覆盖超时 + 修画像构建的「假超时」 |
+| `c9ee295` | `test(frontend)` 覆盖「单次请求可覆盖超时」（+3 用例） |
+| `afdc87f` | `feat(a11y)` 三处流式输出容器补 role=log + aria-live（WCAG 4.1.3） |
+| `07efc53` | `feat(a11y)` 11 处可点击 div 补键盘可达（WCAG 2.1.1） |
+| `05b933f` | `feat(a11y)` C 类键盘可达改为逐元素精判并升为硬门禁（+自检） |
+| `471571c` | `refactor(frontend)` 67 处 catch (e: any) 收敛为 unknown（WS5-3.3） |
+| `0658f48` | `test(frontend)` 覆盖 errMessage / isAbortError 取值边界（+12 用例） |
+| `6a80b31` | `feat(gate)` 新增 any 棘轮门禁（catch any 零容忍 + 总量只降不升） |
+| `c8f9cc6` | `fix(frontend)` 修 SkillPlatformView 模板多余引号（CI ESLint 报错） |
+| `a50becb` | `refactor(frontend)` KnowledgeBaseView 消除 9 处 any（按实际用法反推契约） |
+| （本文） | `docs(ws6)` 审计报告 + 优化总结 |
+
+实现与测试**刻意分开提交**：`test_file_guard` 把「测试与实现同 commit」当作逃逸信号，合在一起会被门禁拦下。
+
+---
+
+## 6. 一个必须说清的过程事实：工作树碰撞
+
+开工时（04:59）主工作树 `HEAD == origin/career-literacy`、仅 2 个未跟踪文件，我据此切了 `opt/frontend-security-20261029` 并在主树里跑了基线。
+
+05:04 再检查时发现：主树出现了 `M py-server/shared/metrics.py`、`M py-server/app/middleware.py`（Prometheus p95/p99 近似分位数 + 中间件埋点），且**当前分支已被切成 `opt/ws1-ws4-20261029`** —— 另一个会话正在同一目录跑 WS1–WS4，并把我的分支切换覆盖掉了。
+
+处置：
+1. **立即停手**，未提交、未推送、未碰对方的两个文件；
+2. 用 `git checkout -- package-lock.json` 撤销我 `npm audit fix` 造成的 lock 污染，把对方的工作树还原成只剩它自己的 2 个文件；
+3. 改用独立 worktree `E:/Program/MARL/mars-opt-fs` + `npm ci` 隔离重做，本轮所有提交都发生在该 worktree。
+
+**遗留影响**：主树 `node_modules` 曾被我升到较新版本，随后 lock 已回滚 ⇒ 主树的 `node_modules` 与 `package-lock.json` 暂时不一致。对方会话若要做依赖相关校验，需先 `npm ci` 复原。这是我的操作副作用，如实记录。
+
+### 6.1 我的验证循环缺了 lint，导致一个缺陷在分支上躺了 6 个提交
+
+`SkillPlatformView.vue` 的 `@keydown.space.prevent="selectSkill(s.id)""` 多了一个尾引号
+（第 4 轮做键盘可达性时批量替换脚本的 `\"` 转义多写了一个），是 `c8f9cc6` 才修的。
+
+为什么一直没发现：我每轮的验证循环是 **vue-tsc + vitest + vite build + python 门禁**，
+**从来没跑过 `npm run lint`**。而这个缺陷恰好落在三者的盲区里：
+- `vue-tsc` 不校验模板属性名合法性（Vue 编译器容忍多余引号）；
+- `vitest` 没有渲染该视图的用例；
+- `vite build` 也能过（产物里该属性被静默丢弃）。
+
+只有 ESLint 的 `vue/valid-attribute-name` 能抓到，而 ESLint 只在 CI 里跑。
+于是 CI 红了 6 个提交，我一直以为分支是绿的 —— **直到主动去查 `gh run list` 才发现**。
+
+**修正**：提交前必须自己补 `npx eslint . --quiet`。本项目 pre-push 的五道门
+（密钥/诚实口径/品牌/克隆/OpenAPI）里**没有 lint**，lint 只在 CI 的
+`Frontend lint + test + type-check + build` 步骤里跑 —— 这条差异不写下来，下一个人会踩同一脚。
+
+> 这条和 4.1 节那句「『脚本说没问题』不等于『查过了』」是同一类错误：
+> 我把"我跑过的那几项绿了"当成了"整体绿了"。
+
+---
+
+## 7. 遗留项（按优先级）
+
+1. **【需主 agent 决策】后端 3 个未声明下限的包**：`filelock`（9 条，修复需 4.x 大版本）、`certifi`（2 条，补下限即可）、`setuptools`（1 条，构建工具可不动）。详见 `docs/dependency-audit-20261029.md` 第 5 节。**未擅自修改**——按分工后端属主 agent 域。
+2. **【需主 agent 决策】前端 3 条 critical 的解除窗口**：`vitest` / `tinypool` / `@vitest/mocker` / `happy-dom` 只能随 `vite 7` 一次性升。已实测 `happy-dom@21` 在 `vitest 3.2.7` 下直接 OOM 崩溃，不是"没试"而是"试过不通"。
+3. **~~未做~~ 已补：四条链路的分级超时**（`137ab92` + `5cec3e1`）。阈值按语义分级而非硬套 30s：JSON 30s / SSE **建连** 30s（拿到响应头即清除计时器，长对话不会被掐断）/ 上传 120s / 二进制 120s。各链路按**既有异常契约**落地：`postStream`、`upload` 抛 `ApiError(status 0)`；`getBlob`、`postBlob` 保持「不抛异常、返回 `ok:false`」；`ttsSynthesize` 保持「返回 `null` 让调用方降级浏览器语音」。6 条用例逐条锁住这四种契约。
+4. **~~未做~~ 已核查：CSP / 安全响应头（结论：已配置，且链路完整）**。
+   **更正**：上一版本文档在这里写的是「未拿到网关配置读取入口，故没有结论」——那是没查到底就下结论。实际核查结果：
+   - `py-server/app/middleware.py` 的 `security_headers_middleware` 已下发全套头：
+     `Content-Security-Policy`（生产/开发两套）、`X-Frame-Options: SAMEORIGIN`、
+     `X-Content-Type-Options: nosniff`、`Referrer-Policy: no-referrer`、
+     `Permissions-Policy`（禁摄像头/麦克风/地理/支付等）、`COOP`+`COEP`（WASM 编译实验室需要跨源隔离）、
+     生产才发的 `Strict-Transport-Security`（开发不发，避免本地 http 被浏览器拒掉）
+   - 生产 CSP 为 `script-src 'self'`（**无 `unsafe-inline`**），`style-src` 保留 `unsafe-inline`
+     （Vue scoped style 必需），`connect-src 'self' ws: wss:`，`frame-ancestors 'self'`
+   - `deploy/vps/nginx.conf` **只反代、不托管静态**（`location /` 全部转发给后端），
+     所以 SPA 的 `index.html` 也由后端返回、同样带上 CSP —— **不存在「静态资源没有安全头」的缺口**
+   - 前端没有任何直连外部域名的 fetch（全部走同源 `/api`），与 `connect-src 'self'` 自洽；
+     图片走 `image_base64` → `data:` 或 `blob:`，都在 `img-src` 白名单内
+   - 已有机器检查：`py-server/scripts/verify_app_wiring.py` 断言这些头存在（含「开发环境不发 HSTS」）
+   **两处已知的、有意为之的放宽**（不是缺陷，但必须写明，否则会被当成"已全绿"）：
+   ① `/showcase` 路径在生产环境降级用 `CSP_DEV`（放行 `script-src 'unsafe-inline'`），
+   因为评委展示用的原型 HTML 含内联脚本 —— 该路径是攻击面更宽的一处；
+   ② markdown 渲染器会输出 `<img src="远程URL">`，而 `img-src` 不含远程 `https:`，
+   故 LLM 生成内容里的外链图片在生产会被 CSP 拦掉（**功能降级，非安全问题**）。
+5. **部分完成：`any` 收敛**。`catch (e: any)` **已全部清零**（67 → 0，`471571c`），并由棘轮门禁守着（`6a80b31`，零容忍）。
+   全仓 `any`/`as any` 从 366 降到 280（按出现次数；按命中行数算是 271，差 9 是因为有些行出现两次，如 `api.get<any>` 后又 `as any`）。
+   `KnowledgeBaseView` 的 9 处已全部消除（`a50becb`）——那批**接不上生成类型**：后端这两个接口都没有 `response_model`，
+   只能按实际用法反推契约，并把「不是从 OpenAPI 生成的」写进注释。
+   剩下这批主要是 `api.get<any>(...)` 这类**响应体未定型**的位置（`openapi-typescript` 已生成 `src/types/api.generated.ts`，但大量调用点没接）。这批不能机械替换：
+   换类型要逐个核对后端响应结构，改错就是运行时崩，而 `vue-tsc` 现在 0 error 说明没有阻塞性错误。
+   **门禁口径是棘轮**：只降不升，`--update` 拒绝抬高基线。所以后续任何新增 `any` 都会被 CI 拦下，
+   要么先降别处、要么在提交信息里写明理由并手工改基线 —— 两条路都强制留痕。
+   建议按视图分批接 `api.generated.ts`（首批 `KnowledgeBaseView` 9 处、`KnowledgeGraphView` 10 处），**每批单独提交并跑 vue-tsc + vitest**。
+6. **已排查、无问题**：`SkillDetailView` 与 `CloudLabView` 的 `AbortController` 都正确把 `signal` 传进了 `postStream` / `askTutor`，不存在 `ProfileBuilder` 那种假超时。全仓 `new AbortController` 共 5 处，逐处核对过。
+
+---
+
+## 8. 根因：后端响应契约缺口（已授权补 10 条，剩余需先改生产方）
+
+前端 `any` 收敛做了两批之后，遇到一个反复出现的墙：**接不上 `api.generated.ts`**。
+查下去发现这不是个别接口的问题，是系统性的：
+
+| 指标 | 实测 |
+|---|---|
+| `py-server/api/` 路由总数 | **254** |
+| 带 `response_model` 的 | **20（7.9%）** |
+| 只有请求模型、响应是裸 dict 的 | **234** |
+
+无响应模型最集中的文件：`skills.py`（30/30）、`career_training.py`（30/30）、
+`memory.py`（14/14）、`engine.py`（13/13）、`xfyun.py`（12/12）、
+`user.py`（11/11）、`teacher.py`（11/11）、`wrong_questions.py`（9/9）。
+
+**这直接解释了前端为什么有 280 处 `any`**：`openapi-typescript` 只能为声明了
+`response_model` 的路由生成 schema，剩下 234 个接口在 `api.generated.ts` 里
+根本没有类型可绑。前端不是"偷懒写 any"，是**没有类型可接**。
+
+两个具体例子（本轮实际遇到）：
+- `/knowledge-base/textbook/{id}` 把导入时的 JSON **原样返回**，字段由 PDF 解析器决定；
+- `/knowledge-graph/*` 的节点是 LLM 抽取的动态实体，`vis.nodes` 的字段不固定。
+
+### 已开始补（用户授权跨域后）
+
+授权后补了 10 条契约，响应模型覆盖率 **7.9% → 11.5%**（20/254 → 30/262 操作）：
+
+| 路由 | 前端使用方 | 备注 |
+|---|---|---|
+| `GET /career/scenarios` | CareerTrainingView | 静态白名单（`_scenario_display`） |
+| `GET /career/consent` | CareerTrainingView | 两态：`null`=从未表态 / `agreed:false`=看过但不同意 |
+| `GET /quiz/history` | AssessmentView / QuizHistoryView / ProfileView | 三处共用，收益最大 |
+| `GET /admin/stats` | AdminView | `by_subject` 键动态 → `dict[str, SubjectStat]` |
+| `GET /memory/overview` | KnowledgeBaseView / ProfileView / EngineView | 5 个真实用户验证过 |
+| `POST /career/consent` | CareerTrainingView | **不复用 GET 的模型**：POST 只回 3 字段（无 `agreed_at`），复用会凭空多一个恒空字段 |
+| `POST /career/task/join` | CareerTrainingView | 含 `roster_bound`/`bound_match`，少一个字段等于静默掉「可能绑错人」的警告 |
+| `POST /career/session/{id}/feedback` | CareerTrainingView | `updated` 区分「新建」与「覆盖旧评价」 |
+| `GET /engine/status` | EngineView | `status` 用 `Literal["ok"]` 才能与前端错误分支组成可判别联合；`reliability` 必须精确建模（`dict[str, Any]` 会让生成类型退化成 `unknown`，模板 v-for 推成 `never`） |
+
+**补契约的标准动作（每一步都不能省）**：
+
+1. 读**产出方**（service/store 里构造 dict 的那几行），不读接口签名；
+2. 写模型，把"可能为 None 的字段"逐个确认（查表定义的 `NOT NULL`、查 `.get()` 有没有默认值）；
+3. **用真实数据跑一遍模型构造**，比对 `原始字段 / 模型字段 / 被丢弃的字段`；
+4. 重生成 `openapi.json` → `npm run types:generate` → 前端改绑；
+5. 跑该域的后端测试。
+
+第 3 步是核心：**补 `response_model` 是"收窄"，模型外字段会被 FastAPI 静默过滤**。
+漏一个字段时 pytest 不会红、tsc 也不会红（前端拿到的类型就是模型本身），
+只有逐字段比对能发现。
+
+**工具**：`python scripts/audit_api_contract.py --contract-gaps` 输出按「前端是否已用
+`api.*<any>()` 调用」排序的缺口清单 —— 当前 236 个缺口中有 **49 条**是前端正在用 any 的，
+那就是剩余工作的顺序。
+
+**剩余 232 个缺口不能一概而论**。补了 10 条之后能看出四类，处理方式完全不同：
+
+| 类型 | 例子 | 为什么不能直接加模型 |
+|---|---|---|
+| **A. 静态可定型** | `/career/scenarios`、`/quiz/history`、`/admin/stats` | 无阻碍，按上面 5 步做即可（已做 10 条） |
+| **B. 动态结构** | `/career/session/start\|answer\|end`（LangGraph `CareerState` + 运行时追加键）、`/engine/status` 的三组 stats | 加严格模型会**吃掉**未声明字段。`/engine/status` 的折中是外层定型 + 内层 `dict[str, Any]` 显式声明不保证结构；但 session 状态连外层都还在演进，需要先把状态收敛成声明式 schema |
+| **C. LLM 生成内容** | `/agents/generate-*`、`/assessment/feedback`、`/engine/frugal-rag-full`、`/engine/gomarl-consensus` | 返回的是模型输出，字段随 prompt 变化。定型等于把"模型可能返回什么"写死，维护成本高于收益 |
+| **D. 类型未归一化** | `/career/my-tasks`（时间字段 sqlite 是 str、PG 是 datetime） | 需要先加字段序列化（`field_serializer`），不是纯补模型能解决的 |
+| **E. 前端有联合类型** | `/achievement/list`（前端 `category` 是 `'milestone' \| ...`，后端是 `str`） | 绑生成类型会让联合失效，需要先约定枚举值来源 |
+
+**这五类的分布本身就是结论**：A 类只有十几条，B/C 类占大头。
+所以"把 232 个补完"不是工程量问题，而是**要先改生产方**（收敛状态、归一化字段、约定枚举）
+—— 那是设计变更，不是补模型。
+
+**故意跳过的**：`/career/my-tasks` —— `career_store._query` 不做类型归一化，
+时间字段在 sqlite 是 `str`、Postgres 是 `datetime`，定型会在生产 500。
+这类需要先加字段序列化，不是纯补模型能解决的。
+
+### 为什么我最初不改后端
+
+按分工后端属主 agent 域（`AGENTS.md` 协作纪律），本轮**未擅自添加 `response_model`**。
+但这件事的性价比值得主 agent 评估：
+
+- 每给一个路由补 `response_model`，前端对应那批 `any` 就**自动**有了绑定来源，
+  且能同时获得：OpenAPI 快照校验（`verify_openapi_snapshot.py` 已就位）、
+  契约漂移门禁（`test_api_contract_audit.py` 已就位）、前端 tsc 保护。
+- 优先级建议按前端 `any` 密度排：`career_training.py`（对应前端 18 处）、
+  `skills.py`（对应 `skillStore` 10 处）、`memory.py`。
+- 注意：补 `response_model` 会**收窄**响应形状，若现有实现返回了模型外的字段，
+  上线后会被 FastAPI 过滤掉 —— 这不是纯类型改动，需要逐个核对，不能一把梭。
+
+> 换句话说：前端这 280 处 `any` 里，**相当一部分不该在前端解决**。
+> 我在前端做的两批（`catch` 67 处、`KnowledgeBaseView` 9 处）是能自己收口的；
+> 剩下的主要卡在这道跨域契约上。
+
+---
+
+## 9. 合并建议
+
+- 目标分支 `career-literacy`，**建议等主 agent 的 WS1–WS4 收工后再合并**，避免两边的 `docs/METRICS_CURRENT.md` 互相覆盖（该文件由脚本生成，冲突后必须重跑 `--update` 而不是手工解冲突）。
+- 合并顺序建议：先 `1ec7402`（依赖），再 `0939759` → `137ab92` → `f3cd88c`（功能，含各自配套的测试提交），最后文档。依赖提交单独在前，便于出问题时单独回滚。
+- 合并后**必须**重跑：`npm ci` → `vue-tsc --build` → `vitest run` → `vite build` → `python scripts/verify_metrics.py`。若 `METRICS_CURRENT.md` 冲突，用 `--update` 重生成。
+
+### 9.1 交付时的实际状态（2026-11-01 15:40 复核）
+
+| 项 | 值 |
+|---|---|
+| PR | #83（base `career-literacy`），**28 项检查 pass / 0 fail** |
+| 提交 | 54 |
+| 工作树 | 干净，与 origin 同步 |
+| 前端单测 | 34 文件 / 256 用例 |
+| `vue-tsc` / `eslint` | 0 error / 0 error |
+| `any` | 280（基线 280，棘轮守护） |
+| 契约覆盖 | 11.5%（30/262） |
+| OpenAPI 快照 | 244 paths / 262 operations，与运行时一致 |
+
+本地全量门禁复核（全部 exit 0）：pre-commit 七道 + tree 级四项、`a11y_scan` 四类
+（默认/a/c/e）、`xss_scan`、`any_ratchet`、`audit_api_contract --gate`、`verify_openapi_snapshot`。
+
+### 9.2 合并可行性（只读模拟实测，2026-11-01 16:25）
+
+用 `git merge-tree --write-tree`（只读，不改工作树）模拟了两个方向：
+
+| 模拟 | 结果 |
+|---|---|
+| **本 PR → `career-literacy`** | **exit 0，零冲突**（产出干净 tree） |
+| `main → career-literacy`（积压 47 提交） | **exit 1，72 个冲突文件** |
+
+冲突文件里除 `deliverables/` 与 `submission/` 的冻结副本外，实质冲突包括：
+`.github/workflows/ci.yml`、`p0-regression.yml`、`.gitattributes`、`.gitignore`、`README.md`、
+`py-server/api/__init__.py`、`py-server/config.py`、`py-server/main.py`、
+`py-server/engines/gomarl_mixer.py`、`py-server/tests/test_engine_modules.py`、
+`src/assets/styles/main.css`、`src/views/LiteracyAssessmentView.vue`、
+`src/views/TeacherLiteracyReportView.vue`。
+
+> ⚠️ **更正我先前的建议**。我此前写过「先同步 main 再合本 PR，避免指标口径冲突」——
+> 实测后这条是**错的**，原因有二：
+> 1. 本 PR 合进 `career-literacy` **本来就零冲突**，不存在需要先同步的前提；
+> 2. `main → career-literacy` 的整包合并会产生 72 个冲突，且冲突面覆盖 CI 配置与后端核心。
+> 这与「新代码一律 `career_*` 前缀零侵入 408」的设计一致 —— 两分支本就是**有意分叉**，
+> 同步应走按需挑选（cherry-pick / 单文件对齐），而不是整包 merge。
+>
+> **结论：本 PR 可直接合并，不要为了合它去做整包同步。**
+> 若确实需要同步，那是一件独立的、需要分支 owner 决策的事，不应捆绑在本 PR 上。

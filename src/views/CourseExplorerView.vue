@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { errMessage } from '@/utils/errorMessage'
 import { ref, onMounted, computed } from 'vue'
 import { api } from '@/utils/api'
 import KnowledgeGraph from '@/components/KnowledgeGraph.vue'
@@ -91,8 +92,8 @@ async function load() {
     const res: any = await api.get('/subjects')
     subjects.value = res.subjects || {}
     graph.value = res.knowledge_graph || { nodes: [], edges: [] }
-  } catch (e: any) {
-    error.value = e?.message || '加载失败'
+  } catch (e) {
+    error.value = errMessage(e, '加载失败')
   } finally {
     loading.value = false
   }

@@ -111,12 +111,38 @@ jobs:
           run_one "token_scan (设计令牌防回归)" "python scripts/token_scan.py --baseline scripts/token_scan.baseline.json" "."
           # 前端可访问性硬门禁（图标按钮可读名）：当前 0 缺陷，发现即阻断。
           run_one "a11y_scan (可访问性硬门禁)" "python scripts/a11y_scan.py" "."
+          # 前端 HTML 注入门禁（v-html + innerHTML/outerHTML/insertAdjacentHTML/
+          # document.write）。2026-10-29 前本脚本只扫 .vue 的 v-html，且**从未被任何
+          # workflow 调用**（只在 package.json 的 gate:xss 里挂着，无人自动执行）——
+          # 即"存在但没跑"的装饰品。此处接入并同时跑自检：
+          # 自检用内存样本断言 6 类注入点全部命中、2 类安全写法放行，
+          # 防止门禁自己被改坏后仍输出 PASS（永远绿的闸门比没有闸门更危险）。
+          run_one "xss_scan --selftest (注入门禁自检)" "python scripts/xss_scan.py --selftest" "."
+          run_one "xss_scan (HTML 注入门禁)" "python scripts/xss_scan.py" "."
           # 浮层焦点管理硬门禁（2026-10-14 由 report-only 升为阻断，P1-1）：
           # VideoPlayer / LandingView 两处浮层补齐焦点圈闭（打开聚焦 / Tab 圈闭 /
           # 关闭归还 opener）后 A 类违规归零，故把该类提为门禁——今后新增无焦点管理的
           # 浮层会直接阻断 merge。脚本 fail-closed：扫描面为 0 个 .vue 时 exit 2
           # （"照不到"不得当作"干净"，否则改坏扫描器会静默放行）。
           run_one "a11y gate-class a (浮层焦点管理)" "python scripts/a11y_scan.py --gate-class a" "."
+          # 键盘可达硬门禁（2026-10-29 提升）：C 类原先只是 report-only，且实现是
+          # 「文件里出现过 @keydown 就整篇放行」的粗判 —— 实测报的 8 条全假、
+          # 真问题 11 处一个没报（@click 写在跨行属性块里，单行正则看不见）。
+          # 现改为跨行匹配开标签、逐元素判定（tabindex 与键盘事件缺一即拦），
+          # 并配 --selftest 钉死语义：门禁被改坏时必须自己变红。
+          run_one "a11y --selftest (键盘可达检测器自检)" "python scripts/a11y_scan.py --selftest" "."
+          run_one "a11y gate-class c (键盘可达)" "python scripts/a11y_scan.py --gate-class c" "."
+          # 焦点可见性硬门禁（2026-10-29 新增）：全局 :focus-visible 是"一处覆盖全局"的
+          # 脆弱结构 —— 任何人在卡片/按钮上加一句 outline:none，键盘用户就看不到焦点在哪，
+          # 而**其他门禁全都不红**（元素照样能聚焦、照样能按 Enter）。
+          # 判定不是"零 outline:none"（那会把表单控件用 box-shadow 替代轮廓的标准做法误杀），
+          # 而是"同规则块内没有替代指示"才算违规。
+          run_one "a11y gate-class e (焦点可见性)" "python scripts/a11y_scan.py --gate-class e" "."
+          # `any` 棘轮门禁（2026-10-29 新增）：catch (x: any) 零容忍 + any 总量只降不升。
+          # 为什么是棘轮而不是清零：剩下约 300 处多是 api.get<any>() 的响应体未定型，
+          # 强制清零只会逼出 `as unknown as T` 这种更糟的绕过写法（连搜索都搜不到）。
+          # 基线在 scripts/any_ratchet.baseline.json，只允许往下调。
+          run_one "any_ratchet (catch any 零容忍 + 总量棘轮)" "python scripts/any_ratchet.py" "."
           # 前端可访问性深度审计（咨询级，report-only，不阻断）：B/C/D 见 CI 日志。
           run_one "a11y_scan --audit (可访问性审计)" "python scripts/a11y_scan.py --audit" "."
           # 前后端契约交叉审计（2026-10-17 新增，A 类阻断）：

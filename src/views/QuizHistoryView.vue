@@ -1,6 +1,13 @@
 <script setup lang="ts">
+import { errMessage } from '@/utils/errorMessage'
 import { ref, onMounted, computed } from 'vue'
 import { api } from '@/utils/api'
+import type { operations } from '@/types/api.generated'
+
+// 答题历史响应类型直接绑后端契约（py-server/api/quiz.py 的 QuizHistoryResponse）。
+// 2026-10-29 该路由补了 response_model，三处调用点才真正有类型可绑。
+type QuizHistoryResponse =
+  operations['get_quiz_history_api_quiz_history_get']['responses'][200]['content']['application/json']
 import Skeleton from '@/components/Skeleton.vue'
 import Stack from '@/components/Stack.vue'
 import EmptyState from '@/components/EmptyState.vue'
@@ -23,15 +30,15 @@ function subjectName(key: string): string {
 
 onMounted(async () => {
   try {
-    const data = await api.get<any>('/quiz/history')
+    const data = await api.get<QuizHistoryResponse>('/quiz/history')
     stats.value = {
       total: data?.total ?? 0,
       correct: data?.correct ?? 0,
       accuracy: data?.accuracy ?? 0,
     }
     history.value = (data?.records || []).reverse()
-  } catch (e: any) {
-    error.value = e?.message || '加载失败'
+  } catch (e) {
+    error.value = errMessage(e, '加载失败')
   } finally {
     loading.value = false
   }

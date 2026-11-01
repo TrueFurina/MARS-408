@@ -1,6 +1,17 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { api } from '@/utils/api'
+import type { operations } from '@/types/api.generated'
+
+// 引擎状态绑后端契约（py-server/api/engine.py 的 EngineStatusResponse）。
+// 后端 `status` 声明为 Literal["ok"]，所以这里能和下面的错误分支组成**可判别联合**，
+// 模板里 `v-else-if="engineStatus?.status === 'ok'"` 才能把类型收窄到成功态。
+type EngineStatusOk =
+  operations['engine_status_api_engine_status_get']['responses'][200]['content']['application/json']
+type EngineStatus = EngineStatusOk | { status: 'error'; message: string }
+// 记忆健康度同理（py-server/api/memory.py 的 MemoryOverviewResponse）
+type MemoryOverview =
+  operations['memory_overview_api_memory_overview_get']['responses'][200]['content']['application/json']
 import Skeleton from '@/components/Skeleton.vue'
 import LangGraphFlow from '@/components/LangGraphFlow.vue'
 import DebateSimulation from '@/components/DebateSimulation.vue'
@@ -43,11 +54,11 @@ async function animateFlow(durationMs: number = 2800) {
 }
 
 // ── 引擎状态 ──
-const engineStatus = ref<any>(null)
+const engineStatus = ref<EngineStatus | null>(null)
 const engineLoading = ref(true)
 async function loadStatus() {
   try {
-    engineStatus.value = await api.get<any>('/engine/status')
+    engineStatus.value = await api.get<EngineStatusOk>('/engine/status')
   } catch (e) {
     engineStatus.value = { status: 'error', message: String(e) }
   } finally {
@@ -57,10 +68,10 @@ async function loadStatus() {
 loadStatus()
 
 // L1/L2/L3 三层学情记忆健康度（低侵入联动：引擎页展示记忆驱动证据，失败不影响主流程）
-const memoryOverview = ref<any>(null)
+const memoryOverview = ref<MemoryOverview | null>(null)
 async function loadMemoryOverview() {
   try {
-    const memRes: any = await api.get('/memory/overview')
+    const memRes = await api.get<MemoryOverview>('/memory/overview')
     if (memRes?.status === 'ok') memoryOverview.value = memRes
   } catch { /* 记忆服务不可用时不阻塞引擎页 */ }
 }

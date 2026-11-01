@@ -12,6 +12,7 @@
 # 异常处理: 统一由 main.py 全局处理器接管 (DomainError → 4xx/5xx, Exception → 500)
 # ============================================================
 
+from typing import Any, Literal
 from fastapi import APIRouter, Depends
 from shared.auth import get_current_user, require_admin
 from shared.ratelimit import require_llm_quota
@@ -207,7 +208,49 @@ async def lora_config(user: dict = Depends(get_current_user)):
     return {"status": "ok", "config": lora_adapter.get_lora_config()}
 
 
-@router.get("/status")
+# ── 响应模型（2026-10-29 补）──
+# 外层结构稳定，内层是**诊断统计字典**（各引擎模块自己 get_stats() 的产物）。
+# 内层刻意用 `dict[str, Any]`：那些键是实现细节，模块加一个计数器就变，
+# 硬定型只会让契约随实现抖动。显式标注"这里不保证结构"比假装有类型诚实。
+# `status` 用 Literal 而非 str：前端错误分支塞的是 `{status:'error'}`，
+# 只有字面量类型才能让 TS 做可判别联合收窄。
+class BreakerStats(BaseModel):
+    """单个熔断器快照（shared/circuit_breaker.py::CircuitBreaker.stats）。"""
+    name: str
+    state: str
+    failures: int
+    failure_threshold: int
+    open_timeout: float
+
+
+class BucketStats(BaseModel):
+    """单个令牌桶快照（shared/token_bucket.py::TokenBucket.stats）。"""
+    name: str
+    tokens: float
+    capacity: int
+    rate_per_sec: float
+
+
+class ReliabilityStats(BaseModel):
+    """可靠性面板数据。这两组前端要逐字段渲染（进度条、徽标），所以必须精确建模 ——
+    用 `dict[str, Any]` 会让生成类型退化成 `unknown`，模板里 v-for 推成 never。"""
+    breakers: dict[str, BreakerStats]
+    token_buckets: dict[str, BucketStats]
+
+
+class EngineStatusResponse(BaseModel):
+    status: Literal["ok"]
+    modules: dict[str, bool]
+    torch_available: bool
+    # 这三组是各引擎模块 get_stats() 的产物，前端目前不渲染内部字段，
+    # 保持 `dict[str, Any]` 显式标注"不保证结构"（模块加计数器不该让契约抖动）。
+    stop_decision_stats: dict[str, Any]
+    mixer_stats: dict[str, Any]
+    teaching_rules_stats: dict[str, Any]
+    reliability: ReliabilityStats
+
+
+@router.get("/status", response_model=EngineStatusResponse)
 async def engine_status(user: dict = Depends(get_current_user)):
     """引擎整体状态"""
     from engines.frugal_rag_stop import stop_decision

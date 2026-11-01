@@ -947,7 +947,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/QuizHistoryResponse"
+                }
               }
             }
           },
@@ -4389,7 +4391,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/EngineStatusResponse"
+                }
               }
             }
           },
@@ -7457,7 +7461,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformStats"
+                }
               }
             }
           },
@@ -14792,7 +14798,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryOverviewResponse"
+                }
               }
             }
           },
@@ -15950,7 +15958,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/CareerScenarioListResponse"
+                }
               }
             }
           },
@@ -17612,7 +17622,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/CareerTaskJoinResult"
+                }
               }
             }
           },
@@ -17740,7 +17752,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/CareerConsentResponse"
+                }
               }
             }
           },
@@ -17812,7 +17826,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/CareerConsentAck"
+                }
               }
             }
           },
@@ -17895,7 +17911,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/CareerFeedbackAck"
+                }
               }
             }
           },
@@ -19232,6 +19250,295 @@
         ],
         "title": "Body_knowledge_upload_api_knowledge_upload_post"
       },
+      "BreakerStats": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "failures": {
+            "type": "integer",
+            "title": "Failures"
+          },
+          "failure_threshold": {
+            "type": "integer",
+            "title": "Failure Threshold"
+          },
+          "open_timeout": {
+            "type": "number",
+            "title": "Open Timeout"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "state",
+          "failures",
+          "failure_threshold",
+          "open_timeout"
+        ],
+        "title": "BreakerStats",
+        "description": "单个熔断器快照（shared/circuit_breaker.py::CircuitBreaker.stats）。"
+      },
+      "BucketStats": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "tokens": {
+            "type": "number",
+            "title": "Tokens"
+          },
+          "capacity": {
+            "type": "integer",
+            "title": "Capacity"
+          },
+          "rate_per_sec": {
+            "type": "number",
+            "title": "Rate Per Sec"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "tokens",
+          "capacity",
+          "rate_per_sec"
+        ],
+        "title": "BucketStats",
+        "description": "单个令牌桶快照（shared/token_bucket.py::TokenBucket.stats）。"
+      },
+      "CareerConsentAck": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "agreed": {
+            "type": "boolean",
+            "title": "Agreed"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "agreed",
+          "version"
+        ],
+        "title": "CareerConsentAck",
+        "description": "POST /career/consent 的回执：只有三个字段，**没有 agreed_at**。\n\n刻意不复用 `CareerConsentRecord` —— 那个多一个 `agreed_at`，复用会让响应里\n凭空多出一个恒为空串的字段。契约里不该有\"为了复用而编造\"的字段。"
+      },
+      "CareerConsentRecord": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "agreed": {
+            "type": "boolean",
+            "title": "Agreed"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          },
+          "agreed_at": {
+            "type": "string",
+            "title": "Agreed At",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "agreed"
+        ],
+        "title": "CareerConsentRecord",
+        "description": "一次知情同意的留痕记录。\n\n形状对齐 `db/career_store.py::get_consent` 的返回 dict（4 个字段，\n`agreed_at` 在那里已被 `str()` 归一为字符串，故此处也按 str 声明）。"
+      },
+      "CareerConsentResponse": {
+        "properties": {
+          "consent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CareerConsentRecord"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "version",
+          "text"
+        ],
+        "title": "CareerConsentResponse",
+        "description": "GET /career/consent。\n\n`consent` 为 null 表示\"从未表态过\"（与 agreed=false 的\"看过但不同意\"是两回事，\n后者会返回一条 agreed=false 的记录）—— 前端据此区分\"要弹门禁\"和\"要显示已拒绝\"。"
+      },
+      "CareerFeedbackAck": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "rating": {
+            "type": "integer",
+            "title": "Rating"
+          },
+          "updated": {
+            "type": "boolean",
+            "title": "Updated"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "rating",
+          "updated"
+        ],
+        "title": "CareerFeedbackAck",
+        "description": "POST /career/session/{id}/feedback 的回执。`updated=true` 表示覆盖了旧评价。"
+      },
+      "CareerScenarioItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "subtype": {
+            "type": "string",
+            "title": "Subtype",
+            "default": ""
+          },
+          "type_label": {
+            "type": "string",
+            "title": "Type Label"
+          },
+          "subtype_label": {
+            "type": "string",
+            "title": "Subtype Label",
+            "default": ""
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "difficulty_default": {
+            "type": "string",
+            "title": "Difficulty Default",
+            "default": "medium"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "type_label",
+          "title"
+        ],
+        "title": "CareerScenarioItem",
+        "description": "情景展示字段。\n\n与 `agents/career_nodes.py::_scenario_display` 的白名单**严格对齐**——\n那里刻意只暴露展示字段、不泄露完整脚本（rubric/追问树等）。模型必须同步收窄，\n不能顺手加字段，否则等于把\"不泄露完整脚本\"的设计意图从 API 层撤销。"
+      },
+      "CareerScenarioListResponse": {
+        "properties": {
+          "scenarios": {
+            "items": {
+              "$ref": "#/components/schemas/CareerScenarioItem"
+            },
+            "type": "array",
+            "title": "Scenarios"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scenarios"
+        ],
+        "title": "CareerScenarioListResponse"
+      },
+      "CareerTaskJoinResult": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "title": "Task Id"
+          },
+          "scenario_id": {
+            "type": "string",
+            "title": "Scenario Id"
+          },
+          "scenario_type": {
+            "type": "string",
+            "title": "Scenario Type"
+          },
+          "difficulty": {
+            "type": "string",
+            "title": "Difficulty"
+          },
+          "max_turns": {
+            "type": "integer",
+            "title": "Max Turns"
+          },
+          "class_id": {
+            "type": "string",
+            "title": "Class Id"
+          },
+          "roster_bound": {
+            "type": "boolean",
+            "title": "Roster Bound"
+          },
+          "bound_name": {
+            "type": "string",
+            "title": "Bound Name"
+          },
+          "bound_match": {
+            "type": "string",
+            "title": "Bound Match"
+          }
+        },
+        "type": "object",
+        "required": [
+          "task_id",
+          "scenario_id",
+          "scenario_type",
+          "difficulty",
+          "max_turns",
+          "class_id",
+          "roster_bound",
+          "bound_name",
+          "bound_match"
+        ],
+        "title": "CareerTaskJoinResult",
+        "description": "POST /career/task/join 的返回。\n\n`roster_bound` / `bound_name` / `bound_match` 三个字段是**如实回传绑定结果**：\n`matched_by=name` 表示按姓名命中花名册；`first_unbound` 表示退回旧行为（可能错位）。\n前端据此提示\"可能匹配到错误的人\"，所以这三个字段不能省。"
+      },
       "ChatSendRequest": {
         "properties": {
           "conv_id": {
@@ -19563,6 +19870,24 @@
         "title": "CreateUserRequest",
         "description": "创建用户请求体。\n\nrole 默认 \"student\"，也可传 \"teacher\"/\"admin\"。\n角色合法性校验在端点内完成（非法返回 400）。"
       },
+      "DailyQuizPoint": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "count"
+        ],
+        "title": "DailyQuizPoint"
+      },
       "DiagnosticResult": {
         "properties": {
           "subject": {
@@ -19678,6 +20003,55 @@
         },
         "type": "object",
         "title": "EndRequest"
+      },
+      "EngineStatusResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status"
+          },
+          "modules": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "type": "object",
+            "title": "Modules"
+          },
+          "torch_available": {
+            "type": "boolean",
+            "title": "Torch Available"
+          },
+          "stop_decision_stats": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Stop Decision Stats"
+          },
+          "mixer_stats": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Mixer Stats"
+          },
+          "teaching_rules_stats": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Teaching Rules Stats"
+          },
+          "reliability": {
+            "$ref": "#/components/schemas/ReliabilityStats"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "modules",
+          "torch_available",
+          "stop_decision_stats",
+          "mixer_stats",
+          "teaching_rules_stats",
+          "reliability"
+        ],
+        "title": "EngineStatusResponse"
       },
       "EnhancedTutorRequest": {
         "properties": {
@@ -20593,6 +20967,65 @@
         "type": "object",
         "title": "MasteryUpdateRequest"
       },
+      "MemoryOverviewResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "has_profile": {
+            "type": "boolean",
+            "title": "Has Profile"
+          },
+          "profile_dimensions": {
+            "type": "integer",
+            "title": "Profile Dimensions"
+          },
+          "mastery_points": {
+            "type": "integer",
+            "title": "Mastery Points"
+          },
+          "weak_points": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Weak Points"
+          },
+          "mastered_points": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Mastered Points"
+          },
+          "episodic_count": {
+            "type": "integer",
+            "title": "Episodic Count"
+          },
+          "working_context": {
+            "type": "boolean",
+            "title": "Working Context"
+          },
+          "memory_level": {
+            "type": "string",
+            "title": "Memory Level"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "has_profile",
+          "profile_dimensions",
+          "mastery_points",
+          "weak_points",
+          "mastered_points",
+          "episodic_count",
+          "working_context",
+          "memory_level"
+        ],
+        "title": "MemoryOverviewResponse"
+      },
       "MultimodalResourceRequest": {
         "properties": {
           "topic": {
@@ -20741,6 +21174,66 @@
           "task_id"
         ],
         "title": "PlanTaskUpdateRequest"
+      },
+      "PlatformStats": {
+        "properties": {
+          "user_count": {
+            "type": "integer",
+            "title": "User Count"
+          },
+          "student_count": {
+            "type": "integer",
+            "title": "Student Count"
+          },
+          "admin_count": {
+            "type": "integer",
+            "title": "Admin Count"
+          },
+          "active_users": {
+            "type": "integer",
+            "title": "Active Users"
+          },
+          "total_quiz": {
+            "type": "integer",
+            "title": "Total Quiz"
+          },
+          "correct_quiz": {
+            "type": "integer",
+            "title": "Correct Quiz"
+          },
+          "overall_accuracy": {
+            "type": "number",
+            "title": "Overall Accuracy"
+          },
+          "by_subject": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/SubjectStat"
+            },
+            "type": "object",
+            "title": "By Subject"
+          },
+          "daily_quiz": {
+            "items": {
+              "$ref": "#/components/schemas/DailyQuizPoint"
+            },
+            "type": "array",
+            "title": "Daily Quiz"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_count",
+          "student_count",
+          "admin_count",
+          "active_users",
+          "total_quiz",
+          "correct_quiz",
+          "overall_accuracy",
+          "by_subject",
+          "daily_quiz"
+        ],
+        "title": "PlatformStats",
+        "description": "平台级看板统计。\n\n`by_subject` 的**键是科目名**（动态，随题库变化），故用 `dict[str, SubjectStat]`\n而不是固定字段；`daily_quiz` 固定 7 个点（近 7 日）。"
       },
       "ProfileBuildRequest": {
         "properties": {
@@ -20901,6 +21394,66 @@
         },
         "type": "object",
         "title": "QuizHistoryPayload"
+      },
+      "QuizHistoryRecord": {
+        "properties": {
+          "subject": {
+            "type": "string",
+            "title": "Subject"
+          },
+          "correct": {
+            "type": "boolean",
+            "title": "Correct"
+          },
+          "difficulty": {
+            "type": "string",
+            "title": "Difficulty"
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "subject",
+          "correct",
+          "difficulty",
+          "timestamp"
+        ],
+        "title": "QuizHistoryRecord",
+        "description": "单条答题记录。\n\n形状对齐 `db/profile_store.py::get_quiz_history`：四个列在表定义里均为\n`NOT NULL`（subject/difficulty 有 DEFAULT），故此处不需要 Optional。"
+      },
+      "QuizHistoryResponse": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "correct": {
+            "type": "integer",
+            "title": "Correct"
+          },
+          "accuracy": {
+            "type": "number",
+            "title": "Accuracy"
+          },
+          "records": {
+            "items": {
+              "$ref": "#/components/schemas/QuizHistoryRecord"
+            },
+            "type": "array",
+            "title": "Records"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "correct",
+          "accuracy",
+          "records"
+        ],
+        "title": "QuizHistoryResponse"
       },
       "QuizRecord": {
         "properties": {
@@ -21263,6 +21816,31 @@
         },
         "type": "object",
         "title": "RegisterResourceRequest"
+      },
+      "ReliabilityStats": {
+        "properties": {
+          "breakers": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/BreakerStats"
+            },
+            "type": "object",
+            "title": "Breakers"
+          },
+          "token_buckets": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/BucketStats"
+            },
+            "type": "object",
+            "title": "Token Buckets"
+          }
+        },
+        "type": "object",
+        "required": [
+          "breakers",
+          "token_buckets"
+        ],
+        "title": "ReliabilityStats",
+        "description": "可靠性面板数据。这两组前端要逐字段渲染（进度条、徽标），所以必须精确建模 ——\n用 `dict[str, Any]` 会让生成类型退化成 `unknown`，模板里 v-for 推成 never。"
       },
       "RemediationItem": {
         "properties": {
@@ -21832,6 +22410,29 @@
         ],
         "title": "StudentsImportRequest"
       },
+      "SubjectStat": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "correct": {
+            "type": "integer",
+            "title": "Correct"
+          },
+          "accuracy": {
+            "type": "number",
+            "title": "Accuracy"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "correct",
+          "accuracy"
+        ],
+        "title": "SubjectStat"
+      },
       "SyllabusImportRequest": {
         "properties": {
           "syllabus_text": {
@@ -22113,6 +22714,36 @@
             "title": "Quick Mode",
             "description": "快速模式 (跳过检索, 纯LLM)",
             "default": false
+          },
+          "hint_level": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 3.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hint Level",
+            "description": "分级提示层级 (1=方向/2=前置/3=局部, SAGE 支架式引导: 只给提示不给最终答案); 不传=普通答疑"
+          },
+          "attempt_text": {
+            "type": "string",
+            "maxLength": 4000,
+            "title": "Attempt Text",
+            "description": "学生已提交的尝试（先答后问）; 分级提示模式下为空时本轮只引导交出尝试",
+            "default": ""
+          },
+          "recent_questions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "title": "Recent Questions",
+            "description": "最近的学生消息（按时间正序, 最多 10 条）; 分级提示模式下非空时运行支架健康监测"
           }
         },
         "type": "object",
@@ -22145,6 +22776,61 @@
             "title": "Diagram Description",
             "description": "图解说明文本 (如有)",
             "default": ""
+          },
+          "hint_level": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hint Level",
+            "description": "分级提示层级 (仅分级提示模式返回)"
+          },
+          "hint_level_name": {
+            "type": "string",
+            "title": "Hint Level Name",
+            "description": "分级提示级别名 (方向/前置/局部)",
+            "default": ""
+          },
+          "withheld": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Withheld",
+            "description": "是否保留最终答案 (分级提示模式恒为 true)"
+          },
+          "attempt_required": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attempt Required",
+            "description": "本轮是否转入了先答后问引导 (仅分级提示模式返回; true=需先交尝试再取提示)"
+          },
+          "scaffold_health": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scaffold Health",
+            "description": "支架健康监测 (仅分级提示模式且 recent_questions 非空时返回): status/hits/signals/advice"
           }
         },
         "type": "object",

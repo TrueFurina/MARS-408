@@ -5464,6 +5464,163 @@ export interface components {
             /** File */
             file: string;
         };
+        /**
+         * BreakerStats
+         * @description 单个熔断器快照（shared/circuit_breaker.py::CircuitBreaker.stats）。
+         */
+        BreakerStats: {
+            /** Name */
+            name: string;
+            /** State */
+            state: string;
+            /** Failures */
+            failures: number;
+            /** Failure Threshold */
+            failure_threshold: number;
+            /** Open Timeout */
+            open_timeout: number;
+        };
+        /**
+         * BucketStats
+         * @description 单个令牌桶快照（shared/token_bucket.py::TokenBucket.stats）。
+         */
+        BucketStats: {
+            /** Name */
+            name: string;
+            /** Tokens */
+            tokens: number;
+            /** Capacity */
+            capacity: number;
+            /** Rate Per Sec */
+            rate_per_sec: number;
+        };
+        /**
+         * CareerConsentAck
+         * @description POST /career/consent 的回执：只有三个字段，**没有 agreed_at**。
+         *
+         *     刻意不复用 `CareerConsentRecord` —— 那个多一个 `agreed_at`，复用会让响应里
+         *     凭空多出一个恒为空串的字段。契约里不该有"为了复用而编造"的字段。
+         */
+        CareerConsentAck: {
+            /** User Id */
+            user_id: string;
+            /** Agreed */
+            agreed: boolean;
+            /** Version */
+            version: string;
+        };
+        /**
+         * CareerConsentRecord
+         * @description 一次知情同意的留痕记录。
+         *
+         *     形状对齐 `db/career_store.py::get_consent` 的返回 dict（4 个字段，
+         *     `agreed_at` 在那里已被 `str()` 归一为字符串，故此处也按 str 声明）。
+         */
+        CareerConsentRecord: {
+            /** User Id */
+            user_id: string;
+            /** Agreed */
+            agreed: boolean;
+            /** Version */
+            version?: string | null;
+            /**
+             * Agreed At
+             * @default
+             */
+            agreed_at: string;
+        };
+        /**
+         * CareerConsentResponse
+         * @description GET /career/consent。
+         *
+         *     `consent` 为 null 表示"从未表态过"（与 agreed=false 的"看过但不同意"是两回事，
+         *     后者会返回一条 agreed=false 的记录）—— 前端据此区分"要弹门禁"和"要显示已拒绝"。
+         */
+        CareerConsentResponse: {
+            consent?: components["schemas"]["CareerConsentRecord"] | null;
+            /** Version */
+            version: string;
+            /** Text */
+            text: string;
+        };
+        /**
+         * CareerFeedbackAck
+         * @description POST /career/session/{id}/feedback 的回执。`updated=true` 表示覆盖了旧评价。
+         */
+        CareerFeedbackAck: {
+            /** Session Id */
+            session_id: string;
+            /** Rating */
+            rating: number;
+            /** Updated */
+            updated: boolean;
+        };
+        /**
+         * CareerScenarioItem
+         * @description 情景展示字段。
+         *
+         *     与 `agents/career_nodes.py::_scenario_display` 的白名单**严格对齐**——
+         *     那里刻意只暴露展示字段、不泄露完整脚本（rubric/追问树等）。模型必须同步收窄，
+         *     不能顺手加字段，否则等于把"不泄露完整脚本"的设计意图从 API 层撤销。
+         */
+        CareerScenarioItem: {
+            /** Id */
+            id: string;
+            /** Type */
+            type: string;
+            /**
+             * Subtype
+             * @default
+             */
+            subtype: string;
+            /** Type Label */
+            type_label: string;
+            /**
+             * Subtype Label
+             * @default
+             */
+            subtype_label: string;
+            /** Title */
+            title: string;
+            /**
+             * Difficulty Default
+             * @default medium
+             */
+            difficulty_default: string;
+        };
+        /** CareerScenarioListResponse */
+        CareerScenarioListResponse: {
+            /** Scenarios */
+            scenarios: components["schemas"]["CareerScenarioItem"][];
+        };
+        /**
+         * CareerTaskJoinResult
+         * @description POST /career/task/join 的返回。
+         *
+         *     `roster_bound` / `bound_name` / `bound_match` 三个字段是**如实回传绑定结果**：
+         *     `matched_by=name` 表示按姓名命中花名册；`first_unbound` 表示退回旧行为（可能错位）。
+         *     前端据此提示"可能匹配到错误的人"，所以这三个字段不能省。
+         */
+        CareerTaskJoinResult: {
+            /** Task Id */
+            task_id: string;
+            /** Scenario Id */
+            scenario_id: string;
+            /** Scenario Type */
+            scenario_type: string;
+            /** Difficulty */
+            difficulty: string;
+            /** Max Turns */
+            max_turns: number;
+            /** Class Id */
+            class_id: string;
+            /** Roster Bound */
+            roster_bound: boolean;
+            /** Bound Name */
+            bound_name: string;
+            /** Bound Match */
+            bound_match: string;
+        };
         /** ChatSendRequest */
         ChatSendRequest: {
             /**
@@ -5681,6 +5838,13 @@ export interface components {
              */
             role: string;
         };
+        /** DailyQuizPoint */
+        DailyQuizPoint: {
+            /** Date */
+            date: string;
+            /** Count */
+            count: number;
+        };
         /**
          * DiagnosticResult
          * @description 单科目诊断结果
@@ -5736,6 +5900,33 @@ export interface components {
              * @default false
              */
             force: boolean;
+        };
+        /** EngineStatusResponse */
+        EngineStatusResponse: {
+            /**
+             * Status
+             * @constant
+             */
+            status: "ok";
+            /** Modules */
+            modules: {
+                [key: string]: boolean;
+            };
+            /** Torch Available */
+            torch_available: boolean;
+            /** Stop Decision Stats */
+            stop_decision_stats: {
+                [key: string]: unknown;
+            };
+            /** Mixer Stats */
+            mixer_stats: {
+                [key: string]: unknown;
+            };
+            /** Teaching Rules Stats */
+            teaching_rules_stats: {
+                [key: string]: unknown;
+            };
+            reliability: components["schemas"]["ReliabilityStats"];
         };
         /**
          * EnhancedTutorRequest
@@ -6261,6 +6452,27 @@ export interface components {
              */
             mastered: boolean;
         };
+        /** MemoryOverviewResponse */
+        MemoryOverviewResponse: {
+            /** Status */
+            status: string;
+            /** Has Profile */
+            has_profile: boolean;
+            /** Profile Dimensions */
+            profile_dimensions: number;
+            /** Mastery Points */
+            mastery_points: number;
+            /** Weak Points */
+            weak_points: string[];
+            /** Mastered Points */
+            mastered_points: string[];
+            /** Episodic Count */
+            episodic_count: number;
+            /** Working Context */
+            working_context: boolean;
+            /** Memory Level */
+            memory_level: string;
+        };
         /**
          * MultimodalResourceRequest
          * @description 多模态资源生成请求（图+文+音一体）
@@ -6337,6 +6549,35 @@ export interface components {
             completed?: boolean | null;
             /** Progress */
             progress?: number | null;
+        };
+        /**
+         * PlatformStats
+         * @description 平台级看板统计。
+         *
+         *     `by_subject` 的**键是科目名**（动态，随题库变化），故用 `dict[str, SubjectStat]`
+         *     而不是固定字段；`daily_quiz` 固定 7 个点（近 7 日）。
+         */
+        PlatformStats: {
+            /** User Count */
+            user_count: number;
+            /** Student Count */
+            student_count: number;
+            /** Admin Count */
+            admin_count: number;
+            /** Active Users */
+            active_users: number;
+            /** Total Quiz */
+            total_quiz: number;
+            /** Correct Quiz */
+            correct_quiz: number;
+            /** Overall Accuracy */
+            overall_accuracy: number;
+            /** By Subject */
+            by_subject: {
+                [key: string]: components["schemas"]["SubjectStat"];
+            };
+            /** Daily Quiz */
+            daily_quiz: components["schemas"]["DailyQuizPoint"][];
         };
         /** ProfileBuildRequest */
         ProfileBuildRequest: {
@@ -6435,6 +6676,34 @@ export interface components {
             records: {
                 [key: string]: unknown;
             }[];
+        };
+        /**
+         * QuizHistoryRecord
+         * @description 单条答题记录。
+         *
+         *     形状对齐 `db/profile_store.py::get_quiz_history`：四个列在表定义里均为
+         *     `NOT NULL`（subject/difficulty 有 DEFAULT），故此处不需要 Optional。
+         */
+        QuizHistoryRecord: {
+            /** Subject */
+            subject: string;
+            /** Correct */
+            correct: boolean;
+            /** Difficulty */
+            difficulty: string;
+            /** Timestamp */
+            timestamp: string;
+        };
+        /** QuizHistoryResponse */
+        QuizHistoryResponse: {
+            /** Total */
+            total: number;
+            /** Correct */
+            correct: number;
+            /** Accuracy */
+            accuracy: number;
+            /** Records */
+            records: components["schemas"]["QuizHistoryRecord"][];
         };
         /** QuizRecord */
         QuizRecord: {
@@ -6633,6 +6902,21 @@ export interface components {
              * @description 质量评分（可选）
              */
             quality_score?: number | null;
+        };
+        /**
+         * ReliabilityStats
+         * @description 可靠性面板数据。这两组前端要逐字段渲染（进度条、徽标），所以必须精确建模 ——
+         *     用 `dict[str, Any]` 会让生成类型退化成 `unknown`，模板里 v-for 推成 never。
+         */
+        ReliabilityStats: {
+            /** Breakers */
+            breakers: {
+                [key: string]: components["schemas"]["BreakerStats"];
+            };
+            /** Token Buckets */
+            token_buckets: {
+                [key: string]: components["schemas"]["BucketStats"];
+            };
         };
         /**
          * RemediationItem
@@ -6908,6 +7192,15 @@ export interface components {
              */
             roster: string;
         };
+        /** SubjectStat */
+        SubjectStat: {
+            /** Total */
+            total: number;
+            /** Correct */
+            correct: number;
+            /** Accuracy */
+            accuracy: number;
+        };
         /** SyllabusImportRequest */
         SyllabusImportRequest: {
             /**
@@ -7083,6 +7376,22 @@ export interface components {
              * @default false
              */
             quick_mode: boolean;
+            /**
+             * Hint Level
+             * @description 分级提示层级 (1=方向/2=前置/3=局部, SAGE 支架式引导: 只给提示不给最终答案); 不传=普通答疑
+             */
+            hint_level?: number | null;
+            /**
+             * Attempt Text
+             * @description 学生已提交的尝试（先答后问）; 分级提示模式下为空时本轮只引导交出尝试
+             * @default
+             */
+            attempt_text: string;
+            /**
+             * Recent Questions
+             * @description 最近的学生消息（按时间正序, 最多 10 条）; 分级提示模式下非空时运行支架健康监测
+             */
+            recent_questions?: string[];
         };
         /**
          * TutorResponse
@@ -7111,6 +7420,34 @@ export interface components {
              * @default
              */
             diagram_description: string;
+            /**
+             * Hint Level
+             * @description 分级提示层级 (仅分级提示模式返回)
+             */
+            hint_level?: number | null;
+            /**
+             * Hint Level Name
+             * @description 分级提示级别名 (方向/前置/局部)
+             * @default
+             */
+            hint_level_name: string;
+            /**
+             * Withheld
+             * @description 是否保留最终答案 (分级提示模式恒为 true)
+             */
+            withheld?: boolean | null;
+            /**
+             * Attempt Required
+             * @description 本轮是否转入了先答后问引导 (仅分级提示模式返回; true=需先交尝试再取提示)
+             */
+            attempt_required?: boolean | null;
+            /**
+             * Scaffold Health
+             * @description 支架健康监测 (仅分级提示模式且 recent_questions 非空时返回): status/hits/signals/advice
+             */
+            scaffold_health?: {
+                [key: string]: unknown;
+            } | null;
         };
         /** UpdateSkillRequest */
         UpdateSkillRequest: {
@@ -7690,7 +8027,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["QuizHistoryResponse"];
                 };
             };
             /** @description Validation Error */
@@ -9332,7 +9669,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["EngineStatusResponse"];
                 };
             };
             /** @description Validation Error */
@@ -10866,7 +11203,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["PlatformStats"];
                 };
             };
             /** @description Validation Error */
@@ -14300,7 +14637,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["MemoryOverviewResponse"];
                 };
             };
             /** @description Validation Error */
@@ -14820,7 +15157,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CareerScenarioListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -15615,7 +15952,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CareerTaskJoinResult"];
                 };
             };
             /** @description Validation Error */
@@ -15679,7 +16016,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CareerConsentResponse"];
                 };
             };
             /** @description Validation Error */
@@ -15715,7 +16052,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CareerConsentAck"];
                 };
             };
             /** @description Validation Error */
@@ -15753,7 +16090,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CareerFeedbackAck"];
                 };
             };
             /** @description Validation Error */

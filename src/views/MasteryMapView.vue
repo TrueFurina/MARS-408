@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { errMessage } from '@/utils/errorMessage'
 import { ref, computed, onMounted } from 'vue'
 import { useStudyStore, type MasteryItem, type WeakPoint, type KnowledgePoint } from '@/stores/studyStore'
 import { icons } from '@/components/icons'
@@ -118,8 +119,8 @@ async function loadData() {
     ])
     masteryData.value = mastery ?? []
     knowledgePoints.value = store.knowledgePoints ?? []
-  } catch (e: any) {
-    error.value = e?.message || '加载掌握度数据失败'
+  } catch (e) {
+    error.value = errMessage(e, '加载掌握度数据失败')
   } finally {
     loading.value = false
   }

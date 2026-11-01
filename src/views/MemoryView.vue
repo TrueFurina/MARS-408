@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { errMessage } from '@/utils/errorMessage'
 import { ref, onMounted } from 'vue'
 import { icons } from '@/components/icons'
 import { api } from '@/utils/api'
@@ -29,8 +30,8 @@ async function loadMemory() {
     if (ov?.status === 'ok') overview.value = ov
     else { overview.value = null; error.value = '获取记忆总览失败' }
     if (ctx?.status === 'ok') context.value = ctx.context || ''
-  } catch (e: any) {
-    error.value = e?.message || '加载失败，请检查后端服务'
+  } catch (e) {
+    error.value = errMessage(e, '加载失败，请检查后端服务')
   } finally {
     loading.value = false
   }

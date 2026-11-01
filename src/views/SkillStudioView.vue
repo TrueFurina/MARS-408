@@ -337,8 +337,11 @@ async function loadMemoryOverview() {
             v-for="opt in memoryAccessOptions"
             :key="opt.value"
             class="memory-access-opt"
-            :class="{ active: memoryAccess === opt.value }" :aria-selected="memoryAccess === opt.value"
+            :class="{ active: memoryAccess === opt.value }"
+            role="radio" tabindex="0" :aria-checked="memoryAccess === opt.value"
             @click="memoryAccess = opt.value"
+            @keydown.enter.prevent="memoryAccess = opt.value"
+            @keydown.space.prevent="memoryAccess = opt.value"
           >
             <div class="ma-label">{{ opt.label }}</div>
             <div class="ma-desc">{{ opt.desc }}</div>

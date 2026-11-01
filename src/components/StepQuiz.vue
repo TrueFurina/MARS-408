@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { errMessage } from '@/utils/errorMessage'
 import { ref, onMounted, onUnmounted } from 'vue'
 import { api } from '@/utils/api'
 import Skeleton from '@/components/Skeleton.vue'
@@ -45,8 +46,8 @@ async function loadStepQuestions() {
     }
     const data = await api.get<any>('/quiz/step-questions')
     stepQuestions.value = data.questions || []
-  } catch (e: any) {
-    stepError.value = '获取步骤化题目失败: ' + (e?.message || '')
+  } catch (e) {
+    stepError.value = '获取步骤化题目失败: ' + errMessage(e, '')
   } finally {
     stepLoading.value = false
   }
@@ -69,8 +70,8 @@ async function startStepQuestion(qId: string) {
   try {
     const data = await api.get<any>(`/quiz/step-questions/${qId}`)
     currentStepQuestion.value = data
-  } catch (e: any) {
-    stepError.value = '获取题目详情失败: ' + (e?.message || '')
+  } catch (e) {
+    stepError.value = '获取题目详情失败: ' + errMessage(e, '')
   } finally {
     stepLoading.value = false
   }
@@ -107,8 +108,8 @@ async function submitStepAnswer() {
       currentStepQuestion.value.step_type = resp.step_type || 'choice'
       currentStepQuestion.value.options = resp.options || []
     }
-  } catch (e: any) {
-    stepError.value = '提交答案失败: ' + (e?.message || '')
+  } catch (e) {
+    stepError.value = '提交答案失败: ' + errMessage(e, '')
   } finally {
     stepLoading.value = false
   }

@@ -41,6 +41,9 @@ py-server/iq_run_tmp/
 
 # WorkBuddy 本地 AI 记忆 / 技能（含真实密钥，禁止入库；已 git rm --cached 移出索引）
 .workbuddy/
+# 同上，新版目录名（Agent 会话会写入 memory/ 日志）。0 个文件被跟踪，
+# 不忽略的话每个会话都会让 `git status` 常驻一条未跟踪目录，污染并行会话的脏文件判据。
+.workbuddy-ai/
 
 # Editor directories and files
 .vscode/*

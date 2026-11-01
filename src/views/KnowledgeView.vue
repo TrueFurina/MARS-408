@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { errMessage } from '@/utils/errorMessage'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useStudyStore } from '@/stores/studyStore'
@@ -99,8 +100,8 @@ async function loadData() {
     }
     allGraphData.value = data
     applyFilter()
-  } catch (e: any) {
-    error.value = e?.message || '加载知识图谱失败，请检查后端服务是否运行'
+  } catch (e) {
+    error.value = errMessage(e, '加载知识图谱失败，请检查后端服务是否运行')
     console.warn('KnowledgeGraph load error:', e)
   } finally {
     loading.value = false

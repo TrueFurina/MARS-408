@@ -5,6 +5,7 @@ import { icons } from '@/components/icons'
 import Skeleton from '@/components/Skeleton.vue'
 import { useSkillStore } from '@/stores/skillStore'
 import { api } from '@/utils/api'
+import { errMessage, isAbortError } from '@/utils/errorMessage'
 
 const route = useRoute()
 const router = useRouter()
@@ -95,9 +96,10 @@ async function sendChat() {
         } catch { /* ignore parse errors */ }
       }
     }
-  } catch (e: any) {
-    if (e.name !== 'AbortError') {
-      aiMsg.content = `调用失败: ${e.message}`
+  } catch (e) {
+    // 用户主动中断（关弹窗会 abort）不该显示成「调用失败」
+    if (!isAbortError(e)) {
+      aiMsg.content = `调用失败: ${errMessage(e, '未知错误')}`
     }
   } finally {
     chatLoading.value = false
@@ -314,7 +316,10 @@ watch(chatMessages, () => {
             <span class="chat-dialog-title">{{ skill?.icon }} {{ skill?.name }}</span>
             <button class="chat-dialog-close" @click="closeChat" v-html="icons.close" aria-label="关闭对话"></button>
           </div>
-          <div class="chat-dialog-body" ref="chatBodyRef">
+          <!-- role=log + aria-live=polite：助手回复是逐 token 追加的，
+               没有 live region 时读屏用户完全感知不到内容在增长（WCAG 4.1.3）。
+               polite 而非 assertive：不要打断用户当前正在读的内容。 -->
+          <div class="chat-dialog-body" ref="chatBodyRef" role="log" aria-live="polite" aria-relevant="additions text" :aria-busy="chatLoading">
             <div v-for="(msg, i) in chatMessages" :key="i" class="chat-msg" :class="msg.role">
               <div class="chat-msg-role">{{ msg.role === 'user' ? '你' : 'AI' }}</div>
               <div class="chat-msg-content" :class="{ 'markdown-body': msg.role === 'assistant' }">{{ msg.content }}</div>

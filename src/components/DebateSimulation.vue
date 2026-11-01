@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { errMessage } from '@/utils/errorMessage'
 import { ref } from 'vue'
 import { api } from '@/utils/api'
 
@@ -44,8 +45,8 @@ async function simulate() {
     }
     log.value.push(` 共检测 ${result.total_conflicts} 个冲突，已消解 ${result.resolved} 个`)
     
-  } catch (e: any) {
-    error.value = e?.message || '调用后端失败'
+  } catch (e) {
+    error.value = errMessage(e, '调用后端失败')
     log.value.push(` 错误: ${error.value}`)
     log.value.push('')
     log.value.push(' 请确保后端已启动 (http://127.0.0.1:8002)')

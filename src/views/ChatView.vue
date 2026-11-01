@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { errMessage } from '@/utils/errorMessage'
 import { ref, computed, watch, onMounted, onBeforeUnmount, shallowReactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStudyStore } from '@/stores/studyStore'
@@ -267,8 +268,8 @@ onMounted(async () => {
           conv.messages.push({ role: 'assistant', content: msg, id: Date.now().toString(), segments: [], timestamp: new Date() })
         }
       }
-    } catch (e: any) {
-      console.warn('加载技能信息失败:', e?.message)
+    } catch (e) {
+      console.warn('加载技能信息失败:', errMessage(e, String(e)))
     }
   }
 })
@@ -297,8 +298,8 @@ async function sendMessage(text: string) {
           teachingVideoTopic.value = topic
           showTeachingVideo.value = true
         }
-      } catch (e: any) {
-        await store.sendMessageStream(` 视频生成失败: ${e?.message || '未知错误'}`, () => { scrollToBottom() })
+      } catch (e) {
+        await store.sendMessageStream(` 视频生成失败: ${errMessage(e, '未知错误')}`, () => { scrollToBottom() })
       }
       const conv = store.getCurrentConversation()
       if (conv && conv.messages.length > 0 && !route.params.convId) {
@@ -338,7 +339,7 @@ async function sendMessage(text: string) {
         router.replace('/c/' + conv.id)
       }
     }
-  } catch (e: any) {
+  } catch (e) {
     // BugFix：原 catch {} 静默吞掉异常，导致「发不出消息却无任何反馈」。
     // 现在将错误打到控制台并展示给用户，便于定位（后端恢复后此处自然恢复）。
     // friendlyError 把裸状态码/网络错误翻译成可操作提示（如 401 → 重新登录）。
@@ -456,11 +457,15 @@ onBeforeUnmount(() => {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
       </div>
-      <div class="sidebar-conversations">
+      <div class="sidebar-conversations" role="list">
         <div v-for="conv in conversations" :key="conv.id"
              class="sidebar-conv-item"
-             :class="{ active: conv.id === currentConvId }" :aria-selected="conv.id === currentConvId"
-             @click="selectConversation(conv.id)">
+             :class="{ active: conv.id === currentConvId }"
+             role="button" tabindex="0"
+             :aria-current="conv.id === currentConvId ? 'true' : undefined"
+             @click="selectConversation(conv.id)"
+             @keydown.enter.prevent="selectConversation(conv.id)"
+             @keydown.space.prevent="selectConversation(conv.id)">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           <span class="conv-title">{{ conv.title || '新对话' }}</span>
           <button class="conv-delete" @click="removeConversation(conv.id, $event)" title="删除对话">
@@ -489,7 +494,13 @@ onBeforeUnmount(() => {
           {{ skillInfo.icon }} {{ skillInfo.name }}
         </button>
       </div>
-      <div ref="messagesRef" class="chat-messages" @scroll="onScroll">
+      <!-- role=log + aria-live=polite：助手回复经 studyStore.sendMessage 的 SSE 流
+           逐 token 追加（流式实现不在本文件，故静态扫描按关键词没识别到），
+           没有 live region 时读屏用户感知不到内容在增长（WCAG 4.1.3）。
+           已知局限：本列表启用了虚拟滚动，只有可视区内的消息真实存在于 DOM，
+           因此 live region 的播报可能不完整。彻底解决需要独立的 visually-hidden
+           播报区（流结束时一次性播报整段），属后续项；此处先补齐基础语义。 -->
+      <div ref="messagesRef" class="chat-messages" role="log" aria-live="polite" aria-relevant="additions text" @scroll="onScroll">
       <div v-if="currentMessages.length === 0" class="chat-greeting">
         <div class="greeting-icon" v-html="icons.chat"></div>
         <h1>专业能力智能学习助手</h1>

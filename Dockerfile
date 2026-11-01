@@ -13,11 +13,22 @@ FROM python:3.12-slim
 
 # 安装系统依赖（PyMilvus 二进制包无需 gcc，但保留 libffi 以防降级回退）
 # gosu：用于以非 root 用户运行应用（F-014），回退 setpriv（util-linux，slim 自带）
-# 换清华镜像源（国内直连提速，避开代理链路）
-RUN sed -i 's|deb.debian.org|mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list.d/debian.sources 2>/dev/null || true \
-    && apt-get update && apt-get install -y --no-install-recommends \
-    curl libffi-dev ffmpeg gosu \
-    && rm -rf /var/lib/apt/lists/*
+#
+# 镜像源策略：**先试清华（国内部署提速），失败自动回退官方源**。
+# 为什么必须带回退：CI 的 GitHub runner 在境外，清华镜像偶发不可达/超时，
+# `apt-get update` 会直接 exit 100 —— 2026-10-29 实测同一 commit 上
+# Docker job 先红后绿（run 40832916407），根因就是这里，与业务代码无关。
+# 单程写死镜像会让 CI 随机红，进而让团队养成「红了就重跑」的习惯，
+# 那会让所有门禁一起失信。回退分支只在镜像不可达时触发，不影响国内构建速度。
+RUN set -eux; \
+    sed -i 's|deb.debian.org|mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list.d/debian.sources 2>/dev/null || true; \
+    if ! apt-get update; then \
+      echo "⚠️  清华镜像不可达，回退官方 deb.debian.org 重试"; \
+      sed -i 's|mirrors.tuna.tsinghua.edu.cn|deb.debian.org|g' /etc/apt/sources.list.d/debian.sources; \
+      apt-get update; \
+    fi; \
+    apt-get install -y --no-install-recommends curl libffi-dev ffmpeg gosu; \
+    rm -rf /var/lib/apt/lists/*
 
 # 创建非 root 用户
 RUN groupadd -r mangdehenzhi && useradd -r -g mangdehenzhi -d /app -s /sbin/nologin mangdehenzhi
