@@ -245,7 +245,7 @@ D 的守卫是全局的、逐文件判定天然误报，两者都不适合直接
 
 ---
 
-## 8. 根因：后端响应契约缺口（跨域，需主 agent 决策）
+## 8. 根因：后端响应契约缺口（已授权补 10 条，剩余需先改生产方）
 
 前端 `any` 收敛做了两批之后，遇到一个反复出现的墙：**接不上 `api.generated.ts`**。
 查下去发现这不是个别接口的问题，是系统性的：
@@ -342,3 +342,22 @@ D 的守卫是全局的、逐文件判定天然误报，两者都不适合直接
 - 目标分支 `career-literacy`，**建议等主 agent 的 WS1–WS4 收工后再合并**，避免两边的 `docs/METRICS_CURRENT.md` 互相覆盖（该文件由脚本生成，冲突后必须重跑 `--update` 而不是手工解冲突）。
 - 合并顺序建议：先 `1ec7402`（依赖），再 `0939759` → `137ab92` → `f3cd88c`（功能，含各自配套的测试提交），最后文档。依赖提交单独在前，便于出问题时单独回滚。
 - 合并后**必须**重跑：`npm ci` → `vue-tsc --build` → `vitest run` → `vite build` → `python scripts/verify_metrics.py`。若 `METRICS_CURRENT.md` 冲突，用 `--update` 重生成。
+
+### 9.1 交付时的实际状态（2026-11-01 15:40 复核）
+
+| 项 | 值 |
+|---|---|
+| PR | #83（base `career-literacy`），**28 项检查 pass / 0 fail** |
+| 提交 | 54 |
+| 工作树 | 干净，与 origin 同步 |
+| 前端单测 | 34 文件 / 256 用例 |
+| `vue-tsc` / `eslint` | 0 error / 0 error |
+| `any` | 280（基线 280，棘轮守护） |
+| 契约覆盖 | 11.5%（30/262） |
+| OpenAPI 快照 | 244 paths / 262 operations，与运行时一致 |
+
+本地全量门禁复核（全部 exit 0）：pre-commit 七道 + tree 级四项、`a11y_scan` 四类
+（默认/a/c/e）、`xss_scan`、`any_ratchet`、`audit_api_contract --gate`、`verify_openapi_snapshot`。
+
+**合并前唯一未决**：`main → career-literacy` 尚有积压提交待同步（方向唯一，禁止反向），
+建议先同步再合本 PR，避免 `METRICS_CURRENT.md` 与指标口径二次冲突。
