@@ -566,7 +566,29 @@ async def get_knowledge_mastery(subject: str = "", user: dict = Depends(get_curr
     return {"knowledge_points": points, "total": len(points)}
 
 
-@router.get("/history")
+# ── 响应模型（2026-10-29 补）──
+# 前端 `AssessmentView` / `QuizHistoryView` / `ProfileView` 三处都用这个接口，
+# 此前是裸 dict，三处各自写 `api.get<any>` 并各自猜字段。
+class QuizHistoryRecord(BaseModel):
+    """单条答题记录。
+
+    形状对齐 `db/profile_store.py::get_quiz_history`：四个列在表定义里均为
+    `NOT NULL`（subject/difficulty 有 DEFAULT），故此处不需要 Optional。
+    """
+    subject: str
+    correct: bool
+    difficulty: str
+    timestamp: str
+
+
+class QuizHistoryResponse(BaseModel):
+    total: int
+    correct: int
+    accuracy: float
+    records: list[QuizHistoryRecord]  # 后端只返回最近 50 条，不是全量
+
+
+@router.get("/history", response_model=QuizHistoryResponse)
 async def get_quiz_history(user: dict = Depends(get_current_user)):
     """获取答题历史记录"""
     from services.user_service import get_quiz_history as _get_history

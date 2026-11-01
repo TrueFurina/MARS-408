@@ -6508,6 +6508,34 @@ export interface components {
                 [key: string]: unknown;
             }[];
         };
+        /**
+         * QuizHistoryRecord
+         * @description 单条答题记录。
+         *
+         *     形状对齐 `db/profile_store.py::get_quiz_history`：四个列在表定义里均为
+         *     `NOT NULL`（subject/difficulty 有 DEFAULT），故此处不需要 Optional。
+         */
+        QuizHistoryRecord: {
+            /** Subject */
+            subject: string;
+            /** Correct */
+            correct: boolean;
+            /** Difficulty */
+            difficulty: string;
+            /** Timestamp */
+            timestamp: string;
+        };
+        /** QuizHistoryResponse */
+        QuizHistoryResponse: {
+            /** Total */
+            total: number;
+            /** Correct */
+            correct: number;
+            /** Accuracy */
+            accuracy: number;
+            /** Records */
+            records: components["schemas"]["QuizHistoryRecord"][];
+        };
         /** QuizRecord */
         QuizRecord: {
             /**
@@ -7806,7 +7834,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["QuizHistoryResponse"];
                 };
             };
             /** @description Validation Error */

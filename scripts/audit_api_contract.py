@@ -138,6 +138,68 @@ def collect_frontend(src_root: str) -> list:
     return calls
 
 
+# ── 契约缺口模式（--contract-gaps）─────────────────────────────────────
+# 判据不是"读 Python 源码有没有写 response_model"，而是直接看 openapi.json：
+# **某操作的 200 响应 schema 为空对象 `{}`** ⟺ 该路由没有声明响应模型。
+# 这样口径与 openapi-typescript 完全一致（它拿不到 schema 就生成不出类型），
+# 不会出现"源码里写了 response_model 但生成物仍是空"的错位。
+ANY_CALL_RE = re.compile(r"api\.(\w+)\s*<\s*any\s*>\s*\(\s*(['\"`])([^'\"`]+)\2")
+
+
+def collect_any_calls(src_root: str) -> list:
+    """扫 src/ 收集 `api.xxx<any>('path')` —— 这些是"想写类型但没类型可写"的地方。"""
+    out = []
+    for root, dirs, files in os.walk(src_root):
+        dirs[:] = [d for d in dirs if d not in ("node_modules", "__tests__")]
+        for fn in files:
+            if not fn.endswith((".ts", ".vue")):
+                continue
+            fp = os.path.join(root, fn)
+            try:
+                with open(fp, encoding="utf-8") as f:
+                    text = f.read()
+            except OSError:
+                continue
+            rel = os.path.relpath(fp, os.path.dirname(src_root)).replace("\\", "/")
+            for m, _q, path in ANY_CALL_RE.findall(text):
+                out.append((_METHOD_MAP.get(m, m.upper()), norm_path(path, frontend=True), rel))
+    return out
+
+
+def collect_contract_gaps(spec: dict, src_root: str):
+    """→ (gaps, blocked_by_frontend, total_ops)。
+
+    gaps: [(METHOD, path)] 200 响应 schema 为空的路由；
+    blocked_by_frontend: 其中被前端 `api.*<any>()` 实际调用的（= 优先级最高，
+    补完模型就能立刻把前端那处 any 换成生成类型）。
+    """
+    gaps = []
+    total = 0
+    for path, methods in spec.get("paths", {}).items():
+        for m, op in methods.items():
+            if m.lower() not in HTTP_METHODS:
+                continue
+            total += 1
+            schema = (
+                op.get("responses", {})
+                .get("200", {})
+                .get("content", {})
+                .get("application/json", {})
+                .get("schema", {})
+            )
+            # 空 dict / 无 $ref 无 properties ⇒ 没有可用 schema
+            if not schema or (not schema.get("$ref") and not schema.get("properties")):
+                gaps.append((m.upper(), norm_path(path)))
+    any_calls = collect_any_calls(src_root)
+    hot = []
+    for gm, gp in gaps:
+        hits = [rel for cm, cp, rel in any_calls if cm == gm and path_match(gp, cp)]
+        if hits:
+            hot.append((gm, gp, sorted(set(hits))))
+    hot.sort(key=lambda x: (-len(x[2]), x[1]))
+    return gaps, hot, total
+
+
 def audit(backend: set, frontend: list):
     """→ (missing, orphans)。
     missing: [{call, where, method_mismatch}] 前端调用无后端路由；
@@ -162,6 +224,8 @@ def main() -> None:
                         help="阻断模式：A 类（前端打到不存在的路由）> 0 时 exit 1")
     parser.add_argument("--openapi", default=OPENAPI, help="openapi.json 路径")
     parser.add_argument("--src", default=SRC, help="前端源码根目录")
+    parser.add_argument("--contract-gaps", action="store_true",
+                        help="只输出「无响应模型」的契约缺口清单（按前端 any 调用热度排序）")
     args = parser.parse_args()
 
     try:
@@ -170,6 +234,33 @@ def main() -> None:
     except (OSError, json.JSONDecodeError) as e:
         print(f"🔴 [contract] openapi.json 不可用：{type(e).__name__}", file=sys.stderr)
         sys.exit(2)
+    if args.contract_gaps:
+        gaps, hot, total = collect_contract_gaps(spec, args.src)
+        print("=" * 72)
+        print("契约缺口：200 响应无 schema 的路由（= 没有 response_model）")
+        print("=" * 72)
+        print(f"路由总数 {total}；有响应模型 {total - len(gaps)}"
+              f"（{(total - len(gaps)) / total * 100:.1f}%）；缺口 {len(gaps)}")
+        print()
+        print(f"=== 优先级最高：缺口且前端已用 api.*<any>() 调用（{len(hot)} 条）===")
+        print("  补完这些的 response_model，前端对应那处 any 就能立刻换成生成类型。")
+        for m, p, files in hot:
+            print(f"  {m:6s} {p}")
+            for f in files:
+                print(f"           ↳ {f}")
+        print()
+        print("=== 其余缺口（前端暂未用 any 调，可按需）===")
+        hot_set = {(m, p) for m, p, _ in hot}
+        rest = [g for g in gaps if g not in hot_set]
+        by_mod: dict = {}
+        for m, p in rest:
+            mod = p.split("/")[2] if p.count("/") >= 2 else p
+            by_mod.setdefault(mod, 0)
+            by_mod[mod] += 1
+        for mod, n in sorted(by_mod.items(), key=lambda x: -x[1])[:20]:
+            print(f"  {n:4d}  /{mod}/…")
+        return
+
     backend = collect_backend(spec)
     if not backend:
         print("🔴 [contract] openapi.json 零路由——快照损坏？fail-closed", file=sys.stderr)

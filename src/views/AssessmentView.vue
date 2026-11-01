@@ -4,6 +4,12 @@ import { ref, onMounted, onUnmounted, computed, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStudyStore } from '@/stores/studyStore'
 import { api } from '@/utils/api'
+import type { operations } from '@/types/api.generated'
+
+// 答题历史响应类型直接绑后端契约（py-server/api/quiz.py 的 QuizHistoryResponse）。
+// 2026-10-29 该路由补了 response_model，三处调用点才真正有类型可绑。
+type QuizHistoryResponse =
+  operations['get_quiz_history_api_quiz_history_get']['responses'][200]['content']['application/json']
 import { renderMarkdownSafe } from '@/utils/markdown'
 import { withAlpha } from '@/utils/themeTokens'
 import { icons } from '@/components/icons'
@@ -59,9 +65,9 @@ async function loadAssessment() {
   try {
     // 从后端拉取真实答题历史（修复 quizHistory 为空的问题）
     try {
-      const histData = await api.get<any>('/quiz/history')
+      const histData = await api.get<QuizHistoryResponse>('/quiz/history')
       if (histData?.records?.length) {
-        quizHistory.value = histData.records.map((r: any) => ({
+        quizHistory.value = histData.records.map((r) => ({
           subject: r.subject || 'unknown',
           correct: !!r.correct,
           difficulty: r.difficulty,

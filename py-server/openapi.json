@@ -947,7 +947,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/QuizHistoryResponse"
+                }
               }
             }
           },
@@ -21029,6 +21031,66 @@
         },
         "type": "object",
         "title": "QuizHistoryPayload"
+      },
+      "QuizHistoryRecord": {
+        "properties": {
+          "subject": {
+            "type": "string",
+            "title": "Subject"
+          },
+          "correct": {
+            "type": "boolean",
+            "title": "Correct"
+          },
+          "difficulty": {
+            "type": "string",
+            "title": "Difficulty"
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "subject",
+          "correct",
+          "difficulty",
+          "timestamp"
+        ],
+        "title": "QuizHistoryRecord",
+        "description": "单条答题记录。\n\n形状对齐 `db/profile_store.py::get_quiz_history`：四个列在表定义里均为\n`NOT NULL`（subject/difficulty 有 DEFAULT），故此处不需要 Optional。"
+      },
+      "QuizHistoryResponse": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "correct": {
+            "type": "integer",
+            "title": "Correct"
+          },
+          "accuracy": {
+            "type": "number",
+            "title": "Accuracy"
+          },
+          "records": {
+            "items": {
+              "$ref": "#/components/schemas/QuizHistoryRecord"
+            },
+            "type": "array",
+            "title": "Records"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "correct",
+          "accuracy",
+          "records"
+        ],
+        "title": "QuizHistoryResponse"
       },
       "QuizRecord": {
         "properties": {

@@ -5,6 +5,12 @@ import { useRouter } from 'vue-router'
 import { useStudyStore } from '@/stores/studyStore'
 import { useAchievementStore } from '@/stores/achievementStore'
 import { api } from '@/utils/api'
+import type { operations } from '@/types/api.generated'
+
+// 答题历史响应类型直接绑后端契约（py-server/api/quiz.py 的 QuizHistoryResponse）。
+// 2026-10-29 该路由补了 response_model，三处调用点才真正有类型可绑。
+type QuizHistoryResponse =
+  operations['get_quiz_history_api_quiz_history_get']['responses'][200]['content']['application/json']
 import { resolveToken, withAlpha } from '@/utils/themeTokens'
 
 const store = useStudyStore()
@@ -245,7 +251,7 @@ const historyError = ref('')
 async function loadQuizHistory() {
   historyError.value = ''
   try {
-    const r = await api.get<{ records?: { subject?: string; correct?: boolean }[] }>('/quiz/history')
+    const r = await api.get<QuizHistoryResponse>('/quiz/history')
     quizHistory.value = (r?.records ?? []).map(x => ({
       subject: x.subject || 'unknown',
       correct: !!x.correct,
