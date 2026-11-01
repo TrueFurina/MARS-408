@@ -14,6 +14,12 @@ type ScenarioListResponse =
 type Scenario = ScenarioListResponse['scenarios'][number]
 type ConsentResponse =
   operations['get_consent_api_career_consent_get']['responses'][200]['content']['application/json']
+type ConsentAck =
+  operations['post_consent_api_career_consent_post']['responses'][200]['content']['application/json']
+type TaskJoinResult =
+  operations['join_task_api_career_task_join_post']['responses'][200]['content']['application/json']
+type FeedbackAck =
+  operations['post_feedback_api_career_session__session_id__feedback_post']['responses'][200]['content']['application/json']
 interface Turn { role: 'interviewer' | 'student'; text: string; mode?: string; dimension?: string; evidence?: any }
 
 const MODE_LABEL: Record<string, string> = { normal: '常规追问', escalating: '逐步加压', catfish: '鲶鱼反诘' }
@@ -48,7 +54,7 @@ const exportError = ref('')
 
 /* 教师任务：凭任务码加入后，场景/难度/轮数由任务决定，会话须带 task_id 才会进班级看板 */
 const joinCode = ref('')
-const joinedTask = ref<any>(null)
+const joinedTask = ref<TaskJoinResult | null>(null)
 const joining = ref(false)
 
 const currentScenario = computed(() => scenarios.value.find(s => s.id === scenarioId.value))
@@ -101,7 +107,7 @@ async function joinByCode() {
   if (joinCodeError.value) { errorMsg.value = joinCodeError.value; return }
   joining.value = true; errorMsg.value = ''
   try {
-    const res = await api.post<any>('/career/task/join', { join_code: code })
+    const res = await api.post<TaskJoinResult>('/career/task/join', { join_code: code })
     joinedTask.value = res
     // 任务已锁定场景/难度/轮数，不再由学生自选
     scenarioId.value = res.scenario_id
@@ -160,7 +166,7 @@ async function submitConsent(agreed: boolean) {
   if (consentBusy.value) return
   consentBusy.value = true
   try {
-    const res = await api.post<any>('/career/consent', { agreed })
+    const res = await api.post<ConsentAck>('/career/consent', { agreed })
     consent.value.agreed = res.agreed
   } catch (e) {
     errorMsg.value = friendlyError(e, '同意记录保存失败')
@@ -179,7 +185,7 @@ async function submitFeedback() {
   if (!sid || !myRating.value || feedbackBusy.value) return
   feedbackBusy.value = true
   try {
-    const res = await api.post<any>(`/career/session/${encodeURIComponent(sid)}/feedback`, {
+    const res = await api.post<FeedbackAck>(`/career/session/${encodeURIComponent(sid)}/feedback`, {
       rating: myRating.value, comment: myComment.value.trim(),
     })
     feedbackDone.value = { rating: res.rating, updated: res.updated }

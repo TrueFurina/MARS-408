@@ -148,6 +148,42 @@ class CareerConsentRecord(BaseModel):
     agreed_at: str = ""
 
 
+class CareerTaskJoinResult(BaseModel):
+    """POST /career/task/join 的返回。
+
+    `roster_bound` / `bound_name` / `bound_match` 三个字段是**如实回传绑定结果**：
+    `matched_by=name` 表示按姓名命中花名册；`first_unbound` 表示退回旧行为（可能错位）。
+    前端据此提示"可能匹配到错误的人"，所以这三个字段不能省。
+    """
+    task_id: str
+    scenario_id: str
+    scenario_type: str
+    difficulty: str
+    max_turns: int
+    class_id: str
+    roster_bound: bool
+    bound_name: str
+    bound_match: str
+
+
+class CareerFeedbackAck(BaseModel):
+    """POST /career/session/{id}/feedback 的回执。`updated=true` 表示覆盖了旧评价。"""
+    session_id: str
+    rating: int
+    updated: bool
+
+
+class CareerConsentAck(BaseModel):
+    """POST /career/consent 的回执：只有三个字段，**没有 agreed_at**。
+
+    刻意不复用 `CareerConsentRecord` —— 那个多一个 `agreed_at`，复用会让响应里
+    凭空多出一个恒为空串的字段。契约里不该有"为了复用而编造"的字段。
+    """
+    user_id: str
+    agreed: bool
+    version: str
+
+
 class CareerConsentResponse(BaseModel):
     """GET /career/consent。
 
@@ -760,7 +796,7 @@ async def class_dashboard(class_id: str, user: dict = Depends(get_current_user))
 
 
 # ── 学生凭任务码加入 ──
-@router.post("/task/join")
+@router.post("/task/join", response_model=CareerTaskJoinResult)
 async def join_task(req: TaskJoinRequest, user: dict = Depends(get_current_user)):
     task = career_store.get_task_by_code(req.join_code)
     if not task:
@@ -807,7 +843,7 @@ async def get_consent(user: dict = Depends(get_current_user)):
             "text": career_store.CONSENT_TEXT}
 
 
-@router.post("/consent")
+@router.post("/consent", response_model=CareerConsentAck)
 async def post_consent(req: ConsentRequest, user: dict = Depends(get_current_user)):
     """记录知情同意（agreed=false 也如实记录，便于审计"看过但不同意"）。"""
     try:
@@ -817,7 +853,7 @@ async def post_consent(req: ConsentRequest, user: dict = Depends(get_current_use
         raise HTTPException(status_code=500, detail=f"记录失败: {e}")
 
 
-@router.post("/session/{session_id}/feedback")
+@router.post("/session/{session_id}/feedback", response_model=CareerFeedbackAck)
 async def post_feedback(session_id: str, req: FeedbackRequest,
                         user: dict = Depends(get_current_user)):
     """课后简评：仅会话本人可提交（教师代填无意义）；每场一条（重复提交更新）。"""

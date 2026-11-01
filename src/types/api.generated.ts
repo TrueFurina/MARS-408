@@ -5465,6 +5465,21 @@ export interface components {
             file: string;
         };
         /**
+         * CareerConsentAck
+         * @description POST /career/consent 的回执：只有三个字段，**没有 agreed_at**。
+         *
+         *     刻意不复用 `CareerConsentRecord` —— 那个多一个 `agreed_at`，复用会让响应里
+         *     凭空多出一个恒为空串的字段。契约里不该有"为了复用而编造"的字段。
+         */
+        CareerConsentAck: {
+            /** User Id */
+            user_id: string;
+            /** Agreed */
+            agreed: boolean;
+            /** Version */
+            version: string;
+        };
+        /**
          * CareerConsentRecord
          * @description 一次知情同意的留痕记录。
          *
@@ -5497,6 +5512,18 @@ export interface components {
             version: string;
             /** Text */
             text: string;
+        };
+        /**
+         * CareerFeedbackAck
+         * @description POST /career/session/{id}/feedback 的回执。`updated=true` 表示覆盖了旧评价。
+         */
+        CareerFeedbackAck: {
+            /** Session Id */
+            session_id: string;
+            /** Rating */
+            rating: number;
+            /** Updated */
+            updated: boolean;
         };
         /**
          * CareerScenarioItem
@@ -5535,6 +5562,34 @@ export interface components {
         CareerScenarioListResponse: {
             /** Scenarios */
             scenarios: components["schemas"]["CareerScenarioItem"][];
+        };
+        /**
+         * CareerTaskJoinResult
+         * @description POST /career/task/join 的返回。
+         *
+         *     `roster_bound` / `bound_name` / `bound_match` 三个字段是**如实回传绑定结果**：
+         *     `matched_by=name` 表示按姓名命中花名册；`first_unbound` 表示退回旧行为（可能错位）。
+         *     前端据此提示"可能匹配到错误的人"，所以这三个字段不能省。
+         */
+        CareerTaskJoinResult: {
+            /** Task Id */
+            task_id: string;
+            /** Scenario Id */
+            scenario_id: string;
+            /** Scenario Type */
+            scenario_type: string;
+            /** Difficulty */
+            difficulty: string;
+            /** Max Turns */
+            max_turns: number;
+            /** Class Id */
+            class_id: string;
+            /** Roster Bound */
+            roster_bound: boolean;
+            /** Bound Name */
+            bound_name: string;
+            /** Bound Match */
+            bound_match: string;
         };
         /** ChatSendRequest */
         ChatSendRequest: {
@@ -15825,7 +15880,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CareerTaskJoinResult"];
                 };
             };
             /** @description Validation Error */
@@ -15925,7 +15980,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CareerConsentAck"];
                 };
             };
             /** @description Validation Error */
@@ -15963,7 +16018,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CareerFeedbackAck"];
                 };
             };
             /** @description Validation Error */

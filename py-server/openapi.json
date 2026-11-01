@@ -17620,7 +17620,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/CareerTaskJoinResult"
+                }
               }
             }
           },
@@ -17822,7 +17824,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/CareerConsentAck"
+                }
               }
             }
           },
@@ -17905,7 +17909,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/CareerFeedbackAck"
+                }
               }
             }
           },
@@ -19242,6 +19248,30 @@
         ],
         "title": "Body_knowledge_upload_api_knowledge_upload_post"
       },
+      "CareerConsentAck": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "agreed": {
+            "type": "boolean",
+            "title": "Agreed"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "agreed",
+          "version"
+        ],
+        "title": "CareerConsentAck",
+        "description": "POST /career/consent 的回执：只有三个字段，**没有 agreed_at**。\n\n刻意不复用 `CareerConsentRecord` —— 那个多一个 `agreed_at`，复用会让响应里\n凭空多出一个恒为空串的字段。契约里不该有\"为了复用而编造\"的字段。"
+      },
       "CareerConsentRecord": {
         "properties": {
           "user_id": {
@@ -19306,6 +19336,30 @@
         "title": "CareerConsentResponse",
         "description": "GET /career/consent。\n\n`consent` 为 null 表示\"从未表态过\"（与 agreed=false 的\"看过但不同意\"是两回事，\n后者会返回一条 agreed=false 的记录）—— 前端据此区分\"要弹门禁\"和\"要显示已拒绝\"。"
       },
+      "CareerFeedbackAck": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "rating": {
+            "type": "integer",
+            "title": "Rating"
+          },
+          "updated": {
+            "type": "boolean",
+            "title": "Updated"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "rating",
+          "updated"
+        ],
+        "title": "CareerFeedbackAck",
+        "description": "POST /career/session/{id}/feedback 的回执。`updated=true` 表示覆盖了旧评价。"
+      },
       "CareerScenarioItem": {
         "properties": {
           "id": {
@@ -19365,6 +19419,60 @@
           "scenarios"
         ],
         "title": "CareerScenarioListResponse"
+      },
+      "CareerTaskJoinResult": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "title": "Task Id"
+          },
+          "scenario_id": {
+            "type": "string",
+            "title": "Scenario Id"
+          },
+          "scenario_type": {
+            "type": "string",
+            "title": "Scenario Type"
+          },
+          "difficulty": {
+            "type": "string",
+            "title": "Difficulty"
+          },
+          "max_turns": {
+            "type": "integer",
+            "title": "Max Turns"
+          },
+          "class_id": {
+            "type": "string",
+            "title": "Class Id"
+          },
+          "roster_bound": {
+            "type": "boolean",
+            "title": "Roster Bound"
+          },
+          "bound_name": {
+            "type": "string",
+            "title": "Bound Name"
+          },
+          "bound_match": {
+            "type": "string",
+            "title": "Bound Match"
+          }
+        },
+        "type": "object",
+        "required": [
+          "task_id",
+          "scenario_id",
+          "scenario_type",
+          "difficulty",
+          "max_turns",
+          "class_id",
+          "roster_bound",
+          "bound_name",
+          "bound_match"
+        ],
+        "title": "CareerTaskJoinResult",
+        "description": "POST /career/task/join 的返回。\n\n`roster_bound` / `bound_name` / `bound_match` 三个字段是**如实回传绑定结果**：\n`matched_by=name` 表示按姓名命中花名册；`first_unbound` 表示退回旧行为（可能错位）。\n前端据此提示\"可能匹配到错误的人\"，所以这三个字段不能省。"
       },
       "ChatSendRequest": {
         "properties": {
