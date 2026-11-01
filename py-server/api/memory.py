@@ -209,7 +209,22 @@ async def record_quiz(req: QuizResultRequest, user: dict = Depends(get_current_u
 
 # ── 聚合 ──
 
-@router.get("/overview")
+# ── 响应模型（2026-10-29 补）──
+# 前端 KnowledgeBaseView 与 ProfileView 都用它，此前各自写 `api.get<any>` 再各自猜字段。
+# 形状对齐 services/memory_service.py::get_memory_overview（9 个字段，全部静态）。
+class MemoryOverviewResponse(BaseModel):
+    status: str
+    has_profile: bool
+    profile_dimensions: int
+    mastery_points: int
+    weak_points: list[str]
+    mastered_points: list[str]
+    episodic_count: int
+    working_context: bool
+    memory_level: str
+
+
+@router.get("/overview", response_model=MemoryOverviewResponse)
 async def memory_overview(user: dict = Depends(get_current_user)):
     """记忆健康度总览（画像维度/掌握点数/情景条数/记忆层级）"""
     uid = _uid(user)

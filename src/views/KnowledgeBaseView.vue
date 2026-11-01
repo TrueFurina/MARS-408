@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { api, friendlyError } from '@/utils/api'
+import type { operations } from '@/types/api.generated'
 import PdfReader from '@/components/PdfReader.vue'
 import { SEED_TEXTBOOK_LIST, getSeedTextbook, isSeedTextbook } from '@/data/seedTextbooks'
 
@@ -55,11 +56,9 @@ interface RagHit {
   metadata?: { subject?: string; topic?: string }
 }
 
-/** `/memory/overview`（只用到 status 与 weak_points，其余字段不参与渲染） */
-interface MemoryOverview {
-  status?: string
-  weak_points?: string[]
-}
+/** `/memory/overview` 直接绑后端契约（py-server/api/memory.py 的 MemoryOverviewResponse） */
+type MemoryOverview =
+  operations['memory_overview_api_memory_overview_get']['responses'][200]['content']['application/json']
 
 const router = useRouter()
 const textbooks = ref<TextbookSummary[]>(SEED_TEXTBOOK_LIST)

@@ -9,6 +9,10 @@ import type { operations } from '@/types/api.generated'
 
 // 答题历史响应类型直接绑后端契约（py-server/api/quiz.py 的 QuizHistoryResponse）。
 // 2026-10-29 该路由补了 response_model，三处调用点才真正有类型可绑。
+// `/memory/overview` 响应类型绑后端契约（py-server/api/memory.py 的 MemoryOverviewResponse）
+type MemoryOverviewResponse =
+  operations['memory_overview_api_memory_overview_get']['responses'][200]['content']['application/json']
+
 type QuizHistoryResponse =
   operations['get_quiz_history_api_quiz_history_get']['responses'][200]['content']['application/json']
 import { resolveToken, withAlpha } from '@/utils/themeTokens'
@@ -235,7 +239,7 @@ let themeObserver: MutationObserver | null = null
 const memoryOverview = ref<any>(null)
 async function loadMemoryOverview() {
   try {
-    const memRes: any = await api.get('/memory/overview')
+    const memRes = await api.get<MemoryOverviewResponse>('/memory/overview')
     if (memRes?.status === 'ok') memoryOverview.value = memRes
   } catch { /* 记忆服务不可用时不阻塞画像页 */ }
 }

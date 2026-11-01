@@ -6340,6 +6340,27 @@ export interface components {
              */
             mastered: boolean;
         };
+        /** MemoryOverviewResponse */
+        MemoryOverviewResponse: {
+            /** Status */
+            status: string;
+            /** Has Profile */
+            has_profile: boolean;
+            /** Profile Dimensions */
+            profile_dimensions: number;
+            /** Mastery Points */
+            mastery_points: number;
+            /** Weak Points */
+            weak_points: string[];
+            /** Mastered Points */
+            mastered_points: string[];
+            /** Episodic Count */
+            episodic_count: number;
+            /** Working Context */
+            working_context: boolean;
+            /** Memory Level */
+            memory_level: string;
+        };
         /**
          * MultimodalResourceRequest
          * @description 多模态资源生成请求（图+文+音一体）
@@ -14489,7 +14510,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["MemoryOverviewResponse"];
                 };
             };
             /** @description Validation Error */

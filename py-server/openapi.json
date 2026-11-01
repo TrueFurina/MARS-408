@@ -14796,7 +14796,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryOverviewResponse"
+                }
               }
             }
           },
@@ -20742,6 +20744,65 @@
         },
         "type": "object",
         "title": "MasteryUpdateRequest"
+      },
+      "MemoryOverviewResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "has_profile": {
+            "type": "boolean",
+            "title": "Has Profile"
+          },
+          "profile_dimensions": {
+            "type": "integer",
+            "title": "Profile Dimensions"
+          },
+          "mastery_points": {
+            "type": "integer",
+            "title": "Mastery Points"
+          },
+          "weak_points": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Weak Points"
+          },
+          "mastered_points": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Mastered Points"
+          },
+          "episodic_count": {
+            "type": "integer",
+            "title": "Episodic Count"
+          },
+          "working_context": {
+            "type": "boolean",
+            "title": "Working Context"
+          },
+          "memory_level": {
+            "type": "string",
+            "title": "Memory Level"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "has_profile",
+          "profile_dimensions",
+          "mastery_points",
+          "weak_points",
+          "mastered_points",
+          "episodic_count",
+          "working_context",
+          "memory_level"
+        ],
+        "title": "MemoryOverviewResponse"
       },
       "MultimodalResourceRequest": {
         "properties": {
