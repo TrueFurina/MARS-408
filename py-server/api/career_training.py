@@ -136,6 +136,29 @@ class CareerScenarioListResponse(BaseModel):
     scenarios: list[CareerScenarioItem]
 
 
+class CareerConsentRecord(BaseModel):
+    """一次知情同意的留痕记录。
+
+    形状对齐 `db/career_store.py::get_consent` 的返回 dict（4 个字段，
+    `agreed_at` 在那里已被 `str()` 归一为字符串，故此处也按 str 声明）。
+    """
+    user_id: str
+    agreed: bool
+    version: Optional[str] = None
+    agreed_at: str = ""
+
+
+class CareerConsentResponse(BaseModel):
+    """GET /career/consent。
+
+    `consent` 为 null 表示"从未表态过"（与 agreed=false 的"看过但不同意"是两回事，
+    后者会返回一条 agreed=false 的记录）—— 前端据此区分"要弹门禁"和"要显示已拒绝"。
+    """
+    consent: Optional[CareerConsentRecord] = None
+    version: str
+    text: str
+
+
 # ── 场景列表 ──
 @router.get("/scenarios", response_model=CareerScenarioListResponse)
 async def scenarios(user: dict = Depends(get_current_user)):
@@ -775,7 +798,7 @@ async def my_growth(user: dict = Depends(get_current_user)):
 # ────────────────────────────────────────────────────────────
 # F6 知情同意与课后简评（试用伦理 + 满意度数据）
 # ────────────────────────────────────────────────────────────
-@router.get("/consent")
+@router.get("/consent", response_model=CareerConsentResponse)
 async def get_consent(user: dict = Depends(get_current_user)):
     """当前用户的同意状态 + 同意书文本（前端据此渲染门禁）。"""
     rec = career_store.get_consent(user["user_id"])

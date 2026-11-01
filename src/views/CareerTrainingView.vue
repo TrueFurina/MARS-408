@@ -12,6 +12,8 @@ type Step = 'select' | 'briefing' | 'battle' | 'report'
 type ScenarioListResponse =
   operations['scenarios_api_career_scenarios_get']['responses'][200]['content']['application/json']
 type Scenario = ScenarioListResponse['scenarios'][number]
+type ConsentResponse =
+  operations['get_consent_api_career_consent_get']['responses'][200]['content']['application/json']
 interface Turn { role: 'interviewer' | 'student'; text: string; mode?: string; dimension?: string; evidence?: any }
 
 const MODE_LABEL: Record<string, string> = { normal: '常规追问', escalating: '逐步加压', catfish: '鲶鱼反诘' }
@@ -146,7 +148,7 @@ const consentBusy = ref(false)
 
 async function loadConsent() {
   try {
-    const res = await api.get<any>('/career/consent')
+    const res = await api.get<ConsentResponse>('/career/consent')
     consent.value = { agreed: res.consent?.agreed ?? null, text: res.text || '', version: res.version || '' }
   } catch {
     consent.value.agreed = null  // 拉取失败不当成已同意，按未同意展示门禁

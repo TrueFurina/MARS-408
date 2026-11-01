@@ -5465,6 +5465,40 @@ export interface components {
             file: string;
         };
         /**
+         * CareerConsentRecord
+         * @description 一次知情同意的留痕记录。
+         *
+         *     形状对齐 `db/career_store.py::get_consent` 的返回 dict（4 个字段，
+         *     `agreed_at` 在那里已被 `str()` 归一为字符串，故此处也按 str 声明）。
+         */
+        CareerConsentRecord: {
+            /** User Id */
+            user_id: string;
+            /** Agreed */
+            agreed: boolean;
+            /** Version */
+            version?: string | null;
+            /**
+             * Agreed At
+             * @default
+             */
+            agreed_at: string;
+        };
+        /**
+         * CareerConsentResponse
+         * @description GET /career/consent。
+         *
+         *     `consent` 为 null 表示"从未表态过"（与 agreed=false 的"看过但不同意"是两回事，
+         *     后者会返回一条 agreed=false 的记录）—— 前端据此区分"要弹门禁"和"要显示已拒绝"。
+         */
+        CareerConsentResponse: {
+            consent?: components["schemas"]["CareerConsentRecord"] | null;
+            /** Version */
+            version: string;
+            /** Text */
+            text: string;
+        };
+        /**
          * CareerScenarioItem
          * @description 情景展示字段。
          *
@@ -15761,7 +15795,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CareerConsentResponse"];
                 };
             };
             /** @description Validation Error */

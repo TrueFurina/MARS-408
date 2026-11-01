@@ -17742,7 +17742,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/CareerConsentResponse"
+                }
               }
             }
           },
@@ -19233,6 +19235,70 @@
           "file"
         ],
         "title": "Body_knowledge_upload_api_knowledge_upload_post"
+      },
+      "CareerConsentRecord": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "agreed": {
+            "type": "boolean",
+            "title": "Agreed"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          },
+          "agreed_at": {
+            "type": "string",
+            "title": "Agreed At",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "agreed"
+        ],
+        "title": "CareerConsentRecord",
+        "description": "一次知情同意的留痕记录。\n\n形状对齐 `db/career_store.py::get_consent` 的返回 dict（4 个字段，\n`agreed_at` 在那里已被 `str()` 归一为字符串，故此处也按 str 声明）。"
+      },
+      "CareerConsentResponse": {
+        "properties": {
+          "consent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CareerConsentRecord"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "version",
+          "text"
+        ],
+        "title": "CareerConsentResponse",
+        "description": "GET /career/consent。\n\n`consent` 为 null 表示\"从未表态过\"（与 agreed=false 的\"看过但不同意\"是两回事，\n后者会返回一条 agreed=false 的记录）—— 前端据此区分\"要弹门禁\"和\"要显示已拒绝\"。"
       },
       "CareerScenarioItem": {
         "properties": {
