@@ -289,6 +289,20 @@ D 的守卫是全局的、逐文件判定天然误报，两者都不适合直接
 `api.*<any>()` 调用」排序的缺口清单 —— 当前 236 个缺口中有 **49 条**是前端正在用 any 的，
 那就是剩余工作的顺序。
 
+**剩余 232 个缺口不能一概而论**。补了 10 条之后能看出四类，处理方式完全不同：
+
+| 类型 | 例子 | 为什么不能直接加模型 |
+|---|---|---|
+| **A. 静态可定型** | `/career/scenarios`、`/quiz/history`、`/admin/stats` | 无阻碍，按上面 5 步做即可（已做 10 条） |
+| **B. 动态结构** | `/career/session/start\|answer\|end`（LangGraph `CareerState` + 运行时追加键）、`/engine/status` 的三组 stats | 加严格模型会**吃掉**未声明字段。`/engine/status` 的折中是外层定型 + 内层 `dict[str, Any]` 显式声明不保证结构；但 session 状态连外层都还在演进，需要先把状态收敛成声明式 schema |
+| **C. LLM 生成内容** | `/agents/generate-*`、`/assessment/feedback`、`/engine/frugal-rag-full`、`/engine/gomarl-consensus` | 返回的是模型输出，字段随 prompt 变化。定型等于把"模型可能返回什么"写死，维护成本高于收益 |
+| **D. 类型未归一化** | `/career/my-tasks`（时间字段 sqlite 是 str、PG 是 datetime） | 需要先加字段序列化（`field_serializer`），不是纯补模型能解决的 |
+| **E. 前端有联合类型** | `/achievement/list`（前端 `category` 是 `'milestone' \| ...`，后端是 `str`） | 绑生成类型会让联合失效，需要先约定枚举值来源 |
+
+**这五类的分布本身就是结论**：A 类只有十几条，B/C 类占大头。
+所以"把 232 个补完"不是工程量问题，而是**要先改生产方**（收敛状态、归一化字段、约定枚举）
+—— 那是设计变更，不是补模型。
+
 **故意跳过的**：`/career/my-tasks` —— `career_store._query` 不做类型归一化，
 时间字段在 sqlite 是 `str`、Postgres 是 `datetime`，定型会在生产 500。
 这类需要先加字段序列化，不是纯补模型能解决的。
