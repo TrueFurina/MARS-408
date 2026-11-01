@@ -261,7 +261,39 @@ D 的守卫是全局的、逐文件判定天然误报，两者都不适合直接
 - `/knowledge-base/textbook/{id}` 把导入时的 JSON **原样返回**，字段由 PDF 解析器决定；
 - `/knowledge-graph/*` 的节点是 LLM 抽取的动态实体，`vis.nodes` 的字段不固定。
 
-### 为什么我不改后端
+### 已开始补（用户授权跨域后）
+
+授权后补了 6 条契约，响应模型覆盖率 **7.9% → 9.9%**（20/254 → 26/262 操作）：
+
+| 路由 | 前端使用方 | 备注 |
+|---|---|---|
+| `GET /career/scenarios` | CareerTrainingView | 静态白名单（`_scenario_display`） |
+| `GET /career/consent` | CareerTrainingView | 两态：`null`=从未表态 / `agreed:false`=看过但不同意 |
+| `GET /quiz/history` | AssessmentView / QuizHistoryView / ProfileView | 三处共用，收益最大 |
+| `GET /admin/stats` | AdminView | `by_subject` 键动态 → `dict[str, SubjectStat]` |
+| `GET /memory/overview` | KnowledgeBaseView / ProfileView | 5 个真实用户验证过 |
+
+**补契约的标准动作（每一步都不能省）**：
+
+1. 读**产出方**（service/store 里构造 dict 的那几行），不读接口签名；
+2. 写模型，把"可能为 None 的字段"逐个确认（查表定义的 `NOT NULL`、查 `.get()` 有没有默认值）；
+3. **用真实数据跑一遍模型构造**，比对 `原始字段 / 模型字段 / 被丢弃的字段`；
+4. 重生成 `openapi.json` → `npm run types:generate` → 前端改绑；
+5. 跑该域的后端测试。
+
+第 3 步是核心：**补 `response_model` 是"收窄"，模型外字段会被 FastAPI 静默过滤**。
+漏一个字段时 pytest 不会红、tsc 也不会红（前端拿到的类型就是模型本身），
+只有逐字段比对能发现。
+
+**工具**：`python scripts/audit_api_contract.py --contract-gaps` 输出按「前端是否已用
+`api.*<any>()` 调用」排序的缺口清单 —— 当前 236 个缺口中有 **49 条**是前端正在用 any 的，
+那就是剩余工作的顺序。
+
+**故意跳过的**：`/career/my-tasks` —— `career_store._query` 不做类型归一化，
+时间字段在 sqlite 是 `str`、Postgres 是 `datetime`，定型会在生产 500。
+这类需要先加字段序列化，不是纯补模型能解决的。
+
+### 为什么我最初不改后端
 
 按分工后端属主 agent 域（`AGENTS.md` 协作纪律），本轮**未擅自添加 `response_model`**。
 但这件事的性价比值得主 agent 评估：
