@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -102,6 +103,25 @@ def resolve_commits(mode: str, ref: str | None) -> list[str]:
         return [s.strip() for s in out.splitlines() if s.strip()]
     except Exception:
         return []
+
+
+# GitHub squash 合并的提交标题形如 `feat: xxx (#83)`。
+# 这类提交是**一次 PR 的合并产物**，其 diff 是整条分支的并集 ——
+# 「测试与实现同 commit」的判据在它身上必然成立，但那是**合并方式造成的**，
+# 不是逃逸信号（实测：本仓库 PR #83 的 55 个原始提交逐个判定全部合规，
+# 压成一个 squash 提交后才触发）。这与 `--all` 模式「全树必然同时含测试与实现」
+# 是同一类语义冲突，故采用同一处理：标记「未生效」并输出可见 warning，
+# 而不是留一道假红让后来人反复排查。
+SQUASH_SUBJECT_RE = re.compile(r"\(#\d+\)\s*$")
+
+
+def is_pr_aggregate(sha: str) -> bool:
+    """该 commit 是否是 PR 的 squash 合并产物（标题以 `(#NNN)` 结尾）。"""
+    try:
+        subj = _git("log", "-1", "--format=%s", sha).strip()
+    except Exception:
+        return False
+    return bool(SQUASH_SUBJECT_RE.search(subj))
 
 
 def _run_per_commit(py: str, script: str, commits: list[str], extra: list[str]) -> tuple[int, list[str]]:
@@ -333,8 +353,24 @@ def main() -> int:
     commits = resolve_commits(mode, args.diff)
     if commits:
         # push 事件可能跨多个 commit；必须逐个判，合并视角会造成误判（见 resolve_commits）
-        rc, notes = _run_per_commit(py, "test_file_guard.py", commits, ["--staged"])
-        record("测试文件禁改", rc, " ".join(notes))
+        aggregates = [c for c in commits if is_pr_aggregate(c)]
+        real = [c for c in commits if c not in set(aggregates)]
+        if aggregates:
+            print(
+                f"::warning::范围内有 {len(aggregates)} 个 squash 合并提交"
+                f"（{', '.join(c[:7] for c in aggregates[:3])}）。"
+                "该提交的 diff 是整条 PR 的并集，「测试与实现同 commit」必然成立，"
+                "属合并方式造成的假红，非逃逸信号；已跳过并标记本道未生效。"
+                "如需保留逐提交纪律，请用 merge commit 合并而不是 squash。",
+                file=sys.stderr,
+            )
+        if real:
+            rc, notes = _run_per_commit(py, "test_file_guard.py", real, ["--staged"])
+            record("测试文件禁改", rc, " ".join(notes))
+        else:
+            record("测试文件禁改", 0,
+                   "范围内只有 squash 合并提交，per-commit 语义不适用（见 warning）",
+                   effective=False)
     elif mode == "all":
         record("测试文件禁改", 0,
                "全量模式不适用：本规则判定粒度是「单次变更」，全树必然同时含"
