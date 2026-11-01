@@ -47,8 +47,8 @@
 | 生产包内可达漏洞 | 5（含 dompurify critical） | **0** | 逐条可达性分级见审计报告第 2/3 节 |
 | 前端单测 | 31 文件 / 220 用例 | **34 文件 / 256 用例**（+36） | `npx vitest run` |
 | `catch (e: any)` 注解 | 67 处 | **0 处**（全部收敛为 `unknown`） | `grep -rn "catch (e: any)" src/` 计数为 0 |
-| `any` 总量（出现次数） | 366 处 | **299 处**（本轮 −67） | `python scripts/any_ratchet.py`（基线 `scripts/any_ratchet.baseline.json`） |
-| `any` 总量（命中行数） | 366 行 | **289 行** | `grep -rn ... \| wc -l` 按行计；与上行的差异见下方口径说明 |
+| `any` 总量（出现次数） | 366 处 | **280 处**（本轮 −86） | `python scripts/any_ratchet.py`（基线 `scripts/any_ratchet.baseline.json`） |
+| `any` 总量（命中行数） | 366 行 | **271 行** | `grep -rn ... \| wc -l` 按行计；与上行的差异见下方口径说明 |
 | `vue-tsc --build` | 0 error | **0 error** | 命令输出 |
 | `vite build` | 成功 | 成功 | 产物 `dist/` |
 | `vite preview` 资源可达性 | — | **5/5 全 200**（首页 / JS / CSS / ico / webmanifest，无 404） | `curl -o /dev/null -w "%{http_code}"` |
@@ -226,7 +226,7 @@ D 的守卫是全局的、逐文件判定天然误报，两者都不适合直接
    ② markdown 渲染器会输出 `<img src="远程URL">`，而 `img-src` 不含远程 `https:`，
    故 LLM 生成内容里的外链图片在生产会被 CSP 拦掉（**功能降级，非安全问题**）。
 5. **部分完成：`any` 收敛**。`catch (e: any)` **已全部清零**（67 → 0，`471571c`），并由棘轮门禁守着（`6a80b31`，零容忍）。
-   全仓 `any`/`as any` 从 366 降到 299（按出现次数；按命中行数算是 289，差 10 是因为有些行出现两次，如 `api.get<any>` 后又 `as any`）。
+   全仓 `any`/`as any` 从 366 降到 280（按出现次数；按命中行数算是 271，差 9 是因为有些行出现两次，如 `api.get<any>` 后又 `as any`）。
    `KnowledgeBaseView` 的 9 处已全部消除（`a50becb`）——那批**接不上生成类型**：后端这两个接口都没有 `response_model`，
    只能按实际用法反推契约，并把「不是从 OpenAPI 生成的」写进注释。
    剩下这批主要是 `api.get<any>(...)` 这类**响应体未定型**的位置（`openapi-typescript` 已生成 `src/types/api.generated.ts`，但大量调用点没接）。这批不能机械替换：
@@ -253,7 +253,7 @@ D 的守卫是全局的、逐文件判定天然误报，两者都不适合直接
 `memory.py`（14/14）、`engine.py`（13/13）、`xfyun.py`（12/12）、
 `user.py`（11/11）、`teacher.py`（11/11）、`wrong_questions.py`（9/9）。
 
-**这直接解释了前端为什么有 299 处 `any`**：`openapi-typescript` 只能为声明了
+**这直接解释了前端为什么有 280 处 `any`**：`openapi-typescript` 只能为声明了
 `response_model` 的路由生成 schema，剩下 234 个接口在 `api.generated.ts` 里
 根本没有类型可绑。前端不是"偷懒写 any"，是**没有类型可接**。
 
@@ -263,7 +263,7 @@ D 的守卫是全局的、逐文件判定天然误报，两者都不适合直接
 
 ### 已开始补（用户授权跨域后）
 
-授权后补了 6 条契约，响应模型覆盖率 **7.9% → 9.9%**（20/254 → 26/262 操作）：
+授权后补了 10 条契约，响应模型覆盖率 **7.9% → 11.5%**（20/254 → 30/262 操作）：
 
 | 路由 | 前端使用方 | 备注 |
 |---|---|---|
@@ -271,7 +271,11 @@ D 的守卫是全局的、逐文件判定天然误报，两者都不适合直接
 | `GET /career/consent` | CareerTrainingView | 两态：`null`=从未表态 / `agreed:false`=看过但不同意 |
 | `GET /quiz/history` | AssessmentView / QuizHistoryView / ProfileView | 三处共用，收益最大 |
 | `GET /admin/stats` | AdminView | `by_subject` 键动态 → `dict[str, SubjectStat]` |
-| `GET /memory/overview` | KnowledgeBaseView / ProfileView | 5 个真实用户验证过 |
+| `GET /memory/overview` | KnowledgeBaseView / ProfileView / EngineView | 5 个真实用户验证过 |
+| `POST /career/consent` | CareerTrainingView | **不复用 GET 的模型**：POST 只回 3 字段（无 `agreed_at`），复用会凭空多一个恒空字段 |
+| `POST /career/task/join` | CareerTrainingView | 含 `roster_bound`/`bound_match`，少一个字段等于静默掉「可能绑错人」的警告 |
+| `POST /career/session/{id}/feedback` | CareerTrainingView | `updated` 区分「新建」与「覆盖旧评价」 |
+| `GET /engine/status` | EngineView | `status` 用 `Literal["ok"]` 才能与前端错误分支组成可判别联合；`reliability` 必须精确建模（`dict[str, Any]` 会让生成类型退化成 `unknown`，模板 v-for 推成 `never`） |
 
 **补契约的标准动作（每一步都不能省）**：
 
@@ -320,7 +324,7 @@ D 的守卫是全局的、逐文件判定天然误报，两者都不适合直接
 - 注意：补 `response_model` 会**收窄**响应形状，若现有实现返回了模型外的字段，
   上线后会被 FastAPI 过滤掉 —— 这不是纯类型改动，需要逐个核对，不能一把梭。
 
-> 换句话说：前端这 299 处 `any` 里，**相当一部分不该在前端解决**。
+> 换句话说：前端这 280 处 `any` 里，**相当一部分不该在前端解决**。
 > 我在前端做的两批（`catch` 67 处、`KnowledgeBaseView` 9 处）是能自己收口的；
 > 剩下的主要卡在这道跨域契约上。
 
