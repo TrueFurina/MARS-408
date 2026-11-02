@@ -4,6 +4,12 @@ import sys
 # 确保 py-server 根目录在 sys.path，使 `import api` / `import main` / `import seed_data` 可用
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# 与 CI 对齐：CI workflow 在 job 级设了 DISABLE_RATE_LIMIT=true（见 .github/workflows/*.yml）。
+# 本地不设时，test_skills_platform 等集成测试会因 in-process 请求累积触发限流 → 429 →
+# 后续断言 KeyError（实测 3 failed + 9 errors）。限流中间件是**每请求**检查该 env，故在此
+# setdefault 即可让本地与 CI 口径一致；不依赖限流的用例（429 那几条测的是 LLM 配额）不受影响。
+os.environ.setdefault("DISABLE_RATE_LIMIT", "1")
+
 import pytest
 
 # ── 集合级自动跳过（requires_milvus + segv_env + isolation）──
