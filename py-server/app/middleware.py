@@ -163,7 +163,16 @@ async def metrics_middleware(request: Request, call_next):
     finally:
         inc_inflight(-1)
         latency = time.perf_counter() - start
-        record_request(request.url.path, status, latency)
+        # metrics label 用**路由模板**而非原始 path（2026-11-02 性能/隐私审计）：
+        #   ① 原始 path 含 user_id / session_id ⇒ /metrics 会输出
+        #      `u_1024`、`alice`、`conv_abc123` 这类标识，属隐私泄露；
+        #   ② 基数随 id 无界增长 ⇒ 实测 20k 路径 = 6.29MiB 常驻内存
+        #      + 268ms 渲染（外加 gzip 会冻结事件循环约 0.7s）。
+        # 路由模板（如 `/api/career/session/{session_id}`）把基数收敛到端点级；
+        # 未匹配（404、SPA fallback 等）统一记 `unmatched`。
+        _route = request.scope.get("route")
+        label_path = getattr(_route, "path", None) or "unmatched"
+        record_request(label_path, status, latency)
         logger.info(
             "request %s %s -> %s (%.0fms)",
             request.method, request.url.path, status, latency * 1000,
