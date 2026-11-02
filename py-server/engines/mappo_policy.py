@@ -188,8 +188,13 @@ class TeachingEnv:
         noise = self.rng.uniform(-0.05, 0.05)
 
         # 正确率提升（带记忆：之前学过的会累积一点）
-        delta_accuracy = max(-0.2, min(base_gain + noise, 0.4))
-        self.accuracy = max(0.1, min(self.accuracy + delta_accuracy, 1.0))
+        gain = max(-0.2, min(base_gain + noise, 0.4))
+        prev_accuracy = self.accuracy
+        self.accuracy = max(0.1, min(prev_accuracy + gain, 1.0))
+        # 奖励里的 Δ正确率必须是**实际**变化，而不是意图增益：正确率饱和到 1.0 后
+        # 实际学习为 0，若仍按意图增益发奖，会在没有学习时持续给正奖励（策略会
+        # 学会「重复无效动作」）。实测旧实现 step3–5 实际 Δ=0 仍发 ~0.44。
+        delta_accuracy = self.accuracy - prev_accuracy
 
         # 参与度：讲解方式加成 + 匹配度
         participation = max(
