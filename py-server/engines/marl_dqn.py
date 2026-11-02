@@ -258,6 +258,24 @@ class QMIXLearner(MARLValueLearner):
             list(self.mixing_net.parameters()) + list(self.mixing_bias.parameters()),
             lr=kw.get("lr", 1e-3),
         )
+        # 目标混合器（标准 QMIX 必需）：TD 目标必须用慢更新的 target mixer 计算，
+        # 否则目标随在线混合器的梯度一起漂移，训练不稳定且目标有偏。
+        self.target_mixing_net = torch.nn.Sequential(
+            torch.nn.Linear(state_dim, mix_hidden),
+            torch.nn.ReLU(),
+            torch.nn.Linear(mix_hidden, self.n_agents),
+        )
+        self.target_mixing_bias = torch.nn.Sequential(
+            torch.nn.Linear(state_dim, mix_hidden),
+            torch.nn.ReLU(),
+            torch.nn.Linear(mix_hidden, 1),
+        )
+        self.target_mixing_net.load_state_dict(self.mixing_net.state_dict())
+        self.target_mixing_bias.load_state_dict(self.mixing_bias.state_dict())
+        for p in self.target_mixing_net.parameters():
+            p.requires_grad_(False)
+        for p in self.target_mixing_bias.parameters():
+            p.requires_grad_(False)
 
     def _q_total(self, q_list: list):
         # 调用处传 (q_list, s)；基类接口只传 q_list，这里在 train_step_once 特殊处理
@@ -293,8 +311,8 @@ class QMIXLearner(MARLValueLearner):
             next_max = torch.stack(
                 [q.max(dim=-1).values for q in next_q_list], dim=-1
             )                                          # (B, n_agents)
-            w2 = torch.abs(self.mixing_net(s2)) + 1e-6
-            b2 = self.mixing_bias(s2)
+            w2 = torch.abs(self.target_mixing_net(s2)) + 1e-6
+            b2 = self.target_mixing_bias(s2)
             target = r + self.gamma * (1 - done) * (
                 (next_max * w2).sum(dim=-1) + b2.squeeze(-1)
             )
@@ -313,6 +331,9 @@ class QMIXLearner(MARLValueLearner):
         if self.train_step % self.target_update_every == 0:
             for t, q in zip(self.target_nets, self.q_nets):
                 t.load_state_dict(q.state_dict())
+            # 混合器也必须同步，否则 target 用的是上一版（甚至初始化）的混合器。
+            self.target_mixing_net.load_state_dict(self.mixing_net.state_dict())
+            self.target_mixing_bias.load_state_dict(self.mixing_bias.state_dict())
         return float(loss.item())
 
 
