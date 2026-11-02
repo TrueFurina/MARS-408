@@ -152,36 +152,86 @@ def _client_ip(request: Request) -> str:
 # 注：以下函数由 install() 注册到 app；独立成具名函数是为了可单测（不必起 HTTP 服务）。
 
 
+def _metrics_label(request: Request) -> str:
+    """metrics label 用**路由模板**而非原始 path（2026-11-02 性能/隐私审计）。
+
+    ① 原始 path 含 user_id / session_id ⇒ /metrics 会输出 `u_1024`、`alice`、
+       `conv_abc123` 这类标识，属隐私泄露；
+    ② 基数随 id 无界增长 ⇒ 实测 20k 路径 = 6.29MiB 常驻 + 268ms 渲染。
+    路由模板（如 `/api/career/session/{session_id}`）把基数收敛到端点级；
+    未匹配（404、SPA fallback 等）统一记 `unmatched`。
+    """
+    route = request.scope.get("route")
+    return getattr(route, "path", None) or "unmatched"
+
+
+def _record_request(request: Request, label: str, status: int, start: float) -> None:
+    """记账 + 访问日志 + 慢请求告警（日志仍打原始 path，便于诊断）。"""
+    latency = time.perf_counter() - start
+    record_request(label, status, latency)
+    logger.info(
+        "request %s %s -> %s (%.0fms)",
+        request.method, request.url.path, status, latency * 1000,
+    )
+    if latency * 1000 >= SLOW_REQUEST_MS:
+        logger.warning(
+            "SLOW request %s %s -> %s (%.0fms, 超过阈值 %.0fms)",
+            request.method, request.url.path, status, latency * 1000, SLOW_REQUEST_MS,
+        )
+
+
+def _is_sse(response) -> bool:
+    """是否 SSE 流式响应（5 个流式端点统一用 StreamingResponse(text/event-stream)）。"""
+    from starlette.responses import StreamingResponse
+
+    return isinstance(response, StreamingResponse) and getattr(
+        response, "media_type", ""
+    ) == "text/event-stream"
+
+
+def _instrument_sse(request: Request, response, label: str, status: int, start: float):
+    """把 SSE 记账推迟到**流结束 / 客户端断开**，得到端到端时长。
+
+    背景（2026-11-02 审计实测）：中间件在 call_next 返回时即记账，而
+    StreamingResponse 在**响应头就绪**时就返回 ⇒ 3.0s 的流被记成 0.68ms
+    （差 4528 倍），SLOW_REQUEST_MS 对最慢的 LLM 流式路径永远不触发。
+
+    包装 `body_iterator` 而不是缓冲整个响应，保持真流式与背压；
+    `finally` 覆盖正常结束、异常与客户端断开三种收尾。
+    """
+    original = response.body_iterator
+
+    async def _timed_stream():
+        try:
+            async for chunk in original:
+                yield chunk
+        finally:
+            _record_request(request, label, status, start)
+
+    response.body_iterator = _timed_stream()
+    return response
+
+
 async def metrics_middleware(request: Request, call_next):
     inc_inflight(1)
     start = time.perf_counter()
     status = 500
+    stream_instrumented = False
     try:
         response = await call_next(request)
         status = response.status_code
+        if _is_sse(response):
+            # 流式：记账推迟到流结束；inflight 仍在 finally 立即回落，
+            # 避免「响应对象未被迭代」时 gauge 永久泄漏。
+            stream_instrumented = True
+            return _instrument_sse(
+                request, response, _metrics_label(request), status, start
+            )
         return response
     finally:
         inc_inflight(-1)
-        latency = time.perf_counter() - start
-        # metrics label 用**路由模板**而非原始 path（2026-11-02 性能/隐私审计）：
-        #   ① 原始 path 含 user_id / session_id ⇒ /metrics 会输出
-        #      `u_1024`、`alice`、`conv_abc123` 这类标识，属隐私泄露；
-        #   ② 基数随 id 无界增长 ⇒ 实测 20k 路径 = 6.29MiB 常驻内存
-        #      + 268ms 渲染（外加 gzip 会冻结事件循环约 0.7s）。
-        # 路由模板（如 `/api/career/session/{session_id}`）把基数收敛到端点级；
-        # 未匹配（404、SPA fallback 等）统一记 `unmatched`。
-        _route = request.scope.get("route")
-        label_path = getattr(_route, "path", None) or "unmatched"
-        record_request(label_path, status, latency)
-        logger.info(
-            "request %s %s -> %s (%.0fms)",
-            request.method, request.url.path, status, latency * 1000,
-        )
-        if latency * 1000 >= SLOW_REQUEST_MS:
-            logger.warning(
-                "SLOW request %s %s -> %s (%.0fms, 超过阈值 %.0fms)",
-                request.method, request.url.path, status, latency * 1000, SLOW_REQUEST_MS,
-            )
+        if not stream_instrumented:
+            _record_request(request, _metrics_label(request), status, start)
 
 
 async def security_headers_middleware(request: Request, call_next) -> Response:
