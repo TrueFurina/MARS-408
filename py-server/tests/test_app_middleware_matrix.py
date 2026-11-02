@@ -293,6 +293,43 @@ class TestMetricsMiddleware:
         assert seen["path"] == "unmatched"
         assert "alice" not in seen["path"]
 
+    async def test_sse_records_end_to_end_duration(self, monkeypatch):
+        """SSE 必须记**端到端**时长，而不是「响应头就绪」的亚毫秒值。
+
+        2026-11-02 审计实测：3.0s 的流被记成 0.68ms（差 4528 倍），
+        SLOW_REQUEST_MS 对最慢的 LLM 流式路径永远不触发。
+        """
+        import asyncio
+
+        from starlette.responses import StreamingResponse
+
+        seen = []
+
+        async def event_stream():
+            for _ in range(3):
+                await asyncio.sleep(0.02)
+                yield b"data: x\n\n"
+
+        async def call_next(request):
+            return StreamingResponse(event_stream(), media_type="text/event-stream")
+
+        monkeypatch.setattr(
+            middleware, "record_request", lambda p, s, l: seen.append((p, s, l))
+        )
+        resp = await middleware.metrics_middleware(
+            _request("/api/chat/stream"), call_next
+        )
+        assert seen == [], "流被消费前不得记账，否则又退化成响应头延迟"
+
+        async for _ in resp.body_iterator:
+            pass
+
+        assert len(seen) == 1, "流结束后必须恰好记账一次"
+        label, status, latency = seen[0]
+        assert label == "unmatched"  # 测试请求未携带 route
+        assert status == 200
+        assert latency >= 0.05, f"应为端到端时长(≥50ms)，实际 {latency * 1000:.1f}ms"
+
     async def test_metrics_records_500_when_handler_raises(self, monkeypatch):
         seen = {}
 
