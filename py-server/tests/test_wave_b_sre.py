@@ -136,8 +136,50 @@ class TestPrometheusRender:
         assert p95 and p99, "必须暴露 p95/p99 分位数"
         p95_val = float(p95[0].split()[-1])
         p99_val = float(p99[0].split()[-1])
-        assert 0.5 < p95_val < 1.0, f"p95 估算应≈0.778，实得 {p95_val}"
-        assert p99_val == 1.0, f"p99 估算应=1.0，实得 {p99_val}"
+
+        # 断言**精度**而非算法快照（旧写法钉死 p99==1.0，改分桶就失配，
+        # 且锁的是实现行为而不是「算得准不准」）。真值直接由样本求。
+        samples = sorted([0.1] * 90 + [1.0] * 9 + [5.0])
+
+        import math as _math
+
+        def _truth(q: float) -> float:
+            # nearest-rank：与估算器 target=q*total 的语义一致（第 ceil(qn) 个样本）
+            rank = max(1, _math.ceil(q * len(samples)))
+            return samples[rank - 1]
+
+        for name, est, q in (("p95", p95_val, 0.95), ("p99", p99_val, 0.99)):
+            true = _truth(q)
+            err = abs(est - true) / true
+            assert err <= 0.15, f"{name} 偏差 {err * 100:.1f}% 超 15%：est={est} true={true}"
+
+    def test_percentile_accuracy_on_skewed_distribution(self):
+        """偏态分布下 p99 偏差须 ≤10% —— 旧分桶实测 +43%，本用例是它的回归护栏。"""
+        import math
+        import random as _random
+
+        _reset_metrics()
+        rng = _random.Random(42)
+        vals = [max(0.001, rng.lognormvariate(math.log(0.2), 0.8)) for _ in range(20000)]
+        for v in vals:
+            metrics.record_request("/api/skew", 200, v)
+
+        out = metrics.render_prometheus()
+        line = [
+            l
+            for l in out.splitlines()
+            if l.startswith('http_request_duration_seconds_p99{path="/api/skew"}')
+        ]
+        assert line, "偏态分布路径也必须暴露 p99"
+        est = float(line[0].split()[-1])
+
+        ordered = sorted(vals)
+        true = ordered[max(1, math.ceil(0.99 * len(ordered))) - 1]
+        err = abs(est - true) / true
+        assert err <= 0.10, (
+            f"p99 偏差 {err * 100:.1f}% 超 10%（est={est:.3f}s true={true:.3f}s）"
+            "—— 检查 _LATENCY_BUCKETS 是否又被放稀"
+        )
 
     def test_percentile_skips_inf_tail(self):
         _reset_metrics()
