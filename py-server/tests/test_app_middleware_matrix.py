@@ -268,6 +268,28 @@ class TestMetricsMiddleware:
             await middleware.metrics_middleware(_request("/api/x"), call_next)
         assert seen["status"] == 500, "异常也必须记账，否则指标漏报"
 
+    async def test_slow_request_logs_warning(self, monkeypatch, caplog):
+        import logging
+
+        monkeypatch.setattr(middleware, "SLOW_REQUEST_MS", 0.0)  # 阈值 0ms，强制触发
+        with caplog.at_level(logging.WARNING, logger="netlearn"):
+            resp = await middleware.metrics_middleware(
+                _request("/api/chat/x", method="POST"), _ok_call_next
+            )
+        assert resp.status_code == 200
+        assert any("SLOW" in r.message for r in caplog.records), "慢请求必须 WARNING"
+
+    async def test_fast_request_no_slow_warning(self, monkeypatch, caplog):
+        import logging
+
+        monkeypatch.setattr(middleware, "SLOW_REQUEST_MS", 1e9)  # 阈值极高，不触发
+        with caplog.at_level(logging.WARNING, logger="netlearn"):
+            resp = await middleware.metrics_middleware(
+                _request("/api/status"), _ok_call_next
+            )
+        assert resp.status_code == 200
+        assert not any("SLOW" in r.message for r in caplog.records)
+
 
 class TestErrorHandlers:
     async def test_http_exception_dev_keeps_detail(self, monkeypatch):

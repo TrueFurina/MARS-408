@@ -34,7 +34,7 @@ export const capabilityComparison: ComparisonItem[] = [
     items: [
       { other: '串行/简单路由', ours: 'LangGraph 11 节点 StateGraph + 条件边回退 + Agent辩论协议', tag: '独创' },
       { other: '输出即终版', ours: '辩论→反思→交叉质询→共识精炼', tag: '独创' },
-      { other: '无教学规则约束', ours: '51个知识点DAG + 考查权重 + 跨科目关联 + Agent适配规则', tag: '创新' },
+      { other: '无教学规则约束', ours: '26 个知识群组 DAG + 考查权重 + 跨科目关联 + Agent适配规则', tag: '创新' },
     ],
   },
   {

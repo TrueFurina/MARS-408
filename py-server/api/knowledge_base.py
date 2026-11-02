@@ -12,7 +12,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 from pydantic import BaseModel, Field
 
-from shared.auth import get_current_user
+from shared.auth import get_current_user, require_teacher
 
 logger = logging.getLogger("netlearn.knowledge_base")
 router = APIRouter(prefix="/knowledge-base", tags=["knowledge-base"])
@@ -77,9 +77,13 @@ async def api_import_pdf(
     file: UploadFile = File(...),
     name: str = "",
     subject: str = "general",
-    user: dict = Depends(get_current_user),
+    user: dict = Depends(require_teacher),
 ):
-    """上传并导入PDF教材"""
+    """上传并导入PDF教材（写入**共享**知识库，需教师/管理员权限）。
+
+    安全边界：该端点会把传入 PDF 解析后写入全站共享的知识库，属于「共享写」操作。
+    此前只要求登录（任意学生可写入共享库），已由 2026-11-02 审计修正为 require_teacher。
+    """
     if not file.filename or not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=422, detail="仅支持 PDF 文件")
 
