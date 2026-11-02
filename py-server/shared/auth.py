@@ -166,6 +166,29 @@ def _is_demo_teacher_open() -> bool:
     return os.environ.get("NETLEARN_DEMO_TEACHER_OPEN", "") in ("1", "true", "True", "yes")
 
 
+# 生产环境开启演示放宽时，只允许这些演示账号（其余学生一律 403）。
+_DEMO_TEACHER_ACCOUNTS = ("demo",)
+
+
+def _demo_open_allowed(user: dict) -> bool:
+    """演示放宽是否对**该用户**生效（2026-11-02 安全审计加固）。
+
+    - 未设置 `NETLEARN_DEMO_TEACHER_OPEN` → False（默认严格）；
+    - 非生产（dev/test）→ True（保持既有演示行为不变，兼容既有回归测试）；
+    - 生产（`NETLEARN_ENV=production|prod`）→ **仅 `_DEMO_TEACHER_ACCOUNTS` 内的演示账号**。
+
+    为什么生产必须收窄：审计实测，生产开启该开关时任意已登录学生都能通过教师门禁
+    并读取全员能力画像（越权读）。开关的本意只是「让 demo 账号预览教师仪表板」，
+    因此按账号收窄既保留演示能力，又消除越权面。
+    """
+    if not _is_demo_teacher_open():
+        return False
+    env = os.environ.get("NETLEARN_ENV", "development").lower()
+    if env in ("production", "prod"):
+        return str(user.get("user_id", "")) in _DEMO_TEACHER_ACCOUNTS
+    return True
+
+
 def require_teacher_or_demo_open(
     user: dict = Depends(get_current_user),
     request: Request = None,
@@ -173,9 +196,11 @@ def require_teacher_or_demo_open(
     """FastAPI dependency: 教师端端点权限控制。
 
     默认行为等同 require_teacher（仅 admin/teacher 放行，其余 403）。
-    若设置了 NETLEARN_DEMO_TEACHER_OPEN=1（演示开关），则允许任意已登录用户通过，
-    但向审计日志写入清晰的 [DEMO-RELAX] 警告（含用户与端点），既保留演示可用性，
-    又保证放宽行为在审计轨迹中显式可见、永不静默。
+    若设置了 NETLEARN_DEMO_TEACHER_OPEN=1（演示开关），则**非生产**环境允许任意已登录
+    用户通过；**生产环境仅放行 `_DEMO_TEACHER_ACCOUNTS`（默认 demo）**——见
+    `_demo_open_allowed` 的 2026-11-02 审计说明。放行时向审计日志写入清晰的
+    [DEMO-RELAX] 警告（含用户与端点），既保留演示可用性，又保证放宽行为在审计轨迹中
+    显式可见、永不静默。
 
     说明：演示账号 demo/demo123456 的角色为 student，因此演示环境必须打开该开关，
     否则教师仪表板对 demo 账号不可见。生产环境严禁设置该开关。
@@ -183,7 +208,7 @@ def require_teacher_or_demo_open(
     role = user.get("role", "student")
     if role in ("admin", "teacher"):
         return user
-    if _is_demo_teacher_open():
+    if _demo_open_allowed(user):
         path = getattr(request, "url", None)
         path_str = str(path.path) if path is not None else "<unknown>"
         logger.warning(
