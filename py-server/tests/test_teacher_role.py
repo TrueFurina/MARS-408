@@ -270,3 +270,35 @@ def test_rtodo_allows_student_when_demo_open(monkeypatch, caplog):
         )
     assert out["role"] == "student"
     assert any("[DEMO-RELAX]" in r.message for r in caplog.records)
+
+
+# ============================================================
+# 2026-11-02 安全审计加固：生产环境演示放宽必须按账号收窄
+#   审计实测：生产开启 NETLEARN_DEMO_TEACHER_OPEN=1 时，任意学生都能通过
+#   教师门禁并读取全员能力画像（越权读）。修法：生产仅放行 demo 账号。
+# ============================================================
+
+
+def test_rtodo_production_demo_open_rejects_non_demo_student(monkeypatch):
+    """生产 + 演示开关：非 demo 学生必须 403（越权读的回归守卫）。"""
+    monkeypatch.setenv("NETLEARN_DEMO_TEACHER_OPEN", "1")
+    monkeypatch.setenv("NETLEARN_ENV", "production")
+    with pytest.raises(HTTPException) as exc:
+        AUTH_MOD.require_teacher_or_demo_open(
+            user={"user_id": "s1", "role": "student"}, request=None
+        )
+    assert exc.value.status_code == 403
+
+
+def test_rtodo_production_demo_open_allows_demo_account(monkeypatch, caplog):
+    """生产 + 演示开关：demo 账号仍可预览（保留演示能力，且留审计痕迹）。"""
+    monkeypatch.setenv("NETLEARN_DEMO_TEACHER_OPEN", "1")
+    monkeypatch.setenv("NETLEARN_ENV", "production")
+    logging.disable(logging.NOTSET)
+    import logging as _logging
+    with caplog.at_level(_logging.WARNING, logger="netlearn.auth"):
+        out = AUTH_MOD.require_teacher_or_demo_open(
+            user={"user_id": "demo", "role": "student"}, request=None
+        )
+    assert out["role"] == "student"
+    assert any("[DEMO-RELAX]" in r.message for r in caplog.records)
