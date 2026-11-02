@@ -252,10 +252,46 @@ class TestMetricsMiddleware:
         async def call_next(request):
             return JSONResponse({"ok": True})
 
+        from types import SimpleNamespace
+
         monkeypatch.setattr(middleware, "record_request", lambda p, s, l: seen.update(path=p, status=s))
-        resp = await middleware.metrics_middleware(_request("/api/status", method="POST"), call_next)
+        req = _request("/api/status", method="POST")
+        # 真实运行时 router 会把匹配到的路由写进 scope["route"]；这里显式模拟。
+        req.scope["route"] = SimpleNamespace(path="/api/status")
+        resp = await middleware.metrics_middleware(req, call_next)
         assert resp.status_code == 200
         assert seen["path"] == "/api/status"
+
+    async def test_metrics_label_uses_route_template_not_raw_path(self, monkeypatch):
+        """metrics label 必须是路由模板，不得把 user_id / session_id 写进 /metrics。"""
+        from starlette.responses import JSONResponse
+        from types import SimpleNamespace
+
+        seen = {}
+
+        async def call_next(request):
+            return JSONResponse({"ok": True})
+
+        monkeypatch.setattr(middleware, "record_request", lambda p, s, l: seen.update(path=p))
+        req = _request("/api/career/session/sess_9f3a2b/answer")
+        req.scope["route"] = SimpleNamespace(path="/api/career/session/{session_id}/answer")
+        await middleware.metrics_middleware(req, call_next)
+        assert seen["path"] == "/api/career/session/{session_id}/answer"
+        assert "sess_9f3a2b" not in seen["path"], "原始会话 id 不得进入 metrics label"
+
+    async def test_metrics_label_unmatched_when_no_route(self, monkeypatch):
+        """未匹配路由（404 / SPA fallback）统一记 unmatched，避免基数无界增长。"""
+        from starlette.responses import JSONResponse
+
+        seen = {}
+
+        async def call_next(request):
+            return JSONResponse({"ok": True}, status_code=404)
+
+        monkeypatch.setattr(middleware, "record_request", lambda p, s, l: seen.update(path=p))
+        await middleware.metrics_middleware(_request("/api/no/such/route/alice"), call_next)
+        assert seen["path"] == "unmatched"
+        assert "alice" not in seen["path"]
 
     async def test_metrics_records_500_when_handler_raises(self, monkeypatch):
         seen = {}
