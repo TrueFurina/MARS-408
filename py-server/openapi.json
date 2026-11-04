@@ -2118,7 +2118,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgePreviewResponse"
+                }
               }
             }
           },
@@ -2196,7 +2198,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeBatchCommitResponse"
+                }
               }
             }
           },
@@ -4770,7 +4774,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/TeachingRulesPrerequisitesResponse"
+                }
               }
             }
           },
@@ -5039,7 +5045,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ClassPerformanceResponse"
+                }
               }
             }
           },
@@ -14920,7 +14928,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryContextResponse"
+                }
               }
             }
           },
@@ -19746,6 +19756,59 @@
         ],
         "title": "ClassCreateRequest"
       },
+      "ClassPerformanceResponse": {
+        "properties": {
+          "avg_mastery": {
+            "type": "number",
+            "title": "Avg Mastery",
+            "default": 0
+          },
+          "avg_progress": {
+            "type": "number",
+            "title": "Avg Progress",
+            "default": 0
+          },
+          "weakest_chapters": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Weakest Chapters",
+            "default": []
+          },
+          "strongest_chapters": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Strongest Chapters",
+            "default": []
+          },
+          "common_weak_points": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Common Weak Points",
+            "default": []
+          },
+          "activity_trend": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Activity Trend",
+            "default": []
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "ClassPerformanceResponse",
+        "description": "班级整体学习表现（/teacher/analytics/class-performance）"
+      },
       "ComplianceReq": {
         "properties": {
           "text": {
@@ -20741,6 +20804,24 @@
         "title": "KnowledgeBatchCommitItem",
         "description": "批量提交的单条分块（Pydantic 校验：防止畸形/超大 payload 触发异常或注入）"
       },
+      "KnowledgeBatchCommitResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "committed": {
+            "type": "integer",
+            "title": "Committed",
+            "default": 0
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "KnowledgeBatchCommitResponse",
+        "description": "批量提交分块到向量库（/knowledge/batch-commit）"
+      },
       "KnowledgeDeleteRequest": {
         "properties": {
           "ids": {
@@ -20896,6 +20977,43 @@
           "total"
         ],
         "title": "KnowledgeListResponse"
+      },
+      "KnowledgePreviewResponse": {
+        "properties": {
+          "filename": {
+            "type": "string",
+            "title": "Filename",
+            "default": ""
+          },
+          "total_chars": {
+            "type": "integer",
+            "title": "Total Chars",
+            "default": 0
+          },
+          "items": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Items",
+            "default": []
+          },
+          "default_subject": {
+            "type": "string",
+            "title": "Default Subject",
+            "default": ""
+          },
+          "default_chapter": {
+            "type": "string",
+            "title": "Default Chapter",
+            "default": ""
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "KnowledgePreviewResponse",
+        "description": "语义解析预览（/knowledge/preview）"
       },
       "KnowledgeStatsResponse": {
         "properties": {
@@ -21238,6 +21356,22 @@
         },
         "type": "object",
         "title": "MasteryUpdateRequest"
+      },
+      "MemoryContextResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "context": {
+            "title": "Context"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "MemoryContextResponse",
+        "description": "三层记忆上下文（/memory/context）"
       },
       "MemoryOverviewResponse": {
         "properties": {
@@ -23267,6 +23401,56 @@
           "topic_id"
         ],
         "title": "TeachingRulesAgentAssignRequest"
+      },
+      "TeachingRulesPrerequisitesResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "topic_id": {
+            "type": "string",
+            "title": "Topic Id",
+            "default": ""
+          },
+          "topic_name": {
+            "type": "string",
+            "title": "Topic Name",
+            "default": ""
+          },
+          "course": {
+            "type": "string",
+            "title": "Course",
+            "default": ""
+          },
+          "exam_weight": {
+            "type": "number",
+            "title": "Exam Weight",
+            "default": 0
+          },
+          "difficulty": {
+            "type": "string",
+            "title": "Difficulty",
+            "default": ""
+          },
+          "prerequisites": {
+            "items": {},
+            "type": "array",
+            "title": "Prerequisites",
+            "default": []
+          },
+          "cross_subject_prerequisites": {
+            "items": {},
+            "type": "array",
+            "title": "Cross Subject Prerequisites",
+            "default": []
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "TeachingRulesPrerequisitesResponse",
+        "description": "知识点前置依赖（/engine/teaching-rules/prerequisites/{topic_id}）"
       },
       "TeachingRulesPrioritizeRequest": {
         "properties": {

@@ -5,6 +5,8 @@ import type { operations } from '@/types/api.generated'
 
 // /engine/teaching-rules 返回（response_model=TeachingRulesStatsResponse）
 type TeachingRulesStatsResp = operations['teaching_rules_stats_api_engine_teaching_rules_get']['responses'][200]['content']['application/json']
+// /engine/teaching-rules/prerequisites/{topic_id} 返回（response_model=TeachingRulesPrerequisitesResponse）
+type TeachingRulesPrereqResp = operations['teaching_rules_prerequisites_api_engine_teaching_rules_prerequisites__topic_id__get']['responses'][200]['content']['application/json']
 import Skeleton from '@/components/Skeleton.vue'
 import EmptyState from '@/components/EmptyState.vue'
 
@@ -25,7 +27,7 @@ onMounted(loadTeachingRules)
 async function loadTopicPrerequisites() {
   if (!selectedTopicId.value) return
   try {
-    topicPrerequisites.value = await api.get<any>(`/engine/teaching-rules/prerequisites/${selectedTopicId.value}`)
+    topicPrerequisites.value = await api.get<TeachingRulesPrereqResp>(`/engine/teaching-rules/prerequisites/${selectedTopicId.value}`)
   } catch {
     // 同上：失败即空态，绝不静默编造前置知识关系
     topicPrerequisites.value = null

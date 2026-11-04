@@ -6,7 +6,7 @@
 import logging
 import os
 from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 from seed_data import SEED_KNOWLEDGE_CHUNKS, SEED_QUESTIONS, KNOWLEDGE_GRAPH
 from shared.auth import get_current_user, require_teacher_or_demo_open
@@ -166,7 +166,18 @@ async def get_knowledge_base_stats(user: dict = Depends(require_teacher_or_demo_
     }
 
 
-@router.get("/analytics/class-performance")
+class ClassPerformanceResponse(BaseModel):
+    """班级整体学习表现（/teacher/analytics/class-performance）"""
+    model_config = ConfigDict(extra="allow")
+    avg_mastery: float = 0
+    avg_progress: float = 0
+    weakest_chapters: list[dict] = []
+    strongest_chapters: list[dict] = []
+    common_weak_points: list[str] = []
+    activity_trend: list[dict] = []
+
+
+@router.get("/analytics/class-performance", response_model=ClassPerformanceResponse)
 @cached(ttl=120)
 async def get_class_performance(user: dict = Depends(require_teacher_or_demo_open)):
     """班级整体学习表现分析 — 基于真实答题记录聚合"""

@@ -341,7 +341,20 @@ async def teaching_rules_prioritize(req: TeachingRulesPrioritizeRequest, user: d
     return {"status": "ok", "prioritized_topics": prioritized}
 
 
-@router.get("/teaching-rules/prerequisites/{topic_id}")
+class TeachingRulesPrerequisitesResponse(BaseModel):
+    """知识点前置依赖（/engine/teaching-rules/prerequisites/{topic_id}）"""
+    model_config = ConfigDict(extra="allow")
+    status: str = "ok"
+    topic_id: str = ""
+    topic_name: str = ""
+    course: str = ""
+    exam_weight: float = 0
+    difficulty: str = ""
+    prerequisites: list = []
+    cross_subject_prerequisites: list = []
+
+
+@router.get("/teaching-rules/prerequisites/{topic_id}", response_model=TeachingRulesPrerequisitesResponse)
 async def teaching_rules_prerequisites(topic_id: str, user: dict = Depends(get_current_user)):
     """获取知识点前置依赖（含跨科目）"""
     from engines.teaching_rules import teaching_rules

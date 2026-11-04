@@ -6,6 +6,8 @@ import type { operations } from '@/types/api.generated'
 
 // /teacher/knowledge-base/stats 返回（response_model=KnowledgeBaseStatsResponse）
 type KnowledgeBaseStatsResp = operations['get_knowledge_base_stats_api_teacher_knowledge_base_stats_get']['responses'][200]['content']['application/json']
+// /teacher/analytics/class-performance 返回（response_model=ClassPerformanceResponse）
+type ClassPerformanceResp = operations['get_class_performance_api_teacher_analytics_class_performance_get']['responses'][200]['content']['application/json']
 import EmptyState from '@/components/EmptyState.vue'
 import Skeleton from '@/components/Skeleton.vue'
 import { icons } from '@/components/icons'
@@ -30,7 +32,7 @@ onMounted(async () => {
     const [o, k, c] = await Promise.all([
       api.get<any>('/teacher/students/overview').catch(() => null),
       api.get<KnowledgeBaseStatsResp>('/teacher/knowledge-base/stats').catch(() => null),
-      api.get<any>('/teacher/analytics/class-performance').catch(() => null),
+      api.get<ClassPerformanceResp>('/teacher/analytics/class-performance').catch(() => null),
     ])
     overview.value = o
     kbStats.value = k

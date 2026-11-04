@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useStudyStore } from '@/stores/studyStore'
 import { api, friendlyError } from '@/utils/api'
+import type { operations } from '@/types/api.generated'
 import { icons } from '@/components/icons'
 import Skeleton from '@/components/Skeleton.vue'
 import EmptyState from '@/components/EmptyState.vue'
@@ -13,6 +14,17 @@ const store = useStudyStore()
 const statusInfo = ref({ status: '', vector_db: '', collection_size: 0, llm_available: false })
 const stats = ref({ total_docs: 0, by_subject: {} as Record<string, number>, by_type: {} as Record<string, number> })
 const documents = ref<any[]>([])
+
+// /knowledge/preview 返回（response_model=KnowledgePreviewResponse，items 为异构分块，
+// 前端用 PreviewItem 收口；其余字段与后端 schema 一致）
+type KnowledgePreviewResp = {
+  filename: string
+  total_chars: number
+  items: PreviewItem[]
+  default_subject: string
+  default_chapter: string
+}
+type KnowledgeBatchCommitResp = operations['knowledge_batch_commit_api_knowledge_batch_commit_post']['responses'][200]['content']['application/json']
 const totalDocs = ref(0)
 const loading = ref(false)
 const loadError = ref('')
@@ -70,7 +82,7 @@ async function previewFile() {
     form.append('subject', uploadSubject.value)
     form.append('chapter', uploadChapter.value)
     // FormData 走 api.upload（不设 Content-Type，由浏览器补 boundary）
-    const data = await api.upload<any>('/knowledge/preview', form)
+    const data = await api.upload<KnowledgePreviewResp>('/knowledge/preview', form)
     data.items = data.items.map((item: PreviewItem) => ({
       ...item,
       _selected: true,
@@ -101,7 +113,7 @@ async function commitSelected() {
   }
   if (!confirm(`确定提交 ${selected.length} 条分块到知识库？`)) return
   try {
-    const data = await api.post<any>('/knowledge/batch-commit', selected)
+    const data = await api.post<KnowledgeBatchCommitResp>('/knowledge/batch-commit', selected)
     alert(` 成功提交 ${data.committed} 条分块`)
     previewResult.value = null
     uploadFile.value = null

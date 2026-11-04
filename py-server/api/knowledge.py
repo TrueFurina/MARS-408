@@ -8,7 +8,7 @@ import re
 import logging
 import hashlib
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Form
 from fastapi.concurrency import run_in_threadpool
 
@@ -331,7 +331,17 @@ def _detect_subject(content: str, filename: str = "") -> str:
 # ── 前端缺失端点补充（AdminView.vue 调用） ──
 
 
-@router.post("/preview")
+class KnowledgePreviewResponse(BaseModel):
+    """语义解析预览（/knowledge/preview）"""
+    model_config = ConfigDict(extra="allow")
+    filename: str = ""
+    total_chars: int = 0
+    items: list[dict] = []
+    default_subject: str = ""
+    default_chapter: str = ""
+
+
+@router.post("/preview", response_model=KnowledgePreviewResponse)
 async def knowledge_preview(
     file: UploadFile = File(...),
     subject: str = Form("general"),
@@ -424,7 +434,14 @@ class KnowledgeBatchCommitItem(BaseModel):
     source: str = Field(default="batch_commit", max_length=100, description="来源")
 
 
-@router.post("/batch-commit")
+class KnowledgeBatchCommitResponse(BaseModel):
+    """批量提交分块到向量库（/knowledge/batch-commit）"""
+    model_config = ConfigDict(extra="allow")
+    status: str = "ok"
+    committed: int = 0
+
+
+@router.post("/batch-commit", response_model=KnowledgeBatchCommitResponse)
 async def knowledge_batch_commit(req: list[KnowledgeBatchCommitItem], user: dict = Depends(require_admin)):
     """批量提交预览审查后的分块到向量库。
     前端 AdminView.vue 调用此端点提交用户选择的分块。"""

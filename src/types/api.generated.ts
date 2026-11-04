@@ -5700,6 +5700,50 @@ export interface components {
             /** Class Name */
             class_name: string;
         };
+        /**
+         * ClassPerformanceResponse
+         * @description 班级整体学习表现（/teacher/analytics/class-performance）
+         */
+        ClassPerformanceResponse: {
+            /**
+             * Avg Mastery
+             * @default 0
+             */
+            avg_mastery: number;
+            /**
+             * Avg Progress
+             * @default 0
+             */
+            avg_progress: number;
+            /**
+             * Weakest Chapters
+             * @default []
+             */
+            weakest_chapters: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Strongest Chapters
+             * @default []
+             */
+            strongest_chapters: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Common Weak Points
+             * @default []
+             */
+            common_weak_points: string[];
+            /**
+             * Activity Trend
+             * @default []
+             */
+            activity_trend: {
+                [key: string]: unknown;
+            }[];
+        } & {
+            [key: string]: unknown;
+        };
         /** ComplianceReq */
         ComplianceReq: {
             /** Text */
@@ -6323,6 +6367,24 @@ export interface components {
              */
             source: string;
         };
+        /**
+         * KnowledgeBatchCommitResponse
+         * @description 批量提交分块到向量库（/knowledge/batch-commit）
+         */
+        KnowledgeBatchCommitResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Committed
+             * @default 0
+             */
+            committed: number;
+        } & {
+            [key: string]: unknown;
+        };
         /** KnowledgeDeleteRequest */
         KnowledgeDeleteRequest: {
             /** Ids */
@@ -6394,6 +6456,41 @@ export interface components {
             items: components["schemas"]["KnowledgeListItem"][];
             /** Total */
             total: number;
+        };
+        /**
+         * KnowledgePreviewResponse
+         * @description 语义解析预览（/knowledge/preview）
+         */
+        KnowledgePreviewResponse: {
+            /**
+             * Filename
+             * @default
+             */
+            filename: string;
+            /**
+             * Total Chars
+             * @default 0
+             */
+            total_chars: number;
+            /**
+             * Items
+             * @default []
+             */
+            items: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Default Subject
+             * @default
+             */
+            default_subject: string;
+            /**
+             * Default Chapter
+             * @default
+             */
+            default_chapter: string;
+        } & {
+            [key: string]: unknown;
         };
         /** KnowledgeStatsResponse */
         KnowledgeStatsResponse: {
@@ -6573,6 +6670,21 @@ export interface components {
              * @default true
              */
             mastered: boolean;
+        };
+        /**
+         * MemoryContextResponse
+         * @description 三层记忆上下文（/memory/context）
+         */
+        MemoryContextResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /** Context */
+            context?: unknown;
+        } & {
+            [key: string]: unknown;
         };
         /** MemoryOverviewResponse */
         MemoryOverviewResponse: {
@@ -7601,6 +7713,54 @@ export interface components {
              * @default
              */
             resource_type: string;
+        };
+        /**
+         * TeachingRulesPrerequisitesResponse
+         * @description 知识点前置依赖（/engine/teaching-rules/prerequisites/{topic_id}）
+         */
+        TeachingRulesPrerequisitesResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Topic Id
+             * @default
+             */
+            topic_id: string;
+            /**
+             * Topic Name
+             * @default
+             */
+            topic_name: string;
+            /**
+             * Course
+             * @default
+             */
+            course: string;
+            /**
+             * Exam Weight
+             * @default 0
+             */
+            exam_weight: number;
+            /**
+             * Difficulty
+             * @default
+             */
+            difficulty: string;
+            /**
+             * Prerequisites
+             * @default []
+             */
+            prerequisites: unknown[];
+            /**
+             * Cross Subject Prerequisites
+             * @default []
+             */
+            cross_subject_prerequisites: unknown[];
+        } & {
+            [key: string]: unknown;
         };
         /** TeachingRulesPrioritizeRequest */
         TeachingRulesPrioritizeRequest: {
@@ -8999,7 +9159,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["KnowledgePreviewResponse"];
                 };
             };
             /** @description Validation Error */
@@ -9035,7 +9195,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["KnowledgeBatchCommitResponse"];
                 };
             };
             /** @description Validation Error */
@@ -10281,7 +10441,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["TeachingRulesPrerequisitesResponse"];
                 };
             };
             /** @description Validation Error */
@@ -10411,7 +10571,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ClassPerformanceResponse"];
                 };
             };
             /** @description Validation Error */
@@ -15110,7 +15270,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["MemoryContextResponse"];
                 };
             };
             /** @description Validation Error */
