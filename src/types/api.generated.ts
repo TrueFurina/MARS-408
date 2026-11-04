@@ -5910,6 +5910,20 @@ export interface components {
             recommendation: string;
         };
         /**
+         * DiagnosticStartResponse
+         * @description 开始诊断返回的题目列表
+         */
+        DiagnosticStartResponse: {
+            /** Total Questions */
+            total_questions: number;
+            /** Subjects */
+            subjects: string[];
+            /** Questions */
+            questions: {
+                [key: string]: unknown;
+            }[];
+        };
+        /**
          * DiagnosticSubmitRequest
          * @description 提交诊断答案
          */
@@ -7194,6 +7208,28 @@ export interface components {
             weak_points?: string[] | null;
             /** Mastered Points */
             mastered_points?: string[] | null;
+        };
+        /** SessionLoadResponse */
+        SessionLoadResponse: {
+            /** Conv Id */
+            conv_id: string;
+            /**
+             * Title
+             * @default
+             */
+            title: string;
+            /**
+             * Messages
+             * @default []
+             */
+            messages: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Created At
+             * @default
+             */
+            created_at: string;
         };
         /** SessionMessage */
         SessionMessage: {
@@ -9045,7 +9081,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SessionLoadResponse"];
                 };
             };
             /** @description Validation Error */
@@ -9255,7 +9291,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ConfigResponse"];
                 };
             };
             /** @description Validation Error */
@@ -13351,7 +13387,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["DiagnosticStartResponse"];
                 };
             };
             /** @description Validation Error */

@@ -2607,7 +2607,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SessionLoadResponse"
+                }
               }
             }
           },
@@ -3048,7 +3050,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigResponse"
+                }
               }
             }
           },
@@ -11574,7 +11578,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/DiagnosticStartResponse"
+                }
               }
             }
           },
@@ -20060,6 +20066,37 @@
         "title": "DiagnosticResult",
         "description": "单科目诊断结果"
       },
+      "DiagnosticStartResponse": {
+        "properties": {
+          "total_questions": {
+            "type": "integer",
+            "title": "Total Questions"
+          },
+          "subjects": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Subjects"
+          },
+          "questions": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Questions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_questions",
+          "subjects",
+          "questions"
+        ],
+        "title": "DiagnosticStartResponse",
+        "description": "开始诊断返回的题目列表"
+      },
       "DiagnosticSubmitRequest": {
         "properties": {
           "answers": {
@@ -22473,6 +22510,38 @@
         },
         "type": "object",
         "title": "SemanticMemoryRequest"
+      },
+      "SessionLoadResponse": {
+        "properties": {
+          "conv_id": {
+            "type": "string",
+            "title": "Conv Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "default": ""
+          },
+          "messages": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Messages",
+            "default": []
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "conv_id"
+        ],
+        "title": "SessionLoadResponse"
       },
       "SessionMessage": {
         "properties": {

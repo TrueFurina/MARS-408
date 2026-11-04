@@ -146,7 +146,7 @@ class DiagnosticSubmitResponse(BaseModel):
 
 # ── 端点 ──
 
-@router.get("/start")
+@router.get("/start", response_model=DiagnosticStartResponse)
 async def start_diagnostic(user: dict = Depends(get_current_user)):
     """获取入学测评题目"""
     subjects = ["computer_network", "data_structures", "computer_organization", "operating_system"]

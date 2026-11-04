@@ -31,7 +31,7 @@ def _mask_key(key: str) -> str:
     return f"{key[:4]}****{key[-4:]}"
 
 
-@router.get("/config")
+@router.get("/config", response_model=ConfigResponse)
 async def config_get(user: dict = Depends(require_admin)):
     """获取配置 — 从深度嵌套结构手动提取到扁平 ConfigResponse"""
     cfg = load_config()

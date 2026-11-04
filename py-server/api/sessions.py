@@ -166,7 +166,7 @@ async def session_list(user: dict = Depends(get_current_user)):
     return {"sessions": await run_in_threadpool(_scan_sessions, user_dir)}
 
 
-@router.get("/load/{conv_id}")
+@router.get("/load/{conv_id}", response_model=SessionLoadResponse)
 async def session_load(conv_id: str, user: dict = Depends(get_current_user)):
     """加载当前用户的单个对话（用户隔离）"""
     uid = user["user_id"]
