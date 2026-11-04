@@ -122,6 +122,17 @@ CREATE TABLE IF NOT EXISTS career_scenarios_custom (
     created_by VARCHAR(64),
     created_at TIMESTAMP DEFAULT NOW()
 );
+
+-- 2026-11-02 审计补索引：下列查询此前均为全表扫描，数据量一上来就线性劣化。
+-- 索引按「WHERE 等值列 + ORDER BY 列」组合，可直接消除排序与扫描。
+CREATE INDEX IF NOT EXISTS idx_career_classes_teacher ON career_classes(teacher_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_career_tasks_join_code ON career_tasks(join_code);
+CREATE INDEX IF NOT EXISTS idx_career_tasks_teacher ON career_tasks(teacher_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_career_tasks_class ON career_tasks(class_id);
+CREATE INDEX IF NOT EXISTS idx_career_sessions_user ON career_sessions(user_id, started_at);
+CREATE INDEX IF NOT EXISTS idx_career_sessions_task ON career_sessions(task_id);
+CREATE INDEX IF NOT EXISTS idx_career_assessments_session ON career_assessments(session_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_career_students_user ON career_class_students(user_id);
 """
 
 # SQLite 建表脚本（TEXT 代替 JSONB，AUTOINCREMENT）
@@ -229,6 +240,16 @@ CREATE TABLE IF NOT EXISTS career_scenarios_custom (
     created_by TEXT,
     created_at TEXT DEFAULT (datetime('now'))
 );
+
+-- 与上方 PG 脚本保持同一组索引（口径必须一致，否则两套库的性能特征会分叉）
+CREATE INDEX IF NOT EXISTS idx_career_classes_teacher ON career_classes(teacher_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_career_tasks_join_code ON career_tasks(join_code);
+CREATE INDEX IF NOT EXISTS idx_career_tasks_teacher ON career_tasks(teacher_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_career_tasks_class ON career_tasks(class_id);
+CREATE INDEX IF NOT EXISTS idx_career_sessions_user ON career_sessions(user_id, started_at);
+CREATE INDEX IF NOT EXISTS idx_career_sessions_task ON career_sessions(task_id);
+CREATE INDEX IF NOT EXISTS idx_career_assessments_session ON career_assessments(session_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_career_students_user ON career_class_students(user_id);
 """
 
 
