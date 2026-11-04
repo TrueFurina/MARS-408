@@ -4,6 +4,8 @@
 # ============================================================
 
 import logging
+from typing import Any, Literal, Optional
+
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from shared.auth import get_current_user
@@ -50,7 +52,34 @@ class RecordRequest(BaseModel):
     correct: bool = False
 
 
-@router.get("/list")
+# ── 响应模型（2026-11-02 契约缺口审计） ──
+AchievementCategory = Literal["milestone", "practice", "knowledge", "streak", "master"]
+
+
+class AchievementItem(BaseModel):
+    id: str
+    name: str
+    description: str
+    icon: str
+    category: AchievementCategory
+    color: str
+    unlocked: bool
+    # 未解锁分支根本不写该键；已解锁但历史缺少 unlockedAt 时为 None ⇒ 必须 Optional
+    unlockedAt: Optional[str] = None
+    progress: float
+    progressLabel: str
+
+
+class AchievementListResponse(BaseModel):
+    total: int
+    unlocked_count: int
+    achievements: list[AchievementItem]
+    # saved_stats 是画像 JSON 原样展开，键集合随 record 事件类型变化 ⇒ 不能用固定字段，
+    # 否则未登记的扩展键会被 FastAPI **静默丢弃**（实测 15 键场景）。
+    stats: dict[str, Any]
+
+
+@router.get("/list", response_model=AchievementListResponse)
 async def get_achievements(user: dict = Depends(get_current_user)):
     """获取成就列表及用户解锁状态"""
     user_id = user.get("user_id")

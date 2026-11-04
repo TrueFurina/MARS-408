@@ -402,7 +402,24 @@ class StepQuestionResponse(BaseModel):
     options: list[str] = []
 
 
-@router.get("/step-questions")
+# ── 响应模型（2026-11-02 契约缺口审计） ──
+class StepQuestionItem(BaseModel):
+    """列表项（刻意不含 steps 明细，与产出方投影一致）。"""
+
+    id: str
+    subject: str
+    chapter: str
+    difficulty: str
+    question_text: str
+    step_count: int
+
+
+class StepQuestionListResponse(BaseModel):
+    questions: list[StepQuestionItem]
+    total: int
+
+
+@router.get("/step-questions", response_model=StepQuestionListResponse)
 async def get_step_questions(subject: str = "", user: dict = Depends(get_current_user)):
     """获取步骤化题目列表"""
     questions = STEP_QUESTIONS
@@ -424,7 +441,7 @@ async def get_step_questions(subject: str = "", user: dict = Depends(get_current
     }
 
 
-@router.get("/step-questions/{question_id}")
+@router.get("/step-questions/{question_id}", response_model=StepQuestionResponse)
 async def get_step_question_detail(question_id: str, user: dict = Depends(get_current_user)):
     """获取步骤化题目详情（第一步）"""
     q = next((q for q in STEP_QUESTIONS if q.id == question_id), None)
@@ -442,7 +459,7 @@ async def get_step_question_detail(question_id: str, user: dict = Depends(get_cu
     )
 
 
-@router.post("/step-questions/{question_id}/answer")
+@router.post("/step-questions/{question_id}/answer", response_model=StepAnswerResponse)
 async def submit_step_answer(question_id: str, req: StepAnswerRequest, user: dict = Depends(get_current_user)):
     """提交单步答案，返回正误+提示+下一步"""
     q = next((q for q in STEP_QUESTIONS if q.id == question_id), None)

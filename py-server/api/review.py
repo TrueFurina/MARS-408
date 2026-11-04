@@ -119,7 +119,7 @@ SUBJECT_NAMES = {
 _review_cache: dict = {}
 _REVIEW_CACHE_TTL = 60
 
-@router.get("/summary")
+@router.get("/summary", response_model=ReviewSummaryResponse)
 async def get_review_summary(user: dict = Depends(get_current_user)):
     """获取错题复盘统计"""
     import time

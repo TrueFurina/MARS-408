@@ -6,6 +6,7 @@
 import logging
 
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 from seed_data import SEED_SUBJECTS, KNOWLEDGE_GRAPH
 from shared.auth import get_current_user
 
@@ -14,7 +15,36 @@ logger = logging.getLogger("netlearn.subjects")
 router = APIRouter(prefix="", tags=["subjects"])
 
 
-@router.get("/subjects")
+# ── 响应模型（2026-11-02 契约缺口审计：A 类静态可定型） ──
+class SubjectInfo(BaseModel):
+    """单科定义。29 科的键集合唯一为 {name, chapters}，无 icon/description 等可选键。"""
+
+    name: str
+    chapters: list[str]
+
+
+class KGNode(BaseModel):
+    id: str
+    label: str
+    group: int
+
+
+class KGEdge(BaseModel):
+    source: str
+    target: str
+
+
+class KnowledgeGraphPayload(BaseModel):
+    nodes: list[KGNode]
+    edges: list[KGEdge]
+
+
+class SubjectsResponse(BaseModel):
+    subjects: dict[str, SubjectInfo]
+    knowledge_graph: KnowledgeGraphPayload
+
+
+@router.get("/subjects", response_model=SubjectsResponse)
 async def subjects_list(user: dict = Depends(get_current_user)):
     """获取所有科目章节"""
     return {"subjects": SEED_SUBJECTS, "knowledge_graph": KNOWLEDGE_GRAPH}
