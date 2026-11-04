@@ -3,16 +3,19 @@
 推送 `career-literacy` → `origin` 后触发的 CI 实测结果，用于回填交付文档的最后两项待核数字。
 **只有本节第一段是当前权威；以下历史段落均为其时点真值，引用前必须核对 run id。**
 
-## run `39681618692` — Backend Test (Linux) / pytest on ubuntu-latest（head `2ba7e6b`，success，2026-10-21）
+## run `41838176855` — Backend Test (Linux) / pytest on ubuntu-latest（head `6508cc4`，success，2026-11-04）
 
-**当前权威值**：SAGE 分级提示功能（分级提示 / 保留答案闸门 / 先答后问 / λ 支架监测）并入后的全量回归。
+**当前权威值**：WS1 六模块覆盖率测试 + 契约 top5（response_model）+ 可观测性（SSE 计时 / p99 分桶）
++ 会话与情景库缓存 + 安全加固（共享库导入权限 / 生产演示放宽收窄）并入后的全量回归。
 
 | step | 命令 | 结果 |
 |---|---|---|
-| 1 默认离线集 | `pytest -q --tb=short` | **1737 passed, 38 skipped, 9 deselected, 1 xfailed, 0 failed** in 266.31s |
+| 1 默认离线集 | `pytest -q --tb=short` | **1883 passed, 40 skipped, 9 deselected, 1 xfailed, 0 failed** in 252.71s |
 
-> collected = 1737+38+9+1 = **1785**（约值口径，与 TEST_TRUTH 一致）；运行项 = 1737+38+1 = **1776**。
-> 1693→1737 增量 = SAGE 分级提示功能新增 44 条测试（2026-10-21 并入）。
+> collected = 1883+40+9+1 = **1933**（约值口径，与 TEST_TRUTH 一致）；运行项 = 1883+40+1 = **1924**。
+> 1737→1883 增量 = WS1 六模块覆盖率测试 + 契约/性能/安全回归等同期新增（2026-11-04 并入）。
+> 前一权威 run `39681618692`（2026-10-21，head `2ba7e6b`）：**1737 passed / 38 skipped / 1 xfailed**（266.31s，
+> collected 1785 / 运行项 1776；1693→1737 增量 = SAGE 分级提示新增 44 条）——**已被本次取代**。
 > 同步更新的活副本：`AGENTS.md:11/33`、`docs/METRICS_CURRENT.md`、`docs/TEST_TRUTH.md`、
 > `README.md`、`README_EN.md`、`src/views/ShowcaseView.vue`、`site/` 与 `website/` 落地页
 > （后者由 `scripts/check_landing_sync.py` 机检守护）、`submission/00` + 配套文档、两份 pptx 与 4 份 docx 实体。
