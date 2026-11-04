@@ -8,7 +8,7 @@ import logging
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 from shared.auth import get_current_user
 
@@ -58,7 +58,15 @@ async def register_resource(req: RegisterResourceRequest, user: dict = Depends(g
     return {"status": "ok", "resource": resource}
 
 
-@router.get("/list")
+class ResourceListResponse(BaseModel):
+    """可复用资源列表（/resource/list）"""
+    model_config = ConfigDict(extra="allow")
+    status: str = "ok"
+    resources: list[dict] = []
+    total: int = 0
+
+
+@router.get("/list", response_model=ResourceListResponse)
 async def list_resources(user: dict = Depends(get_current_user)):
     """列出当前用户的可复用资源（直接打开，也可重新生成）"""
     from services.user_service import list_learning_resources

@@ -533,7 +533,23 @@ async def submit_step_answer(question_id: str, req: StepAnswerRequest, user: dic
     )
 
 
-@router.get("/weak-points")
+class WeakPointItem(BaseModel):
+    """单条薄弱知识点（/quiz/weak-points 数组元素）"""
+    subject: str = ""
+    chapter: str = ""
+    concept: str = ""
+    error_type: str = ""
+    count: int = 0
+    mastered: bool = False
+
+
+class WeakPointsResponse(BaseModel):
+    """薄弱知识点聚合结果"""
+    weak_points: list[WeakPointItem] = []
+    total: int = 0
+
+
+@router.get("/weak-points", response_model=WeakPointsResponse)
 async def get_weak_points(subject: str = "", user: dict = Depends(get_current_user)):
     """获取用户薄弱知识点（答题追踪 + L2 记忆薄弱点聚合）"""
     weak = weak_point_tracker.get_weak_topics(user["user_id"], subject)

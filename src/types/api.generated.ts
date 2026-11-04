@@ -6246,6 +6246,49 @@ export interface components {
             subject?: string | null;
         };
         /**
+         * KnowledgeBaseStatsResponse
+         * @description 知识库统计（/teacher/knowledge-base/stats）
+         */
+        KnowledgeBaseStatsResponse: {
+            /**
+             * Total Chunks
+             * @default 0
+             */
+            total_chunks: number;
+            /**
+             * Total Questions
+             * @default 0
+             */
+            total_questions: number;
+            /**
+             * Kg Nodes
+             * @default 0
+             */
+            kg_nodes: number;
+            /**
+             * Kg Edges
+             * @default 0
+             */
+            kg_edges: number;
+            /**
+             * By Subject
+             * @default {}
+             */
+            by_subject: {
+                [key: string]: unknown;
+            };
+            /**
+             * Auto Generated
+             * @default 0
+             */
+            auto_generated: number;
+            /**
+             * Manual
+             * @default 0
+             */
+            manual: number;
+        };
+        /**
          * KnowledgeBatchCommitItem
          * @description 批量提交的单条分块（Pydantic 校验：防止畸形/超大 payload 触发异常或注入）
          */
@@ -7015,6 +7058,31 @@ export interface components {
              */
             resource_id: number;
         };
+        /**
+         * ResourceListResponse
+         * @description 可复用资源列表（/resource/list）
+         */
+        ResourceListResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Resources
+             * @default []
+             */
+            resources: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+        } & {
+            [key: string]: unknown;
+        };
         /** ResourceRecommendRequest */
         ResourceRecommendRequest: {
             /**
@@ -7543,6 +7611,26 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /**
+         * TeachingRulesStatsResponse
+         * @description 教学规则引擎统计（/engine/teaching-rules）
+         */
+        TeachingRulesStatsResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Stats
+             * @default {}
+             */
+            stats: {
+                [key: string]: unknown;
+            };
+        } & {
+            [key: string]: unknown;
+        };
         /** TeachingRulesValidateRequest */
         TeachingRulesValidateRequest: {
             /**
@@ -7581,6 +7669,22 @@ export interface components {
              * @default html
              */
             output_format: string;
+        };
+        /**
+         * TestLLMResponse
+         * @description LLM 连通性测试结果（/config/test-llm）
+         */
+        TestLLMResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Message
+             * @default
+             */
+            message: string;
         };
         /** TokenResponse */
         TokenResponse: {
@@ -7755,6 +7859,58 @@ export interface components {
              * @default 120
              */
             word_count: number;
+        };
+        /**
+         * WeakPointItem
+         * @description 单条薄弱知识点（/quiz/weak-points 数组元素）
+         */
+        WeakPointItem: {
+            /**
+             * Subject
+             * @default
+             */
+            subject: string;
+            /**
+             * Chapter
+             * @default
+             */
+            chapter: string;
+            /**
+             * Concept
+             * @default
+             */
+            concept: string;
+            /**
+             * Error Type
+             * @default
+             */
+            error_type: string;
+            /**
+             * Count
+             * @default 0
+             */
+            count: number;
+            /**
+             * Mastered
+             * @default false
+             */
+            mastered: boolean;
+        };
+        /**
+         * WeakPointsResponse
+         * @description 薄弱知识点聚合结果
+         */
+        WeakPointsResponse: {
+            /**
+             * Weak Points
+             * @default []
+             */
+            weak_points: components["schemas"]["WeakPointItem"][];
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
         };
         /** WorkingMemoryRequest */
         WorkingMemoryRequest: {
@@ -8243,7 +8399,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["WeakPointsResponse"];
                 };
             };
             /** @description Validation Error */
@@ -9359,7 +9515,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["TestLLMResponse"];
                 };
             };
             /** @description Validation Error */
@@ -9983,7 +10139,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["TeachingRulesStatsResponse"];
                 };
             };
             /** @description Validation Error */
@@ -10223,7 +10379,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["KnowledgeBaseStatsResponse"];
                 };
             };
             /** @description Validation Error */
@@ -14402,7 +14558,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ResourceListResponse"];
                 };
             };
             /** @description Validation Error */

@@ -815,7 +815,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/WeakPointsResponse"
+                }
               }
             }
           },
@@ -3188,7 +3190,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/TestLLMResponse"
+                }
               }
             }
           },
@@ -4469,7 +4473,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/TeachingRulesStatsResponse"
+                }
               }
             }
           },
@@ -4967,7 +4973,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeBaseStatsResponse"
+                }
               }
             }
           },
@@ -13745,7 +13753,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceListResponse"
+                }
               }
             }
           },
@@ -20643,6 +20653,49 @@
         ],
         "title": "KGQueryRequest"
       },
+      "KnowledgeBaseStatsResponse": {
+        "properties": {
+          "total_chunks": {
+            "type": "integer",
+            "title": "Total Chunks",
+            "default": 0
+          },
+          "total_questions": {
+            "type": "integer",
+            "title": "Total Questions",
+            "default": 0
+          },
+          "kg_nodes": {
+            "type": "integer",
+            "title": "Kg Nodes",
+            "default": 0
+          },
+          "kg_edges": {
+            "type": "integer",
+            "title": "Kg Edges",
+            "default": 0
+          },
+          "by_subject": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "By Subject",
+            "default": {}
+          },
+          "auto_generated": {
+            "type": "integer",
+            "title": "Auto Generated",
+            "default": 0
+          },
+          "manual": {
+            "type": "integer",
+            "title": "Manual",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "KnowledgeBaseStatsResponse",
+        "description": "知识库统计（/teacher/knowledge-base/stats）"
+      },
       "KnowledgeBatchCommitItem": {
         "properties": {
           "content": {
@@ -22101,6 +22154,33 @@
         ],
         "title": "ResourceIdRequest"
       },
+      "ResourceListResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "resources": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Resources",
+            "default": []
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "default": 0
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "ResourceListResponse",
+        "description": "可复用资源列表（/resource/list）"
+      },
       "ResourceRecommendRequest": {
         "properties": {
           "entity_name": {
@@ -23210,6 +23290,25 @@
         ],
         "title": "TeachingRulesPrioritizeRequest"
       },
+      "TeachingRulesStatsResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "stats": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Stats",
+            "default": {}
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "TeachingRulesStatsResponse",
+        "description": "教学规则引擎统计（/engine/teaching-rules）"
+      },
       "TeachingRulesValidateRequest": {
         "properties": {
           "topic_ids": {
@@ -23269,6 +23368,23 @@
           "topic"
         ],
         "title": "TeachingVideoRequest"
+      },
+      "TestLLMResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "TestLLMResponse",
+        "description": "LLM 连通性测试结果（/config/test-llm）"
       },
       "TokenResponse": {
         "properties": {
@@ -23642,6 +23758,63 @@
           "prompt"
         ],
         "title": "VideoReq"
+      },
+      "WeakPointItem": {
+        "properties": {
+          "subject": {
+            "type": "string",
+            "title": "Subject",
+            "default": ""
+          },
+          "chapter": {
+            "type": "string",
+            "title": "Chapter",
+            "default": ""
+          },
+          "concept": {
+            "type": "string",
+            "title": "Concept",
+            "default": ""
+          },
+          "error_type": {
+            "type": "string",
+            "title": "Error Type",
+            "default": ""
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "default": 0
+          },
+          "mastered": {
+            "type": "boolean",
+            "title": "Mastered",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "WeakPointItem",
+        "description": "单条薄弱知识点（/quiz/weak-points 数组元素）"
+      },
+      "WeakPointsResponse": {
+        "properties": {
+          "weak_points": {
+            "items": {
+              "$ref": "#/components/schemas/WeakPointItem"
+            },
+            "type": "array",
+            "title": "Weak Points",
+            "default": []
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "WeakPointsResponse",
+        "description": "薄弱知识点聚合结果"
       },
       "WorkingMemoryRequest": {
         "properties": {

@@ -8,6 +8,8 @@ import type { operations } from '@/types/api.generated'
 
 // 契约类型：取自后端新增的 response_model=ConfigResponse（py-server/api/config_routes.py）
 type ConfigResp = operations['config_get_api_config_get']['responses'][200]['content']['application/json']
+// /config/test-llm 返回（response_model=TestLLMResponse）
+type ConfigTestLLMResp = operations['config_test_llm_api_config_test_llm_post']['responses'][200]['content']['application/json']
 
 const router = useRouter()
 const store = useStudyStore()
@@ -59,7 +61,7 @@ async function testLLM() {
   testing.value = true
   testResult.value = ''
   try {
-    const data = await api.post<any>('/config/test-llm', {
+    const data = await api.post<ConfigTestLLMResp>('/config/test-llm', {
       llm_api_key: config.value.llm_api_key,
       llm_base_url: config.value.llm_base_url,
       llm_model: config.value.llm_model,

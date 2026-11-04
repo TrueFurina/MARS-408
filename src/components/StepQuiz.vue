@@ -2,6 +2,10 @@
 import { errMessage } from '@/utils/errorMessage'
 import { ref, onMounted, onUnmounted } from 'vue'
 import { api } from '@/utils/api'
+import type { operations } from '@/types/api.generated'
+
+// /quiz/weak-points 返回（response_model=WeakPointsResponse）
+type WeakPointsResp = operations['get_weak_points_api_quiz_weak_points_get']['responses'][200]['content']['application/json']
 import Skeleton from '@/components/Skeleton.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import { icons } from '@/components/icons'
@@ -94,7 +98,7 @@ async function submitStepAnswer() {
     if (data.finished) {
       stepFinished.value = true
       try {
-        const wp = await api.get<any>('/quiz/weak-points')
+        const wp = await api.get<WeakPointsResp>('/quiz/weak-points')
         stepResult.value = { weak_points: wp.weak_points || [] }
       } catch { stepResult.value = { weak_points: [] } }
     } else {

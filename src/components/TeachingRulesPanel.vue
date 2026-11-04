@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { api } from '@/utils/api'
+import type { operations } from '@/types/api.generated'
+
+// /engine/teaching-rules 返回（response_model=TeachingRulesStatsResponse）
+type TeachingRulesStatsResp = operations['teaching_rules_stats_api_engine_teaching_rules_get']['responses'][200]['content']['application/json']
 import Skeleton from '@/components/Skeleton.vue'
 import EmptyState from '@/components/EmptyState.vue'
 
@@ -10,7 +14,7 @@ const topicPrerequisites = ref<any>(null)
 
 async function loadTeachingRules() {
   try {
-    teachingRulesData.value = await api.get<any>('/engine/teaching-rules')
+    teachingRulesData.value = await api.get<TeachingRulesStatsResp>('/engine/teaching-rules')
   } catch {
     // 取不到就保持 null，由模板渲染空态；不填充任何占位数据
     teachingRulesData.value = null

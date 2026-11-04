@@ -16,7 +16,7 @@ from typing import Any, Literal
 from fastapi import APIRouter, Depends
 from shared.auth import get_current_user, require_admin
 from shared.ratelimit import require_llm_quota
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, ConfigDict
 
 import logging
 
@@ -297,7 +297,14 @@ def _bucket_stats() -> dict:
 
 # ── 教学规则引擎端点（报告§3.3.3） ──
 
-@router.get("/teaching-rules")
+class TeachingRulesStatsResponse(BaseModel):
+    """教学规则引擎统计（/engine/teaching-rules）"""
+    model_config = ConfigDict(extra="allow")
+    status: str = "ok"
+    stats: dict = {}
+
+
+@router.get("/teaching-rules", response_model=TeachingRulesStatsResponse)
 async def teaching_rules_stats(user: dict = Depends(get_current_user)):
     """教学规则引擎统计 — 知识点依赖+考查权重+Agent适配"""
     from engines.teaching_rules import teaching_rules

@@ -134,7 +134,18 @@ async def get_student_detail(student_id: str, user: dict = Depends(require_teach
     }
 
 
-@router.get("/knowledge-base/stats")
+class KnowledgeBaseStatsResponse(BaseModel):
+    """知识库统计（/teacher/knowledge-base/stats）"""
+    total_chunks: int = 0
+    total_questions: int = 0
+    kg_nodes: int = 0
+    kg_edges: int = 0
+    by_subject: dict = {}
+    auto_generated: int = 0
+    manual: int = 0
+
+
+@router.get("/knowledge-base/stats", response_model=KnowledgeBaseStatsResponse)
 @cached(ttl=300)
 async def get_knowledge_base_stats(user: dict = Depends(require_teacher_or_demo_open)):
     """知识库统计信息"""

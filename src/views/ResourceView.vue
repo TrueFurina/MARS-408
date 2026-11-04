@@ -4,6 +4,10 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useStudyStore } from '@/stores/studyStore'
 import { api } from '@/utils/api'
+import type { operations } from '@/types/api.generated'
+
+// /resource/list 返回（response_model=ResourceListResponse）
+type ResourceListResp = operations['list_resources_api_resource_list_get']['responses'][200]['content']['application/json']
 import { ttsSynthesize, friendlyError } from '@/utils/api'
 import { icons } from '@/components/icons'
 import { renderMarkdownSafe } from '@/utils/markdown'
@@ -130,7 +134,7 @@ const poolLoading = ref(false)
 async function loadPoolResources() {
   poolLoading.value = true
   try {
-    const data = await api.get<any>('/resource/list')
+    const data = await api.get<ResourceListResp>('/resource/list')
     poolResources.value = data?.resources || []
     showPool.value = true
   } catch {
