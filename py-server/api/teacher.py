@@ -16,7 +16,27 @@ logger = logging.getLogger("netlearn.teacher")
 router = APIRouter(prefix="/teacher", tags=["teacher"])
 
 
-@router.get("/students/overview")
+# ── 响应模型（2026-11-02 契约缺口审计） ──
+# 字段来源：api/teacher.py 的 student_rows 构造（第 38-44 行）+ 聚合（51-57 行）。
+# progress/mastery 由 list_all_users 现算（quiz_total=len(...) / round(float*100)），
+# 当前恒为 int；last_active 无历史时回退 "—"，不会为 None。
+class StudentOverviewRow(BaseModel):
+    id: str
+    name: str
+    progress: int
+    mastery: int
+    last_active: str
+
+
+class StudentsOverviewResponse(BaseModel):
+    total_students: int
+    active_today: int
+    avg_mastery: float
+    avg_progress: float
+    students: list[StudentOverviewRow]
+
+
+@router.get("/students/overview", response_model=StudentsOverviewResponse)
 @cached(ttl=120)
 async def get_students_overview(user: dict = Depends(require_teacher_or_demo_open)):
     """获取所有学生概览（教师仪表板）— 基于真实用户与答题历史聚合"""

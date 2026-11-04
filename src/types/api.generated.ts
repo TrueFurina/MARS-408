@@ -3652,7 +3652,10 @@ export interface paths {
         put?: never;
         /**
          * Api Import Pdf
-         * @description 上传并导入PDF教材
+         * @description 上传并导入PDF教材（写入**共享**知识库，需教师/管理员权限）。
+         *
+         *     安全边界：该端点会把传入 PDF 解析后写入全站共享的知识库，属于「共享写」操作。
+         *     此前只要求登录（任意学生可写入共享库），已由 2026-11-02 审计修正为 require_teacher。
          */
         post: operations["api_import_pdf_api_knowledge_base_import_pdf_post"];
         delete?: never;
@@ -5105,6 +5108,45 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AchievementItem */
+        AchievementItem: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+            /** Icon */
+            icon: string;
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "milestone" | "practice" | "knowledge" | "streak" | "master";
+            /** Color */
+            color: string;
+            /** Unlocked */
+            unlocked: boolean;
+            /** Unlockedat */
+            unlockedAt?: string | null;
+            /** Progress */
+            progress: number;
+            /** Progresslabel */
+            progressLabel: string;
+        };
+        /** AchievementListResponse */
+        AchievementListResponse: {
+            /** Total */
+            total: number;
+            /** Unlocked Count */
+            unlocked_count: number;
+            /** Achievements */
+            achievements: components["schemas"]["AchievementItem"][];
+            /** Stats */
+            stats: {
+                [key: string]: unknown;
+            };
+        };
         /** AddWrongQuestionRequest */
         AddWrongQuestionRequest: {
             /** Question */
@@ -6160,6 +6202,22 @@ export interface components {
              */
             question: string;
         };
+        /** KGEdge */
+        KGEdge: {
+            /** Source */
+            source: string;
+            /** Target */
+            target: string;
+        };
+        /** KGNode */
+        KGNode: {
+            /** Id */
+            id: string;
+            /** Label */
+            label: string;
+            /** Group */
+            group: number;
+        };
         /** KGQueryRequest */
         KGQueryRequest: {
             /**
@@ -6221,6 +6279,13 @@ export interface components {
             metadata?: {
                 [key: string]: unknown;
             };
+        };
+        /** KnowledgeGraphPayload */
+        KnowledgeGraphPayload: {
+            /** Nodes */
+            nodes: components["schemas"]["KGNode"][];
+            /** Edges */
+            edges: components["schemas"]["KGEdge"][];
         };
         /** KnowledgeGraphRequest */
         KnowledgeGraphRequest: {
@@ -6963,6 +7028,23 @@ export interface components {
              */
             recalled: boolean;
         };
+        /** ReviewSummaryResponse */
+        ReviewSummaryResponse: {
+            /** Total Questions */
+            total_questions: number;
+            /** Total Wrong */
+            total_wrong: number;
+            /** Overall Accuracy */
+            overall_accuracy: number;
+            /** By Subject */
+            by_subject: components["schemas"]["SubjectSummary"][];
+            /** Weak Topics */
+            weak_topics: string[];
+            /** Wrong Questions */
+            wrong_questions: components["schemas"]["WrongQuestion"][];
+            /** Recommendation */
+            recommendation: string;
+        };
         /** RoleplayReq */
         RoleplayReq: {
             /**
@@ -7175,6 +7257,90 @@ export interface components {
             /** Answer */
             answer: string;
         };
+        /**
+         * StepAnswerResponse
+         * @description 单步反馈
+         */
+        StepAnswerResponse: {
+            /** Correct */
+            correct: boolean;
+            /**
+             * Hint
+             * @default
+             */
+            hint: string;
+            /**
+             * Error Type
+             * @default
+             */
+            error_type: string;
+            /**
+             * Next Step
+             * @default -1
+             */
+            next_step: number;
+            /**
+             * Finished
+             * @default false
+             */
+            finished: boolean;
+        };
+        /**
+         * StepQuestionItem
+         * @description 列表项（刻意不含 steps 明细，与产出方投影一致）。
+         */
+        StepQuestionItem: {
+            /** Id */
+            id: string;
+            /** Subject */
+            subject: string;
+            /** Chapter */
+            chapter: string;
+            /** Difficulty */
+            difficulty: string;
+            /** Question Text */
+            question_text: string;
+            /** Step Count */
+            step_count: number;
+        };
+        /** StepQuestionListResponse */
+        StepQuestionListResponse: {
+            /** Questions */
+            questions: components["schemas"]["StepQuestionItem"][];
+            /** Total */
+            total: number;
+        };
+        /**
+         * StepQuestionResponse
+         * @description 步骤化题目
+         */
+        StepQuestionResponse: {
+            /** Id */
+            id: string;
+            /** Subject */
+            subject: string;
+            /** Chapter */
+            chapter: string;
+            /** Difficulty */
+            difficulty: string;
+            /** Question Text */
+            question_text: string;
+            /** Total Steps */
+            total_steps: number;
+            /** Current Step */
+            current_step: number;
+            /** Step Name */
+            step_name: string;
+            /** Step Description */
+            step_description: string;
+            /** Step Type */
+            step_type: string;
+            /**
+             * Options
+             * @default []
+             */
+            options: string[];
+        };
         /** StopDecisionUpdateRequest */
         StopDecisionUpdateRequest: {
             /** Complexity */
@@ -7184,6 +7350,19 @@ export interface components {
             /** Was Good */
             was_good: boolean;
         };
+        /** StudentOverviewRow */
+        StudentOverviewRow: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Progress */
+            progress: number;
+            /** Mastery */
+            mastery: number;
+            /** Last Active */
+            last_active: string;
+        };
         /** StudentsImportRequest */
         StudentsImportRequest: {
             /**
@@ -7191,6 +7370,29 @@ export interface components {
              * @description 粘贴文本，每行『学号 姓名』或『姓名』，空格分隔
              */
             roster: string;
+        };
+        /** StudentsOverviewResponse */
+        StudentsOverviewResponse: {
+            /** Total Students */
+            total_students: number;
+            /** Active Today */
+            active_today: number;
+            /** Avg Mastery */
+            avg_mastery: number;
+            /** Avg Progress */
+            avg_progress: number;
+            /** Students */
+            students: components["schemas"]["StudentOverviewRow"][];
+        };
+        /**
+         * SubjectInfo
+         * @description 单科定义。29 科的键集合唯一为 {name, chapters}，无 icon/description 等可选键。
+         */
+        SubjectInfo: {
+            /** Name */
+            name: string;
+            /** Chapters */
+            chapters: string[];
         };
         /** SubjectStat */
         SubjectStat: {
@@ -7200,6 +7402,29 @@ export interface components {
             correct: number;
             /** Accuracy */
             accuracy: number;
+        };
+        /** SubjectSummary */
+        SubjectSummary: {
+            /** Subject */
+            subject: string;
+            /** Subject Name */
+            subject_name: string;
+            /** Total */
+            total: number;
+            /** Wrong */
+            wrong: number;
+            /** Accuracy */
+            accuracy: number;
+            /** Weak Topics */
+            weak_topics: string[];
+        };
+        /** SubjectsResponse */
+        SubjectsResponse: {
+            /** Subjects */
+            subjects: {
+                [key: string]: components["schemas"]["SubjectInfo"];
+            };
+            knowledge_graph: components["schemas"]["KnowledgeGraphPayload"];
         };
         /** SyllabusImportRequest */
         SyllabusImportRequest: {
@@ -7531,6 +7756,27 @@ export interface components {
              */
             focus?: string | null;
         };
+        /** WrongQuestion */
+        WrongQuestion: {
+            /** Id */
+            id: number;
+            /** Subject */
+            subject: string;
+            /** Topic */
+            topic: string;
+            /** Question */
+            question: string;
+            /** User Answer */
+            user_answer: string;
+            /** Correct Answer */
+            correct_answer: string;
+            /** Error Type */
+            error_type: string;
+            /** Hint */
+            hint: string;
+            /** Timestamp */
+            timestamp: string;
+        };
         /** AnswerRequest */
         api__career_training__AnswerRequest: {
             /**
@@ -7855,7 +8101,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["StepQuestionListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -7889,7 +8135,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["StepQuestionResponse"];
                 };
             };
             /** @description Validation Error */
@@ -7927,7 +8173,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["StepAnswerResponse"];
                 };
             };
             /** @description Validation Error */
@@ -9109,7 +9355,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SubjectsResponse"];
                 };
             };
             /** @description Validation Error */
@@ -9875,7 +10121,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["StudentsOverviewResponse"];
                 };
             };
             /** @description Validation Error */
@@ -13173,7 +13419,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ReviewSummaryResponse"];
                 };
             };
             /** @description Validation Error */
@@ -14016,7 +14262,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["AchievementListResponse"];
                 };
             };
             /** @description Validation Error */

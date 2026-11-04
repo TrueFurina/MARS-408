@@ -579,7 +579,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/StepQuestionListResponse"
+                }
               }
             }
           },
@@ -652,7 +654,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/StepQuestionResponse"
+                }
               }
             }
           },
@@ -735,7 +739,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/StepAnswerResponse"
+                }
               }
             }
           },
@@ -3242,7 +3248,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SubjectsResponse"
+                }
               }
             }
           },
@@ -4816,7 +4824,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/StudentsOverviewResponse"
+                }
               }
             }
           },
@@ -11704,7 +11714,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewSummaryResponse"
+                }
               }
             }
           },
@@ -13513,7 +13525,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/AchievementListResponse"
+                }
               }
             }
           },
@@ -18653,6 +18667,109 @@
   },
   "components": {
     "schemas": {
+      "AchievementItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "icon": {
+            "type": "string",
+            "title": "Icon"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "milestone",
+              "practice",
+              "knowledge",
+              "streak",
+              "master"
+            ],
+            "title": "Category"
+          },
+          "color": {
+            "type": "string",
+            "title": "Color"
+          },
+          "unlocked": {
+            "type": "boolean",
+            "title": "Unlocked"
+          },
+          "unlockedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unlockedat"
+          },
+          "progress": {
+            "type": "number",
+            "title": "Progress"
+          },
+          "progressLabel": {
+            "type": "string",
+            "title": "Progresslabel"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "icon",
+          "category",
+          "color",
+          "unlocked",
+          "progress",
+          "progressLabel"
+        ],
+        "title": "AchievementItem"
+      },
+      "AchievementListResponse": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "unlocked_count": {
+            "type": "integer",
+            "title": "Unlocked Count"
+          },
+          "achievements": {
+            "items": {
+              "$ref": "#/components/schemas/AchievementItem"
+            },
+            "type": "array",
+            "title": "Achievements"
+          },
+          "stats": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Stats"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "unlocked_count",
+          "achievements",
+          "stats"
+        ],
+        "title": "AchievementListResponse"
+      },
       "AddWrongQuestionRequest": {
         "properties": {
           "question": {
@@ -20421,6 +20538,47 @@
         ],
         "title": "ImageUnderstandReq"
       },
+      "KGEdge": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "target"
+        ],
+        "title": "KGEdge"
+      },
+      "KGNode": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "group": {
+            "type": "integer",
+            "title": "Group"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "group"
+        ],
+        "title": "KGNode"
+      },
       "KGQueryRequest": {
         "properties": {
           "query": {
@@ -20526,6 +20684,30 @@
           "content"
         ],
         "title": "KnowledgeDocIn"
+      },
+      "KnowledgeGraphPayload": {
+        "properties": {
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/KGNode"
+            },
+            "type": "array",
+            "title": "Nodes"
+          },
+          "edges": {
+            "items": {
+              "$ref": "#/components/schemas/KGEdge"
+            },
+            "type": "array",
+            "title": "Edges"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nodes",
+          "edges"
+        ],
+        "title": "KnowledgeGraphPayload"
       },
       "KnowledgeGraphRequest": {
         "properties": {
@@ -21927,6 +22109,58 @@
         "type": "object",
         "title": "ReviewRecallRequest"
       },
+      "ReviewSummaryResponse": {
+        "properties": {
+          "total_questions": {
+            "type": "integer",
+            "title": "Total Questions"
+          },
+          "total_wrong": {
+            "type": "integer",
+            "title": "Total Wrong"
+          },
+          "overall_accuracy": {
+            "type": "number",
+            "title": "Overall Accuracy"
+          },
+          "by_subject": {
+            "items": {
+              "$ref": "#/components/schemas/SubjectSummary"
+            },
+            "type": "array",
+            "title": "By Subject"
+          },
+          "weak_topics": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Weak Topics"
+          },
+          "wrong_questions": {
+            "items": {
+              "$ref": "#/components/schemas/WrongQuestion"
+            },
+            "type": "array",
+            "title": "Wrong Questions"
+          },
+          "recommendation": {
+            "type": "string",
+            "title": "Recommendation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_questions",
+          "total_wrong",
+          "overall_accuracy",
+          "by_subject",
+          "weak_topics",
+          "wrong_questions",
+          "recommendation"
+        ],
+        "title": "ReviewSummaryResponse"
+      },
       "RoleplayReq": {
         "properties": {
           "persona": {
@@ -22373,6 +22607,167 @@
         "title": "StepAnswerRequest",
         "description": "提交单步答案"
       },
+      "StepAnswerResponse": {
+        "properties": {
+          "correct": {
+            "type": "boolean",
+            "title": "Correct"
+          },
+          "hint": {
+            "type": "string",
+            "title": "Hint",
+            "default": ""
+          },
+          "error_type": {
+            "type": "string",
+            "title": "Error Type",
+            "default": ""
+          },
+          "next_step": {
+            "type": "integer",
+            "title": "Next Step",
+            "default": -1
+          },
+          "finished": {
+            "type": "boolean",
+            "title": "Finished",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "correct"
+        ],
+        "title": "StepAnswerResponse",
+        "description": "单步反馈"
+      },
+      "StepQuestionItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject"
+          },
+          "chapter": {
+            "type": "string",
+            "title": "Chapter"
+          },
+          "difficulty": {
+            "type": "string",
+            "title": "Difficulty"
+          },
+          "question_text": {
+            "type": "string",
+            "title": "Question Text"
+          },
+          "step_count": {
+            "type": "integer",
+            "title": "Step Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "subject",
+          "chapter",
+          "difficulty",
+          "question_text",
+          "step_count"
+        ],
+        "title": "StepQuestionItem",
+        "description": "列表项（刻意不含 steps 明细，与产出方投影一致）。"
+      },
+      "StepQuestionListResponse": {
+        "properties": {
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/StepQuestionItem"
+            },
+            "type": "array",
+            "title": "Questions"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "questions",
+          "total"
+        ],
+        "title": "StepQuestionListResponse"
+      },
+      "StepQuestionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject"
+          },
+          "chapter": {
+            "type": "string",
+            "title": "Chapter"
+          },
+          "difficulty": {
+            "type": "string",
+            "title": "Difficulty"
+          },
+          "question_text": {
+            "type": "string",
+            "title": "Question Text"
+          },
+          "total_steps": {
+            "type": "integer",
+            "title": "Total Steps"
+          },
+          "current_step": {
+            "type": "integer",
+            "title": "Current Step"
+          },
+          "step_name": {
+            "type": "string",
+            "title": "Step Name"
+          },
+          "step_description": {
+            "type": "string",
+            "title": "Step Description"
+          },
+          "step_type": {
+            "type": "string",
+            "title": "Step Type"
+          },
+          "options": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Options",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "subject",
+          "chapter",
+          "difficulty",
+          "question_text",
+          "total_steps",
+          "current_step",
+          "step_name",
+          "step_description",
+          "step_type"
+        ],
+        "title": "StepQuestionResponse",
+        "description": "步骤化题目"
+      },
       "StopDecisionUpdateRequest": {
         "properties": {
           "complexity": {
@@ -22396,6 +22791,39 @@
         ],
         "title": "StopDecisionUpdateRequest"
       },
+      "StudentOverviewRow": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "progress": {
+            "type": "integer",
+            "title": "Progress"
+          },
+          "mastery": {
+            "type": "integer",
+            "title": "Mastery"
+          },
+          "last_active": {
+            "type": "string",
+            "title": "Last Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "progress",
+          "mastery",
+          "last_active"
+        ],
+        "title": "StudentOverviewRow"
+      },
       "StudentsImportRequest": {
         "properties": {
           "roster": {
@@ -22409,6 +22837,64 @@
           "roster"
         ],
         "title": "StudentsImportRequest"
+      },
+      "StudentsOverviewResponse": {
+        "properties": {
+          "total_students": {
+            "type": "integer",
+            "title": "Total Students"
+          },
+          "active_today": {
+            "type": "integer",
+            "title": "Active Today"
+          },
+          "avg_mastery": {
+            "type": "number",
+            "title": "Avg Mastery"
+          },
+          "avg_progress": {
+            "type": "number",
+            "title": "Avg Progress"
+          },
+          "students": {
+            "items": {
+              "$ref": "#/components/schemas/StudentOverviewRow"
+            },
+            "type": "array",
+            "title": "Students"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_students",
+          "active_today",
+          "avg_mastery",
+          "avg_progress",
+          "students"
+        ],
+        "title": "StudentsOverviewResponse"
+      },
+      "SubjectInfo": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "chapters": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Chapters"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "chapters"
+        ],
+        "title": "SubjectInfo",
+        "description": "单科定义。29 科的键集合唯一为 {name, chapters}，无 icon/description 等可选键。"
       },
       "SubjectStat": {
         "properties": {
@@ -22432,6 +22918,67 @@
           "accuracy"
         ],
         "title": "SubjectStat"
+      },
+      "SubjectSummary": {
+        "properties": {
+          "subject": {
+            "type": "string",
+            "title": "Subject"
+          },
+          "subject_name": {
+            "type": "string",
+            "title": "Subject Name"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "wrong": {
+            "type": "integer",
+            "title": "Wrong"
+          },
+          "accuracy": {
+            "type": "number",
+            "title": "Accuracy"
+          },
+          "weak_topics": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Weak Topics"
+          }
+        },
+        "type": "object",
+        "required": [
+          "subject",
+          "subject_name",
+          "total",
+          "wrong",
+          "accuracy",
+          "weak_topics"
+        ],
+        "title": "SubjectSummary"
+      },
+      "SubjectsResponse": {
+        "properties": {
+          "subjects": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/SubjectInfo"
+            },
+            "type": "object",
+            "title": "Subjects"
+          },
+          "knowledge_graph": {
+            "$ref": "#/components/schemas/KnowledgeGraphPayload"
+          }
+        },
+        "type": "object",
+        "required": [
+          "subjects",
+          "knowledge_graph"
+        ],
+        "title": "SubjectsResponse"
       },
       "SyllabusImportRequest": {
         "properties": {
@@ -23089,6 +23636,59 @@
           "topic"
         ],
         "title": "WorkingTopicRequest"
+      },
+      "WrongQuestion": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject"
+          },
+          "topic": {
+            "type": "string",
+            "title": "Topic"
+          },
+          "question": {
+            "type": "string",
+            "title": "Question"
+          },
+          "user_answer": {
+            "type": "string",
+            "title": "User Answer"
+          },
+          "correct_answer": {
+            "type": "string",
+            "title": "Correct Answer"
+          },
+          "error_type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "hint": {
+            "type": "string",
+            "title": "Hint"
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "subject",
+          "topic",
+          "question",
+          "user_answer",
+          "correct_answer",
+          "error_type",
+          "hint",
+          "timestamp"
+        ],
+        "title": "WrongQuestion"
       },
       "api__career_training__AnswerRequest": {
         "properties": {
