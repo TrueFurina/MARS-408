@@ -184,6 +184,14 @@ jobs:
           node-version: "22"
           cache: "npm"
       - run: npm ci
+      - name: Frontend dependency CVE scan (prod-only, block on high+)
+        # 仅审计「真正上线到浏览器的生产依赖」：dev 依赖（vitest/tinypool 等）的
+        # critical 不在此阻断，避免误伤构建；其风险由下方全量审计以报告形式暴露。
+        # 实测当前 prod 依赖仅 2 low（katex，无可用修复），high/critical = 0，故门禁常绿。
+        run: npm audit --omit=dev --audit-level=high
+      - name: Frontend dependency audit (full, informational)
+        # 全量审计仅作可见报告（dev 端 3 critical 需 vitest 破坏性升级，另行处理），不阻断。
+        run: npm audit || true
       - name: ESLint (zero-error gate)
         run: npm run lint
       - name: Vitest unit tests
