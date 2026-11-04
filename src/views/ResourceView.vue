@@ -6,6 +6,13 @@ import { useStudyStore } from '@/stores/studyStore'
 import { api } from '@/utils/api'
 import type { operations } from '@/types/api.generated'
 
+// 契约层响应类型（来自 src/types/api.generated.ts 的 operations[...]）
+type ImageGenResp = operations['generate_teaching_image_api_multimodal_generate_image_post']['responses'][200]['content']['application/json']
+type AudioGenResp = operations['generate_teaching_audio_api_multimodal_generate_audio_post']['responses'][200]['content']['application/json']
+type ExtensionResp = operations['generate_extension_api_agents_generate_extension_post']['responses'][200]['content']['application/json']
+type PptResp = operations['generate_ppt_api_agents_generate_ppt_post']['responses'][200]['content']['application/json']
+type CodePracticeResp = operations['generate_code_practice_api_agents_generate_code_practice_post']['responses'][200]['content']['application/json']
+
 // /resource/list 返回（response_model=ResourceListResponse）
 type ResourceListResp = operations['list_resources_api_resource_list_get']['responses'][200]['content']['application/json']
 import { ttsSynthesize, friendlyError } from '@/utils/api'
@@ -238,19 +245,19 @@ async function generateMultimodal() {
   try {
     // 并行生成教学插图 + 语音旁白
     const [imgRes, audioRes] = await Promise.all([
-      api.post<any>('/multimodal/generate-image', { topic: topic.value }),
-      api.post<any>('/multimodal/generate-audio', {
+      api.post<ImageGenResp>('/multimodal/generate-image', { topic: topic.value }),
+      api.post<AudioGenResp>('/multimodal/generate-audio', {
         text: (result.value?.teacher_doc || result.value?.video_script || '').substring(0, 500)
       }).catch(() => null)
     ])
 
-    const imgData = imgRes.data
+    const imgData = imgRes
     mmImageBase64.value = imgData.image_base64 || null
     mmImageSvg.value = imgData.image_svg || null
     mmImageSource.value = imgData.source || 'none'
 
     if (audioRes) {
-      const audioData = audioRes.data
+      const audioData = audioRes
       mmAudioBase64.value = audioData.audio_base64 || null
       mmAudioFallbackText.value = audioData.fallback_text || null
       mmAudioSource.value = audioData.source || 'none'
@@ -669,7 +676,7 @@ async function generateExtension() {
   extensionDoc.value = ''
   extensionWarnings.value = []
   try {
-    const data = await api.post<any>('/agents/generate-extension', {
+    const data = await api.post<ExtensionResp>('/agents/generate-extension', {
       topic: topic.value,
       difficulty: difficulty.value,
       profile: store.studentProfile,
@@ -693,7 +700,7 @@ async function generatePpt() {
   pptLoading.value = true
   pptOutline.value = ''
   try {
-    const data = await api.post<any>('/agents/generate-ppt', {
+    const data = await api.post<PptResp>('/agents/generate-ppt', {
       topic: topic.value,
       difficulty: difficulty.value,
       profile: store.studentProfile,
@@ -718,7 +725,7 @@ async function generateCodePractice() {
   codePractice.value = ''
   codeWarnings.value = []
   try {
-    const data = await api.post<any>('/agents/generate-code-practice', {
+    const data = await api.post<CodePracticeResp>('/agents/generate-code-practice', {
       topic: topic.value,
       difficulty: difficulty.value,
       profile: store.studentProfile,

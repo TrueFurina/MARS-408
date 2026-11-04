@@ -5232,6 +5232,33 @@ export interface components {
              */
             question: string;
         };
+        /**
+         * AssessmentFeedbackResponse
+         * @description 增强版学习效果评估 + 路径调整返回（/assessment/feedback）
+         */
+        AssessmentFeedbackResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Evaluation
+             * @default {}
+             */
+            evaluation: {
+                [key: string]: unknown;
+            };
+            /**
+             * Path Adjustment
+             * @default {}
+             */
+            path_adjustment: {
+                [key: string]: unknown;
+            };
+        } & {
+            [key: string]: unknown;
+        };
         /** AssessmentRequest */
         AssessmentRequest: {
             /** Profile */
@@ -5351,6 +5378,44 @@ export interface components {
              * @default xiaoyan
              */
             voice: string;
+        };
+        /**
+         * AudioGenerationResponse
+         * @description 语音旁白生成返回（/multimodal/generate-audio）
+         */
+        AudioGenerationResponse: {
+            /**
+             * Source
+             * @default
+             */
+            source: string;
+            /**
+             * Audio Base64
+             * @default
+             */
+            audio_base64: string;
+            /**
+             * Audio Format
+             * @default
+             */
+            audio_format: string;
+            /**
+             * Fallback Text
+             * @default
+             */
+            fallback_text: string;
+            /**
+             * Is Real Audio
+             * @default false
+             */
+            is_real_audio: boolean;
+            /**
+             * Text Length
+             * @default 0
+             */
+            text_length: number;
+        } & {
+            [key: string]: unknown;
         };
         /** BatchDeleteRequest */
         BatchDeleteRequest: {
@@ -5751,6 +5816,34 @@ export interface components {
             /** Categories */
             categories?: string[] | null;
         };
+        /**
+         * ComplianceResponse
+         * @description 文本合规返回（/xfyun/compliance）
+         */
+        ComplianceResponse: {
+            /**
+             * Passed
+             * @default false
+             */
+            passed: boolean;
+            /**
+             * Suggest
+             * @default
+             */
+            suggest: string;
+            /**
+             * Hits
+             * @default []
+             */
+            hits: unknown[];
+            /**
+             * Source
+             * @default
+             */
+            source: string;
+        } & {
+            [key: string]: unknown;
+        };
         /** ConfigResponse */
         ConfigResponse: {
             /**
@@ -6029,6 +6122,23 @@ export interface components {
             reliability: components["schemas"]["ReliabilityStats"];
         };
         /**
+         * EnhancedAnswerResponse
+         * @description 增强版智能答疑返回（/tutor/enhanced-answer）；result 为 LLM 产物 dict，故额外字段全部放行
+         */
+        EnhancedAnswerResponse: {
+            /**
+             * Answer
+             * @default
+             */
+            answer: string;
+            /** Svg Diagram */
+            svg_diagram?: string | null;
+            /** Video Script */
+            video_script?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
          * EnhancedTutorRequest
          * @description 增强版答疑请求
          */
@@ -6164,6 +6274,55 @@ export interface components {
              */
             course: string;
         };
+        /**
+         * GenerateCodePracticeResponse
+         * @description 代码实操案例生成返回（/agents/generate-code-practice）
+         */
+        GenerateCodePracticeResponse: {
+            /**
+             * Code Practice
+             * @default
+             */
+            code_practice: string;
+            /**
+             * Hallucination Warnings
+             * @default []
+             */
+            hallucination_warnings: string[];
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * GenerateExtensionResponse
+         * @description 课外拓展阅读材料生成返回（/agents/generate-extension）
+         */
+        GenerateExtensionResponse: {
+            /**
+             * Extension Doc
+             * @default
+             */
+            extension_doc: string;
+            /**
+             * Hallucination Warnings
+             * @default []
+             */
+            hallucination_warnings: string[];
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * GeneratePPTResponse
+         * @description PPT 大纲生成返回（/agents/generate-ppt）
+         */
+        GeneratePPTResponse: {
+            /**
+             * Ppt Outline
+             * @default
+             */
+            ppt_outline: string;
+        } & {
+            [key: string]: unknown;
+        };
         /** GenerateQuestionsRequest */
         GenerateQuestionsRequest: {
             /** Subject */
@@ -6250,6 +6409,36 @@ export interface components {
             /** Prompt */
             prompt?: string | null;
         };
+        /**
+         * ImageGenerationResponse
+         * @description 教学插图生成返回（/multimodal/generate-image）
+         */
+        ImageGenerationResponse: {
+            /**
+             * Topic
+             * @default
+             */
+            topic: string;
+            /**
+             * Source
+             * @default
+             */
+            source: string;
+            /**
+             * Image Base64
+             * @default
+             */
+            image_base64: string;
+            /** Image Svg */
+            image_svg?: string | null;
+            /**
+             * Is Real Image
+             * @default false
+             */
+            is_real_image: boolean;
+        } & {
+            [key: string]: unknown;
+        };
         /** ImageUnderstandReq */
         ImageUnderstandReq: {
             /** Image Base64 */
@@ -6259,6 +6448,24 @@ export interface components {
              * @default 这张图片讲了什么？
              */
             question: string;
+        };
+        /**
+         * ImageUnderstandResponse
+         * @description 图片理解返回（/xfyun/image-understand）
+         */
+        ImageUnderstandResponse: {
+            /**
+             * Text
+             * @default
+             */
+            text: string;
+            /**
+             * Source
+             * @default
+             */
+            source: string;
+        } & {
+            [key: string]: unknown;
         };
         /** KGEdge */
         KGEdge: {
@@ -6727,6 +6934,19 @@ export interface components {
              */
             generate_audio: boolean;
         };
+        /**
+         * MyTasksResponse
+         * @description 学生任务中心返回（/career/my-tasks）
+         */
+        MyTasksResponse: {
+            /**
+             * Tasks
+             * @default []
+             */
+            tasks: unknown[];
+        } & {
+            [key: string]: unknown;
+        };
         /** NarratedVideoRequest */
         NarratedVideoRequest: {
             /** Text */
@@ -6763,6 +6983,56 @@ export interface components {
              * @default true
              */
             search: boolean;
+        };
+        /**
+         * PPTStatusResponse
+         * @description PPT 生成进度/结果返回（/xfyun/ppt/status/{task_id}）
+         */
+        PPTStatusResponse: {
+            /**
+             * Task Id
+             * @default
+             */
+            task_id: string;
+            /**
+             * Status
+             * @default pending
+             */
+            status: string;
+            /** Result */
+            result?: unknown;
+            /** Error */
+            error?: unknown;
+            /**
+             * Created At
+             * @default 0
+             */
+            created_at: number;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * PPTSubmitResponse
+         * @description PPT 生成异步提交返回（/xfyun/ppt）
+         */
+        PPTSubmitResponse: {
+            /**
+             * Task Id
+             * @default
+             */
+            task_id: string;
+            /**
+             * Status
+             * @default pending
+             */
+            status: string;
+            /**
+             * Source
+             * @default
+             */
+            source: string;
+        } & {
+            [key: string]: unknown;
         };
         /** PerQuestionResponse */
         PerQuestionResponse: {
@@ -6896,10 +7166,56 @@ export interface components {
              */
             max_tokens: number;
         };
+        /**
+         * ProofreadDocResponse
+         * @description 公文校对返回（/xfyun/proofread-doc）
+         */
+        ProofreadDocResponse: {
+            /**
+             * Corrections
+             * @default []
+             */
+            corrections: unknown[];
+            /**
+             * Count
+             * @default 0
+             */
+            count: number;
+            /**
+             * Source
+             * @default
+             */
+            source: string;
+        } & {
+            [key: string]: unknown;
+        };
         /** ProofreadReq */
         ProofreadReq: {
             /** Text */
             text: string;
+        };
+        /**
+         * ProofreadResponse
+         * @description 文本纠错返回（/xfyun/proofread）
+         */
+        ProofreadResponse: {
+            /**
+             * Corrections
+             * @default []
+             */
+            corrections: unknown[];
+            /**
+             * Count
+             * @default 0
+             */
+            count: number;
+            /**
+             * Source
+             * @default
+             */
+            source: string;
+        } & {
+            [key: string]: unknown;
         };
         /** QuizHistoryPayload */
         QuizHistoryPayload: {
@@ -7214,6 +7530,29 @@ export interface components {
             /** Info */
             info: string;
         };
+        /**
+         * ResumeResponse
+         * @description 智能简历返回（/xfyun/resume）
+         */
+        ResumeResponse: {
+            /**
+             * Word Url
+             * @default
+             */
+            word_url: string;
+            /**
+             * Raw
+             * @default
+             */
+            raw: string;
+            /**
+             * Source
+             * @default
+             */
+            source: string;
+        } & {
+            [key: string]: unknown;
+        };
         /** ReviewRecallRequest */
         ReviewRecallRequest: {
             /**
@@ -7253,6 +7592,29 @@ export interface components {
              * @default
              */
             topic: string;
+        };
+        /**
+         * RoleplayResponse
+         * @description 星火角色模拟返回（/xfyun/roleplay）
+         */
+        RoleplayResponse: {
+            /**
+             * Reply
+             * @default
+             */
+            reply: string;
+            /**
+             * Chat Id
+             * @default
+             */
+            chat_id: string;
+            /**
+             * Source
+             * @default
+             */
+            source: string;
+        } & {
+            [key: string]: unknown;
         };
         /** RunSkillRequest */
         RunSkillRequest: {
@@ -7367,6 +7729,29 @@ export interface components {
              * @description 指定教材ID
              */
             textbook_id?: string | null;
+        };
+        /**
+         * SearchResponse
+         * @description 聚合搜索返回（/xfyun/search）
+         */
+        SearchResponse: {
+            /**
+             * Items
+             * @default []
+             */
+            items: unknown[];
+            /**
+             * Count
+             * @default 0
+             */
+            count: number;
+            /**
+             * Source
+             * @default
+             */
+            source: string;
+        } & {
+            [key: string]: unknown;
         };
         /** SemanticMemoryRequest */
         SemanticMemoryRequest: {
@@ -8019,6 +8404,56 @@ export interface components {
              * @default 120
              */
             word_count: number;
+        };
+        /**
+         * VideoStatusResponse
+         * @description 视频生成进度/结果返回（/xfyun/video/status/{task_id}）
+         */
+        VideoStatusResponse: {
+            /**
+             * Task Id
+             * @default
+             */
+            task_id: string;
+            /**
+             * Status
+             * @default pending
+             */
+            status: string;
+            /** Result */
+            result?: unknown;
+            /** Error */
+            error?: unknown;
+            /**
+             * Created At
+             * @default 0
+             */
+            created_at: number;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * VideoSubmitResponse
+         * @description 数字人视频生成异步提交返回（/xfyun/video）
+         */
+        VideoSubmitResponse: {
+            /**
+             * Task Id
+             * @default
+             */
+            task_id: string;
+            /**
+             * Status
+             * @default pending
+             */
+            status: string;
+            /**
+             * Source
+             * @default
+             */
+            source: string;
+        } & {
+            [key: string]: unknown;
         };
         /**
          * WeakPointItem
@@ -8873,7 +9308,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["GenerateExtensionResponse"];
                 };
             };
             /** @description Validation Error */
@@ -8909,7 +9344,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["GeneratePPTResponse"];
                 };
             };
             /** @description Validation Error */
@@ -8945,7 +9380,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["GenerateCodePracticeResponse"];
                 };
             };
             /** @description Validation Error */
@@ -9813,7 +10248,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["AssessmentFeedbackResponse"];
                 };
             };
             /** @description Validation Error */
@@ -10917,7 +11352,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ImageGenerationResponse"];
                 };
             };
             /** @description Validation Error */
@@ -10953,7 +11388,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["AudioGenerationResponse"];
                 };
             };
             /** @description Validation Error */
@@ -11201,7 +11636,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["EnhancedAnswerResponse"];
                 };
             };
             /** @description Validation Error */
@@ -11939,7 +12374,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ImageUnderstandResponse"];
                 };
             };
             /** @description Validation Error */
@@ -11975,7 +12410,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SearchResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12011,7 +12446,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["PPTSubmitResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12045,7 +12480,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["PPTStatusResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12081,7 +12516,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["VideoSubmitResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12115,7 +12550,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["VideoStatusResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12151,7 +12586,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ProofreadResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12187,7 +12622,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ProofreadDocResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12223,7 +12658,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ComplianceResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12259,7 +12694,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["RoleplayResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12295,7 +12730,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ResumeResponse"];
                 };
             };
             /** @description Validation Error */
@@ -16480,7 +16915,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["MyTasksResponse"];
                 };
             };
             /** @description Validation Error */

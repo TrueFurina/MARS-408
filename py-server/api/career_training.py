@@ -8,7 +8,7 @@ import logging
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 
 from shared.auth import get_current_user
@@ -776,7 +776,13 @@ async def student_detail(class_id: str, user_id: str, user: dict = Depends(get_c
 
 
 # ── 学生任务中心（F3：我已绑定班级的开放任务，免手输任务码）──
-@router.get("/my-tasks")
+class MyTasksResponse(BaseModel):
+    """学生任务中心返回（/career/my-tasks）"""
+    model_config = ConfigDict(extra="allow")
+    tasks: list = []
+
+
+@router.get("/my-tasks", response_model=MyTasksResponse)
 async def my_tasks(user: dict = Depends(get_current_user)):
     tasks = career_store.my_tasks(user["user_id"])
     scenarios = {s.get("id"): s.get("title", "") for s in career_service.list_scenarios()}

@@ -4,6 +4,9 @@ import { api, friendlyError } from '@/utils/api'
 import type { operations } from '@/types/api.generated'
 import { CAREER_DIM_LABEL as DIM_LABEL, CAREER_DIM_ORDER as DIM_ORDER } from '@/data/careerDimensions'
 
+// /career/my-tasks 返回（response_model=MyTasksResponse）
+type MyTasksResp = operations['my_tasks_api_career_my_tasks_get']['responses'][200]['content']['application/json']
+
 /* ===================== 类型与常量 ===================== */
 type Step = 'select' | 'briefing' | 'battle' | 'report'
 // 情景展示字段直接绑后端契约（py-server/api/career_training.py 的 CareerScenarioItem）。
@@ -131,7 +134,7 @@ const myTasks = ref<any[]>([])
 
 async function loadMyTasks() {
   try {
-    const res = await api.get<any>('/career/my-tasks')
+    const res = await api.get<MyTasksResp>('/career/my-tasks')
     myTasks.value = res.tasks || []
   } catch {
     myTasks.value = []  // 未加入任何班级等场景：静默为空，不打扰主流程

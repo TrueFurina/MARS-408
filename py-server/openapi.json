@@ -1471,7 +1471,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateExtensionResponse"
+                }
               }
             }
           },
@@ -1545,7 +1547,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratePPTResponse"
+                }
               }
             }
           },
@@ -1619,7 +1623,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateCodePracticeResponse"
+                }
               }
             }
           },
@@ -3486,7 +3492,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/AssessmentFeedbackResponse"
+                }
               }
             }
           },
@@ -5762,7 +5770,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ImageGenerationResponse"
+                }
               }
             }
           },
@@ -5836,7 +5846,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/AudioGenerationResponse"
+                }
               }
             }
           },
@@ -6346,7 +6358,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/EnhancedAnswerResponse"
+                }
               }
             }
           },
@@ -7776,7 +7790,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ImageUnderstandResponse"
+                }
               }
             }
           },
@@ -7850,7 +7866,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
               }
             }
           },
@@ -7924,7 +7942,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PPTSubmitResponse"
+                }
               }
             }
           },
@@ -7997,7 +8017,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PPTStatusResponse"
+                }
               }
             }
           },
@@ -8071,7 +8093,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/VideoSubmitResponse"
+                }
               }
             }
           },
@@ -8144,7 +8168,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/VideoStatusResponse"
+                }
               }
             }
           },
@@ -8218,7 +8244,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ProofreadResponse"
+                }
               }
             }
           },
@@ -8292,7 +8320,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ProofreadDocResponse"
+                }
               }
             }
           },
@@ -8366,7 +8396,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceResponse"
+                }
               }
             }
           },
@@ -8440,7 +8472,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/RoleplayResponse"
+                }
               }
             }
           },
@@ -8514,7 +8548,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ResumeResponse"
+                }
               }
             }
           },
@@ -17517,7 +17553,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/MyTasksResponse"
+                }
               }
             }
           },
@@ -18944,6 +18982,31 @@
         ],
         "title": "AskRequest"
       },
+      "AssessmentFeedbackResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "evaluation": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Evaluation",
+            "default": {}
+          },
+          "path_adjustment": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Path Adjustment",
+            "default": {}
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "AssessmentFeedbackResponse",
+        "description": "增强版学习效果评估 + 路径调整返回（/assessment/feedback）"
+      },
       "AssessmentRequest": {
         "properties": {
           "profile": {
@@ -19111,6 +19174,44 @@
         ],
         "title": "AudioGenerationRequest",
         "description": "语音合成请求"
+      },
+      "AudioGenerationResponse": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "default": ""
+          },
+          "audio_base64": {
+            "type": "string",
+            "title": "Audio Base64",
+            "default": ""
+          },
+          "audio_format": {
+            "type": "string",
+            "title": "Audio Format",
+            "default": ""
+          },
+          "fallback_text": {
+            "type": "string",
+            "title": "Fallback Text",
+            "default": ""
+          },
+          "is_real_audio": {
+            "type": "boolean",
+            "title": "Is Real Audio",
+            "default": false
+          },
+          "text_length": {
+            "type": "integer",
+            "title": "Text Length",
+            "default": 0
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "AudioGenerationResponse",
+        "description": "语音旁白生成返回（/multimodal/generate-audio）"
       },
       "BatchDeleteRequest": {
         "properties": {
@@ -19836,6 +19937,35 @@
         ],
         "title": "ComplianceReq"
       },
+      "ComplianceResponse": {
+        "properties": {
+          "passed": {
+            "type": "boolean",
+            "title": "Passed",
+            "default": false
+          },
+          "suggest": {
+            "type": "string",
+            "title": "Suggest",
+            "default": ""
+          },
+          "hits": {
+            "items": {},
+            "type": "array",
+            "title": "Hits",
+            "default": []
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "default": ""
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "ComplianceResponse",
+        "description": "文本合规返回（/xfyun/compliance）"
+      },
       "ConfigResponse": {
         "properties": {
           "llm_api_key": {
@@ -20280,6 +20410,41 @@
         ],
         "title": "EngineStatusResponse"
       },
+      "EnhancedAnswerResponse": {
+        "properties": {
+          "answer": {
+            "type": "string",
+            "title": "Answer",
+            "default": ""
+          },
+          "svg_diagram": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Svg Diagram"
+          },
+          "video_script": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Video Script"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "EnhancedAnswerResponse",
+        "description": "增强版智能答疑返回（/tutor/enhanced-answer）；result 为 LLM 产物 dict，故额外字段全部放行"
+      },
       "EnhancedTutorRequest": {
         "properties": {
           "question": {
@@ -20461,6 +20626,61 @@
         ],
         "title": "GOMARLConsensusRequest"
       },
+      "GenerateCodePracticeResponse": {
+        "properties": {
+          "code_practice": {
+            "type": "string",
+            "title": "Code Practice",
+            "default": ""
+          },
+          "hallucination_warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Hallucination Warnings",
+            "default": []
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "GenerateCodePracticeResponse",
+        "description": "代码实操案例生成返回（/agents/generate-code-practice）"
+      },
+      "GenerateExtensionResponse": {
+        "properties": {
+          "extension_doc": {
+            "type": "string",
+            "title": "Extension Doc",
+            "default": ""
+          },
+          "hallucination_warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Hallucination Warnings",
+            "default": []
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "GenerateExtensionResponse",
+        "description": "课外拓展阅读材料生成返回（/agents/generate-extension）"
+      },
+      "GeneratePPTResponse": {
+        "properties": {
+          "ppt_outline": {
+            "type": "string",
+            "title": "Ppt Outline",
+            "default": ""
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "GeneratePPTResponse",
+        "description": "PPT 大纲生成返回（/agents/generate-ppt）"
+      },
       "GenerateQuestionsRequest": {
         "properties": {
           "subject": {
@@ -20630,6 +20850,45 @@
         "title": "ImageGenerationRequest",
         "description": "教学插图生成请求"
       },
+      "ImageGenerationResponse": {
+        "properties": {
+          "topic": {
+            "type": "string",
+            "title": "Topic",
+            "default": ""
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "default": ""
+          },
+          "image_base64": {
+            "type": "string",
+            "title": "Image Base64",
+            "default": ""
+          },
+          "image_svg": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Svg"
+          },
+          "is_real_image": {
+            "type": "boolean",
+            "title": "Is Real Image",
+            "default": false
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "ImageGenerationResponse",
+        "description": "教学插图生成返回（/multimodal/generate-image）"
+      },
       "ImageUnderstandReq": {
         "properties": {
           "image_base64": {
@@ -20647,6 +20906,24 @@
           "image_base64"
         ],
         "title": "ImageUnderstandReq"
+      },
+      "ImageUnderstandResponse": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "default": ""
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "default": ""
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "ImageUnderstandResponse",
+        "description": "图片理解返回（/xfyun/image-understand）"
       },
       "KGEdge": {
         "properties": {
@@ -21461,6 +21738,20 @@
         "title": "MultimodalResourceRequest",
         "description": "多模态资源生成请求（图+文+音一体）"
       },
+      "MyTasksResponse": {
+        "properties": {
+          "tasks": {
+            "items": {},
+            "type": "array",
+            "title": "Tasks",
+            "default": []
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "MyTasksResponse",
+        "description": "学生任务中心返回（/career/my-tasks）"
+      },
       "NarratedVideoRequest": {
         "properties": {
           "text": {
@@ -21522,6 +21813,58 @@
           "query"
         ],
         "title": "PPTReq"
+      },
+      "PPTStatusResponse": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "title": "Task Id",
+            "default": ""
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "pending"
+          },
+          "result": {
+            "title": "Result"
+          },
+          "error": {
+            "title": "Error"
+          },
+          "created_at": {
+            "type": "number",
+            "title": "Created At",
+            "default": 0.0
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "PPTStatusResponse",
+        "description": "PPT 生成进度/结果返回（/xfyun/ppt/status/{task_id}）"
+      },
+      "PPTSubmitResponse": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "title": "Task Id",
+            "default": ""
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "pending"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "default": ""
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "PPTSubmitResponse",
+        "description": "PPT 生成异步提交返回（/xfyun/ppt）"
       },
       "PerQuestionResponse": {
         "properties": {
@@ -21773,6 +22116,30 @@
         ],
         "title": "PromptTestRequest"
       },
+      "ProofreadDocResponse": {
+        "properties": {
+          "corrections": {
+            "items": {},
+            "type": "array",
+            "title": "Corrections",
+            "default": []
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "default": 0
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "default": ""
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "ProofreadDocResponse",
+        "description": "公文校对返回（/xfyun/proofread-doc）"
+      },
       "ProofreadReq": {
         "properties": {
           "text": {
@@ -21785,6 +22152,30 @@
           "text"
         ],
         "title": "ProofreadReq"
+      },
+      "ProofreadResponse": {
+        "properties": {
+          "corrections": {
+            "items": {},
+            "type": "array",
+            "title": "Corrections",
+            "default": []
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "default": 0
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "default": ""
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "ProofreadResponse",
+        "description": "文本纠错返回（/xfyun/proofread）"
       },
       "QuizHistoryPayload": {
         "properties": {
@@ -22349,6 +22740,29 @@
         ],
         "title": "ResumeReq"
       },
+      "ResumeResponse": {
+        "properties": {
+          "word_url": {
+            "type": "string",
+            "title": "Word Url",
+            "default": ""
+          },
+          "raw": {
+            "type": "string",
+            "title": "Raw",
+            "default": ""
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "default": ""
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "ResumeResponse",
+        "description": "智能简历返回（/xfyun/resume）"
+      },
       "ReviewRecallRequest": {
         "properties": {
           "recalled": {
@@ -22434,6 +22848,29 @@
           "message"
         ],
         "title": "RoleplayReq"
+      },
+      "RoleplayResponse": {
+        "properties": {
+          "reply": {
+            "type": "string",
+            "title": "Reply",
+            "default": ""
+          },
+          "chat_id": {
+            "type": "string",
+            "title": "Chat Id",
+            "default": ""
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "default": ""
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "RoleplayResponse",
+        "description": "星火角色模拟返回（/xfyun/roleplay）"
       },
       "RunSkillRequest": {
         "properties": {
@@ -22662,6 +23099,30 @@
           "query"
         ],
         "title": "SearchRequest"
+      },
+      "SearchResponse": {
+        "properties": {
+          "items": {
+            "items": {},
+            "type": "array",
+            "title": "Items",
+            "default": []
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "default": 0
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "default": ""
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "SearchResponse",
+        "description": "聚合搜索返回（/xfyun/search）"
       },
       "SemanticMemoryRequest": {
         "properties": {
@@ -23942,6 +24403,58 @@
           "prompt"
         ],
         "title": "VideoReq"
+      },
+      "VideoStatusResponse": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "title": "Task Id",
+            "default": ""
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "pending"
+          },
+          "result": {
+            "title": "Result"
+          },
+          "error": {
+            "title": "Error"
+          },
+          "created_at": {
+            "type": "number",
+            "title": "Created At",
+            "default": 0.0
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "VideoStatusResponse",
+        "description": "视频生成进度/结果返回（/xfyun/video/status/{task_id}）"
+      },
+      "VideoSubmitResponse": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "title": "Task Id",
+            "default": ""
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "pending"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "default": ""
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "VideoSubmitResponse",
+        "description": "数字人视频生成异步提交返回（/xfyun/video）"
       },
       "WeakPointItem": {
         "properties": {

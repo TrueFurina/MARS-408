@@ -21,6 +21,7 @@ from shared.prompt_guard import sanitize_user_input, wrap_untrusted  # F-015：�
 from models import (
     AgentResourceRequest, AgentResourceResponse,
 )
+from pydantic import BaseModel, ConfigDict
 
 logger = logging.getLogger("netlearn.agents")
 # F-011：多智能体资源生成端点统一鉴权 + 每用户 LLM 配额（429）
@@ -331,7 +332,27 @@ async def generate_resource_stream(req: AgentResourceRequest, request: Request, 
     return StreamingResponse(sse_disconnect_guard(request, event_stream()), media_type="text/event-stream")
 
 
-@router.post("/generate-extension")
+class GenerateExtensionResponse(BaseModel):
+    """课外拓展阅读材料生成返回（/agents/generate-extension）"""
+    model_config = ConfigDict(extra="allow")
+    extension_doc: str = ""
+    hallucination_warnings: list[str] = []
+
+
+class GeneratePPTResponse(BaseModel):
+    """PPT 大纲生成返回（/agents/generate-ppt）"""
+    model_config = ConfigDict(extra="allow")
+    ppt_outline: str = ""
+
+
+class GenerateCodePracticeResponse(BaseModel):
+    """代码实操案例生成返回（/agents/generate-code-practice）"""
+    model_config = ConfigDict(extra="allow")
+    code_practice: str = ""
+    hallucination_warnings: list[str] = []
+
+
+@router.post("/generate-extension", response_model=GenerateExtensionResponse)
 async def generate_extension(req: AgentResourceRequest, user: dict = Depends(get_current_user)):
     """生成课外拓展阅读材料"""
     from prompts import EXTENSION_AGENT_PROMPT
@@ -347,7 +368,7 @@ async def generate_extension(req: AgentResourceRequest, user: dict = Depends(get
     return {"extension_doc": result or "", "hallucination_warnings": hallucination_warnings}
 
 
-@router.post("/generate-ppt")
+@router.post("/generate-ppt", response_model=GeneratePPTResponse)
 async def generate_ppt(req: AgentResourceRequest, user: dict = Depends(get_current_user)):
     """生成PPT幻灯片大纲（赛题功能2：≥5种资源类型含PPT）"""
     from prompts import PPT_AGENT_PROMPT
@@ -366,7 +387,7 @@ async def generate_ppt(req: AgentResourceRequest, user: dict = Depends(get_curre
     return {"ppt_outline": result or ""}
 
 
-@router.post("/generate-code-practice")
+@router.post("/generate-code-practice", response_model=GenerateCodePracticeResponse)
 async def generate_code_practice(req: AgentResourceRequest, user: dict = Depends(get_current_user)):
     """生成代码实操案例（赛题功能2：≥5种资源类型含代码实操案例）"""
     from prompts import CODE_PRACTICE_AGENT_PROMPT

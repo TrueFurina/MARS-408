@@ -45,6 +45,13 @@ interface EvalReport {
   overall?: { avg_mastery?: number; trend?: string; efficiency?: string }
   adjustment?: { action?: string; description?: string; focus_areas?: string[] }
 }
+// /assessment/feedback 返回（response_model=AssessmentFeedbackResponse；evaluation/path_adjustment 为 LLM 产物 dict，
+// 生成类型退化为 {[key:string]:unknown} 无法直接收口到上面两个精确接口，故手写精确响应类型）
+interface AssessmentFeedbackResp {
+  status: string
+  evaluation: EvalReport
+  path_adjustment: PathFeedback
+}
 const pathFeedback = ref<PathFeedback | null>(null)
 const evalReport = ref<EvalReport | null>(null)
 const feedbackLoading = ref(false)
@@ -160,7 +167,7 @@ async function loadPathFeedback() {
   feedbackLoading.value = true
   feedbackError.value = ''
   try {
-    const data = await api.post<any>('/assessment/feedback', {
+    const data = await api.post<AssessmentFeedbackResp>('/assessment/feedback', {
       quiz_history: quizHistory.value,
       study_sessions: [],
       profile: store.studentProfile || {},
