@@ -2,7 +2,14 @@ name: CI Security Gate (芒得很职 / study-help-pro)
 
 # 固化已修复的安全缺陷，防 regression。任一阻塞门禁失败即阻断 PR 合并。
 on:
+  # 2026-11-04 收敛：此前是裸 `push:`（所有分支）+ `pull_request:`，
+  # 于是**向 PR 分支推一次代码会同时触发 push run 与 pull_request run**，
+  # 每个作业各跑两遍 ⇒ 同名的 "Docker image build" 一条 pass、一条排队（PR #89/#91 实测），
+  # 白占一个完整构建的 runner，并让 PR 长期显示 pending。
+  # 现与 gates.yml / verify-structural.yml / p0-regression.yml 保持同一约定：
+  # push 只在主干上跑，特性分支交给 pull_request 单次触发。
   push:
+    branches: [career-literacy, main]
   pull_request:
   # 手动补跑入口。2026-10-18 实测：一次并发 push 撞锁后 ref 更新了但 GitHub
   # 没有为那个 SHA 创建任何 run（head_sha 查询 total_count=0），而本 workflow
