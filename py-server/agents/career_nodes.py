@@ -66,13 +66,44 @@ def extract_json(text: str):
     return None
 
 
+# 情景库缓存（2026-11-02 性能审计）：本函数原先每次调用都 open + json.load
+# （实测 158µs/次），而 list_scenarios() 每个请求至少调一次、get_scenario() 每轮对话调一次。
+# 情景库运行时是静态文件（app_config），按 mtime_ns + size 失效即可：
+# 既免掉重复解析，又保证运维改文件后下一次调用立即生效。
+_SCENARIO_CACHE: dict = {"mtime_ns": -1, "size": -1, "data": None}
+
+
 def _load_scenario_file() -> dict:
+    """读取情景库（按 mtime+size 缓存）。
+
+    ⚠️ 返回的 dict 是**缓存对象本身**，调用方只可读，不得原地修改——
+    需要改字段请先自行 copy。唯一例外是 get_scenario 里的 setdefault(rubric_version)，
+    它是幂等且值恒定的（取自文件顶层），不会污染缓存。
+    """
+    try:
+        st = os.stat(_SCENARIO_PATH)
+    except OSError as e:
+        logger.error(f"情景库读取失败 {_SCENARIO_PATH}: {e}")
+        return {"scenarios": []}
+
+    if (
+        _SCENARIO_CACHE["data"] is not None
+        and _SCENARIO_CACHE["mtime_ns"] == st.st_mtime_ns
+        and _SCENARIO_CACHE["size"] == st.st_size
+    ):
+        return _SCENARIO_CACHE["data"]
+
     try:
         with open(_SCENARIO_PATH, "r", encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
     except Exception as e:
         logger.error(f"情景库读取失败 {_SCENARIO_PATH}: {e}")
         return {"scenarios": []}
+
+    _SCENARIO_CACHE["mtime_ns"] = st.st_mtime_ns
+    _SCENARIO_CACHE["size"] = st.st_size
+    _SCENARIO_CACHE["data"] = data
+    return data
 
 
 def _scenario_display(s: dict) -> dict:
