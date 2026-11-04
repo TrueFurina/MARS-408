@@ -1,6 +1,8 @@
 # 提交包数字对齐核对清单（2026-10-09 预检）
 
-> ⚠️ **当前真值（2026-10-22 复核）**：本文 §一 / §三 / §六 是 10-09 / 10-10 时点快照，**以 §十一 为准** —— API **261 ops / 243 paths**（/api 口径，全量 262/244 含 `/metrics`）、认证覆盖率 **95.02%（248/261）**、测试 **1737 passed / 38 skipped / 1 xfailed / 0 失败**（1776 运行项 / 约 1785 collected，addopts deselect 9；CI run `39681618692`，2026-10-21）。改任何数字请以 §十一 与机器复算（`scripts/verify_metrics.py` / `scripts/verify_auth_coverage.py`）为唯一来源，禁止手抄旧值。
+> 🔵 **历史快照（2026-10-22 复核）**：测试数已于 **2026-11-04 刷新为 1883 通过 / 40 跳过 / 1 xfail**（run `41838176855`），
+> 最新真值以 `docs/METRICS_CURRENT.md` 为准；本文下述 1737 口径仅作当时记录。
+> ⚠️ 本文 §一 / §三 / §六 是 10-09 / 10-10 时点快照，**以 §十一 为准** —— API **261 ops / 243 paths**（/api 口径，全量 262/244 含 `/metrics`）、认证覆盖率 **95.02%（248/261）**、测试 **1737 passed / 38 skipped / 1 xfailed / 0 失败**（1776 运行项 / 约 1785 collected，addopts deselect 9；CI run `39681618692`，2026-10-21）。改任何数字请以 §十一 与机器复算（`scripts/verify_metrics.py` / `scripts/verify_auth_coverage.py`）为唯一来源，禁止手抄旧值。
 
 > **性质**：只读审计 + diff 清单。**10-28 冻结窗口前不碰 `submission/` 实体**，本文件只列"到时改什么"。
 > **真值来源**（按可信度）：
