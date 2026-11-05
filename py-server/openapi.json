@@ -9074,7 +9074,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SkillDetailResponse"
+                }
               }
             }
           },
@@ -9147,7 +9149,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SkillDetailResponse"
+                }
               }
             }
           },
@@ -9230,7 +9234,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SkillDetailResponse"
+                }
               }
             }
           },
@@ -9303,7 +9309,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SkillAckResponse"
+                }
               }
             }
           },
@@ -9590,7 +9598,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SkillAckResponse"
+                }
               }
             }
           },
@@ -9663,7 +9673,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SkillAckResponse"
+                }
               }
             }
           },
@@ -9828,7 +9840,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SkillListResponse"
+                }
               }
             }
           },
@@ -9943,7 +9957,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SkillListResponse"
+                }
               }
             }
           },
@@ -10007,7 +10023,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SkillListResponse"
+                }
               }
             }
           },
@@ -10090,7 +10108,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/RatingDetailResponse"
+                }
               }
             }
           },
@@ -10186,7 +10206,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/RatingListResponse"
+                }
               }
             }
           },
@@ -10259,7 +10281,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/FavoritedResponse"
+                }
               }
             }
           },
@@ -10332,7 +10356,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/FavoritedResponse"
+                }
               }
             }
           },
@@ -10396,7 +10422,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/FavoritesResponse"
+                }
               }
             }
           },
@@ -10469,7 +10497,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/FavoritedResponse"
+                }
               }
             }
           },
@@ -10533,7 +10563,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/CreatorStatsResponse"
+                }
               }
             }
           },
@@ -10597,7 +10629,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateListResponse"
+                }
               }
             }
           },
@@ -10670,7 +10704,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateDetailResponse"
+                }
               }
             }
           },
@@ -10753,7 +10789,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SkillDetailResponse"
+                }
               }
             }
           },
@@ -11360,7 +11398,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PromptTestResponse"
+                }
               }
             }
           },
@@ -20725,6 +20765,54 @@
         "title": "CreateUserRequest",
         "description": "创建用户请求体。\n\nrole 默认 \"student\"，也可传 \"teacher\"/\"admin\"。\n角色合法性校验在端点内完成（非法返回 400）。"
       },
+      "CreatorStatsOut": {
+        "properties": {
+          "total_skills": {
+            "type": "integer",
+            "title": "Total Skills",
+            "default": 0
+          },
+          "published_skills": {
+            "type": "integer",
+            "title": "Published Skills",
+            "default": 0
+          },
+          "total_usage": {
+            "type": "integer",
+            "title": "Total Usage",
+            "default": 0
+          },
+          "usage_trend": {
+            "items": {
+              "$ref": "#/components/schemas/UsageTrendPoint"
+            },
+            "type": "array",
+            "title": "Usage Trend",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "CreatorStatsOut",
+        "description": "db/skill_store.py::get_creator_stats() 的返回投影。"
+      },
+      "CreatorStatsResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "stats": {
+            "$ref": "#/components/schemas/CreatorStatsOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stats"
+        ],
+        "title": "CreatorStatsResponse",
+        "description": "stats 的返回：{status, stats}。"
+      },
       "DailyQuizPoint": {
         "properties": {
           "date": {
@@ -21070,6 +21158,43 @@
           "text"
         ],
         "title": "ExtractRequest"
+      },
+      "FavoritedResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "favorited": {
+            "type": "boolean",
+            "title": "Favorited",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "FavoritedResponse",
+        "description": "favorite / unfavorite / favorited 的返回。"
+      },
+      "FavoritesResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SkillItemOut"
+            },
+            "type": "array",
+            "title": "Items",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "FavoritesResponse",
+        "description": "favorites 的返回：只有 {status, items}，没有 total。"
       },
       "FeedbackRequest": {
         "properties": {
@@ -22852,6 +22977,23 @@
         ],
         "title": "PromptTestRequest"
       },
+      "PromptTestResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "response": {
+            "type": "string",
+            "title": "Response",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "PromptTestResponse",
+        "description": "prompt-test 的返回；异常分支直接抛 HTTPException，无 200 错误形状。"
+      },
       "ProofreadDocResponse": {
         "properties": {
           "corrections": {
@@ -23257,6 +23399,49 @@
           "rating"
         ],
         "title": "RateSkillRequest"
+      },
+      "RatingDetailResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "rating": {
+            "$ref": "#/components/schemas/SkillRatingOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rating"
+        ],
+        "title": "RatingDetailResponse",
+        "description": "rate 的返回：{status, rating}。"
+      },
+      "RatingListResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "default": 0
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SkillRatingOut"
+            },
+            "type": "array",
+            "title": "Items",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "RatingListResponse",
+        "description": "ratings 的返回：{status, total, items}。"
       },
       "RecordRequest": {
         "properties": {
@@ -24018,6 +24203,350 @@
         ],
         "title": "SessionSaveRequest"
       },
+      "SkillAckResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "SkillAckResponse",
+        "description": "delete / publish / archive / seed-official 的回执。"
+      },
+      "SkillDetailResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "skill": {
+            "$ref": "#/components/schemas/SkillItemOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "skill"
+        ],
+        "title": "SkillDetailResponse",
+        "description": "get/create/update/from-template 的返回：{status, skill}。"
+      },
+      "SkillItemOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "default": ""
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "default": ""
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
+          },
+          "icon": {
+            "type": "string",
+            "title": "Icon",
+            "default": ""
+          },
+          "system_prompt": {
+            "type": "string",
+            "title": "System Prompt",
+            "default": ""
+          },
+          "llm_channel": {
+            "type": "string",
+            "title": "Llm Channel",
+            "default": ""
+          },
+          "temperature": {
+            "type": "number",
+            "title": "Temperature",
+            "default": 0.0
+          },
+          "max_tokens": {
+            "type": "integer",
+            "title": "Max Tokens",
+            "default": 0
+          },
+          "kb_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Kb Ids",
+            "default": []
+          },
+          "rag_enabled": {
+            "type": "boolean",
+            "title": "Rag Enabled",
+            "default": true
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tags",
+            "default": []
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "default": ""
+          },
+          "category_label": {
+            "type": "string",
+            "title": "Category Label",
+            "default": ""
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "default": 1
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": ""
+          },
+          "usage_count": {
+            "type": "integer",
+            "title": "Usage Count",
+            "default": 0
+          },
+          "user_count": {
+            "type": "integer",
+            "title": "User Count",
+            "default": 0
+          },
+          "avg_rating": {
+            "type": "number",
+            "title": "Avg Rating",
+            "default": 0.0
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At",
+            "default": ""
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At",
+            "default": ""
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "creator_id": {
+            "type": "string",
+            "title": "Creator Id",
+            "default": ""
+          },
+          "creator_name": {
+            "type": "string",
+            "title": "Creator Name",
+            "default": ""
+          },
+          "is_official": {
+            "type": "boolean",
+            "title": "Is Official",
+            "default": false
+          },
+          "allowed_tools": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Allowed Tools",
+            "default": []
+          },
+          "disable_model_invocation": {
+            "type": "boolean",
+            "title": "Disable Model Invocation",
+            "default": false
+          },
+          "trigger_paths": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Trigger Paths",
+            "default": []
+          },
+          "tools": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Tools",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "SkillItemOut",
+        "description": "schemas/skills.py::Skill.to_dict() 的完整投影。"
+      },
+      "SkillListResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "default": 0
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SkillItemOut"
+            },
+            "type": "array",
+            "title": "Items",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "SkillListResponse",
+        "description": "market/my/official 的返回：{status, total, items}。"
+      },
+      "SkillRatingOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "default": ""
+          },
+          "skill_id": {
+            "type": "string",
+            "title": "Skill Id",
+            "default": ""
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id",
+            "default": ""
+          },
+          "user_name": {
+            "type": "string",
+            "title": "User Name",
+            "default": ""
+          },
+          "rating": {
+            "type": "integer",
+            "title": "Rating",
+            "default": 0
+          },
+          "comment": {
+            "type": "string",
+            "title": "Comment",
+            "default": ""
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "SkillRatingOut",
+        "description": "schemas/skills.py::SkillRating.to_dict()。"
+      },
+      "SkillTemplateConfig": {
+        "properties": {
+          "llm_channel": {
+            "type": "string",
+            "title": "Llm Channel",
+            "default": "auto"
+          },
+          "temperature": {
+            "type": "number",
+            "title": "Temperature",
+            "default": 0.7
+          },
+          "max_tokens": {
+            "type": "integer",
+            "title": "Max Tokens",
+            "default": 2048
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "SkillTemplateConfig",
+        "description": "模板 default_config：种子数据固定三键（db/skill_store.py 全部模板一致）。"
+      },
+      "SkillTemplateOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "default": ""
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "default": ""
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "default": ""
+          },
+          "category_label": {
+            "type": "string",
+            "title": "Category Label",
+            "default": ""
+          },
+          "icon": {
+            "type": "string",
+            "title": "Icon",
+            "default": ""
+          },
+          "system_prompt_template": {
+            "type": "string",
+            "title": "System Prompt Template",
+            "default": ""
+          },
+          "default_config": {
+            "$ref": "#/components/schemas/SkillTemplateConfig"
+          },
+          "sort_order": {
+            "type": "integer",
+            "title": "Sort Order",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "SkillTemplateOut",
+        "description": "schemas/skills.py::SkillTemplate.to_dict()。"
+      },
       "StartRequest": {
         "properties": {
           "scenario_id": {
@@ -24750,6 +25279,49 @@
         ],
         "title": "TeachingVideoRequest"
       },
+      "TemplateDetailResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "template": {
+            "$ref": "#/components/schemas/SkillTemplateOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "template"
+        ],
+        "title": "TemplateDetailResponse",
+        "description": "templates/{id} 的返回：{status, template}。"
+      },
+      "TemplateListResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "default": 0
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SkillTemplateOut"
+            },
+            "type": "array",
+            "title": "Items",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "TemplateListResponse",
+        "description": "templates 的返回：{status, total, items}。"
+      },
       "TestLLMResponse": {
         "properties": {
           "status": {
@@ -25081,6 +25653,22 @@
         },
         "type": "object",
         "title": "UpdateSkillRequest"
+      },
+      "UsageTrendPoint": {
+        "properties": {
+          "day": {
+            "type": "string",
+            "title": "Day",
+            "default": ""
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "UsageTrendPoint"
       },
       "ValidationError": {
         "properties": {

@@ -3,7 +3,7 @@ import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { icons } from '@/components/icons'
 import Skeleton from '@/components/Skeleton.vue'
-import { useSkillStore } from '@/stores/skillStore'
+import { useSkillStore, type FavoritedResp } from '@/stores/skillStore'
 import { api } from '@/utils/api'
 import { errMessage, isAbortError } from '@/utils/errorMessage'
 
@@ -26,16 +26,16 @@ const ratingSubmitted = ref(false)
 const isFav = ref(false)
 async function checkFav() {
   try {
-    const res: any = await api.get(`/skills/favorited/${skillId.value}`)
+    const res = await api.get<FavoritedResp>(`/skills/favorited/${skillId.value}`)
     isFav.value = res.favorited
   } catch { isFav.value = false }
 }
 async function toggleFav() {
   if (isFav.value) {
-    await api.post(`/skills/unfavorite/${skillId.value}`)
+    await api.post<FavoritedResp>(`/skills/unfavorite/${skillId.value}`)
     isFav.value = false
   } else {
-    await api.post(`/skills/favorite/${skillId.value}`)
+    await api.post<FavoritedResp>(`/skills/favorite/${skillId.value}`)
     isFav.value = true
   }
 }

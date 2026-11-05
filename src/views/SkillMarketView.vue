@@ -5,7 +5,7 @@ import { icons } from '@/components/icons'
 import Skeleton from '@/components/Skeleton.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import SkillCard from '@/components/SkillCard.vue'
-import { useSkillStore, type SkillItem } from '@/stores/skillStore'
+import { useSkillStore, type SkillItem, type FavoritesResp } from '@/stores/skillStore'
 import { api } from '@/utils/api'
 
 const router = useRouter()
@@ -104,7 +104,7 @@ async function switchToFavorites() {
   showMyDrafts.value = false
   showFavorites.value = true
   try {
-    const res: any = await api.get('/skills/favorites')
+    const res = await api.get<FavoritesResp>('/skills/favorites')
     favoritesList.value = res.items || []
   } catch { favoritesList.value = [] }
 }

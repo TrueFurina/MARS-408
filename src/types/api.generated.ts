@@ -6183,6 +6183,44 @@ export interface components {
              */
             role: string;
         };
+        /**
+         * CreatorStatsOut
+         * @description db/skill_store.py::get_creator_stats() 的返回投影。
+         */
+        CreatorStatsOut: {
+            /**
+             * Total Skills
+             * @default 0
+             */
+            total_skills: number;
+            /**
+             * Published Skills
+             * @default 0
+             */
+            published_skills: number;
+            /**
+             * Total Usage
+             * @default 0
+             */
+            total_usage: number;
+            /**
+             * Usage Trend
+             * @default []
+             */
+            usage_trend: components["schemas"]["UsageTrendPoint"][];
+        };
+        /**
+         * CreatorStatsResponse
+         * @description stats 的返回：{status, stats}。
+         */
+        CreatorStatsResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            stats: components["schemas"]["CreatorStatsOut"];
+        };
         /** DailyQuizPoint */
         DailyQuizPoint: {
             /** Date */
@@ -6380,6 +6418,38 @@ export interface components {
              * @default true
              */
             enhance: boolean;
+        };
+        /**
+         * FavoritedResponse
+         * @description favorite / unfavorite / favorited 的返回。
+         */
+        FavoritedResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Favorited
+             * @default false
+             */
+            favorited: boolean;
+        };
+        /**
+         * FavoritesResponse
+         * @description favorites 的返回：只有 {status, items}，没有 total。
+         */
+        FavoritesResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Items
+             * @default []
+             */
+            items: components["schemas"]["SkillItemOut"][];
         };
         /** FeedbackRequest */
         FeedbackRequest: {
@@ -7530,6 +7600,22 @@ export interface components {
             max_tokens: number;
         };
         /**
+         * PromptTestResponse
+         * @description prompt-test 的返回；异常分支直接抛 HTTPException，无 200 错误形状。
+         */
+        PromptTestResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Response
+             * @default
+             */
+            response: string;
+        };
+        /**
          * ProofreadDocResponse
          * @description 公文校对返回（/xfyun/proofread-doc）
          */
@@ -7758,6 +7844,39 @@ export interface components {
              * @default
              */
             comment: string;
+        };
+        /**
+         * RatingDetailResponse
+         * @description rate 的返回：{status, rating}。
+         */
+        RatingDetailResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            rating: components["schemas"]["SkillRatingOut"];
+        };
+        /**
+         * RatingListResponse
+         * @description ratings 的返回：{status, total, items}。
+         */
+        RatingListResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+            /**
+             * Items
+             * @default []
+             */
+            items: components["schemas"]["SkillRatingOut"][];
         };
         /** RecordRequest */
         RecordRequest: {
@@ -8190,6 +8309,311 @@ export interface components {
              */
             messages: components["schemas"]["SessionMessage"][];
         };
+        /**
+         * SkillAckResponse
+         * @description delete / publish / archive / seed-official 的回执。
+         */
+        SkillAckResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Message
+             * @default
+             */
+            message: string;
+        };
+        /**
+         * SkillDetailResponse
+         * @description get/create/update/from-template 的返回：{status, skill}。
+         */
+        SkillDetailResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            skill: components["schemas"]["SkillItemOut"];
+        };
+        /**
+         * SkillItemOut
+         * @description schemas/skills.py::Skill.to_dict() 的完整投影。
+         */
+        SkillItemOut: {
+            /**
+             * Id
+             * @default
+             */
+            id: string;
+            /**
+             * Name
+             * @default
+             */
+            name: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /**
+             * Icon
+             * @default
+             */
+            icon: string;
+            /**
+             * System Prompt
+             * @default
+             */
+            system_prompt: string;
+            /**
+             * Llm Channel
+             * @default
+             */
+            llm_channel: string;
+            /**
+             * Temperature
+             * @default 0
+             */
+            temperature: number;
+            /**
+             * Max Tokens
+             * @default 0
+             */
+            max_tokens: number;
+            /**
+             * Kb Ids
+             * @default []
+             */
+            kb_ids: string[];
+            /**
+             * Rag Enabled
+             * @default true
+             */
+            rag_enabled: boolean;
+            /**
+             * Tags
+             * @default []
+             */
+            tags: string[];
+            /**
+             * Category
+             * @default
+             */
+            category: string;
+            /**
+             * Category Label
+             * @default
+             */
+            category_label: string;
+            /**
+             * Version
+             * @default 1
+             */
+            version: number;
+            /**
+             * Status
+             * @default
+             */
+            status: string;
+            /**
+             * Usage Count
+             * @default 0
+             */
+            usage_count: number;
+            /**
+             * User Count
+             * @default 0
+             */
+            user_count: number;
+            /**
+             * Avg Rating
+             * @default 0
+             */
+            avg_rating: number;
+            /**
+             * Created At
+             * @default
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * @default
+             */
+            updated_at: string;
+            /** Published At */
+            published_at?: string | null;
+            /**
+             * Creator Id
+             * @default
+             */
+            creator_id: string;
+            /**
+             * Creator Name
+             * @default
+             */
+            creator_name: string;
+            /**
+             * Is Official
+             * @default false
+             */
+            is_official: boolean;
+            /**
+             * Allowed Tools
+             * @default []
+             */
+            allowed_tools: string[];
+            /**
+             * Disable Model Invocation
+             * @default false
+             */
+            disable_model_invocation: boolean;
+            /**
+             * Trigger Paths
+             * @default []
+             */
+            trigger_paths: string[];
+            /**
+             * Tools
+             * @default []
+             */
+            tools: {
+                [key: string]: unknown;
+            }[];
+        };
+        /**
+         * SkillListResponse
+         * @description market/my/official 的返回：{status, total, items}。
+         */
+        SkillListResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+            /**
+             * Items
+             * @default []
+             */
+            items: components["schemas"]["SkillItemOut"][];
+        };
+        /**
+         * SkillRatingOut
+         * @description schemas/skills.py::SkillRating.to_dict()。
+         */
+        SkillRatingOut: {
+            /**
+             * Id
+             * @default
+             */
+            id: string;
+            /**
+             * Skill Id
+             * @default
+             */
+            skill_id: string;
+            /**
+             * User Id
+             * @default
+             */
+            user_id: string;
+            /**
+             * User Name
+             * @default
+             */
+            user_name: string;
+            /**
+             * Rating
+             * @default 0
+             */
+            rating: number;
+            /**
+             * Comment
+             * @default
+             */
+            comment: string;
+            /**
+             * Created At
+             * @default
+             */
+            created_at: string;
+        };
+        /**
+         * SkillTemplateConfig
+         * @description 模板 default_config：种子数据固定三键（db/skill_store.py 全部模板一致）。
+         */
+        SkillTemplateConfig: {
+            /**
+             * Llm Channel
+             * @default auto
+             */
+            llm_channel: string;
+            /**
+             * Temperature
+             * @default 0.7
+             */
+            temperature: number;
+            /**
+             * Max Tokens
+             * @default 2048
+             */
+            max_tokens: number;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * SkillTemplateOut
+         * @description schemas/skills.py::SkillTemplate.to_dict()。
+         */
+        SkillTemplateOut: {
+            /**
+             * Id
+             * @default
+             */
+            id: string;
+            /**
+             * Name
+             * @default
+             */
+            name: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /**
+             * Category
+             * @default
+             */
+            category: string;
+            /**
+             * Category Label
+             * @default
+             */
+            category_label: string;
+            /**
+             * Icon
+             * @default
+             */
+            icon: string;
+            /**
+             * System Prompt Template
+             * @default
+             */
+            system_prompt_template: string;
+            default_config?: components["schemas"]["SkillTemplateConfig"];
+            /**
+             * Sort Order
+             * @default 0
+             */
+            sort_order: number;
+        };
         /** StartRequest */
         StartRequest: {
             /** Scenario Id */
@@ -8579,6 +9003,39 @@ export interface components {
             output_format: string;
         };
         /**
+         * TemplateDetailResponse
+         * @description templates/{id} 的返回：{status, template}。
+         */
+        TemplateDetailResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            template: components["schemas"]["SkillTemplateOut"];
+        };
+        /**
+         * TemplateListResponse
+         * @description templates 的返回：{status, total, items}。
+         */
+        TemplateListResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+            /**
+             * Items
+             * @default []
+             */
+            items: components["schemas"]["SkillTemplateOut"][];
+        };
+        /**
          * TestLLMResponse
          * @description LLM 连通性测试结果（/config/test-llm）
          */
@@ -8744,6 +9201,19 @@ export interface components {
             tags?: string | null;
             /** Rag Enabled */
             rag_enabled?: boolean | null;
+        };
+        /** UsageTrendPoint */
+        UsageTrendPoint: {
+            /**
+             * Day
+             * @default
+             */
+            day: string;
+            /**
+             * Count
+             * @default 0
+             */
+            count: number;
         };
         /** ValidationError */
         ValidationError: {
@@ -13339,7 +13809,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SkillDetailResponse"];
                 };
             };
             /** @description Validation Error */
@@ -13373,7 +13843,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SkillDetailResponse"];
                 };
             };
             /** @description Validation Error */
@@ -13411,7 +13881,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SkillDetailResponse"];
                 };
             };
             /** @description Validation Error */
@@ -13445,7 +13915,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SkillAckResponse"];
                 };
             };
             /** @description Validation Error */
@@ -13585,7 +14055,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SkillAckResponse"];
                 };
             };
             /** @description Validation Error */
@@ -13619,7 +14089,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SkillAckResponse"];
                 };
             };
             /** @description Validation Error */
@@ -13664,7 +14134,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SkillListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -13702,7 +14172,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SkillListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -13734,7 +14204,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SkillListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -13772,7 +14242,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["RatingDetailResponse"];
                 };
             };
             /** @description Validation Error */
@@ -13809,7 +14279,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["RatingListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -13843,7 +14313,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["FavoritedResponse"];
                 };
             };
             /** @description Validation Error */
@@ -13877,7 +14347,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["FavoritedResponse"];
                 };
             };
             /** @description Validation Error */
@@ -13909,7 +14379,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["FavoritesResponse"];
                 };
             };
             /** @description Validation Error */
@@ -13943,7 +14413,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["FavoritedResponse"];
                 };
             };
             /** @description Validation Error */
@@ -13975,7 +14445,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CreatorStatsResponse"];
                 };
             };
             /** @description Validation Error */
@@ -14007,7 +14477,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["TemplateListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -14041,7 +14511,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["TemplateDetailResponse"];
                 };
             };
             /** @description Validation Error */
@@ -14079,7 +14549,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SkillDetailResponse"];
                 };
             };
             /** @description Validation Error */
@@ -14365,7 +14835,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["PromptTestResponse"];
                 };
             };
             /** @description Validation Error */

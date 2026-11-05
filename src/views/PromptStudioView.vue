@@ -3,7 +3,7 @@ import { errMessage } from '@/utils/errorMessage'
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { icons } from '@/components/icons'
-import { useSkillStore, type SkillTemplate } from '@/stores/skillStore'
+import { useSkillStore, type SkillTemplate, type PromptTestResp } from '@/stores/skillStore'
 import { api } from '@/utils/api'
 
 const router = useRouter()
@@ -52,7 +52,7 @@ async function runTest() {
   testOutput.value = ''
 
   try {
-    const res: any = await api.post('/skills/prompt-test', {
+    const res = await api.post<PromptTestResp>('/skills/prompt-test', {
       system_prompt: promptText.value,
       message: testInput.value,
       llm_channel: llmChannel.value,

@@ -2,63 +2,38 @@ import { defineStore } from 'pinia'
 import { errMessage } from '@/utils/errorMessage'
 import { ref, shallowRef } from 'vue'
 import { api, friendlyError } from '@/utils/api'
+import type { components } from '@/types/api.generated'
 
-export interface SkillItem {
-  id: string
-  name: string
-  description: string
-  icon: string
-  system_prompt: string
-  llm_channel: string
-  temperature: number
-  max_tokens: number
-  kb_ids: string[]
-  rag_enabled: boolean
-  tags: string[]
-  category: string
-  category_label: string
-  version: number
-  status: string
-  usage_count: number
-  user_count: number
-  avg_rating: number
-  created_at: string
-  updated_at: string
-  published_at: string | null
-  creator_id: string
-  creator_name: string
-  is_official: boolean
-  memory_access: string
-}
+// 2026-11-06 批6：四个接口原先是手写"看着对"的投影，后端改名时 tsc 抓不到。
+// 现在 /api/skills/* 有了 response_model，直接绑定生成类型作为单一真值源。
+type SkillItemOut = components['schemas']['SkillItemOut']
+type SkillTemplateOut = components['schemas']['SkillTemplateOut']
+type SkillRatingOut = components['schemas']['SkillRatingOut']
+type CreatorStatsOut = components['schemas']['CreatorStatsOut']
 
-export interface SkillTemplate {
-  id: string
-  name: string
-  description: string
-  category: string
-  category_label: string
-  icon: string
-  system_prompt_template: string
-  default_config: Record<string, any>
-  sort_order: number
-}
+export type SkillTemplate = SkillTemplateOut
+export type SkillRatingItem = SkillRatingOut
+export type CreatorStats = CreatorStatsOut
 
-export interface SkillRatingItem {
-  id: string
-  skill_id: string
-  user_id: string
-  user_name: string
-  rating: number
-  comment: string
-  created_at: string
-}
+// ⚠️ 已知后端缺陷（批6 发现，未修，勿当作"契约已对齐"）：
+// Skill 实体有 memory_access、db 层也存/读它，但 Skill.to_dict() 未导出，
+// 且 CreateSkillRequest / UpdateSkillRequest 未声明它 —— 前端 SkillStudioView
+// 提交的记忆权限被静默忽略，SkillDetailView 的徽章也恒不显示。
+// 故此处把它保留为**可选**扩展（而非谎称后端必返回），待后端补投影后删除。
+export type SkillItem = SkillItemOut & { memory_access?: string }
 
-export interface CreatorStats {
-  total_skills: number
-  published_skills: number
-  total_usage: number
-  usage_trend: { day: string; count: number }[]
-}
+// 各端点的响应包装（生成类型，替代原先的 const res: any）。
+// 导出供其它视图复用，避免每个文件重复声明同一份别名（dup_scan 克隆门禁）。
+export type SkillListResp = components['schemas']['SkillListResponse']
+export type SkillDetailResp = components['schemas']['SkillDetailResponse']
+export type RatingListResp = components['schemas']['RatingListResponse']
+export type TemplateListResp = components['schemas']['TemplateListResponse']
+export type CreatorStatsResp = components['schemas']['CreatorStatsResponse']
+export type FavoritedResp = components['schemas']['FavoritedResponse']
+export type FavoritesResp = components['schemas']['FavoritesResponse']
+export type SkillAckResp = components['schemas']['SkillAckResponse']
+export type RatingDetailResp = components['schemas']['RatingDetailResponse']
+export type PromptTestResp = components['schemas']['PromptTestResponse']
 
 export const useSkillStore = defineStore('skills', () => {
   // ── 状态 ──
@@ -97,7 +72,7 @@ export const useSkillStore = defineStore('skills', () => {
       if (params?.sort_desc !== undefined) q.set('sort_desc', String(params.sort_desc))
       q.set('limit', String(params?.limit ?? 50))
       q.set('offset', String(params?.offset ?? 0))
-      const res: any = await api.get(`/skills/market?${q}`)
+      const res = await api.get<SkillListResp>(`/skills/market?${q}`)
       marketItems.value = res.items || []
       marketTotal.value = res.total || 0
     } catch (e) {
@@ -114,7 +89,7 @@ export const useSkillStore = defineStore('skills', () => {
     try {
       const q = new URLSearchParams()
       if (params?.status) q.set('status', params.status)
-      const res: any = await api.get(`/skills/my?${q}`)
+      const res = await api.get<SkillListResp>(`/skills/my?${q}`)
       mySkills.value = res.items || []
       mySkillsTotal.value = res.total || 0
     } catch (e) {
@@ -127,7 +102,7 @@ export const useSkillStore = defineStore('skills', () => {
   // ── 官方技能 ──
   async function fetchOfficial() {
     try {
-      const res: any = await api.get('/skills/official')
+      const res = await api.get<SkillListResp>('/skills/official')
       officialSkills.value = res.items || []
     } catch (e) {
       console.warn('获取官方技能失败:', errMessage(e, String(e)))
@@ -139,7 +114,7 @@ export const useSkillStore = defineStore('skills', () => {
     loading.value = true
     error.value = ''
     try {
-      const res: any = await api.get(`/skills/get/${id}`)
+      const res = await api.get<SkillDetailResp>(`/skills/get/${id}`)
       currentSkill.value = res.skill || null
     } catch (e) {
       error.value = friendlyError(e, '加载技能失败')
@@ -164,7 +139,7 @@ export const useSkillStore = defineStore('skills', () => {
     loading.value = true
     error.value = ''
     try {
-      const res: any = await api.post('/skills/create', data)
+      const res = await api.post<SkillDetailResp>('/skills/create', data)
       return res.skill || null
     } catch (e) {
       error.value = errMessage(e, '创建失败')
@@ -178,7 +153,7 @@ export const useSkillStore = defineStore('skills', () => {
   async function updateSkill(id: string, data: Record<string, any>): Promise<boolean> {
     error.value = ''
     try {
-      const res: any = await api.post(`/skills/update/${id}`, data)
+      const res = await api.post<SkillDetailResp>(`/skills/update/${id}`, data)
       if (res.skill) currentSkill.value = res.skill
       return true
     } catch (e) {
@@ -190,7 +165,7 @@ export const useSkillStore = defineStore('skills', () => {
   // ── 删除 ──
   async function deleteSkill(id: string): Promise<boolean> {
     try {
-      await api.post(`/skills/delete/${id}`)
+      await api.post<SkillAckResp>(`/skills/delete/${id}`)
       return true
     } catch (e) {
       error.value = errMessage(e, '删除失败')
@@ -201,7 +176,7 @@ export const useSkillStore = defineStore('skills', () => {
   // ── 发布 / 归档 ──
   async function publishSkill(id: string): Promise<boolean> {
     try {
-      await api.post(`/skills/publish/${id}`)
+      await api.post<SkillAckResp>(`/skills/publish/${id}`)
       return true
     } catch (e) {
       error.value = errMessage(e, '发布失败')
@@ -211,7 +186,7 @@ export const useSkillStore = defineStore('skills', () => {
 
   async function archiveSkill(id: string): Promise<boolean> {
     try {
-      await api.post(`/skills/archive/${id}`)
+      await api.post<SkillAckResp>(`/skills/archive/${id}`)
       return true
     } catch (e) {
       error.value = errMessage(e, '归档失败')
@@ -222,7 +197,7 @@ export const useSkillStore = defineStore('skills', () => {
   // ── 评价 ──
   async function rateSkill(skillId: string, rating: number, comment?: string): Promise<boolean> {
     try {
-      await api.post(`/skills/rate/${skillId}`, { rating, comment: comment || '' })
+      await api.post<RatingDetailResp>(`/skills/rate/${skillId}`, { rating, comment: comment || '' })
       return true
     } catch (e) {
       error.value = errMessage(e, '评价失败')
@@ -232,7 +207,7 @@ export const useSkillStore = defineStore('skills', () => {
 
   async function fetchRatings(skillId: string) {
     try {
-      const res: any = await api.get(`/skills/ratings/${skillId}`)
+      const res = await api.get<RatingListResp>(`/skills/ratings/${skillId}`)
       ratings.value = res.items || []
     } catch (e) {
       console.warn('获取评价失败:', errMessage(e, String(e)))
@@ -242,7 +217,7 @@ export const useSkillStore = defineStore('skills', () => {
   // ── 模板 ──
   async function fetchTemplates() {
     try {
-      const res: any = await api.get('/skills/templates')
+      const res = await api.get<TemplateListResp>('/skills/templates')
       templates.value = res.items || []
     } catch (e) {
       console.warn('获取模板失败:', errMessage(e, String(e)))
@@ -253,7 +228,7 @@ export const useSkillStore = defineStore('skills', () => {
     loading.value = true
     error.value = ''
     try {
-      const res: any = await api.post(`/skills/from-template/${templateId}`, { name, description: description || '', icon: icon || '' })
+      const res = await api.post<SkillDetailResp>(`/skills/from-template/${templateId}`, { name, description: description || '', icon: icon || '' })
       return res.skill || null
     } catch (e) {
       error.value = friendlyError(e, '从模板创建失败')
@@ -266,7 +241,7 @@ export const useSkillStore = defineStore('skills', () => {
   // ── 创作者统计 ──
   async function fetchCreatorStats() {
     try {
-      const res: any = await api.get('/skills/stats')
+      const res = await api.get<CreatorStatsResp>('/skills/stats')
       creatorStats.value = res.stats || null
     } catch (e) {
       console.warn('获取创作者统计失败:', errMessage(e, String(e)))
