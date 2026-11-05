@@ -110,6 +110,51 @@ def test_orphans_detected_without_param_false_positive():
     assert orphans == ["POST /api/skills/run/{}"]
 
 
+# ── 1b. 「响应被标成 any」的两类等价写法（2026-11-06 口径修正） ──
+
+def test_any_call_two_equivalent_forms_both_counted(tmp_path):
+    """泛型标注与变量标注都是放弃类型检查，hot 度量必须都看见。
+
+    回归背景：此前 ANY_CALL_RE 只认 `api.get<any>()`，仓库里 41 处
+    `const res: any = await api.get()` 被漏掉，导致「hot 清零」是假象。
+    """
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "store.ts").write_text(
+        "const a: any = await api.get('/skills/market?${q}')\n"
+        "const b: any = await api.post(`/skills/get/${id}`, data)\n"
+        "const c = await api.get<any>('/skills/stats')\n",
+        encoding="utf-8",
+    )
+    calls = ac.collect_any_calls(str(src))
+    got = {(m, p) for m, p, _ in calls}
+    assert ("GET", "/api/skills/market") in got      # query 串剥离 + /api 前缀
+    assert ("POST", "/api/skills/get/{}") in got     # 模板占位归一
+    assert ("GET", "/api/skills/stats") in got       # 旧泛型写法仍生效
+
+
+def test_any_call_dedup_when_both_regex_match(tmp_path):
+    """`const x: any = await api.get<any>('/foo')` 同时命中两类正则时只计一次。"""
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "a.ts").write_text(
+        "const x: any = await api.get<any>('/foo')\n", encoding="utf-8"
+    )
+    calls = ac.collect_any_calls(str(src))
+    # relpath 基准是 src_root 的父目录（与既有 collect_any_calls 口径一致）
+    assert calls.count(("GET", "/api/foo", "src/a.ts")) == 1
+
+
+def test_typed_variable_is_not_counted_as_any(tmp_path):
+    """`const res: SkillResp = await api.get(...)` 已收敛，不该再算 hot。"""
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "a.ts").write_text(
+        "const res: SkillResp = await api.get('/skills/stats')\n", encoding="utf-8"
+    )
+    assert ac.collect_any_calls(str(src)) == []
+
+
 # ── 2. 门禁契约（合成夹具，subprocess 验退出码） ──────────────
 
 def _write_fixture(root: Path, paths: dict, calls: list) -> tuple:
