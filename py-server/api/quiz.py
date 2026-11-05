@@ -645,6 +645,34 @@ class GenerateQuizRequest(BaseModel):
     mode: str = "normal"  # "normal"=常规按科目/难度；"adaptive"=优先针对用户薄弱科目
 
 
+# ── 出题响应模型（2026-11-05 补，批5）──
+# 形状完全由 generate_quiz 的投影决定（questions 每项 6 字段、steps 每项 4 字段），
+# 与 engines/quiz_engine.py::QuestionStep / StepQuestion 字段类型一致，故精确建模不兜底。
+class GenerateQuizStep(BaseModel):
+    """生成题目中的单个步骤（对齐 generate_quiz 的投影，不含答案/提示）。"""
+    step_name: str = ""
+    description: str = ""
+    check_type: str = ""
+    options: list[str] = []
+
+
+class GenerateQuizQuestion(BaseModel):
+    """生成题目列表项（steps 为子模型数组）。"""
+    id: str = ""
+    subject: str = ""
+    chapter: str = ""
+    difficulty: str = ""
+    question_text: str = ""
+    steps: list[GenerateQuizStep] = []
+
+
+class GenerateQuizResponse(BaseModel):
+    """POST /quiz/generate 返回。"""
+    questions: list[GenerateQuizQuestion] = []
+    total: int = 0
+    subject: str = ""
+
+
 def _weak_points_from_history(user_id: str, threshold: float) -> list[str]:
     """语义掌握度为空时的回退：读答题历史，按科目聚合正确率，正确率低于阈值者视为薄弱。
     返回已归一化的规范科目列表（network/transport/… → computer_network/…）。"""
@@ -686,7 +714,7 @@ def _adaptive_candidates(req: GenerateQuizRequest, user: dict) -> list:
         return []
 
 
-@router.post("/generate")
+@router.post("/generate", response_model=GenerateQuizResponse)
 async def generate_quiz(req: GenerateQuizRequest, user: dict = Depends(require_llm_quota)):
     """根据科目/难度生成练习题；mode='adaptive' 时优先针对用户薄弱科目出题。"""
     if req.mode == "adaptive":

@@ -2,6 +2,7 @@
 import { errMessage } from '@/utils/errorMessage'
 import { ref } from 'vue'
 import { api } from '@/utils/api'
+import type { ConflictCheckResp } from '@/types/engineResponses'
 
 const visible = ref(false)
 const active = ref(false)
@@ -14,7 +15,7 @@ async function simulate() {
   log.value = [' 正在调用后端冲突检测引擎...']
   
   try {
-    const result = await api.post<any>('/engine/conflict-check', {
+    const result = await api.post<ConflictCheckResp>('/engine/conflict-check', {
       agent_results: [
         { agent_name: 'teacher', content: 'TCP三次握手是标准流程，SYN→SYN+ACK→ACK，RFC 793明确规定。' },
         { agent_name: 'quizmaster', content: 'TCP建立连接使用三次握手，但题目选项中需要包含四次握手的干扰项。' },

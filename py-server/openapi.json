@@ -1031,7 +1031,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateQuizResponse"
+                }
               }
             }
           },
@@ -3941,7 +3943,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/FrugalRagFullResponse"
+                }
               }
             }
           },
@@ -4015,7 +4019,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/GOMARLConsensusResponse"
+                }
               }
             }
           },
@@ -4291,7 +4297,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictCheckResponse"
+                }
               }
             }
           },
@@ -16384,7 +16392,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/CareerSessionStartResponse"
+                }
               }
             }
           },
@@ -16466,7 +16476,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/CareerSessionAnswerResponse"
+                }
               }
             }
           },
@@ -16548,7 +16560,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/CareerSessionEndResponse"
+                }
               }
             }
           },
@@ -16620,7 +16634,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/CareerSessionReportResponse"
+                }
               }
             }
           },
@@ -19729,6 +19745,480 @@
         ],
         "title": "CareerScenarioListResponse"
       },
+      "CareerSessionAnswerResponse": {
+        "properties": {
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "turns_done": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Turns Done"
+          },
+          "max_turns": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Turns"
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mode"
+          },
+          "catfish_triggered": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Catfish Triggered"
+          },
+          "last_evidence": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Evidence"
+          },
+          "next_question": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Question"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "assessment": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assessment"
+          },
+          "improvement": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Improvement"
+          },
+          "evidence_chain": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Chain"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "CareerSessionAnswerResponse",
+        "description": "POST /career/session/{id}/answer：status ∈ ongoing / finished_pending / finished / 已结束。"
+      },
+      "CareerSessionEndResponse": {
+        "properties": {
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "turns_done": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Turns Done"
+          },
+          "min_turns": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Turns"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "assessment": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assessment"
+          },
+          "improvement": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Improvement"
+          },
+          "evidence_chain": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Chain"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "CareerSessionEndResponse",
+        "description": "POST /career/session/{id}/end：status ∈ insufficient / generating / finished。"
+      },
+      "CareerSessionReportResponse": {
+        "properties": {
+          "session_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "scenario_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scenario Label"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "turns": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Turns"
+          },
+          "assessment": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assessment"
+          },
+          "improvement": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Improvement"
+          },
+          "evidence_chain": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Chain"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "CareerSessionReportResponse",
+        "description": "GET /career/session/{id}/report：status ∈ generating / failed / 会话真实状态（可能为 None）。"
+      },
+      "CareerSessionStartResponse": {
+        "properties": {
+          "session_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id"
+          },
+          "scenario_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scenario Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "scenario_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scenario Label"
+          },
+          "setting": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Setting"
+          },
+          "student_role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Student Role"
+          },
+          "interviewer_role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interviewer Role"
+          },
+          "max_turns": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Turns"
+          },
+          "next_question": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Question"
+          },
+          "turns_done": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Turns Done"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "phase": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phase"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "CareerSessionStartResponse",
+        "description": "POST /career/session/start：开场（单一形状，字段稳定）。"
+      },
       "CareerTaskJoinResult": {
         "properties": {
           "task_id": {
@@ -20038,6 +20528,45 @@
           "agent_results"
         ],
         "title": "ConflictCheckRequest"
+      },
+      "ConflictCheckResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "total_conflicts": {
+            "type": "integer",
+            "title": "Total Conflicts",
+            "default": 0
+          },
+          "resolved": {
+            "type": "integer",
+            "title": "Resolved",
+            "default": 0
+          },
+          "unresolved": {
+            "type": "integer",
+            "title": "Unresolved",
+            "default": 0
+          },
+          "conflicts": {
+            "items": {},
+            "type": "array",
+            "title": "Conflicts",
+            "default": []
+          },
+          "overall_consistency": {
+            "type": "number",
+            "title": "Overall Consistency",
+            "default": 0.0
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "ConflictCheckResponse",
+        "description": "独立冲突检测+消解返回（/engine/conflict-check）。"
       },
       "ConsentRequest": {
         "properties": {
@@ -20593,6 +21122,66 @@
         ],
         "title": "FrugalRAGFullRequest"
       },
+      "FrugalRagFullResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "answer": {
+            "type": "string",
+            "title": "Answer",
+            "default": ""
+          },
+          "trajectory": {
+            "items": {},
+            "type": "array",
+            "title": "Trajectory",
+            "default": []
+          },
+          "total_searches": {
+            "type": "integer",
+            "title": "Total Searches",
+            "default": 0
+          },
+          "rewrites": {
+            "type": "integer",
+            "title": "Rewrites",
+            "default": 0
+          },
+          "coverage": {
+            "type": "number",
+            "title": "Coverage",
+            "default": 0.0
+          },
+          "complexity": {
+            "type": "string",
+            "title": "Complexity",
+            "default": ""
+          },
+          "cleaned_question": {
+            "type": "string",
+            "title": "Cleaned Question",
+            "default": ""
+          },
+          "chunks_count": {
+            "type": "integer",
+            "title": "Chunks Count",
+            "default": 0
+          },
+          "personalized_rerank": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Personalized Rerank",
+            "default": {}
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "FrugalRagFullResponse",
+        "description": "完整 FrugalRAG 检索返回（/engine/frugal-rag-full）。"
+      },
       "GOMARLConsensusRequest": {
         "properties": {
           "agent_results": {
@@ -20625,6 +21214,58 @@
           "agent_results"
         ],
         "title": "GOMARLConsensusRequest"
+      },
+      "GOMARLConsensusResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "consensus_score": {
+            "type": "number",
+            "title": "Consensus Score",
+            "default": 0.0
+          },
+          "neural_used": {
+            "type": "boolean",
+            "title": "Neural Used",
+            "default": false
+          },
+          "dynamic_weights": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Dynamic Weights",
+            "default": {}
+          },
+          "weighted_scores": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Weighted Scores",
+            "default": {}
+          },
+          "groups": {
+            "items": {},
+            "type": "array",
+            "title": "Groups",
+            "default": []
+          },
+          "sd_loss": {
+            "type": "number",
+            "title": "Sd Loss",
+            "default": 0.0
+          },
+          "conflicts": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Conflicts",
+            "default": {}
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "GOMARLConsensusResponse",
+        "description": "GoMARL 共识评估返回（/engine/gomarl-consensus）。"
       },
       "GenerateCodePracticeResponse": {
         "properties": {
@@ -20751,6 +21392,46 @@
         ],
         "title": "GenerateQuestionsResponse"
       },
+      "GenerateQuizQuestion": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "default": ""
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject",
+            "default": ""
+          },
+          "chapter": {
+            "type": "string",
+            "title": "Chapter",
+            "default": ""
+          },
+          "difficulty": {
+            "type": "string",
+            "title": "Difficulty",
+            "default": ""
+          },
+          "question_text": {
+            "type": "string",
+            "title": "Question Text",
+            "default": ""
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/GenerateQuizStep"
+            },
+            "type": "array",
+            "title": "Steps",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "GenerateQuizQuestion",
+        "description": "生成题目列表项（steps 为子模型数组）。"
+      },
       "GenerateQuizRequest": {
         "properties": {
           "subject": {
@@ -20776,6 +21457,61 @@
         },
         "type": "object",
         "title": "GenerateQuizRequest"
+      },
+      "GenerateQuizResponse": {
+        "properties": {
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/GenerateQuizQuestion"
+            },
+            "type": "array",
+            "title": "Questions",
+            "default": []
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "default": 0
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "GenerateQuizResponse",
+        "description": "POST /quiz/generate 返回。"
+      },
+      "GenerateQuizStep": {
+        "properties": {
+          "step_name": {
+            "type": "string",
+            "title": "Step Name",
+            "default": ""
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
+          },
+          "check_type": {
+            "type": "string",
+            "title": "Check Type",
+            "default": ""
+          },
+          "options": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Options",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "GenerateQuizStep",
+        "description": "生成题目中的单个步骤（对齐 generate_quiz 的投影，不含答案/提示）。"
       },
       "GenerationRequest": {
         "properties": {

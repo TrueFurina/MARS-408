@@ -20,6 +20,7 @@ import {
   type ConflictDTO,
   type CorrectionDTO,
 } from '@/utils/evidence'
+import type { ConflictCheckResp } from '@/types/engineResponses'
 
 const props = defineProps<{
   report: EvidenceReport | null
@@ -91,11 +92,12 @@ async function runDemo(idx: number) {
   demoLoading.value = true
   demoError.value = ''
   try {
-    const res = await api.post('/engine/conflict-check', {
+    const res = await api.post<ConflictCheckResp>('/engine/conflict-check', {
       agent_results: demo.agentResults,
       course: demo.course,
     })
-    demoReport.value = normalizeDemoResult((res as any)?.result || res || {})
+    // conflict-check 始终返回扁平 {"status":"ok", **result}；旧代码兼容的 .result 包裹形状不存在
+    demoReport.value = normalizeDemoResult(res || {})
   } catch (e) {
     demoError.value = errMessage(e, '演示失败，请检查后端服务')
   } finally {

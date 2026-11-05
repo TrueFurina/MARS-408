@@ -5701,6 +5701,134 @@ export interface components {
             scenarios: components["schemas"]["CareerScenarioItem"][];
         };
         /**
+         * CareerSessionAnswerResponse
+         * @description POST /career/session/{id}/answer：status ∈ ongoing / finished_pending / finished / 已结束。
+         */
+        CareerSessionAnswerResponse: {
+            /** Status */
+            status?: string | null;
+            /** Turns Done */
+            turns_done?: number | null;
+            /** Max Turns */
+            max_turns?: number | null;
+            /** Mode */
+            mode?: string | null;
+            /** Catfish Triggered */
+            catfish_triggered?: boolean | null;
+            /** Last Evidence */
+            last_evidence?: {
+                [key: string]: unknown;
+            } | null;
+            /** Next Question */
+            next_question?: {
+                [key: string]: unknown;
+            } | null;
+            /** Message */
+            message?: string | null;
+            /** Assessment */
+            assessment?: {
+                [key: string]: unknown;
+            } | null;
+            /** Improvement */
+            improvement?: {
+                [key: string]: unknown;
+            } | null;
+            /** Evidence Chain */
+            evidence_chain?: unknown[] | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * CareerSessionEndResponse
+         * @description POST /career/session/{id}/end：status ∈ insufficient / generating / finished。
+         */
+        CareerSessionEndResponse: {
+            /** Status */
+            status?: string | null;
+            /** Turns Done */
+            turns_done?: number | null;
+            /** Min Turns */
+            min_turns?: number | null;
+            /** Message */
+            message?: string | null;
+            /** Assessment */
+            assessment?: {
+                [key: string]: unknown;
+            } | null;
+            /** Improvement */
+            improvement?: {
+                [key: string]: unknown;
+            } | null;
+            /** Evidence Chain */
+            evidence_chain?: unknown[] | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * CareerSessionReportResponse
+         * @description GET /career/session/{id}/report：status ∈ generating / failed / 会话真实状态（可能为 None）。
+         */
+        CareerSessionReportResponse: {
+            /** Session Id */
+            session_id?: string | null;
+            /** Title */
+            title?: string | null;
+            /** Scenario Label */
+            scenario_label?: string | null;
+            /** Status */
+            status?: string | null;
+            /** Turns */
+            turns?: unknown[] | null;
+            /** Assessment */
+            assessment?: {
+                [key: string]: unknown;
+            } | null;
+            /** Improvement */
+            improvement?: {
+                [key: string]: unknown;
+            } | null;
+            /** Evidence Chain */
+            evidence_chain?: unknown[] | null;
+            /** Message */
+            message?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * CareerSessionStartResponse
+         * @description POST /career/session/start：开场（单一形状，字段稳定）。
+         */
+        CareerSessionStartResponse: {
+            /** Session Id */
+            session_id?: string | null;
+            /** Scenario Id */
+            scenario_id?: string | null;
+            /** Title */
+            title?: string | null;
+            /** Scenario Label */
+            scenario_label?: string | null;
+            /** Setting */
+            setting?: string | null;
+            /** Student Role */
+            student_role?: string | null;
+            /** Interviewer Role */
+            interviewer_role?: string | null;
+            /** Max Turns */
+            max_turns?: number | null;
+            /** Next Question */
+            next_question?: {
+                [key: string]: unknown;
+            } | null;
+            /** Turns Done */
+            turns_done?: number | null;
+            /** Status */
+            status?: string | null;
+            /** Phase */
+            phase?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
          * CareerTaskJoinResult
          * @description POST /career/task/join 的返回。
          *
@@ -5903,6 +6031,44 @@ export interface components {
              * @default computer_network
              */
             course: string;
+        };
+        /**
+         * ConflictCheckResponse
+         * @description 独立冲突检测+消解返回（/engine/conflict-check）。
+         */
+        ConflictCheckResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Total Conflicts
+             * @default 0
+             */
+            total_conflicts: number;
+            /**
+             * Resolved
+             * @default 0
+             */
+            resolved: number;
+            /**
+             * Unresolved
+             * @default 0
+             */
+            unresolved: number;
+            /**
+             * Conflicts
+             * @default []
+             */
+            conflicts: unknown[];
+            /**
+             * Overall Consistency
+             * @default 0
+             */
+            overall_consistency: number;
+        } & {
+            [key: string]: unknown;
         };
         /** ConsentRequest */
         ConsentRequest: {
@@ -6250,6 +6416,66 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /**
+         * FrugalRagFullResponse
+         * @description 完整 FrugalRAG 检索返回（/engine/frugal-rag-full）。
+         */
+        FrugalRagFullResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Answer
+             * @default
+             */
+            answer: string;
+            /**
+             * Trajectory
+             * @default []
+             */
+            trajectory: unknown[];
+            /**
+             * Total Searches
+             * @default 0
+             */
+            total_searches: number;
+            /**
+             * Rewrites
+             * @default 0
+             */
+            rewrites: number;
+            /**
+             * Coverage
+             * @default 0
+             */
+            coverage: number;
+            /**
+             * Complexity
+             * @default
+             */
+            complexity: string;
+            /**
+             * Cleaned Question
+             * @default
+             */
+            cleaned_question: string;
+            /**
+             * Chunks Count
+             * @default 0
+             */
+            chunks_count: number;
+            /**
+             * Personalized Rerank
+             * @default {}
+             */
+            personalized_rerank: {
+                [key: string]: unknown;
+            };
+        } & {
+            [key: string]: unknown;
+        };
         /** GOMARLConsensusRequest */
         GOMARLConsensusRequest: {
             /** Agent Results */
@@ -6273,6 +6499,60 @@ export interface components {
              * @default computer_network
              */
             course: string;
+        };
+        /**
+         * GOMARLConsensusResponse
+         * @description GoMARL 共识评估返回（/engine/gomarl-consensus）。
+         */
+        GOMARLConsensusResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Consensus Score
+             * @default 0
+             */
+            consensus_score: number;
+            /**
+             * Neural Used
+             * @default false
+             */
+            neural_used: boolean;
+            /**
+             * Dynamic Weights
+             * @default {}
+             */
+            dynamic_weights: {
+                [key: string]: unknown;
+            };
+            /**
+             * Weighted Scores
+             * @default {}
+             */
+            weighted_scores: {
+                [key: string]: unknown;
+            };
+            /**
+             * Groups
+             * @default []
+             */
+            groups: unknown[];
+            /**
+             * Sd Loss
+             * @default 0
+             */
+            sd_loss: number;
+            /**
+             * Conflicts
+             * @default {}
+             */
+            conflicts: {
+                [key: string]: unknown;
+            };
+        } & {
+            [key: string]: unknown;
         };
         /**
          * GenerateCodePracticeResponse
@@ -6355,6 +6635,42 @@ export interface components {
             /** Message */
             message?: string | null;
         };
+        /**
+         * GenerateQuizQuestion
+         * @description 生成题目列表项（steps 为子模型数组）。
+         */
+        GenerateQuizQuestion: {
+            /**
+             * Id
+             * @default
+             */
+            id: string;
+            /**
+             * Subject
+             * @default
+             */
+            subject: string;
+            /**
+             * Chapter
+             * @default
+             */
+            chapter: string;
+            /**
+             * Difficulty
+             * @default
+             */
+            difficulty: string;
+            /**
+             * Question Text
+             * @default
+             */
+            question_text: string;
+            /**
+             * Steps
+             * @default []
+             */
+            steps: components["schemas"]["GenerateQuizStep"][];
+        };
         /** GenerateQuizRequest */
         GenerateQuizRequest: {
             /**
@@ -6377,6 +6693,53 @@ export interface components {
              * @default normal
              */
             mode: string;
+        };
+        /**
+         * GenerateQuizResponse
+         * @description POST /quiz/generate 返回。
+         */
+        GenerateQuizResponse: {
+            /**
+             * Questions
+             * @default []
+             */
+            questions: components["schemas"]["GenerateQuizQuestion"][];
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+            /**
+             * Subject
+             * @default
+             */
+            subject: string;
+        };
+        /**
+         * GenerateQuizStep
+         * @description 生成题目中的单个步骤（对齐 generate_quiz 的投影，不含答案/提示）。
+         */
+        GenerateQuizStep: {
+            /**
+             * Step Name
+             * @default
+             */
+            step_name: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /**
+             * Check Type
+             * @default
+             */
+            check_type: string;
+            /**
+             * Options
+             * @default []
+             */
+            options: string[];
         };
         /** GenerationRequest */
         GenerationRequest: {
@@ -9096,7 +9459,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["GenerateQuizResponse"];
                 };
             };
             /** @description Validation Error */
@@ -10466,7 +10829,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["FrugalRagFullResponse"];
                 };
             };
             /** @description Validation Error */
@@ -10502,7 +10865,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["GOMARLConsensusResponse"];
                 };
             };
             /** @description Validation Error */
@@ -10638,7 +11001,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ConflictCheckResponse"];
                 };
             };
             /** @description Validation Error */
@@ -16360,7 +16723,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CareerSessionStartResponse"];
                 };
             };
             /** @description Validation Error */
@@ -16398,7 +16761,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CareerSessionAnswerResponse"];
                 };
             };
             /** @description Validation Error */
@@ -16436,7 +16799,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CareerSessionEndResponse"];
                 };
             };
             /** @description Validation Error */
@@ -16470,7 +16833,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CareerSessionReportResponse"];
                 };
             };
             /** @description Validation Error */

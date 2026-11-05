@@ -78,9 +78,51 @@ class TeachingRulesPrioritizeRequest(BaseModel):
     student_profile: dict
 
 
+# ── 响应模型（2026-11-05 补，批5）──
+# 顶层字段精确 + 嵌套 dict/list 用兜底（运行时实际结构由引擎模块决定，粗定型会随实现抖动）；
+# extra="allow" 保证 response_model 不静默收窄丢字段 / 不 500。
+class FrugalRagFullResponse(BaseModel):
+    """完整 FrugalRAG 检索返回（/engine/frugal-rag-full）。"""
+    model_config = ConfigDict(extra="allow")
+    status: str = "ok"
+    answer: str = ""
+    trajectory: list = []
+    total_searches: int = 0
+    rewrites: int = 0
+    coverage: float = 0.0
+    complexity: str = ""
+    cleaned_question: str = ""
+    chunks_count: int = 0
+    personalized_rerank: dict = {}
+
+
+class GOMARLConsensusResponse(BaseModel):
+    """GoMARL 共识评估返回（/engine/gomarl-consensus）。"""
+    model_config = ConfigDict(extra="allow")
+    status: str = "ok"
+    consensus_score: float = 0.0
+    neural_used: bool = False
+    dynamic_weights: dict = {}
+    weighted_scores: dict = {}
+    groups: list = []
+    sd_loss: float = 0.0
+    conflicts: dict = {}
+
+
+class ConflictCheckResponse(BaseModel):
+    """独立冲突检测+消解返回（/engine/conflict-check）。"""
+    model_config = ConfigDict(extra="allow")
+    status: str = "ok"
+    total_conflicts: int = 0
+    resolved: int = 0
+    unresolved: int = 0
+    conflicts: list = []
+    overall_consistency: float = 0.0
+
+
 # ── 端点 ──
 
-@router.post("/frugal-rag-full")
+@router.post("/frugal-rag-full", response_model=FrugalRagFullResponse)
 async def frugal_rag_full(req: FrugalRAGFullRequest, user: dict = Depends(require_llm_quota)):
     """完整 FrugalRAG 检索流程
 
@@ -120,7 +162,7 @@ async def frugal_rag_full(req: FrugalRAGFullRequest, user: dict = Depends(requir
     }
 
 
-@router.post("/gomarl-consensus")
+@router.post("/gomarl-consensus", response_model=GOMARLConsensusResponse)
 async def gomarl_consensus(req: GOMARLConsensusRequest, user: dict = Depends(require_llm_quota)):
     """GoMARL 共识评估（NeuralMixer + 证据冲突消解）
 
@@ -191,7 +233,7 @@ async def neural_mixer_stats(user: dict = Depends(get_current_user)):
     return {"status": "ok", "stats": neural_mixer.get_stats()}
 
 
-@router.post("/conflict-check")
+@router.post("/conflict-check", response_model=ConflictCheckResponse)
 async def conflict_check(req: ConflictCheckRequest, user: dict = Depends(require_llm_quota)):
     """独立冲突检测+消解"""
     from engines.gomarl_conflict import conflict_engine
