@@ -9,6 +9,7 @@ import { icons } from '@/components/icons'
 import { api } from '@/utils/api'
 import type { components } from '@/types/api.generated'
 type SkillDetailResp = components['schemas']['SkillDetailResponse']
+type TeachingVideoResp = components['schemas']['TeachingVideoResponse']
 import { renderMarkdownSafe, sanitizeSvg } from '@/utils/markdown'
 import { ttsSynthesize, friendlyError } from '@/utils/api'
 import { useVirtualizer, type Virtualizer } from '@tanstack/vue-virtual'
@@ -294,7 +295,7 @@ async function sendMessage(text: string) {
       const topic = videoCmd[3]?.trim() || text.replace(/^(生成|制作|创建)\s*(教学)?\s*视频[:：]?\s*/i, '').trim() || '计算机专业知识点'
       await store.sendMessageStream(` 正在生成「${topic}」的教学视频...`, () => { scrollToBottom() })
       try {
-        const res: any = await api.post('/multimodal/generate-teaching-video', { topic, difficulty: 'medium', output_format: 'html' })
+        const res = await api.post<TeachingVideoResp>('/multimodal/generate-teaching-video', { topic, difficulty: 'medium', output_format: 'html' })
         if (res?.html) {
           teachingVideoHtml.value = res.html
           teachingVideoTopic.value = topic

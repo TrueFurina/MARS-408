@@ -209,7 +209,24 @@ async def assessment_feedback(
 # ── 画像驱动推荐 API ──
 
 
-@router.post("/assessment/recommendations")
+class RecommendationItem(BaseModel):
+    """单条学习推荐（/assessment/recommendations 的 recs 元素，6 键固定）。"""
+    icon: str = ""
+    title: str = ""
+    text: str = ""
+    action: str = ""
+    route: str = ""
+    priority: str = "normal"
+
+
+class AssessmentRecommendationsResponse(BaseModel):
+    """POST /assessment/recommendations 返回。"""
+    status: str = "ok"
+    recommendations: list[RecommendationItem] = []
+    total: int = 0
+
+
+@router.post("/assessment/recommendations", response_model=AssessmentRecommendationsResponse)
 async def get_assessment_recommendations(
     body: dict = {},
     user: dict = Depends(require_llm_quota),

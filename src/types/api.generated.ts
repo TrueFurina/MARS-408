@@ -5259,6 +5259,27 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /**
+         * AssessmentRecommendationsResponse
+         * @description POST /assessment/recommendations 返回。
+         */
+        AssessmentRecommendationsResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Recommendations
+             * @default []
+             */
+            recommendations: components["schemas"]["RecommendationItem"][];
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+        };
         /** AssessmentRequest */
         AssessmentRequest: {
             /** Profile */
@@ -6930,6 +6951,24 @@ export interface components {
             subject?: string | null;
         };
         /**
+         * KGVisGraph
+         * @description kg_to_vis_json 的可视化投影 {nodes, edges}；节点/边字段随图谱类型变化。
+         */
+        KGVisGraph: {
+            /**
+             * Nodes
+             * @default []
+             */
+            nodes: unknown[];
+            /**
+             * Edges
+             * @default []
+             */
+            edges: unknown[];
+        } & {
+            [key: string]: unknown;
+        };
+        /**
          * KnowledgeBaseStatsResponse
          * @description 知识库统计（/teacher/knowledge-base/stats）
          */
@@ -7038,6 +7077,60 @@ export interface components {
             metadata?: {
                 [key: string]: unknown;
             };
+        };
+        /**
+         * KnowledgeGraphExtractResponse
+         * @description POST /knowledge-graph/extract 返回。
+         *     entities / relationships / stats 是 LLM 抽取产物，形状不固定，用 list/dict 兜底；
+         *     vis 是 kg_to_vis_json 的固定两键结构，单独精确建模供前端可视化消费。
+         */
+        KnowledgeGraphExtractResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Subject
+             * @default
+             */
+            subject: string;
+            /**
+             * Entities
+             * @default []
+             */
+            entities: unknown[];
+            /**
+             * Relationships
+             * @default []
+             */
+            relationships: unknown[];
+            /**
+             * Stats
+             * @default {}
+             */
+            stats: {
+                [key: string]: unknown;
+            };
+            vis?: components["schemas"]["KGVisGraph"];
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * KnowledgeGraphListResponse
+         * @description GET /knowledge-graph/list 返回。
+         */
+        KnowledgeGraphListResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Graphs
+             * @default []
+             */
+            graphs: components["schemas"]["SavedGraphItem"][];
         };
         /** KnowledgeGraphPayload */
         KnowledgeGraphPayload: {
@@ -7478,6 +7571,130 @@ export interface components {
                 [key: string]: unknown;
             }[];
         };
+        /**
+         * PlanHistoryItem
+         * @description db/user_store.py::list_daily_plans 的精简投影（9 键）。
+         *     注意：这里**没有** created_at / updated_at —— 单计划端点才有，
+         *     前端手写 DailyPlan 曾把这两个字段声明为必填，属假契约。
+         */
+        PlanHistoryItem: {
+            /**
+             * Id
+             * @default 0
+             */
+            id: number;
+            /**
+             * Plan Date
+             * @default
+             */
+            plan_date: string;
+            /**
+             * Tasks
+             * @default []
+             */
+            tasks: components["schemas"]["PlanHistoryTask"][];
+            /**
+             * Total Tasks
+             * @default 0
+             */
+            total_tasks: number;
+            /**
+             * Completed Tasks
+             * @default 0
+             */
+            completed_tasks: number;
+            /**
+             * Completion Rate
+             * @default 0
+             */
+            completion_rate: number;
+            /**
+             * Target Exam Date
+             * @default
+             */
+            target_exam_date: string;
+            /**
+             * Target Score
+             * @default 0
+             */
+            target_score: number;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * PlanHistoryResponse
+         * @description GET /daily-plan/history 返回。
+         */
+        PlanHistoryResponse: {
+            /**
+             * Plans
+             * @default []
+             */
+            plans: components["schemas"]["PlanHistoryItem"][];
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+            /**
+             * Start Date
+             * @default
+             */
+            start_date: string;
+            /**
+             * End Date
+             * @default
+             */
+            end_date: string;
+        };
+        /**
+         * PlanHistoryTask
+         * @description 每日计划的任务项（_generate_default_daily_tasks 的投影）。
+         */
+        PlanHistoryTask: {
+            /**
+             * Id
+             * @default
+             */
+            id: string;
+            /**
+             * Type
+             * @default
+             */
+            type: string;
+            /**
+             * Title
+             * @default
+             */
+            title: string;
+            /**
+             * Subject
+             * @default
+             */
+            subject: string;
+            /**
+             * Chapter
+             * @default
+             */
+            chapter: string;
+            /**
+             * Progress
+             * @default 0
+             */
+            progress: number;
+            /**
+             * Completed
+             * @default false
+             */
+            completed: boolean;
+            /**
+             * Estimated Minutes
+             * @default 0
+             */
+            estimated_minutes: number;
+        } & {
+            [key: string]: unknown;
+        };
         /** PlanTaskUpdateRequest */
         PlanTaskUpdateRequest: {
             /** Task Id */
@@ -7878,6 +8095,42 @@ export interface components {
              */
             items: components["schemas"]["SkillRatingOut"][];
         };
+        /**
+         * RecommendationItem
+         * @description 单条学习推荐（/assessment/recommendations 的 recs 元素，6 键固定）。
+         */
+        RecommendationItem: {
+            /**
+             * Icon
+             * @default
+             */
+            icon: string;
+            /**
+             * Title
+             * @default
+             */
+            title: string;
+            /**
+             * Text
+             * @default
+             */
+            text: string;
+            /**
+             * Action
+             * @default
+             */
+            action: string;
+            /**
+             * Route
+             * @default
+             */
+            route: string;
+            /**
+             * Priority
+             * @default normal
+             */
+            priority: string;
+        };
         /** RecordRequest */
         RecordRequest: {
             /** Event */
@@ -8173,6 +8426,37 @@ export interface components {
              * @default ok
              */
             status: string;
+        };
+        /**
+         * SavedGraphItem
+         * @description GET /knowledge-graph/list 的列表项（5 键固定投影）。
+         */
+        SavedGraphItem: {
+            /**
+             * Id
+             * @default
+             */
+            id: string;
+            /**
+             * Subject
+             * @default
+             */
+            subject: string;
+            /**
+             * Entity Count
+             * @default 0
+             */
+            entity_count: number;
+            /**
+             * Relation Count
+             * @default 0
+             */
+            relation_count: number;
+            /**
+             * Created At
+             * @default
+             */
+            created_at: string;
         };
         /** ScenarioGenerateRequest */
         ScenarioGenerateRequest: {
@@ -9003,6 +9287,62 @@ export interface components {
             output_format: string;
         };
         /**
+         * TeachingVideoResponse
+         * @description POST /multimodal/generate-teaching-video 返回（_generate_teaching_video 的 10 键投影）。
+         */
+        TeachingVideoResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Resource Type
+             * @default teaching_video
+             */
+            resource_type: string;
+            /**
+             * Topic
+             * @default
+             */
+            topic: string;
+            /**
+             * Scenes
+             * @default 0
+             */
+            scenes: number;
+            /**
+             * Duration Sec
+             * @default 0
+             */
+            duration_sec: number;
+            /**
+             * Duration Str
+             * @default
+             */
+            duration_str: string;
+            /**
+             * Html
+             * @default
+             */
+            html: string;
+            /**
+             * Html Path
+             * @default
+             */
+            html_path: string;
+            /**
+             * Video Script
+             * @default
+             */
+            video_script: string;
+            /**
+             * Format
+             * @default html
+             */
+            format: string;
+        };
+        /**
          * TemplateDetailResponse
          * @description templates/{id} 的返回：{status, template}。
          */
@@ -9396,6 +9736,128 @@ export interface components {
             hint: string;
             /** Timestamp */
             timestamp: string;
+        };
+        /**
+         * WrongQuestionItem
+         * @description db/user_store.py::get_wrong_question 的 17 键投影。
+         *     question / attribution / review_history 是从 JSON 列解析出的任意结构，
+         *     用 dict/list/Any 兜底（解析失败时分别为 {} / None / []），不硬定型。
+         */
+        WrongQuestionItem: {
+            /**
+             * Id
+             * @default 0
+             */
+            id: number;
+            /**
+             * Question Id
+             * @default
+             */
+            question_id: string;
+            /**
+             * Question
+             * @default {}
+             */
+            question: {
+                [key: string]: unknown;
+            };
+            /**
+             * Subject
+             * @default
+             */
+            subject: string;
+            /**
+             * Chapter
+             * @default
+             */
+            chapter: string;
+            /**
+             * Knowledge Point
+             * @default
+             */
+            knowledge_point: string;
+            /**
+             * Wrong Answer
+             * @default
+             */
+            wrong_answer: string;
+            /**
+             * Correct Answer
+             * @default
+             */
+            correct_answer: string;
+            /**
+             * Error Type
+             * @default
+             */
+            error_type: string;
+            /** Attribution */
+            attribution?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Wrong Count
+             * @default 0
+             */
+            wrong_count: number;
+            /**
+             * Mastered
+             * @default false
+             */
+            mastered: boolean;
+            /**
+             * Last Wrong At
+             * @default
+             */
+            last_wrong_at: string;
+            /**
+             * First Wrong At
+             * @default
+             */
+            first_wrong_at: string;
+            /**
+             * Review Stage
+             * @default
+             */
+            review_stage: string;
+            /**
+             * Next Review At
+             * @default
+             */
+            next_review_at: string;
+            /**
+             * Review History
+             * @default []
+             */
+            review_history: unknown[];
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * WrongQuestionListResponse
+         * @description GET /wrong-questions 返回（db/user_store.py::list_wrong_questions）。
+         */
+        WrongQuestionListResponse: {
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+            /**
+             * Page
+             * @default 1
+             */
+            page: number;
+            /**
+             * Page Size
+             * @default 20
+             */
+            page_size: number;
+            /**
+             * Items
+             * @default []
+             */
+            items: components["schemas"]["WrongQuestionItem"][];
         };
         /** AnswerRequest */
         api__career_training__AnswerRequest: {
@@ -11119,7 +11581,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["AssessmentRecommendationsResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12361,7 +12823,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["TeachingVideoResponse"];
                 };
             };
             /** @description Validation Error */
@@ -15218,7 +15680,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["KnowledgeGraphExtractResponse"];
                 };
             };
             /** @description Validation Error */
@@ -15354,7 +15816,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["KnowledgeGraphListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -16575,7 +17037,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["WrongQuestionListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -16677,7 +17139,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["WrongQuestionItem"];
                 };
             };
             /** @description Validation Error */
@@ -16919,7 +17381,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["PlanHistoryResponse"];
                 };
             };
             /** @description Validation Error */

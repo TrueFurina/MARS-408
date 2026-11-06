@@ -4,7 +4,8 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useStudyStore } from '@/stores/studyStore'
 import { api } from '@/utils/api'
-import type { operations } from '@/types/api.generated'
+import type { operations, components } from '@/types/api.generated'
+type TeachingVideoResp = components['schemas']['TeachingVideoResponse']
 
 // 契约层响应类型（来自 src/types/api.generated.ts 的 operations[...]）
 type ImageGenResp = operations['generate_teaching_image_api_multimodal_generate_image_post']['responses'][200]['content']['application/json']
@@ -305,7 +306,7 @@ async function generateTeachingVideo() {
   if (!topic.value) return
   teachingVideoLoading.value = true
   try {
-    const res: any = await api.post('/multimodal/generate-teaching-video', {
+    const res = await api.post<TeachingVideoResp>('/multimodal/generate-teaching-video', {
       topic: topic.value,
       difficulty: difficulty.value,
       output_format: 'html',

@@ -3,6 +3,10 @@ import { errMessage } from '@/utils/errorMessage'
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '@/utils/api'
+import type { components } from '@/types/api.generated'
+type KGExtractResp = components['schemas']['KnowledgeGraphExtractResponse']
+type KGListResp = components['schemas']['KnowledgeGraphListResponse']
+type SavedGraphItem = components['schemas']['SavedGraphItem']
 import KnowledgeGraph from '@/components/KnowledgeGraph.vue'
 import KnowledgeGraph3D from '@/components/KnowledgeGraph3D.vue'
 
@@ -14,7 +18,7 @@ const loading = ref(false)
 const error = ref('')
 const graphData = ref<{ nodes: any[]; edges: any[] }>({ nodes: [], edges: [] })
 const stats = ref<any>(null)
-const savedGraphs = ref<any[]>([])
+const savedGraphs = ref<SavedGraphItem[]>([])
 const filterType = ref('')
 const viewMode = ref<'graph' | 'outline' | 'mindmap' | 'map' | 'sphere'>('graph')
 
@@ -49,7 +53,7 @@ async function extractGraph() {
   loading.value = true
   error.value = ''
   try {
-    const res: any = await api.post('/knowledge-graph/extract', {
+    const res = await api.post<KGExtractResp>('/knowledge-graph/extract', {
       text: inputText.value,
       subject: subject.value,
       enhance: true,
@@ -65,7 +69,7 @@ async function extractGraph() {
 
 async function loadSavedGraphs() {
   try {
-    const res: any = await api.get('/knowledge-graph/list')
+    const res = await api.get<KGListResp>('/knowledge-graph/list')
     savedGraphs.value = res.graphs || []
   } catch { /* ignore */ }
 }
@@ -74,7 +78,7 @@ async function loadGraph(id: string) {
   loading.value = true
   error.value = ''
   try {
-    const res: any = await api.get(`/knowledge-graph/list`)
+    await api.get<KGListResp>(`/knowledge-graph/list`)
     // 从列表中找到对应的图
     const graph = savedGraphs.value.find(g => g.id === id)
     if (graph) {

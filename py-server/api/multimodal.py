@@ -539,6 +539,20 @@ async def _generate_narrated_video(req: GenerationRequest) -> dict:
 # 工作流：分镜脚本 → SVG 场景 → HTML 幻灯片
 # ════════════════════════════════════════════════
 
+class TeachingVideoResponse(BaseModel):
+    """POST /multimodal/generate-teaching-video 返回（_generate_teaching_video 的 10 键投影）。"""
+    status: str = "ok"
+    resource_type: str = "teaching_video"
+    topic: str = ""
+    scenes: int = 0
+    duration_sec: int = 0
+    duration_str: str = ""
+    html: str = ""
+    html_path: str = ""
+    video_script: str = ""
+    format: str = "html"
+
+
 class TeachingVideoRequest(BaseModel):
     topic: str
     profile: Optional[dict] = None
@@ -547,7 +561,7 @@ class TeachingVideoRequest(BaseModel):
     output_format: str = "html"
 
 
-@router.post("/generate-teaching-video")
+@router.post("/generate-teaching-video", response_model=TeachingVideoResponse)
 async def generate_teaching_video_endpoint(
     req: TeachingVideoRequest,
     user: dict = Depends(get_current_user),

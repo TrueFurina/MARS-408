@@ -3572,7 +3572,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/AssessmentRecommendationsResponse"
+                }
               }
             }
           },
@@ -6142,7 +6144,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/TeachingVideoResponse"
+                }
               }
             }
           },
@@ -12209,7 +12213,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeGraphExtractResponse"
+                }
               }
             }
           },
@@ -12485,7 +12491,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeGraphListResponse"
+                }
               }
             }
           },
@@ -15133,7 +15141,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/WrongQuestionListResponse"
+                }
               }
             }
           },
@@ -15342,7 +15352,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/WrongQuestionItem"
+                }
               }
             }
           },
@@ -15863,7 +15875,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PlanHistoryResponse"
+                }
               }
             }
           },
@@ -19063,6 +19077,31 @@
         "title": "AssessmentFeedbackResponse",
         "description": "增强版学习效果评估 + 路径调整返回（/assessment/feedback）"
       },
+      "AssessmentRecommendationsResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "recommendations": {
+            "items": {
+              "$ref": "#/components/schemas/RecommendationItem"
+            },
+            "type": "array",
+            "title": "Recommendations",
+            "default": []
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "AssessmentRecommendationsResponse",
+        "description": "POST /assessment/recommendations 返回。"
+      },
       "AssessmentRequest": {
         "properties": {
           "profile": {
@@ -21854,6 +21893,26 @@
         ],
         "title": "KGQueryRequest"
       },
+      "KGVisGraph": {
+        "properties": {
+          "nodes": {
+            "items": {},
+            "type": "array",
+            "title": "Nodes",
+            "default": []
+          },
+          "edges": {
+            "items": {},
+            "type": "array",
+            "title": "Edges",
+            "default": []
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "KGVisGraph",
+        "description": "kg_to_vis_json 的可视化投影 {nodes, edges}；节点/边字段随图谱类型变化。"
+      },
       "KnowledgeBaseStatsResponse": {
         "properties": {
           "total_chunks": {
@@ -21993,6 +22052,65 @@
           "content"
         ],
         "title": "KnowledgeDocIn"
+      },
+      "KnowledgeGraphExtractResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject",
+            "default": ""
+          },
+          "entities": {
+            "items": {},
+            "type": "array",
+            "title": "Entities",
+            "default": []
+          },
+          "relationships": {
+            "items": {},
+            "type": "array",
+            "title": "Relationships",
+            "default": []
+          },
+          "stats": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Stats",
+            "default": {}
+          },
+          "vis": {
+            "$ref": "#/components/schemas/KGVisGraph"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "KnowledgeGraphExtractResponse",
+        "description": "POST /knowledge-graph/extract 返回。\nentities / relationships / stats 是 LLM 抽取产物，形状不固定，用 list/dict 兜底；\nvis 是 kg_to_vis_json 的固定两键结构，单独精确建模供前端可视化消费。"
+      },
+      "KnowledgeGraphListResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "graphs": {
+            "items": {
+              "$ref": "#/components/schemas/SavedGraphItem"
+            },
+            "type": "array",
+            "title": "Graphs",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "KnowledgeGraphListResponse",
+        "description": "GET /knowledge-graph/list 返回。"
       },
       "KnowledgeGraphPayload": {
         "properties": {
@@ -22750,6 +22868,135 @@
         ],
         "title": "PerQuestionResponse"
       },
+      "PlanHistoryItem": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "default": 0
+          },
+          "plan_date": {
+            "type": "string",
+            "title": "Plan Date",
+            "default": ""
+          },
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/PlanHistoryTask"
+            },
+            "type": "array",
+            "title": "Tasks",
+            "default": []
+          },
+          "total_tasks": {
+            "type": "integer",
+            "title": "Total Tasks",
+            "default": 0
+          },
+          "completed_tasks": {
+            "type": "integer",
+            "title": "Completed Tasks",
+            "default": 0
+          },
+          "completion_rate": {
+            "type": "number",
+            "title": "Completion Rate",
+            "default": 0.0
+          },
+          "target_exam_date": {
+            "type": "string",
+            "title": "Target Exam Date",
+            "default": ""
+          },
+          "target_score": {
+            "type": "integer",
+            "title": "Target Score",
+            "default": 0
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "PlanHistoryItem",
+        "description": "db/user_store.py::list_daily_plans 的精简投影（9 键）。\n注意：这里**没有** created_at / updated_at —— 单计划端点才有，\n前端手写 DailyPlan 曾把这两个字段声明为必填，属假契约。"
+      },
+      "PlanHistoryResponse": {
+        "properties": {
+          "plans": {
+            "items": {
+              "$ref": "#/components/schemas/PlanHistoryItem"
+            },
+            "type": "array",
+            "title": "Plans",
+            "default": []
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "default": 0
+          },
+          "start_date": {
+            "type": "string",
+            "title": "Start Date",
+            "default": ""
+          },
+          "end_date": {
+            "type": "string",
+            "title": "End Date",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "PlanHistoryResponse",
+        "description": "GET /daily-plan/history 返回。"
+      },
+      "PlanHistoryTask": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "default": ""
+          },
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "default": ""
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "default": ""
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject",
+            "default": ""
+          },
+          "chapter": {
+            "type": "string",
+            "title": "Chapter",
+            "default": ""
+          },
+          "progress": {
+            "type": "integer",
+            "title": "Progress",
+            "default": 0
+          },
+          "completed": {
+            "type": "boolean",
+            "title": "Completed",
+            "default": false
+          },
+          "estimated_minutes": {
+            "type": "integer",
+            "title": "Estimated Minutes",
+            "default": 0
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "PlanHistoryTask",
+        "description": "每日计划的任务项（_generate_default_daily_tasks 的投影）。"
+      },
       "PlanTaskUpdateRequest": {
         "properties": {
           "task_id": {
@@ -23443,6 +23690,43 @@
         "title": "RatingListResponse",
         "description": "ratings 的返回：{status, total, items}。"
       },
+      "RecommendationItem": {
+        "properties": {
+          "icon": {
+            "type": "string",
+            "title": "Icon",
+            "default": ""
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "default": ""
+          },
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "default": ""
+          },
+          "action": {
+            "type": "string",
+            "title": "Action",
+            "default": ""
+          },
+          "route": {
+            "type": "string",
+            "title": "Route",
+            "default": ""
+          },
+          "priority": {
+            "type": "string",
+            "title": "Priority",
+            "default": "normal"
+          }
+        },
+        "type": "object",
+        "title": "RecommendationItem",
+        "description": "单条学习推荐（/assessment/recommendations 的 recs 元素，6 键固定）。"
+      },
       "RecordRequest": {
         "properties": {
           "event": {
@@ -23945,6 +24229,38 @@
           "output"
         ],
         "title": "SandboxResponse"
+      },
+      "SavedGraphItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "default": ""
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject",
+            "default": ""
+          },
+          "entity_count": {
+            "type": "integer",
+            "title": "Entity Count",
+            "default": 0
+          },
+          "relation_count": {
+            "type": "integer",
+            "title": "Relation Count",
+            "default": 0
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "SavedGraphItem",
+        "description": "GET /knowledge-graph/list 的列表项（5 键固定投影）。"
       },
       "ScenarioGenerateRequest": {
         "properties": {
@@ -25279,6 +25595,63 @@
         ],
         "title": "TeachingVideoRequest"
       },
+      "TeachingVideoResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "resource_type": {
+            "type": "string",
+            "title": "Resource Type",
+            "default": "teaching_video"
+          },
+          "topic": {
+            "type": "string",
+            "title": "Topic",
+            "default": ""
+          },
+          "scenes": {
+            "type": "integer",
+            "title": "Scenes",
+            "default": 0
+          },
+          "duration_sec": {
+            "type": "integer",
+            "title": "Duration Sec",
+            "default": 0
+          },
+          "duration_str": {
+            "type": "string",
+            "title": "Duration Str",
+            "default": ""
+          },
+          "html": {
+            "type": "string",
+            "title": "Html",
+            "default": ""
+          },
+          "html_path": {
+            "type": "string",
+            "title": "Html Path",
+            "default": ""
+          },
+          "video_script": {
+            "type": "string",
+            "title": "Video Script",
+            "default": ""
+          },
+          "format": {
+            "type": "string",
+            "title": "Format",
+            "default": "html"
+          }
+        },
+        "type": "object",
+        "title": "TeachingVideoResponse",
+        "description": "POST /multimodal/generate-teaching-video 返回（_generate_teaching_video 的 10 键投影）。"
+      },
       "TemplateDetailResponse": {
         "properties": {
           "status": {
@@ -25952,6 +26325,138 @@
           "timestamp"
         ],
         "title": "WrongQuestion"
+      },
+      "WrongQuestionItem": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "default": 0
+          },
+          "question_id": {
+            "type": "string",
+            "title": "Question Id",
+            "default": ""
+          },
+          "question": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Question",
+            "default": {}
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject",
+            "default": ""
+          },
+          "chapter": {
+            "type": "string",
+            "title": "Chapter",
+            "default": ""
+          },
+          "knowledge_point": {
+            "type": "string",
+            "title": "Knowledge Point",
+            "default": ""
+          },
+          "wrong_answer": {
+            "type": "string",
+            "title": "Wrong Answer",
+            "default": ""
+          },
+          "correct_answer": {
+            "type": "string",
+            "title": "Correct Answer",
+            "default": ""
+          },
+          "error_type": {
+            "type": "string",
+            "title": "Error Type",
+            "default": ""
+          },
+          "attribution": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attribution"
+          },
+          "wrong_count": {
+            "type": "integer",
+            "title": "Wrong Count",
+            "default": 0
+          },
+          "mastered": {
+            "type": "boolean",
+            "title": "Mastered",
+            "default": false
+          },
+          "last_wrong_at": {
+            "type": "string",
+            "title": "Last Wrong At",
+            "default": ""
+          },
+          "first_wrong_at": {
+            "type": "string",
+            "title": "First Wrong At",
+            "default": ""
+          },
+          "review_stage": {
+            "type": "string",
+            "title": "Review Stage",
+            "default": ""
+          },
+          "next_review_at": {
+            "type": "string",
+            "title": "Next Review At",
+            "default": ""
+          },
+          "review_history": {
+            "items": {},
+            "type": "array",
+            "title": "Review History",
+            "default": []
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "WrongQuestionItem",
+        "description": "db/user_store.py::get_wrong_question 的 17 键投影。\nquestion / attribution / review_history 是从 JSON 列解析出的任意结构，\n用 dict/list/Any 兜底（解析失败时分别为 {} / None / []），不硬定型。"
+      },
+      "WrongQuestionListResponse": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "default": 0
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page",
+            "default": 1
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size",
+            "default": 20
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/WrongQuestionItem"
+            },
+            "type": "array",
+            "title": "Items",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "WrongQuestionListResponse",
+        "description": "GET /wrong-questions 返回（db/user_store.py::list_wrong_questions）。"
       },
       "api__career_training__AnswerRequest": {
         "properties": {
