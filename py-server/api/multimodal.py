@@ -7,7 +7,7 @@ import logging
 import asyncio
 import json as json_mod
 from fastapi import APIRouter, HTTPException, Depends, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 
 from db.llm_provider import LLMProvider
@@ -328,7 +328,28 @@ class MultimodalResourceRequest(BaseModel):
     generate_audio: bool = True
 
 
-@router.post("/generate-image")
+class ImageGenerationResponse(BaseModel):
+    """教学插图生成返回（/multimodal/generate-image）"""
+    model_config = ConfigDict(extra="allow")
+    topic: str = ""
+    source: str = ""
+    image_base64: str = ""
+    image_svg: Optional[str] = None
+    is_real_image: bool = False
+
+
+class AudioGenerationResponse(BaseModel):
+    """语音旁白生成返回（/multimodal/generate-audio）"""
+    model_config = ConfigDict(extra="allow")
+    source: str = ""
+    audio_base64: str = ""
+    audio_format: str = ""
+    fallback_text: str = ""
+    is_real_audio: bool = False
+    text_length: int = 0
+
+
+@router.post("/generate-image", response_model=ImageGenerationResponse)
 async def generate_teaching_image(req: ImageGenerationRequest, user: dict = Depends(get_current_user)):
     """生成教学插图（赛题多模态要求）
 
@@ -352,7 +373,7 @@ async def generate_teaching_image(req: ImageGenerationRequest, user: dict = Depe
     }
 
 
-@router.post("/generate-audio")
+@router.post("/generate-audio", response_model=AudioGenerationResponse)
 async def generate_teaching_audio(req: AudioGenerationRequest, user: dict = Depends(get_current_user)):
     """生成语音旁白（赛题多模态要求）
 
@@ -518,6 +539,20 @@ async def _generate_narrated_video(req: GenerationRequest) -> dict:
 # 工作流：分镜脚本 → SVG 场景 → HTML 幻灯片
 # ════════════════════════════════════════════════
 
+class TeachingVideoResponse(BaseModel):
+    """POST /multimodal/generate-teaching-video 返回（_generate_teaching_video 的 10 键投影）。"""
+    status: str = "ok"
+    resource_type: str = "teaching_video"
+    topic: str = ""
+    scenes: int = 0
+    duration_sec: int = 0
+    duration_str: str = ""
+    html: str = ""
+    html_path: str = ""
+    video_script: str = ""
+    format: str = "html"
+
+
 class TeachingVideoRequest(BaseModel):
     topic: str
     profile: Optional[dict] = None
@@ -526,7 +561,7 @@ class TeachingVideoRequest(BaseModel):
     output_format: str = "html"
 
 
-@router.post("/generate-teaching-video")
+@router.post("/generate-teaching-video", response_model=TeachingVideoResponse)
 async def generate_teaching_video_endpoint(
     req: TeachingVideoRequest,
     user: dict = Depends(get_current_user),

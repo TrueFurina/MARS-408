@@ -71,7 +71,12 @@ def _init_schema(conn: sqlite3.Connection):
         published_at TEXT,
         creator_id TEXT NOT NULL DEFAULT '',
         creator_name TEXT NOT NULL DEFAULT '',
-        is_official INTEGER NOT NULL DEFAULT 0
+        is_official INTEGER NOT NULL DEFAULT 0,
+        -- 批8：SKILL.md 对齐字段与结构化工具元数据（allowed_tools /
+        -- disable_model_invocation / trigger_paths / tools）此前只存在于 Skill
+        -- 实体与 to_dict/from_dict，db 无列 ⇒ 用户在 Studio 里配置后刷新即丢。
+        -- 与 kb_ids/tags 一致，用一个 JSON 列承载，避免为 4 个字段各加列。
+        skill_meta_json TEXT NOT NULL DEFAULT '{}'
     );
     CREATE TABLE IF NOT EXISTS skill_ratings (
         id TEXT PRIMARY KEY,
@@ -118,8 +123,12 @@ def _init_schema(conn: sqlite3.Connection):
         if "memory_access" not in cols:
             conn.execute("ALTER TABLE skills ADD COLUMN memory_access TEXT NOT NULL DEFAULT 'read_write'")
             logger.info("skills 表新增 memory_access 列（兼容迁移）")
+        # 批8：老库缺 skill_meta_json（SKILL.md 字段/工具元数据持久化）
+        if "skill_meta_json" not in cols:
+            conn.execute("ALTER TABLE skills ADD COLUMN skill_meta_json TEXT NOT NULL DEFAULT '{}'")
+            logger.info("skills 表新增 skill_meta_json 列（兼容迁移）")
     except Exception as e:
-        logger.debug(f"skills 表 memory_access 列迁移跳过(忽略): {e}")
+        logger.debug(f"skills 表列迁移跳过(忽略): {e}")
     conn.commit()
     logger.info("技能表结构初始化完成")
 
@@ -127,8 +136,30 @@ def _init_schema(conn: sqlite3.Connection):
 # ── 技能 CRUD ──
 
 
+def _skill_meta_to_json(skill: Skill) -> str:
+    """把 SKILL.md 对齐字段与工具元数据打包为单列 JSON。"""
+    return json.dumps({
+        "allowed_tools": skill.allowed_tools,
+        "disable_model_invocation": skill.disable_model_invocation,
+        "trigger_paths": skill.trigger_paths,
+        "tools": skill.tools,
+    }, ensure_ascii=False)
+
+
+def _meta_from_json(raw) -> dict:
+    """解析 meta 列；老库/非法 JSON 一律回退空 dict（Skill 字段自带默认值）。"""
+    if not raw:
+        return {}
+    try:
+        v = json.loads(raw)
+        return v if isinstance(v, dict) else {}
+    except (ValueError, TypeError):
+        return {}
+
+
 def _row_to_skill(row: sqlite3.Row) -> Skill:
     """将 SQLite 行转换为 Skill 对象"""
+    meta = _meta_from_json(row["skill_meta_json"]) if "skill_meta_json" in row.keys() else {}
     return Skill(
         id=row["id"],
         name=row["name"],
@@ -154,6 +185,10 @@ def _row_to_skill(row: sqlite3.Row) -> Skill:
         creator_id=row["creator_id"],
         creator_name=row["creator_name"],
         is_official=bool(row["is_official"]),
+        allowed_tools=meta.get("allowed_tools", []),
+        disable_model_invocation=bool(meta.get("disable_model_invocation", False)),
+        trigger_paths=meta.get("trigger_paths", []),
+        tools=meta.get("tools", []),
     )
 
 
@@ -169,8 +204,8 @@ def create_skill(skill: Skill) -> Skill:
                 llm_channel, temperature, max_tokens, kb_ids, rag_enabled,
                 tags, category, version, status, memory_access, usage_count, user_count, avg_rating,
                 created_at, updated_at, published_at,
-                creator_id, creator_name, is_official
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                creator_id, creator_name, is_official, skill_meta_json
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 skill_id,
                 skill.name,
@@ -193,6 +228,7 @@ def create_skill(skill: Skill) -> Skill:
                 skill.creator_id,
                 skill.creator_name,
                 1 if skill.is_official else 0,
+                _skill_meta_to_json(skill),
             ),
         )
         conn.commit()
@@ -225,7 +261,7 @@ def update_skill(skill: Skill) -> bool:
                 name=?, description=?, icon=?, system_prompt=?,
                 llm_channel=?, temperature=?, max_tokens=?, kb_ids=?, rag_enabled=?,
                 tags=?, category=?, version=?, status=?, memory_access=?,
-                published_at=?, creator_name=?, is_official=?
+                published_at=?, creator_name=?, is_official=?, skill_meta_json=?
             WHERE id=?""",
             (
                 skill.name, skill.description, skill.icon, skill.system_prompt,
@@ -234,6 +270,7 @@ def update_skill(skill: Skill) -> bool:
                 json.dumps(skill.tags), skill.category, skill.version, skill.status,
                 skill.memory_access,
                 published_at, skill.creator_name, 1 if skill.is_official else 0,
+                _skill_meta_to_json(skill),
                 skill.id,
             ),
         )

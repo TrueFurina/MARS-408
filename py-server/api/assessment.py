@@ -11,6 +11,7 @@ import hashlib
 from fastapi import APIRouter, Depends
 from db.llm_provider import LLMProvider
 from models import AssessmentRequest, AssessmentResponse
+from pydantic import BaseModel, ConfigDict
 from shared.auth import get_current_user
 from shared.ratelimit import require_llm_quota
 from services.user_service import save_profile, get_profile
@@ -135,7 +136,15 @@ async def assessment_evaluate(req: AssessmentRequest, user: dict = Depends(requi
 # ── 增强版学习效果评估 + 路径调整闭环（赛题加分项⑤） ──
 
 
-@router.post("/assessment/feedback")
+class AssessmentFeedbackResponse(BaseModel):
+    """增强版学习效果评估 + 路径调整返回（/assessment/feedback）"""
+    model_config = ConfigDict(extra="allow")
+    status: str = "ok"
+    evaluation: dict = {}
+    path_adjustment: dict = {}
+
+
+@router.post("/assessment/feedback", response_model=AssessmentFeedbackResponse)
 async def assessment_feedback(
     quiz_history: list[dict],
     study_sessions: list[dict] = None,
@@ -200,7 +209,24 @@ async def assessment_feedback(
 # ── 画像驱动推荐 API ──
 
 
-@router.post("/assessment/recommendations")
+class RecommendationItem(BaseModel):
+    """单条学习推荐（/assessment/recommendations 的 recs 元素，6 键固定）。"""
+    icon: str = ""
+    title: str = ""
+    text: str = ""
+    action: str = ""
+    route: str = ""
+    priority: str = "normal"
+
+
+class AssessmentRecommendationsResponse(BaseModel):
+    """POST /assessment/recommendations 返回。"""
+    status: str = "ok"
+    recommendations: list[RecommendationItem] = []
+    total: int = 0
+
+
+@router.post("/assessment/recommendations", response_model=AssessmentRecommendationsResponse)
 async def get_assessment_recommendations(
     body: dict = {},
     user: dict = Depends(require_llm_quota),

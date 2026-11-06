@@ -4,6 +4,9 @@ import { api, friendlyError } from '@/utils/api'
 import type { operations } from '@/types/api.generated'
 import { CAREER_DIM_LABEL as DIM_LABEL, CAREER_DIM_ORDER as DIM_ORDER } from '@/data/careerDimensions'
 
+// /career/my-tasks 返回（response_model=MyTasksResponse）
+type MyTasksResp = operations['my_tasks_api_career_my_tasks_get']['responses'][200]['content']['application/json']
+
 /* ===================== 类型与常量 ===================== */
 type Step = 'select' | 'briefing' | 'battle' | 'report'
 // 情景展示字段直接绑后端契约（py-server/api/career_training.py 的 CareerScenarioItem）。
@@ -21,6 +24,42 @@ type TaskJoinResult =
 type FeedbackAck =
   operations['post_feedback_api_career_session__session_id__feedback_post']['responses'][200]['content']['application/json']
 interface Turn { role: 'interviewer' | 'student'; text: string; mode?: string; dimension?: string; evidence?: any }
+
+/* /career/session/{start,answer,end,report} 是 status 判别联合：
+   后端按会话状态返回不同字段集合（ongoing 有 next_question、finished 有 assessment、
+   generating/insufficient/failed 有 message……），响应模型全 Optional + extra="allow"，
+   生成类型会把 next_question 塌成 {[key:string]: unknown}，模板里拿不到字段类型。
+   故按「前端实际消费路径」手写精确接口：status/message/next_question 为前端必访问的字段，
+   声明为必填（各自分支一定有）；其余按分支可选。后端未列入的字段仍会原样返回。 */
+interface CareerNextQuestion {
+  question: string
+  mode: string
+  probe_dimension: string
+  intent?: string
+}
+interface CareerSessionResp {
+  status: string
+  message: string
+  next_question: CareerNextQuestion
+  session_id?: string
+  scenario_id?: string
+  title?: string
+  scenario_label?: string
+  setting?: string
+  student_role?: string
+  interviewer_role?: string
+  max_turns?: number
+  turns_done?: number
+  min_turns?: number
+  phase?: string | null
+  mode?: string
+  catfish_triggered?: boolean
+  last_evidence?: Record<string, unknown>
+  assessment?: Record<string, unknown>
+  improvement?: Record<string, unknown>
+  evidence_chain?: unknown[]
+  turns?: unknown[]
+}
 
 const MODE_LABEL: Record<string, string> = { normal: '常规追问', escalating: '逐步加压', catfish: '鲶鱼反诘' }
 const MODE_CLASS: Record<string, string> = { normal: 'm-normal', escalating: 'm-escalating', catfish: 'm-catfish' }
@@ -131,7 +170,7 @@ const myTasks = ref<any[]>([])
 
 async function loadMyTasks() {
   try {
-    const res = await api.get<any>('/career/my-tasks')
+    const res = await api.get<MyTasksResp>('/career/my-tasks')
     myTasks.value = res.tasks || []
   } catch {
     myTasks.value = []  // 未加入任何班级等场景：静默为空，不打扰主流程
@@ -206,7 +245,7 @@ async function startTraining() {
     if (joinedTask.value?.task_id) payload.task_id = joinedTask.value.task_id
     // F5: 仅在有选择时透传 phase（'' 不传，后端按未标记处理）
     if (phase.value) payload.phase = phase.value
-    const res = await api.post<any>('/career/session/start', payload)
+    const res = await api.post<CareerSessionResp>('/career/session/start', payload)
     session.value = res
     turns.value = [{ role: 'interviewer', text: res.next_question.question, mode: 'normal', dimension: res.next_question.probe_dimension }]
     step.value = 'briefing'
@@ -234,7 +273,7 @@ async function submitAnswer() {
   answerInput.value = ''
   await scrollBottom()
   try {
-    const res = await api.post<any>(`/career/session/${session.value.session_id}/answer`, { answer: text })
+    const res = await api.post<CareerSessionResp>(`/career/session/${session.value.session_id}/answer`, { answer: text })
     const idx = turns.value.length - 1
     const mine = turns.value[idx]
     if (mine) mine.evidence = res.last_evidence
@@ -274,7 +313,7 @@ async function finishEarly() {
   busy.value = true; errorMsg.value = ''
   reportPending.value = true; progressMsg.value = '评估报告生成中（六维 ECD 评估 + 提升路径），约需 1–2 分钟…'
   try {
-    const res = await api.post<any>(`/career/session/${sid}/end`, { force: false })
+    const res = await api.post<CareerSessionResp>(`/career/session/${sid}/end`, { force: false })
     if (res.status === 'insufficient') {
       errorMsg.value = res.message
       reportPending.value = false; busy.value = false
@@ -296,7 +335,7 @@ async function pollReport(sid: string, silentOnError = false): Promise<boolean> 
   while (Date.now() < deadline) {
     await new Promise(r => setTimeout(r, 3000))
     try {
-      const r = await api.get<any>(`/career/session/${sid}/report`)
+      const r = await api.get<CareerSessionResp>(`/career/session/${sid}/report`)
       if (r?.status === 'failed') {
         errorMsg.value = r.message || '报告生成失败，请重试结束'
         reportPending.value = false

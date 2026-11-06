@@ -6,7 +6,8 @@
 import logging
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
+from typing import Optional
 
 from db.llm_provider import LLMProvider
 from shared.content_safety import audit_output  # P1-7：统一输出内容安全审核
@@ -150,7 +151,15 @@ class EnhancedTutorRequest(BaseModel):
     quick_mode: bool = Field(default=False, description="快速模式（跳过检索）")
 
 
-@router.post("/enhanced-answer")
+class EnhancedAnswerResponse(BaseModel):
+    """增强版智能答疑返回（/tutor/enhanced-answer）；result 为 LLM 产物 dict，故额外字段全部放行"""
+    model_config = ConfigDict(extra="allow")
+    answer: str = ""
+    svg_diagram: Optional[str] = None
+    video_script: Optional[str] = None
+
+
+@router.post("/enhanced-answer", response_model=EnhancedAnswerResponse)
 async def tutor_enhanced_endpoint(req: EnhancedTutorRequest, user: dict = Depends(require_llm_quota)):
     """增强版智能答疑：文字解答 + SVG 图解 + 可选短视频脚本
 

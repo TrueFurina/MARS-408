@@ -143,11 +143,27 @@ def collect_frontend(src_root: str) -> list:
 # **某操作的 200 响应 schema 为空对象 `{}`** ⟺ 该路由没有声明响应模型。
 # 这样口径与 openapi-typescript 完全一致（它拿不到 schema 就生成不出类型），
 # 不会出现"源码里写了 response_model 但生成物仍是空"的错位。
+# 「放弃类型检查」有两种等价写法，必须都算进 hot，否则度量会说谎：
+#   ① 泛型标注：api.get<any>('/path')
+#   ② 变量标注：const res: any = await api.get('/path')
+# 2026-11-06 修正：此前只认 ①，而仓库里 41 处用的是 ②（skillStore.ts 等），
+# 导致「hot 清零」是假象——那些端点后端仍是裸 dict、前端仍用 any 接着，
+# 只是审计看不见。两类写法语义完全相同：响应没有契约，前端主动放弃类型检查。
 ANY_CALL_RE = re.compile(r"api\.(\w+)\s*<\s*any\s*>\s*\(\s*(['\"`])([^'\"`]+)\2")
+ANY_VAR_RE = re.compile(
+    r"\b(?:const|let|var)\s+\w+\s*:\s*any\s*=\s*await\s+"
+    r"api\.(\w+)\s*(?:<[^>]*>)?\s*\(\s*(['\"`])([^'\"`]+)\2"
+)
+_ANY_RES = (ANY_CALL_RE, ANY_VAR_RE)
 
 
 def collect_any_calls(src_root: str) -> list:
-    """扫 src/ 收集 `api.xxx<any>('path')` —— 这些是"想写类型但没类型可写"的地方。"""
+    """扫 src/ 收集「响应被主动标成 any」的调用点（泛型标注 + 变量标注两类）。
+
+    这些是"想写类型但没类型可写"的地方：后端一旦补上 response_model，
+    前端就能立刻换成生成类型。返回 [(method, norm_path, relpath)]，按三元组去重
+    （同一个调用若同时命中两类正则不应被计两次）。
+    """
     out = []
     for root, dirs, files in os.walk(src_root):
         dirs[:] = [d for d in dirs if d not in ("node_modules", "__tests__")]
@@ -161,9 +177,10 @@ def collect_any_calls(src_root: str) -> list:
             except OSError:
                 continue
             rel = os.path.relpath(fp, os.path.dirname(src_root)).replace("\\", "/")
-            for m, _q, path in ANY_CALL_RE.findall(text):
-                out.append((_METHOD_MAP.get(m, m.upper()), norm_path(path, frontend=True), rel))
-    return out
+            for regex in _ANY_RES:
+                for m, _q, path in regex.findall(text):
+                    out.append((_METHOD_MAP.get(m, m.upper()), norm_path(path, frontend=True), rel))
+    return sorted(set(out))
 
 
 def collect_contract_gaps(spec: dict, src_root: str):
@@ -242,7 +259,8 @@ def main() -> None:
         print(f"路由总数 {total}；有响应模型 {total - len(gaps)}"
               f"（{(total - len(gaps)) / total * 100:.1f}%）；缺口 {len(gaps)}")
         print()
-        print(f"=== 优先级最高：缺口且前端已用 api.*<any>() 调用（{len(hot)} 条）===")
+        print(f"=== 优先级最高：缺口且前端把响应标成 any（{len(hot)} 条）===")
+        print("  两类写法都计入：api.*<any>() 与 const res: any = await api.*()。")
         print("  补完这些的 response_model，前端对应那处 any 就能立刻换成生成类型。")
         for m, p, files in hot:
             print(f"  {m:6s} {p}")

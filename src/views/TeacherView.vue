@@ -2,6 +2,12 @@
 import { errMessage } from '@/utils/errorMessage'
 import { ref, onMounted, computed } from 'vue'
 import { api } from '@/utils/api'
+import type { operations } from '@/types/api.generated'
+
+// /teacher/knowledge-base/stats 返回（response_model=KnowledgeBaseStatsResponse）
+type KnowledgeBaseStatsResp = operations['get_knowledge_base_stats_api_teacher_knowledge_base_stats_get']['responses'][200]['content']['application/json']
+// /teacher/analytics/class-performance 返回（response_model=ClassPerformanceResponse）
+type ClassPerformanceResp = operations['get_class_performance_api_teacher_analytics_class_performance_get']['responses'][200]['content']['application/json']
 import EmptyState from '@/components/EmptyState.vue'
 import Skeleton from '@/components/Skeleton.vue'
 import { icons } from '@/components/icons'
@@ -11,7 +17,7 @@ import { useStudyStore } from '@/stores/studyStore'
 const store = useStudyStore()
 
 const overview = ref<any>(null)
-const kbStats = ref<any>(null)
+const kbStats = ref<KnowledgeBaseStatsResp | null>(null)
 const classPerf = ref<any>(null)
 const loading = ref(true)
 const error = ref('')
@@ -25,8 +31,8 @@ onMounted(async () => {
   try {
     const [o, k, c] = await Promise.all([
       api.get<any>('/teacher/students/overview').catch(() => null),
-      api.get<any>('/teacher/knowledge-base/stats').catch(() => null),
-      api.get<any>('/teacher/analytics/class-performance').catch(() => null),
+      api.get<KnowledgeBaseStatsResp>('/teacher/knowledge-base/stats').catch(() => null),
+      api.get<ClassPerformanceResp>('/teacher/analytics/class-performance').catch(() => null),
     ])
     overview.value = o
     kbStats.value = k
@@ -132,7 +138,7 @@ const filteredStudents = computed(() => {
         <div class="dash-card" v-if="kbStats">
           <div class="dash-card-title"><span v-html="icons.knowledge" class="card-title-icon"></span>知识库统计</div>
           <div class="dash-stats">
-            <div class="dash-stat"><span class="dash-value">{{ kbStats.total_docs }}</span><span class="dash-label">总文档</span></div>
+            <div class="dash-stat"><span class="dash-value">{{ kbStats.total_chunks }}</span><span class="dash-label">总文档</span></div>
             <div class="dash-stat" v-for="(count, subj) in kbStats.by_subject" :key="subj">
               <span class="dash-value">{{ count }}</span><span class="dash-label">{{ subjectName(String(subj)) }}</span>
             </div>

@@ -4,6 +4,7 @@ import { api, friendlyError } from '@/utils/api'
 import Skeleton from '@/components/Skeleton.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import EngineSection from '@/components/EngineSection.vue'
+import type { FrugalRagFullResp } from '@/types/engineResponses'
 
 const loading = ref(false)
 const ran = ref(false)
@@ -42,10 +43,10 @@ async function runCompare() {
   try {
     // 统一走 api 客户端：自动带 token、502/503/504 退避重试、错误转友好提示
     const [dataA, dataB] = await Promise.all([
-      api.post<any>('/engine/frugal-rag-full', {
+      api.post<FrugalRagFullResp>('/engine/frugal-rag-full', {
         question: question.value, course: course.value, top_k: 5, student_profile: profileA.value,
       }),
-      api.post<any>('/engine/frugal-rag-full', {
+      api.post<FrugalRagFullResp>('/engine/frugal-rag-full', {
         question: question.value, course: course.value, top_k: 5, student_profile: profileB.value,
       }),
     ])

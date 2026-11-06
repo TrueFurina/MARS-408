@@ -3,6 +3,8 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { api, friendlyError } from '@/utils/api'
 import { renderMarkdownSafe } from '@/utils/markdown'
+import type { components } from '@/types/api.generated'
+type WrongQuestionListResp = components['schemas']['WrongQuestionListResponse']
 import { toast } from '@/utils/toast'
 import ReviewView from '@/views/ReviewView.vue'
 import QuizHistoryView from '@/views/QuizHistoryView.vue'
@@ -21,6 +23,12 @@ interface WrongQuestion {
   mastered: boolean
   last_wrong_at: string
   first_wrong_at: string
+  // db/user_store.py::get_wrong_question 实际还返回以下 4 键，
+  // 旧手写接口漏了它们（前端暂不消费，但契约不该隐瞒）。
+  attribution?: Record<string, any> | null
+  review_stage?: string
+  next_review_at?: string
+  review_history?: any[]
 }
 
 interface WrongStats {
@@ -125,7 +133,7 @@ async function loadList() {
     params.set('page_size', String(pageSize))
     if (filterSubject.value) params.set('subject', filterSubject.value)
     if (filterMastered.value !== '') params.set('mastered', filterMastered.value)
-    const res: any = await api.get(`/wrong-questions?${params.toString()}`)
+    const res = await api.get<WrongQuestionListResp>(`/wrong-questions?${params.toString()}`)
     questions.value = res.items || []
     total.value = res.total || 0
   } catch (e) {

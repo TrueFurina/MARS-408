@@ -10,7 +10,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Query, Depends, Request
 from fastapi.responses import StreamingResponse
 from shared.sse_guard import sse_disconnect_guard
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 from shared.auth import get_current_user
 from shared.ratelimit import require_llm_quota
@@ -35,6 +35,12 @@ router = APIRouter(prefix="/skills", tags=["skills"], dependencies=[Depends(requ
 # ── Pydantic 请求模型 ──
 
 
+# 批8：SkillStudioView 长期提交这 3 类配置，但请求模型未声明 ⇒ Pydantic 默认
+# 静默忽略额外字段，用户设置完全不生效。现在显式声明并落到 Skill 实体/db。
+# memory_access 白名单对齐 schemas/skills.py 的 P2② 权限语义（none/read/write/read_write）。
+_MEMORY_ACCESS_VALUES = ("none", "read", "write", "read_write")
+
+
 class CreateSkillRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=100, description="技能名称")
     description: str = Field("", max_length=500, description="技能描述")
@@ -46,6 +52,8 @@ class CreateSkillRequest(BaseModel):
     category: str = Field("other", max_length=30)
     tags: str = Field("[]", max_length=500, description="JSON 数组")
     rag_enabled: bool = True
+    memory_access: str = Field("read_write", description="记忆权限 none/read/write/read_write")
+    tools: list[dict] = Field(default_factory=list, description="结构化工具元数据")
 
 
 class UpdateSkillRequest(BaseModel):
@@ -59,6 +67,8 @@ class UpdateSkillRequest(BaseModel):
     category: Optional[str] = Field(None, max_length=30)
     tags: Optional[str] = Field(None, max_length=500)
     rag_enabled: Optional[bool] = None
+    memory_access: Optional[str] = None
+    tools: Optional[list[dict]] = None
 
 
 class RateSkillRequest(BaseModel):
@@ -99,10 +109,163 @@ def _user_name(user: dict) -> str:
     return user.get("display_name") or user.get("username", "用户")
 
 
+# ── 响应模型（2026-11-06 补，批6）──
+# 形状由 schemas/skills.py 各 *.to_dict() 的硬编码投影决定（键集合固定），
+# 故精确建模、不靠 extra="allow" 兜底：前端可直接消费生成类型，后端若改投影
+# 会立刻在 openapi 快照/类型检查里显形，而不是悄悄漂移。
+# 批8：to_dict() 补导出了 memory_access，此模型同步补字段——否则 response_model
+# 会把新字段静默过滤掉（精确建模的联动代价）。
+class SkillItemOut(BaseModel):
+    """schemas/skills.py::Skill.to_dict() 的完整投影。"""
+    id: str = ""
+    name: str = ""
+    description: str = ""
+    icon: str = ""
+    system_prompt: str = ""
+    llm_channel: str = ""
+    temperature: float = 0.0
+    max_tokens: int = 0
+    kb_ids: list[str] = []
+    rag_enabled: bool = True
+    tags: list[str] = []
+    category: str = ""
+    category_label: str = ""
+    version: int = 1
+    status: str = ""
+    memory_access: str = "read_write"
+    usage_count: int = 0
+    user_count: int = 0
+    avg_rating: float = 0.0
+    created_at: str = ""
+    updated_at: str = ""
+    published_at: Optional[str] = None
+    creator_id: str = ""
+    creator_name: str = ""
+    is_official: bool = False
+    allowed_tools: list[str] = []
+    disable_model_invocation: bool = False
+    trigger_paths: list[str] = []
+    tools: list[dict] = []
+
+
+class SkillRatingOut(BaseModel):
+    """schemas/skills.py::SkillRating.to_dict()。"""
+    id: str = ""
+    skill_id: str = ""
+    user_id: str = ""
+    user_name: str = ""
+    rating: int = 0
+    comment: str = ""
+    created_at: str = ""
+
+
+class SkillTemplateConfig(BaseModel):
+    """模板 default_config：种子数据固定三键（db/skill_store.py 全部模板一致）。"""
+    model_config = ConfigDict(extra="allow")  # 模板可加配置项，不因新增键收窄
+    llm_channel: str = "auto"
+    temperature: float = 0.7
+    max_tokens: int = 2048
+
+
+class SkillTemplateOut(BaseModel):
+    """schemas/skills.py::SkillTemplate.to_dict()。"""
+    id: str = ""
+    name: str = ""
+    description: str = ""
+    category: str = ""
+    category_label: str = ""
+    icon: str = ""
+    system_prompt_template: str = ""
+    default_config: SkillTemplateConfig = Field(default_factory=SkillTemplateConfig)
+    sort_order: int = 0
+
+
+class UsageTrendPoint(BaseModel):
+    day: str = ""
+    count: int = 0
+
+
+class CreatorStatsOut(BaseModel):
+    """db/skill_store.py::get_creator_stats() 的返回投影。"""
+    total_skills: int = 0
+    published_skills: int = 0
+    total_usage: int = 0
+    usage_trend: list[UsageTrendPoint] = []
+
+
+class SkillDetailResponse(BaseModel):
+    """get/create/update/from-template 的返回：{status, skill}。"""
+    status: str = "ok"
+    skill: SkillItemOut
+
+
+class SkillListResponse(BaseModel):
+    """market/my/official 的返回：{status, total, items}。"""
+    status: str = "ok"
+    total: int = 0
+    items: list[SkillItemOut] = []
+
+
+class FavoritesResponse(BaseModel):
+    """favorites 的返回：只有 {status, items}，没有 total。"""
+    status: str = "ok"
+    items: list[SkillItemOut] = []
+
+
+class FavoritedResponse(BaseModel):
+    """favorite / unfavorite / favorited 的返回。"""
+    status: str = "ok"
+    favorited: bool = False
+
+
+class SkillAckResponse(BaseModel):
+    """delete / publish / archive / seed-official 的回执。"""
+    status: str = "ok"
+    message: str = ""
+
+
+class RatingDetailResponse(BaseModel):
+    """rate 的返回：{status, rating}。"""
+    status: str = "ok"
+    rating: SkillRatingOut
+
+
+class RatingListResponse(BaseModel):
+    """ratings 的返回：{status, total, items}。"""
+    status: str = "ok"
+    total: int = 0
+    items: list[SkillRatingOut] = []
+
+
+class TemplateListResponse(BaseModel):
+    """templates 的返回：{status, total, items}。"""
+    status: str = "ok"
+    total: int = 0
+    items: list[SkillTemplateOut] = []
+
+
+class TemplateDetailResponse(BaseModel):
+    """templates/{id} 的返回：{status, template}。"""
+    status: str = "ok"
+    template: SkillTemplateOut
+
+
+class CreatorStatsResponse(BaseModel):
+    """stats 的返回：{status, stats}。"""
+    status: str = "ok"
+    stats: CreatorStatsOut
+
+
+class PromptTestResponse(BaseModel):
+    """prompt-test 的返回；异常分支直接抛 HTTPException，无 200 错误形状。"""
+    status: str = "ok"
+    response: str = ""
+
+
 # ── 技能 CRUD ──
 
 
-@router.post("/create")
+@router.post("/create", response_model=SkillDetailResponse)
 async def api_create_skill(
     body: CreateSkillRequest,
     user: dict = Depends(get_current_user),
@@ -116,6 +279,8 @@ async def api_create_skill(
     valid_categories = {c.value for c in SkillCategory}
     if body.category not in valid_categories:
         raise HTTPException(status_code=422, detail=f"无效分类: {body.category}")
+    if body.memory_access not in _MEMORY_ACCESS_VALUES:
+        raise HTTPException(status_code=422, detail=f"无效记忆权限: {body.memory_access}")
 
     skill = Skill(
         name=body.name,
@@ -128,6 +293,8 @@ async def api_create_skill(
         category=body.category,
         tags=tag_list,
         rag_enabled=body.rag_enabled,
+        memory_access=body.memory_access,
+        tools=body.tools or [],
         creator_id=_user_id(user),
         creator_name=_user_name(user),
     )
@@ -135,7 +302,7 @@ async def api_create_skill(
     return {"status": "ok", "skill": created.to_dict()}
 
 
-@router.get("/get/{skill_id}")
+@router.get("/get/{skill_id}", response_model=SkillDetailResponse)
 async def api_get_skill(skill_id: str, user: dict = Depends(get_current_user)):
     """获取技能详情"""
     skill = get_skill(skill_id)
@@ -144,7 +311,7 @@ async def api_get_skill(skill_id: str, user: dict = Depends(get_current_user)):
     return {"status": "ok", "skill": skill.to_dict()}
 
 
-@router.post("/update/{skill_id}")
+@router.post("/update/{skill_id}", response_model=SkillDetailResponse)
 async def api_update_skill(
     skill_id: str,
     body: UpdateSkillRequest,
@@ -183,6 +350,12 @@ async def api_update_skill(
             existing.tags = []
     if body.rag_enabled is not None:
         existing.rag_enabled = body.rag_enabled
+    if body.memory_access is not None:
+        if body.memory_access not in _MEMORY_ACCESS_VALUES:
+            raise HTTPException(status_code=422, detail=f"无效记忆权限: {body.memory_access}")
+        existing.memory_access = body.memory_access
+    if body.tools is not None:
+        existing.tools = body.tools
 
     ok = update_skill(existing)
     if not ok:
@@ -190,7 +363,7 @@ async def api_update_skill(
     return {"status": "ok", "skill": existing.to_dict()}
 
 
-@router.post("/delete/{skill_id}")
+@router.post("/delete/{skill_id}", response_model=SkillAckResponse)
 async def api_delete_skill(skill_id: str, user: dict = Depends(get_current_user)):
     """删除技能"""
     existing = get_skill(skill_id)
@@ -265,7 +438,7 @@ async def api_import_skills(
 # ── 技能状态管理 ──
 
 
-@router.post("/publish/{skill_id}")
+@router.post("/publish/{skill_id}", response_model=SkillAckResponse)
 async def api_publish_skill(skill_id: str, user: dict = Depends(get_current_user)):
     """发布技能（draft → published）"""
     existing = get_skill(skill_id)
@@ -280,7 +453,7 @@ async def api_publish_skill(skill_id: str, user: dict = Depends(get_current_user
     return {"status": "ok", "message": "技能已发布"}
 
 
-@router.post("/archive/{skill_id}")
+@router.post("/archive/{skill_id}", response_model=SkillAckResponse)
 async def api_archive_skill(skill_id: str, user: dict = Depends(get_current_user)):
     """归档技能（published → archived）"""
     existing = get_skill(skill_id)
@@ -298,7 +471,7 @@ async def api_archive_skill(skill_id: str, user: dict = Depends(get_current_user
 # ── 技能市场查询 ──
 
 
-@router.get("/market")
+@router.get("/market", response_model=SkillListResponse)
 async def api_market(
     category: Optional[str] = Query(None, description="分类过滤"),
     tag: Optional[str] = Query(None, description="标签过滤"),
@@ -327,7 +500,7 @@ async def api_market(
     }
 
 
-@router.get("/my")
+@router.get("/my", response_model=SkillListResponse)
 async def api_my_skills(
     status: Optional[str] = Query(None, description="过滤状态"),
     sort_by: str = Query("updated_at"),
@@ -350,7 +523,7 @@ async def api_my_skills(
     }
 
 
-@router.get("/official")
+@router.get("/official", response_model=SkillListResponse)
 async def api_official_skills(user: dict = Depends(get_current_user)):
     """获取官方技能列表"""
     items, total = list_skills(is_official=True, status=SkillStatus.PUBLISHED.value)
@@ -364,7 +537,7 @@ async def api_official_skills(user: dict = Depends(get_current_user)):
 # ── 评价 ──
 
 
-@router.post("/rate/{skill_id}")
+@router.post("/rate/{skill_id}", response_model=RatingDetailResponse)
 async def api_rate_skill(
     skill_id: str,
     body: RateSkillRequest,
@@ -388,7 +561,7 @@ async def api_rate_skill(
     return {"status": "ok", "rating": created.to_dict()}
 
 
-@router.get("/ratings/{skill_id}")
+@router.get("/ratings/{skill_id}", response_model=RatingListResponse)
 async def api_skill_ratings(
     skill_id: str,
     limit: int = Query(20, ge=1, le=100),
@@ -407,7 +580,7 @@ async def api_skill_ratings(
 # ── 收藏 ──
 
 
-@router.post("/favorite/{skill_id}")
+@router.post("/favorite/{skill_id}", response_model=FavoritedResponse)
 async def api_favorite_skill(skill_id: str, user: dict = Depends(get_current_user)):
     """收藏技能"""
     existing = get_skill(skill_id)
@@ -417,21 +590,21 @@ async def api_favorite_skill(skill_id: str, user: dict = Depends(get_current_use
     return {"status": "ok", "favorited": True}
 
 
-@router.post("/unfavorite/{skill_id}")
+@router.post("/unfavorite/{skill_id}", response_model=FavoritedResponse)
 async def api_unfavorite_skill(skill_id: str, user: dict = Depends(get_current_user)):
     """取消收藏"""
     remove_favorite(_user_id(user), skill_id)
     return {"status": "ok", "favorited": False}
 
 
-@router.get("/favorites")
+@router.get("/favorites", response_model=FavoritesResponse)
 async def api_favorites(user: dict = Depends(get_current_user)):
     """获取收藏列表"""
     items = list_favorites(_user_id(user))
     return {"status": "ok", "items": [s.to_dict() for s in items]}
 
 
-@router.get("/favorited/{skill_id}")
+@router.get("/favorited/{skill_id}", response_model=FavoritedResponse)
 async def api_is_favorited(skill_id: str, user: dict = Depends(get_current_user)):
     """检查是否已收藏"""
     fav = is_favorited(_user_id(user), skill_id)
@@ -441,7 +614,7 @@ async def api_is_favorited(skill_id: str, user: dict = Depends(get_current_user)
 # ── 创作者统计 ──
 
 
-@router.get("/stats")
+@router.get("/stats", response_model=CreatorStatsResponse)
 async def api_creator_stats(user: dict = Depends(get_current_user)):
     """创作者统计看板"""
     stats = get_creator_stats(_user_id(user))
@@ -451,7 +624,7 @@ async def api_creator_stats(user: dict = Depends(get_current_user)):
 # ── 模板 ──
 
 
-@router.get("/templates")
+@router.get("/templates", response_model=TemplateListResponse)
 async def api_templates(user: dict = Depends(get_current_user)):
     """获取预设技能模板列表"""
     templates = get_templates()
@@ -462,7 +635,7 @@ async def api_templates(user: dict = Depends(get_current_user)):
     }
 
 
-@router.get("/templates/{template_id}")
+@router.get("/templates/{template_id}", response_model=TemplateDetailResponse)
 async def api_template_detail(template_id: str, user: dict = Depends(get_current_user)):
     """获取模板详情"""
     tmpl = get_template(template_id)
@@ -471,7 +644,7 @@ async def api_template_detail(template_id: str, user: dict = Depends(get_current
     return {"status": "ok", "template": tmpl.to_dict()}
 
 
-@router.post("/from-template/{template_id}")
+@router.post("/from-template/{template_id}", response_model=SkillDetailResponse)
 async def api_create_from_template(
     template_id: str,
     body: CreateFromTemplateRequest,
@@ -718,7 +891,7 @@ class PromptTestRequest(BaseModel):
     max_tokens: int = 1024
 
 
-@router.post("/prompt-test")
+@router.post("/prompt-test", response_model=PromptTestResponse)
 async def api_prompt_test(
     body: PromptTestRequest,
     user: dict = Depends(get_current_user),

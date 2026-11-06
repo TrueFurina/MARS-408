@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import type { components } from '@/types/api.generated'
+type PlanHistoryResp = components['schemas']['PlanHistoryResponse']
+type PlanHistoryItem = components['schemas']['PlanHistoryItem']
 import { api, friendlyError } from '@/utils/api'
 import { toast } from '@/utils/toast'
 
@@ -30,7 +33,9 @@ interface DailyPlan {
 const loading = ref(true)
 const error = ref('')
 const plan = ref<DailyPlan | null>(null)
-const history = ref<DailyPlan[]>([])
+// history 来自 /daily-plan/history 的精简投影：db 层不返回 created_at/updated_at，
+// 与单计划端点 /daily-plan 的 DailyPlan 形状不同，故用生成类型而非复用手写接口。
+const history = ref<PlanHistoryItem[]>([])
 const activeTab = ref<'today' | 'history'>('today')
 const selectedDate = ref(formatToday())
 
@@ -102,7 +107,7 @@ async function loadPlan(date?: string) {
 
 async function loadHistory() {
   try {
-    const res: any = await api.get('/daily-plan/history?days=14')
+    const res = await api.get<PlanHistoryResp>('/daily-plan/history?days=14')
     history.value = res.plans || []
   } catch (e) {
     console.warn('加载历史计划失败:', e)

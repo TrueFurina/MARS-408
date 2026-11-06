@@ -5,6 +5,7 @@ import { api } from '@/utils/api'
 import ProfileInputPanel from '@/components/ProfileInputPanel.vue'
 import { icons } from '@/components/icons'
 import EngineSection from '@/components/EngineSection.vue'
+import type { FrugalRagFullResp } from '@/types/engineResponses'
 
 // ── 配置 ──
 const question = ref('')
@@ -51,7 +52,7 @@ async function runSearch() {
   elapsedMs.value = 0
 
   try {
-    result.value = await api.post<any>('/engine/frugal-rag-full', {
+    result.value = await api.post<FrugalRagFullResp>('/engine/frugal-rag-full', {
       question: question.value,
       course: course.value,
       top_k: 5,

@@ -4,6 +4,9 @@ import { ref, onMounted, computed } from 'vue'
 import { SUBJECT_COLOR_TOKENS } from '@/data/subjectTokens'
 import { useRouter } from 'vue-router'
 import { useStudyStore, type StatData, type Session, type Task } from '@/stores/studyStore'
+import type { components } from '@/types/api.generated'
+type RecommendationItem = components['schemas']['RecommendationItem']
+type RecommendationsResp = components['schemas']['AssessmentRecommendationsResponse']
 import { icons } from '@/components/icons'
 import RingProgress from '@/components/RingProgress.vue'
 import EmptyState from '@/components/EmptyState.vue'
@@ -18,7 +21,7 @@ const sessions = ref<Session[]>([])
 const tasks = ref<Task[]>([])
 const memoryOverview = ref<any>(null)
 const loading = ref(true)
-const recommendations = ref<any[]>([])
+const recommendations = ref<RecommendationItem[]>([])
 
 // ── 仪表盘扩展：8-Agent 协作架构（静态结构声明）──
 // 【证据纪律 2026-09-15】此前此处硬编码 status: 'online'/'busy'/'idle' 并注释称"由后端 SSE 驱动"，
@@ -215,7 +218,7 @@ onMounted(async () => {
     tasks.value = t
     // 加载画像驱动推荐
     try {
-      const recRes: any = await api.post('/assessment/recommendations', {
+      const recRes = await api.post<RecommendationsResp>('/assessment/recommendations', {
         profile: store.studentProfile || {},
         quiz_history: [], // 答题历史由 AssessmentView 统一拉取；此处仅以画像驱动推荐
       })

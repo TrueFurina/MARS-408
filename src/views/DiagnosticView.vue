@@ -2,6 +2,11 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '@/utils/api'
+import type { operations } from '@/types/api.generated'
+
+// 契约类型：取自后端 response_model（py-server/api/diagnostic.py）
+type DiagnosticStartResp = operations['start_diagnostic_api_diagnostic_start_get']['responses'][200]['content']['application/json']
+type DiagnosticSubmitResp = operations['submit_diagnostic_api_diagnostic_submit_post']['responses'][200]['content']['application/json']
 
 const router = useRouter()
 const questions = ref<any[]>([])
@@ -27,7 +32,7 @@ async function loadMemoryOverview() {
 async function fetchQuestions() {
   loading.value = true
   try {
-    const res = await api.get<any>('/diagnostic/start')
+    const res = await api.get<DiagnosticStartResp>('/diagnostic/start')
     questions.value = res.questions || []
     step.value = 'doing'
   } catch (e) {
@@ -44,7 +49,7 @@ function selectAnswer(qId: string, option: string) {
 async function submit() {
   loading.value = true
   try {
-    const res = await api.post<any>('/diagnostic/submit', { answers: answers.value })
+    const res = await api.post<DiagnosticSubmitResp>('/diagnostic/submit', { answers: answers.value })
     result.value = res
     step.value = 'result'
   } catch (e) {

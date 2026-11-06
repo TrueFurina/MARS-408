@@ -4,7 +4,7 @@
 
 import logging
 from fastapi import APIRouter, HTTPException, Depends, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from services.user_service import (
     add_wrong_question,
@@ -38,9 +38,42 @@ class MasteryUpdateRequest(BaseModel):
     mastered: bool = True
 
 
+# ── 响应模型（2026-11-06 补，批7）──
+class WrongQuestionItem(BaseModel):
+    """db/user_store.py::get_wrong_question 的 17 键投影。
+    question / attribution / review_history 是从 JSON 列解析出的任意结构，
+    用 dict/list/Any 兜底（解析失败时分别为 {} / None / []），不硬定型。"""
+    model_config = ConfigDict(extra="allow")
+    id: int = 0
+    question_id: str = ""
+    question: dict = {}
+    subject: str = ""
+    chapter: str = ""
+    knowledge_point: str = ""
+    wrong_answer: str = ""
+    correct_answer: str = ""
+    error_type: str = ""
+    attribution: Optional[dict] = None
+    wrong_count: int = 0
+    mastered: bool = False
+    last_wrong_at: str = ""
+    first_wrong_at: str = ""
+    review_stage: str = ""
+    next_review_at: str = ""
+    review_history: list = []
+
+
+class WrongQuestionListResponse(BaseModel):
+    """GET /wrong-questions 返回（db/user_store.py::list_wrong_questions）。"""
+    total: int = 0
+    page: int = 1
+    page_size: int = 20
+    items: list[WrongQuestionItem] = []
+
+
 # ── 端点 ──
 
-@router.get("")
+@router.get("", response_model=WrongQuestionListResponse)
 async def get_wrong_questions(
     subject: Optional[str] = None,
     mastered: Optional[bool] = None,
@@ -62,7 +95,7 @@ async def get_stats(user: dict = Depends(get_current_user)):
     return get_wrong_question_stats(user["user_id"])
 
 
-@router.get("/{qid}")
+@router.get("/{qid}", response_model=WrongQuestionItem)
 async def get_wrong_question_detail(qid: int, user: dict = Depends(get_current_user)):
     """获取单条错题详情"""
     item = get_wrong_question(qid)

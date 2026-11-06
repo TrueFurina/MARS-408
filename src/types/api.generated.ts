@@ -5232,6 +5232,54 @@ export interface components {
              */
             question: string;
         };
+        /**
+         * AssessmentFeedbackResponse
+         * @description 增强版学习效果评估 + 路径调整返回（/assessment/feedback）
+         */
+        AssessmentFeedbackResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Evaluation
+             * @default {}
+             */
+            evaluation: {
+                [key: string]: unknown;
+            };
+            /**
+             * Path Adjustment
+             * @default {}
+             */
+            path_adjustment: {
+                [key: string]: unknown;
+            };
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * AssessmentRecommendationsResponse
+         * @description POST /assessment/recommendations 返回。
+         */
+        AssessmentRecommendationsResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Recommendations
+             * @default []
+             */
+            recommendations: components["schemas"]["RecommendationItem"][];
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+        };
         /** AssessmentRequest */
         AssessmentRequest: {
             /** Profile */
@@ -5351,6 +5399,44 @@ export interface components {
              * @default xiaoyan
              */
             voice: string;
+        };
+        /**
+         * AudioGenerationResponse
+         * @description 语音旁白生成返回（/multimodal/generate-audio）
+         */
+        AudioGenerationResponse: {
+            /**
+             * Source
+             * @default
+             */
+            source: string;
+            /**
+             * Audio Base64
+             * @default
+             */
+            audio_base64: string;
+            /**
+             * Audio Format
+             * @default
+             */
+            audio_format: string;
+            /**
+             * Fallback Text
+             * @default
+             */
+            fallback_text: string;
+            /**
+             * Is Real Audio
+             * @default false
+             */
+            is_real_audio: boolean;
+            /**
+             * Text Length
+             * @default 0
+             */
+            text_length: number;
+        } & {
+            [key: string]: unknown;
         };
         /** BatchDeleteRequest */
         BatchDeleteRequest: {
@@ -5636,6 +5722,134 @@ export interface components {
             scenarios: components["schemas"]["CareerScenarioItem"][];
         };
         /**
+         * CareerSessionAnswerResponse
+         * @description POST /career/session/{id}/answer：status ∈ ongoing / finished_pending / finished / 已结束。
+         */
+        CareerSessionAnswerResponse: {
+            /** Status */
+            status?: string | null;
+            /** Turns Done */
+            turns_done?: number | null;
+            /** Max Turns */
+            max_turns?: number | null;
+            /** Mode */
+            mode?: string | null;
+            /** Catfish Triggered */
+            catfish_triggered?: boolean | null;
+            /** Last Evidence */
+            last_evidence?: {
+                [key: string]: unknown;
+            } | null;
+            /** Next Question */
+            next_question?: {
+                [key: string]: unknown;
+            } | null;
+            /** Message */
+            message?: string | null;
+            /** Assessment */
+            assessment?: {
+                [key: string]: unknown;
+            } | null;
+            /** Improvement */
+            improvement?: {
+                [key: string]: unknown;
+            } | null;
+            /** Evidence Chain */
+            evidence_chain?: unknown[] | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * CareerSessionEndResponse
+         * @description POST /career/session/{id}/end：status ∈ insufficient / generating / finished。
+         */
+        CareerSessionEndResponse: {
+            /** Status */
+            status?: string | null;
+            /** Turns Done */
+            turns_done?: number | null;
+            /** Min Turns */
+            min_turns?: number | null;
+            /** Message */
+            message?: string | null;
+            /** Assessment */
+            assessment?: {
+                [key: string]: unknown;
+            } | null;
+            /** Improvement */
+            improvement?: {
+                [key: string]: unknown;
+            } | null;
+            /** Evidence Chain */
+            evidence_chain?: unknown[] | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * CareerSessionReportResponse
+         * @description GET /career/session/{id}/report：status ∈ generating / failed / 会话真实状态（可能为 None）。
+         */
+        CareerSessionReportResponse: {
+            /** Session Id */
+            session_id?: string | null;
+            /** Title */
+            title?: string | null;
+            /** Scenario Label */
+            scenario_label?: string | null;
+            /** Status */
+            status?: string | null;
+            /** Turns */
+            turns?: unknown[] | null;
+            /** Assessment */
+            assessment?: {
+                [key: string]: unknown;
+            } | null;
+            /** Improvement */
+            improvement?: {
+                [key: string]: unknown;
+            } | null;
+            /** Evidence Chain */
+            evidence_chain?: unknown[] | null;
+            /** Message */
+            message?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * CareerSessionStartResponse
+         * @description POST /career/session/start：开场（单一形状，字段稳定）。
+         */
+        CareerSessionStartResponse: {
+            /** Session Id */
+            session_id?: string | null;
+            /** Scenario Id */
+            scenario_id?: string | null;
+            /** Title */
+            title?: string | null;
+            /** Scenario Label */
+            scenario_label?: string | null;
+            /** Setting */
+            setting?: string | null;
+            /** Student Role */
+            student_role?: string | null;
+            /** Interviewer Role */
+            interviewer_role?: string | null;
+            /** Max Turns */
+            max_turns?: number | null;
+            /** Next Question */
+            next_question?: {
+                [key: string]: unknown;
+            } | null;
+            /** Turns Done */
+            turns_done?: number | null;
+            /** Status */
+            status?: string | null;
+            /** Phase */
+            phase?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
          * CareerTaskJoinResult
          * @description POST /career/task/join 的返回。
          *
@@ -5700,12 +5914,84 @@ export interface components {
             /** Class Name */
             class_name: string;
         };
+        /**
+         * ClassPerformanceResponse
+         * @description 班级整体学习表现（/teacher/analytics/class-performance）
+         */
+        ClassPerformanceResponse: {
+            /**
+             * Avg Mastery
+             * @default 0
+             */
+            avg_mastery: number;
+            /**
+             * Avg Progress
+             * @default 0
+             */
+            avg_progress: number;
+            /**
+             * Weakest Chapters
+             * @default []
+             */
+            weakest_chapters: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Strongest Chapters
+             * @default []
+             */
+            strongest_chapters: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Common Weak Points
+             * @default []
+             */
+            common_weak_points: string[];
+            /**
+             * Activity Trend
+             * @default []
+             */
+            activity_trend: {
+                [key: string]: unknown;
+            }[];
+        } & {
+            [key: string]: unknown;
+        };
         /** ComplianceReq */
         ComplianceReq: {
             /** Text */
             text: string;
             /** Categories */
             categories?: string[] | null;
+        };
+        /**
+         * ComplianceResponse
+         * @description 文本合规返回（/xfyun/compliance）
+         */
+        ComplianceResponse: {
+            /**
+             * Passed
+             * @default false
+             */
+            passed: boolean;
+            /**
+             * Suggest
+             * @default
+             */
+            suggest: string;
+            /**
+             * Hits
+             * @default []
+             */
+            hits: unknown[];
+            /**
+             * Source
+             * @default
+             */
+            source: string;
+        } & {
+            [key: string]: unknown;
         };
         /** ConfigResponse */
         ConfigResponse: {
@@ -5766,6 +6052,44 @@ export interface components {
              * @default computer_network
              */
             course: string;
+        };
+        /**
+         * ConflictCheckResponse
+         * @description 独立冲突检测+消解返回（/engine/conflict-check）。
+         */
+        ConflictCheckResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Total Conflicts
+             * @default 0
+             */
+            total_conflicts: number;
+            /**
+             * Resolved
+             * @default 0
+             */
+            resolved: number;
+            /**
+             * Unresolved
+             * @default 0
+             */
+            unresolved: number;
+            /**
+             * Conflicts
+             * @default []
+             */
+            conflicts: unknown[];
+            /**
+             * Overall Consistency
+             * @default 0
+             */
+            overall_consistency: number;
+        } & {
+            [key: string]: unknown;
         };
         /** ConsentRequest */
         ConsentRequest: {
@@ -5856,6 +6180,19 @@ export interface components {
              * @default true
              */
             rag_enabled: boolean;
+            /**
+             * Memory Access
+             * @description 记忆权限 none/read/write/read_write
+             * @default read_write
+             */
+            memory_access: string;
+            /**
+             * Tools
+             * @description 结构化工具元数据
+             */
+            tools?: {
+                [key: string]: unknown;
+            }[];
         };
         /**
          * CreateUserRequest
@@ -5879,6 +6216,44 @@ export interface components {
              * @default student
              */
             role: string;
+        };
+        /**
+         * CreatorStatsOut
+         * @description db/skill_store.py::get_creator_stats() 的返回投影。
+         */
+        CreatorStatsOut: {
+            /**
+             * Total Skills
+             * @default 0
+             */
+            total_skills: number;
+            /**
+             * Published Skills
+             * @default 0
+             */
+            published_skills: number;
+            /**
+             * Total Usage
+             * @default 0
+             */
+            total_usage: number;
+            /**
+             * Usage Trend
+             * @default []
+             */
+            usage_trend: components["schemas"]["UsageTrendPoint"][];
+        };
+        /**
+         * CreatorStatsResponse
+         * @description stats 的返回：{status, stats}。
+         */
+        CreatorStatsResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            stats: components["schemas"]["CreatorStatsOut"];
         };
         /** DailyQuizPoint */
         DailyQuizPoint: {
@@ -5908,6 +6283,20 @@ export interface components {
             strong_topics: string[];
             /** Recommendation */
             recommendation: string;
+        };
+        /**
+         * DiagnosticStartResponse
+         * @description 开始诊断返回的题目列表
+         */
+        DiagnosticStartResponse: {
+            /** Total Questions */
+            total_questions: number;
+            /** Subjects */
+            subjects: string[];
+            /** Questions */
+            questions: {
+                [key: string]: unknown;
+            }[];
         };
         /**
          * DiagnosticSubmitRequest
@@ -5969,6 +6358,23 @@ export interface components {
                 [key: string]: unknown;
             };
             reliability: components["schemas"]["ReliabilityStats"];
+        };
+        /**
+         * EnhancedAnswerResponse
+         * @description 增强版智能答疑返回（/tutor/enhanced-answer）；result 为 LLM 产物 dict，故额外字段全部放行
+         */
+        EnhancedAnswerResponse: {
+            /**
+             * Answer
+             * @default
+             */
+            answer: string;
+            /** Svg Diagram */
+            svg_diagram?: string | null;
+            /** Video Script */
+            video_script?: string | null;
+        } & {
+            [key: string]: unknown;
         };
         /**
          * EnhancedTutorRequest
@@ -6047,6 +6453,38 @@ export interface components {
              */
             enhance: boolean;
         };
+        /**
+         * FavoritedResponse
+         * @description favorite / unfavorite / favorited 的返回。
+         */
+        FavoritedResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Favorited
+             * @default false
+             */
+            favorited: boolean;
+        };
+        /**
+         * FavoritesResponse
+         * @description favorites 的返回：只有 {status, items}，没有 total。
+         */
+        FavoritesResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Items
+             * @default []
+             */
+            items: components["schemas"]["SkillItemOut"][];
+        };
         /** FeedbackRequest */
         FeedbackRequest: {
             /**
@@ -6082,6 +6520,66 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /**
+         * FrugalRagFullResponse
+         * @description 完整 FrugalRAG 检索返回（/engine/frugal-rag-full）。
+         */
+        FrugalRagFullResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Answer
+             * @default
+             */
+            answer: string;
+            /**
+             * Trajectory
+             * @default []
+             */
+            trajectory: unknown[];
+            /**
+             * Total Searches
+             * @default 0
+             */
+            total_searches: number;
+            /**
+             * Rewrites
+             * @default 0
+             */
+            rewrites: number;
+            /**
+             * Coverage
+             * @default 0
+             */
+            coverage: number;
+            /**
+             * Complexity
+             * @default
+             */
+            complexity: string;
+            /**
+             * Cleaned Question
+             * @default
+             */
+            cleaned_question: string;
+            /**
+             * Chunks Count
+             * @default 0
+             */
+            chunks_count: number;
+            /**
+             * Personalized Rerank
+             * @default {}
+             */
+            personalized_rerank: {
+                [key: string]: unknown;
+            };
+        } & {
+            [key: string]: unknown;
+        };
         /** GOMARLConsensusRequest */
         GOMARLConsensusRequest: {
             /** Agent Results */
@@ -6105,6 +6603,109 @@ export interface components {
              * @default computer_network
              */
             course: string;
+        };
+        /**
+         * GOMARLConsensusResponse
+         * @description GoMARL 共识评估返回（/engine/gomarl-consensus）。
+         */
+        GOMARLConsensusResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Consensus Score
+             * @default 0
+             */
+            consensus_score: number;
+            /**
+             * Neural Used
+             * @default false
+             */
+            neural_used: boolean;
+            /**
+             * Dynamic Weights
+             * @default {}
+             */
+            dynamic_weights: {
+                [key: string]: unknown;
+            };
+            /**
+             * Weighted Scores
+             * @default {}
+             */
+            weighted_scores: {
+                [key: string]: unknown;
+            };
+            /**
+             * Groups
+             * @default []
+             */
+            groups: unknown[];
+            /**
+             * Sd Loss
+             * @default 0
+             */
+            sd_loss: number;
+            /**
+             * Conflicts
+             * @default {}
+             */
+            conflicts: {
+                [key: string]: unknown;
+            };
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * GenerateCodePracticeResponse
+         * @description 代码实操案例生成返回（/agents/generate-code-practice）
+         */
+        GenerateCodePracticeResponse: {
+            /**
+             * Code Practice
+             * @default
+             */
+            code_practice: string;
+            /**
+             * Hallucination Warnings
+             * @default []
+             */
+            hallucination_warnings: string[];
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * GenerateExtensionResponse
+         * @description 课外拓展阅读材料生成返回（/agents/generate-extension）
+         */
+        GenerateExtensionResponse: {
+            /**
+             * Extension Doc
+             * @default
+             */
+            extension_doc: string;
+            /**
+             * Hallucination Warnings
+             * @default []
+             */
+            hallucination_warnings: string[];
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * GeneratePPTResponse
+         * @description PPT 大纲生成返回（/agents/generate-ppt）
+         */
+        GeneratePPTResponse: {
+            /**
+             * Ppt Outline
+             * @default
+             */
+            ppt_outline: string;
+        } & {
+            [key: string]: unknown;
         };
         /** GenerateQuestionsRequest */
         GenerateQuestionsRequest: {
@@ -6138,6 +6739,42 @@ export interface components {
             /** Message */
             message?: string | null;
         };
+        /**
+         * GenerateQuizQuestion
+         * @description 生成题目列表项（steps 为子模型数组）。
+         */
+        GenerateQuizQuestion: {
+            /**
+             * Id
+             * @default
+             */
+            id: string;
+            /**
+             * Subject
+             * @default
+             */
+            subject: string;
+            /**
+             * Chapter
+             * @default
+             */
+            chapter: string;
+            /**
+             * Difficulty
+             * @default
+             */
+            difficulty: string;
+            /**
+             * Question Text
+             * @default
+             */
+            question_text: string;
+            /**
+             * Steps
+             * @default []
+             */
+            steps: components["schemas"]["GenerateQuizStep"][];
+        };
         /** GenerateQuizRequest */
         GenerateQuizRequest: {
             /**
@@ -6160,6 +6797,53 @@ export interface components {
              * @default normal
              */
             mode: string;
+        };
+        /**
+         * GenerateQuizResponse
+         * @description POST /quiz/generate 返回。
+         */
+        GenerateQuizResponse: {
+            /**
+             * Questions
+             * @default []
+             */
+            questions: components["schemas"]["GenerateQuizQuestion"][];
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+            /**
+             * Subject
+             * @default
+             */
+            subject: string;
+        };
+        /**
+         * GenerateQuizStep
+         * @description 生成题目中的单个步骤（对齐 generate_quiz 的投影，不含答案/提示）。
+         */
+        GenerateQuizStep: {
+            /**
+             * Step Name
+             * @default
+             */
+            step_name: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /**
+             * Check Type
+             * @default
+             */
+            check_type: string;
+            /**
+             * Options
+             * @default []
+             */
+            options: string[];
         };
         /** GenerationRequest */
         GenerationRequest: {
@@ -6192,6 +6876,36 @@ export interface components {
             /** Prompt */
             prompt?: string | null;
         };
+        /**
+         * ImageGenerationResponse
+         * @description 教学插图生成返回（/multimodal/generate-image）
+         */
+        ImageGenerationResponse: {
+            /**
+             * Topic
+             * @default
+             */
+            topic: string;
+            /**
+             * Source
+             * @default
+             */
+            source: string;
+            /**
+             * Image Base64
+             * @default
+             */
+            image_base64: string;
+            /** Image Svg */
+            image_svg?: string | null;
+            /**
+             * Is Real Image
+             * @default false
+             */
+            is_real_image: boolean;
+        } & {
+            [key: string]: unknown;
+        };
         /** ImageUnderstandReq */
         ImageUnderstandReq: {
             /** Image Base64 */
@@ -6201,6 +6915,24 @@ export interface components {
              * @default 这张图片讲了什么？
              */
             question: string;
+        };
+        /**
+         * ImageUnderstandResponse
+         * @description 图片理解返回（/xfyun/image-understand）
+         */
+        ImageUnderstandResponse: {
+            /**
+             * Text
+             * @default
+             */
+            text: string;
+            /**
+             * Source
+             * @default
+             */
+            source: string;
+        } & {
+            [key: string]: unknown;
         };
         /** KGEdge */
         KGEdge: {
@@ -6230,6 +6962,67 @@ export interface components {
              * @description 科目过滤
              */
             subject?: string | null;
+        };
+        /**
+         * KGVisGraph
+         * @description kg_to_vis_json 的可视化投影 {nodes, edges}；节点/边字段随图谱类型变化。
+         */
+        KGVisGraph: {
+            /**
+             * Nodes
+             * @default []
+             */
+            nodes: unknown[];
+            /**
+             * Edges
+             * @default []
+             */
+            edges: unknown[];
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * KnowledgeBaseStatsResponse
+         * @description 知识库统计（/teacher/knowledge-base/stats）
+         */
+        KnowledgeBaseStatsResponse: {
+            /**
+             * Total Chunks
+             * @default 0
+             */
+            total_chunks: number;
+            /**
+             * Total Questions
+             * @default 0
+             */
+            total_questions: number;
+            /**
+             * Kg Nodes
+             * @default 0
+             */
+            kg_nodes: number;
+            /**
+             * Kg Edges
+             * @default 0
+             */
+            kg_edges: number;
+            /**
+             * By Subject
+             * @default {}
+             */
+            by_subject: {
+                [key: string]: unknown;
+            };
+            /**
+             * Auto Generated
+             * @default 0
+             */
+            auto_generated: number;
+            /**
+             * Manual
+             * @default 0
+             */
+            manual: number;
         };
         /**
          * KnowledgeBatchCommitItem
@@ -6266,6 +7059,24 @@ export interface components {
              */
             source: string;
         };
+        /**
+         * KnowledgeBatchCommitResponse
+         * @description 批量提交分块到向量库（/knowledge/batch-commit）
+         */
+        KnowledgeBatchCommitResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Committed
+             * @default 0
+             */
+            committed: number;
+        } & {
+            [key: string]: unknown;
+        };
         /** KnowledgeDeleteRequest */
         KnowledgeDeleteRequest: {
             /** Ids */
@@ -6279,6 +7090,60 @@ export interface components {
             metadata?: {
                 [key: string]: unknown;
             };
+        };
+        /**
+         * KnowledgeGraphExtractResponse
+         * @description POST /knowledge-graph/extract 返回。
+         *     entities / relationships / stats 是 LLM 抽取产物，形状不固定，用 list/dict 兜底；
+         *     vis 是 kg_to_vis_json 的固定两键结构，单独精确建模供前端可视化消费。
+         */
+        KnowledgeGraphExtractResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Subject
+             * @default
+             */
+            subject: string;
+            /**
+             * Entities
+             * @default []
+             */
+            entities: unknown[];
+            /**
+             * Relationships
+             * @default []
+             */
+            relationships: unknown[];
+            /**
+             * Stats
+             * @default {}
+             */
+            stats: {
+                [key: string]: unknown;
+            };
+            vis?: components["schemas"]["KGVisGraph"];
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * KnowledgeGraphListResponse
+         * @description GET /knowledge-graph/list 返回。
+         */
+        KnowledgeGraphListResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Graphs
+             * @default []
+             */
+            graphs: components["schemas"]["SavedGraphItem"][];
         };
         /** KnowledgeGraphPayload */
         KnowledgeGraphPayload: {
@@ -6337,6 +7202,41 @@ export interface components {
             items: components["schemas"]["KnowledgeListItem"][];
             /** Total */
             total: number;
+        };
+        /**
+         * KnowledgePreviewResponse
+         * @description 语义解析预览（/knowledge/preview）
+         */
+        KnowledgePreviewResponse: {
+            /**
+             * Filename
+             * @default
+             */
+            filename: string;
+            /**
+             * Total Chars
+             * @default 0
+             */
+            total_chars: number;
+            /**
+             * Items
+             * @default []
+             */
+            items: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Default Subject
+             * @default
+             */
+            default_subject: string;
+            /**
+             * Default Chapter
+             * @default
+             */
+            default_chapter: string;
+        } & {
+            [key: string]: unknown;
         };
         /** KnowledgeStatsResponse */
         KnowledgeStatsResponse: {
@@ -6517,6 +7417,21 @@ export interface components {
              */
             mastered: boolean;
         };
+        /**
+         * MemoryContextResponse
+         * @description 三层记忆上下文（/memory/context）
+         */
+        MemoryContextResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /** Context */
+            context?: unknown;
+        } & {
+            [key: string]: unknown;
+        };
         /** MemoryOverviewResponse */
         MemoryOverviewResponse: {
             /** Status */
@@ -6558,6 +7473,19 @@ export interface components {
              */
             generate_audio: boolean;
         };
+        /**
+         * MyTasksResponse
+         * @description 学生任务中心返回（/career/my-tasks）
+         */
+        MyTasksResponse: {
+            /**
+             * Tasks
+             * @default []
+             */
+            tasks: unknown[];
+        } & {
+            [key: string]: unknown;
+        };
         /** NarratedVideoRequest */
         NarratedVideoRequest: {
             /** Text */
@@ -6595,6 +7523,56 @@ export interface components {
              */
             search: boolean;
         };
+        /**
+         * PPTStatusResponse
+         * @description PPT 生成进度/结果返回（/xfyun/ppt/status/{task_id}）
+         */
+        PPTStatusResponse: {
+            /**
+             * Task Id
+             * @default
+             */
+            task_id: string;
+            /**
+             * Status
+             * @default pending
+             */
+            status: string;
+            /** Result */
+            result?: unknown;
+            /** Error */
+            error?: unknown;
+            /**
+             * Created At
+             * @default 0
+             */
+            created_at: number;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * PPTSubmitResponse
+         * @description PPT 生成异步提交返回（/xfyun/ppt）
+         */
+        PPTSubmitResponse: {
+            /**
+             * Task Id
+             * @default
+             */
+            task_id: string;
+            /**
+             * Status
+             * @default pending
+             */
+            status: string;
+            /**
+             * Source
+             * @default
+             */
+            source: string;
+        } & {
+            [key: string]: unknown;
+        };
         /** PerQuestionResponse */
         PerQuestionResponse: {
             /** Provenance */
@@ -6605,6 +7583,130 @@ export interface components {
             per_question: {
                 [key: string]: unknown;
             }[];
+        };
+        /**
+         * PlanHistoryItem
+         * @description db/user_store.py::list_daily_plans 的精简投影（9 键）。
+         *     注意：这里**没有** created_at / updated_at —— 单计划端点才有，
+         *     前端手写 DailyPlan 曾把这两个字段声明为必填，属假契约。
+         */
+        PlanHistoryItem: {
+            /**
+             * Id
+             * @default 0
+             */
+            id: number;
+            /**
+             * Plan Date
+             * @default
+             */
+            plan_date: string;
+            /**
+             * Tasks
+             * @default []
+             */
+            tasks: components["schemas"]["PlanHistoryTask"][];
+            /**
+             * Total Tasks
+             * @default 0
+             */
+            total_tasks: number;
+            /**
+             * Completed Tasks
+             * @default 0
+             */
+            completed_tasks: number;
+            /**
+             * Completion Rate
+             * @default 0
+             */
+            completion_rate: number;
+            /**
+             * Target Exam Date
+             * @default
+             */
+            target_exam_date: string;
+            /**
+             * Target Score
+             * @default 0
+             */
+            target_score: number;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * PlanHistoryResponse
+         * @description GET /daily-plan/history 返回。
+         */
+        PlanHistoryResponse: {
+            /**
+             * Plans
+             * @default []
+             */
+            plans: components["schemas"]["PlanHistoryItem"][];
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+            /**
+             * Start Date
+             * @default
+             */
+            start_date: string;
+            /**
+             * End Date
+             * @default
+             */
+            end_date: string;
+        };
+        /**
+         * PlanHistoryTask
+         * @description 每日计划的任务项（_generate_default_daily_tasks 的投影）。
+         */
+        PlanHistoryTask: {
+            /**
+             * Id
+             * @default
+             */
+            id: string;
+            /**
+             * Type
+             * @default
+             */
+            type: string;
+            /**
+             * Title
+             * @default
+             */
+            title: string;
+            /**
+             * Subject
+             * @default
+             */
+            subject: string;
+            /**
+             * Chapter
+             * @default
+             */
+            chapter: string;
+            /**
+             * Progress
+             * @default 0
+             */
+            progress: number;
+            /**
+             * Completed
+             * @default false
+             */
+            completed: boolean;
+            /**
+             * Estimated Minutes
+             * @default 0
+             */
+            estimated_minutes: number;
+        } & {
+            [key: string]: unknown;
         };
         /** PlanTaskUpdateRequest */
         PlanTaskUpdateRequest: {
@@ -6727,10 +7829,72 @@ export interface components {
              */
             max_tokens: number;
         };
+        /**
+         * PromptTestResponse
+         * @description prompt-test 的返回；异常分支直接抛 HTTPException，无 200 错误形状。
+         */
+        PromptTestResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Response
+             * @default
+             */
+            response: string;
+        };
+        /**
+         * ProofreadDocResponse
+         * @description 公文校对返回（/xfyun/proofread-doc）
+         */
+        ProofreadDocResponse: {
+            /**
+             * Corrections
+             * @default []
+             */
+            corrections: unknown[];
+            /**
+             * Count
+             * @default 0
+             */
+            count: number;
+            /**
+             * Source
+             * @default
+             */
+            source: string;
+        } & {
+            [key: string]: unknown;
+        };
         /** ProofreadReq */
         ProofreadReq: {
             /** Text */
             text: string;
+        };
+        /**
+         * ProofreadResponse
+         * @description 文本纠错返回（/xfyun/proofread）
+         */
+        ProofreadResponse: {
+            /**
+             * Corrections
+             * @default []
+             */
+            corrections: unknown[];
+            /**
+             * Count
+             * @default 0
+             */
+            count: number;
+            /**
+             * Source
+             * @default
+             */
+            source: string;
+        } & {
+            [key: string]: unknown;
         };
         /** QuizHistoryPayload */
         QuizHistoryPayload: {
@@ -6911,6 +8075,75 @@ export interface components {
              */
             comment: string;
         };
+        /**
+         * RatingDetailResponse
+         * @description rate 的返回：{status, rating}。
+         */
+        RatingDetailResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            rating: components["schemas"]["SkillRatingOut"];
+        };
+        /**
+         * RatingListResponse
+         * @description ratings 的返回：{status, total, items}。
+         */
+        RatingListResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+            /**
+             * Items
+             * @default []
+             */
+            items: components["schemas"]["SkillRatingOut"][];
+        };
+        /**
+         * RecommendationItem
+         * @description 单条学习推荐（/assessment/recommendations 的 recs 元素，6 键固定）。
+         */
+        RecommendationItem: {
+            /**
+             * Icon
+             * @default
+             */
+            icon: string;
+            /**
+             * Title
+             * @default
+             */
+            title: string;
+            /**
+             * Text
+             * @default
+             */
+            text: string;
+            /**
+             * Action
+             * @default
+             */
+            action: string;
+            /**
+             * Route
+             * @default
+             */
+            route: string;
+            /**
+             * Priority
+             * @default normal
+             */
+            priority: string;
+        };
         /** RecordRequest */
         RecordRequest: {
             /** Event */
@@ -7001,6 +8234,31 @@ export interface components {
              */
             resource_id: number;
         };
+        /**
+         * ResourceListResponse
+         * @description 可复用资源列表（/resource/list）
+         */
+        ResourceListResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Resources
+             * @default []
+             */
+            resources: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+        } & {
+            [key: string]: unknown;
+        };
         /** ResourceRecommendRequest */
         ResourceRecommendRequest: {
             /**
@@ -7019,6 +8277,29 @@ export interface components {
         ResumeReq: {
             /** Info */
             info: string;
+        };
+        /**
+         * ResumeResponse
+         * @description 智能简历返回（/xfyun/resume）
+         */
+        ResumeResponse: {
+            /**
+             * Word Url
+             * @default
+             */
+            word_url: string;
+            /**
+             * Raw
+             * @default
+             */
+            raw: string;
+            /**
+             * Source
+             * @default
+             */
+            source: string;
+        } & {
+            [key: string]: unknown;
         };
         /** ReviewRecallRequest */
         ReviewRecallRequest: {
@@ -7059,6 +8340,29 @@ export interface components {
              * @default
              */
             topic: string;
+        };
+        /**
+         * RoleplayResponse
+         * @description 星火角色模拟返回（/xfyun/roleplay）
+         */
+        RoleplayResponse: {
+            /**
+             * Reply
+             * @default
+             */
+            reply: string;
+            /**
+             * Chat Id
+             * @default
+             */
+            chat_id: string;
+            /**
+             * Source
+             * @default
+             */
+            source: string;
+        } & {
+            [key: string]: unknown;
         };
         /** RunSkillRequest */
         RunSkillRequest: {
@@ -7136,6 +8440,37 @@ export interface components {
              */
             status: string;
         };
+        /**
+         * SavedGraphItem
+         * @description GET /knowledge-graph/list 的列表项（5 键固定投影）。
+         */
+        SavedGraphItem: {
+            /**
+             * Id
+             * @default
+             */
+            id: string;
+            /**
+             * Subject
+             * @default
+             */
+            subject: string;
+            /**
+             * Entity Count
+             * @default 0
+             */
+            entity_count: number;
+            /**
+             * Relation Count
+             * @default 0
+             */
+            relation_count: number;
+            /**
+             * Created At
+             * @default
+             */
+            created_at: string;
+        };
         /** ScenarioGenerateRequest */
         ScenarioGenerateRequest: {
             /**
@@ -7174,6 +8509,29 @@ export interface components {
              */
             textbook_id?: string | null;
         };
+        /**
+         * SearchResponse
+         * @description 聚合搜索返回（/xfyun/search）
+         */
+        SearchResponse: {
+            /**
+             * Items
+             * @default []
+             */
+            items: unknown[];
+            /**
+             * Count
+             * @default 0
+             */
+            count: number;
+            /**
+             * Source
+             * @default
+             */
+            source: string;
+        } & {
+            [key: string]: unknown;
+        };
         /** SemanticMemoryRequest */
         SemanticMemoryRequest: {
             /**
@@ -7194,6 +8552,28 @@ export interface components {
             weak_points?: string[] | null;
             /** Mastered Points */
             mastered_points?: string[] | null;
+        };
+        /** SessionLoadResponse */
+        SessionLoadResponse: {
+            /** Conv Id */
+            conv_id: string;
+            /**
+             * Title
+             * @default
+             */
+            title: string;
+            /**
+             * Messages
+             * @default []
+             */
+            messages: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Created At
+             * @default
+             */
+            created_at: string;
         };
         /** SessionMessage */
         SessionMessage: {
@@ -7225,6 +8605,316 @@ export interface components {
              * @default []
              */
             messages: components["schemas"]["SessionMessage"][];
+        };
+        /**
+         * SkillAckResponse
+         * @description delete / publish / archive / seed-official 的回执。
+         */
+        SkillAckResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Message
+             * @default
+             */
+            message: string;
+        };
+        /**
+         * SkillDetailResponse
+         * @description get/create/update/from-template 的返回：{status, skill}。
+         */
+        SkillDetailResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            skill: components["schemas"]["SkillItemOut"];
+        };
+        /**
+         * SkillItemOut
+         * @description schemas/skills.py::Skill.to_dict() 的完整投影。
+         */
+        SkillItemOut: {
+            /**
+             * Id
+             * @default
+             */
+            id: string;
+            /**
+             * Name
+             * @default
+             */
+            name: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /**
+             * Icon
+             * @default
+             */
+            icon: string;
+            /**
+             * System Prompt
+             * @default
+             */
+            system_prompt: string;
+            /**
+             * Llm Channel
+             * @default
+             */
+            llm_channel: string;
+            /**
+             * Temperature
+             * @default 0
+             */
+            temperature: number;
+            /**
+             * Max Tokens
+             * @default 0
+             */
+            max_tokens: number;
+            /**
+             * Kb Ids
+             * @default []
+             */
+            kb_ids: string[];
+            /**
+             * Rag Enabled
+             * @default true
+             */
+            rag_enabled: boolean;
+            /**
+             * Tags
+             * @default []
+             */
+            tags: string[];
+            /**
+             * Category
+             * @default
+             */
+            category: string;
+            /**
+             * Category Label
+             * @default
+             */
+            category_label: string;
+            /**
+             * Version
+             * @default 1
+             */
+            version: number;
+            /**
+             * Status
+             * @default
+             */
+            status: string;
+            /**
+             * Memory Access
+             * @default read_write
+             */
+            memory_access: string;
+            /**
+             * Usage Count
+             * @default 0
+             */
+            usage_count: number;
+            /**
+             * User Count
+             * @default 0
+             */
+            user_count: number;
+            /**
+             * Avg Rating
+             * @default 0
+             */
+            avg_rating: number;
+            /**
+             * Created At
+             * @default
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * @default
+             */
+            updated_at: string;
+            /** Published At */
+            published_at?: string | null;
+            /**
+             * Creator Id
+             * @default
+             */
+            creator_id: string;
+            /**
+             * Creator Name
+             * @default
+             */
+            creator_name: string;
+            /**
+             * Is Official
+             * @default false
+             */
+            is_official: boolean;
+            /**
+             * Allowed Tools
+             * @default []
+             */
+            allowed_tools: string[];
+            /**
+             * Disable Model Invocation
+             * @default false
+             */
+            disable_model_invocation: boolean;
+            /**
+             * Trigger Paths
+             * @default []
+             */
+            trigger_paths: string[];
+            /**
+             * Tools
+             * @default []
+             */
+            tools: {
+                [key: string]: unknown;
+            }[];
+        };
+        /**
+         * SkillListResponse
+         * @description market/my/official 的返回：{status, total, items}。
+         */
+        SkillListResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+            /**
+             * Items
+             * @default []
+             */
+            items: components["schemas"]["SkillItemOut"][];
+        };
+        /**
+         * SkillRatingOut
+         * @description schemas/skills.py::SkillRating.to_dict()。
+         */
+        SkillRatingOut: {
+            /**
+             * Id
+             * @default
+             */
+            id: string;
+            /**
+             * Skill Id
+             * @default
+             */
+            skill_id: string;
+            /**
+             * User Id
+             * @default
+             */
+            user_id: string;
+            /**
+             * User Name
+             * @default
+             */
+            user_name: string;
+            /**
+             * Rating
+             * @default 0
+             */
+            rating: number;
+            /**
+             * Comment
+             * @default
+             */
+            comment: string;
+            /**
+             * Created At
+             * @default
+             */
+            created_at: string;
+        };
+        /**
+         * SkillTemplateConfig
+         * @description 模板 default_config：种子数据固定三键（db/skill_store.py 全部模板一致）。
+         */
+        SkillTemplateConfig: {
+            /**
+             * Llm Channel
+             * @default auto
+             */
+            llm_channel: string;
+            /**
+             * Temperature
+             * @default 0.7
+             */
+            temperature: number;
+            /**
+             * Max Tokens
+             * @default 2048
+             */
+            max_tokens: number;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * SkillTemplateOut
+         * @description schemas/skills.py::SkillTemplate.to_dict()。
+         */
+        SkillTemplateOut: {
+            /**
+             * Id
+             * @default
+             */
+            id: string;
+            /**
+             * Name
+             * @default
+             */
+            name: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /**
+             * Category
+             * @default
+             */
+            category: string;
+            /**
+             * Category Label
+             * @default
+             */
+            category_label: string;
+            /**
+             * Icon
+             * @default
+             */
+            icon: string;
+            /**
+             * System Prompt Template
+             * @default
+             */
+            system_prompt_template: string;
+            default_config?: components["schemas"]["SkillTemplateConfig"];
+            /**
+             * Sort Order
+             * @default 0
+             */
+            sort_order: number;
         };
         /** StartRequest */
         StartRequest: {
@@ -7498,6 +9188,54 @@ export interface components {
              */
             resource_type: string;
         };
+        /**
+         * TeachingRulesPrerequisitesResponse
+         * @description 知识点前置依赖（/engine/teaching-rules/prerequisites/{topic_id}）
+         */
+        TeachingRulesPrerequisitesResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Topic Id
+             * @default
+             */
+            topic_id: string;
+            /**
+             * Topic Name
+             * @default
+             */
+            topic_name: string;
+            /**
+             * Course
+             * @default
+             */
+            course: string;
+            /**
+             * Exam Weight
+             * @default 0
+             */
+            exam_weight: number;
+            /**
+             * Difficulty
+             * @default
+             */
+            difficulty: string;
+            /**
+             * Prerequisites
+             * @default []
+             */
+            prerequisites: unknown[];
+            /**
+             * Cross Subject Prerequisites
+             * @default []
+             */
+            cross_subject_prerequisites: unknown[];
+        } & {
+            [key: string]: unknown;
+        };
         /** TeachingRulesPrioritizeRequest */
         TeachingRulesPrioritizeRequest: {
             /** Topic Ids */
@@ -7506,6 +9244,26 @@ export interface components {
             student_profile: {
                 [key: string]: unknown;
             };
+        };
+        /**
+         * TeachingRulesStatsResponse
+         * @description 教学规则引擎统计（/engine/teaching-rules）
+         */
+        TeachingRulesStatsResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Stats
+             * @default {}
+             */
+            stats: {
+                [key: string]: unknown;
+            };
+        } & {
+            [key: string]: unknown;
         };
         /** TeachingRulesValidateRequest */
         TeachingRulesValidateRequest: {
@@ -7545,6 +9303,111 @@ export interface components {
              * @default html
              */
             output_format: string;
+        };
+        /**
+         * TeachingVideoResponse
+         * @description POST /multimodal/generate-teaching-video 返回（_generate_teaching_video 的 10 键投影）。
+         */
+        TeachingVideoResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Resource Type
+             * @default teaching_video
+             */
+            resource_type: string;
+            /**
+             * Topic
+             * @default
+             */
+            topic: string;
+            /**
+             * Scenes
+             * @default 0
+             */
+            scenes: number;
+            /**
+             * Duration Sec
+             * @default 0
+             */
+            duration_sec: number;
+            /**
+             * Duration Str
+             * @default
+             */
+            duration_str: string;
+            /**
+             * Html
+             * @default
+             */
+            html: string;
+            /**
+             * Html Path
+             * @default
+             */
+            html_path: string;
+            /**
+             * Video Script
+             * @default
+             */
+            video_script: string;
+            /**
+             * Format
+             * @default html
+             */
+            format: string;
+        };
+        /**
+         * TemplateDetailResponse
+         * @description templates/{id} 的返回：{status, template}。
+         */
+        TemplateDetailResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            template: components["schemas"]["SkillTemplateOut"];
+        };
+        /**
+         * TemplateListResponse
+         * @description templates 的返回：{status, total, items}。
+         */
+        TemplateListResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+            /**
+             * Items
+             * @default []
+             */
+            items: components["schemas"]["SkillTemplateOut"][];
+        };
+        /**
+         * TestLLMResponse
+         * @description LLM 连通性测试结果（/config/test-llm）
+         */
+        TestLLMResponse: {
+            /**
+             * Status
+             * @default ok
+             */
+            status: string;
+            /**
+             * Message
+             * @default
+             */
+            message: string;
         };
         /** TokenResponse */
         TokenResponse: {
@@ -7696,6 +9559,25 @@ export interface components {
             tags?: string | null;
             /** Rag Enabled */
             rag_enabled?: boolean | null;
+            /** Memory Access */
+            memory_access?: string | null;
+            /** Tools */
+            tools?: {
+                [key: string]: unknown;
+            }[] | null;
+        };
+        /** UsageTrendPoint */
+        UsageTrendPoint: {
+            /**
+             * Day
+             * @default
+             */
+            day: string;
+            /**
+             * Count
+             * @default 0
+             */
+            count: number;
         };
         /** ValidationError */
         ValidationError: {
@@ -7719,6 +9601,108 @@ export interface components {
              * @default 120
              */
             word_count: number;
+        };
+        /**
+         * VideoStatusResponse
+         * @description 视频生成进度/结果返回（/xfyun/video/status/{task_id}）
+         */
+        VideoStatusResponse: {
+            /**
+             * Task Id
+             * @default
+             */
+            task_id: string;
+            /**
+             * Status
+             * @default pending
+             */
+            status: string;
+            /** Result */
+            result?: unknown;
+            /** Error */
+            error?: unknown;
+            /**
+             * Created At
+             * @default 0
+             */
+            created_at: number;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * VideoSubmitResponse
+         * @description 数字人视频生成异步提交返回（/xfyun/video）
+         */
+        VideoSubmitResponse: {
+            /**
+             * Task Id
+             * @default
+             */
+            task_id: string;
+            /**
+             * Status
+             * @default pending
+             */
+            status: string;
+            /**
+             * Source
+             * @default
+             */
+            source: string;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * WeakPointItem
+         * @description 单条薄弱知识点（/quiz/weak-points 数组元素）
+         */
+        WeakPointItem: {
+            /**
+             * Subject
+             * @default
+             */
+            subject: string;
+            /**
+             * Chapter
+             * @default
+             */
+            chapter: string;
+            /**
+             * Concept
+             * @default
+             */
+            concept: string;
+            /**
+             * Error Type
+             * @default
+             */
+            error_type: string;
+            /**
+             * Count
+             * @default 0
+             */
+            count: number;
+            /**
+             * Mastered
+             * @default false
+             */
+            mastered: boolean;
+        };
+        /**
+         * WeakPointsResponse
+         * @description 薄弱知识点聚合结果
+         */
+        WeakPointsResponse: {
+            /**
+             * Weak Points
+             * @default []
+             */
+            weak_points: components["schemas"]["WeakPointItem"][];
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
         };
         /** WorkingMemoryRequest */
         WorkingMemoryRequest: {
@@ -7776,6 +9760,128 @@ export interface components {
             hint: string;
             /** Timestamp */
             timestamp: string;
+        };
+        /**
+         * WrongQuestionItem
+         * @description db/user_store.py::get_wrong_question 的 17 键投影。
+         *     question / attribution / review_history 是从 JSON 列解析出的任意结构，
+         *     用 dict/list/Any 兜底（解析失败时分别为 {} / None / []），不硬定型。
+         */
+        WrongQuestionItem: {
+            /**
+             * Id
+             * @default 0
+             */
+            id: number;
+            /**
+             * Question Id
+             * @default
+             */
+            question_id: string;
+            /**
+             * Question
+             * @default {}
+             */
+            question: {
+                [key: string]: unknown;
+            };
+            /**
+             * Subject
+             * @default
+             */
+            subject: string;
+            /**
+             * Chapter
+             * @default
+             */
+            chapter: string;
+            /**
+             * Knowledge Point
+             * @default
+             */
+            knowledge_point: string;
+            /**
+             * Wrong Answer
+             * @default
+             */
+            wrong_answer: string;
+            /**
+             * Correct Answer
+             * @default
+             */
+            correct_answer: string;
+            /**
+             * Error Type
+             * @default
+             */
+            error_type: string;
+            /** Attribution */
+            attribution?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Wrong Count
+             * @default 0
+             */
+            wrong_count: number;
+            /**
+             * Mastered
+             * @default false
+             */
+            mastered: boolean;
+            /**
+             * Last Wrong At
+             * @default
+             */
+            last_wrong_at: string;
+            /**
+             * First Wrong At
+             * @default
+             */
+            first_wrong_at: string;
+            /**
+             * Review Stage
+             * @default
+             */
+            review_stage: string;
+            /**
+             * Next Review At
+             * @default
+             */
+            next_review_at: string;
+            /**
+             * Review History
+             * @default []
+             */
+            review_history: unknown[];
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * WrongQuestionListResponse
+         * @description GET /wrong-questions 返回（db/user_store.py::list_wrong_questions）。
+         */
+        WrongQuestionListResponse: {
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+            /**
+             * Page
+             * @default 1
+             */
+            page: number;
+            /**
+             * Page Size
+             * @default 20
+             */
+            page_size: number;
+            /**
+             * Items
+             * @default []
+             */
+            items: components["schemas"]["WrongQuestionItem"][];
         };
         /** AnswerRequest */
         api__career_training__AnswerRequest: {
@@ -8207,7 +10313,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["WeakPointsResponse"];
                 };
             };
             /** @description Validation Error */
@@ -8309,7 +10415,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["GenerateQuizResponse"];
                 };
             };
             /** @description Validation Error */
@@ -8521,7 +10627,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["GenerateExtensionResponse"];
                 };
             };
             /** @description Validation Error */
@@ -8557,7 +10663,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["GeneratePPTResponse"];
                 };
             };
             /** @description Validation Error */
@@ -8593,7 +10699,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["GenerateCodePracticeResponse"];
                 };
             };
             /** @description Validation Error */
@@ -8807,7 +10913,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["KnowledgePreviewResponse"];
                 };
             };
             /** @description Validation Error */
@@ -8843,7 +10949,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["KnowledgeBatchCommitResponse"];
                 };
             };
             /** @description Validation Error */
@@ -9045,7 +11151,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SessionLoadResponse"];
                 };
             };
             /** @description Validation Error */
@@ -9255,7 +11361,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ConfigResponse"];
                 };
             };
             /** @description Validation Error */
@@ -9323,7 +11429,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["TestLLMResponse"];
                 };
             };
             /** @description Validation Error */
@@ -9461,7 +11567,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["AssessmentFeedbackResponse"];
                 };
             };
             /** @description Validation Error */
@@ -9499,7 +11605,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["AssessmentRecommendationsResponse"];
                 };
             };
             /** @description Validation Error */
@@ -9679,7 +11785,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["FrugalRagFullResponse"];
                 };
             };
             /** @description Validation Error */
@@ -9715,7 +11821,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["GOMARLConsensusResponse"];
                 };
             };
             /** @description Validation Error */
@@ -9851,7 +11957,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ConflictCheckResponse"];
                 };
             };
             /** @description Validation Error */
@@ -9947,7 +12053,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["TeachingRulesStatsResponse"];
                 };
             };
             /** @description Validation Error */
@@ -10089,7 +12195,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["TeachingRulesPrerequisitesResponse"];
                 };
             };
             /** @description Validation Error */
@@ -10187,7 +12293,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["KnowledgeBaseStatsResponse"];
                 };
             };
             /** @description Validation Error */
@@ -10219,7 +12325,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ClassPerformanceResponse"];
                 };
             };
             /** @description Validation Error */
@@ -10565,7 +12671,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ImageGenerationResponse"];
                 };
             };
             /** @description Validation Error */
@@ -10601,7 +12707,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["AudioGenerationResponse"];
                 };
             };
             /** @description Validation Error */
@@ -10741,7 +12847,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["TeachingVideoResponse"];
                 };
             };
             /** @description Validation Error */
@@ -10849,7 +12955,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["EnhancedAnswerResponse"];
                 };
             };
             /** @description Validation Error */
@@ -11587,7 +13693,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ImageUnderstandResponse"];
                 };
             };
             /** @description Validation Error */
@@ -11623,7 +13729,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SearchResponse"];
                 };
             };
             /** @description Validation Error */
@@ -11659,7 +13765,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["PPTSubmitResponse"];
                 };
             };
             /** @description Validation Error */
@@ -11693,7 +13799,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["PPTStatusResponse"];
                 };
             };
             /** @description Validation Error */
@@ -11729,7 +13835,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["VideoSubmitResponse"];
                 };
             };
             /** @description Validation Error */
@@ -11763,7 +13869,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["VideoStatusResponse"];
                 };
             };
             /** @description Validation Error */
@@ -11799,7 +13905,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ProofreadResponse"];
                 };
             };
             /** @description Validation Error */
@@ -11835,7 +13941,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ProofreadDocResponse"];
                 };
             };
             /** @description Validation Error */
@@ -11871,7 +13977,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ComplianceResponse"];
                 };
             };
             /** @description Validation Error */
@@ -11907,7 +14013,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["RoleplayResponse"];
                 };
             };
             /** @description Validation Error */
@@ -11943,7 +14049,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ResumeResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12189,7 +14295,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SkillDetailResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12223,7 +14329,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SkillDetailResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12261,7 +14367,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SkillDetailResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12295,7 +14401,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SkillAckResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12435,7 +14541,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SkillAckResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12469,7 +14575,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SkillAckResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12514,7 +14620,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SkillListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12552,7 +14658,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SkillListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12584,7 +14690,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SkillListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12622,7 +14728,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["RatingDetailResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12659,7 +14765,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["RatingListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12693,7 +14799,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["FavoritedResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12727,7 +14833,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["FavoritedResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12759,7 +14865,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["FavoritesResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12793,7 +14899,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["FavoritedResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12825,7 +14931,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CreatorStatsResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12857,7 +14963,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["TemplateListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12891,7 +14997,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["TemplateDetailResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12929,7 +15035,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["SkillDetailResponse"];
                 };
             };
             /** @description Validation Error */
@@ -13215,7 +15321,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["PromptTestResponse"];
                 };
             };
             /** @description Validation Error */
@@ -13351,7 +15457,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["DiagnosticStartResponse"];
                 };
             };
             /** @description Validation Error */
@@ -13598,7 +15704,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["KnowledgeGraphExtractResponse"];
                 };
             };
             /** @description Validation Error */
@@ -13734,7 +15840,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["KnowledgeGraphListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -14366,7 +16472,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ResourceListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -14918,7 +17024,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["MemoryContextResponse"];
                 };
             };
             /** @description Validation Error */
@@ -14955,7 +17061,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["WrongQuestionListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -15057,7 +17163,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["WrongQuestionItem"];
                 };
             };
             /** @description Validation Error */
@@ -15299,7 +17405,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["PlanHistoryResponse"];
                 };
             };
             /** @description Validation Error */
@@ -15573,7 +17679,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CareerSessionStartResponse"];
                 };
             };
             /** @description Validation Error */
@@ -15611,7 +17717,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CareerSessionAnswerResponse"];
                 };
             };
             /** @description Validation Error */
@@ -15649,7 +17755,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CareerSessionEndResponse"];
                 };
             };
             /** @description Validation Error */
@@ -15683,7 +17789,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CareerSessionReportResponse"];
                 };
             };
             /** @description Validation Error */
@@ -16128,7 +18234,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["MyTasksResponse"];
                 };
             };
             /** @description Validation Error */

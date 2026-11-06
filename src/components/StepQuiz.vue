@@ -2,6 +2,12 @@
 import { errMessage } from '@/utils/errorMessage'
 import { ref, onMounted, onUnmounted } from 'vue'
 import { api } from '@/utils/api'
+import type { operations } from '@/types/api.generated'
+
+// /quiz/weak-points 返回（response_model=WeakPointsResponse）
+type WeakPointsResp = operations['get_weak_points_api_quiz_weak_points_get']['responses'][200]['content']['application/json']
+// /quiz/generate 返回（response_model=GenerateQuizResponse，精确嵌套子模型）
+type GenerateQuizResp = operations['generate_quiz_api_quiz_generate_post']['responses'][200]['content']['application/json']
 import Skeleton from '@/components/Skeleton.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import { icons } from '@/components/icons'
@@ -28,10 +34,10 @@ async function loadStepQuestions() {
   try {
     if (adaptiveMode.value) {
       // P2 拓展：自适应选题 —— 后端按用户薄弱科目采样（network/transport 等归一化为 computer_network 等）
-      const data = await api.post<any>('/quiz/generate', {
+      const data = await api.post<GenerateQuizResp>('/quiz/generate', {
         subject: 'computer_network', difficulty: 'all', count: 5, mode: 'adaptive',
       })
-      const qs = (data?.questions || []).map((q: any) => ({
+      const qs = (data?.questions || []).map((q) => ({
         id: q.id,
         subject: q.subject,
         difficulty: q.difficulty,
@@ -94,7 +100,7 @@ async function submitStepAnswer() {
     if (data.finished) {
       stepFinished.value = true
       try {
-        const wp = await api.get<any>('/quiz/weak-points')
+        const wp = await api.get<WeakPointsResp>('/quiz/weak-points')
         stepResult.value = { weak_points: wp.weak_points || [] }
       } catch { stepResult.value = { weak_points: [] } }
     } else {

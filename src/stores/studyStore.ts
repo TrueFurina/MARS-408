@@ -177,6 +177,10 @@ llm_assessed: boolean
 // ── 对话管理 ──
 const _ns = (k: string) => `mangdehenzhi_${k}`
 
+// 契约层响应类型（对应 py-server 的 response_model）
+interface XfImageUnderstandResp { text: string; source: string }
+interface EnhancedAnswerResp { answer: string; svg_diagram?: string; video_script?: string }
+
 function nextId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
 }
@@ -597,7 +601,7 @@ const userMsg: ChatMessage = {
     conv.messages.push({ id: msgId, role: 'assistant', content: '', segments: [], timestamp: new Date() })
     saveConversations()
     try {
-      const data = await api.post<any>('/xfyun/image-understand', {
+      const data = await api.post<XfImageUnderstandResp>('/xfyun/image-understand', {
         image_base64: imageBase64,
         question: question || '这张图片讲了什么？',
       })
@@ -676,7 +680,7 @@ const userMsg: ChatMessage = {
           }
         }
       } else {
-        const data = await api.post<any>('/tutor/enhanced-answer', {
+        const data = await api.post<EnhancedAnswerResp>('/tutor/enhanced-answer', {
           question,
           profile: studentProfile.value || {},
           course: 'computer_network',

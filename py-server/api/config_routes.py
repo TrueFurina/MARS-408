@@ -6,6 +6,7 @@
 import logging
 
 from fastapi import APIRouter, Depends, Request
+from pydantic import BaseModel
 from db.llm_provider import LLMProvider, _provider_configured
 from config import load_config, save_config
 from models import ConfigResponse
@@ -31,7 +32,7 @@ def _mask_key(key: str) -> str:
     return f"{key[:4]}****{key[-4:]}"
 
 
-@router.get("/config")
+@router.get("/config", response_model=ConfigResponse)
 async def config_get(user: dict = Depends(require_admin)):
     """获取配置 — 从深度嵌套结构手动提取到扁平 ConfigResponse"""
     cfg = load_config()
@@ -100,7 +101,13 @@ async def config_post(config: ConfigResponse, user: dict = Depends(require_admin
     return {"status": "ok"}
 
 
-@router.post("/config/test-llm")
+class TestLLMResponse(BaseModel):
+    """LLM 连通性测试结果（/config/test-llm）"""
+    status: str = "ok"
+    message: str = ""
+
+
+@router.post("/config/test-llm", response_model=TestLLMResponse)
 async def config_test_llm(user: dict = Depends(require_admin)):
     """测试 LLM 连接"""
     llm = LLMProvider()

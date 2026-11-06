@@ -9,8 +9,8 @@ import logging
 import time
 import uuid
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
-from pydantic import BaseModel
-from typing import Optional, List
+from pydantic import BaseModel, ConfigDict
+from typing import Optional, List, Any
 
 from db.xfyun_services import (
     understand_image, web_search, generate_ppt, generate_video,
@@ -130,13 +130,105 @@ class ResumeReq(BaseModel):
 
 # ── 端点 ──
 
+class ImageUnderstandResponse(BaseModel):
+    """图片理解返回（/xfyun/image-understand）"""
+    model_config = ConfigDict(extra="allow")
+    text: str = ""
+    source: str = ""
+
+
+class SearchResponse(BaseModel):
+    """聚合搜索返回（/xfyun/search）"""
+    model_config = ConfigDict(extra="allow")
+    items: list = []
+    count: int = 0
+    source: str = ""
+
+
+class PPTSubmitResponse(BaseModel):
+    """PPT 生成异步提交返回（/xfyun/ppt）"""
+    model_config = ConfigDict(extra="allow")
+    task_id: str = ""
+    status: str = "pending"
+    source: str = ""
+
+
+class PPTStatusResponse(BaseModel):
+    """PPT 生成进度/结果返回（/xfyun/ppt/status/{task_id}）"""
+    model_config = ConfigDict(extra="allow")
+    task_id: str = ""
+    status: str = "pending"
+    result: Any = None
+    error: Any = None
+    created_at: float = 0.0
+
+
+class VideoSubmitResponse(BaseModel):
+    """数字人视频生成异步提交返回（/xfyun/video）"""
+    model_config = ConfigDict(extra="allow")
+    task_id: str = ""
+    status: str = "pending"
+    source: str = ""
+
+
+class VideoStatusResponse(BaseModel):
+    """视频生成进度/结果返回（/xfyun/video/status/{task_id}）"""
+    model_config = ConfigDict(extra="allow")
+    task_id: str = ""
+    status: str = "pending"
+    result: Any = None
+    error: Any = None
+    created_at: float = 0.0
+
+
+class ProofreadResponse(BaseModel):
+    """文本纠错返回（/xfyun/proofread）"""
+    model_config = ConfigDict(extra="allow")
+    corrections: list = []
+    count: int = 0
+    source: str = ""
+
+
+class ProofreadDocResponse(BaseModel):
+    """公文校对返回（/xfyun/proofread-doc）"""
+    model_config = ConfigDict(extra="allow")
+    corrections: list = []
+    count: int = 0
+    source: str = ""
+
+
+class ComplianceResponse(BaseModel):
+    """文本合规返回（/xfyun/compliance）"""
+    model_config = ConfigDict(extra="allow")
+    passed: bool = False
+    suggest: str = ""
+    hits: list = []
+    source: str = ""
+
+
+class RoleplayResponse(BaseModel):
+    """星火角色模拟返回（/xfyun/roleplay）"""
+    model_config = ConfigDict(extra="allow")
+    reply: str = ""
+    chat_id: str = ""
+    source: str = ""
+
+
+class ResumeResponse(BaseModel):
+    """智能简历返回（/xfyun/resume）"""
+    model_config = ConfigDict(extra="allow")
+    word_url: str = ""
+    raw: str = ""
+    source: str = ""
+
+
 @router.get("/status")
 async def xfyun_status(user: dict = Depends(get_current_user)):
     """讯飞全部能力可用状态（前端能力全景展示）"""
     return get_all_status()
 
 
-@router.post("/image-understand")
+@router.post("/image-understand", response_model=ImageUnderstandResponse)
 async def api_image_understand(req: ImageUnderstandReq, user: dict = Depends(get_current_user)):
     """图片理解：上传图片+提问，返回图文回答"""
     # F-015：用户自由文本净化（直连讯飞图片理解 LLM 入口，绕过统一边界）
@@ -159,7 +251,7 @@ async def api_image_understand(req: ImageUnderstandReq, user: dict = Depends(get
     return {"text": safe_text, "source": "xfyun-image-understanding"}
 
 
-@router.post("/search")
+@router.post("/search", response_model=SearchResponse)
 async def api_search(req: SearchReq, user: dict = Depends(get_current_user)):
     """聚合搜索（万搜）：联网检索，用于 RAG 增强"""
     # F-015：用户自由文本净化（直连讯飞聚合搜索 LLM 入口）
@@ -172,7 +264,7 @@ async def api_search(req: SearchReq, user: dict = Depends(get_current_user)):
             "count": len(r.items), "source": "xfyun-one-search"}
 
 
-@router.post("/ppt")
+@router.post("/ppt", response_model=PPTSubmitResponse)
 async def api_ppt(req: PPTReq, background_tasks: BackgroundTasks,
                   user: dict = Depends(get_current_user)):
     """智能 PPT 生成：异步提交，返回 task_id；轮询 /ppt/status/{task_id} 获取结果链接"""
@@ -185,7 +277,7 @@ async def api_ppt(req: PPTReq, background_tasks: BackgroundTasks,
     return {"task_id": task_id, "status": "pending", "source": "xfyun-ppt"}
 
 
-@router.get("/ppt/status/{task_id}")
+@router.get("/ppt/status/{task_id}", response_model=PPTStatusResponse)
 async def api_ppt_status(task_id: str, user: dict = Depends(get_current_user)):
     """PPT 生成进度/结果查询"""
     _prune_tasks(_ppt_tasks)
@@ -195,7 +287,7 @@ async def api_ppt_status(task_id: str, user: dict = Depends(get_current_user)):
     return {"task_id": task_id, **t}
 
 
-@router.post("/video")
+@router.post("/video", response_model=VideoSubmitResponse)
 async def api_video(req: VideoReq, background_tasks: BackgroundTasks,
                    user: dict = Depends(get_current_user)):
     """数字人视频生成：异步提交，返回 task_id；轮询 /video/status/{task_id} 获取结果链接"""
@@ -207,7 +299,7 @@ async def api_video(req: VideoReq, background_tasks: BackgroundTasks,
     return {"task_id": task_id, "status": "pending", "source": "xfyun-digital-human"}
 
 
-@router.get("/video/status/{task_id}")
+@router.get("/video/status/{task_id}", response_model=VideoStatusResponse)
 async def api_video_status(task_id: str, user: dict = Depends(get_current_user)):
     """视频生成进度/结果查询"""
     _prune_tasks(_video_tasks)
@@ -217,7 +309,7 @@ async def api_video_status(task_id: str, user: dict = Depends(get_current_user))
     return {"task_id": task_id, **t}
 
 
-@router.post("/proofread")
+@router.post("/proofread", response_model=ProofreadResponse)
 async def api_proofread(req: ProofreadReq, user: dict = Depends(get_current_user)):
     """文本纠错：拼写/语法/搭配/成语等纠错"""
     # F-015：用户自由文本净化（直连讯飞文本纠错 LLM 入口）
@@ -229,7 +321,7 @@ async def api_proofread(req: ProofreadReq, user: dict = Depends(get_current_user
             "source": "xfyun-text-correction"}
 
 
-@router.post("/proofread-doc")
+@router.post("/proofread-doc", response_model=ProofreadDocResponse)
 async def api_proofread_doc(req: ProofreadReq, user: dict = Depends(get_current_user)):
     """公文校对：政务/公文风格校对"""
     # F-015：用户自由文本净化（直连讯飞公文校对 LLM 入口）
@@ -241,7 +333,7 @@ async def api_proofread_doc(req: ProofreadReq, user: dict = Depends(get_current_
             "source": "xfyun-doc-proofread"}
 
 
-@router.post("/compliance")
+@router.post("/compliance", response_model=ComplianceResponse)
 async def api_compliance(req: ComplianceReq, user: dict = Depends(get_current_user)):
     """文本合规：内容安全审核（防违规/防幻觉输出）"""
     # F-015：用户自由文本净化（直连讯飞文本合规 LLM 入口）
@@ -253,7 +345,7 @@ async def api_compliance(req: ComplianceReq, user: dict = Depends(get_current_us
             "source": "xfyun-text-moderation"}
 
 
-@router.post("/roleplay")
+@router.post("/roleplay", response_model=RoleplayResponse)
 async def api_roleplay(req: RoleplayReq, user: dict = Depends(get_current_user)):
     """星火角色模拟：模拟面试官/导师与用户多轮对话"""
     # F-015：用户自由文本净化（直连讯飞角色模拟 LLM 入口）
@@ -271,7 +363,7 @@ async def api_roleplay(req: RoleplayReq, user: dict = Depends(get_current_user))
             "source": "xfyun-character-simulation"}
 
 
-@router.post("/resume")
+@router.post("/resume", response_model=ResumeResponse)
 async def api_resume(req: ResumeReq, user: dict = Depends(get_current_user)):
     """智能简历：生成可下载的求职/升学简历(word)"""
     # F-015：用户自由文本净化（直连讯飞智能简历 LLM 入口）

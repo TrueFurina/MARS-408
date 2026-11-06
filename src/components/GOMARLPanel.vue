@@ -4,6 +4,7 @@ import { icons } from '@/components/icons'
 import EngineSection from '@/components/EngineSection.vue'
 import { useStudyStore } from '@/stores/studyStore'
 import { api } from '@/utils/api'
+import type { GomarlConsensusResp } from '@/types/engineResponses'
 
 const store = useStudyStore()
 
@@ -37,7 +38,7 @@ async function runConsensus() {
   result.value = null
 
   try {
-    result.value = await api.post<any>('/engine/gomarl-consensus', {
+    result.value = await api.post<GomarlConsensusResp>('/engine/gomarl-consensus', {
       agent_results: sampleAgentResults.value,
       student_profile: store.studentProfile || {},
       topic: topic.value,

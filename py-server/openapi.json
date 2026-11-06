@@ -815,7 +815,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/WeakPointsResponse"
+                }
               }
             }
           },
@@ -1029,7 +1031,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateQuizResponse"
+                }
               }
             }
           },
@@ -1469,7 +1473,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateExtensionResponse"
+                }
               }
             }
           },
@@ -1543,7 +1549,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratePPTResponse"
+                }
               }
             }
           },
@@ -1617,7 +1625,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateCodePracticeResponse"
+                }
               }
             }
           },
@@ -2116,7 +2126,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgePreviewResponse"
+                }
               }
             }
           },
@@ -2194,7 +2206,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeBatchCommitResponse"
+                }
               }
             }
           },
@@ -2607,7 +2621,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SessionLoadResponse"
+                }
               }
             }
           },
@@ -3048,7 +3064,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigResponse"
+                }
               }
             }
           },
@@ -3184,7 +3202,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/TestLLMResponse"
+                }
               }
             }
           },
@@ -3474,7 +3494,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/AssessmentFeedbackResponse"
+                }
               }
             }
           },
@@ -3550,7 +3572,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/AssessmentRecommendationsResponse"
+                }
               }
             }
           },
@@ -3921,7 +3945,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/FrugalRagFullResponse"
+                }
               }
             }
           },
@@ -3995,7 +4021,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/GOMARLConsensusResponse"
+                }
               }
             }
           },
@@ -4271,7 +4299,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictCheckResponse"
+                }
               }
             }
           },
@@ -4465,7 +4495,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/TeachingRulesStatsResponse"
+                }
               }
             }
           },
@@ -4760,7 +4792,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/TeachingRulesPrerequisitesResponse"
+                }
               }
             }
           },
@@ -4963,7 +4997,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeBaseStatsResponse"
+                }
               }
             }
           },
@@ -5027,7 +5063,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ClassPerformanceResponse"
+                }
               }
             }
           },
@@ -5742,7 +5780,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ImageGenerationResponse"
+                }
               }
             }
           },
@@ -5816,7 +5856,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/AudioGenerationResponse"
+                }
               }
             }
           },
@@ -6102,7 +6144,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/TeachingVideoResponse"
+                }
               }
             }
           },
@@ -6326,7 +6370,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/EnhancedAnswerResponse"
+                }
               }
             }
           },
@@ -7756,7 +7802,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ImageUnderstandResponse"
+                }
               }
             }
           },
@@ -7830,7 +7878,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
               }
             }
           },
@@ -7904,7 +7954,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PPTSubmitResponse"
+                }
               }
             }
           },
@@ -7977,7 +8029,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PPTStatusResponse"
+                }
               }
             }
           },
@@ -8051,7 +8105,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/VideoSubmitResponse"
+                }
               }
             }
           },
@@ -8124,7 +8180,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/VideoStatusResponse"
+                }
               }
             }
           },
@@ -8198,7 +8256,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ProofreadResponse"
+                }
               }
             }
           },
@@ -8272,7 +8332,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ProofreadDocResponse"
+                }
               }
             }
           },
@@ -8346,7 +8408,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceResponse"
+                }
               }
             }
           },
@@ -8420,7 +8484,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/RoleplayResponse"
+                }
               }
             }
           },
@@ -8494,7 +8560,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ResumeResponse"
+                }
               }
             }
           },
@@ -9010,7 +9078,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SkillDetailResponse"
+                }
               }
             }
           },
@@ -9083,7 +9153,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SkillDetailResponse"
+                }
               }
             }
           },
@@ -9166,7 +9238,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SkillDetailResponse"
+                }
               }
             }
           },
@@ -9239,7 +9313,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SkillAckResponse"
+                }
               }
             }
           },
@@ -9526,7 +9602,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SkillAckResponse"
+                }
               }
             }
           },
@@ -9599,7 +9677,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SkillAckResponse"
+                }
               }
             }
           },
@@ -9764,7 +9844,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SkillListResponse"
+                }
               }
             }
           },
@@ -9879,7 +9961,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SkillListResponse"
+                }
               }
             }
           },
@@ -9943,7 +10027,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SkillListResponse"
+                }
               }
             }
           },
@@ -10026,7 +10112,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/RatingDetailResponse"
+                }
               }
             }
           },
@@ -10122,7 +10210,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/RatingListResponse"
+                }
               }
             }
           },
@@ -10195,7 +10285,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/FavoritedResponse"
+                }
               }
             }
           },
@@ -10268,7 +10360,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/FavoritedResponse"
+                }
               }
             }
           },
@@ -10332,7 +10426,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/FavoritesResponse"
+                }
               }
             }
           },
@@ -10405,7 +10501,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/FavoritedResponse"
+                }
               }
             }
           },
@@ -10469,7 +10567,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/CreatorStatsResponse"
+                }
               }
             }
           },
@@ -10533,7 +10633,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateListResponse"
+                }
               }
             }
           },
@@ -10606,7 +10708,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateDetailResponse"
+                }
               }
             }
           },
@@ -10689,7 +10793,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SkillDetailResponse"
+                }
               }
             }
           },
@@ -11296,7 +11402,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PromptTestResponse"
+                }
               }
             }
           },
@@ -11574,7 +11682,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/DiagnosticStartResponse"
+                }
               }
             }
           },
@@ -12103,7 +12213,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeGraphExtractResponse"
+                }
               }
             }
           },
@@ -12379,7 +12491,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeGraphListResponse"
+                }
               }
             }
           },
@@ -13739,7 +13853,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceListResponse"
+                }
               }
             }
           },
@@ -14904,7 +15020,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryContextResponse"
+                }
               }
             }
           },
@@ -15023,7 +15141,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/WrongQuestionListResponse"
+                }
               }
             }
           },
@@ -15232,7 +15352,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/WrongQuestionItem"
+                }
               }
             }
           },
@@ -15753,7 +15875,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PlanHistoryResponse"
+                }
               }
             }
           },
@@ -16322,7 +16446,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/CareerSessionStartResponse"
+                }
               }
             }
           },
@@ -16404,7 +16530,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/CareerSessionAnswerResponse"
+                }
               }
             }
           },
@@ -16486,7 +16614,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/CareerSessionEndResponse"
+                }
               }
             }
           },
@@ -16558,7 +16688,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/CareerSessionReportResponse"
+                }
               }
             }
           },
@@ -17491,7 +17623,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/MyTasksResponse"
+                }
               }
             }
           },
@@ -18918,6 +19052,56 @@
         ],
         "title": "AskRequest"
       },
+      "AssessmentFeedbackResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "evaluation": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Evaluation",
+            "default": {}
+          },
+          "path_adjustment": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Path Adjustment",
+            "default": {}
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "AssessmentFeedbackResponse",
+        "description": "增强版学习效果评估 + 路径调整返回（/assessment/feedback）"
+      },
+      "AssessmentRecommendationsResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "recommendations": {
+            "items": {
+              "$ref": "#/components/schemas/RecommendationItem"
+            },
+            "type": "array",
+            "title": "Recommendations",
+            "default": []
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "AssessmentRecommendationsResponse",
+        "description": "POST /assessment/recommendations 返回。"
+      },
       "AssessmentRequest": {
         "properties": {
           "profile": {
@@ -19085,6 +19269,44 @@
         ],
         "title": "AudioGenerationRequest",
         "description": "语音合成请求"
+      },
+      "AudioGenerationResponse": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "default": ""
+          },
+          "audio_base64": {
+            "type": "string",
+            "title": "Audio Base64",
+            "default": ""
+          },
+          "audio_format": {
+            "type": "string",
+            "title": "Audio Format",
+            "default": ""
+          },
+          "fallback_text": {
+            "type": "string",
+            "title": "Fallback Text",
+            "default": ""
+          },
+          "is_real_audio": {
+            "type": "boolean",
+            "title": "Is Real Audio",
+            "default": false
+          },
+          "text_length": {
+            "type": "integer",
+            "title": "Text Length",
+            "default": 0
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "AudioGenerationResponse",
+        "description": "语音旁白生成返回（/multimodal/generate-audio）"
       },
       "BatchDeleteRequest": {
         "properties": {
@@ -19602,6 +19824,480 @@
         ],
         "title": "CareerScenarioListResponse"
       },
+      "CareerSessionAnswerResponse": {
+        "properties": {
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "turns_done": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Turns Done"
+          },
+          "max_turns": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Turns"
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mode"
+          },
+          "catfish_triggered": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Catfish Triggered"
+          },
+          "last_evidence": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Evidence"
+          },
+          "next_question": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Question"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "assessment": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assessment"
+          },
+          "improvement": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Improvement"
+          },
+          "evidence_chain": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Chain"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "CareerSessionAnswerResponse",
+        "description": "POST /career/session/{id}/answer：status ∈ ongoing / finished_pending / finished / 已结束。"
+      },
+      "CareerSessionEndResponse": {
+        "properties": {
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "turns_done": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Turns Done"
+          },
+          "min_turns": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Turns"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "assessment": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assessment"
+          },
+          "improvement": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Improvement"
+          },
+          "evidence_chain": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Chain"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "CareerSessionEndResponse",
+        "description": "POST /career/session/{id}/end：status ∈ insufficient / generating / finished。"
+      },
+      "CareerSessionReportResponse": {
+        "properties": {
+          "session_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "scenario_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scenario Label"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "turns": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Turns"
+          },
+          "assessment": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assessment"
+          },
+          "improvement": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Improvement"
+          },
+          "evidence_chain": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Chain"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "CareerSessionReportResponse",
+        "description": "GET /career/session/{id}/report：status ∈ generating / failed / 会话真实状态（可能为 None）。"
+      },
+      "CareerSessionStartResponse": {
+        "properties": {
+          "session_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id"
+          },
+          "scenario_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scenario Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "scenario_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scenario Label"
+          },
+          "setting": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Setting"
+          },
+          "student_role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Student Role"
+          },
+          "interviewer_role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interviewer Role"
+          },
+          "max_turns": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Turns"
+          },
+          "next_question": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Question"
+          },
+          "turns_done": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Turns Done"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "phase": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phase"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "CareerSessionStartResponse",
+        "description": "POST /career/session/start：开场（单一形状，字段稳定）。"
+      },
       "CareerTaskJoinResult": {
         "properties": {
           "task_id": {
@@ -19730,6 +20426,59 @@
         ],
         "title": "ClassCreateRequest"
       },
+      "ClassPerformanceResponse": {
+        "properties": {
+          "avg_mastery": {
+            "type": "number",
+            "title": "Avg Mastery",
+            "default": 0
+          },
+          "avg_progress": {
+            "type": "number",
+            "title": "Avg Progress",
+            "default": 0
+          },
+          "weakest_chapters": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Weakest Chapters",
+            "default": []
+          },
+          "strongest_chapters": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Strongest Chapters",
+            "default": []
+          },
+          "common_weak_points": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Common Weak Points",
+            "default": []
+          },
+          "activity_trend": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Activity Trend",
+            "default": []
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "ClassPerformanceResponse",
+        "description": "班级整体学习表现（/teacher/analytics/class-performance）"
+      },
       "ComplianceReq": {
         "properties": {
           "text": {
@@ -19756,6 +20505,35 @@
           "text"
         ],
         "title": "ComplianceReq"
+      },
+      "ComplianceResponse": {
+        "properties": {
+          "passed": {
+            "type": "boolean",
+            "title": "Passed",
+            "default": false
+          },
+          "suggest": {
+            "type": "string",
+            "title": "Suggest",
+            "default": ""
+          },
+          "hits": {
+            "items": {},
+            "type": "array",
+            "title": "Hits",
+            "default": []
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "default": ""
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "ComplianceResponse",
+        "description": "文本合规返回（/xfyun/compliance）"
       },
       "ConfigResponse": {
         "properties": {
@@ -19829,6 +20607,45 @@
           "agent_results"
         ],
         "title": "ConflictCheckRequest"
+      },
+      "ConflictCheckResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "total_conflicts": {
+            "type": "integer",
+            "title": "Total Conflicts",
+            "default": 0
+          },
+          "resolved": {
+            "type": "integer",
+            "title": "Resolved",
+            "default": 0
+          },
+          "unresolved": {
+            "type": "integer",
+            "title": "Unresolved",
+            "default": 0
+          },
+          "conflicts": {
+            "items": {},
+            "type": "array",
+            "title": "Conflicts",
+            "default": []
+          },
+          "overall_consistency": {
+            "type": "number",
+            "title": "Overall Consistency",
+            "default": 0.0
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "ConflictCheckResponse",
+        "description": "独立冲突检测+消解返回（/engine/conflict-check）。"
       },
       "ConsentRequest": {
         "properties": {
@@ -19950,6 +20767,21 @@
             "type": "boolean",
             "title": "Rag Enabled",
             "default": true
+          },
+          "memory_access": {
+            "type": "string",
+            "title": "Memory Access",
+            "description": "记忆权限 none/read/write/read_write",
+            "default": "read_write"
+          },
+          "tools": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Tools",
+            "description": "结构化工具元数据"
           }
         },
         "type": "object",
@@ -19986,6 +20818,54 @@
         ],
         "title": "CreateUserRequest",
         "description": "创建用户请求体。\n\nrole 默认 \"student\"，也可传 \"teacher\"/\"admin\"。\n角色合法性校验在端点内完成（非法返回 400）。"
+      },
+      "CreatorStatsOut": {
+        "properties": {
+          "total_skills": {
+            "type": "integer",
+            "title": "Total Skills",
+            "default": 0
+          },
+          "published_skills": {
+            "type": "integer",
+            "title": "Published Skills",
+            "default": 0
+          },
+          "total_usage": {
+            "type": "integer",
+            "title": "Total Usage",
+            "default": 0
+          },
+          "usage_trend": {
+            "items": {
+              "$ref": "#/components/schemas/UsageTrendPoint"
+            },
+            "type": "array",
+            "title": "Usage Trend",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "CreatorStatsOut",
+        "description": "db/skill_store.py::get_creator_stats() 的返回投影。"
+      },
+      "CreatorStatsResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "stats": {
+            "$ref": "#/components/schemas/CreatorStatsOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stats"
+        ],
+        "title": "CreatorStatsResponse",
+        "description": "stats 的返回：{status, stats}。"
       },
       "DailyQuizPoint": {
         "properties": {
@@ -20059,6 +20939,37 @@
         ],
         "title": "DiagnosticResult",
         "description": "单科目诊断结果"
+      },
+      "DiagnosticStartResponse": {
+        "properties": {
+          "total_questions": {
+            "type": "integer",
+            "title": "Total Questions"
+          },
+          "subjects": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Subjects"
+          },
+          "questions": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Questions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_questions",
+          "subjects",
+          "questions"
+        ],
+        "title": "DiagnosticStartResponse",
+        "description": "开始诊断返回的题目列表"
       },
       "DiagnosticSubmitRequest": {
         "properties": {
@@ -20170,6 +21081,41 @@
         ],
         "title": "EngineStatusResponse"
       },
+      "EnhancedAnswerResponse": {
+        "properties": {
+          "answer": {
+            "type": "string",
+            "title": "Answer",
+            "default": ""
+          },
+          "svg_diagram": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Svg Diagram"
+          },
+          "video_script": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Video Script"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "EnhancedAnswerResponse",
+        "description": "增强版智能答疑返回（/tutor/enhanced-answer）；result 为 LLM 产物 dict，故额外字段全部放行"
+      },
       "EnhancedTutorRequest": {
         "properties": {
           "question": {
@@ -20267,6 +21213,43 @@
         ],
         "title": "ExtractRequest"
       },
+      "FavoritedResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "favorited": {
+            "type": "boolean",
+            "title": "Favorited",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "FavoritedResponse",
+        "description": "favorite / unfavorite / favorited 的返回。"
+      },
+      "FavoritesResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SkillItemOut"
+            },
+            "type": "array",
+            "title": "Items",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "FavoritesResponse",
+        "description": "favorites 的返回：只有 {status, items}，没有 total。"
+      },
       "FeedbackRequest": {
         "properties": {
           "rating": {
@@ -20318,6 +21301,66 @@
         ],
         "title": "FrugalRAGFullRequest"
       },
+      "FrugalRagFullResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "answer": {
+            "type": "string",
+            "title": "Answer",
+            "default": ""
+          },
+          "trajectory": {
+            "items": {},
+            "type": "array",
+            "title": "Trajectory",
+            "default": []
+          },
+          "total_searches": {
+            "type": "integer",
+            "title": "Total Searches",
+            "default": 0
+          },
+          "rewrites": {
+            "type": "integer",
+            "title": "Rewrites",
+            "default": 0
+          },
+          "coverage": {
+            "type": "number",
+            "title": "Coverage",
+            "default": 0.0
+          },
+          "complexity": {
+            "type": "string",
+            "title": "Complexity",
+            "default": ""
+          },
+          "cleaned_question": {
+            "type": "string",
+            "title": "Cleaned Question",
+            "default": ""
+          },
+          "chunks_count": {
+            "type": "integer",
+            "title": "Chunks Count",
+            "default": 0
+          },
+          "personalized_rerank": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Personalized Rerank",
+            "default": {}
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "FrugalRagFullResponse",
+        "description": "完整 FrugalRAG 检索返回（/engine/frugal-rag-full）。"
+      },
       "GOMARLConsensusRequest": {
         "properties": {
           "agent_results": {
@@ -20350,6 +21393,113 @@
           "agent_results"
         ],
         "title": "GOMARLConsensusRequest"
+      },
+      "GOMARLConsensusResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "consensus_score": {
+            "type": "number",
+            "title": "Consensus Score",
+            "default": 0.0
+          },
+          "neural_used": {
+            "type": "boolean",
+            "title": "Neural Used",
+            "default": false
+          },
+          "dynamic_weights": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Dynamic Weights",
+            "default": {}
+          },
+          "weighted_scores": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Weighted Scores",
+            "default": {}
+          },
+          "groups": {
+            "items": {},
+            "type": "array",
+            "title": "Groups",
+            "default": []
+          },
+          "sd_loss": {
+            "type": "number",
+            "title": "Sd Loss",
+            "default": 0.0
+          },
+          "conflicts": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Conflicts",
+            "default": {}
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "GOMARLConsensusResponse",
+        "description": "GoMARL 共识评估返回（/engine/gomarl-consensus）。"
+      },
+      "GenerateCodePracticeResponse": {
+        "properties": {
+          "code_practice": {
+            "type": "string",
+            "title": "Code Practice",
+            "default": ""
+          },
+          "hallucination_warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Hallucination Warnings",
+            "default": []
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "GenerateCodePracticeResponse",
+        "description": "代码实操案例生成返回（/agents/generate-code-practice）"
+      },
+      "GenerateExtensionResponse": {
+        "properties": {
+          "extension_doc": {
+            "type": "string",
+            "title": "Extension Doc",
+            "default": ""
+          },
+          "hallucination_warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Hallucination Warnings",
+            "default": []
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "GenerateExtensionResponse",
+        "description": "课外拓展阅读材料生成返回（/agents/generate-extension）"
+      },
+      "GeneratePPTResponse": {
+        "properties": {
+          "ppt_outline": {
+            "type": "string",
+            "title": "Ppt Outline",
+            "default": ""
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "GeneratePPTResponse",
+        "description": "PPT 大纲生成返回（/agents/generate-ppt）"
       },
       "GenerateQuestionsRequest": {
         "properties": {
@@ -20421,6 +21571,46 @@
         ],
         "title": "GenerateQuestionsResponse"
       },
+      "GenerateQuizQuestion": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "default": ""
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject",
+            "default": ""
+          },
+          "chapter": {
+            "type": "string",
+            "title": "Chapter",
+            "default": ""
+          },
+          "difficulty": {
+            "type": "string",
+            "title": "Difficulty",
+            "default": ""
+          },
+          "question_text": {
+            "type": "string",
+            "title": "Question Text",
+            "default": ""
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/GenerateQuizStep"
+            },
+            "type": "array",
+            "title": "Steps",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "GenerateQuizQuestion",
+        "description": "生成题目列表项（steps 为子模型数组）。"
+      },
       "GenerateQuizRequest": {
         "properties": {
           "subject": {
@@ -20446,6 +21636,61 @@
         },
         "type": "object",
         "title": "GenerateQuizRequest"
+      },
+      "GenerateQuizResponse": {
+        "properties": {
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/GenerateQuizQuestion"
+            },
+            "type": "array",
+            "title": "Questions",
+            "default": []
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "default": 0
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "GenerateQuizResponse",
+        "description": "POST /quiz/generate 返回。"
+      },
+      "GenerateQuizStep": {
+        "properties": {
+          "step_name": {
+            "type": "string",
+            "title": "Step Name",
+            "default": ""
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
+          },
+          "check_type": {
+            "type": "string",
+            "title": "Check Type",
+            "default": ""
+          },
+          "options": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Options",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "GenerateQuizStep",
+        "description": "生成题目中的单个步骤（对齐 generate_quiz 的投影，不含答案/提示）。"
       },
       "GenerationRequest": {
         "properties": {
@@ -20520,6 +21765,45 @@
         "title": "ImageGenerationRequest",
         "description": "教学插图生成请求"
       },
+      "ImageGenerationResponse": {
+        "properties": {
+          "topic": {
+            "type": "string",
+            "title": "Topic",
+            "default": ""
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "default": ""
+          },
+          "image_base64": {
+            "type": "string",
+            "title": "Image Base64",
+            "default": ""
+          },
+          "image_svg": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Svg"
+          },
+          "is_real_image": {
+            "type": "boolean",
+            "title": "Is Real Image",
+            "default": false
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "ImageGenerationResponse",
+        "description": "教学插图生成返回（/multimodal/generate-image）"
+      },
       "ImageUnderstandReq": {
         "properties": {
           "image_base64": {
@@ -20537,6 +21821,24 @@
           "image_base64"
         ],
         "title": "ImageUnderstandReq"
+      },
+      "ImageUnderstandResponse": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "default": ""
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "default": ""
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "ImageUnderstandResponse",
+        "description": "图片理解返回（/xfyun/image-understand）"
       },
       "KGEdge": {
         "properties": {
@@ -20606,6 +21908,69 @@
         ],
         "title": "KGQueryRequest"
       },
+      "KGVisGraph": {
+        "properties": {
+          "nodes": {
+            "items": {},
+            "type": "array",
+            "title": "Nodes",
+            "default": []
+          },
+          "edges": {
+            "items": {},
+            "type": "array",
+            "title": "Edges",
+            "default": []
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "KGVisGraph",
+        "description": "kg_to_vis_json 的可视化投影 {nodes, edges}；节点/边字段随图谱类型变化。"
+      },
+      "KnowledgeBaseStatsResponse": {
+        "properties": {
+          "total_chunks": {
+            "type": "integer",
+            "title": "Total Chunks",
+            "default": 0
+          },
+          "total_questions": {
+            "type": "integer",
+            "title": "Total Questions",
+            "default": 0
+          },
+          "kg_nodes": {
+            "type": "integer",
+            "title": "Kg Nodes",
+            "default": 0
+          },
+          "kg_edges": {
+            "type": "integer",
+            "title": "Kg Edges",
+            "default": 0
+          },
+          "by_subject": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "By Subject",
+            "default": {}
+          },
+          "auto_generated": {
+            "type": "integer",
+            "title": "Auto Generated",
+            "default": 0
+          },
+          "manual": {
+            "type": "integer",
+            "title": "Manual",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "KnowledgeBaseStatsResponse",
+        "description": "知识库统计（/teacher/knowledge-base/stats）"
+      },
       "KnowledgeBatchCommitItem": {
         "properties": {
           "content": {
@@ -20651,6 +22016,24 @@
         "title": "KnowledgeBatchCommitItem",
         "description": "批量提交的单条分块（Pydantic 校验：防止畸形/超大 payload 触发异常或注入）"
       },
+      "KnowledgeBatchCommitResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "committed": {
+            "type": "integer",
+            "title": "Committed",
+            "default": 0
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "KnowledgeBatchCommitResponse",
+        "description": "批量提交分块到向量库（/knowledge/batch-commit）"
+      },
       "KnowledgeDeleteRequest": {
         "properties": {
           "ids": {
@@ -20684,6 +22067,65 @@
           "content"
         ],
         "title": "KnowledgeDocIn"
+      },
+      "KnowledgeGraphExtractResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject",
+            "default": ""
+          },
+          "entities": {
+            "items": {},
+            "type": "array",
+            "title": "Entities",
+            "default": []
+          },
+          "relationships": {
+            "items": {},
+            "type": "array",
+            "title": "Relationships",
+            "default": []
+          },
+          "stats": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Stats",
+            "default": {}
+          },
+          "vis": {
+            "$ref": "#/components/schemas/KGVisGraph"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "KnowledgeGraphExtractResponse",
+        "description": "POST /knowledge-graph/extract 返回。\nentities / relationships / stats 是 LLM 抽取产物，形状不固定，用 list/dict 兜底；\nvis 是 kg_to_vis_json 的固定两键结构，单独精确建模供前端可视化消费。"
+      },
+      "KnowledgeGraphListResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "graphs": {
+            "items": {
+              "$ref": "#/components/schemas/SavedGraphItem"
+            },
+            "type": "array",
+            "title": "Graphs",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "KnowledgeGraphListResponse",
+        "description": "GET /knowledge-graph/list 返回。"
       },
       "KnowledgeGraphPayload": {
         "properties": {
@@ -20806,6 +22248,43 @@
           "total"
         ],
         "title": "KnowledgeListResponse"
+      },
+      "KnowledgePreviewResponse": {
+        "properties": {
+          "filename": {
+            "type": "string",
+            "title": "Filename",
+            "default": ""
+          },
+          "total_chars": {
+            "type": "integer",
+            "title": "Total Chars",
+            "default": 0
+          },
+          "items": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Items",
+            "default": []
+          },
+          "default_subject": {
+            "type": "string",
+            "title": "Default Subject",
+            "default": ""
+          },
+          "default_chapter": {
+            "type": "string",
+            "title": "Default Chapter",
+            "default": ""
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "KnowledgePreviewResponse",
+        "description": "语义解析预览（/knowledge/preview）"
       },
       "KnowledgeStatsResponse": {
         "properties": {
@@ -21149,6 +22628,22 @@
         "type": "object",
         "title": "MasteryUpdateRequest"
       },
+      "MemoryContextResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "context": {
+            "title": "Context"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "MemoryContextResponse",
+        "description": "三层记忆上下文（/memory/context）"
+      },
       "MemoryOverviewResponse": {
         "properties": {
           "status": {
@@ -21237,6 +22732,20 @@
         "title": "MultimodalResourceRequest",
         "description": "多模态资源生成请求（图+文+音一体）"
       },
+      "MyTasksResponse": {
+        "properties": {
+          "tasks": {
+            "items": {},
+            "type": "array",
+            "title": "Tasks",
+            "default": []
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "MyTasksResponse",
+        "description": "学生任务中心返回（/career/my-tasks）"
+      },
       "NarratedVideoRequest": {
         "properties": {
           "text": {
@@ -21299,6 +22808,58 @@
         ],
         "title": "PPTReq"
       },
+      "PPTStatusResponse": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "title": "Task Id",
+            "default": ""
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "pending"
+          },
+          "result": {
+            "title": "Result"
+          },
+          "error": {
+            "title": "Error"
+          },
+          "created_at": {
+            "type": "number",
+            "title": "Created At",
+            "default": 0.0
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "PPTStatusResponse",
+        "description": "PPT 生成进度/结果返回（/xfyun/ppt/status/{task_id}）"
+      },
+      "PPTSubmitResponse": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "title": "Task Id",
+            "default": ""
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "pending"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "default": ""
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "PPTSubmitResponse",
+        "description": "PPT 生成异步提交返回（/xfyun/ppt）"
+      },
       "PerQuestionResponse": {
         "properties": {
           "provenance": {
@@ -21321,6 +22882,135 @@
           "per_question"
         ],
         "title": "PerQuestionResponse"
+      },
+      "PlanHistoryItem": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "default": 0
+          },
+          "plan_date": {
+            "type": "string",
+            "title": "Plan Date",
+            "default": ""
+          },
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/PlanHistoryTask"
+            },
+            "type": "array",
+            "title": "Tasks",
+            "default": []
+          },
+          "total_tasks": {
+            "type": "integer",
+            "title": "Total Tasks",
+            "default": 0
+          },
+          "completed_tasks": {
+            "type": "integer",
+            "title": "Completed Tasks",
+            "default": 0
+          },
+          "completion_rate": {
+            "type": "number",
+            "title": "Completion Rate",
+            "default": 0.0
+          },
+          "target_exam_date": {
+            "type": "string",
+            "title": "Target Exam Date",
+            "default": ""
+          },
+          "target_score": {
+            "type": "integer",
+            "title": "Target Score",
+            "default": 0
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "PlanHistoryItem",
+        "description": "db/user_store.py::list_daily_plans 的精简投影（9 键）。\n注意：这里**没有** created_at / updated_at —— 单计划端点才有，\n前端手写 DailyPlan 曾把这两个字段声明为必填，属假契约。"
+      },
+      "PlanHistoryResponse": {
+        "properties": {
+          "plans": {
+            "items": {
+              "$ref": "#/components/schemas/PlanHistoryItem"
+            },
+            "type": "array",
+            "title": "Plans",
+            "default": []
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "default": 0
+          },
+          "start_date": {
+            "type": "string",
+            "title": "Start Date",
+            "default": ""
+          },
+          "end_date": {
+            "type": "string",
+            "title": "End Date",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "PlanHistoryResponse",
+        "description": "GET /daily-plan/history 返回。"
+      },
+      "PlanHistoryTask": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "default": ""
+          },
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "default": ""
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "default": ""
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject",
+            "default": ""
+          },
+          "chapter": {
+            "type": "string",
+            "title": "Chapter",
+            "default": ""
+          },
+          "progress": {
+            "type": "integer",
+            "title": "Progress",
+            "default": 0
+          },
+          "completed": {
+            "type": "boolean",
+            "title": "Completed",
+            "default": false
+          },
+          "estimated_minutes": {
+            "type": "integer",
+            "title": "Estimated Minutes",
+            "default": 0
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "PlanHistoryTask",
+        "description": "每日计划的任务项（_generate_default_daily_tasks 的投影）。"
       },
       "PlanTaskUpdateRequest": {
         "properties": {
@@ -21549,6 +23239,47 @@
         ],
         "title": "PromptTestRequest"
       },
+      "PromptTestResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "response": {
+            "type": "string",
+            "title": "Response",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "PromptTestResponse",
+        "description": "prompt-test 的返回；异常分支直接抛 HTTPException，无 200 错误形状。"
+      },
+      "ProofreadDocResponse": {
+        "properties": {
+          "corrections": {
+            "items": {},
+            "type": "array",
+            "title": "Corrections",
+            "default": []
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "default": 0
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "default": ""
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "ProofreadDocResponse",
+        "description": "公文校对返回（/xfyun/proofread-doc）"
+      },
       "ProofreadReq": {
         "properties": {
           "text": {
@@ -21561,6 +23292,30 @@
           "text"
         ],
         "title": "ProofreadReq"
+      },
+      "ProofreadResponse": {
+        "properties": {
+          "corrections": {
+            "items": {},
+            "type": "array",
+            "title": "Corrections",
+            "default": []
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "default": 0
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "default": ""
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "ProofreadResponse",
+        "description": "文本纠错返回（/xfyun/proofread）"
       },
       "QuizHistoryPayload": {
         "properties": {
@@ -21907,6 +23662,86 @@
         ],
         "title": "RateSkillRequest"
       },
+      "RatingDetailResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "rating": {
+            "$ref": "#/components/schemas/SkillRatingOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rating"
+        ],
+        "title": "RatingDetailResponse",
+        "description": "rate 的返回：{status, rating}。"
+      },
+      "RatingListResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "default": 0
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SkillRatingOut"
+            },
+            "type": "array",
+            "title": "Items",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "RatingListResponse",
+        "description": "ratings 的返回：{status, total, items}。"
+      },
+      "RecommendationItem": {
+        "properties": {
+          "icon": {
+            "type": "string",
+            "title": "Icon",
+            "default": ""
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "default": ""
+          },
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "default": ""
+          },
+          "action": {
+            "type": "string",
+            "title": "Action",
+            "default": ""
+          },
+          "route": {
+            "type": "string",
+            "title": "Route",
+            "default": ""
+          },
+          "priority": {
+            "type": "string",
+            "title": "Priority",
+            "default": "normal"
+          }
+        },
+        "type": "object",
+        "title": "RecommendationItem",
+        "description": "单条学习推荐（/assessment/recommendations 的 recs 元素，6 键固定）。"
+      },
       "RecordRequest": {
         "properties": {
           "event": {
@@ -22064,6 +23899,33 @@
         ],
         "title": "ResourceIdRequest"
       },
+      "ResourceListResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "resources": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Resources",
+            "default": []
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "default": 0
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "ResourceListResponse",
+        "description": "可复用资源列表（/resource/list）"
+      },
       "ResourceRecommendRequest": {
         "properties": {
           "entity_name": {
@@ -22097,6 +23959,29 @@
           "info"
         ],
         "title": "ResumeReq"
+      },
+      "ResumeResponse": {
+        "properties": {
+          "word_url": {
+            "type": "string",
+            "title": "Word Url",
+            "default": ""
+          },
+          "raw": {
+            "type": "string",
+            "title": "Raw",
+            "default": ""
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "default": ""
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "ResumeResponse",
+        "description": "智能简历返回（/xfyun/resume）"
       },
       "ReviewRecallRequest": {
         "properties": {
@@ -22183,6 +24068,29 @@
           "message"
         ],
         "title": "RoleplayReq"
+      },
+      "RoleplayResponse": {
+        "properties": {
+          "reply": {
+            "type": "string",
+            "title": "Reply",
+            "default": ""
+          },
+          "chat_id": {
+            "type": "string",
+            "title": "Chat Id",
+            "default": ""
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "default": ""
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "RoleplayResponse",
+        "description": "星火角色模拟返回（/xfyun/roleplay）"
       },
       "RunSkillRequest": {
         "properties": {
@@ -22337,6 +24245,38 @@
         ],
         "title": "SandboxResponse"
       },
+      "SavedGraphItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "default": ""
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject",
+            "default": ""
+          },
+          "entity_count": {
+            "type": "integer",
+            "title": "Entity Count",
+            "default": 0
+          },
+          "relation_count": {
+            "type": "integer",
+            "title": "Relation Count",
+            "default": 0
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "SavedGraphItem",
+        "description": "GET /knowledge-graph/list 的列表项（5 键固定投影）。"
+      },
       "ScenarioGenerateRequest": {
         "properties": {
           "job_direction": {
@@ -22412,6 +24352,30 @@
         ],
         "title": "SearchRequest"
       },
+      "SearchResponse": {
+        "properties": {
+          "items": {
+            "items": {},
+            "type": "array",
+            "title": "Items",
+            "default": []
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "default": 0
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "default": ""
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "SearchResponse",
+        "description": "聚合搜索返回（/xfyun/search）"
+      },
       "SemanticMemoryRequest": {
         "properties": {
           "profile": {
@@ -22473,6 +24437,38 @@
         },
         "type": "object",
         "title": "SemanticMemoryRequest"
+      },
+      "SessionLoadResponse": {
+        "properties": {
+          "conv_id": {
+            "type": "string",
+            "title": "Conv Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "default": ""
+          },
+          "messages": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Messages",
+            "default": []
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "conv_id"
+        ],
+        "title": "SessionLoadResponse"
       },
       "SessionMessage": {
         "properties": {
@@ -22537,6 +24533,355 @@
           "conv_id"
         ],
         "title": "SessionSaveRequest"
+      },
+      "SkillAckResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "SkillAckResponse",
+        "description": "delete / publish / archive / seed-official 的回执。"
+      },
+      "SkillDetailResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "skill": {
+            "$ref": "#/components/schemas/SkillItemOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "skill"
+        ],
+        "title": "SkillDetailResponse",
+        "description": "get/create/update/from-template 的返回：{status, skill}。"
+      },
+      "SkillItemOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "default": ""
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "default": ""
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
+          },
+          "icon": {
+            "type": "string",
+            "title": "Icon",
+            "default": ""
+          },
+          "system_prompt": {
+            "type": "string",
+            "title": "System Prompt",
+            "default": ""
+          },
+          "llm_channel": {
+            "type": "string",
+            "title": "Llm Channel",
+            "default": ""
+          },
+          "temperature": {
+            "type": "number",
+            "title": "Temperature",
+            "default": 0.0
+          },
+          "max_tokens": {
+            "type": "integer",
+            "title": "Max Tokens",
+            "default": 0
+          },
+          "kb_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Kb Ids",
+            "default": []
+          },
+          "rag_enabled": {
+            "type": "boolean",
+            "title": "Rag Enabled",
+            "default": true
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tags",
+            "default": []
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "default": ""
+          },
+          "category_label": {
+            "type": "string",
+            "title": "Category Label",
+            "default": ""
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "default": 1
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": ""
+          },
+          "memory_access": {
+            "type": "string",
+            "title": "Memory Access",
+            "default": "read_write"
+          },
+          "usage_count": {
+            "type": "integer",
+            "title": "Usage Count",
+            "default": 0
+          },
+          "user_count": {
+            "type": "integer",
+            "title": "User Count",
+            "default": 0
+          },
+          "avg_rating": {
+            "type": "number",
+            "title": "Avg Rating",
+            "default": 0.0
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At",
+            "default": ""
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At",
+            "default": ""
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "creator_id": {
+            "type": "string",
+            "title": "Creator Id",
+            "default": ""
+          },
+          "creator_name": {
+            "type": "string",
+            "title": "Creator Name",
+            "default": ""
+          },
+          "is_official": {
+            "type": "boolean",
+            "title": "Is Official",
+            "default": false
+          },
+          "allowed_tools": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Allowed Tools",
+            "default": []
+          },
+          "disable_model_invocation": {
+            "type": "boolean",
+            "title": "Disable Model Invocation",
+            "default": false
+          },
+          "trigger_paths": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Trigger Paths",
+            "default": []
+          },
+          "tools": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Tools",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "SkillItemOut",
+        "description": "schemas/skills.py::Skill.to_dict() 的完整投影。"
+      },
+      "SkillListResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "default": 0
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SkillItemOut"
+            },
+            "type": "array",
+            "title": "Items",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "SkillListResponse",
+        "description": "market/my/official 的返回：{status, total, items}。"
+      },
+      "SkillRatingOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "default": ""
+          },
+          "skill_id": {
+            "type": "string",
+            "title": "Skill Id",
+            "default": ""
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id",
+            "default": ""
+          },
+          "user_name": {
+            "type": "string",
+            "title": "User Name",
+            "default": ""
+          },
+          "rating": {
+            "type": "integer",
+            "title": "Rating",
+            "default": 0
+          },
+          "comment": {
+            "type": "string",
+            "title": "Comment",
+            "default": ""
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "SkillRatingOut",
+        "description": "schemas/skills.py::SkillRating.to_dict()。"
+      },
+      "SkillTemplateConfig": {
+        "properties": {
+          "llm_channel": {
+            "type": "string",
+            "title": "Llm Channel",
+            "default": "auto"
+          },
+          "temperature": {
+            "type": "number",
+            "title": "Temperature",
+            "default": 0.7
+          },
+          "max_tokens": {
+            "type": "integer",
+            "title": "Max Tokens",
+            "default": 2048
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "SkillTemplateConfig",
+        "description": "模板 default_config：种子数据固定三键（db/skill_store.py 全部模板一致）。"
+      },
+      "SkillTemplateOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "default": ""
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "default": ""
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "default": ""
+          },
+          "category_label": {
+            "type": "string",
+            "title": "Category Label",
+            "default": ""
+          },
+          "icon": {
+            "type": "string",
+            "title": "Icon",
+            "default": ""
+          },
+          "system_prompt_template": {
+            "type": "string",
+            "title": "System Prompt Template",
+            "default": ""
+          },
+          "default_config": {
+            "$ref": "#/components/schemas/SkillTemplateConfig"
+          },
+          "sort_order": {
+            "type": "integer",
+            "title": "Sort Order",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "SkillTemplateOut",
+        "description": "schemas/skills.py::SkillTemplate.to_dict()。"
       },
       "StartRequest": {
         "properties": {
@@ -23119,6 +25464,56 @@
         ],
         "title": "TeachingRulesAgentAssignRequest"
       },
+      "TeachingRulesPrerequisitesResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "topic_id": {
+            "type": "string",
+            "title": "Topic Id",
+            "default": ""
+          },
+          "topic_name": {
+            "type": "string",
+            "title": "Topic Name",
+            "default": ""
+          },
+          "course": {
+            "type": "string",
+            "title": "Course",
+            "default": ""
+          },
+          "exam_weight": {
+            "type": "number",
+            "title": "Exam Weight",
+            "default": 0
+          },
+          "difficulty": {
+            "type": "string",
+            "title": "Difficulty",
+            "default": ""
+          },
+          "prerequisites": {
+            "items": {},
+            "type": "array",
+            "title": "Prerequisites",
+            "default": []
+          },
+          "cross_subject_prerequisites": {
+            "items": {},
+            "type": "array",
+            "title": "Cross Subject Prerequisites",
+            "default": []
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "TeachingRulesPrerequisitesResponse",
+        "description": "知识点前置依赖（/engine/teaching-rules/prerequisites/{topic_id}）"
+      },
       "TeachingRulesPrioritizeRequest": {
         "properties": {
           "topic_ids": {
@@ -23140,6 +25535,25 @@
           "student_profile"
         ],
         "title": "TeachingRulesPrioritizeRequest"
+      },
+      "TeachingRulesStatsResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "stats": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Stats",
+            "default": {}
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "TeachingRulesStatsResponse",
+        "description": "教学规则引擎统计（/engine/teaching-rules）"
       },
       "TeachingRulesValidateRequest": {
         "properties": {
@@ -23200,6 +25614,123 @@
           "topic"
         ],
         "title": "TeachingVideoRequest"
+      },
+      "TeachingVideoResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "resource_type": {
+            "type": "string",
+            "title": "Resource Type",
+            "default": "teaching_video"
+          },
+          "topic": {
+            "type": "string",
+            "title": "Topic",
+            "default": ""
+          },
+          "scenes": {
+            "type": "integer",
+            "title": "Scenes",
+            "default": 0
+          },
+          "duration_sec": {
+            "type": "integer",
+            "title": "Duration Sec",
+            "default": 0
+          },
+          "duration_str": {
+            "type": "string",
+            "title": "Duration Str",
+            "default": ""
+          },
+          "html": {
+            "type": "string",
+            "title": "Html",
+            "default": ""
+          },
+          "html_path": {
+            "type": "string",
+            "title": "Html Path",
+            "default": ""
+          },
+          "video_script": {
+            "type": "string",
+            "title": "Video Script",
+            "default": ""
+          },
+          "format": {
+            "type": "string",
+            "title": "Format",
+            "default": "html"
+          }
+        },
+        "type": "object",
+        "title": "TeachingVideoResponse",
+        "description": "POST /multimodal/generate-teaching-video 返回（_generate_teaching_video 的 10 键投影）。"
+      },
+      "TemplateDetailResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "template": {
+            "$ref": "#/components/schemas/SkillTemplateOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "template"
+        ],
+        "title": "TemplateDetailResponse",
+        "description": "templates/{id} 的返回：{status, template}。"
+      },
+      "TemplateListResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "default": 0
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SkillTemplateOut"
+            },
+            "type": "array",
+            "title": "Items",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "TemplateListResponse",
+        "description": "templates 的返回：{status, total, items}。"
+      },
+      "TestLLMResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "ok"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "TestLLMResponse",
+        "description": "LLM 连通性测试结果（/config/test-llm）"
       },
       "TokenResponse": {
         "properties": {
@@ -23511,10 +26042,52 @@
               }
             ],
             "title": "Rag Enabled"
+          },
+          "memory_access": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Memory Access"
+          },
+          "tools": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tools"
           }
         },
         "type": "object",
         "title": "UpdateSkillRequest"
+      },
+      "UsageTrendPoint": {
+        "properties": {
+          "day": {
+            "type": "string",
+            "title": "Day",
+            "default": ""
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "UsageTrendPoint"
       },
       "ValidationError": {
         "properties": {
@@ -23573,6 +26146,115 @@
           "prompt"
         ],
         "title": "VideoReq"
+      },
+      "VideoStatusResponse": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "title": "Task Id",
+            "default": ""
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "pending"
+          },
+          "result": {
+            "title": "Result"
+          },
+          "error": {
+            "title": "Error"
+          },
+          "created_at": {
+            "type": "number",
+            "title": "Created At",
+            "default": 0.0
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "VideoStatusResponse",
+        "description": "视频生成进度/结果返回（/xfyun/video/status/{task_id}）"
+      },
+      "VideoSubmitResponse": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "title": "Task Id",
+            "default": ""
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "pending"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "default": ""
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "VideoSubmitResponse",
+        "description": "数字人视频生成异步提交返回（/xfyun/video）"
+      },
+      "WeakPointItem": {
+        "properties": {
+          "subject": {
+            "type": "string",
+            "title": "Subject",
+            "default": ""
+          },
+          "chapter": {
+            "type": "string",
+            "title": "Chapter",
+            "default": ""
+          },
+          "concept": {
+            "type": "string",
+            "title": "Concept",
+            "default": ""
+          },
+          "error_type": {
+            "type": "string",
+            "title": "Error Type",
+            "default": ""
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "default": 0
+          },
+          "mastered": {
+            "type": "boolean",
+            "title": "Mastered",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "WeakPointItem",
+        "description": "单条薄弱知识点（/quiz/weak-points 数组元素）"
+      },
+      "WeakPointsResponse": {
+        "properties": {
+          "weak_points": {
+            "items": {
+              "$ref": "#/components/schemas/WeakPointItem"
+            },
+            "type": "array",
+            "title": "Weak Points",
+            "default": []
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "WeakPointsResponse",
+        "description": "薄弱知识点聚合结果"
       },
       "WorkingMemoryRequest": {
         "properties": {
@@ -23689,6 +26371,138 @@
           "timestamp"
         ],
         "title": "WrongQuestion"
+      },
+      "WrongQuestionItem": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "default": 0
+          },
+          "question_id": {
+            "type": "string",
+            "title": "Question Id",
+            "default": ""
+          },
+          "question": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Question",
+            "default": {}
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject",
+            "default": ""
+          },
+          "chapter": {
+            "type": "string",
+            "title": "Chapter",
+            "default": ""
+          },
+          "knowledge_point": {
+            "type": "string",
+            "title": "Knowledge Point",
+            "default": ""
+          },
+          "wrong_answer": {
+            "type": "string",
+            "title": "Wrong Answer",
+            "default": ""
+          },
+          "correct_answer": {
+            "type": "string",
+            "title": "Correct Answer",
+            "default": ""
+          },
+          "error_type": {
+            "type": "string",
+            "title": "Error Type",
+            "default": ""
+          },
+          "attribution": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attribution"
+          },
+          "wrong_count": {
+            "type": "integer",
+            "title": "Wrong Count",
+            "default": 0
+          },
+          "mastered": {
+            "type": "boolean",
+            "title": "Mastered",
+            "default": false
+          },
+          "last_wrong_at": {
+            "type": "string",
+            "title": "Last Wrong At",
+            "default": ""
+          },
+          "first_wrong_at": {
+            "type": "string",
+            "title": "First Wrong At",
+            "default": ""
+          },
+          "review_stage": {
+            "type": "string",
+            "title": "Review Stage",
+            "default": ""
+          },
+          "next_review_at": {
+            "type": "string",
+            "title": "Next Review At",
+            "default": ""
+          },
+          "review_history": {
+            "items": {},
+            "type": "array",
+            "title": "Review History",
+            "default": []
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "WrongQuestionItem",
+        "description": "db/user_store.py::get_wrong_question 的 17 键投影。\nquestion / attribution / review_history 是从 JSON 列解析出的任意结构，\n用 dict/list/Any 兜底（解析失败时分别为 {} / None / []），不硬定型。"
+      },
+      "WrongQuestionListResponse": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "default": 0
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page",
+            "default": 1
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size",
+            "default": 20
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/WrongQuestionItem"
+            },
+            "type": "array",
+            "title": "Items",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "WrongQuestionListResponse",
+        "description": "GET /wrong-questions 返回（db/user_store.py::list_wrong_questions）。"
       },
       "api__career_training__AnswerRequest": {
         "properties": {

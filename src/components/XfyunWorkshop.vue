@@ -23,6 +23,21 @@ const xfGov = ref<{ corrections: any[]; count: number } | null>(null)
 const xfCompliance = ref<{ passed: boolean; suggest: string; hits: any[] } | null>(null)
 const xfResume = ref<{ url: string | null; raw: string } | null>(null)
 
+// 契约层响应类型（对应 py-server 各 xfyun 端点的 response_model）
+interface XfSubmitTaskResp { task_id: string; status: string; source: string }
+interface XfSearchResp { items: { title: string; summary: string; url: string }[]; count: number; source: string }
+interface XfProofreadResp { corrections: unknown[]; count: number; source: string }
+interface XfComplianceResp { passed: boolean; suggest: string; hits: unknown[]; source: string }
+interface XfRoleplayResp { reply: string; chat_id: string; source: string }
+interface XfResumeResp { word_url: string; raw: string; source: string }
+interface XfTaskStatus {
+  task_id: string
+  status: string
+  result: { ppt_url?: string; title?: string; video_url?: string; audio_url?: string; text?: string; [k: string]: unknown }
+  error: string | null
+  created_at?: number
+}
+
 // 角色模拟 mini-chat
 const rpPersona = ref('interviewer')
 const rpTopic = ref('')
@@ -45,10 +60,10 @@ async function xfCall(key: string, fn: () => Promise<void>) {
   finally { xfLoading.value = null }
 }
 
-async function pollXfTask(statusUrl: string, timeoutMs = 320000): Promise<any> {
+async function pollXfTask(statusUrl: string, timeoutMs = 320000): Promise<XfTaskStatus> {
   const start = Date.now()
   while (Date.now() - start < timeoutMs) {
-    const s = await api.get<any>(statusUrl)
+    const s = await api.get<XfTaskStatus>(statusUrl)
     if (s.status === 'done') return s
     if (s.status === 'failed') throw new Error(s.error || '生成失败')
     await new Promise(r => setTimeout(r, 4000))
@@ -63,11 +78,11 @@ function _sourceText(): string {
 async function genXfPpt() {
   if (!props.topic.trim()) return
   await xfCall('ppt', async () => {
-    const submit = await api.post<any>('/xfyun/ppt', {
+    const submit = await api.post<XfSubmitTaskResp>('/xfyun/ppt', {
       query: props.topic, is_figure: true, ai_image: 'normal', search: true,
     })
     const s = await pollXfTask('/xfyun/ppt/status/' + submit.task_id)
-    xfPpt.value = { url: s.result.ppt_url, title: s.result.title }
+    xfPpt.value = { url: s.result.ppt_url || '', title: s.result.title || '' }
   })
 }
 
@@ -75,16 +90,16 @@ async function genXfVideo() {
   const prompt = (props.result?.video_script || props.result?.teacher_doc || props.topic).slice(0, 800)
   if (!prompt.trim()) return
   await xfCall('video', async () => {
-    const submit = await api.post<any>('/xfyun/video', { prompt, word_count: 120 })
+    const submit = await api.post<XfSubmitTaskResp>('/xfyun/video', { prompt, word_count: 120 })
     const s = await pollXfTask('/xfyun/video/status/' + submit.task_id)
-    xfVideo.value = { url: s.result.video_url, audio: s.result.audio_url, text: s.result.text }
+    xfVideo.value = { url: s.result.video_url || '', audio: s.result.audio_url || '', text: s.result.text || '' }
   })
 }
 
 async function doXfSearch() {
   if (!props.topic.trim()) return
   await xfCall('search', async () => {
-    const d = await api.post<any>('/xfyun/search', { query: props.topic, limit: 5 })
+    const d = await api.post<XfSearchResp>('/xfyun/search', { query: props.topic, limit: 5 })
     xfSearch.value = { items: d.items || [], count: d.count || 0 }
   })
 }
@@ -93,7 +108,7 @@ async function doXfProofread() {
   const text = _sourceText()
   if (!text.trim()) return
   await xfCall('proof', async () => {
-    const d = await api.post<any>('/xfyun/proofread', { text })
+    const d = await api.post<XfProofreadResp>('/xfyun/proofread', { text })
     xfProof.value = { corrections: d.corrections || [], count: d.count || 0 }
   })
 }
@@ -102,7 +117,7 @@ async function doXfGovProof() {
   const text = _sourceText()
   if (!text.trim()) return
   await xfCall('gov', async () => {
-    const d = await api.post<any>('/xfyun/proofread-doc', { text })
+    const d = await api.post<XfProofreadResp>('/xfyun/proofread-doc', { text })
     xfGov.value = { corrections: d.corrections || [], count: d.count || 0 }
   })
 }
@@ -111,7 +126,7 @@ async function doXfCompliance() {
   const text = _sourceText()
   if (!text.trim()) return
   await xfCall('compliance', async () => {
-    const d = await api.post<any>('/xfyun/compliance', { text })
+    const d = await api.post<XfComplianceResp>('/xfyun/compliance', { text })
     xfCompliance.value = { passed: d.passed, suggest: d.suggest, hits: d.hits || [] }
   })
 }
@@ -122,7 +137,7 @@ async function sendRp() {
   rpMessages.value.push({ role: 'user', content: msg })
   rpInput.value = ''
   await xfCall('roleplay', async () => {
-    const d = await api.post<any>('/xfyun/roleplay', {
+    const d = await api.post<XfRoleplayResp>('/xfyun/roleplay', {
       persona: rpPersona.value, message: msg, topic: rpTopic.value,
     })
     rpMessages.value.push({ role: 'assistant', content: d.reply || '（无回答）' })
@@ -142,7 +157,7 @@ async function genXfResume() {
     `请生成1份专业技术求职简历。`,
   ].join('\n')
   await xfCall('resume', async () => {
-    const d = await api.post<any>('/xfyun/resume', { info })
+    const d = await api.post<XfResumeResp>('/xfyun/resume', { info })
     xfResume.value = { url: d.word_url, raw: d.raw }
   })
 }

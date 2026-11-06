@@ -5,10 +5,10 @@
 # ============================================================
 
 import logging
-from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
+from typing import Optional
 
 from shared.auth import get_current_user
 
@@ -36,6 +36,42 @@ class KGQueryRequest(BaseModel):
     subject: Optional[str] = Field(None, description="科目过滤")
 
 
+# ── 响应模型（2026-11-06 补，批7）──
+class KGVisGraph(BaseModel):
+    """kg_to_vis_json 的可视化投影 {nodes, edges}；节点/边字段随图谱类型变化。"""
+    model_config = ConfigDict(extra="allow")
+    nodes: list = []
+    edges: list = []
+
+
+class KnowledgeGraphExtractResponse(BaseModel):
+    """POST /knowledge-graph/extract 返回。
+    entities / relationships / stats 是 LLM 抽取产物，形状不固定，用 list/dict 兜底；
+    vis 是 kg_to_vis_json 的固定两键结构，单独精确建模供前端可视化消费。"""
+    model_config = ConfigDict(extra="allow")
+    status: str = "ok"
+    subject: str = ""
+    entities: list = []
+    relationships: list = []
+    stats: dict = {}
+    vis: KGVisGraph = Field(default_factory=KGVisGraph)
+
+
+class SavedGraphItem(BaseModel):
+    """GET /knowledge-graph/list 的列表项（5 键固定投影）。"""
+    id: str = ""
+    subject: str = ""
+    entity_count: int = 0
+    relation_count: int = 0
+    created_at: str = ""
+
+
+class KnowledgeGraphListResponse(BaseModel):
+    """GET /knowledge-graph/list 返回。"""
+    status: str = "ok"
+    graphs: list[SavedGraphItem] = []
+
+
 # ── 助手函数 ──
 
 
@@ -50,7 +86,7 @@ def _user_name(user: dict) -> str:
 # ── API 端点 ──
 
 
-@router.post("/extract")
+@router.post("/extract", response_model=KnowledgeGraphExtractResponse)
 async def api_extract_knowledge_graph(
     body: ExtractRequest,
     user: dict = Depends(get_current_user),
@@ -216,7 +252,7 @@ async def api_kg_stats(user: dict = Depends(get_current_user)):
     return {"status": "ok", "stats": stats}
 
 
-@router.get("/list")
+@router.get("/list", response_model=KnowledgeGraphListResponse)
 async def api_list_graphs(user: dict = Depends(get_current_user)):
     """列出已保存的知识图谱"""
     import os

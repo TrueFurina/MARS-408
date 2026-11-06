@@ -8,7 +8,7 @@ import logging
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 
 from shared.auth import get_current_user
@@ -195,6 +195,73 @@ class CareerConsentResponse(BaseModel):
     text: str
 
 
+# ── 会话响应模型（2026-11-05 补，批5）──
+# 这四个端点都是 **status 判别联合**：同一个路由按会话状态返回不同字段集合
+# （answer 有 ongoing / finished_pending / finished / 已结束 四种形状；
+#  report 有 generating / failed / 完整报告三种；end 有 insufficient / generating / finished）。
+# 若按单一形状硬定型，要么缺字段时校验 500，要么靠默认值凭空注入一堆恒为 null 的字段
+# —— 两种都不诚实。故采用：所有顶层字段 Optional + extra="allow" 兜底实现细节 +
+# 端点统一 response_model_exclude_unset=True（只序列化本次真实返回的字段）。
+# 前端按 status 判别消费，精确形状见各自前端接口声明。
+class CareerSessionStartResponse(BaseModel):
+    """POST /career/session/start：开场（单一形状，字段稳定）。"""
+    model_config = ConfigDict(extra="allow")
+    session_id: Optional[str] = None
+    scenario_id: Optional[str] = None
+    title: Optional[str] = None
+    scenario_label: Optional[str] = None
+    setting: Optional[str] = None
+    student_role: Optional[str] = None
+    interviewer_role: Optional[str] = None
+    max_turns: Optional[int] = None
+    next_question: Optional[dict] = None
+    turns_done: Optional[int] = None
+    status: Optional[str] = None
+    phase: Optional[str] = None
+
+
+class CareerSessionAnswerResponse(BaseModel):
+    """POST /career/session/{id}/answer：status ∈ ongoing / finished_pending / finished / 已结束。"""
+    model_config = ConfigDict(extra="allow")
+    status: Optional[str] = None
+    turns_done: Optional[int] = None
+    max_turns: Optional[int] = None
+    mode: Optional[str] = None
+    catfish_triggered: Optional[bool] = None
+    last_evidence: Optional[dict] = None
+    next_question: Optional[dict] = None
+    message: Optional[str] = None
+    assessment: Optional[dict] = None
+    improvement: Optional[dict] = None
+    evidence_chain: Optional[list] = None
+
+
+class CareerSessionEndResponse(BaseModel):
+    """POST /career/session/{id}/end：status ∈ insufficient / generating / finished。"""
+    model_config = ConfigDict(extra="allow")
+    status: Optional[str] = None
+    turns_done: Optional[int] = None
+    min_turns: Optional[int] = None
+    message: Optional[str] = None
+    assessment: Optional[dict] = None
+    improvement: Optional[dict] = None
+    evidence_chain: Optional[list] = None
+
+
+class CareerSessionReportResponse(BaseModel):
+    """GET /career/session/{id}/report：status ∈ generating / failed / 会话真实状态（可能为 None）。"""
+    model_config = ConfigDict(extra="allow")
+    session_id: Optional[str] = None
+    title: Optional[str] = None
+    scenario_label: Optional[str] = None
+    status: Optional[str] = None
+    turns: Optional[list] = None
+    assessment: Optional[dict] = None
+    improvement: Optional[dict] = None
+    evidence_chain: Optional[list] = None
+    message: Optional[str] = None
+
+
 # ── 场景列表 ──
 @router.get("/scenarios", response_model=CareerScenarioListResponse)
 async def scenarios(user: dict = Depends(get_current_user)):
@@ -248,7 +315,8 @@ async def activate_scenario(scenario_id: str, user: dict = Depends(get_current_u
 
 
 # ── 启动一场实训 ──
-@router.post("/session/start")
+@router.post("/session/start", response_model=CareerSessionStartResponse,
+             response_model_exclude_unset=True)
 async def start(req: StartRequest, user: dict = Depends(get_current_user)):
     try:
         return await career_service.start_session(
@@ -264,7 +332,8 @@ async def start(req: StartRequest, user: dict = Depends(get_current_user)):
 
 
 # ── 推进一轮 ──
-@router.post("/session/{session_id}/answer")
+@router.post("/session/{session_id}/answer", response_model=CareerSessionAnswerResponse,
+             response_model_exclude_unset=True)
 async def answer(session_id: str, req: AnswerRequest, user: dict = Depends(get_current_user)):
     _check_owner(session_id, user)
     try:
@@ -279,7 +348,8 @@ async def answer(session_id: str, req: AnswerRequest, user: dict = Depends(get_c
 
 
 # ── 主动结束并出报告 ──
-@router.post("/session/{session_id}/end")
+@router.post("/session/{session_id}/end", response_model=CareerSessionEndResponse,
+             response_model_exclude_unset=True)
 async def end(session_id: str, req: EndRequest, user: dict = Depends(get_current_user)):
     _check_owner(session_id, user)
     try:
@@ -292,7 +362,8 @@ async def end(session_id: str, req: EndRequest, user: dict = Depends(get_current
 
 
 # ── 获取报告（含完整对话与证据链）──
-@router.get("/session/{session_id}/report")
+@router.get("/session/{session_id}/report", response_model=CareerSessionReportResponse,
+            response_model_exclude_unset=True)
 async def report(session_id: str, user: dict = Depends(get_current_user)):
     _check_owner(session_id, user)
     try:
@@ -776,7 +847,13 @@ async def student_detail(class_id: str, user_id: str, user: dict = Depends(get_c
 
 
 # ── 学生任务中心（F3：我已绑定班级的开放任务，免手输任务码）──
-@router.get("/my-tasks")
+class MyTasksResponse(BaseModel):
+    """学生任务中心返回（/career/my-tasks）"""
+    model_config = ConfigDict(extra="allow")
+    tasks: list = []
+
+
+@router.get("/my-tasks", response_model=MyTasksResponse)
 async def my_tasks(user: dict = Depends(get_current_user)):
     tasks = career_store.my_tasks(user["user_id"])
     scenarios = {s.get("id"): s.get("title", "") for s in career_service.list_scenarios()}

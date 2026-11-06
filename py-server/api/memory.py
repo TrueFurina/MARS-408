@@ -9,10 +9,10 @@
 # ============================================================
 
 import logging
-from typing import Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 from shared.auth import get_current_user
 from services import memory_service as mem_svc
@@ -237,7 +237,14 @@ async def memory_overview(user: dict = Depends(get_current_user)):
     return resp
 
 
-@router.get("/context")
+class MemoryContextResponse(BaseModel):
+    """三层记忆上下文（/memory/context）"""
+    model_config = ConfigDict(extra="allow")
+    status: str = "ok"
+    context: Any = None
+
+
+@router.get("/context", response_model=MemoryContextResponse)
 async def memory_context(session_id: Optional[str] = None, max_episodes: int = 10,
                          user: dict = Depends(get_current_user)):
     """组装三层记忆为 LLM 上下文提示块（供智能体/前端调试使用）"""

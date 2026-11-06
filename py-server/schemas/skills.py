@@ -116,6 +116,9 @@ class Skill:
             ),
             "version": self.version,
             "status": self.status,
+            # P2② 记忆权限：db 层有列且读写，此前 to_dict 漏导出导致
+            # 前端「记忆权限」徽章恒不显示、导出技能会丢权限（批8 修复）。
+            "memory_access": self.memory_access,
             "usage_count": self.usage_count,
             "user_count": self.user_count,
             "avg_rating": round(self.avg_rating, 1),
@@ -149,6 +152,7 @@ class Skill:
             category=data.get("category", SkillCategory.OTHER.value),
             version=int(data.get("version", 1)),
             status=data.get("status", SkillStatus.DRAFT.value),
+            memory_access=data.get("memory_access", "read_write"),
             usage_count=int(data.get("usage_count", 0)),
             user_count=int(data.get("user_count", 0)),
             avg_rating=float(data.get("avg_rating", 0.0)),

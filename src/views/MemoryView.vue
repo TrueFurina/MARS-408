@@ -3,6 +3,9 @@ import { errMessage } from '@/utils/errorMessage'
 import { ref, onMounted } from 'vue'
 import { icons } from '@/components/icons'
 import { api } from '@/utils/api'
+import type { operations } from '@/types/api.generated'
+
+type MemoryContextResp = operations['memory_context_api_memory_context_get']['responses'][200]['content']['application/json']
 
 const loading = ref(true)
 const error = ref('')
@@ -25,11 +28,11 @@ async function loadMemory() {
     // P0② 修复：统一走 api 实例（自动携带 Authorization token），替代裸 fetch（401）
     const [ov, ctx] = await Promise.all([
       api.get<any>('/memory/overview'),
-      api.get<any>('/memory/context?max_episodes=6'),
+      api.get<MemoryContextResp>('/memory/context?max_episodes=6'),
     ])
     if (ov?.status === 'ok') overview.value = ov
     else { overview.value = null; error.value = '获取记忆总览失败' }
-    if (ctx?.status === 'ok') context.value = ctx.context || ''
+    if (ctx?.status === 'ok') context.value = String(ctx.context ?? '')
   } catch (e) {
     error.value = errMessage(e, '加载失败，请检查后端服务')
   } finally {
