@@ -105,6 +105,63 @@ def test_meta_from_json_tolerates_legacy_garbage():
 
 # ── ③ API 端到端：请求模型 → 实体 → 持久化 ───────────────────
 
+def test_legacy_table_migration_adds_meta_column():
+    """老库（skills 表无 skill_meta_json 列）经 _init_schema 迁移后必须可写。
+
+    生产升级路径：INSERT 语句硬编码了 skill_meta_json 列，若 ALTER 未成功，
+    老用户升级后「创建技能」会直接 no such column 报错。此用例锁住该路径。
+    """
+    from db.skill_store import _get_conn, _init_schema, create_skill, get_skill
+    from schemas.skills import Skill
+
+    legacy = """
+    CREATE TABLE skills (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        description TEXT NOT NULL DEFAULT '',
+        icon TEXT NOT NULL DEFAULT '🤖',
+        system_prompt TEXT NOT NULL DEFAULT '',
+        llm_channel TEXT NOT NULL DEFAULT 'auto',
+        temperature REAL NOT NULL DEFAULT 0.7,
+        max_tokens INTEGER NOT NULL DEFAULT 2048,
+        kb_ids TEXT NOT NULL DEFAULT '[]',
+        rag_enabled INTEGER NOT NULL DEFAULT 1,
+        tags TEXT NOT NULL DEFAULT '[]',
+        category TEXT NOT NULL DEFAULT 'other',
+        version INTEGER NOT NULL DEFAULT 1,
+        status TEXT NOT NULL DEFAULT 'draft',
+        memory_access TEXT NOT NULL DEFAULT 'read_write',
+        usage_count INTEGER NOT NULL DEFAULT 0,
+        user_count INTEGER NOT NULL DEFAULT 0,
+        avg_rating REAL NOT NULL DEFAULT 0.0,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        published_at TEXT,
+        creator_id TEXT NOT NULL DEFAULT '',
+        creator_name TEXT NOT NULL DEFAULT '',
+        is_official INTEGER NOT NULL DEFAULT 0
+    );
+    """
+    conn = _get_conn()
+    conn.execute("DROP TABLE IF EXISTS skills")
+    conn.executescript(legacy)
+    conn.commit()
+    assert "skill_meta_json" not in [
+        r[1] for r in conn.execute("PRAGMA table_info(skills)").fetchall()
+    ]
+
+    _init_schema(conn)  # 迁移入口（幂等建表 + ALTER 补列）
+
+    assert "skill_meta_json" in [
+        r[1] for r in conn.execute("PRAGMA table_info(skills)").fetchall()
+    ], "迁移未补列 → 后续 INSERT 必报 no such column"
+
+    saved = create_skill(Skill(name="老库升级", description="迁移", tools=[{"name": "t"}]))
+    loaded = get_skill(saved.id)
+    assert loaded is not None
+    assert loaded.tools == [{"name": "t"}]
+
+
 def test_api_create_applies_memory_access_and_tools():
     """前端提交的 memory_access/tools 必须真正落库（此前被 Pydantic 静默忽略）。"""
     from fastapi.testclient import TestClient
