@@ -20767,6 +20767,21 @@
             "type": "boolean",
             "title": "Rag Enabled",
             "default": true
+          },
+          "memory_access": {
+            "type": "string",
+            "title": "Memory Access",
+            "description": "记忆权限 none/read/write/read_write",
+            "default": "read_write"
+          },
+          "tools": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Tools",
+            "description": "结构化工具元数据"
           }
         },
         "type": "object",
@@ -24637,6 +24652,11 @@
             "title": "Status",
             "default": ""
           },
+          "memory_access": {
+            "type": "string",
+            "title": "Memory Access",
+            "default": "read_write"
+          },
           "usage_count": {
             "type": "integer",
             "title": "Usage Count",
@@ -26022,6 +26042,32 @@
               }
             ],
             "title": "Rag Enabled"
+          },
+          "memory_access": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Memory Access"
+          },
+          "tools": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tools"
           }
         },
         "type": "object",

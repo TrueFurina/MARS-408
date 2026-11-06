@@ -35,6 +35,12 @@ router = APIRouter(prefix="/skills", tags=["skills"], dependencies=[Depends(requ
 # ── Pydantic 请求模型 ──
 
 
+# 批8：SkillStudioView 长期提交这 3 类配置，但请求模型未声明 ⇒ Pydantic 默认
+# 静默忽略额外字段，用户设置完全不生效。现在显式声明并落到 Skill 实体/db。
+# memory_access 白名单对齐 schemas/skills.py 的 P2② 权限语义（none/read/write/read_write）。
+_MEMORY_ACCESS_VALUES = ("none", "read", "write", "read_write")
+
+
 class CreateSkillRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=100, description="技能名称")
     description: str = Field("", max_length=500, description="技能描述")
@@ -46,6 +52,8 @@ class CreateSkillRequest(BaseModel):
     category: str = Field("other", max_length=30)
     tags: str = Field("[]", max_length=500, description="JSON 数组")
     rag_enabled: bool = True
+    memory_access: str = Field("read_write", description="记忆权限 none/read/write/read_write")
+    tools: list[dict] = Field(default_factory=list, description="结构化工具元数据")
 
 
 class UpdateSkillRequest(BaseModel):
@@ -59,6 +67,8 @@ class UpdateSkillRequest(BaseModel):
     category: Optional[str] = Field(None, max_length=30)
     tags: Optional[str] = Field(None, max_length=500)
     rag_enabled: Optional[bool] = None
+    memory_access: Optional[str] = None
+    tools: Optional[list[dict]] = None
 
 
 class RateSkillRequest(BaseModel):
@@ -103,8 +113,8 @@ def _user_name(user: dict) -> str:
 # 形状由 schemas/skills.py 各 *.to_dict() 的硬编码投影决定（键集合固定），
 # 故精确建模、不靠 extra="allow" 兜底：前端可直接消费生成类型，后端若改投影
 # 会立刻在 openapi 快照/类型检查里显形，而不是悄悄漂移。
-# 注意：Skill 实体有 memory_access 字段，但 to_dict() 未导出；此处如实按投影建模，
-# 不编造字段（前端 skillStore.ts 同名手写接口把它改成了可选，详见该文件注释）。
+# 批8：to_dict() 补导出了 memory_access，此模型同步补字段——否则 response_model
+# 会把新字段静默过滤掉（精确建模的联动代价）。
 class SkillItemOut(BaseModel):
     """schemas/skills.py::Skill.to_dict() 的完整投影。"""
     id: str = ""
@@ -122,6 +132,7 @@ class SkillItemOut(BaseModel):
     category_label: str = ""
     version: int = 1
     status: str = ""
+    memory_access: str = "read_write"
     usage_count: int = 0
     user_count: int = 0
     avg_rating: float = 0.0
@@ -268,6 +279,8 @@ async def api_create_skill(
     valid_categories = {c.value for c in SkillCategory}
     if body.category not in valid_categories:
         raise HTTPException(status_code=422, detail=f"无效分类: {body.category}")
+    if body.memory_access not in _MEMORY_ACCESS_VALUES:
+        raise HTTPException(status_code=422, detail=f"无效记忆权限: {body.memory_access}")
 
     skill = Skill(
         name=body.name,
@@ -280,6 +293,8 @@ async def api_create_skill(
         category=body.category,
         tags=tag_list,
         rag_enabled=body.rag_enabled,
+        memory_access=body.memory_access,
+        tools=body.tools or [],
         creator_id=_user_id(user),
         creator_name=_user_name(user),
     )
@@ -335,6 +350,12 @@ async def api_update_skill(
             existing.tags = []
     if body.rag_enabled is not None:
         existing.rag_enabled = body.rag_enabled
+    if body.memory_access is not None:
+        if body.memory_access not in _MEMORY_ACCESS_VALUES:
+            raise HTTPException(status_code=422, detail=f"无效记忆权限: {body.memory_access}")
+        existing.memory_access = body.memory_access
+    if body.tools is not None:
+        existing.tools = body.tools
 
     ok = update_skill(existing)
     if not ok:

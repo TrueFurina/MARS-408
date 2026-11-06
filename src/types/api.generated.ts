@@ -6180,6 +6180,19 @@ export interface components {
              * @default true
              */
             rag_enabled: boolean;
+            /**
+             * Memory Access
+             * @description 记忆权限 none/read/write/read_write
+             * @default read_write
+             */
+            memory_access: string;
+            /**
+             * Tools
+             * @description 结构化工具元数据
+             */
+            tools?: {
+                [key: string]: unknown;
+            }[];
         };
         /**
          * CreateUserRequest
@@ -8702,6 +8715,11 @@ export interface components {
              */
             status: string;
             /**
+             * Memory Access
+             * @default read_write
+             */
+            memory_access: string;
+            /**
              * Usage Count
              * @default 0
              */
@@ -9541,6 +9559,12 @@ export interface components {
             tags?: string | null;
             /** Rag Enabled */
             rag_enabled?: boolean | null;
+            /** Memory Access */
+            memory_access?: string | null;
+            /** Tools */
+            tools?: {
+                [key: string]: unknown;
+            }[] | null;
         };
         /** UsageTrendPoint */
         UsageTrendPoint: {

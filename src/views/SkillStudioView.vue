@@ -118,8 +118,12 @@ async function loadForEdit() {
     category.value = s.category
     tags.value = s.tags.join(', ')
     ragEnabled.value = s.rag_enabled
-    // 循环13-P0：编辑时回填 tools 元数据
-    const tools = (s as any).tools || []
+    // 批8：后端已导出 memory_access，编辑时正确回填（此前恒为默认值，
+    // 用户改过的权限在编辑页看不到，保存又被静默忽略）。
+    useMemory.value = s.memory_access !== 'none'
+    memoryAccess.value = s.memory_access || 'read_write'
+    // 循环13-P0：编辑时回填 tools 元数据（后端持久化后不再是空数组）
+    const tools = s.tools || []
     useTools.value = tools.length > 0
     toolsMeta.value = tools.map((t: any) => ({
       name: t?.function?.name || '',
@@ -153,8 +157,9 @@ async function doSave() {
     category: category.value,
     tags: JSON.stringify(tagList),
     rag_enabled: ragEnabled.value,
-    use_memory: useMemory.value,
-    memory_access: memoryAccess.value,
+    // 「启用学情记忆联动」复选框等价于 memory_access=none；use_memory 是运行时
+    // 参数（RunSkillWithMemoryRequest），不是技能配置，此前提交会被后端静默忽略。
+    memory_access: useMemory.value ? memoryAccess.value : 'none',
     tools: useTools.value ? toolsPayload() : [],
   }
 

@@ -15,12 +15,9 @@ export type SkillTemplate = SkillTemplateOut
 export type SkillRatingItem = SkillRatingOut
 export type CreatorStats = CreatorStatsOut
 
-// ⚠️ 已知后端缺陷（批6 发现，未修，勿当作"契约已对齐"）：
-// Skill 实体有 memory_access、db 层也存/读它，但 Skill.to_dict() 未导出，
-// 且 CreateSkillRequest / UpdateSkillRequest 未声明它 —— 前端 SkillStudioView
-// 提交的记忆权限被静默忽略，SkillDetailView 的徽章也恒不显示。
-// 故此处把它保留为**可选**扩展（而非谎称后端必返回），待后端补投影后删除。
-export type SkillItem = SkillItemOut & { memory_access?: string }
+// 批8：后端已补齐 to_dict()/SkillItemOut 的 memory_access 导出与请求模型声明，
+// 不再需要可选扩展占位 —— 直接绑定生成类型作为单一真值源。
+export type SkillItem = SkillItemOut
 
 // 各端点的响应包装（生成类型，替代原先的 const res: any）。
 // 导出供其它视图复用，避免每个文件重复声明同一份别名（dup_scan 克隆门禁）。
@@ -135,6 +132,8 @@ export const useSkillStore = defineStore('skills', () => {
     category?: string
     tags?: string
     rag_enabled?: boolean
+    memory_access?: string
+    tools?: Record<string, unknown>[]
   }): Promise<SkillItem | null> {
     loading.value = true
     error.value = ''
