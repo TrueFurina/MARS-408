@@ -43,7 +43,7 @@ async def rag_status(user: dict = Depends(get_current_user)):
         "by_subject": dict(subject_counts.most_common()),
         "engine": "FrugalRAG (E5 + BM25 + Reranker)",
         "dimension": 768,
-        "embedding_model": "intfloat/multilingual-e5-base",
+        "embedding_model": "intfloat/e5-base-v2",
     }
 
 

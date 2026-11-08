@@ -26,7 +26,7 @@ async def status():
     - degraded_reasons: 人类可读的降级原因列表（空列表表示全绿）
     约定：未配置的组件（如开发环境未启用 Milvus）视为「不要求」，不计入降级。
     """
-    from config import load_config
+    from config import load_config, get_embedding_config
     from db import embedder
     cfg = load_config()
 
@@ -54,9 +54,13 @@ async def status():
     redis_enabled = bool(getattr(redis_client, "is_enabled", False))
 
     # ── 嵌入（E5 静默回落零向量占位计数 + 模型是否已加载）──
-    embedding_model = embedder.EMBED_MODEL_NAME
+    # 读「实际生效模型」而非常量：config.json / 环境变量可能覆盖 DEFAULTS，
+    # 报常量会掩盖「配置与向量库空间不一致」这类静默退化。
+    embedding_model = get_embedding_config().get("model", embedder.EMBED_MODEL_NAME)
     embedding_loaded = embedder._e5_model is not None
     embedding_fallback = int(getattr(vector_db, "embedding_fallback_count", 0))
+    # 启动期 space-probe 结果由 app/lifespan 写入；fail-soft 跳过时保持 None。
+    space_probe = getattr(embedder, "SPACE_PROBE_RESULT", None)
 
     # ── LLM（核心能力，无可用凭证 → 资源生成不可用）──
     llm_provider_name = cfg.get("llm_provider", "auto")
@@ -115,6 +119,13 @@ async def status():
         degraded_reasons.append(
             f"embedding: {embedding_fallback} 个文档因 E5 失败使用零向量占位，检索质量下降"
         )
+    # 启动期 space-probe：只有明确「不同空间」才降级；skipped / suspicious / ok 不降级，
+    # 避免模型缺失或 CI 注入 mock 时误报（探针在 lifespan 侧 fail-soft）。
+    if isinstance(space_probe, dict) and space_probe.get("state") == "mismatch":
+        degraded_reasons.append(
+            "embedding: 嵌入模型与向量库不同空间（space-probe 余弦 %.4f，检索结果不可用）"
+            % float(space_probe.get("cosine", 0.0))
+        )
     if not llm_available:
         degraded_reasons.append("llm: 未配置任何可用供应商凭证（资源生成不可用）")
     degraded_reasons.extend(probe_failures)
@@ -145,6 +156,8 @@ async def status():
                 "model": embedding_model,
                 "loaded": embedding_loaded,
                 "fallback_zero_docs": embedding_fallback,
+                # 启动期 space-probe 结论（None=未执行/跳过，dict=同空间/不匹配/可疑）。
+                "space_probe": space_probe,
             },
             "llm": {
                 "provider": llm_provider_name,
