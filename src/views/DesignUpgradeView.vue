@@ -133,7 +133,7 @@ const aiStateLabel: Record<AiState, string> = {
           <div class="hero-body">
             <div class="hero-greet">
               <div class="hero-hi">{{ profileName }}，今天也要稳住节奏 👋</div>
-              <div class="hero-meta">已学科目 <b>{{ subjectCount }}</b> · 学习体系持续覆盖</div>
+              <div class="hero-meta">知识领域 <b>{{ subjectCount }}</b> · 学习体系持续覆盖</div>
             </div>
             <div class="hero-ring">
               <svg viewBox="0 0 88 88" class="ring">
@@ -157,9 +157,9 @@ const aiStateLabel: Record<AiState, string> = {
 
         <!-- KPI 小卡 -->
         <div class="bento-cell bento-kpi1">
-          <div class="bento-cell-title">已学科目</div>
+          <div class="bento-cell-title">知识领域</div>
           <div class="kpi-value">{{ subjectCount || '—' }}</div>
-          <div class="kpi-foot">覆盖核心课程</div>
+          <div class="kpi-foot">四科知识体系下的知识点分组</div>
         </div>
         <div class="bento-cell bento-kpi2">
           <div class="bento-cell-title">画像完整度</div>

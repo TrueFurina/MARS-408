@@ -55,10 +55,10 @@ async function saveProfile() {
   }
 }
 
-const TRAIT_COLORS = [
-  '#8B5CF6', '#7c6af2', '#3B82F6', '#06B6D4',
-  '#EC4899', '#F472B6', '#818CF8', '#4F46E5',
-]
+/* 8 维不再各配一色：原为 8 个写死的十六进制（#8B5CF6/#3B82F6/#06B6D4/#EC4899…），
+   既让整屏五彩斑斓，也绕开了 data-accent 配色层——换配色时这 8 条根本不跟。
+   维度差异交给标签与条长，颜色统一跟随主色。 */
+const TRAIT_COLORS = Array.from({ length: 8 }, () => 'var(--color-accent)')
 
 // 8 维画像计算
 const traits = computed(() => {
@@ -216,7 +216,8 @@ function drawRadar() {
     const angle = -Math.PI / 2 + i * angleStep, item = traits.value[i]
     if (!item) continue
     const r = radius * (values[i] ?? 0), x = cx + r * Math.cos(angle), y = cy + r * Math.sin(angle)
-    const color = TRAIT_COLORS[i % TRAIT_COLORS.length] ?? resolveToken('--color-accent')
+    // canvas 不解析 CSS var()，这里必须取实际色值；且后文要拼 '20' 做淡圈，需 hex 形式。
+    const color = resolveToken('--color-accent')
     ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2)
     ctx.fillStyle = color; ctx.fill(); ctx.strokeStyle = resolveToken('--color-accent'); ctx.lineWidth = 2; ctx.stroke()
     ctx.beginPath(); ctx.arc(x, y, 10, 0, Math.PI * 2); ctx.fillStyle = color + '20'; ctx.fill()
@@ -293,26 +294,30 @@ onUnmounted(() => {
 <template>
   <div class="page-section active">
     <div v-if="loading" class="profile-skeleton">
-      <div class="skeleton" style="width:200px;height:28px;margin-bottom:20px;border-radius:8px;"></div>
-      <div class="skeleton" style="width:100%;height:120px;margin-bottom:16px;border-radius:12px;"></div>
-      <div class="skeleton-grid"><div v-for="i in 4" :key="i" class="skeleton" style="height:120px;border-radius:12px;"></div></div>
+      <div class="skeleton sk-title"></div>
+      <div class="skeleton sk-hero"></div>
+      <div class="skeleton-grid"><div v-for="i in 4" :key="i" class="skeleton sk-card"></div></div>
     </div>
     <template v-else>
+      <div class="pf-eyebrow">LEARNER PROFILE</div>
       <div class="section-header">
-        <div class="section-title"> 学生画像</div>
+        <div class="section-title">学生画像</div>
         <div class="section-desc">基于学习行为数据构建的 8 维个性化能力图谱 | <button class="btn-link" @click="showEdit = !showEdit">{{ showEdit ? '收起编辑' : '编辑目标' }}</button></div>
       </div>
 
       <!-- L1/L2/L3 三层学情记忆健康度（低侵入联动） -->
-      <div v-if="memoryOverview" class="memory-mini-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-size:12px;">
-        <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);"> {{ memoryOverview.memory_level || 'L3' }}</span>
-        <span style="padding:3px 10px;border-radius:12px;background:var(--bg-tertiary);color:var(--text-secondary);">掌握度 {{ memoryOverview.mastery_points ?? 0 }} 点</span>
-        <span style="padding:3px 10px;border-radius:12px;background:var(--bg-tertiary);color:var(--text-secondary);">情景事件 {{ memoryOverview.episodic_count ?? 0 }}</span>
-        <span v-if="memoryOverview.weak_points?.length" style="padding:3px 10px;border-radius:12px;background:rgba(var(--danger-rgb),0.12);color:var(--accent-danger);">记忆薄弱: {{ memoryOverview.weak_points.slice(0, 4).join('、') }}</span>
+      <div v-if="memoryOverview" class="memory-mini-strip">
+        <span class="mem-pill mem-pill--accent">{{ memoryOverview.memory_level || 'L3' }}</span>
+        <span class="mem-pill">掌握度 {{ memoryOverview.mastery_points ?? 0 }} 点</span>
+        <span class="mem-pill">情景事件 {{ memoryOverview.episodic_count ?? 0 }}</span>
+        <span v-if="memoryOverview.weak_points?.length" class="mem-group">
+          <span class="mem-label">记忆薄弱点</span>
+          <span v-for="w in memoryOverview.weak_points.slice(0, 4)" :key="w" class="mem-chip">{{ w }}</span>
+        </span>
       </div>
 
       <!-- 编辑目标 -->
-      <div v-if="showEdit" class="card" style="margin-bottom:20px;">
+      <div v-if="showEdit" class="card mt-20">
         <div class="card-header"><span class="card-title"> 编辑学习目标</span></div>
         <div class="edit-grid">
           <div class="edit-field">
@@ -359,9 +364,10 @@ onUnmounted(() => {
             <div class="profile-strength" :class="profileSummary.strength === '优势明显' ? 'strong' : profileSummary.strength === '稳步提升' ? 'stable' : 'weak'">{{ profileSummary.strength }}</div>
           </div>
           <div class="profile-meta-row">
-            <span class="profile-meta-tag"> {{ profileSummary.level }}</span>
-            <span class="profile-meta-tag">{{ getStyleIcon(store.studentProfile?.learning_style) }} {{ profileSummary.style }}</span>
-            <span class="profile-meta-tag"> {{ profileSummary.weakCount }} 个薄弱点</span>
+            <!-- 还没有画像时原来会渲染两枚「未知」胶囊，占着位置却没有信息，直接不渲染 -->
+            <span v-if="store.studentProfile" class="profile-meta-tag">{{ profileSummary.level }}</span>
+            <span v-if="store.studentProfile" class="profile-meta-tag">{{ getStyleIcon(store.studentProfile?.learning_style) }}{{ profileSummary.style }}</span>
+            <span class="profile-meta-tag">{{ profileSummary.weakCount }} 个薄弱点</span>
           </div>
           <div class="profile-hero-actions">
             <button class="btn btn-sm btn-soft" @click="router.push('/practice')"> 针对性练习</button>
@@ -379,25 +385,24 @@ onUnmounted(() => {
             <span class="dim-value">{{ trait.value }}%</span>
           </div>
           <div class="dim-bar-bg">
-            <div class="dim-bar-fill" :style="{ width: '100%', transform: 'scaleX(' + (trait.value / 100) + ')', transformOrigin: 'left', background: `linear-gradient(90deg, ${TRAIT_COLORS[traits.indexOf(trait) % TRAIT_COLORS.length]}, ${TRAIT_COLORS[(traits.indexOf(trait) + 1) % TRAIT_COLORS.length]})` }"></div>
+            <div class="dim-bar-fill" :style="{ width: '100%', transform: 'scaleX(' + (trait.value / 100) + ')', transformOrigin: 'left' }"></div>
           </div>
           <div class="dim-desc">{{ trait.desc }}</div>
         </div>
       </div>
 
       <!-- 雷达图 + 学习风格 -->
-      <div class="grid-2" style="margin-top: 20px;">
+      <div class="grid-2 grid-2--top">
         <div class="card">
-          <div class="card-header"><span class="card-title"> 8 维能力雷达图</span></div>
+          <div class="card-header"><span class="card-title">8 维能力雷达图</span></div>
           <div v-if="traits.length < 3" class="radar-placeholder">
-            <div style="font-size:40px;margin-bottom:8px;"></div>
-            <div style="font-size:14px;color:var(--text-muted);">完成入学测评后自动生成雷达图</div>
-            <button class="engine-btn" style="margin-top:12px;" @click="router.push('/diagnostic/start')">去测评</button>
+            <p>完成入学测评后自动生成 8 维能力雷达图</p>
+            <button class="btn btn-primary" @click="router.push('/diagnostic/start')">去测评</button>
           </div>
           <div v-else class="radar-wrapper"><canvas id="profileRadar" class="radar-canvas"></canvas></div>
         </div>
         <div class="card">
-          <div class="card-header"><span class="card-title"> 个性化建议</span></div>
+          <div class="card-header"><span class="card-title">个性化建议</span></div>
           <div class="recommend-list">
             <div v-for="(rec, i) in recommendations" :key="i" class="recommend-item">
               <span class="recommend-icon">{{ rec.icon }}</span>
@@ -407,17 +412,16 @@ onUnmounted(() => {
               </div>
             </div>
             <div v-if="recommendations.length === 0" class="recommend-empty">
-              <div style="font-size:32px;margin-bottom:8px;"></div>
-              <div style="color:var(--text-muted);font-size:14px;">所有维度表现良好，继续保持！</div>
+              <div class="inline-note">所有维度表现良好，继续保持！</div>
             </div>
           </div>
         </div>
       </div>
 
       <!-- 科目掌握度 -->
-      <div class="card" style="margin-top: 20px;">
+      <div class="card mt-20">
         <div class="card-header">
-          <span class="card-title"> 科目掌握度</span>
+          <span class="card-title">科目掌握度</span>
           <button class="btn btn-sm btn-ghost" @click="router.push('/learning-path')">查看完整路径 →</button>
         </div>
         <div class="mastery-grid">
@@ -427,26 +431,26 @@ onUnmounted(() => {
             <div class="mastery-pct">{{ m.pct ?? 0 }}%</div>
           </div>
           <div v-if="(store.data?.masteryData ?? []).length === 0" class="mastery-empty">
-            <div style="font-size:14px;color:var(--text-muted);">暂无数据，开始学习后自动生成</div>
+            <div class="inline-note">暂无数据，开始学习后自动生成</div>
           </div>
         </div>
       </div>
 
       <!-- 薄弱点 + 评价 -->
-      <div class="grid-2" style="margin-top: 20px;">
+      <div class="grid-2 grid-2--top">
         <div class="card">
-          <div class="card-header"><span class="card-title"> 待加强知识点</span></div>
+          <div class="card-header"><span class="card-title">待加强知识点</span></div>
           <div>
             <div v-for="w in (store.studentProfile?.weak_points || '').split(/[,，、]/).filter(Boolean).slice(0, 5)" :key="w" class="weakness-item">
               <span class="weakness-bullet"></span>
               <span class="weakness-name">{{ w }}</span>
               <span class="weakness-tag">待加强</span>
             </div>
-            <div v-if="!store.studentProfile?.weak_points" style="font-size:14px;color:var(--text-muted);padding:20px;text-align:center;">暂无薄弱点数据</div>
+            <div v-if="!store.studentProfile?.weak_points" class="inline-note inline-note--tight">暂无薄弱点数据</div>
           </div>
         </div>
         <div class="card">
-          <div class="card-header"><span class="card-title"> 学习评估</span></div>
+          <div class="card-header"><span class="card-title">学习评估</span></div>
           <!-- 历史拉取失败时准确率会按 0% 显示，必须说明原因，否则看起来像「从没答过题」 -->
           <p v-if="historyError" class="history-error" role="alert">
             <span>{{ historyError }}（答题准确率暂按 0% 显示，可能偏低）</span>
@@ -454,19 +458,19 @@ onUnmounted(() => {
           </p>
           <div class="assessment-stats">
             <div class="assessment-stat">
-              <span class="stat-value" style="color:var(--accent-primary)">{{ calculateAccuracy() }}%</span>
+              <span class="stat-value">{{ calculateAccuracy() }}%</span>
               <span class="stat-label">答题准确率</span>
             </div>
             <div class="assessment-stat">
-              <span class="stat-value" style="color:var(--accent-cyan)">{{ calculateActiveness() }}%</span>
+              <span class="stat-value">{{ calculateActiveness() }}%</span>
               <span class="stat-label">学习活跃度</span>
             </div>
             <div class="assessment-stat">
-              <span class="stat-value" style="color:var(--accent-success)">{{ calculateDiscipline() }}%</span>
+              <span class="stat-value">{{ calculateDiscipline() }}%</span>
               <span class="stat-label">自律性</span>
             </div>
             <div class="assessment-stat">
-              <span class="stat-value" style="color:var(--accent-warm)">{{ (store.studentProfile?.progress ?? 0) * 14 }}%</span>
+              <span class="stat-value">{{ (store.studentProfile?.progress ?? 0) * 14 }}%</span>
               <span class="stat-label">学习进度</span>
             </div>
           </div>
@@ -474,9 +478,9 @@ onUnmounted(() => {
       </div>
 
       <!-- 成就系统预览 -->
-      <div class="card" style="margin-top: 20px;">
+      <div class="card mt-20">
         <div class="card-header">
-          <span class="card-title"> 成就徽章</span>
+          <span class="card-title">成就徽章</span>
           <button class="btn btn-sm btn-ghost" @click="router.push('/achievements')">查看全部 →</button>
         </div>
         <div class="achievement-preview">
@@ -502,8 +506,7 @@ onUnmounted(() => {
               <span class="ach-preview-name">{{ ach.name }}</span>
             </div>
             <div v-if="achStore.recentAchievements.length === 0" class="ach-preview-empty">
-              <div style="font-size: 2rem; margin-bottom: 4px;"></div>
-              <div style="font-size: 13px; color: var(--text-muted);">开始学习，解锁你的第一个成就！</div>
+              <div class="inline-note">开始学习，解锁你的第一个成就！</div>
             </div>
           </div>
         </div>
@@ -513,6 +516,7 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+.pf-eyebrow { font-size: 11px; line-height: 1; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent-primary); font-weight: 600; margin-bottom: 10px; }
 .profile-hero { display:flex; gap:var(--space-5); padding:var(--space-6); background:var(--color-surface); border:1px solid var(--color-border); border-radius:14px; margin-bottom:var(--space-5); }
 .profile-avatar-large { width:72px; height:72px; border-radius:16px; background:var(--gradient-primary); display:flex; align-items:center; justify-content:center; font-size:28px; color:var(--color-text-on-accent); font-weight:var(--weight-bold); flex-shrink:0; }
 .profile-hero-body { flex:1; min-width:0; }
@@ -523,7 +527,22 @@ onUnmounted(() => {
 .profile-strength.stable { background:rgba(var(--subject-co-rgb),0.12); color:var(--accent-cyan); }
 .profile-strength.weak { background:rgba(var(--warning-rgb),0.12); color:var(--accent-warm); }
 .profile-meta-row { display:flex; gap:var(--space-2); flex-wrap:wrap; margin-bottom:var(--space-3); }
-.profile-meta-tag { font-size:var(--text-xs); padding:3px 10px; border-radius:6px; background:var(--color-surface-2); color:var(--color-text-2); }
+.profile-meta-tag { font-size:var(--text-xs); padding:3px 10px; border-radius:6px; background:var(--color-surface); border:1px solid var(--color-border); color:var(--color-text-2); }
+/* 薄弱点原为一个长胶囊，四个词条连成一串、跨两行，像一条告警横幅。
+   拆成"小标签 + 独立词条"，与桌面端同一读法。 */
+.mem-group { display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap; }
+/* 「记忆薄弱点」原来是主色底 + 主色字，比它后面四个知识点胶囊更亮，
+   读起来像标签才是重点。降成纯文字灰标签，让知识点胶囊成为视觉主体。 */
+.mem-label { padding:0 0 0 var(--space-2); margin-left:var(--space-1); background:none; color:var(--color-text-3); font-weight:400; border-left:1px solid var(--color-border); }
+.mem-chip { padding:3px 9px; border-radius:12px; background:var(--color-surface-2); color:var(--color-text-2); border:1px solid var(--color-border); }
+/* 三层记忆徽标原先三个都用内联样式写死 padding/圆角/底色，且底色用已废弃的 --bg-tertiary */
+.memory-mini-strip { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:12px; font-size:12px; }
+.mem-pill { padding:3px 10px; border-radius:12px; background:var(--color-surface-2); color:var(--color-text-2); border:1px solid var(--color-border); }
+.mem-pill--accent { background:var(--accent-primary-10); color:var(--color-accent); border-color:transparent; }
+.mt-20 { margin-top:20px; }
+.grid-2--top { margin-top:20px; align-items:start; }
+.inline-note { font-size:14px; color:var(--color-text-2); }
+.inline-note--tight { padding:4px 0 2px; }
 .profile-hero-actions { display:flex; gap:var(--space-2); }
 .profile-dim-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:10px; margin-bottom:var(--space-5); }
 .profile-dim-card { padding:14px; background:var(--color-surface); border:1px solid var(--color-border); border-radius:10px; }
@@ -531,39 +550,74 @@ onUnmounted(() => {
 .dim-icon { font-size:var(--text-2xl); }
 .dim-label { flex:1; font-size:var(--text-base); font-weight:var(--weight-semibold); color:var(--color-text); }
 .dim-value { font-size:var(--text-lg); font-weight:var(--weight-bold); color:var(--color-text); }
-.dim-bar-bg { height:6px; background:var(--color-surface-2); border-radius:3px; overflow:hidden; margin-bottom:6px; }
+/* 轨道原来用 surface-2，在深色下与卡片底只差几个灰阶、整条看不见；改用 --color-border。 */
+.dim-bar-bg { height:6px; background:var(--color-border); border-radius:3px; overflow:hidden; margin-bottom:6px; }
 .dim-bar-fill { height:100%; border-radius:3px; width: 100%; transform-origin: left; transition: transform var(--duration-slow) var(--ease-standard); }
 .dim-desc { font-size:var(--text-2xs); color:var(--color-text-3); }
 .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:var(--space-4); }
 @media(max-width:800px){ .grid-2{grid-template-columns:1fr} }
-.card { padding:var(--space-5); background:var(--color-surface); border:1px solid var(--color-border); border-radius:12px; }
+/* grid 默认 align-items:stretch，会把「个性化建议」这种只有一两行内容的卡
+   拉成和旁边雷达卡一样高，底下留出一大片空。改成按内容高度对齐。 */
+.grid-2--top { align-items:start; }
+
+/* 手机上头像 + 标题 + 徽标挤在同一行，标题折成两行、徽标也被压断。
+   头像缩小并把徽标收到标题下方一行。 */
+@media(max-width:640px){
+  .profile-hero{padding:var(--space-5) var(--space-4);gap:var(--space-4)}
+  .profile-avatar-large{width:56px;height:56px;border-radius:14px;font-size:22px}
+  .profile-hero-top{flex-wrap:wrap;gap:8px;margin-bottom:6px}
+  .profile-name{font-size:18px;line-height:1.3}
+  .profile-strength{flex-shrink:0;white-space:nowrap;font-size:.6875rem}
+  .profile-hero-actions{flex-wrap:wrap}
+  /* 390px 下三枚基础胶囊加四个知识点胶囊排了四行、把画像卡推下去半屏：
+     缩小内边距和字号，让基础三项回到一行。 */
+  .memory-mini-strip{gap:6px;font-size:11px;margin-bottom:10px}
+  .mem-pill,.mem-chip{padding:2px 8px;border-radius:10px}
+  /* 「记忆薄弱点」这个说明词和五个胶囊挤在同一个 flex 行里，390px 下会被折成
+     「标签 + 3 枚 / 1 枚」两行，末枚孤零零挂第二行；让说明词独占一行。 */
+  .mem-label{flex:0 0 100%;margin-right:0;font-size:11px}
+}
+/* 这里原来用 --color-surface 覆盖全局 .card，比 --color-card 偏亮、也没有阴影，
+   与全站其它页的卡片面不一致；对齐全局的卡片面 + 阴影。 */
+.card { padding:var(--space-5); background:var(--color-card); border:1px solid var(--color-border); border-radius:12px; box-shadow:var(--shadow-card); }
 .card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-4); }
 .card-title { font-size:var(--text-lg); font-weight:var(--weight-semibold); color:var(--color-text); }
 .radar-wrapper { width:100%; max-width:500px; margin:0 auto; }
 .radar-canvas { width:100%; height:auto; display:block; }
+/* 未测评空态：之前只有一行内联灰字，卡片靠 .card 的内边距撑，高度随右侧卡片走，
+   在桌面两栏里留下一大片空。改成贴左的文字块 + 一个主按钮，纵向留白收到 20px。 */
+.radar-placeholder { text-align:left; padding: var(--space-4) 0 var(--space-3); }
+.radar-placeholder p { font-size: var(--text-sm); color: var(--color-text-2); line-height: 1.6; margin: 0 0 var(--space-3); max-width: 20rem; }
 .recommend-list { display:flex; flex-direction:column; gap:10px; }
-.recommend-item { display:flex; gap:10px; padding:var(--space-3); background:var(--color-surface-2); border-radius:8px; }
+.recommend-item { display:flex; gap:10px; padding:var(--space-3); background:var(--color-surface); border:1px solid var(--color-border); border-radius:8px; }
 .recommend-icon { font-size:var(--text-2xl); line-height:1.4; }
 .recommend-body { flex:1; }
 .recommend-text { font-size:var(--text-sm); color:var(--color-text-2); margin-bottom:6px; line-height:1.5; }
-.recommend-empty { text-align:center; padding:30px; }
+/* 空态原为 30-40px 内边距 + 居中对齐，卡片被撑到半屏高、中间一行字，四周全是空白。
+   改成贴着标题的一行提示，卡片高度跟着内容走。 */
+.recommend-empty { text-align:left; padding:4px 0 2px; }
 .mastery-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px; }
-.mastery-card { padding:14px; background:var(--color-surface-2); border-radius:8px; }
+.mastery-card { padding:14px; background:var(--color-surface); border:1px solid var(--color-border); border-radius:8px; }
 .mastery-label { font-size:var(--text-sm); font-weight:var(--weight-semibold); color:var(--color-text); margin-bottom:var(--space-2); }
 .mastery-bar-bg { height:6px; background:var(--color-surface); border-radius:3px; overflow:hidden; }
 .mastery-bar-fill { height:100%; background:var(--gradient-primary); border-radius:3px; width: 100%; transform-origin: left; transition: transform var(--duration-slow) var(--ease-standard); }
 .mastery-pct { font-size:var(--text-xs); font-weight:var(--weight-semibold); color:var(--color-text-2); margin-top:var(--space-1); text-align:right; }
-.mastery-empty { grid-column:1/-1; text-align:center; padding:30px; }
+.mastery-empty { grid-column:1/-1; text-align:left; padding:4px 0 2px; }
 .weakness-item { display:flex; align-items:center; gap:10px; padding:10px var(--space-3); border-radius:6px; margin-bottom:var(--space-1); }
 .weakness-item:hover { background:var(--color-surface-hover); }
 .weakness-bullet { width:6px; height:6px; border-radius:50%; background:var(--accent-warm); flex-shrink:0; }
 .weakness-name { flex:1; font-size:var(--text-base); color:var(--color-text); }
 .weakness-tag { font-size:var(--text-2xs); padding:2px var(--space-2); border-radius:4px; background:rgba(var(--warning-rgb),0.12); color:var(--accent-warm); }
 .assessment-stats { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.assessment-stat { text-align:center; padding:14px; background:var(--color-surface-2); border-radius:8px; }
+/* 四块统计原来用 --color-surface-2，比卡片更暗，在浅色/深色下都像"挖下去"的凹槽；
+   改成 --color-surface + 细描边，读作卡片内的一组浮起磁贴。 */
+.assessment-stat { text-align:center; padding:14px; background:var(--color-surface); border:1px solid var(--color-border); border-radius:8px; }
 .assessment-stat .stat-value { display:block; font-size:var(--text-3xl); font-weight:var(--weight-bold); }
 .assessment-stat .stat-label { display:block; font-size:var(--text-xs); color:var(--color-text-3); margin-top:2px; }
 .skeleton-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:10px; }
+.sk-title { width:200px; height:28px; margin-bottom:20px; border-radius:8px; }
+.sk-hero { width:100%; height:120px; margin-bottom:16px; border-radius:12px; }
+.sk-card { height:120px; border-radius:12px; }
 /* ── 编辑目标 ── */
 .edit-grid { display:grid; grid-template-columns:1fr 1fr; gap:var(--space-4); padding:var(--space-3) 0; }
 .edit-field { display:flex; flex-direction:column; gap:var(--space-1); }
@@ -586,7 +640,7 @@ onUnmounted(() => {
 
 /* ── 成就预览 ── */
 .achievement-preview { }
-.achievement-summary { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-3) var(--space-4); background: var(--color-surface-2); border-radius: 10px; margin-bottom: var(--space-3); }
+.achievement-summary { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-3) var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 10px; margin-bottom: var(--space-3); }
 .ach-summary-stat { text-align: center; flex: 1; }
 .ach-summary-value { display: block; font-size: var(--text-2xl); font-weight: 800; color: var(--accent-primary); }
 .ach-summary-label { display: block; font-size: var(--text-2xs); color: var(--text-muted); margin-top: 0.125rem; }

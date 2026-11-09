@@ -72,7 +72,7 @@ function initGraph() {
     x: w / 2 + (Math.random() - 0.5) * w * 0.5,
     y: h / 2 + (Math.random() - 0.5) * h * 0.5,
     vx: 0, vy: 0,
-    radius: (n.value || 22) * (n.importance === 'high' ? 1.3 : n.importance === 'low' ? 0.8 : 1),
+    radius: (n.value || 22) * 0.72 * (n.importance === 'high' ? 1.3 : n.importance === 'low' ? 0.8 : 1),
     color: n.mastery ? resolveToken(masteryColor(n.mastery), '#7c6af2') : (n.color || resolveToken('--color-accent', '#7c6af2')),
     mastery: n.mastery,
     data: n,
@@ -92,7 +92,8 @@ function startSimulation() {
   let frames = 0
 
   function simulate() {
-    const repulsion = 5000; const attraction = 0.005; const damping = 0.85; const centerForce = 0.01
+    // 斥力从 5000 提到 11000：节点要散得开，圆下方的名称才有位置落下去
+    const repulsion = 11000; const attraction = 0.005; const damping = 0.85; const centerForce = 0.008
     for (let i = 0; i < nodes.length; i++) {
       const ni = nodes[i]!
       let fx = 0, fy = 0
@@ -118,12 +119,23 @@ function startSimulation() {
       fx += (w / 2 - ni.x) * centerForce; fy += (h / 2 - ni.y) * centerForce
       ni.vx = (ni.vx + fx) * damping; ni.vy = (ni.vy + fy) * damping
       ni.x += ni.vx; ni.y += ni.vy
-      ni.x = Math.max(20, Math.min(w - 20, ni.x))
-      ni.y = Math.max(20, Math.min(h - 20, ni.y))
+      // 原来是硬夹（Math.max(20, Math.min(w-20, x))）：节点一撞边就被摁死在那儿，
+      // 几十个节点在左右边沿排成一竖列、名称互相压住，还常被面板裁掉。
+      // 改成软回推——越界只给一个反向力，节点自己会回到画面内，不再贴边成列。
+      // 边界要从固定值改成「按节点半径让位」：大圆半径能到 70+，仍用 46 的话
+      // 圆有一半被画布切掉；底部再额外让 24px，因为名称画在圆下方、比圆更靠下。
+      const r = ni.radius
+      const padX = Math.min(r + 10, w / 2 - 6)
+      const padTop = Math.min(r + 8, h / 2 - 6)
+      const padBottom = Math.min(r + 34, h / 2 - 6)
+      if (ni.x < padX) ni.vx += (padX - ni.x) * 0.03
+      else if (ni.x > w - padX) ni.vx -= (ni.x - (w - padX)) * 0.03
+      if (ni.y < padTop) ni.vy += (padTop - ni.y) * 0.03
+      else if (ni.y > h - padBottom) ni.vy -= (ni.y - (h - padBottom)) * 0.03
     }
     draw()
     frames++
-    if (frames < 120) { simTimer = requestAnimationFrame(simulate) }
+    if (frames < 240) { simTimer = requestAnimationFrame(simulate) }
   }
   simulate()
 }
@@ -169,14 +181,26 @@ function draw() {
       ctx.lineWidth = 3; ctx.stroke()
     }
     ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, Math.PI * 2)
-    ctx.fillStyle = n.color + '20'; ctx.fill()
+    ctx.fillStyle = n.color + '33'; ctx.fill()
     ctx.strokeStyle = isSelected ? resolveToken('--color-text', '#ffffff') : n.color
     ctx.lineWidth = isHovered || isSelected ? 3 : 2; ctx.stroke()
 
-    ctx.fillStyle = resolveToken('--color-text', '#f8fafc') // 节点标签：覆盖在学科/掌握度色填充之上，跟随 --color-text（双主题均可读，且修复浅色主题白字不可见）
-    ctx.font = `${isHovered ? 14 : 12}px sans-serif`
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-    ctx.fillText(n.label.length > 10 ? n.label.slice(0, 10) + '..' : n.label, n.x, n.y)
+    // 名称默认必须可见——一屏没名字的圆点等于没信息。
+    // 60 个节点挤在 760×560 里，名称只能放到圆下方、限 6 字；节点间距由加大后的斥力拉开，
+    // 悬停/选中时放大字号并把完整名称补出来。
+    {
+      const full = isHovered || isSelected
+      const label = full ? n.label : (n.label.length > 6 ? n.label.slice(0, 6) + '…' : n.label)
+      const lx = n.x
+      const ly = n.y + r + (full ? 12 : 9)
+      ctx.font = (full ? '12px' : '10px') + ' sans-serif'
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top'
+      ctx.lineWidth = 3
+      ctx.strokeStyle = resolveToken('--color-card', '#191f26')
+      ctx.strokeText(label, lx, ly)
+      ctx.fillStyle = resolveToken(full ? '--color-text' : '--color-text-2', '#f8fafc')
+      ctx.fillText(label, lx, ly)
+    }
   }
   ctx.restore()
 }
@@ -294,6 +318,8 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
           <div class="empty-icon"></div><div class="empty-text">暂无知识图谱数据</div>
           <div class="empty-hint">请先通过「提取知识图谱」生成数据</div>
         </div>
+        <!-- 节点多时默认不画标签（否则叠成一片），这里说明怎么看名称。 -->
+        <div v-else-if="nodes.length > 8" class="kg-hint">名称超过 6 字已截断 · 悬停看全称 · 可缩放</div>
       </div>
     </template>
 
@@ -494,6 +520,9 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
 .empty-icon { font-size: 48px; }
 .empty-text { font-size: var(--text-xl); font-weight: var(--weight-semibold); color: var(--color-text-2); }
 .empty-hint { font-size: var(--text-base); color: var(--color-text-3); }
+/* 提示胶囊原来在左上、图例正下方，正好压在画布顶部几个节点和它们的名称上；
+   挪到底部左侧——那里是画布留白，不挡任何节点 */
+.kg-hint { position: absolute; left: var(--space-3); bottom: var(--space-2); padding: 3px 8px; border-radius: 8px; background: var(--color-card); border: 1px solid var(--color-border); font-size: var(--text-2xs); color: var(--color-text-3); pointer-events: none; }
 
 /* 大纲模式 */
 .outline-view { padding: var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; min-height: 400px; }
@@ -529,4 +558,15 @@ watch(() => [props.nodes, props.edges], () => { initGraph(); startSimulation() }
 .map-node-label { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--color-text); }
 .map-node-mastery { font-size: 10px; padding: 1px var(--space-2); border-radius: 8px; margin-top: var(--space-1); display: inline-block; }
 .map-arrow { font-size: var(--text-2xl); color: var(--color-text-3); }
+
+/* 手机：图例、缩放控件、提示三者都浮在画布上方，390px 宽时占掉近半屏可视区，
+   把顶上的节点和名称整个盖住。这里收紧尺寸并把提示藏掉——名称默认已经画出来了，
+   那句「超 6 字已截断」在手机上属于解释性文字，让位给画布。 */
+@media (max-width: 640px) {
+  .kg-mastery-legend { top: 8px; left: 8px; padding: 3px 8px; font-size: 9px; gap: 4px; }
+  .kg-legend-dot { width: 6px; height: 6px; }
+  .kg-zoom-controls { top: 8px; right: 8px; gap: 4px; }
+  .kg-zoom-btn { width: 26px; height: 26px; font-size: var(--text-base); }
+  .kg-hint { display: none; }
+}
 </style>

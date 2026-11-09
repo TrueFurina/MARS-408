@@ -2,8 +2,13 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useStudyStore } from '@/stores/studyStore'
 import { icons } from '@/components/icons'
+import { useScene } from '@/composables/useScene'
 
 const store = useStudyStore()
+// 画像面板是全局的，但两场景里该看的东西不一样：职业素养场景下再摆
+// 「距考试 / 目标分数 / 报考科目」就是串味，把实训页说成考研页。
+const { scene } = useScene()
+const isCareer = computed(() => scene.value === 'career')
 
 const props = defineProps<{
   open: boolean
@@ -56,7 +61,7 @@ const profile = computed(() => {
   if (!p) return null
   return {
     name: '计算机专业学习者',
-    target: '计算机核心知识体系',
+    target: isCareer.value ? '职业素养 · 六维能力' : '计算机核心知识体系',
     tags: getTags(p),
     avatar: 'Net',
   }
@@ -189,19 +194,19 @@ const learningPhase = computed(() => {
         <div class="profile-avatar" v-html="icons.user"></div>
         <div class="profile-meta">
           <h3>{{ profile?.name || '计算机专业学习者' }}</h3>
-          <p>{{ profile?.target || '计算机核心知识体系' }}</p>
+          <p>{{ profile?.target || (isCareer ? '职业素养 · 六维能力' : '计算机核心知识体系') }}</p>
           <div class="profile-tags">
             <span v-for="tag in profile?.tags || []" :key="tag" class="profile-tag">{{ tag }}</span>
           </div>
         </div>
-        <div class="profile-score-badge" :style="{ background: learningPhase.color }">
+        <div class="profile-score-badge" v-if="store.studentProfile" :style="{ background: learningPhase.color }">
           <div class="score-badge-value">{{ overallScore }}分</div>
           <div class="score-badge-label">{{ learningPhase.label }}</div>
         </div>
       </div>
 
-      <!-- 学习阶段提示 -->
-      <div class="phase-banner" :style="{ borderColor: learningPhase.color, background: learningPhase.color + '10' }">
+      <!-- 学习阶段提示：没有画像数据时不编造「0 分 / 起步阶段」 -->
+      <div class="phase-banner" v-if="store.studentProfile" :style="{ borderColor: learningPhase.color, background: learningPhase.color + '10' }">
         <div class="phase-banner-icon" :style="{ color: learningPhase.color }">{{ learningPhase.label === '冲刺阶段' ? '' : learningPhase.label === '强化阶段' ? '' : learningPhase.label === '基础阶段' ? '' : '' }}</div>
         <div class="phase-banner-text">
           <div class="phase-banner-title" :style="{ color: learningPhase.color }">{{ learningPhase.label }}</div>
@@ -209,8 +214,16 @@ const learningPhase = computed(() => {
         </div>
       </div>
 
-      <!-- 关键统计 -->
-      <div class="profile-stats-grid">
+      <!-- 没有画像时给出下一步，而不是留一个空面板 -->
+      <div class="profile-career-hint" v-if="!store.studentProfile && !isCareer">
+        <div class="profile-career-hint-title">还没有学习画像</div>
+        <div class="profile-career-hint-desc">完成入学测评后，这里会显示你的知识基础、学习风格与四科掌握度。</div>
+        <router-link class="profile-career-hint-link" to="/diagnostic">去做入学测评 →</router-link>
+      </div>
+
+      <!-- 关键统计：仅考研场景展示。这四项（距考试/目标分数/报考科目/每日学习）
+           都是 408 的备考口径，出现在职业素养实训页等于把两个场景混成一个。 -->
+      <div class="profile-stats-grid" v-if="!isCareer">
         <div class="profile-stat-card">
           <div class="stat-value">{{ store.daysToExam }}</div>
           <div class="stat-label">距考试</div>
@@ -229,8 +242,17 @@ const learningPhase = computed(() => {
         </div>
       </div>
 
+      <!-- 职业素养场景：不在这里编造六维分数，只指向真正的评分入口 -->
+      <div class="profile-career-hint" v-else>
+        <div class="profile-career-hint-title">职业素养过程性评价</div>
+        <div class="profile-career-hint-desc">
+          对抗实训的六维评分与证据链记录在「我的成长」，这里只保留与场景无关的能力特质。
+        </div>
+        <router-link class="profile-career-hint-link" to="/career/growth">查看我的成长 →</router-link>
+      </div>
+
       <!-- 能力特质 -->
-      <div class="traits-section">
+      <div class="traits-section" v-if="traits.length">
         <div class="traits-title">学习能力特质</div>
         <div v-for="(trait, idx) in traits" :key="trait.id" class="trait-row">
           <span class="trait-icon" v-html="icons[trait.iconKey as keyof typeof icons]"></span>
@@ -249,8 +271,8 @@ const learningPhase = computed(() => {
         </div>
       </div>
 
-      <!-- 科目掌握 -->
-      <div class="traits-section">
+      <!-- 科目掌握：四科是 408 口径，职业素养场景下不展示；无画像时不渲染一排 0% -->
+      <div class="traits-section" v-if="!isCareer && store.studentProfile">
         <div class="traits-title">科目掌握度</div>
         <div v-for="m in mastery" :key="m.subject" class="trait-row">
           <span class="trait-label">{{ m.label }}</span>
@@ -268,8 +290,8 @@ const learningPhase = computed(() => {
         </div>
       </div>
 
-      <!-- 薄弱点 -->
-      <div class="traits-section">
+      <!-- 待加强知识点：同为 408 口径；无画像时列表本来就空，不占位 -->
+      <div class="traits-section" v-if="!isCareer && store.studentProfile">
         <div class="traits-title">待加强知识点</div>
         <div v-for="w in weaknesses" :key="w.name" class="weakness-item">
           <div class="weakness-name">
@@ -280,7 +302,7 @@ const learningPhase = computed(() => {
         </div>
       </div>
 
-      <div style="text-align:center;padding:16px 0 8px;font-size:12px;color:var(--text-muted);">
+      <div v-if="!isCareer" style="text-align:center;padding:16px 0 8px;font-size:12px;color:var(--text-muted);">
         {{ daysText() }} · 坚持就是胜利
       </div>
     </div>

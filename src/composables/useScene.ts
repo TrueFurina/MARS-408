@@ -22,7 +22,8 @@ export type SelectableScene = (typeof SELECTABLE_SCENES)[number]
 
 /** 场景展示元数据（切换控件用） */
 export const SCENE_META: Record<SelectableScene, { label: string; sub: string; route: string }> = {
-  kaoyan: { label: '专业能力训练', sub: '专业核心四科智能学习', route: '/kaoyan' },
+  // ⚠️ 临时复原：与参赛提交版本对齐，答辩/材料比对用；之后需撤回为「专业能力训练」
+  kaoyan: { label: 'MARS-408', sub: '专业核心四科智能学习', route: '/kaoyan' },
   career: { label: '职业素养实训', sub: 'AI 对抗式能力训练', route: '/career/training' },
 }
 

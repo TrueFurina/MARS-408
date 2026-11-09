@@ -88,50 +88,48 @@ function goPractice(courseKey: string) {
 </script>
 
 <template>
-  <div class="page-section">
+  <div class="rev-embedded">
     <ErrorBoundary title="错题复盘异常">
-      <div class="section-title"> 错题复盘</div>
-    <div class="section-desc">按专业四科统计错题情况，点击科目进入针对性练习</div>
+      <div class="rev-eyebrow">WRONG ANSWER REVIEW</div>
+      <div class="rev-title">错题复盘</div>
+      <div class="rev-desc">按专业四科统计错题情况，点击科目进入针对性练习</div>
 
     <!-- L1/L2/L3 三层学情记忆薄弱点提示（低侵入联动） -->
-    <div v-if="memoryOverview?.weak_points?.length" class="memory-mini-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-size:12px;">
-      <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);"> 记忆薄弱点:</span>
-      <span v-for="w in memoryOverview.weak_points.slice(0, 6)" :key="w" style="padding:3px 10px;border-radius:12px;background:rgba(239,68,68,0.12);color:var(--accent-danger);">{{ w }}</span>
+    <div v-if="memoryOverview?.weak_points?.length" class="memory-mini-strip rev-strip">
+      <span class="memory-mini-chip rev-strip-label">记忆薄弱点</span>
+      <span v-for="w in memoryOverview.weak_points.slice(0, 6)" :key="w" class="memory-mini-chip">{{ w }}</span>
     </div>
 
     <div v-if="loading" class="empty-state"><div class="empty-title">加载中...</div></div>
     <EmptyState v-else-if="error" :icon="icons.xCircle" :title="error" />
-    <div v-else-if="summary">
-      <div class="dashboard-grid">
-        <div class="dash-card">
-          <div class="dash-card-title"> 答题概览</div>
-          <div class="dash-stats">
-            <div class="dash-stat"><span class="dash-value">{{ summary.total_questions }}</span><span class="dash-label">总题数</span></div>
-            <div class="dash-stat"><span class="dash-value">{{ summary.total_wrong }}</span><span class="dash-label">错题数</span></div>
-            <div class="dash-stat"><span class="dash-value">{{ (summary.overall_accuracy * 100).toFixed(0) }}%</span><span class="dash-label">正确率</span></div>
-          </div>
-        </div>
+    <div v-else-if="summary" class="rev-body">
+      <!-- 父页「错题本」顶部已有一排统计卡，这里不再放第二张概览卡，
+           三数字压成一行摘要，避免两个统计模块叠在一起 -->
+      <div class="rev-summary">
+        <span class="rev-sum-item"><b>{{ summary.total_questions }}</b>总题</span>
+        <span class="rev-sum-item"><b>{{ summary.total_wrong }}</b>错题</span>
+        <span class="rev-sum-item"><b>{{ (summary.overall_accuracy * 100).toFixed(0) }}%</b>正确率</span>
+      </div>
 
-        <div class="dash-card" v-if="byCourse.length">
-          <div class="dash-card-title"> 专业四科统计</div>
-          <div v-for="s in byCourse" :key="s.subject" class="subject-row" role="button" tabindex="0" :aria-label="'复习 ' + s.subject_name" @click="goPractice(s.subject)" @keydown.enter="goPractice(s.subject)" @keydown.space.prevent="goPractice(s.subject)">
-            <span class="subject-name">{{ s.subject_name }}</span>
-            <span class="subject-accuracy" :style="{ color: s.accuracy >= 0.7 ? 'var(--accent-success)' : s.accuracy >= 0.4 ? 'var(--accent-warm)' : 'var(--accent-danger)' }">{{ (s.accuracy * 100).toFixed(0) }}%</span>
-            <span class="subject-count">{{ s.wrong }}/{{ s.total }} 错</span>
-          </div>
+      <div class="rev-card" v-if="byCourse.length">
+        <div class="rev-card-title">专业四科统计</div>
+        <div v-for="s in byCourse" :key="s.subject" class="rev-subject-row" role="button" tabindex="0" :aria-label="'复习 ' + s.subject_name" @click="goPractice(s.subject)" @keydown.enter="goPractice(s.subject)" @keydown.space.prevent="goPractice(s.subject)">
+          <span class="rev-subject-name">{{ s.subject_name }}</span>
+          <span class="rev-subject-acc">{{ (s.accuracy * 100).toFixed(0) }}%</span>
+          <span class="rev-subject-count">{{ s.wrong }}/{{ s.total }} 错</span>
         </div>
       </div>
 
-      <div class="card" style="margin-top:20px;" v-if="summary.weak_topics?.length">
-        <div class="card-title" style="margin-bottom:12px;"> 薄弱知识点</div>
-        <div class="tag-list">
-          <span v-for="topic in summary.weak_topics" :key="topic" class="tag tag-warning">{{ topic }}</span>
+      <div class="rev-card" v-if="summary.weak_topics?.length">
+        <div class="rev-card-title">薄弱知识点</div>
+        <div class="rev-tags">
+          <span v-for="topic in summary.weak_topics" :key="topic" class="rev-tag">{{ topic }}</span>
         </div>
       </div>
 
-      <div class="card" style="margin-top:20px;" v-if="summary.recommendation">
-        <div class="card-title" style="margin-bottom:8px;"> 学习建议</div>
-        <div class="recommendation-text">{{ summary.recommendation }}</div>
+      <div class="rev-card" v-if="summary.recommendation">
+        <div class="rev-card-title">学习建议</div>
+        <div class="rev-text">{{ summary.recommendation }}</div>
       </div>
     </div>
     <EmptyState v-else :icon="icons.search" title="暂无答题记录" description="去做一些练习题，错题会自动记录在这里" />
@@ -140,17 +138,35 @@ function goPractice(courseKey: string) {
 </template>
 
 <style scoped>
-.dash-stats { display: flex; gap: var(--space-4); flex-wrap: wrap; padding: var(--space-3) 0; }
-.dash-stat { display: flex; flex-direction: column; align-items: center; min-width: 80px; }
-.dash-value { font-size: 28px; font-weight: var(--weight-bold); color: var(--accent-primary); }
-.dash-label { font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-1); }
-.subject-row { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) 0; cursor: pointer; transition: var(--transition); border-bottom: 1px solid var(--glass-border); }
-.subject-row:hover { background: var(--bg-card-hover); }
-.subject-name { flex: 1; font-size: var(--text-base); font-weight: var(--weight-medium); }
-.subject-accuracy { font-size: var(--text-lg); font-weight: var(--weight-bold); min-width: 48px; text-align: right; }
-.subject-count { font-size: var(--text-xs); color: var(--text-muted); min-width: 60px; text-align: right; }
-.tag-list { display: flex; gap: 6px; flex-wrap: wrap; }
-.tag { padding: var(--space-1) 10px; border-radius: 12px; font-size: var(--text-xs); }
-.tag-warning { background: rgba(var(--warning-rgb), 0.15); color: var(--accent-warm); }
-.recommendation-text { font-size: var(--text-base); line-height: 1.6; color: var(--text-secondary); padding: var(--space-2) 0; }
+.rev-eyebrow { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.16em; color: var(--color-accent); margin-bottom: 6px; }
+/* 嵌在「错题本」的 review Tab 里，父页已有整页页头，这里只能是区块级标题 */
+.rev-title { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; color: var(--color-text); line-height: 1.3; }
+.rev-desc { font-size: var(--text-sm); color: var(--color-text-2); margin-top: 4px; padding-bottom: var(--space-3); border-bottom: 1px solid var(--color-border); margin-bottom: var(--space-4); }
+.rev-strip { margin-bottom: var(--space-4); }
+.rev-strip-label { color: var(--color-accent); }
+
+.rev-body { display: flex; flex-direction: column; gap: var(--space-4); }
+.rev-summary { display: flex; gap: var(--space-5); flex-wrap: wrap; font-size: var(--text-xs); color: var(--color-text-3); }
+.rev-sum-item b { font-size: var(--text-md); font-weight: 700; color: var(--color-text); margin-right: 5px; }
+.rev-card { padding: var(--space-4) var(--space-5); background: var(--color-card); border: 1px solid var(--color-border); border-radius: 12px; box-shadow: var(--shadow-card); }
+.rev-card-title { font-size: var(--text-md); font-weight: 600; color: var(--color-text); margin-bottom: var(--space-3); }
+
+.rev-subject-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: var(--space-3); padding: var(--space-2) 0; cursor: pointer; border-bottom: 1px solid var(--color-border); transition: var(--transition); }
+.rev-subject-row:last-child { border-bottom: none; }
+.rev-subject-row:hover { background: var(--color-surface-2); }
+.rev-subject-name { font-size: var(--text-sm); color: var(--color-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* 准确率原先是绿/橙/红三色写死，四个科目四组色相；统一中性，颜色交给图表承担 */
+.rev-subject-acc { font-size: var(--text-base); font-weight: 600; color: var(--color-text); min-width: 44px; text-align: right; }
+.rev-subject-count { font-size: var(--text-xs); color: var(--color-text-3); min-width: 56px; text-align: right; white-space: nowrap; }
+
+.rev-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.rev-tag { padding: 3px 10px; border-radius: var(--radius-full); font-size: var(--text-xs); background: var(--color-surface-2); border: 1px solid var(--color-border); color: var(--color-text-2); }
+.rev-text { font-size: var(--text-sm); line-height: 1.7; color: var(--color-text-2); }
+
+@media (max-width: 640px) {
+  .rev-summary { gap: var(--space-4); }
+  .rev-subject-row { gap: var(--space-2); }
+  .rev-subject-acc { min-width: 40px; }
+  .rev-subject-count { min-width: 52px; }
+}
 </style>

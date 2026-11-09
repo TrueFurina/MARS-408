@@ -62,6 +62,10 @@ const routeLoading = ref(false)
 let loadingTimer: ReturnType<typeof setTimeout> | null = null
 const toastRef = ref<InstanceType<typeof ToastNotification> | null>(null)
 watch(() => route.path, () => {
+  // 切页时收起两个抽屉。否则在 A 页打开的画像/对话历史会一直挂到 B 页上——
+  // 实训页底部那两块「对话历史 / 学生画像」就是这么跟过去的，不是常驻组件。
+  showProfile.value = false
+  showHistory.value = false
   routeLoading.value = true
   if (loadingTimer) clearTimeout(loadingTimer)
   loadingTimer = setTimeout(() => { routeLoading.value = false }, 300)
@@ -129,6 +133,13 @@ onMounted(() => {
   }
   applyTheme(saved === 'light' ? 'light' : 'dark')
 
+  // 初始化配色（默认 violet 不落 data-accent）
+  let savedAccent: string | null = null
+  try { savedAccent = localStorage.getItem('mangdehenzhi-accent') } catch {}
+  applyAccent(savedAccent || 'violet')
+  window.addEventListener('mangdehenzhi:accent', onAccentChange)
+  window.addEventListener('mangdehenzhi:theme', onThemeChange)
+
   // 空闲时预取侧边栏导航页的懒加载 chunk。
   // 为什么：视图是 `() => import(...)` 懒加载，首次点击时 js+css 要走一次网络往返，
   // 期间 router-view 为空 ⇒ 内容区从满屏骤降到近空白再填充（冷缓存实测 1601→822→…→1176），
@@ -148,10 +159,16 @@ onMounted(() => {
 onUnmounted(() => {
   if (healthTimer) clearInterval(healthTimer)
   if (loadingTimer) clearTimeout(loadingTimer)
+  window.removeEventListener('mangdehenzhi:accent', onAccentChange)
+  window.removeEventListener('mangdehenzhi:theme', onThemeChange)
 })
 
 /* ── 主题切换（双主题：dark 默认 / light 可选） ── */
 const theme = ref<'dark' | 'light'>('dark')
+/* ── 配色方案（第二维，与明暗正交；只换强调色系，不动画布与文字层级） ── */
+type AccentKey = 'violet' | 'teal' | 'blue' | 'amber' | 'rose'
+const ACCENT_KEYS: AccentKey[] = ['violet', 'teal', 'blue', 'amber', 'rose']
+const accent = ref<AccentKey>('violet')
 const sunIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>`
 const moonIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`
 function applyTheme(t: 'dark' | 'light') {
@@ -167,6 +184,25 @@ function applyTheme(t: 'dark' | 'light') {
   }
   // 主题切换后清空 canvas 令牌缓存，使知识图谱等 canvas 组件下一次绘制取到新主题色
   clearTokenCache()
+}
+/* 配色切换：violet 是第 2/3 节的原始值，不设 data-accent 即回到默认 */
+function applyAccent(a: string) {
+  const key: AccentKey = ACCENT_KEYS.includes(a as AccentKey) ? (a as AccentKey) : 'violet'
+  if (key === 'violet') delete document.documentElement.dataset.accent
+  else document.documentElement.dataset.accent = key
+  accent.value = key
+  try { localStorage.setItem('mangdehenzhi-accent', key) } catch {}
+  clearTokenCache()
+}
+// 设置页改配色后派事件通知本组件，保证 accent ref 与 DOM 同步（避免两处各写一份状态）
+function onAccentChange(e: Event) {
+  const detail = (e as CustomEvent<string>).detail
+  if (typeof detail === 'string') applyAccent(detail)
+}
+// 同理：设置页改明暗后由本组件统一落地（含 meta theme-color 与 canvas 令牌缓存）
+function onThemeChange(e: Event) {
+  const detail = (e as CustomEvent<string>).detail
+  if (detail === 'light' || detail === 'dark') applyTheme(detail)
 }
 function toggleTheme() {
   applyTheme(theme.value === 'dark' ? 'light' : 'dark')
@@ -259,8 +295,9 @@ function hoverPrefetch(routePath: string) {
 
       <nav class="sidebar-nav">
         <section v-for="group in navGroups" :key="group.id" class="nav-group">
-          <!-- 分组标题：可折叠分组带展开箭头与徽标 -->
+          <!-- 分组标题：可折叠分组带展开箭头与徽标；title 为空表示置顶独立项，不画分组头 -->
           <div
+            v-if="group.title"
             class="nav-group-title"
             :class="{ clickable: group.collapsible }"
             role="button"
@@ -393,6 +430,17 @@ function hoverPrefetch(routePath: string) {
         </ErrorBoundary>
       </main>
 
+      <!-- 手机浮动的导航 + 主题入口：顶栏与底栏都不再常驻，靠这一列圆钮维持可达性 -->
+      <div class="mobile-fab">
+        <button
+          class="fab-btn"
+          :title="theme === 'dark' ? '切换到浅色' : '切换到深色'"
+          @click="toggleTheme"
+          v-html="theme === 'dark' ? moonIcon : sunIcon"
+        ></button>
+        <MoreMenu />
+      </div>
+
       <!-- 底部导航（仅移动端） -->
       <nav class="bottom-nav">
         <div class="bottom-nav-list">
@@ -412,7 +460,7 @@ function hoverPrefetch(routePath: string) {
             @focus="hoverPrefetch(item.route)"
           >
             <span v-html="safeIcon(item.icon)" aria-hidden="true"></span>
-            <span>{{ item.name }}</span>
+            <span>{{ item.shortName || item.name }}</span>
           </div>
         </div>
       </nav>
@@ -430,6 +478,19 @@ function hoverPrefetch(routePath: string) {
 </template>
 
 <style scoped>
+/* 顶栏左右两块此前缺 display:flex，子元素按 block 竖直堆叠，
+   实测 390px 下 topbar-left 高 72px、topbar-right 高 120px，
+   溢出 64px 的顶栏形成"两层导航"观感。 */
+.topbar-left,
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 0;
+}
+.topbar-left { flex: 1 1 auto; overflow: hidden; }
+.topbar-right { flex: 0 0 auto; }
+
 .topbar-btn {
   width:2.5rem;
   height:2.5rem;
@@ -614,4 +675,14 @@ function hoverPrefetch(routePath: string) {
   cursor: pointer;
 }
 .tu-logout:hover { color: var(--text-danger); border-color: var(--accent-danger-20); }
+
+/* 手机端顶栏空间只够「抽屉 + 品牌 + 主题 + 更多」，
+   用户名和退出按钮塞进来会把品牌挤没（实测 390px 下 7 个元素并排）。
+   退出入口保留在侧栏底部，不影响可用性。 */
+@media (max-width: 768px) {
+  .topbar-user { display: none; }
+  /* 左「对话历史」两条线、右 MoreMenu 三条线，390px 下看起来像同一个图标出现两次。
+     底部导航已有「对话」入口，历史可从对话页进，手机端先收掉左侧这个。 */
+  .history-btn { display: none; }
+}
 </style>

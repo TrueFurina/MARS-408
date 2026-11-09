@@ -564,7 +564,12 @@ const userMsg: ChatMessage = {
       }
     } catch (e) {
       if (!conv.messages[msgIndex]?.content) {
-        conv.messages[msgIndex]!.content = '连接失败，请检查后端服务是否运行'
+        // 403 是「权限不足」，跟后端起没起来是两回事：只读评审账号打到这里会被拒，
+        // 若统一报成"请检查后端服务"，用户会以为是服务挂了，去排查一个不存在的故障。
+        const status = (e as { status?: number })?.status
+        conv.messages[msgIndex]!.content = status === 403
+          ? '当前账号没有发起作答的权限（只读评审账号），如需体验请用学生账号'
+          : '连接失败，请检查后端服务是否运行'
       }
       conv.updatedAt = new Date()
       saveConversations()

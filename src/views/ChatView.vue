@@ -483,7 +483,7 @@ onBeforeUnmount(() => {
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
       </button>
       <!-- 画像快捷入口 -->
-      <div class="chat-profile-bar">
+      <div class="chat-profile-bar" :class="{ 'with-menu': !sidebarOpen }">
         <button v-if="currentUser" class="chat-profile-btn" @click="showProfile = true" title="查看学生画像">
           <span class="cpb-avatar"></span>
           <span class="cpb-level">{{ profileLevelLabel }}</span>
@@ -657,7 +657,9 @@ onBeforeUnmount(() => {
 
 <style scoped>
 /* ── 侧边栏 ── */
-.chat-layout { display: flex; height:100vh; width:100%; position: relative; }
+/* 原来写死 100vh，而主内容区高度已经是"视口 − 顶栏"，多出来的这一段会把
+   整个对话页上推，顶部页头直接被切掉一半。改成跟随父容器高度。 */
+.chat-layout { flex:1; min-height:0; display: flex; width:100%; position: relative; }
 .chat-sidebar { width: 280px; min-width: 280px; display: flex; flex-direction: column; background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border-right: 1px solid var(--glass-border); transition: all 0.25s ease; overflow: hidden; }
 .chat-sidebar.collapsed { width:0; min-width:0; border-right: none; }
 .sidebar-header { display: flex; align-items: center; gap:0.375rem; padding:var(--space-3); border-bottom: 1px solid var(--glass-border); }
@@ -679,7 +681,7 @@ onBeforeUnmount(() => {
 .sidebar-conv-item:hover .conv-delete { opacity: 1; }
 .conv-delete:hover { background: var(--accent-danger-20); color: var(--accent-danger); }
 .sidebar-empty { text-align: center; padding:var(--space-10) var(--space-3); color: var(--text-muted); font-size:var(--text-sm); }
-.chat-main { flex: 1; display: flex; flex-direction: column; position: relative; min-width:0; }
+.chat-main { flex: 1; min-height:0; display: flex; flex-direction: column; position: relative; min-width:0; }
 .chat-menu-btn { position: absolute; top: 12px; left: 12px; z-index: 10; width: 2.75rem; height: 2.75rem; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); border: 1px solid var(--glass-border); background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); color: var(--text-secondary); cursor: pointer; transition: var(--transition); }
 .chat-menu-btn:hover { background: var(--bg-card-hover); color: var(--accent-primary); }
 
@@ -798,6 +800,9 @@ onBeforeUnmount(() => {
 
 /* ── 导师答疑模式切换 ── */
 .chat-profile-bar { display:flex; align-items:center; gap:var(--space-2); padding:var(--space-2) var(--space-4); border-bottom:1px solid var(--color-border); flex-shrink:0; }
+/* 汉堡按钮是绝对定位的，不收侧栏时会正好压在头像条最左侧的文字上，
+   把「待评估」压掉一半。只有按钮出现时才让出它的宽度。 */
+.chat-profile-bar.with-menu { padding-left: calc(2.75rem + var(--space-4) + var(--space-2)); }
 .chat-profile-btn { display:flex; align-items:center; gap:6px; padding:var(--space-1) var(--space-3); border-radius:20px; border:1px solid var(--color-border); background:var(--color-surface); font-size:var(--text-xs); color:var(--color-text-2); cursor:pointer; transition: var(--transition) }
 .chat-profile-btn:hover { border-color:var(--color-border-focus); color:var(--color-text); }
 .cpb-avatar { font-size:var(--text-lg); }

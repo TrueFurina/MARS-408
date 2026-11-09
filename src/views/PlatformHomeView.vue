@@ -44,20 +44,23 @@ interface SceneCard {
 
 const cards: SceneCard[] = [
   {
-    key: 'kaoyan',
-    title: '专业能力训练',
-    sub: '专业核心四科智能学习 · 低年级',
-    points: ['学情诊断 → 个性化学习路径', '多智能体对话 · RAG 知识底座', '智能出题 · 错题复盘 · 能力画像'],
-    icon: icons.graduation,
-    accent: 'blue',
-  },
-  {
+    // 主推场景置顶：平台定位是职业素养实训，学生首屏应先看到它。
+    // 此前专业能力训练排第一，手机端第一屏完全看不到"主推"场景。
     key: 'career',
     title: '职业素养实训',
     sub: 'AI 对抗式能力训练 · 高年级 · 主推',
     points: ['证据链（ECD）对抗实训', '答辩 / 评审 / 应急 / 冲突对抗场景', '六维软素养评估报告'],
     icon: icons.target,
     accent: 'teal',
+  },
+  {
+    key: 'kaoyan',
+    // ⚠️ 临时复原：与参赛提交版本对齐；之后需撤回为「专业能力训练」
+    title: 'MARS-408',
+    sub: '专业核心四科智能学习 · 低年级',
+    points: ['学情诊断 → 个性化学习路径', '多智能体对话 · RAG 知识底座', '智能出题 · 错题复盘 · 能力画像'],
+    icon: icons.graduation,
+    accent: 'blue',
   },
 ]
 
@@ -76,13 +79,15 @@ function enterScene(c: SceneCard) {
     <div class="ph-aura" aria-hidden="true"></div>
 
     <header class="ph-hero">
-      <span class="ph-track">一个平台 · 两个业务场景</span>
-      <div class="ph-brand">
-        <span class="ph-logo"><img class="brand-img" src="/brand/mangxiaocheng.png" alt="芒得很职" /></span>
-        <h1 class="ph-title">芒得很职</h1>
+      <div class="ph-hero-main">
+        <span class="ph-track">一个平台 · 两个业务场景</span>
+        <div class="ph-brand">
+          <span class="ph-logo"><img class="brand-img" src="/brand/mangxiaocheng.png" alt="芒得很职" /></span>
+          <h1 class="ph-title">芒得很职</h1>
+        </div>
+        <p class="ph-sub">新一代多智能体赋能的计算机类学生职业素养对抗实训平台</p>
       </div>
-      <p class="ph-sub">新一代多智能体赋能的计算机类学生职业素养对抗实训平台</p>
-      <p class="ph-welcome">欢迎回来，{{ userName }} · 选一个场景开始</p>
+      <p class="ph-welcome">欢迎回来，{{ userName }}</p>
     </header>
 
     <section class="ph-scenes" aria-label="场景入口">
@@ -118,22 +123,28 @@ function enterScene(c: SceneCard) {
         画像服务未就绪，展示本地缓存{{ ability ? '' : '（暂无缓存）' }}
       </p>
       <div v-if="ability" class="ph-ability-grid">
-        <div class="ph-ability-col">
-          <span class="ph-ability-label">专业能力（核心四科）</span>
-          <span class="ph-ability-value">{{ ability.professional ? '已构建' : '待诊断' }}</span>
+        <div class="ph-ability-col" :data-on="ability.professional">
+          <div class="ph-ability-row">
+            <span class="ph-ability-label">专业能力（核心四科）</span>
+            <span class="ph-ability-state">{{ ability.professional ? '已构建' : '待诊断' }}</span>
+          </div>
+          <span class="ph-ability-hint">学情诊断 · 个性化路径 · 智能出题 · 错题复盘</span>
         </div>
-        <div class="ph-ability-col">
-          <span class="ph-ability-label">软素养（职业素养实训）</span>
-          <span class="ph-ability-value">{{ ability.soft_skills ? '已评估' : '待实训' }}</span>
+        <div class="ph-ability-col" :data-on="ability.soft_skills">
+          <div class="ph-ability-row">
+            <span class="ph-ability-label">软素养（职业素养实训）</span>
+            <span class="ph-ability-state">{{ ability.soft_skills ? '已评估' : '待实训' }}</span>
+          </div>
+          <span class="ph-ability-hint">证据链对抗 · 六维评估 · 前后测对比 · 证据金句</span>
         </div>
       </div>
     </section>
 
     <section class="ph-stats" aria-label="平台能力">
-      <div class="ph-stat"><b>4</b><span>对抗实训场景<br/>答辩/评审/应急/冲突</span></div>
-      <div class="ph-stat"><b>6</b><span>维 ECD<br/>职业素养评估</span></div>
-      <div class="ph-stat"><b>49</b><span>前端视图<br/>已落地可用</span></div><!-- 口径：ls src/views/*.vue 实测 49（2026-10-17） -->
-      <div class="ph-stat"><b>40+</b><span>真实实验产物<br/>可复现证据</span></div>
+      <div class="ph-stat"><b>4</b><span>对抗实训场景</span></div>
+      <div class="ph-stat"><b>6</b><span>维 ECD 职业素养评估</span></div>
+      <div class="ph-stat"><b>49</b><span>前端视图已落地</span></div><!-- 口径：ls src/views/*.vue 实测 49（2026-10-17） -->
+      <div class="ph-stat"><b>40+</b><span>真实实验产物可复现</span></div>
     </section>
 
     <section class="ph-edge" aria-label="核心差异">
@@ -162,63 +173,79 @@ function enterScene(c: SceneCard) {
     radial-gradient(720px 360px at 80% -8%, rgba(var(--accent-rgb), 0.14), transparent 60%),
     radial-gradient(560px 320px at 6% 4%, rgba(var(--subject-co-rgb), 0.07), transparent 58%);
 }
+/* 浅色底上同样的紫光晕会显得脏，压到只剩一点空气感 */
+[data-theme="light"] .ph-aura { opacity: 0.32; }
 
+/* 页头：左对齐的控制台式页头。居中堆叠会读成个人主页/落地页，不像平台入口。 */
 .ph-hero {
   position: relative;
-  text-align: center;
-  margin-bottom: var(--space-12);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-6);
+  text-align: left;
+  margin-bottom: var(--space-10);
+  padding-bottom: var(--space-7, 28px);
+  border-bottom: 1px solid var(--color-border);
 }
+.ph-hero-main { min-width: 0; }
 
+/* 小字英文 eyebrow，不用胶囊——胶囊会抢掉标题的注意力 */
 .ph-track {
-  display: inline-block;
-  font-size: var(--text-2xs);
+  display: block;
+  font-size: 11px;
   font-weight: var(--weight-semibold);
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
   color: var(--accent-primary);
-  background: var(--accent-primary-10);
-  border: 1px solid var(--accent-primary-20);
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-full);
-  margin-bottom: var(--space-5);
+  margin-bottom: 12px;
 }
 
 .ph-brand {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: var(--space-3);
-  margin-bottom: var(--space-4);
+  gap: 14px;
+  margin-bottom: 10px;
 }
 
 .ph-logo {
   display: inline-flex;
-  width: var(--space-10);
-  height: var(--space-10);
+  width: 40px;
+  height: 40px;
   color: var(--accent-primary);
   border-radius: var(--radius-md);
   overflow: hidden;
+  flex-shrink: 0;
 }
 .ph-logo :deep(svg) { width: 100%; height: 100%; }
 
 .ph-title {
-  font-size: var(--text-5xl);
+  font-size: 34px;
   font-weight: var(--weight-bold);
   color: var(--color-text);
   margin: 0;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
 }
 
 .ph-sub {
-  margin: var(--space-3) auto var(--space-2);
-  max-width: 560px;
-  font-size: var(--text-lg);
+  margin: 0;
+  max-width: 640px;
+  font-size: var(--text-md);
   color: var(--color-text-2);
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 .ph-welcome {
-  margin: 0;
+  margin: 0 0 2px;
   font-size: var(--text-sm);
   color: var(--color-text-3);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+@media (max-width: 720px) {
+  .ph-hero { flex-direction: column; align-items: flex-start; gap: var(--space-3); }
+  .ph-title { font-size: 26px; }
+  .ph-welcome { white-space: normal; }
 }
 
 /* ── 场景卡片 ── */
@@ -234,12 +261,16 @@ function enterScene(c: SceneCard) {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: var(--space-4);
+  gap: var(--space-5);
   padding: var(--space-8);
   text-align: left;
-  background: var(--color-surface);
-  border: 1px solid var(--color-glass-border);
-  border-radius: var(--radius-xl);
+  /* 深色底上必须靠"底、边、阴影"三层把卡片托起来：
+     原来卡片色与页面底色几乎一致，只留一根细边，视觉上是平的。
+     现在提一档底色 + 顶部内高光 + 外投影，卡片才有实体感。 */
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  box-shadow: var(--shadow-card);
   cursor: pointer;
   font-family: inherit;
   color: inherit;
@@ -265,7 +296,10 @@ function enterScene(c: SceneCard) {
   outline-offset: 2px;
 }
 
-.ph-card--blue { --card-accent: var(--color-info); }
+/* 场景卡配色统一跟随全局 --color-accent。
+   此前 kaoyan 卡写死 --color-info，切到 teal/amber/rose 时这张卡仍是固定信息蓝，
+   与主色打架；主次改由"主推徽标 + 图标语义"承担，不靠第二个色相。 */
+.ph-card--blue { --card-accent: var(--color-accent); }
 .ph-card--teal { --card-accent: var(--color-accent); }
 
 .ph-card-top {
@@ -277,14 +311,19 @@ function enterScene(c: SceneCard) {
 .ph-card-icon {
   display: grid;
   place-items: center;
-  width: 52px;
-  height: 52px;
-  flex: 0 0 52px;
-  border-radius: var(--radius-md);
+  width: 56px;
+  height: 56px;
+  flex: 0 0 56px;
+  border-radius: 14px;
   background: rgba(var(--accent-rgb), 0.14);
+  border: 1px solid rgba(var(--accent-rgb), 0.22);
   color: var(--card-accent);
 }
-.ph-card--blue .ph-card-icon { background: rgba(var(--info-rgb), 0.14); }
+/* 蓝色卡的图标底压淡一档，与主推卡拉开层次，同时仍跟随全局配色 */
+.ph-card--blue .ph-card-icon {
+  background: rgba(var(--accent-rgb), 0.08);
+  border-color: rgba(var(--accent-rgb), 0.16);
+}
 .ph-card-icon :deep(svg) { width: 26px; height: 26px; }
 
 .ph-card-heading {
@@ -339,12 +378,21 @@ function enterScene(c: SceneCard) {
 .ph-card-cta {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   margin-top: auto;
-  padding-top: var(--space-3);
+  padding: 11px 16px;
+  border-radius: 10px;
+  background: rgba(var(--accent-rgb), 0.10);
+  border: 1px solid rgba(var(--accent-rgb), 0.26);
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
-  color: var(--card-accent);
+  color: var(--color-accent-text);
+  transition: var(--transition);
+}
+.ph-card:hover .ph-card-cta {
+  background: rgba(var(--accent-rgb), 0.18);
+  border-color: rgba(var(--accent-rgb), 0.42);
 }
 .ph-card-cta svg { width: 16px; height: 16px; transition: transform var(--transition); }
 .ph-card:hover .ph-card-cta svg { transform: translateX(4px); }
@@ -355,10 +403,21 @@ function enterScene(c: SceneCard) {
   margin-top: var(--space-14);
 }
 .ph-section-title {
-  font-size: var(--text-2xl);
-  font-weight: var(--weight-semibold);
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
   color: var(--color-text);
-  margin: 0 0 var(--space-5);
+  margin: 0 0 var(--space-4);
+}
+.ph-section-title::before {
+  content: "";
+  width: 3px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--accent-primary);
+  flex-shrink: 0;
 }
 .ph-ability-degraded {
   font-size: var(--text-xs);
@@ -373,20 +432,43 @@ function enterScene(c: SceneCard) {
 .ph-ability-col {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-5);
-  background: var(--color-surface);
-  border: 1px solid var(--color-glass-border);
-  border-radius: var(--radius-md);
+  gap: 8px;
+  padding: 18px var(--space-5);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-card);
+}
+.ph-ability-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
 }
 .ph-ability-label {
   font-size: var(--text-xs);
   color: var(--color-text-3);
 }
-.ph-ability-value {
-  font-size: var(--text-lg);
+/* 状态徽标：已构建/已评估用主色，待办用中性色，颜色只在状态上有意义 */
+.ph-ability-state {
+  flex-shrink: 0;
+  font-size: var(--text-2xs);
   font-weight: var(--weight-semibold);
-  color: var(--color-text);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  color: var(--color-text-3);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+}
+.ph-ability-col[data-on="true"] .ph-ability-state {
+  color: var(--color-accent-text);
+  background: rgba(var(--accent-rgb), 0.12);
+  border-color: rgba(var(--accent-rgb), 0.28);
+}
+.ph-ability-hint {
+  font-size: var(--text-sm);
+  color: var(--color-text-2);
+  line-height: 1.5;
 }
 
 /* ── 能力数据条 ── */
@@ -395,15 +477,14 @@ function enterScene(c: SceneCard) {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: var(--space-4);
-  margin-top: var(--space-14);
-  padding: var(--space-6) 0;
-  border-top: 1px solid var(--color-glass-border);
-  border-bottom: 1px solid var(--color-glass-border);
+  margin-top: var(--space-12);
+  padding-top: var(--space-7, 28px);
+  border-top: 1px solid var(--color-border);
 }
-.ph-stat { text-align: center; }
+.ph-stat { text-align: left; }
 .ph-stat b {
   display: block;
-  font-size: var(--text-4xl);
+  font-size: 30px;
   font-weight: var(--weight-bold);
   color: var(--color-text);
   font-variant-numeric: tabular-nums;
@@ -412,7 +493,7 @@ function enterScene(c: SceneCard) {
 }
 .ph-stat span {
   display: block;
-  margin-top: 6px;
+  margin-top: 4px;
   font-size: var(--text-2xs);
   color: var(--color-text-3);
   line-height: 1.45;
@@ -446,8 +527,14 @@ function enterScene(c: SceneCard) {
 
 /* ── 响应式 ── */
 @media (max-width: 720px) {
-  .platform-home { padding: var(--space-12) var(--space-5) var(--space-16); }
-  .ph-stats { grid-template-columns: repeat(2, 1fr); gap: var(--space-6); }
-  .ph-title { font-size: var(--text-4xl); }
+  .platform-home { padding: var(--space-10) var(--space-5) var(--space-16); }
+  .ph-scenes { gap: var(--space-4); }
+  .ph-card { padding: var(--space-5); gap: var(--space-4); border-radius: 16px; }
+  .ph-card-icon { width: 44px; height: 44px; flex: 0 0 44px; }
+  .ph-card-icon :deep(svg) { width: 22px; height: 22px; }
+  .ph-card-title { font-size: var(--text-xl); }
+  .ph-stats { grid-template-columns: repeat(2, 1fr); gap: var(--space-5); }
+  .ph-stat b { font-size: 26px; }
+  .ph-edge { padding: var(--space-5); }
 }
 </style>

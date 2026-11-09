@@ -94,6 +94,13 @@ ALLOW_SUBSTRINGS = [
     "TrueFurina/MARS-408",
 ]
 
+# 临时白名单：考研场景为对齐参赛提交版本而复原代号。
+# ⚠️ 复原撤销时必须同步删除本列表，勿长期保留（否则门禁对该串永久失效）。
+TEMP_RESTORE_ALLOW = [
+    "label: 'MARS-408'",
+    "title: 'MARS-408'",
+]
+
 # 面 A 扫描目录。website/ 与 site/ 曾是**盲区**（不在扫描面内 ⇒ 旧品牌名与过期数字
 # 可在其中静默存活，门禁仍报 PASS）。2026-10-12 实测 website/index.html 确有
 # 「技术底座 MARS-408」×5 与「约 240 个 API 端点」等过期口径，即由该盲区漏出。
@@ -178,8 +185,8 @@ def _excluded(path: Path) -> bool:
 
 
 def _allowed(line: str) -> bool:
-    """功能性 URL（GitHub 仓名未更名）不算品牌展示，放行。"""
-    return any(s in line for s in ALLOW_SUBSTRINGS)
+    """功能性 URL（GitHub 仓名未更名）与临时复原文案不算品牌展示，放行。"""
+    return any(s in line for s in ALLOW_SUBSTRINGS + TEMP_RESTORE_ALLOW)
 
 
 def _scan_text(rel: str, text: str, tokens) -> list[tuple[str, int, str, str]]:

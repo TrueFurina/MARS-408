@@ -23,8 +23,21 @@ const loading = ref(true)
 const error = ref('')
 
 // 章节级 key → 中文名（循环8-P2：知识库统计英文 key 显示修复）
+// 知识库统计里同时存在「章节码」（ds_linear、co_overview…）和「科目码」（cn/ds/co/os）：
+// 后者不在 store.subjects（那是章节表）里，原来直接回落成裸 key，页面上就出现了
+// 「ds 42 / co 46 / os 28 / cn 42」四个英文短名条目。
+const SUBJECT_LEVEL_NAMES: Record<string, string> = {
+  cn: '计算机网络',
+  ds: '数据结构',
+  co: '计算机组成原理',
+  os: '操作系统',
+  computer_network: '计算机网络',
+  data_structures: '数据结构',
+  computer_organization: '计算机组成原理',
+  operating_system: '操作系统',
+}
 function subjectName(key: string): string {
-  return store.subjects[key]?.name || key
+  return SUBJECT_LEVEL_NAMES[key] || store.subjects[key]?.name || key
 }
 
 onMounted(async () => {
@@ -74,14 +87,14 @@ const studentFilter = ref<'all' | 'weak' | 'strong'>('all')
 const studentSearch = ref('')
 const filteredStudents = computed(() => {
   const list = overview.value?.students || []
-  return list
-    .filter((s: any) => {
-      if (studentFilter.value === 'weak' && (s.mastery ?? 0) >= 60) return false
-      if (studentFilter.value === 'strong' && (s.mastery ?? 0) < 70) return false
-      if (studentSearch.value && !String(s.name || '').includes(studentSearch.value)) return false
-      return true
-    })
-    .slice(0, 8)
+  // 不再静默截断。原来这里写死 .slice(0, 8)，页头却显示全量总数（75），
+  // 两边口径对不上；现在全量渲染，交给列表容器滚动。
+  return list.filter((s: any) => {
+    if (studentFilter.value === 'weak' && (s.mastery ?? 0) >= 60) return false
+    if (studentFilter.value === 'strong' && (s.mastery ?? 0) < 70) return false
+    if (studentSearch.value && !String(s.name || '').includes(studentSearch.value)) return false
+    return true
+  })
 })
 </script>
 
@@ -127,10 +140,15 @@ const filteredStudents = computed(() => {
               </select>
               <input v-model="studentSearch" class="filter-input" placeholder="搜索学生..." />
             </div>
-            <div v-for="s in filteredStudents" :key="s.id" class="student-row">
-              <span class="student-name">{{ s.name }}</span>
-              <span class="student-progress">进度: {{ s.progress }}</span>
-              <span class="student-mastery" :style="{color: s.mastery >= 70 ? 'var(--accent-success)' : s.mastery >= 50 ? 'var(--accent-warm)' : 'var(--accent-danger)'}">{{ s.mastery }}%</span>
+            <div class="student-count">
+              共 {{ overview.total_students }} 人<template v-if="filteredStudents.length !== (overview.students?.length || 0)">，当前筛选出 {{ filteredStudents.length }} 人</template>
+            </div>
+            <div class="student-rows">
+              <div v-for="s in filteredStudents" :key="s.id" class="student-row">
+                <span class="student-name">{{ s.name }}</span>
+                <span class="student-progress">进度: {{ s.progress }}</span>
+                <span class="student-mastery" :style="{color: s.mastery >= 70 ? 'var(--accent-success)' : s.mastery >= 50 ? 'var(--accent-warm)' : 'var(--accent-danger)'}">{{ s.mastery }}%</span>
+              </div>
             </div>
           </div>
         </div>
@@ -138,7 +156,7 @@ const filteredStudents = computed(() => {
         <div class="dash-card" v-if="kbStats">
           <div class="dash-card-title"><span v-html="icons.knowledge" class="card-title-icon"></span>知识库统计</div>
           <div class="dash-stats">
-            <div class="dash-stat"><span class="dash-value">{{ kbStats.total_chunks }}</span><span class="dash-label">总文档</span></div>
+            <div class="dash-stat"><span class="dash-value">{{ kbStats.total_chunks }}</span><span class="dash-label">知识片段</span></div>
             <div class="dash-stat" v-for="(count, subj) in kbStats.by_subject" :key="subj">
               <span class="dash-value">{{ count }}</span><span class="dash-label">{{ subjectName(String(subj)) }}</span>
             </div>
@@ -181,6 +199,9 @@ const filteredStudents = computed(() => {
 .dash-value { display: block; font-size:1.375rem; font-weight: 800; color: var(--accent-primary); }
 .dash-label { font-size:var(--text-2xs); color: var(--text-muted); }
 .student-list { display: flex; flex-direction: column; gap:0.375rem; }
+/* 全量渲染后班级人数可能几十上百，列表固定高度内滚动，避免整页被名册撑长 */
+.student-rows { display: flex; flex-direction: column; gap:0.375rem; max-height: 20rem; overflow-y: auto; padding-right: 0.25rem; }
+.student-count { font-size: var(--text-2xs); color: var(--text-muted); margin-bottom: 0.25rem; }
 .student-filter { display: flex; gap:var(--space-2); margin-bottom:0.625rem; }
 .filter-select, .filter-input { padding:0.375rem 0.625rem; border-radius:var(--radius-sm); border:1px solid var(--glass-border); background:var(--bg-tertiary); color:var(--text-primary); font-size:var(--text-xs); }
 .filter-input { flex:1; min-width:0; }

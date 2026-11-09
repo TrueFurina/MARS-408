@@ -130,9 +130,10 @@ async function loadMemoryOverview() {
 
 <template>
   <div class="page-section">
+    <div class="sm-eyebrow">SKILL MARKET</div>
     <div class="section-header">
       <div class="section-title-group">
-        <div class="section-title" v-html="icons.skill"></div>
+        <div class="section-title-icon-lg" v-html="icons.skill"></div>
         <div>
           <div class="section-title">AI 技能市场</div>
           <div class="section-desc">发现、创建和分享 AI 教学技能</div>
@@ -147,8 +148,8 @@ async function loadMemoryOverview() {
 
     <!-- L1/L2/L3 三层学情记忆薄弱点提示（低侵入联动） -->
     <div v-if="memoryOverview?.weak_points?.length" class="memory-mini-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-size:12px;">
-      <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);"> 记忆薄弱点:</span>
-      <span v-for="w in memoryOverview.weak_points.slice(0, 6)" :key="w" style="padding:3px 10px;border-radius:12px;background:rgba(239,68,68,0.12);color:var(--accent-danger);">{{ w }}</span>
+      <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);font-weight:600;">记忆薄弱点:</span>
+      <span v-for="w in memoryOverview.weak_points.slice(0, 6)" :key="w" style="padding:3px 10px;border-radius:12px;background:var(--color-surface-2);color:var(--color-text-2);border:1px solid var(--color-border);">{{ w }}</span>
     </div>
 
     <!-- 切换 Tab -->
@@ -213,11 +214,14 @@ async function loadMemoryOverview() {
 <style scoped>
 .section-header { display: flex; justify-content: space-between; align-items: flex-start; gap:var(--space-4); flex-wrap: wrap; }
 .section-title-group { display: flex; align-items: center; gap:var(--space-3); }
-.section-title-group :deep(svg) { width:2rem; height:2rem; color: var(--accent); }
+.section-title-icon-lg { display: inline-flex; align-items: center; }
+.section-title-icon-lg :deep(svg) { width:2rem; height:2rem; color: var(--accent); }
 .section-actions { display: flex; gap:var(--space-2); }
+.sm-eyebrow { font-size: 11px; line-height: 1; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent-primary); font-weight: 600; margin-bottom: 10px; }
 
-.tab-bar { display: flex; gap:var(--space-1); margin:var(--space-4) 0; background: var(--color-surface-2); border-radius:0.625rem; padding:var(--space-1); }
-.tab-btn { flex: 1; padding:var(--space-2) var(--space-4); border: none; border-radius:0.5rem; background: transparent; color: var(--color-text-2); font-size:var(--text-base); font-weight: var(--weight-medium); cursor: pointer; transition: var(--transition) }
+/* 原来四个 tab 平分整行宽度，看起来像一条很重的分段控件；收成内容宽度。 */
+.tab-bar { display: inline-flex; gap:var(--space-1); margin:var(--space-4) 0; background: var(--color-surface-2); border-radius:0.625rem; padding:var(--space-1); }
+.tab-btn { flex: 0 0 auto; padding:var(--space-2) var(--space-4); border: none; border-radius:0.5rem; background: transparent; color: var(--color-text-2); font-size:var(--text-base); font-weight: var(--weight-medium); cursor: pointer; transition: var(--transition) }
 .tab-btn.active { background: var(--color-elevated); color: var(--color-text); box-shadow: var(--shadow-2); }
 .tab-btn:hover:not(.active) { color: var(--color-text); }
 
@@ -228,9 +232,22 @@ async function loadMemoryOverview() {
 .search-input:focus { outline: none; border-color: var(--color-border-focus); }
 .filter-select { padding: 10px var(--space-3); border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface-2); color: var(--color-text); font-size: var(--text-base); cursor: pointer; }
 
-.official-banner { margin-bottom:var(--space-4); padding:var(--space-4); border-radius:0.75rem; background: linear-gradient(135deg, rgba(var(--accent-rgb),0.08), rgba(var(--subject-co-rgb),0.08)); border: 1px solid var(--color-border-focus); }
-.official-title { font-size:var(--text-base); font-weight: var(--weight-semibold); color: var(--accent); margin-bottom:var(--space-3); }
-.official-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--space-2); }
+/* 原来是一层渐变底 + 主色描边的大卡，里面再放 4 张卡 —— 卡中卡，层级打架。
+   改成区块标题 + 直接排卡，外框去掉。 */
+.official-banner { margin-bottom:var(--space-5); }
+.official-title { font-size:var(--text-base); font-weight: var(--weight-semibold); color: var(--color-text); margin-bottom:var(--space-3); padding-left: 0.625rem; position: relative; }
+.official-title::before { content:''; position:absolute; left:0; top:50%; transform:translateY(-50%); width:3px; height:1em; border-radius:2px; background: var(--color-accent); }
+.official-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--space-3); }
 
 .skill-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-3); }
+
+/* 手机端：创建按钮别顶成一大块，搜索栏两枚下拉平分一行，别让「最热门」单独掉下去 */
+@media (max-width: 640px) {
+  .section-actions .btn { padding: 0.5rem var(--space-4); font-size: var(--text-sm); }
+  .search-bar { display: grid; grid-template-columns: 1fr 1fr; align-items: stretch; }
+  .search-input-wrap { grid-column: 1 / -1; min-width: 0; }
+  .search-bar .filter-select { width: 100%; }
+  .tab-bar .tab-btn { padding-left: var(--space-3); padding-right: var(--space-3); }
+  .official-list { grid-template-columns: 1fr; }
+}
 </style>

@@ -29,7 +29,12 @@ const strokeColor = computed(() => props.color || `url(#${gradId})`)
 <template>
   <div
     class="ring-progress"
-    :style="{ width: size + 'px', height: size + 'px' }"
+    :style="{
+      width: size + 'px',
+      height: size + 'px',
+      '--ring-num-size': Math.round(size * 0.29) + 'px',
+      '--ring-label-size': Math.max(9, Math.round(size * 0.115)) + 'px',
+    }"
     role="img"
     :aria-label="`掌握度 ${Math.round(value)}%`"
   >
@@ -77,7 +82,10 @@ const strokeColor = computed(() => props.color || `url(#${gradId})`)
   align-items: center;
   justify-content: center;
 }
-.ring-progress svg { display: block; }
+/* 全局样式里有条 `[class*="icon"] svg{width:1.125rem;height:1.125rem}`，
+   会把这里 svg 的 84px 属性尺寸压成 18px —— 实测环被压成一个小点，几乎看不见。
+   CSS 覆盖 attribute，这里按容器铺满（容器宽高由 :style 给）。 */
+.ring-progress svg { display: block; width: 100%; height: 100%; }
 .ring-track { opacity: 0.55; }
 .ring-value {
   transition: stroke-dashoffset 1s cubic-bezier(0.22, 1, 0.36, 1);
@@ -91,8 +99,11 @@ const strokeColor = computed(() => props.color || `url(#${gradId})`)
   justify-content: center;
   pointer-events: none;
 }
+/* 字号原来写死 --text-2xl / --text-2xs，与 size 无关：
+   84px 的环里塞 24px 数字 + 12px 标签，两行会顶出环外（掌握度地图手机端就是这么挤的）。
+   改为按 size 比例下发，96px 仍是 28/11px，84px 变 24/10px。 */
 .ring-num {
-  font-size: var(--text-2xl);
+  font-size: var(--ring-num-size, var(--text-2xl));
   font-weight: 800;
   color: var(--text-primary);
   letter-spacing: -0.0312rem;
@@ -106,7 +117,7 @@ const strokeColor = computed(() => props.color || `url(#${gradId})`)
   color: var(--text-secondary);
 }
 .ring-label {
-  font-size: var(--text-2xs);
+  font-size: var(--ring-label-size, var(--text-2xs));
   color: var(--text-muted);
   margin-top: 2px;
   font-weight: var(--weight-semibold);

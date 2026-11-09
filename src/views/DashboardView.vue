@@ -17,6 +17,12 @@ const store = useStudyStore()
 const router = useRouter()
 
 const stats = ref<StatData | null>(null)
+/* 后端 /user/stats 的 studyTime 单位是「分钟」（字段名沿用旧契约没改），
+   前端直接拼 h 会把 93 分钟显示成 93 小时。这里统一换算成小时。 */
+const studyHours = computed(() => {
+  const m = Number(stats.value?.studyTime) || 0
+  return (m / 60).toFixed(1)
+})
 const sessions = ref<Session[]>([])
 const tasks = ref<Task[]>([])
 const memoryOverview = ref<any>(null)
@@ -86,17 +92,23 @@ function subjectLabel(s: string): string {
 
 const userName = computed(() => store.studentProfile ? '同学' : '计算机专业学习者')
 
-// 考试倒计时（以 2026 年 12 月第三个周六为考试日 ≈ 12/19）
-const examDate = new Date('2026-12-19T08:30:00')
-const daysToExam = computed(() => {
-  const now = new Date()
-  const diff = examDate.getTime() - now.getTime()
-  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)))
-})
+// 考试倒计时统一由 studyStore.daysToExam 供值。
+// 这里原来自己算了一份（写死 2026-12-19），比真实考试日晚 7 天，
+// 于是首页显示「40 天」、同屏画像卡显示「48 天」，自己跟自己打架。
+const daysToExam = computed(() => store.daysToExam)
 
 const subjectEntries = computed(() => {
   return Object.entries(store.subjects).map(([key, val]) => ({ key, name: val.name }))
 })
+
+/* 接口返回的是「章节级」条目（计算机网络概述/物理层/…共 30+ 条），
+   全平铺时首屏被按钮墙占满、且与上面 4 个科目标识混在一起分不清层级。
+   默认先展示前 8 条，其余折叠。 */
+const SQ_LIMIT = 8
+const sqExpanded = ref(false)
+const visibleSubjects = computed(() =>
+  sqExpanded.value ? subjectEntries.value : subjectEntries.value.slice(0, SQ_LIMIT)
+)
 
 // 学科掌握度：以最近学习记录的得分均值作为真实掌握度代理；无数据时优雅降级
 // 学科配色：收敛到权威映射（2026-10-18 P3），不再组件内定义第四套词表
@@ -306,13 +318,16 @@ onMounted(async () => {
         </div>
         <!-- 学科快捷入口 -->
         <div v-if="subjectEntries.length" class="subject-quick-grid">
-          <div v-for="sub in subjectEntries" :key="sub.key" class="subject-quick-card" :class="'sq-' + sub.key" role="button" tabindex="0" @click="go('/knowledge?subject=' + sub.key)" @keydown.enter="go('/knowledge?subject=' + sub.key)" @keydown.space.prevent="go('/knowledge?subject=' + sub.key)">
+          <div v-for="sub in visibleSubjects" :key="sub.key" class="subject-quick-card" :class="'sq-' + sub.key" role="button" tabindex="0" @click="go('/knowledge?subject=' + sub.key)" @keydown.enter="go('/knowledge?subject=' + sub.key)" @keydown.space.prevent="go('/knowledge?subject=' + sub.key)">
             <span class="sq-name">{{ sub.name }}</span>
             <span class="sq-arrow">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </span>
           </div>
         </div>
+        <button v-if="subjectEntries.length > SQ_LIMIT" class="sq-toggle" @click="sqExpanded = !sqExpanded">
+          {{ sqExpanded ? '收起知识点' : `展开全部 ${subjectEntries.length} 个知识点` }}
+        </button>
         <button v-if="!store.profileCompleted" class="hero-cta" @click="go('/chat')">
           开始构建学习画像
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -330,12 +345,12 @@ onMounted(async () => {
           <p class="db-hero-tip">{{ userName }}，今天也稳扎稳打。</p>
         </div>
         <div class="bento-cell db-area-kpi1">
-          <div class="db-kpi-val">{{ stats.studyTime }}<span class="db-kpi-unit">h</span></div>
-          <div class="db-kpi-label">今日学习时长</div>
+          <div class="db-kpi-val">{{ studyHours }}<span class="db-kpi-unit">h</span></div>
+          <div class="db-kpi-label">累计学习时长</div>
         </div>
         <div class="bento-cell db-area-kpi2">
           <div class="db-kpi-val">{{ stats.questionsDone }}</div>
-          <div class="db-kpi-label">今日完成题目</div>
+          <div class="db-kpi-label">累计完成题目</div>
         </div>
         <div class="bento-cell db-area-kpi3">
           <div class="db-kpi-val">{{ stats.streak }}<span class="db-kpi-unit">天</span></div>
@@ -537,7 +552,7 @@ onMounted(async () => {
 /* ── Hero ── */
 .hero-section {
   position: relative;
-  padding:3.75rem var(--space-8) var(--space-12);
+  padding:2.5rem var(--space-8) var(--space-10);
   overflow: hidden;
 }
 
@@ -545,28 +560,26 @@ onMounted(async () => {
   position: absolute;
   inset:0;
   background:
-    radial-gradient(ellipse 600px 400px at 30% 30%, rgba(var(--accent-rgb), 0.08) 0%, transparent 70%),
-    radial-gradient(ellipse 500px 300px at 70% 60%, rgba(var(--info-rgb), 0.06) 0%, transparent 70%);
+    radial-gradient(ellipse 600px 400px at 30% 30%, rgba(var(--accent-rgb), 0.06) 0%, transparent 70%);
   pointer-events: none;
 }
 
 .hero-content {
-  max-width:75rem;
+  /* 原为 max-width:75rem：首屏内容比下方「今日速览」网格窄了 200 多像素，
+     两者左边界对不上，右侧平白空出一条。取消限宽，与网格同宽。 */
   margin:0 auto;
   position: relative;
   z-index: 1;
 }
 
+/* 由紫色胶囊改为纯文字 eyebrow：与平台首页 .ph-track、实训页 .c-eyebrow 同一套做法。
+   胶囊底在这里没有信息量，只是给首屏加了一个彩色块。 */
 .hero-badge {
   display: inline-block;
-  padding:0.375rem var(--space-4);
-  border-radius:var(--radius-full);
-  background: var(--accent-primary-10);
-  color: var(--accent-primary);
-  font-size:var(--text-xs);
-  font-weight: var(--weight-semibold);
-  letter-spacing:0.0187rem;
-  margin-bottom:var(--space-4);
+  font-size:0.6875rem;
+  font-weight: 600;
+  letter-spacing:0.16em;
+  color: var(--color-accent);
 }
 
 .hero-top-row {
@@ -605,9 +618,17 @@ onMounted(async () => {
 .subject-quick-grid {
   display: flex;
   gap:var(--space-2);
-  margin-bottom:var(--space-5);
+  margin-bottom:var(--space-3);
   flex-wrap: wrap;
 }
+.sq-toggle {
+  display: flex; width: fit-content; align-items: center; gap:var(--space-1);
+  margin-bottom:var(--space-5); padding:var(--space-1) 0;
+  background:none; border:0; cursor:pointer;
+  /* 原为固定青色 --accent-cyan：与主色、科目色并排出现时就是画面里的第 4 个色相。 */
+  color:var(--color-accent); font-size:var(--text-xs);
+}
+.sq-toggle:hover { color:var(--text-primary); }
 .subject-quick-card {
   display: flex;
   align-items: center;
@@ -627,29 +648,26 @@ onMounted(async () => {
 .sq-arrow { opacity: 0; transition: var(--transition); display: flex; }
 .subject-quick-card:hover .sq-arrow { opacity: 1; }
 
-.sq-data_structures .sq-name { color: var(--subject-ds); }
+/* 科目名不再各染一色：8 个入口铺开时 4 个色相同时出现，恰是"模块相当乱"的直观来源。
+   学科色保留在 hover 描边上作轻提示，正文统一走中性。 */
 .sq-data_structures:hover { border-color: rgba(var(--subject-ds-rgb), 0.30); }
-.sq-computer_network .sq-name { color: var(--subject-cn); }
 .sq-computer_network:hover { border-color: rgba(var(--subject-cn-rgb), 0.30); }
-.sq-computer_organization .sq-name { color: var(--subject-co); }
 .sq-computer_organization:hover { border-color: rgba(var(--subject-co-rgb), 0.30); }
-.sq-operating_system .sq-name { color: var(--subject-os); }
 .sq-operating_system:hover { border-color: rgba(var(--subject-os-rgb), 0.30); }
 
 .hero-title {
-  font-size:var(--text-5xl);
+  font-size:1.875rem;
   font-weight: 800;
   color: var(--text-primary);
-  letter-spacing:-0.0625rem;
+  letter-spacing:-0.0312rem;
   line-height:var(--leading-tight);
   margin-bottom:0.625rem;
 }
 
+/* 原为 gradient-primary 的渐变文字，后改主色；但标题里单独一段换色仍会把一句话切成两截。
+   统一为纯文字色，强调交给字号本身。 */
 .hero-title-accent {
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: inherit;
 }
 
 .hero-tagline {
@@ -669,13 +687,13 @@ onMounted(async () => {
 .hero-stat {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .hero-stat-value {
   font-size:1.75rem;
   font-weight: 800;
-  color: var(--accent-primary);
+  color: var(--text-primary);
   letter-spacing:-0.0312rem;
 }
 
@@ -691,16 +709,19 @@ onMounted(async () => {
   background: var(--border-color);
 }
 
+/* 原为 --radius-full 的药丸按钮：药丸形状在深色工作台上像营销落地页的 CTA，
+   一屏只该有一个这种强视觉元件，这里连"开始构建"（主）+ "进入智能对话"（次）两个都是药丸。
+   收敛为 10px 圆角、常规高度，与 .btn-primary 同一档。 */
 .hero-cta {
   display: inline-flex;
   align-items: center;
   gap:var(--space-2);
-  padding:0.875rem var(--space-7);
-  border-radius:var(--radius-full);
+  padding:0.6875rem var(--space-5);
+  border-radius:10px;
   background: var(--gradient-primary);
   color: var(--color-text-on-accent);
-  font-size:var(--text-md);
-  font-weight: var(--weight-semibold);
+  font-size:0.9375rem;
+  font-weight: 600;
   cursor: pointer;
   transition: var(--transition);
   border: none;
@@ -708,8 +729,8 @@ onMounted(async () => {
 
 .hero-cta:hover {
   opacity: 0.92;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(var(--accent-rgb), 0.30);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(var(--accent-rgb), 0.26);
 }
 
 .hero-cta svg { width:1rem; height:1rem; }
@@ -728,10 +749,13 @@ onMounted(async () => {
   border-radius:var(--radius-full);
   letter-spacing:0.0187rem;
 }
-.badge-ds { background: rgba(var(--subject-ds-rgb), 0.12); color: var(--subject-ds); border: 1px solid rgba(var(--subject-ds-rgb), 0.20); }
-.badge-cn { background: rgba(var(--subject-cn-rgb), 0.12); color: var(--subject-cn); border: 1px solid rgba(var(--subject-cn-rgb), 0.20); }
-.badge-co { background: rgba(var(--subject-co-rgb), 0.12); color: var(--subject-co); border: 1px solid rgba(var(--subject-co-rgb), 0.20); }
-.badge-os { background: rgba(var(--subject-os-rgb), 0.12); color: var(--subject-os); border: 1px solid rgba(var(--subject-os-rgb), 0.20); }
+/* 四科不再各配一色：四个色相并排时读者会以为它们是四种状态，实际只是四个学科。
+   统一中性底，学科差异交给下方带名称的入口卡承担。 */
+.badge-ds, .badge-cn, .badge-co, .badge-os {
+  background: var(--color-surface-2);
+  color: var(--color-text-2);
+  border: 1px solid var(--color-border);
+}
 
 /*  评审推荐卡片 */
 .rec-section { padding:0 var(--space-8) var(--space-6); max-width:75rem; margin:0 auto; }
@@ -1174,7 +1198,8 @@ onMounted(async () => {
 }
 
 @media (max-width: 768px) {
-  .hero-section { padding:var(--space-10) var(--space-5) var(--space-8); }
+  /* 手机上 hero 上下留白按桌面量给会把标题推到半屏以下，收紧一档 */
+  .hero-section { padding:var(--space-6) var(--space-5) var(--space-6); }
   .hero-title { font-size:1.75rem; }
   .hero-tagline { font-size:var(--text-base); }
   .hero-stats-row { gap:var(--space-4); }
@@ -1216,12 +1241,14 @@ onMounted(async () => {
 .db-area-subjects{grid-area:subjects}
 .db-area-recent{grid-area:recent}
 .db-area-hero{
-  background:linear-gradient(135deg, rgba(var(--accent-rgb),.14), var(--glass-bg));
-  display:flex;flex-direction:column;justify-content:center;
+  /* 跨两行（约 320px）只放三行字：原先上下两端对流，中间数字被推到半空，
+     整格看着像三块互不相干的字。改为整体垂直居中、行间 8px。 */
+  background:var(--color-card);
+  display:flex;flex-direction:column;justify-content:center;gap:var(--space-2);
 }
 .db-hero-eyebrow{font-size:var(--text-xs);font-weight:var(--weight-semibold);color:var(--color-text-2);letter-spacing:var(--tracking-caps)}
 .db-hero-count{display:flex;align-items:baseline;gap:var(--space-2);margin:var(--space-2) 0}
-.db-hero-num{font-size:var(--text-4xl);font-weight:var(--weight-bold);color:var(--color-text);line-height:1}
+.db-hero-num{font-size:3.5rem;font-weight:800;color:var(--color-text);line-height:1}
 .db-hero-unit{font-size:var(--text-lg);font-weight:var(--weight-semibold);color:var(--color-text-2)}
 .db-hero-tip{font-size:var(--text-sm);color:var(--color-text-2);margin:0}
 .db-kpi-val{font-size:var(--text-3xl);font-weight:var(--weight-bold);color:var(--color-text);line-height:1}
@@ -1245,6 +1272,21 @@ onMounted(async () => {
 @media (max-width:640px){
   .dash-bento{grid-template-columns:1fr;grid-template-areas:none}
   .db-area-hero,.db-area-kpi1,.db-area-kpi2,.db-area-kpi3,.db-area-mastery,.db-area-subjects,.db-area-recent{grid-area:auto}
+  /* 五格统计在 390px 上被 flex 拉成一长条：数字与标签都顶到边缘，中间被撑开。
+     改 3 列网格、隐藏竖分隔线（网格本身已有间距，再画线反而碎）。 */
+  .hero-title{font-size:1.375rem}
+  .hero-stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-4)}
+  .hero-stat-divider{display:none}
+  .hero-stat-value{font-size:1.5rem}
+  .hero-badge{font-size:0.625rem;letter-spacing:0.12em}
+  /* 手机上 .hero-cta 的 padding 依赖 --space-5，落不到值时按钮塌成一条色块。
+     背景同样兜底为纯色：--gradient-primary 在该断点读不出渐变，按钮会只剩一条底边。 */
+  .hero-cta{padding:11px 20px;min-height:44px;font-size:0.9375rem;display:inline-flex;align-items:center;justify-content:center;color:var(--color-text-on-accent);background:var(--color-accent-solid)}
+  /* 8 个知识点在手机上竖排成 3 行，把主按钮挤出首屏（被滚动容器裁掉下半截）。
+     改成单行横向滑动：内容一个不少，首屏高度省下两行。 */
+  .subject-quick-grid{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;padding-bottom:6px;-webkit-overflow-scrolling:touch}
+  .subject-quick-card{flex:0 0 auto}
+  .subject-quick-grid::-webkit-scrollbar{display:none}
 }
 
 /* ── 多智能体协作架构：Bento 层级（关键词 01）──

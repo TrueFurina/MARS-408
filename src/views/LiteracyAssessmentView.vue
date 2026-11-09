@@ -206,7 +206,10 @@ function restart(nextPhase: 'pre' | 'post') {
             class="option-btn"
             :class="{ selected: answers[currentQ!.id] === i }"
             @click="pick(i)"
-          >{{ opt }}</button>
+          >
+            <span class="option-letter">{{ String.fromCharCode(65 + i) }}</span>
+            <span class="option-text">{{ opt }}</span>
+          </button>
         </div>
 
         <div class="quiz-nav">
@@ -246,9 +249,13 @@ function restart(nextPhase: 'pre' | 'post') {
 .progress-fill { height: 100%; background: var(--color-accent); width: 100%; transform-origin: left; transition: transform var(--duration-slow) var(--ease-standard); }
 .stem { font-size: 17px; line-height: 1.6; margin: 0 0 18px; }
 .options { display: flex; flex-direction: column; gap: 10px; }
-.option-btn { text-align: left; padding: 14px var(--space-4); border-radius: 10px; border: 1.5px solid var(--border); background: transparent; cursor: pointer; font-size: var(--text-base); line-height: 1.5; transition: var(--transition) }
+.option-btn { display: flex; align-items: flex-start; gap: 12px; text-align: left; padding: 13px var(--space-4); border-radius: 10px; border: 1.5px solid var(--color-border-strong); background: var(--color-surface-2); cursor: pointer; font-size: var(--text-base); line-height: 1.5; transition: var(--transition) }
+/* 选项编号：可点区域要一眼看出是「A/B/C/D」而不是四段纯文本 */
+.option-letter { flex: none; width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: var(--text-xs); font-weight: var(--weight-bold); background: var(--color-elevated); color: var(--text-secondary); border: 1px solid var(--color-border-strong); }
+.option-text { flex: 1; }
 .option-btn:hover { border-color: var(--accent-primary-30); }
 .option-btn.selected { border-color: var(--color-accent); background: var(--accent-primary-10); }
+.option-btn.selected .option-letter { background: var(--color-accent); color: var(--color-text-on-accent); border-color: var(--color-accent); }
 .quiz-nav { display: flex; gap: 10px; margin-top: 18px; }
 .submit-row { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
 .text-input { flex: 1; min-width: 160px; padding: 9px var(--space-3); border: 1.5px solid var(--border); border-radius: 8px; font-size: var(--text-sm); }

@@ -55,6 +55,12 @@ export interface NavItem {
   tab?: string
   /** 是否匹配子路径，用于 /skills/:id、/studio/:id、/c/:convId 等动态路由 */
   matchChildren?: boolean
+  /**
+   * 底部导航专用短名。
+   * 手机 390px 分 5 项时单项仅 ~78px，全名（"智能对话"等 4 字）会被省略成"智能对…"，
+   * 实测视觉上是残缺文字。底部导航取 shortName，侧栏仍用完整 name。
+   */
+  shortName?: string
   /** 可见角色；不填 = 所有角色可见 */
   roles?: UserRole[]
   /** 场景域；不填 = common（两场景都显示） */
@@ -90,6 +96,24 @@ function visibleForRole<T extends { roles?: UserRole[] }>(entry: T, role: UserRo
 }
 
 export const NAV_GROUPS: NavGroup[] = [
+  // ── 0. 平台门户（无标题，置顶独立项）─────────────────────────────────
+  // 「平台首页」原本挂在「我的」分组里，等于把全局入口当个人页内容，
+  // 学生和教师两侧都会读成「我的 → 平台首页」，是模块错位的直接来源。
+  {
+    id: 'portal',
+    title: '',
+    icon: icons.compass,
+    items: [
+      {
+        key: 'platform-home',
+        name: '平台首页',
+        shortName: '首页',
+        icon: icons.compass,
+        route: '/',
+      },
+    ],
+  },
+
   // ── 1. 学习（学生主路径）──────────────────────────────────────────────
   {
     id: 'learn',
@@ -114,6 +138,7 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         key: 'chat',
         name: '智能对话',
+        shortName: '对话',
         icon: icons.chat,
         route: '/chat',
         subjectClass: 'nav-subject-1',
@@ -130,6 +155,7 @@ export const NAV_GROUPS: NavGroup[] = [
         // 修正：原侧栏「学习路径」标签错误指向 /dashboard（首页）
         key: 'learning-path',
         name: '学习路径',
+        shortName: '路径',
         icon: icons.path,
         route: '/learning-path',
       },
@@ -149,10 +175,15 @@ export const NAV_GROUPS: NavGroup[] = [
     icon: icons.quiz,
     scene: 'kaoyan',
     roles: ['student'],
+    // 考研侧栏原本 25 项全平铺、一屏装不下，学生找不到主路径；
+    // 除「学习」外都默认折叠，首屏只留主干，点开才展开分线。
+    collapsible: true,
+    defaultCollapsed: true,
     items: [
       {
         key: 'practice',
         name: '智能出题',
+        shortName: '出题',
         icon: icons.quiz,
         route: '/practice',
         subjectClass: 'nav-subject-0',
@@ -161,6 +192,7 @@ export const NAV_GROUPS: NavGroup[] = [
         // 母页：错题本。两个同源视图降为子项，老 URL 由 router redirect 保留
         key: 'wrong-questions',
         name: '错题本',
+        shortName: '错题',
         icon: icons.bookOpen,
         route: '/wrong-questions',
         children: [
@@ -191,6 +223,8 @@ export const NAV_GROUPS: NavGroup[] = [
     title: '知识',
     icon: icons.knowledge,
     scene: 'kaoyan',
+    collapsible: true,
+    defaultCollapsed: true,
     items: [
       {
         // 母页：知识图谱。另两个图谱视图降为子项
@@ -220,6 +254,8 @@ export const NAV_GROUPS: NavGroup[] = [
     title: 'AI 技能工坊',
     icon: icons.skill,
     scene: 'kaoyan',
+    collapsible: true,
+    defaultCollapsed: true,
     items: [
       {
         key: 'skills',
@@ -253,13 +289,16 @@ export const NAV_GROUPS: NavGroup[] = [
   // ── 5. 职业素养实训（场景B · 芒得很职主线）────────────────────────────
   {
     id: 'career',
-    title: '职业素养实训',
+    // 分组头原本与唯一的学生项同名「职业素养实训」，读起来是「组 → 同名项 → 对抗实训」，
+    // 等于同一层意思说两遍；收成「实训」后，组和项各说各的层次。
+    title: '实训',
     icon: icons.target,
     scene: 'career',
     items: [
       {
         key: 'career-training',
         name: '对抗实训',
+        shortName: '实训',
         icon: icons.target,
         route: '/career/training',
       },
@@ -280,6 +319,9 @@ export const NAV_GROUPS: NavGroup[] = [
     title: '实验室',
     icon: icons.microscope,
     scene: 'common',
+    // 实验室是演示/调试页：学生端不出现（此前 9 个页面对学生可见，
+    // 与"职业素养实训"主线无关，是侧栏显得杂乱的直接原因）。答辩用教师账号可见。
+    roles: ['teacher', 'admin'],
     collapsible: true,
     defaultCollapsed: true,
     badge: '评审演示',
@@ -303,23 +345,20 @@ export const NAV_GROUPS: NavGroup[] = [
     icon: icons.user,
     items: [
       {
-        // 双场景门户（统一入口）：登录后首屏，可随时回到场景选择
-        key: 'platform-home',
-        name: '平台首页',
-        icon: icons.compass,
-        route: '/',
-      },
-      {
+        // 学习画像 / 成就 / 重建画像是学生的个人成长模块，教师端不挂：
+        // 老师的日常入口在「教学与管理」，塞一套自己的画像和成就在侧栏纯属噪音。
         key: 'profile',
         name: '学习画像',
+        shortName: '画像',
         icon: icons.user,
         route: '/profile',
+        roles: ['student'],
         matchChildren: true, // /profile/build
         children: [
-          { key: 'profile-build', name: '重建画像', icon: icons.refresh, route: '/profile/build' },
+          { key: 'profile-build', name: '重建画像', icon: icons.refresh, route: '/profile/build', roles: ['student'] },
         ],
       },
-      { key: 'achievements', name: '成就', icon: icons.star, route: '/achievements' },
+      { key: 'achievements', name: '成就', icon: icons.star, route: '/achievements', roles: ['student'] },
       { key: 'settings', name: '设置', icon: icons.setting, route: '/settings' },
     ],
   },
