@@ -36,7 +36,7 @@
   ``_removed_redundant_e5v2_20261015/``（不随包、不入库）。该目录**不在**
   ``PRESERVE_TOP_NAMES`` 内 ⇒ 服务从包目录跑过之后写入的零向量垃圾会被下次 build 清掉，
   不变量自愈（2026-10-22：曾因 PRESERVE 它而永久误报，见 :data:`PRESERVE_TOP_NAMES` 注释）。
-- **不含 E5 模型**：嵌入模型为 ``intfloat/multilingual-e5-base``（768 维，约 1.1GB，
+- **不含 E5 模型**：嵌入模型为 ``intfloat/e5-base-v2``（768 维，约 1.1GB，
   见 ``py-server/db/embedder.py:5``），加载依赖 ``sentence-transformers``
   （``py-server/db/embedder.py:167``），而瘦版 ``requirements.txt`` 明确剔除该依赖
   ⇒ **拿不到真实向量**：调用方捕获时回落零向量占位（启动种子即如此，实测日志
@@ -226,7 +226,7 @@ PACKAGE_README = """\
 | LLM 对话生成（DeepSeek） | ✅ 可用（需 ``DEEPSEEK_API_KEY``） | ``LLM_PROVIDER=deepseek`` |
 
 - **为什么 408 检索不可用**：向量库产物未随包分发（``vectordb_data/`` 只允许运行时自建的
-  ``import_jobs/``），嵌入模型 ``intfloat/multilingual-e5-base``（``py-server/db/embedder.py:5``）
+  ``import_jobs/``），嵌入模型 ``intfloat/e5-base-v2``（``py-server/db/embedder.py:5``）
   及其依赖 ``sentence-transformers``（``py-server/db/embedder.py:167``）也不在
   ``requirements.txt`` 中 ⇒ **拿不到真实向量**：启动时 2245 条内置种子全部按零向量占位写入
   （实测日志 ``E5 嵌入失败(No module named 'sentence_transformers')，使用零向量占位并标记

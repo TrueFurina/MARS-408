@@ -2,7 +2,7 @@
 # 嵌入服务 — 独立模块，不依赖 engines 层
 # 解决循环依赖: db/milvus_client.py 不再导入 engines/frugal_rag.py
 #
-# 模型: intfloat/multilingual-e5-base (768维, ~1.1GB)
+# 模型: intfloat/e5-base-v2 (768维, ~1.1GB)
 # 注意: 与 config.json embedding 配置保持一致
 #
 # v2 优化（2026-07-22）：内容寻址的磁盘嵌入缓存。
@@ -28,7 +28,7 @@ logger = logging.getLogger("netlearn.embedder")
 _e5_model = None
 
 # 模型配置（与 config.json embedding 保持一致）
-EMBED_MODEL_NAME = "intfloat/multilingual-e5-base"
+EMBED_MODEL_NAME = "intfloat/e5-base-v2"
 EMBED_DIM = 768
 
 # ── 嵌入缓存（内容寻址）──
@@ -134,7 +134,10 @@ def _flush_cache():
         tmp = _CACHE_PATH + f".tmp.{os.getpid()}.npz"
         np.savez(
             tmp,
-            meta_model=np.array(EMBED_MODEL_NAME),
+            # 写「实际生效模型」而非常量，消除「缓存元信息 / 对外声明」两个真值源。
+            # 常量只是默认值，config.json / 环境变量可能覆盖；若仍写常量，
+            # 覆盖后新落盘的缓存会被 _load_cache 按常量误判为「模型不匹配」。
+            meta_model=np.array(get_embedding_config().get("model", EMBED_MODEL_NAME)),
             meta_dim=np.array([EMBED_DIM]),
             hashes=hashes,
             vectors=vectors,
@@ -155,7 +158,7 @@ def _ensure_cache():
 
 
 def _get_e5_model():
-    """延迟加载 multilingual-e5-base 模型（优先本地预打包 models/multilingual-e5-base）"""
+    """延迟加载 e5-base-v2 模型（优先本地预打包 models/e5-base-v2）"""
     global _e5_model
     if _e5_model is not None:
         return _e5_model
@@ -185,7 +188,7 @@ def _get_e5_model():
 
 
 def embed_batch(texts: list[str], prefix: str = "query") -> list[list[float]]:
-    """批量文本 → 向量（768维，multilingual-e5-base）。命中缓存的文本跳过模型推理。
+    """批量文本 → 向量（768维，e5-base-v2）。命中缓存的文本跳过模型推理。
 
     prefix: "query"（检索侧）或 "passage"（入库/文档侧），"" 表示不加前缀。
             intfloat/e5 系列要求两侧分别加前缀，否则语义质量显著退化。
@@ -221,7 +224,7 @@ def embed_batch(texts: list[str], prefix: str = "query") -> list[list[float]]:
 
     if miss_unique:
         model = _get_e5_model()
-        # E5 系列（含 multilingual-e5-base）官方要求 query/passage 两侧分别加前缀。
+        # E5 系列（含 e5-base-v2）官方要求 query/passage 两侧分别加前缀。
         # 当前向量库(netlearn_kb.json, 2113条)已用 passage 前缀重建(embedding_status=e5_real)，
         # 检索侧 embed_query 默认 query 前缀 —— 两侧前缀匹配，向量检索生效。
         # 逃生舱 E5_PREFIX=off 可退回无前缀（兼容无前缀训练的 NeuralMixer 权重）。
@@ -256,8 +259,61 @@ def embed_batch(texts: list[str], prefix: str = "query") -> list[list[float]]:
 
 
 def embed_text(text: str, prefix: str = "query") -> list[float]:
-    """文本 → 向量（768维，multilingual-e5-base）"""
+    """文本 → 向量（768维，e5-base-v2）"""
     return embed_batch([text], prefix=prefix)[0]
+
+
+# ── 启动期嵌入空间探针（只读）────────────────────────────────────────
+# 由 app/lifespan._init_vector_db() 在 .emb.npy 载入内存之后调用一次，结果写入
+# SPACE_PROBE_RESULT 供 app/status.py 读取。目的：防止「代码声明的嵌入模型」与
+# 「向量库实际编码空间」错配时检索静默退化为随机基线（历史回归：库由 e5-base-v2
+# 编码，代码却一度声明了另一个多语言 E5 模型）。
+# ⚠️ 只读约束：必须直接调底层 model.encode，绝不复用 embed_batch()/embed_text()
+#    —— 后者会置 _CACHE_DIRTY=True 并 _flush_cache() 落盘 e5_embed_cache.npz，
+#    使一个纯读取探针污染 vectordb_data/ 下不可再生的向量缓存资产。
+# ⚠️ fail-soft 由调用方承担：模型缺失 / CI 注入 mock / 库空 / 首行文本为空 /
+#    任何异常一律在 lifespan 侧 WARNING 后跳过，不得阻断启动（本函数只向上抛，
+#    便于测试对异常路径做断言）。
+SPACE_PROBE_RESULT: Optional[dict] = None
+SPACE_PROBE_SAME_THRESHOLD = 0.9
+SPACE_PROBE_MISMATCH_THRESHOLD = 0.3
+
+
+def probe_embedding_space(text0: str, emb_row0) -> tuple[bool, float]:
+    """用当前生效模型判断首条文档文本与库内首行向量是否处于同一嵌入空间。
+
+    以 ``prefix="passage"`` 编码（与建库一致，经 _apply_prefix 应用 E5_PREFIX 逃生舱），
+    与 ``emb_row0`` 求余弦：>0.9 判同空间、<0.3 判不匹配、中间为可疑。
+
+    返回 ``(同空间?, 余弦值)``；三态细分由调用方按余弦值判定（本函数只给出
+    布尔结论与原始余弦，不吞异常）。
+    """
+    text = (text0 or "").strip()
+    if not text:
+        raise ValueError("space-probe: 首行文档文本为空")
+    lib_row = np.asarray(emb_row0, dtype=np.float32).reshape(-1)
+    if lib_row.size != EMBED_DIM:
+        raise ValueError(
+            f"space-probe: 库首行向量维度异常 ({lib_row.size} != {EMBED_DIM})"
+        )
+
+    model = _get_e5_model()
+    encoded = model.encode(
+        [_apply_prefix(text, "passage")], normalize_embeddings=True
+    )
+    probe_vec = np.asarray(encoded, dtype=np.float32).reshape(-1)
+    if probe_vec.size != lib_row.size:
+        raise ValueError(
+            f"space-probe: 探针向量维度 ({probe_vec.size}) 与库向量 ({lib_row.size}) 不一致"
+        )
+
+    n_probe = float(np.linalg.norm(probe_vec))
+    n_lib = float(np.linalg.norm(lib_row))
+    if n_probe == 0.0 or n_lib == 0.0:
+        raise ValueError("space-probe: 零向量无法计算余弦（库可能为零向量占位）")
+
+    cos = float(np.dot(probe_vec, lib_row) / (n_probe * n_lib))
+    return cos > SPACE_PROBE_SAME_THRESHOLD, cos
 
 
 def get_embed_dim() -> int:

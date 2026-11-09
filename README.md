@@ -273,7 +273,7 @@ npm install && npm run dev                   # :5173，代理 /api → 8002
 |------|------|
 | 前端 | Vue 3 + TypeScript · 49 个 views（88 个 .vue） · Vite 构建 |
 | 后端 | FastAPI + LangGraph · 约 261 个 API 端点（openapi.json 实测 `/api` 子集 243 路径 / 261 操作）· 11 Agent 节点 |
-| 代码量 | 后端 400 个 Python 文件 / 约 9.6 万行 · 前端 166 文件（88 .vue + 78 .ts）/ 约 6.1 万行 |
+| 代码量 | 后端 401 个 Python 文件 / 约 9.6 万行 · 前端 166 文件（88 .vue + 78 .ts）/ 约 6.1 万行 |
 | 测试 | 1883 项测试通过 / 40 跳过 / 1 xfail（CI run `41838176855`，2026-11-04；全量回归 0 失败） |
 | LLM | 四通道自动容灾：讯飞星火 X2（主）→ DeepSeek → Qwen → 智谱 GLM（逐级回退，ADR-020） |
 | 检索 | 向量检索主路径 · 约 2245 条条目 · E5 已本地化启用（768 维） |
@@ -313,7 +313,7 @@ npm install && npm run dev                   # :5173，代理 /api → 8002
 | 408 考研侧检索 / 画像 | **不可用** | 可用 |
 | LLM 对话生成（DeepSeek） | 可用（需注入 `DEEPSEEK_API_KEY`） | 可用 |
 
-- **为什么 408 检索不可用**：向量库产物未随包分发（`backend/vectordb_data/` 只允许运行时自建的 `import_jobs/`）；嵌入模型 `intfloat/multilingual-e5-base`（`py-server/db/embedder.py:5`）及其依赖 `sentence-transformers`（`py-server/db/embedder.py:167`）不在瘦版 `requirements.txt` 中 ⇒ **拿不到真实向量**：启动时 2245 条内置种子全部按零向量占位写入（实测日志 `E5 嵌入失败(No module named 'sentence_transformers')，使用零向量占位并标记 fallback_zero`），未捕获处直接抛错，**不会**给出看似正常的检索结果。
+- **为什么 408 检索不可用**：向量库产物未随包分发（`backend/vectordb_data/` 只允许运行时自建的 `import_jobs/`）；嵌入模型 `intfloat/e5-base-v2`（`py-server/db/embedder.py:5`）及其依赖 `sentence-transformers`（`py-server/db/embedder.py:167`）不在瘦版 `requirements.txt` 中 ⇒ **拿不到真实向量**：启动时 2245 条内置种子全部按零向量占位写入（实测日志 `E5 嵌入失败(No module named 'sentence_transformers')，使用零向量占位并标记 fallback_zero`），未捕获处直接抛错，**不会**给出看似正常的检索结果。
 - **为什么 career 闭环不受影响**：该链路本就不做 KB/向量检索——`py-server/api/career_training.py:267`「本实训链路无 KB/向量库检索」、`py-server/api/career_training.py:419`「未做任何 KB/向量库检索……未伪造任何 chunk 引用」；评估取自情景种子的静态 BARS 评分量表（`source_type=rule`），不依赖检索质量。
 - **健康探针如实上报**：`GET /api/status` 的 `embedding_loaded` 为 `false`（`py-server/app/status.py:57-58`）——未配置即不要求，不存在「假装可用」。
 - ✅ **健康探针如实计数（2026-10-18 修复）**：`GET /api/status` 的 `fallback_zero_docs` 会真实报出零向量占位文档数（此前恒为 0——`py-server/app/status.py:59` 读公开名 `embedding_fallback_count`，而 `py-server/db/milvus_client.py:517` 只有私有字段 `_embedding_fallback_count`，`getattr` 默认值恒生效，属已修复缺陷）。瘦包启动后该项为 2245，且 `status` 为 `degraded`（原因：`embedding: 2245 个文档因 E5 失败使用零向量占位，检索质量下降`）——如实反映「KB 检索在瘦包内不可用」，而非假装健康。守护见 `tests/test_app_status_invariants.py` 的两条新不变量。

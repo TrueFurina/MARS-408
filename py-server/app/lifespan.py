@@ -14,9 +14,11 @@ import os
 import time
 from contextlib import asynccontextmanager
 
+import numpy as np
 from fastapi import FastAPI
 
 from app.env import logger
+from db import embedder as _embedder
 from db.milvus_client import vector_db
 from db.pg_client import pg_client
 from db.redis_client import redis_client
@@ -73,6 +75,53 @@ async def _init_vector_db() -> int:
         "向量库就绪，共 %d 个文档（Milvus 或 InMemoryVectorStore）；初始化耗时 %.0fms",
         count, (time.perf_counter() - t0) * 1000,
     )
+
+    # ── 启动期嵌入空间探针（只读、fail-soft，防「模型与向量库不同空间」静默回归）──
+    # 时机：vector_db.connect() 已把 netlearn_kb.json.emb.npy 载入内存之后。
+    # 只读：probe 直接调底层 model.encode，绝不走 embed_batch（后者会置 _CACHE_DIRTY
+    #       并落盘 e5_embed_cache.npz，污染 vectordb_data/ 下不可再生的向量缓存资产）。
+    # 容错：模型缺失 / CI 注入 mock / 库为空 / 首行文本为空 / 任何异常 —— 一律 WARNING
+    #       后跳过降级判定，绝不抛异常、绝不阻断启动、绝不写缓存。
+    try:
+        docs0, _ = vector_db.get_all_with_texts("netlearn_kb", 0, 1)
+        text0 = (docs0[0].get("content") or "") if docs0 else ""
+        # 首行向量取内存 coll["embeddings"][0]（与 texts[0] 严格同源），
+        # 即 connect() 里 np.load 完 .emb.npy 之后的结果；Milvus 模式下为 None。
+        _store = getattr(vector_db, "_mem_store", None)
+        _coll = (getattr(_store, "_collections", {}) or {}).get("netlearn_kb") if _store else None
+        _emb = _coll.get("embeddings") if isinstance(_coll, dict) else None
+        emb_row0 = (
+            np.asarray(_emb[0], dtype=np.float32)
+            if _emb is not None and len(_emb) else None
+        )
+        if not text0.strip() or emb_row0 is None:
+            logger.warning("嵌入空间探针跳过：向量库为空或首行文本/向量不可用（不影响启动）")
+            _embedder.SPACE_PROBE_RESULT = {"state": "skipped"}
+        else:
+            same_space, cos = await asyncio.to_thread(
+                _embedder.probe_embedding_space, text0, emb_row0
+            )
+            if same_space:
+                state = "ok"
+                logger.info("嵌入空间探针：同空间（cos=%.4f）", cos)
+            elif cos < _embedder.SPACE_PROBE_MISMATCH_THRESHOLD:
+                state = "mismatch"
+                logger.warning(
+                    "嵌入空间探针：嵌入模型与向量库不同空间（cos=%.4f），/api/status 将降级",
+                    cos,
+                )
+            else:
+                state = "suspicious"
+                logger.warning(
+                    "嵌入空间探针：余弦可疑（cos=%.4f，介于 0.3~0.9），跳过降级判定", cos
+                )
+            _embedder.SPACE_PROBE_RESULT = {
+                "state": state, "cosine": round(cos, 6),
+            }
+    except Exception as e:  # noqa: BLE001 — 探针失败绝不阻断启动
+        logger.warning("嵌入空间探针执行失败，已 fail-soft 跳过（不影响启动）: %s", e)
+        _embedder.SPACE_PROBE_RESULT = {"state": "skipped"}
+
     return count
 
 
