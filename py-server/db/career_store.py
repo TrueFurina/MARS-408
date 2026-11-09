@@ -1152,9 +1152,27 @@ def list_feedback(teacher_id: str, class_id: Optional[str] = None, limit: int = 
 def save_generated_scenario(scenario: dict, job_direction: str, scenario_type: str,
                             difficulty: str, created_by: str = "",
                             status: str = "draft") -> str:
-    """保存生成器产出的自定义场景（默认 draft，人工审核后 active）。"""
+    """保存生成器产出的自定义场景（默认 draft，人工审核后 active）。
+
+    同标题去重：生成器多次产出同一情境时，直接 INSERT 会让场景列表里
+    堆出多张同名卡（线上实测 4 条 gen_backend_incident_* 标题完全相同，
+    前端只能靠 title 去重遮住症状）。这里按 scenario_type + difficulty + title
+    命中已有记录就复用它的 id，不再新增一行。
+    """
     ensure_tables()
     sid = scenario.get("id") or new_id("gensc")
+    title = str(scenario.get("title") or "").strip()
+    if title:
+        q = "?" if pg_client.is_fallback else "%s"
+        rows = _query(
+            f"SELECT id, scenario_json FROM career_scenarios_custom "
+            f"WHERE scenario_type={q} AND difficulty={q}",
+            (scenario_type, difficulty),
+        )
+        for r in rows:
+            old = _loads(r.get("scenario_json"), {})
+            if isinstance(old, dict) and str(old.get("title") or "").strip() == title:
+                return r.get("id") or sid
     _exec(
         "INSERT INTO career_scenarios_custom "
         "(id,scenario_json,job_direction,scenario_type,difficulty,status,created_by) "

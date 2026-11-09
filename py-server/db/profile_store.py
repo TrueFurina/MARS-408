@@ -5,7 +5,7 @@
 # 让 user_store.py 不再同时承载账户、画像、作业、资源、错题、每日计划六个域。
 #
 # 边界：本模块只负责 user_profiles / user_quiz_history / user_conversations /
-# profile_snapshots 四张表及其读写函数；账户、作业、资源、错题、每日计划仍在
+# profile_snapshots / user_diagnostic_history 五张表及其读写函数；账户、作业、资源、错题、每日计划仍在
 # db/user_store.py。
 #
 # 兼容：db/user_store.py 通过 __getattr__ 动态委托本模块的 8 个公共符号，
@@ -85,7 +85,19 @@ def _init_schema(conn: sqlite3.Connection):
         snapshot_json TEXT NOT NULL DEFAULT '{}',
         created_at TEXT NOT NULL
     );
+    /* 入学测评的整场记录：只记汇总是不够的——学生做完想核对「我这题选了什么、
+       正确答案是什么」，需要逐题明细；而 user_quiz_history 一行只有
+       subject/correct 四个字段，装不下题干、选项与用户作答，所以单开一张表。 */
+    CREATE TABLE IF NOT EXISTS user_diagnostic_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        session_id TEXT NOT NULL,
+        overall_accuracy REAL NOT NULL DEFAULT 0,
+        payload_json TEXT NOT NULL DEFAULT '{}',
+        taken_at TEXT NOT NULL
+    );
     CREATE INDEX IF NOT EXISTS idx_snapshot_user ON profile_snapshots(user_id);
+    CREATE INDEX IF NOT EXISTS idx_diag_user ON user_diagnostic_history(user_id);
     CREATE INDEX IF NOT EXISTS idx_quiz_user ON user_quiz_history(user_id);
     CREATE INDEX IF NOT EXISTS idx_conv_user ON user_conversations(user_id);
     """)
@@ -144,6 +156,46 @@ def get_quiz_history(user_id: str) -> list[dict]:
             {"subject": r["subject"], "correct": bool(r["correct"]), "difficulty": r["difficulty"], "timestamp": r["timestamp"]}
             for r in rows
         ]
+
+
+# ── 每用户入学测评历史 ──
+
+def append_diagnostic_history(user_id: str, session_id: str, overall_accuracy: float, payload: dict) -> str:
+    """落一整场测评（含逐题明细），返回 taken_at。"""
+    conn = _get_conn()
+    taken_at = _now()
+    with _lock:
+        conn.execute(
+            "INSERT INTO user_diagnostic_history (user_id, session_id, overall_accuracy, payload_json, taken_at) "
+            "VALUES (?,?,?,?,?)",
+            (user_id, session_id, overall_accuracy, json.dumps(payload, ensure_ascii=False), taken_at),
+        )
+        conn.commit()
+    return taken_at
+
+
+def get_diagnostic_history(user_id: str, limit: int = 20) -> list[dict]:
+    """按时间倒序返回历次测评（含明细），最近的在前。"""
+    with _lock:
+        conn = _get_conn()
+        rows = conn.execute(
+            "SELECT session_id, overall_accuracy, payload_json, taken_at FROM user_diagnostic_history "
+            "WHERE user_id=? ORDER BY id DESC LIMIT ?",
+            (user_id, int(limit)),
+        ).fetchall()
+    out = []
+    for r in rows:
+        try:
+            payload = json.loads(r["payload_json"])
+        except Exception:
+            payload = {}
+        out.append({
+            "session_id": r["session_id"],
+            "overall_accuracy": r["overall_accuracy"],
+            "taken_at": r["taken_at"],
+            **payload,
+        })
+    return out
 
 
 # ── 每用户对话 ──

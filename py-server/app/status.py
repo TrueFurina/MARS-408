@@ -54,7 +54,7 @@ async def status():
     redis_enabled = bool(getattr(redis_client, "is_enabled", False))
 
     # ── 嵌入（E5 静默回落零向量占位计数 + 模型是否已加载）──
-    embedding_model = embedder.EMBED_MODEL_NAME
+    embedding_model = embedder._effective_model_name()
     embedding_loaded = embedder._e5_model is not None
     embedding_fallback = int(getattr(vector_db, "embedding_fallback_count", 0))
 
