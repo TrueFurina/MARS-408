@@ -78,10 +78,10 @@ const badCount = computed(() => props.details.length - okCount.value)
 
 .dg-list { border-top: 1px solid var(--color-border); padding: var(--space-3); display: flex; flex-direction: column; gap: var(--space-3); }
 .dg-item { padding: var(--space-4); border-radius: var(--radius-sm); background: var(--color-card); border-left: 3px solid var(--color-border); }
-.dg-item.is-ok { border-left-color: var(--color-success, #2f9e6b); }
-.dg-item.is-bad { border-left-color: var(--color-danger, #d9534f); }
-.dg-item.is-ok .dg-badge { color: var(--color-success, #2f9e6b); }
-.dg-item.is-bad .dg-badge { color: var(--color-danger, #d9534f); }
+.dg-item.is-ok { border-left-color: var(--color-success); }
+.dg-item.is-bad { border-left-color: var(--color-danger); }
+.dg-item.is-ok .dg-badge { color: var(--color-success); }
+.dg-item.is-bad .dg-badge { color: var(--color-danger); }
 
 .dg-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; }
 .dg-no { font-size: var(--text-xs); color: var(--color-text-3); }
@@ -91,14 +91,14 @@ const badCount = computed(() => props.details.length - okCount.value)
 .dg-q { font-size: var(--text-base); font-weight: 600; color: var(--color-text); line-height: 1.6; margin-bottom: 10px; }
 .dg-options { display: flex; flex-direction: column; gap: 6px; }
 .dg-opt { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--color-border); font-size: var(--text-sm); color: var(--color-text-2); }
-.dg-opt.is-correct { border-color: var(--color-success, #2f9e6b); color: var(--color-text); }
-.dg-opt.is-wrong { border-color: var(--color-danger, #d9534f); color: var(--color-text); }
+.dg-opt.is-correct { border-color: var(--color-success); color: var(--color-text); }
+.dg-opt.is-wrong { border-color: var(--color-danger); color: var(--color-text); }
 .dg-opt-mark { flex-shrink: 0; width: 1rem; font-weight: 700; }
-.dg-opt.is-correct .dg-opt-mark { color: var(--color-success, #2f9e6b); }
-.dg-opt.is-wrong .dg-opt-mark { color: var(--color-danger, #d9534f); }
+.dg-opt.is-correct .dg-opt-mark { color: var(--color-success); }
+.dg-opt.is-wrong .dg-opt-mark { color: var(--color-danger); }
 .dg-opt-text { flex: 1; min-width: 0; }
 .dg-opt-note { flex-shrink: 0; font-size: var(--text-xs); color: var(--color-text-3); }
-.dg-opt-note--right { color: var(--color-success, #2f9e6b); }
+.dg-opt-note--right { color: var(--color-success); }
 
 .dg-answer { margin-top: 10px; font-size: var(--text-sm); color: var(--color-text-2); }
 .dg-answer strong { color: var(--color-text); }

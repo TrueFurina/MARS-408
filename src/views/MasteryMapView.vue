@@ -386,7 +386,7 @@ onMounted(() => {
   gap: var(--space-4);
 }
 /* 科目卡在 --color-card 面板上，同色会融成一块；--color-surface 更深（内凹）。
-   深色下 surface-3（#232A34）比 card 亮一档，才是面板里浮起的子卡；浅色下是浅灰，
+   深色下 surface-3 比 card 亮一档，才是面板里浮起的子卡；浅色下是浅灰，
    配 --shadow-card 读作分区。 */
 .subject-tile {
   display: flex;
