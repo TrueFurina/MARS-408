@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "芒得很职 — 基于 GOMARL 与 FrugalRAG 的计算机类学生职业素养对抗实训平台",
-    "description": "芒得很职 计算机类学生职业素养对抗实训多智能体系统。\n\n## 核心架构\n- 11 节点 LangGraph 多智能体流水线（含 evidence_check 证据校验 + quality_gate 产物验收闸门）\n- GOMARL 共识引擎（NeuralMixer 神经网络加权融合）\n- FrugalRAG 检索增强生成（E5 + BM25 + 个性化重排）\n- 7 种学习资源并行生成\n\n## 技术栈\n后端: FastAPI + LangGraph + PyTorch + Milvus\n前端: Vue 3 + TypeScript + Vite\nLLM: 四通道容灾 讯飞星火 X2 / DeepSeek / Qwen / 智谱 GLM（auto 按此优先级逐级回退，ADR-020）\n\n## 安全\n- 95.02% API 认证覆盖率（248/261 个 /api 端点；scripts/verify_auth_coverage.py 可复现重算）\n- JWT HMAC-SHA256 Token\n- PBKDF2 密码哈希\n- DOMPurify XSS 防护\n- 安全响应头 (CSP/HSTS/X-Frame-Options)",
+    "description": "芒得很职 计算机类学生职业素养对抗实训多智能体系统。\n\n## 核心架构\n- 11 节点 LangGraph 多智能体流水线（含 evidence_check 证据校验 + quality_gate 产物验收闸门）\n- GOMARL 共识引擎（NeuralMixer 神经网络加权融合）\n- FrugalRAG 检索增强生成（E5 + BM25 + 个性化重排）\n- 7 种学习资源并行生成\n\n## 技术栈\n后端: FastAPI + LangGraph + PyTorch + Milvus\n前端: Vue 3 + TypeScript + Vite\nLLM: 四通道容灾 讯飞星火 X2 / DeepSeek / Qwen / 智谱 GLM（auto 按此优先级逐级回退，ADR-020）\n\n## 安全\n- 95.04% API 认证覆盖率（249/262 个 /api 端点；scripts/verify_auth_coverage.py 可复现重算）\n- JWT HMAC-SHA256 Token\n- PBKDF2 密码哈希\n- DOMPurify XSS 防护\n- 安全响应头 (CSP/HSTS/X-Frame-Options)",
     "version": "2.0.0"
   },
   "paths": {
@@ -11777,6 +11777,70 @@
         }
       }
     },
+    "/api/diagnostic/history": {
+      "get": {
+        "tags": [
+          "diagnostic"
+        ],
+        "summary": "Diagnostic History",
+        "description": "历次入学测评记录（含逐题明细），供「答题历史」页回看与核对答案。",
+        "operationId": "diagnostic_history_api_diagnostic_history_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-App-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-App-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/review/summary": {
       "get": {
         "tags": [
@@ -21009,6 +21073,25 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Profile"
+          },
+          "details": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Details",
+            "default": []
+          },
+          "session_id": {
+            "type": "string",
+            "title": "Session Id",
+            "default": ""
+          },
+          "taken_at": {
+            "type": "string",
+            "title": "Taken At",
+            "default": ""
           }
         },
         "type": "object",

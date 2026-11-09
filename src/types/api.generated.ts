@@ -3231,6 +3231,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/diagnostic/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Diagnostic History
+         * @description 历次入学测评记录（含逐题明细），供「答题历史」页回看与核对答案。
+         */
+        get: operations["diagnostic_history_api_diagnostic_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/review/summary": {
         parameters: {
             query?: never;
@@ -6323,6 +6343,23 @@ export interface components {
             profile: {
                 [key: string]: unknown;
             };
+            /**
+             * Details
+             * @default []
+             */
+            details: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Session Id
+             * @default
+             */
+            session_id: string;
+            /**
+             * Taken At
+             * @default
+             */
+            taken_at: string;
         };
         /** EndRequest */
         EndRequest: {
@@ -15494,6 +15531,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DiagnosticSubmitResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    diagnostic_history_api_diagnostic_history_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "X-App-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

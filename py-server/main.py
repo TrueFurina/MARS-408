@@ -47,7 +47,7 @@ app = FastAPI(
                 "前端: Vue 3 + TypeScript + Vite\n"
                 "LLM: 四通道容灾 讯飞星火 X2 / DeepSeek / Qwen / 智谱 GLM（auto 按此优先级逐级回退，ADR-020）\n\n"
                 "## 安全\n"
-                "- 95.02% API 认证覆盖率（248/261 个 /api 端点；"
+                "- 95.04% API 认证覆盖率（249/262 个 /api 端点；"
                 "scripts/verify_auth_coverage.py 可复现重算）\n"
                 "- JWT HMAC-SHA256 Token\n"
                 "- PBKDF2 密码哈希\n"
