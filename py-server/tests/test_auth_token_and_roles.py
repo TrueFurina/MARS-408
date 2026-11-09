@@ -153,3 +153,71 @@ class TestDemoTeacherSwitch:
         token = auth.create_token("u-ttl")
         payload = auth.verify_token(token)
         assert payload["exp"] > int(time.time()), "新签发的 token 不应立即过期"
+
+
+class _FakeUrl:
+    def __init__(self, path):
+        self.path = path
+
+
+class _FakeRequest:
+    """只实现 enforce_readonly 读取的两个属性，避免依赖 FastAPI 注入。"""
+
+    def __init__(self, method, path):
+        self.method = method
+        self.url = _FakeUrl(path)
+
+
+class TestEnforceReadonly:
+    """只读演示账号闸门：安全方法放行 / 名单外放行 / 名单内写 403 / 白名单读放行。
+
+    这组用例**不走 conftest 的 get_current_user 打桩**（那会让闸门天然失效），
+    直接调用 enforce_readonly，确保闸门本身有回归保护。
+    """
+
+    UID = "u_readonly_test"
+
+    @pytest.fixture(autouse=True)
+    def readonly_env(self, monkeypatch):
+        monkeypatch.setenv("NETLEARN_READONLY_USERS", self.UID)
+        monkeypatch.setenv(
+            "NETLEARN_READONLY_ALLOW",
+            "POST:/api/literacy/class-report,POST:/api/rag/search",
+        )
+
+    def test_safe_method_passes(self):
+        user = {"user_id": self.UID, "role": "teacher"}
+        assert auth.enforce_readonly(user, _FakeRequest("GET", "/api/teacher/students")) == user
+
+    def test_non_listed_account_write_passes(self):
+        user = {"user_id": "u_someone_else", "role": "teacher"}
+        assert auth.enforce_readonly(user, _FakeRequest("POST", "/api/teacher/assignments")) == user
+
+    def test_listed_account_write_blocked(self):
+        user = {"user_id": self.UID, "role": "teacher"}
+        with pytest.raises(HTTPException) as exc:
+            auth.enforce_readonly(user, _FakeRequest("POST", "/api/teacher/assignments"))
+        assert exc.value.status_code == 403
+
+    @pytest.mark.parametrize("path", ["/api/literacy/class-report", "/api/rag/search"])
+    def test_allowlisted_read_post_passes(self, path):
+        user = {"user_id": self.UID, "role": "teacher"}
+        assert auth.enforce_readonly(user, _FakeRequest("POST", path)) == user
+
+    def test_allowlist_is_exact_not_prefix(self):
+        """白名单必须精确匹配，不能凭前缀放行其他 POST。"""
+        user = {"user_id": self.UID, "role": "teacher"}
+        with pytest.raises(HTTPException):
+            auth.enforce_readonly(user, _FakeRequest("POST", "/api/literacy/class-report-write"))
+
+    def test_user_id_list_is_case_insensitive(self, monkeypatch):
+        monkeypatch.setenv("NETLEARN_READONLY_USERS", self.UID.upper())
+        user = {"user_id": self.UID, "role": "teacher"}
+        with pytest.raises(HTTPException):
+            auth.enforce_readonly(user, _FakeRequest("DELETE", "/api/anything"))
+
+    def test_request_none_is_passthrough(self):
+        """单测/内部直接调用不注入 request 时保持既有语义（已知的 fail-open 兜底）。"""
+        user = {"user_id": self.UID, "role": "teacher"}
+        assert auth.enforce_readonly(user, None) == user
+
