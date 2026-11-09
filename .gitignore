@@ -160,6 +160,10 @@ dist-qa-prove/
 # 测试临时根目录实际名为下划线 .pytest_tmp（上面的 .pytest-tmp 连字符规则不匹配，2026-09-14 补正）
 py-server/.pytest_tmp*/
 dist-verify/
+# gh-pages base 实验的整目录备份（2026-11-10 补）：201 个构建产物（js/css/字体）
+# 曾被算作未跟踪文件，随时可能被 git add -A 带进仓库（本项目永禁 -A 正因这类风险）。
+# 该目录是构建副产物，可由 npm run build 重生成，不入库。
+dist.ghpages-base.bak/
 
 # 构建产物缓存
 node_modules/.tmp/
