@@ -51,7 +51,7 @@
 | 真实对话生成 | ✅ 已实现 | `POST /api/chat/stream` → 200 / **5.4 s** / 有效 LLM 内容 |
 | 检索增强效果 | ✅ 已实现 | **Recall@5 +7.14pp / P@5 +15.71pp / MRR +12.38pp**（2026-09-18 benchmark 真实产出） |
 | 三级降级容灾 | ✅ 已实现 | Redis 未启用 / PostgreSQL→SQLite / Milvus→InMemory 逐级回退 |
-| 前端页面 | ✅ 已实现 | **49 个 views**（88 个 .vue 含组件），学生端 + 教师看板 |
+| 前端页面 | ✅ 已实现 | **49 个 views**（89 个 .vue 含组件），学生端 + 教师看板 |
 | 向量检索 | ✅ 已实现 | E5 已本地化（`models/e5-base-v2` 437MB / 768 维），`frugal_rag` 走真实向量检索，`_degraded` 关闭（2026-09-13 验证） |
 | 共识与冲突消解引擎 | ✅ 规则原型 + 三评审门禁 | M2 已实施：批评者结构化输出 + 共识证据门禁 + 置信度（tests/test_m2_review_gate.py 9 用例）；GoMARL 加权共识权重仍为规则设定 |
 | Triage 分级路由（M1） | ✅ 已实现 | 零 LLM 成本分类器 + low 短路快路径，tests/test_triage.py 18 用例通过 |
@@ -271,9 +271,9 @@ npm install && npm run dev                   # :5173，代理 /api → 8002
 
 | 维度 | 指标 |
 |------|------|
-| 前端 | Vue 3 + TypeScript · 49 个 views（88 个 .vue） · Vite 构建 |
+| 前端 | Vue 3 + TypeScript · 49 个 views（89 个 .vue） · Vite 构建 |
 | 后端 | FastAPI + LangGraph · 约 262 个 API 端点（openapi.json 实测 `/api` 子集 244 路径 / 262 操作）· 11 Agent 节点 |
-| 代码量 | 后端 401 个 Python 文件 / 约 9.6 万行 · 前端 166 文件（88 .vue + 78 .ts）/ 约 6.2 万行 |
+| 代码量 | 后端 401 个 Python 文件 / 约 9.6 万行 · 前端 167 文件（89 .vue + 78 .ts）/ 约 6.2 万行 |
 | 测试 | 1883 项测试通过 / 40 跳过 / 1 xfail（CI run `41838176855`，2026-11-04；全量回归 0 失败） |
 | LLM | 四通道自动容灾：讯飞星火 X2（主）→ DeepSeek → Qwen → 智谱 GLM（逐级回退，ADR-020） |
 | 检索 | 向量检索主路径 · 约 2245 条条目 · E5 已本地化启用（768 维） |
