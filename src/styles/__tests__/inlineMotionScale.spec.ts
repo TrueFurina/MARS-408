@@ -71,17 +71,24 @@ describe('内联动效必须走 --motion-scale 总闸', () => {
       .toEqual([])
   })
 
-  it('已知的三处历史缺口确实已走 calc(X * var(--motion-scale))', () => {
-    const probes: Array<[string, string]> = [
+  it('已知的三处历史缺口都仍走 calc(X * var(--motion-scale)) 总闸', () => {
+    // 仍以内联形式存在的两处：内联特异性高于普通选择器，必须显式引用总闸。
+    const inlineProbes: Array<[string, string]> = [
       ['src/components/EvidenceCheckPanel.vue', 'stroke-dashoffset'],
-      ['src/views/LearningPathView.vue', 'transform'],
       ['src/views/ResourceView.vue', 'transform'],
     ]
-    for (const [rel, prop] of probes) {
+    for (const [rel, prop] of inlineProbes) {
       const src = stripStylesAndComments(readFileSync(resolve(process.cwd(), rel), 'utf-8'))
       const hit = [...src.matchAll(INLINE_MOTION)].find((m) => m[1].includes(prop))
       expect(hit, `${rel} 应含 ${prop} 的内联 transition`).toBeTruthy()
       expect(hit![1]).toContain('var(--motion-scale)')
     }
+    // LearningPathView 的进度条动效在 2026-11 设计重构里从内联 style 移到
+    // CSS 类 .path-bar-fill（去掉与环重复的横向条）。CSS 内的死时长本就由
+    // _components.css 的 prefers-reduced-motion !important 兜底，内联缺口已消失；
+    // 这里改读全文，确认迁移后仍保留 --motion-scale 的触屏降级而非退回写死时长。
+    const lp = readFileSync(resolve(process.cwd(), 'src/views/LearningPathView.vue'), 'utf-8')
+    expect(lp, 'LearningPathView 的 CSS 类动效仍须走 --motion-scale')
+      .toMatch(/transition:\s*transform\s+calc\([^)]*var\(--motion-scale\)/)
   })
 })

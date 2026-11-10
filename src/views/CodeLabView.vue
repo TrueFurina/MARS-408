@@ -249,10 +249,10 @@ onBeforeUnmount(() => {
     <div v-if="!compilerEnvironment.ready" class="compiler-notice" role="status">
       <strong>浏览器编译环境尚未就绪</strong>
       <span>{{ envError }}</span>
-      <small>开发模式需在 vite.config 中启用 COOP/COEP 响应头，生产环境需反向代理配置。</small>
+      <small>本实验室依赖跨源隔离（Cross-Origin Isolation，需 HTTPS 或 localhost）下的 WASM 编译环境。当前地址不是安全上下文，编译环境不可用——这是内网/演示环境的已知限制，并非功能故障。生产部署请通过 HTTPS 访问。</small>
     </div>
 
-    <div class="sandbox-layout">
+    <div v-if="compilerEnvironment.ready" class="sandbox-layout">
       <div class="sandbox-editor-panel">
         <div class="sandbox-toolbar">
           <div class="lang-switch" aria-label="编程语言">
