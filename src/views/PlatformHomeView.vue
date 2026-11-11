@@ -40,6 +40,10 @@ interface SceneCard {
   points: string[]
   icon: string
   accent: 'blue' | 'teal'
+  /** 卡片右上角徽标：主推场景用实心，验证场景用静音样式 */
+  badge?: string
+  /** secondary = 次级入口（技术底座复用验证），视觉上不与主推卡等权 */
+  tier: 'primary' | 'secondary'
 }
 
 const cards: SceneCard[] = [
@@ -52,14 +56,20 @@ const cards: SceneCard[] = [
     points: ['证据链（ECD）对抗实训', '答辩 / 评审 / 应急 / 冲突对抗场景', '六维软素养评估报告'],
     icon: icons.target,
     accent: 'teal',
+    badge: '主推',
+    tier: 'primary',
   },
   {
+    // 考研场景降为次级入口：它是"同一套多智能体+RAG 底座可复用"的验证场景，
+    // 不是本平台的主营业务，故不与职业素养等权陈列，并明示为教学验证。
     key: 'kaoyan',
     title: '专业能力训练',
     sub: '专业核心四科智能学习 · 低年级',
     points: ['学情诊断 → 个性化学习路径', '多智能体对话 · RAG 知识底座', '智能出题 · 错题复盘 · 能力画像'],
     icon: icons.graduation,
     accent: 'blue',
+    badge: '教学验证',
+    tier: 'secondary',
   },
 ]
 
@@ -94,14 +104,14 @@ function enterScene(c: SceneCard) {
         v-for="c in cards"
         :key="c.key"
         class="ph-card"
-        :class="`ph-card--${c.accent}`"
+        :class="[`ph-card--${c.accent}`, c.tier === 'secondary' ? 'ph-card--secondary' : '']"
         @click="enterScene(c)"
       >
         <div class="ph-card-top">
           <span class="ph-card-icon" v-html="safeIcon(c.icon)"></span>
           <div class="ph-card-heading">
             <span class="ph-card-title">{{ c.title }}</span>
-            <span v-if="c.key === 'career'" class="ph-tag">主推</span>
+            <span v-if="c.badge" class="ph-tag" :class="{ 'ph-tag--muted': c.tier === 'secondary' }">{{ c.badge }}</span>
           </div>
         </div>
         <p class="ph-card-sub">{{ c.sub }}</p>
@@ -301,6 +311,23 @@ function enterScene(c: SceneCard) {
 .ph-card--blue { --card-accent: var(--color-accent); }
 .ph-card--teal { --card-accent: var(--color-accent); }
 
+/* 场景卡层级：主推场景占主列，验证场景收窄为次级入口（宽屏才分栏，窄屏仍按序堆叠）。
+   考研是"同一套底座可复用"的验证场景，不是本平台主营业务，故不与职业素养等权。 */
+@media (min-width: 900px) {
+  .ph-scenes {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.7fr);
+    align-items: start;
+  }
+}
+
+.ph-card--secondary {
+  padding: var(--space-6);
+  box-shadow: none;
+}
+.ph-card--secondary::before { opacity: 0.25; }
+.ph-card--secondary .ph-card-title { font-size: var(--text-lg); }
+.ph-card--secondary .ph-card-points li { font-size: var(--text-sm); }
+
 .ph-card-top {
   display: flex;
   align-items: center;
@@ -343,6 +370,12 @@ function enterScene(c: SceneCard) {
   background: var(--card-accent);
   padding: 2px 9px;
   border-radius: var(--radius-full);
+}
+/* 次级入口的徽标不抢主推卡的实心注意力 */
+.ph-tag--muted {
+  color: var(--color-text-2);
+  background: transparent;
+  border: 1px solid var(--color-border);
 }
 
 .ph-card-sub {
