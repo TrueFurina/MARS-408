@@ -55,8 +55,7 @@ const cards: SceneCard[] = [
   },
   {
     key: 'kaoyan',
-    // ⚠️ 临时复原：与参赛提交版本对齐；之后需撤回为「专业能力训练」
-    title: 'MARS-408',
+    title: '专业能力训练',
     sub: '专业核心四科智能学习 · 低年级',
     points: ['学情诊断 → 个性化学习路径', '多智能体对话 · RAG 知识底座', '智能出题 · 错题复盘 · 能力画像'],
     icon: icons.graduation,
