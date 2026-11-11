@@ -7,7 +7,7 @@ import logging
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field
 
-from shared.auth import create_token, get_current_user
+from shared.auth import create_token, get_current_user, is_readonly_user
 from shared.errors import ValidationError, ResourceNotFoundError
 from shared.limits import (
     LOGIN_PER_15MIN_PER_USER,
@@ -102,6 +102,7 @@ async def register(req: RegisterRequest, request: Request):
     token = create_token(user["id"], user["role"])
     log_event("register", user_id=user["id"], ip=client_ip, result="success", detail=f"username={req.username}")
     logger.info(f"新用户注册: {user['username']} (role={user['role']})")
+    user = {**user, "readonly": is_readonly_user(user.get("id"))}
     return TokenResponse(token=token, user=user)
 
 
@@ -135,6 +136,7 @@ async def login(req: LoginRequest, request: Request):
     except Exception as _e:
         logger.warning("获取入学测评状态失败，保守要求测评: %s", _e)
         diagnostic_required = True
+    user = {**user, "readonly": is_readonly_user(user.get("id"))}
     return TokenResponse(token=token, user=user, diagnostic_required=diagnostic_required)
 
 
@@ -144,7 +146,7 @@ async def me(user: dict = Depends(get_current_user)):
     full = get_user_by_id(user["user_id"])
     if not full:
         raise ResourceNotFoundError(resource="用户")
-    return full
+    return {**full, "readonly": is_readonly_user(user["user_id"])}
 
 
 @router.post("/logout")

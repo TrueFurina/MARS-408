@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, 
 from fastapi.concurrency import run_in_threadpool
 
 from db.milvus_client import vector_db
-from shared.auth import get_current_user, require_admin
+from shared.auth import get_current_user, require_admin, is_readonly_user
 from shared.audit import log_event
 # ADR-007：在线写端点与导入 Worker 共用同一把锁，保证后端为向量库唯一写者
 from services.import_worker import import_worker
@@ -86,9 +86,10 @@ async def knowledge_list(
 ):
     """列出知识库文档，支持语义搜索和过滤"""
     # L1/L2/L3 三层学情记忆联动（低侵入：知识库浏览入 L3，支撑学习轨迹）
+    # 只读账号跳过：这是 GET 里唯一的落库动作，放行等于只读闸门被绕过。
     try:
         user_id = user.get("user_id") or user.get("id") or ""
-        if user_id and query:
+        if user_id and query and not is_readonly_user(user_id):
             from db import memory_store as _ms
             _ms.append_episode(user_id, "knowledge_browse", {"query": query[:100], "subject": subject or ""})
     except Exception as _me:

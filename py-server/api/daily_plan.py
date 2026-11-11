@@ -13,7 +13,7 @@ from services.user_service import (
     list_daily_plans,
     reset_daily_plan,
 )
-from shared.auth import get_current_user
+from shared.auth import get_current_user, is_readonly_user
 
 logger = logging.getLogger("netlearn.daily_plan")
 router = APIRouter(prefix="/daily-plan", tags=["daily-plan"])
@@ -40,7 +40,12 @@ async def get_today_plan(
     user: dict = Depends(get_current_user),
 ):
     """获取指定日期（默认今日）的学习计划，不存在则自动生成"""
-    plan = get_or_create_daily_plan(user["user_id"], plan_date=date)
+    # 只读账号走内存态生成，不落库：GET 的「自动生成」本身就是一次写操作。
+    plan = get_or_create_daily_plan(
+        user["user_id"],
+        plan_date=date,
+        persist=not is_readonly_user(user.get("user_id")),
+    )
     return plan
 
 

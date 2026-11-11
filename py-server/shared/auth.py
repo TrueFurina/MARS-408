@@ -195,6 +195,15 @@ def _readonly_user_ids() -> set:
     return {s.strip().lower() for s in raw.split(",") if s.strip()}
 
 
+def is_readonly_user(user_id: str) -> bool:
+    """该 user_id 是否为只读演示账号（供登录/me 接口向前端暴露只读态）。
+
+    前端据此显示「只读演示账号」标识，避免用户在点击写操作后只看到一句 403
+    却不知道原因（2026-11-09 复核：闸门生效，但前端全程不知情）。
+    """
+    return str(user_id or "").strip().lower() in _readonly_user_ids()
+
+
 def _readonly_allow() -> set:
     """读取只读账号可用的非 GET 路径白名单，形如 {'POST:/API/LITERACY/CLASS-REPORT'}。"""
     raw = os.environ.get(_READONLY_ALLOW_ENV, "")

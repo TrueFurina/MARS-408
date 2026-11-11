@@ -1088,8 +1088,13 @@ def _generate_default_daily_tasks(user_id: str) -> list:
     return base_tasks
 
 
-def get_or_create_daily_plan(user_id: str, plan_date: str = None, target_exam_date: str = None, target_score: int = None) -> dict:
-    """获取或创建指定日期的学习计划"""
+def get_or_create_daily_plan(user_id: str, plan_date: str = None, target_exam_date: str = None, target_score: int = None, persist: bool = True) -> dict:
+    """获取或创建指定日期的学习计划
+
+    persist=False（只读账号）时**不落库**：GET 端点「不存在则自动生成」本身带写
+    副作用，若只读账号也照此执行，等于绕过了只读闸门（2026-11-09 复核 §P1-3）。
+    此时返回一份内存态计划，id 为 None，前端只读展示即可。
+    """
     # 注：此处原有一行 `from datetime import datetime` 函数内重导入，
     # 会遮蔽模块顶部的 datetime（第 14 行），令任何模块级打桩/冻结时钟失效
     # （2026-09-28 冻结基线探针假失败的根因）。已在审查中移除，语义不变。
@@ -1125,6 +1130,19 @@ def get_or_create_daily_plan(user_id: str, plan_date: str = None, target_exam_da
         tasks = _generate_default_daily_tasks(user_id)
         total = len(tasks)
         completed = 0
+        if not persist:
+            return {
+                "id": None,
+                "plan_date": plan_date,
+                "tasks": tasks,
+                "total_tasks": total,
+                "completed_tasks": completed,
+                "completion_rate": 0,
+                "target_exam_date": target_exam_date or "",
+                "target_score": target_score or 0,
+                "created_at": now,
+                "updated_at": now,
+            }
         cursor = conn.execute(
             """INSERT INTO user_daily_plans 
             (user_id, plan_date, tasks_json, total_tasks, completed_tasks, target_exam_date, target_score, created_at, updated_at)
