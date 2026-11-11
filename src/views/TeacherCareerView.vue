@@ -183,6 +183,12 @@ const provisionSkipped = ref<{ student_no?: string; name: string; reason: string
 
 async function generateAccounts(cls: ClassItem) {
   if (!cls || busyProvision.value) return
+  // 建号是发生型动作：账号一旦创建无法回收，口令只显示一次。批量越大越要先确认。
+  const ok = window.confirm(
+    `将在「${cls.class_name}」按学号批量创建学生账号（名单 ${cls.student_count} 人）。\n`
+    + '账号 = 学号，初始口令在生成后只显示一次；账号目前没有删除入口，请确认名单已定稿。确认继续？',
+  )
+  if (!ok) return
   busyProvision.value = true
   try {
     const res = await api.post<{
