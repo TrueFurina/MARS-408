@@ -163,6 +163,70 @@ async function importRoster(cls: ClassItem) {
   }
 }
 
+/**
+ * 一键建号（2026-11-12）：花名册导入后直接生成平台账号并确定性绑定。
+ *
+ * 为什么要这个：注册在课堂统一开通，学生不能自注册；61 人的班靠人工建号
+ * 会直接吃掉第一节课。口径与后端一致 —— 账号=学号，初始口令=Mc{学号后4位}#2026，
+ * 口令只在这一次响应里返回，页面必须让教师当场导出账号卡，否则口令就丢了。
+ */
+interface ProvisionAccount {
+  student_no: string
+  name: string
+  username: string
+  password: string
+  status: 'created' | 'existing' | 'already_bound'
+}
+const busyProvision = ref(false)
+const provisionAccounts = ref<ProvisionAccount[] | null>(null)
+const provisionSkipped = ref<{ student_no?: string; name: string; reason: string }[]>([])
+
+async function generateAccounts(cls: ClassItem) {
+  if (!cls || busyProvision.value) return
+  busyProvision.value = true
+  try {
+    const res = await api.post<{
+      created: number; bound: number
+      accounts: ProvisionAccount[]
+      skipped: { student_no?: string; name: string; reason: string }[]
+    }>(`/career/classes/${cls.class_id}/provision-accounts`, {})
+    provisionAccounts.value = res.accounts || []
+    provisionSkipped.value = res.skipped || []
+    const created = (res.accounts || []).filter(a => a.status === 'created').length
+    msg.value = created > 0
+      ? `已新建 ${created} 个账号并绑定名单，请立刻下载账号卡（口令只显示这一次）`
+      : `名单已全部绑定（新增 0 个），无新口令需要下发`
+    await selectClass(cls.class_id)
+  } catch (e) {
+    msg.value = friendlyError(e, '生成账号失败')
+  } finally {
+    busyProvision.value = false
+  }
+}
+
+/** 账号卡 CSV：教师打印/发群，学生凭「学号 + 初始口令」登录 */
+function exportAccountCards() {
+  const list = provisionAccounts.value
+  if (!list || !list.length) return
+  const head = ['学号', '姓名', '登录账号', '初始口令', '状态']
+  const statusLabel: Record<string, string> = {
+    created: '新建', existing: '账号已存在', already_bound: '已在名单绑定',
+  }
+  const rows = list.map(a => [
+    a.student_no, a.name, a.username,
+    a.password || '（沿用原口令，未重置）',
+    statusLabel[a.status] || a.status,
+  ])
+  const csv = [head, ...rows].map(r => r.map(csvCell).join(',')).join('\n')
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = '学生账号卡.csv'
+  a.click()
+  URL.revokeObjectURL(a.href)
+  msg.value = `已导出账号卡 CSV（${rows.length} 人）`
+}
+
 async function selectClass(classId: string) {
   activeClassId.value = classId
   dash.value = null
@@ -502,6 +566,29 @@ onMounted(() => {
         <button :disabled="loading || !activeClassId" @click="importRoster(classes.find(c => c.class_id === activeClassId)!)">
           导入花名册
         </button>
+        <!-- 建号口径：账号=学号（必须纯数字，否则会被花名册解析成姓名）；口令只回传一次 -->
+        <button :disabled="loading || busyProvision || !activeClassId"
+                data-testid="provision-accounts"
+                @click="generateAccounts(classes.find(c => c.class_id === activeClassId)!)">
+          {{ busyProvision ? '生成中…' : '生成学生账号' }}
+        </button>
+        <p class="hint">生成规则：账号 = 学号，初始口令 = Mc + 学号后 4 位 + #2026；口令只在生成当次返回，请当场下载账号卡再关闭页面。</p>
+
+        <div v-if="provisionAccounts && provisionAccounts.length" class="account-cards" data-testid="account-cards">
+          <p class="agg-k">账号卡（{{ provisionAccounts.length }} 人 · 新建
+            {{ provisionAccounts.filter(a => a.status === 'created').length }} 个）</p>
+          <ul class="roster">
+            <li v-for="(a, i) in provisionAccounts" :key="i">
+              {{ a.student_no }} · {{ a.name }} → <strong>{{ a.username }}</strong>
+              <span class="dim">{{ a.password || '沿用原口令' }}</span>
+            </li>
+          </ul>
+          <button @click="exportAccountCards">下载账号卡 CSV</button>
+          <p v-if="provisionSkipped.length" class="hint">
+            跳过 {{ provisionSkipped.length }} 行：
+            <span v-for="(s, i) in provisionSkipped" :key="i">{{ s.name || s.student_no }}（{{ s.reason }}）<span v-if="i < provisionSkipped.length - 1">、</span></span>
+          </p>
+        </div>
 
         <div class="row task-row">
           <select v-model="taskScenarioId">

@@ -614,6 +614,24 @@ def list_students(cid: str, teacher_id: str) -> list[dict]:
                   f"WHERE class_id={q} ORDER BY student_no ASC", (cid,))
 
 
+def set_student_user(cid: str, student_no: str, user_id: str) -> bool:
+    """按学号把花名册行绑定到平台账号（写入后回读校验）
+
+    与 bind_student（按姓名/首个未绑定行匹配）互补：本函数用于教师批量建号后
+    的确定性绑定，学号为空或写后回读不一致都返回 False，由调用方如实上报。
+    """
+    ensure_tables()
+    sn = (student_no or "").strip()
+    if not sn:
+        return False
+    q = "?" if pg_client.is_fallback else "%s"
+    _exec(f"UPDATE career_class_students SET user_id={q} WHERE class_id={q} AND student_no={q}",
+          (user_id, cid, sn))
+    rows = _query(f"SELECT user_id FROM career_class_students WHERE class_id={q} AND student_no={q}",
+                  (cid, sn))
+    return bool(rows) and rows[0].get("user_id") == user_id
+
+
 def create_task(teacher_id: str, class_id: str, scenario_id: str,
                 scenario_type: str = "", scenario_subtype: str = "",
                 difficulty: str = "medium", max_turns: int = 8,
