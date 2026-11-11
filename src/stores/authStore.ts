@@ -3,10 +3,10 @@ import { ref, computed } from 'vue'
 import { api, resetUnauthorizedLatch } from '@/utils/api'
 
 // ── 类型 ──
-type AuthState = { token: string; user: { id: string; user_id: string; username: string; role: string; display_name?: string } } | null
+type AuthState = { token: string; user: { id: string; user_id: string; username: string; role: string; display_name?: string; readonly?: boolean } } | null
 
 /** 登录/注册统一返回类型（LoginView 据此判断是否跳转诊断测试） */
-type AuthResult = { id: string; user_id: string; username: string; role: string; display_name?: string; diagnostic_required?: boolean }
+type AuthResult = { id: string; user_id: string; username: string; role: string; display_name?: string; readonly?: boolean; diagnostic_required?: boolean }
 
 function normalizeUser(raw: Record<string, any>) {
   return {
@@ -15,6 +15,8 @@ function normalizeUser(raw: Record<string, any>) {
     username: raw.username || '',
     role: raw.role || 'student',
     display_name: raw.display_name,
+    // 只读演示账号标志（后端 shared/auth.is_readonly_user 判定，登录与 /auth/me 均下发）
+    readonly: raw.readonly === true,
   }
 }
 
@@ -50,6 +52,7 @@ export const useAuthStore = defineStore('auth', () => {
   const auth = ref<AuthState>(loadAuth())
   const currentUser = computed(() => auth.value?.user ?? null)
   const isAdmin = computed(() => auth.value?.user?.role === 'admin')
+  const isReadonly = computed(() => auth.value?.user?.readonly === true)
   const token = computed(() => auth.value?.token ?? null)
 
   async function login(username: string, password: string): Promise<AuthResult> {
@@ -76,5 +79,22 @@ export const useAuthStore = defineStore('auth', () => {
     saveAuth(null)
   }
 
-  return { auth, currentUser, isAdmin, token, login, register, logout }
+  /**
+   * 用 /auth/me 刷新本地用户信息（尤其是 readonly 标志）。
+   * 老用户 localStorage 里的 user 是加这个标志之前写下的，不刷新就一直是 false；
+   * 刷新失败（离线/登录失效）静默保留原值，不打断页面。
+   */
+  async function refreshProfile(): Promise<void> {
+    if (!auth.value?.token) return
+    try {
+      const me = await api.get<Record<string, any>>('/auth/me')
+      // 以 /auth/me 为准（账号从只读名单里移除时这里能跟着摘掉标志）；老部署不带该字段时才沿用本地值。
+      const readonly = typeof me.readonly === 'boolean' ? me.readonly : auth.value.user.readonly === true
+      const user = { ...normalizeUser(me), readonly }
+      auth.value = { token: auth.value.token, user }
+      saveAuth(auth.value)
+    } catch { /* 保留既有登录态，401 已由 api 层统一处理 */ }
+  }
+
+  return { auth, currentUser, isAdmin, isReadonly, token, login, register, logout, refreshProfile }
 })

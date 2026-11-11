@@ -41,9 +41,12 @@ const isLoginPage = computed(() => route.path === '/login')
 const isStandalonePage = computed(() => isLoginPage.value || (route.meta as any)?.public === true)
 const currentUser = computed(() => authStore.currentUser)
 const currentRole = computed(() => resolveRole(authStore.currentUser?.role))
-const roleLabel = computed(() =>
-  ({ admin: '管理员', teacher: '教师', student: '学生' })[currentRole.value] ?? '学生',
-)
+const roleLabel = computed(() => {
+  const base = ({ admin: '管理员', teacher: '教师', student: '学生' } as Record<string, string>)[currentRole.value] ?? '学生'
+  // 只读演示账号：后端对非安全方法一律 403（白名单内的读语义 POST 除外）。
+  // 侧边栏先把这个身份说清楚，避免用户点了写操作只看到一句 403 却不知道原因。
+  return authStore.isReadonly ? `${base}（只读演示）` : base
+})
 function doLogout() {
   authStore.logout()
   router.push('/login')
@@ -71,6 +74,8 @@ watch(() => route.path, () => {
   loadingTimer = setTimeout(() => { routeLoading.value = false }, 300)
 })
 onMounted(() => { loadingTimer = setTimeout(() => { routeLoading.value = false }, 100) })
+// 刷新一次用户信息：老登录态里没有 readonly 字段，不刷新会一直显示成普通教师。
+onMounted(() => { void authStore.refreshProfile() })
 
 async function checkBackend() {
   try {
