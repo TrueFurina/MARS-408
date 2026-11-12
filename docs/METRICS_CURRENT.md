@@ -81,8 +81,11 @@
 > **1524 通过 / 38 跳过 / 1 xfail / 0 失败（2026-10-17 CI run 38938041036）** → **已更新（2026-10-18）：1654 通过 / 38 跳过 / 1 xfail / 0 失败（CI run 39101268904，head 3bae4b9，Backend Test Linux 默认档；约 1702 collected，`addopts` deselect 9。1524→1654 增量 = 教师端三方向新测试。旧 1389/38/1 为 2026-10-09 run 37917008258，已作废）** → **已更新（2026-10-20）：1693 通过 / 38 跳过 / 1 xfail / 0 失败（CI run 39467891052，head 22a7469，Backend Test Linux 默认档，384.74s；约 1741 collected。1654→1693 增量 = 教师端看板口径 + 错误文案分类 + 四组运行时契约测试）** → **已更新（2026-10-21）：1737 通过 / 38 跳过 / 1 xfail / 0 失败（CI run 39681618692，head 2ba7e6b，Backend Test Linux 默认档，266.31s；约 1785 collected。1693→1737 增量 = SAGE 分级提示功能新增 44 条测试）** → **已更新（2026-11-04）：1883 通过 / 40 跳过 / 1 xfail / 0 失败（CI run 41838176855，head 6508cc4，Backend Test Linux 默认档，252.71s；约 1933 collected，addopts deselect 9。1737→1883 增量 = WS1 六模块覆盖率测试 + 契约/性能/安全回归等同期新增）**。
 >
 > **认证覆盖率**同理由独立脚本产出：`py-server/scripts/verify_auth_coverage.py`
-> （当前 total=262 / protected=249 / public=13 / coverage=**95.04%** / unregistered=0；
-> 2026-11-10 随 diagnostic 新增受保护路由 `/history` 重算，旧值 261/248/95.02% 作废）。
+> （当前 total=263 / protected=250 / public=13 / coverage=**95.06%** / unregistered=0；
+> 2026-11-12 复核重算，旧值 262/249/95.04%（2026-11-10 口径）与 261/248/95.02% 均已作废）。
+> 注：本行"当前"值必须与 `verify_auth_coverage.py` 的 `__SUMMARY__` 逐字对齐，
+> `tests/test_app_status_invariants.py::test_openapi_description_auth_coverage_matches_recomputation`
+> 已把对外数字锁死；改路由后须先跑脚本再更新本行。
 
 ## 漂移防护
 
