@@ -708,15 +708,14 @@ onMounted(() => {
             </p>
             <p class="agg-line">
               <span class="agg-k">全班六维均分</span>
-              <template v-if="Object.keys(dash.summary.dimension_avg).length">
-                <!-- 固定渲染 canonical 六维：缺失维度显式写「本场景未覆盖」，不静默消失、
-                     也不写「无数据」（后者会被读成 0 分或采集故障） -->
-                <span v-for="r in careerDimRows(dash.summary.dimension_avg)" :key="r.key"
-                      :class="['chip', { dim: !r.covered }]">
-                  {{ r.label }} {{ r.covered ? r.value : '本场景未覆盖' }}
-                </span>
-              </template>
-              <span v-else class="dim">暂无</span>
+              <!-- 固定渲染 canonical 六维：缺失维度显式写「本场景未覆盖」，不静默消失、
+                   也不写「无数据」（后者会被读成 0 分或采集故障）。零评估时六维全部
+                   未覆盖，仍然把六个维度列出来——否则教师无法区分「这场景只考三维」
+                   与「六维中某一维压根没采集」。 -->
+              <span v-for="r in careerDimRows(dash.summary.dimension_avg)" :key="r.key"
+                    :class="['chip', { dim: !r.covered }]">
+                {{ r.label }} {{ r.covered ? r.value : '本场景未覆盖' }}
+              </span>
             </p>
             <!-- 口径说明：缺失维度不是 0 分。一次对抗只考察部分维度，其余维度没有证据 -->
             <p class="hint">
