@@ -5,7 +5,7 @@ import { computed, ref, onMounted, watch } from 'vue'
 import { api, friendlyError } from '@/utils/api'
 import {
   CAREER_DIM_LABEL, CAREER_DIM_ORDER,
-  careerDimRows, careerPartialMissingDimText, isDemoClassName,
+  careerDimRows, careerMissingDimText, careerPartialMissingDimText, isDemoClassName,
 } from '@/data/careerDimensions'
 import { useModalFocus } from '@/composables/useModalFocus'
 
@@ -360,17 +360,24 @@ function exportDashCsv() {
   const dims: string[] = [...CAREER_DIM_ORDER]
   // 「已加入」必须用 s.joined（学生本人凭码加入过），不能用 s.bound（教师建号即绑定）——
   // 否则导出表会把「教师替全班建了号」写成「全班已加入」（2026-11-12 真实班实测）。
-  const head = ['学号', '姓名', '是否加入', '完成场次', '总会话', 'best_overall', ...dims.map(dimLabel)]
+  const head = ['学号', '姓名', '是否加入', '完成场次', '总会话', 'best_overall', ...dims.map(dimLabel), '未覆盖维度']
+  // 缺失维度在六个数字列里保持空白（不写文字，教师还要拿去做统计），
+  // 另起一列显式说明缺了哪几维：空白 + 无解释会被读成 0 分或导出丢列。
+  const missCell = (scores: Record<string, number | undefined>) =>
+    Object.keys(scores || {}).length === 0
+      ? '未评分（六维均无分数）'
+      : careerMissingDimText(scores)
   const rows = d.students.map(s =>
     [s.student_no || '', s.name,
      s.joined ? '已加入' : (s.bound ? '已建号未加入' : '未建号'),
      s.finished_count, s.session_count, s.overall_best ?? '',
-     ...dims.map(dim => s.dimension_avg[dim] ?? '')])
+     ...dims.map(dim => s.dimension_avg[dim] ?? ''), missCell(s.dimension_avg)])
   // 末尾附班级六维均分（有聚合才有）
   if (d.summary) {
     rows.push(['', `班级均分（${d.summary.student_count}人）`, '',
       d.summary.finished_count, d.summary.started_count, '',
-      ...dims.map(dim => d.summary!.dimension_avg[dim] ?? '')])
+      ...dims.map(dim => d.summary!.dimension_avg[dim] ?? ''),
+      missCell(d.summary.dimension_avg)])
   }
   const csv = [head, ...rows].map(r => r.map(csvCell).join(',')).join('\n')
   const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' })
@@ -381,7 +388,7 @@ function exportDashCsv() {
   URL.revokeObjectURL(a.href)
   // 浏览器下载不进页面、也不报错：点了没反应时教师会以为导出坏了（2026-10-20 实测
   // 点击后 .msg 仍是上一次操作的文案）。这里给一条显式回执。
-  msg.value = `已导出 CSV：${d.class_name}（${rows.length} 行，含表头与班级均分行）`
+  msg.value = `已导出 CSV：${d.class_name}（${rows.length} 行，含表头、未覆盖维度列与班级均分行）`
 }
 
 /** F7：导出班级学情一页纸（后端渲染自包含 HTML，浏览器另存为 PDF；镜像学生端证据一页纸） */

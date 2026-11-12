@@ -1086,12 +1086,12 @@ def _render_class_export_html(dash: dict) -> str:
         for k, v in stat_cards)
 
     dim_avg = summary.get("dimension_avg") or {}
-    # 固定按 canonical 六维渲染：无数据维度显「无数据」而非从行里消失
+    # 固定按 canonical 六维渲染：缺失维度显式写「本场景未覆盖」而非从行里消失
     # （2026-10-15 浏览器走查发现：按数据键渲染时，无证据维度整项消失，"六维"名不副实）
     if dim_avg:
         dim_html = "、".join(
             (f"{_esc(dim_label(d))} {_esc(dim_avg[d])}" if d in dim_avg
-             else f"{_esc(dim_label(d))} 无数据")
+             else f"{_esc(dim_label(d))} 本场景未覆盖")
             for d in DIMENSIONS)
     else:
         dim_html = "暂无已评分数据"
@@ -1101,7 +1101,7 @@ def _render_class_export_html(dash: dict) -> str:
         dims = s.get("dimension_avg") or {}
         dim_cell = ("、".join(
             (f"{_esc(dim_label(d))} {_esc(dims[d])}" if d in dims
-             else f"{_esc(dim_label(d))} 无数据")
+             else f"{_esc(dim_label(d))} 本场景未覆盖")
             for d in DIMENSIONS) if dims else "—")
         best = s.get("overall_best")
         rows.append(

@@ -815,7 +815,7 @@ def class_dashboard(cid: str, teacher_id: str) -> Optional[dict]:
                  f"{len(finished)} 人已完成、{len(scored)} 人有可评分结果"]
         if uncovered:
             parts.append("未纳入完成率的：" + "、".join(uncovered))
-        parts.append("六维均分只统计有评分的学生，无数据维度不计入最弱排序")
+        parts.append("六维均分只统计有评分的学生，未覆盖维度不计入最弱排序")
         coverage_note = "。".join(parts) + "。"
 
     return {"class_id": cid, "class_name": cls.get("class_name"),
@@ -830,7 +830,7 @@ def class_dashboard(cid: str, teacher_id: str) -> Optional[dict]:
                 "completion_rate": round(len(finished) / total, 2) if total else 0.0,
                 "dimension_avg": dimension_avg,
                 "weakest_dimensions": [{"dimension": d, "avg": v} for d, v in weakest],
-                "note": "最弱维度为全班均分的相对排序（升序），非绝对达标线；无数据维度不参与最弱排序（六维均分中显示为无数据）。",
+                "note": "最弱维度为全班均分的相对排序（升序），非绝对达标线；未覆盖维度不参与最弱排序（六维均分中标注「本场景未覆盖」）。",
                 "coverage_note": coverage_note,
             },
             "attention": attention}
