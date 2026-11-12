@@ -128,8 +128,11 @@ function checkPaths() {
 
 // ---------- 3. Git 卫生（多会话并发改仓场景） ----------
 function checkGit() {
-  const branch = run('git', ['branch', 'show-current'])
-  const name = (branch.stdout || '').trim()
+  // 判定是否在分支上：symbolic-ref 在 detached 时退出码非 0 且 stdout 为空，
+  // 比 `branch show-current` 更不易误判（后者在部分工作区/版本下会静默返回空串，
+  // 导致「在分支上」被误报成「detached（可恢复）」）。
+  const sym = run('git', ['symbolic-ref', '--short', 'HEAD'])
+  const name = (sym.stdout || '').trim()
   const st = run('git', 'status --porcelain'.split(' '))
   const lines = (st.stdout || '').split('\n').filter(Boolean)
   const untracked = lines.filter((l) => l.startsWith('??')).length
