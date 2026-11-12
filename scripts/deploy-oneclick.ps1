@@ -31,7 +31,8 @@ $RemoteDist = @("/home/ubuntu/app/dist", "/home/ubuntu/app/py-server/dist")
 $Stamp     = Get-Date -Format "yyyyMMdd-HHmmss"
 
 function Invoke-Ssh([string]$Command) {
-    $out = & ssh -i $Key -o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=accept-new $Server $Command 2>&1 | Out-String
+    # -n：stdin 接 /dev/null。后台/无控制台执行时，ssh 不带 -n 会一直等 stdin，表现为脚本卡死。
+    $out = & ssh -n -i $Key -o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=accept-new $Server $Command 2>&1 | Out-String
     if ($LASTEXITCODE -ne 0) { throw "SSH 失败：$Command`n$out" }
     return $out.Trim()
 }
@@ -48,7 +49,7 @@ function Invoke-CopyUp([string]$LocalPath, [string]$RemotePath) {
 }
 
 function Get-BackendHealth {
-    $raw = & ssh -i $Key -o BatchMode=yes -o ConnectTimeout=10 $Server "curl -s -m 8 http://127.0.0.1:8002/api/status" 2>$null
+    $raw = & ssh -n -i $Key -o BatchMode=yes -o ConnectTimeout=10 $Server "curl -s -m 8 http://127.0.0.1:8002/api/status" 2>$null
     if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace(($raw -join "")) ) { return $null }
     try { $j = ($raw -join "`n") | ConvertFrom-Json } catch { return $null }
     return $j
