@@ -1526,7 +1526,7 @@ function parseWeakPoints(wpStr: string): string[] {
 .rv-ae-hint { font-size: var(--text-xs); color: var(--text-secondary); font-weight: var(--weight-regular); }
 .rv-ae-icon {
   flex-shrink: 0; width: 1.125rem; height: 1.125rem; border-radius: 50%;
-  background: var(--accent-warm); color: #fff;
+  background: var(--accent-warm); color: var(--color-text-on-accent);
   display: flex; align-items: center; justify-content: center;
   font-size: var(--text-xs); font-weight: var(--weight-bold);
 }
