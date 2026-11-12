@@ -6,8 +6,10 @@
 import json
 import logging
 import asyncio
+import os
 import random
 import threading
+import time
 from typing import Optional, AsyncIterator
 import httpx
 
@@ -18,6 +20,30 @@ from shared.circuit_breaker import get_breaker  # 优先级4b：通道级熔断�
 from shared.token_bucket import try_consume as _bucket_try_consume  # 优先级4b：进程内令牌桶（Redis 不可用时兜底突发限流）
 
 logger = logging.getLogger("netlearn.llm")
+
+_DEFAULT_CHAIN = ["xfyun", "deepseek", "qwen", "glm"]
+
+
+def _channel_order() -> list[str]:
+    """auto 模式下的通道顺序。可由 LLM_CHAIN 覆盖（逗号分隔），
+    用于把已知欠费/无权限的通道排到后面，避免每次请求都先撞一次失败。
+    默认保持原四通道顺序，行为不变。"""
+    raw = (os.getenv("LLM_CHAIN") or "").strip()
+    if raw:
+        names = [x.strip() for x in raw.split(",") if x.strip()]
+        valid = [n for n in names if n in _DEFAULT_CHAIN]
+        if valid:
+            return valid
+    return list(_DEFAULT_CHAIN)
+
+
+def _bucket_wait_seconds() -> float:
+    """令牌桶排队等待预算（秒）。课堂并发下引导排队而不是立刻失败；0 表示不等待。"""
+    try:
+        return max(0.0, float(os.getenv("LLM_BUCKET_WAIT_SECONDS", "8")))
+    except ValueError:
+        return 8.0
+
 
 
 # ── 通道可用性 / 失败可观测性辅助函数 ──
@@ -186,8 +212,8 @@ class LLMProvider:
             )
             self.last_channel = self._target
             return result
-        # auto: 逐通道尝试，失败回退（讯飞星火X2 第一优先级—赛题合规 → DeepSeek → Qwen → 智谱GLM 兜底）
-        for name in ["xfyun", "deepseek", "qwen", "glm"]:
+        # auto: 逐通道尝试，失败回退（顺序可由 LLM_CHAIN 覆盖，默认 xfyun→deepseek→qwen→glm）
+        for name in _channel_order():
             provider_cfg = self._config.get(name, {})
             if not _provider_configured(name, provider_cfg):
                 logger.debug("LLM 通道 %s 未配置可用凭证，跳过", name)
@@ -199,7 +225,7 @@ class LLMProvider:
                 continue
             provider = _apply_xfyun_preset(name, provider_cfg)
             try:
-                result = await self._call_provider(
+                result = await self._call_with_queue(
                     provider, "chat", messages, temperature, max_tokens, tools, thinking, timeout
                 )
                 logger.info("LLM 调用成功: %s", name)
@@ -207,6 +233,12 @@ class LLMProvider:
                 breaker.record_success()
                 self.last_channel = name
                 return result
+            except LLMThrottled as e:
+                # 本地令牌桶排队超时属于「本进程太挤」，不是通道故障：
+                # 不计入熔断失败，否则并发高峰会把健康通道熔断 30s，全班一起挂。
+                logger.warning("LLM 通道 %s 排队超时(%s)，转下一通道", name, e)
+                record_llm_fallback()
+                continue
             except Exception as e:
                 breaker.record_failure()
                 logger.warning(
@@ -235,9 +267,9 @@ class LLMProvider:
                 self.last_channel = self._target
                 yield chunk
             return
-        # auto: 逐通道尝试，失败回退（讯飞星火X2 第一优先级 → DeepSeek → Qwen → 智谱GLM 兜底）
+        # auto: 逐通道尝试，失败回退（顺序可由 LLM_CHAIN 覆盖，默认 xfyun→deepseek→qwen→glm）
         yielded_any = False
-        for name in ["xfyun", "deepseek", "qwen", "glm"]:
+        for name in _channel_order():
             provider_cfg = self._config.get(name, {})
             if not _provider_configured(name, provider_cfg):
                 logger.debug("LLM 通道 %s 未配置可用凭证，跳过", name)
@@ -248,17 +280,30 @@ class LLMProvider:
                 logger.warning("LLM 通道 %s 熔断中，跳过（快速失败）", name)
                 continue
             provider = _apply_xfyun_preset(name, provider_cfg)
+            deadline = time.monotonic() + _bucket_wait_seconds()
             try:
-                async for chunk in self._stream_provider(
-                    provider, messages, temperature, tools, thinking, timeout
-                ):
-                    yielded_any = True
-                    self.last_channel = name
-                    yield chunk
+                while True:
+                    try:
+                        async for chunk in self._stream_provider(
+                            provider, messages, temperature, tools, thinking, timeout
+                        ):
+                            yielded_any = True
+                            self.last_channel = name
+                            yield chunk
+                        break
+                    except LLMThrottled:
+                        # 流式尚未产出任何分片时，可安全地在本地令牌桶排队等待后重试
+                        if yielded_any or time.monotonic() >= deadline:
+                            raise
+                        await asyncio.sleep(0.2)
                 logger.info("LLM 流式调用成功: %s", name)
                 record_llm_call(name)
                 breaker.record_success()
                 return
+            except LLMThrottled as e:
+                logger.warning("LLM 通道 %s 流式排队超时(%s)，转下一通道", name, e)
+                record_llm_fallback()
+                continue
             except Exception as e:
                 breaker.record_failure()
                 if yielded_any:
@@ -416,6 +461,34 @@ class LLMProvider:
             # 降级：仅句法防护已生效，语义层失败不中断
             logger.debug(f"语义级注入防护跳过（降级为仅句法）: {e}")
 
+    async def _call_with_queue(
+        self,
+        provider: dict,
+        mode: str,
+        messages: list[dict],
+        temperature: float,
+        max_tokens: int,
+        tools: Optional[list],
+        thinking: bool,
+        timeout: float,
+    ) -> dict:
+        """本地令牌桶不够时，在预算内排队等待令牌，而不是立刻失败回退。
+
+        课堂场景是 40+ 学生同时发一轮，本地桶（5/s）必然瞬间打空；
+        旧实现直接把「本进程太挤」当成通道故障，连撞 3 次就把健康通道熔断 30s，
+        结果是全班一起报错。这里改为有限等待，平滑突发。
+        """
+        deadline = time.monotonic() + _bucket_wait_seconds()
+        while True:
+            try:
+                return await self._call_provider(
+                    provider, mode, messages, temperature, max_tokens, tools, thinking, timeout
+                )
+            except LLMThrottled:
+                if time.monotonic() >= deadline:
+                    raise
+                await asyncio.sleep(0.2)
+
     async def _call_provider(
         self,
         provider: dict,
@@ -428,11 +501,11 @@ class LLMProvider:
         timeout: float,
     ) -> dict:
         name = provider["name"]
-        # 优先级4b：进程内令牌桶突发限流（Redis 未启用时兜底；超限快速失败，不阻塞主链路）
-        # 每通道 5/s 突发上限，桶容量 10；超出时直接抛 LLMUnavailable 触发通道回退
+        # 优先级4b：进程内令牌桶突发限流（Redis 未启用时兜底；超限抛 LLMThrottled）
+        # 每通道 5/s 突发上限，桶容量 10；排队由 chat()/stream_chat() 的 _call_with_queue 负责
         if not _bucket_try_consume(f"llm_bucket_{name}", n=1):
-            logger.warning("LLM 通道 %s 进程内令牌桶超限（突发限流兜底）", name)
-            raise LLMUnavailable(f"{name} 突发调用超限（令牌桶）")
+            logger.debug("LLM 通道 %s 进程内令牌桶超限（排队或回退）", name)
+            raise LLMThrottled(f"{name} 突发调用超限（令牌桶）")
         self._sanitize_messages(messages)
         # P1-5①: 语义级注入防护（采样触发，超时降级为仅句法）
         if not self._skip_semantic:
@@ -754,4 +827,9 @@ def _apply_xfyun_preset(name: str, cfg: dict) -> dict:
 
 class LLMUnavailable(RuntimeError):
     """所有 LLM 通道不可用"""
+    pass
+
+
+class LLMThrottled(LLMUnavailable):
+    """本进程令牌桶暂时打空（并发太挤），不是通道故障；可排队等待后重试，且不应计入熔断。"""
     pass
