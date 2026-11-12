@@ -6601,6 +6601,80 @@
         }
       }
     },
+    "/api/auth/change-password": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Change Password",
+        "description": "本人修改登录口令（学生自助入口）。\n\n课堂场景的现实问题：48 张登录卡上的 `Mg#xxxxxx` 是一次性明文口令，\n学生丢了只能找教师重设。此端点让学生自己换口令，教师不再当人工客服。\n\n安全口径：\n- 必须验证**当前口令**，仅凭 Token 不足以改密（防 token 泄漏后被静默换密）；\n- 新口令不得与当前口令相同；\n- 只读演示账号由 `get_current_user` 的 enforce_readonly 在任何\n  POST 上直接 403，本端点无需重复判断；\n- 账户级限流 5 次/10 分钟，避免被用来暴力试探旧口令。",
+        "operationId": "change_password_api_auth_change_password_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-App-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-App-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/user/profile": {
       "get": {
         "tags": [
@@ -20488,6 +20562,29 @@
         ],
         "title": "CareerTaskJoinResult",
         "description": "POST /career/task/join 的返回。\n\n`roster_bound` / `bound_name` / `bound_match` 三个字段是**如实回传绑定结果**：\n`matched_by=name` 表示按姓名命中花名册；`first_unbound` 表示退回旧行为（可能错位）。\n前端据此提示\"可能匹配到错误的人\"，所以这三个字段不能省。"
+      },
+      "ChangePasswordRequest": {
+        "properties": {
+          "old_password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Old Password"
+          },
+          "new_password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "New Password",
+            "description": "新口令至少8位"
+          }
+        },
+        "type": "object",
+        "required": [
+          "old_password",
+          "new_password"
+        ],
+        "title": "ChangePasswordRequest"
       },
       "ChatSendRequest": {
         "properties": {

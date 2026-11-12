@@ -86,7 +86,7 @@ onMounted(load)
     </header>
 
     <div class="toolbar">
-      <input v-model="className" class="text-input" placeholder="班级名称（如：信息安全1班-实验组）" @keyup.enter="load" />
+      <input v-model="className" class="text-input" placeholder="班级名称（如：24信安1班）" @keyup.enter="load" />
       <button class="btn primary" :disabled="loading" @click="load">{{ loading ? '加载中…' : '查询报告' }}</button>
       <button v-if="report" class="btn ghost" @click="exportCsv">导出 CSV</button>
     </div>

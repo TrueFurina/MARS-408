@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStudyStore } from '@/stores/studyStore'
 import { useAuthStore } from '@/stores/authStore'
-import { api } from '@/utils/api'
+import { api, ApiError } from '@/utils/api'
 import { icons } from '@/components/icons'
 import type { operations } from '@/types/api.generated'
 
@@ -44,6 +44,43 @@ const ACCENTS = [
   { key: 'rose',   name: '玫红',   color: '#EF7FA8' },
 ] as const
 const accent = ref<string>(localStorage.getItem('mangdehenzhi-accent') || 'violet')
+
+/* 账号安全：学生自助改密（2026-11-13）
+   登录卡上的初始口令是一次性明文，丢了原本只能找教师重设。
+   前端只做长度提示，真正的旧口令校验在后端 /api/auth/change-password。 */
+const pwdOld = ref('')
+const pwdNew = ref('')
+const pwdSaving = ref(false)
+const pwdMsg = ref('')
+const pwdErr = ref('')
+
+async function changePassword() {
+  if (pwdSaving.value) return
+  pwdMsg.value = ''
+  pwdErr.value = ''
+  if (pwdNew.value.length < 8) {
+    pwdErr.value = '新口令至少 8 位'
+    return
+  }
+  if (!pwdOld.value) {
+    pwdErr.value = '请填写当前口令'
+    return
+  }
+  pwdSaving.value = true
+  try {
+    const res = await api.post<{ message: string }>('/auth/change-password', {
+      old_password: pwdOld.value,
+      new_password: pwdNew.value,
+    })
+    pwdMsg.value = res?.message || '口令已更新'
+    pwdOld.value = ''
+    pwdNew.value = ''
+  } catch (e) {
+    pwdErr.value = e instanceof ApiError ? e.message : '修改失败，请稍后重试'
+  } finally {
+    pwdSaving.value = false
+  }
+}
 
 function pickAccent(key: string) {
   accent.value = key
@@ -249,6 +286,43 @@ onMounted(() => {
         </div>
       </div>
 
+      <div class="card">
+        <div class="settings-block">
+          <div class="settings-subtitle">账号安全</div>
+          <p class="pwd-hint">登录卡上的初始口令是一次性的，可在此改成你自己的口令（至少 8 位）。改完请用新口令登录。</p>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="pwd-old">当前口令</label>
+              <input
+                id="pwd-old"
+                v-model="pwdOld"
+                class="form-input"
+                type="password"
+                autocomplete="current-password"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="pwd-new">新口令</label>
+              <input
+                id="pwd-new"
+                v-model="pwdNew"
+                class="form-input"
+                type="password"
+                autocomplete="new-password"
+                placeholder="至少 8 位"
+              />
+            </div>
+          </div>
+          <div class="settings-inline">
+            <button class="btn btn-primary" :disabled="pwdSaving" @click="changePassword">
+              {{ pwdSaving ? '提交中…' : '修改口令' }}
+            </button>
+            <span v-if="pwdMsg" class="pwd-msg" role="status">{{ pwdMsg }}</span>
+            <span v-if="pwdErr" class="pwd-err" role="alert">{{ pwdErr }}</span>
+          </div>
+        </div>
+      </div>
+
       <div class="settings-actions">
         <button class="btn btn-ghost" @click="toggleTheme">
           {{ isDark ? '切换亮色模式' : '切换暗色模式' }}
@@ -358,6 +432,16 @@ onMounted(() => {
   color: var(--text-muted);
   line-height: 1.5;
 }
+
+/* ── 账号安全：改密 ── */
+.pwd-hint {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-2xs);
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.pwd-msg { font-size: var(--text-2xs); color: var(--accent-success); }
+.pwd-err { font-size: var(--text-2xs); color: var(--accent-danger); }
 .accent-row { display: flex; flex-wrap: wrap; gap: 8px; }
 .accent-chip {
   display: inline-flex;

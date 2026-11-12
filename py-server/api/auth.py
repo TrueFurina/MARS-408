@@ -17,7 +17,7 @@ from shared.limits import (
     WINDOW_LOGIN_USER_SECONDS,
     WINDOW_REGISTER_SECONDS,
 )
-from services.user_service import create_user, authenticate, get_user_by_id
+from services.user_service import create_user, authenticate, get_user_by_id, set_password
 from db.redis_client import redis_client
 from shared.audit import log_event
 
@@ -71,6 +71,12 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     username: str
     password: str
+
+
+class ChangePasswordRequest(BaseModel):
+    old_password: str = Field(..., min_length=1, max_length=128)
+    new_password: str = Field(..., min_length=8, max_length=128,
+                             description="新口令至少8位")
 
 
 class TokenResponse(BaseModel):
@@ -153,3 +159,46 @@ async def me(user: dict = Depends(get_current_user)):
 async def logout(user: dict = Depends(get_current_user)):
     """登出（无状态 Token：前端丢弃即可）"""
     return {"status": "ok", "user_id": user["user_id"]}
+
+
+@router.post("/change-password")
+async def change_password(
+    req: ChangePasswordRequest,
+    request: Request,
+    user: dict = Depends(get_current_user),
+):
+    """本人修改登录口令（学生自助入口）。
+
+    课堂场景的现实问题：48 张登录卡上的 `Mg#xxxxxx` 是一次性明文口令，
+    学生丢了只能找教师重设。此端点让学生自己换口令，教师不再当人工客服。
+
+    安全口径：
+    - 必须验证**当前口令**，仅凭 Token 不足以改密（防 token 泄漏后被静默换密）；
+    - 新口令不得与当前口令相同；
+    - 只读演示账号由 `get_current_user` 的 enforce_readonly 在任何
+      POST 上直接 403，本端点无需重复判断；
+    - 账户级限流 5 次/10 分钟，避免被用来暴力试探旧口令。
+    """
+    client_ip = request.client.host if request.client else "unknown"
+    _check_rate_limit(f"change_pwd:user:{user['user_id']}", max_requests=5, window=600)
+
+    full = get_user_by_id(user["user_id"])
+    if not full:
+        raise ResourceNotFoundError(resource="用户")
+    username = full["username"]
+
+    if not authenticate(username, req.old_password):
+        log_event("change_password", user_id=str(user["user_id"]), ip=client_ip,
+                  result="failure", detail="old_password_mismatch")
+        raise ValidationError(detail="当前口令不正确")
+
+    if req.new_password == req.old_password:
+        raise ValidationError(detail="新口令不能与当前口令相同")
+
+    if not set_password(username, req.new_password):
+        raise ResourceNotFoundError(resource="用户")
+
+    log_event("change_password", user_id=str(user["user_id"]), ip=client_ip,
+              result="success", detail=f"username={username}")
+    return {"status": "ok", "username": username,
+            "message": "口令已更新，请用新口令重新登录"}

@@ -34,8 +34,9 @@ const dimensions = ref<string[]>([])
 const currentIndex = ref(0)
 const answers = ref<Record<number, number>>({})   // qid -> option_index
 const phase = ref<'pre' | 'post'>('pre')
-const className = ref('')
-const studentId = ref('')   // 实验编号=学号后4位：课堂身份主键（共享 demo 登录下唯一区分）
+const className = ref(localStorage.getItem('mangdehenzhi-class') || '')
+const studentId = ref('')   // 真实账号 user_id：前测/后测必须落到本人账号名下
+const identityName = ref('') // 页面展示用：姓名（登录账号）
 const submitting = ref(false)
 const loading = ref(true)
 const errorMsg = ref('')
@@ -81,7 +82,22 @@ async function loadQuestions() {
 
 onMounted(() => {
   void loadQuestions()
+  void bindIdentity()
 })
+
+/** 身份绑定（2026-11-13）：48 名学生已有各自账号，前测必须记到真实 user_id 上。
+ *  此前让学手填"学号后4位"作 user_id 是"全班共用 demo 登录"时代的产物；
+ *  现在若继续手填，提交会落在 "5101" 这类伪 ID 上，与班级花名册、成长页、
+ *  教师端报告全部对不上。改为从 /auth/me 取真实 id，学号只用于展示。 */
+async function bindIdentity() {
+  try {
+    const me = await api.get<{ id: string; username: string; display_name?: string }>('/auth/me')
+    studentId.value = me.id
+    identityName.value = me.display_name ? `${me.display_name}（${me.username}）` : me.username
+  } catch {
+    // 未登录时保留手填入口（本地调试用），线上课堂一律走账号登录
+  }
+}
 
 function pick(optionIndex: number) {
   if (!currentQ.value) return
@@ -96,11 +112,14 @@ async function submit() {
   submitting.value = true
   errorMsg.value = ''
   try {
+    // 班级口径必须全班一字不差，教师端按 class_name 汇总前后测；
+    // 记住上一次输入，避免每名学生手打时打出"24信安一班"这类变体。
+    localStorage.setItem('mangdehenzhi-class', className.value.trim())
     result.value = await api.post<SubmitResult>('/literacy/submit', {
       phase: phase.value,
-      class_name: className.value,
+      class_name: className.value.trim(),
       user_id: studentId.value,
-      user_name: studentId.value,
+      user_name: identityName.value || studentId.value,
       answers: Object.entries(answers.value).map(([qid, option_index]) => ({
         qid: Number(qid), option_index,
       })),
@@ -212,8 +231,9 @@ function restart(nextPhase: 'pre' | 'post') {
         </div>
 
         <div class="submit-row">
-          <input v-model="studentId" class="text-input" placeholder="学号 / 昵称（可选，如 9001）" maxlength="4" />
-          <input v-model="className" class="text-input" placeholder="班级（如：信息安全1班-实验组）" />
+          <span v-if="studentId" class="identity-chip">当前账号：{{ identityName || studentId }}</span>
+          <input v-else v-model="studentId" class="text-input" placeholder="学号 / 昵称（可选，如 9001）" maxlength="4" />
+          <input v-model="className" class="text-input" placeholder="班级（统一填 24信安1班）" />
           <button class="btn primary" :disabled="!allAnswered || !studentId.trim() || submitting" @click="submit">
             {{ submitting ? '提交中…' : `提交测评（${answeredCount}/${questions.length}）` }}
           </button>
@@ -252,6 +272,11 @@ function restart(nextPhase: 'pre' | 'post') {
 .option-btn.selected .option-letter { background: var(--color-accent); color: var(--color-text-on-accent); border-color: var(--color-accent); }
 .quiz-nav { display: flex; gap: 10px; margin-top: 18px; }
 .submit-row { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+.identity-chip {
+  display: inline-flex; align-items: center; padding: 9px var(--space-3);
+  border: 1.5px solid var(--border); border-radius: 8px; font-size: var(--text-sm);
+  color: var(--text-muted); background: var(--surface-2, transparent);
+}
 .text-input { flex: 1; min-width: 160px; padding: 9px var(--space-3); border: 1.5px solid var(--border); border-radius: 8px; font-size: var(--text-sm); }
 .btn { padding: 9px 18px; border-radius: 8px; font-size: var(--text-base); cursor: pointer; border: 1.5px solid transparent; }
 .btn.primary { background: var(--color-accent); color: var(--color-text-on-accent); }

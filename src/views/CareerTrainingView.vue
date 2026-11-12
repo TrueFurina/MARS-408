@@ -465,6 +465,7 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
         <h1 class="c-title">职业素养对抗实训</h1>
         <p class="c-desc">多智能体扮演高压职场对手，多轮追问并全程留证，结束后按证据中心设计（ECD）生成六维能力报告</p>
         <router-link class="c-link" to="/career/growth">查看我的成长（六维趋势 · 前后测对比 · 证据金句）→</router-link>
+        <router-link class="c-link c-link--sub" to="/settings">修改登录口令 →</router-link>
       </header>
 
       <!-- F6 知情同意门禁：收成一条，默认两行封顶，不占首屏 -->
@@ -795,6 +796,7 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
 .c-desc { font-size: var(--text-sm); color: var(--text-secondary); margin: 8px 0 0; max-width: 640px; line-height: 1.65; }
 .c-link { display: inline-block; margin-top: 10px; font-size: var(--text-sm); color: var(--accent-primary); text-decoration: none; }
 .c-link:hover { text-decoration: underline; }
+.c-link--sub { margin-left: 16px; color: var(--text-muted); }
 
 /* 分区：每块自带编号与标题，上面一根分隔线，内容才不会糊成一片 */
 .c-sec { margin-top: var(--space-8); }
