@@ -99,3 +99,71 @@ def test_provision_rejects_student_role(client):
 def test_provision_unknown_class_404(client):
     res = client.post("/api/career/classes/cls_not_exist/provision-accounts")
     assert res.status_code == 404
+
+
+def test_provision_does_not_count_as_joined(client):
+    """教师一键建号 ≠ 学生已加入：看板必须把两个口径分开报。
+
+    2026-11-12 真实班实测：48 行名册由教师批量绑定账号后，看板显示「已加入 48/48」，
+    而实际 0 人登录过。若把「已建号」算成「已加入」，教师课上会以为全班到齐。
+    """
+    cid = _make_class(client, f"建号班{_RUN}四")
+    _import(client, cid, _roster(_SN_BASE + 6))
+
+    body = client.post(f"/api/career/classes/{cid}/provision-accounts").json()
+    assert body["bound"] == 2
+
+    dash = client.get(f"/api/career/classes/{cid}/dashboard").json()
+    summ = dash["summary"]
+    assert summ["provisioned_count"] == 2, "已建号人数必须单独给出"
+    assert summ["joined_count"] == 0, "教师建号不得计入「已加入」"
+    assert summ["started_count"] == 0
+    assert all(not s["joined"] for s in dash["students"]), "建号后不得有任何一行算作已加入"
+    assert sum(1 for s in dash["students"] if s["bound"]) == 2  # 缺学号的「王五」不建号
+    assert "已建号但本人尚未加入" in summ["coverage_note"]
+
+
+def test_join_after_provision_binds_existing_row(client):
+    """教师先建号，学生后凭任务码加入：必须认出「这行就是我」，并记真实加入时间。
+
+    旧实现只在 ``user_id IS NULL`` 的行里找，教师已把全班绑完后学生 join 会一行都找
+    不到而回 ``roster_bound=False``（2026-11-12 真实班实测的连带风险）。
+    """
+    from main import app
+    from shared.auth import get_current_user
+    from db.user_store import get_user_by_username
+
+    cid = _make_class(client, f"建号班{_RUN}五")
+    _import(client, cid, _roster(_SN_BASE + 8))
+    body = client.post(f"/api/career/classes/{cid}/provision-accounts").json()
+
+    created = [a for a in body["accounts"] if a["status"] == "created"]
+    sn = created[0]["student_no"]
+    user = get_user_by_username(sn)
+    assert user is not None
+
+    sc = client.get("/api/career/scenarios").json()["scenarios"]
+    task = client.post("/api/career/tasks", json={
+        "class_id": cid, "scenario_id": sc[0]["id"],
+        "difficulty": "medium", "max_turns": 4}).json()
+
+    app.dependency_overrides[get_current_user] = lambda: {
+        "user_id": user["id"], "role": "student"}
+    try:
+        joined = client.post("/api/career/task/join", json={"join_code": task["join_code"]})
+    finally:
+        from db.user_store import authenticate
+        admin = authenticate("test_admin", "test_pw_123")
+        app.dependency_overrides[get_current_user] = lambda: {
+            "user_id": admin["id"], "role": "admin"}
+
+    assert joined.status_code == 200
+    payload = joined.json()
+    assert payload["roster_bound"] is True, "教师已建号的学生 join 也必须绑定成功"
+    assert payload["bound_match"] == "already_bound"
+    assert payload["bound_name"] == "张三"
+
+    dash = client.get(f"/api/career/classes/{cid}/dashboard").json()
+    assert dash["summary"]["joined_count"] == 1
+    joined_row = next(s for s in dash["students"] if s["student_no"] == sn)
+    assert joined_row["joined"] is True and joined_row["joined_at"]
