@@ -2,6 +2,7 @@
 // 职业素养测评页（对照实验载体）：10 题分档计分 → 六维雷达条 → 前后测对比
 import { computed, onMounted, ref } from 'vue'
 import { api, ApiError } from '@/utils/api'
+import { gradeColor } from '@/utils/grade'
 
 interface Question {
   id: number
@@ -44,13 +45,6 @@ const report = ref<Report | null>(null)
 const answeredCount = computed(() => Object.keys(answers.value).length)
 const allAnswered = computed(() => questions.value.length > 0 && answeredCount.value === questions.value.length)
 const currentQ = computed(() => questions.value[currentIndex.value])
-
-function scoreColor(score: number): string {
-  if (score >= 90) return '#22c55e'
-  if (score >= 75) return '#84cc16'
-  if (score >= 60) return '#eab308'
-  return '#ef4444'
-}
 
 async function loadReport() {
   // 身份必须来自学号而非写死的 demo：后端 submit 以请求体 user_id（学号后4位）为身份主键，
@@ -146,14 +140,14 @@ function restart(nextPhase: 'pre' | 'post') {
       <section v-if="result" class="result-card">
         <div class="result-total">
           <span class="label">综合素养分</span>
-          <span class="value" :style="{ color: scoreColor(result.total_score) }">{{ result.total_score }}</span>
+          <span class="value" :style="{ color: gradeColor(result.total_score) }">{{ result.total_score }}</span>
           <span class="phase-tag">{{ result.phase === 'pre' ? '前测' : '后测' }}</span>
         </div>
         <div class="dim-bars">
           <div v-for="d in dimensions" :key="d" class="dim-row">
             <span class="dim-name">{{ d }}</span>
             <div class="bar-track">
-              <div class="bar-fill" :style="{ width: '100%', transform: 'scaleX(' + ((result.dim_scores[d] || 0) / 100) + ')', transformOrigin: 'left', background: scoreColor(result.dim_scores[d] || 0) }" />
+              <div class="bar-fill" :style="{ width: '100%', transform: 'scaleX(' + ((result.dim_scores[d] || 0) / 100) + ')', transformOrigin: 'left', background: gradeColor(result.dim_scores[d] || 0) }" />
             </div>
             <span class="dim-score">{{ result.dim_scores[d] ?? 0 }}</span>
           </div>
@@ -177,7 +171,7 @@ function restart(nextPhase: 'pre' | 'post') {
             <div v-for="d in dimensions" :key="'d-' + d" class="dim-row">
               <span class="dim-name">{{ d }}</span>
               <div class="bar-track">
-                <div class="bar-fill" :style="{ width: '100%', transform: 'scaleX(' + ((report.post.dims[d] || 0) / 100) + ')', transformOrigin: 'left', background: scoreColor(report.post.dims[d] || 0) }" />
+                <div class="bar-fill" :style="{ width: '100%', transform: 'scaleX(' + ((report.post.dims[d] || 0) / 100) + ')', transformOrigin: 'left', background: gradeColor(report.post.dims[d] || 0) }" />
               </div>
               <span class="dim-score">{{ report.pre.dims[d] ?? '-' }} → {{ report.post.dims[d] ?? '-' }}</span>
             </div>
