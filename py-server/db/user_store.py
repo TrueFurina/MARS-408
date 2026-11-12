@@ -1230,7 +1230,10 @@ def update_daily_plan_task(pid: int, user_id: str, task_id: str, completed: bool
 def list_daily_plans(user_id: str, start_date: str = None, end_date: str = None, limit: int = 30) -> list:
     """获取用户一段时间的计划列表"""
     conn = _get_conn()
-    query = "SELECT id FROM user_daily_plans WHERE user_id=?"
+    # 一次取整行：此前先 `SELECT id` 再逐条 `SELECT * ... WHERE id=?` 回查，
+    # 在 limit=30 时单次调用会多打 30 条 SQL（典型 N+1），且逐条回查在 _lock 之外，
+    # 共享连接下存在并发隐患。改为一次 SELECT * 后直接遍历，语义完全等价。
+    query = "SELECT * FROM user_daily_plans WHERE user_id=?"
     params = [user_id]
     
     if start_date:
@@ -1247,8 +1250,7 @@ def list_daily_plans(user_id: str, start_date: str = None, end_date: str = None,
         rows = conn.execute(query, params).fetchall()
     
     result = []
-    for r in rows:
-        row = conn.execute("SELECT * FROM user_daily_plans WHERE id=?", (r["id"],)).fetchone()
+    for row in rows:
         try:
             tasks = json.loads(row["tasks_json"])
         except Exception:
