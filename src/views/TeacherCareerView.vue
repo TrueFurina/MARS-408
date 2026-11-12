@@ -17,13 +17,17 @@ interface TaskItem {
 interface DashSession { session_id: string; status: string; turn_count: number; overall: number | null }
 interface DashStudent {
   student_no: string; name: string; user_id: string | null; bound: boolean
+  /** 学生本人凭任务码加入过（教师建号不算）；旧响应无此字段时按未加入处理 */
+  joined?: boolean; joined_at?: string | null
   session_count: number; finished_count: number
   dimension_avg: Record<string, number>; overall_best: number | null
   sessions: DashSession[]
 }
 interface DashSummary {
   student_count: number
-  /** 名册行已绑定账号的人数（凭码加入过）——与 started_count「已开练」是两个口径 */
+  /** 名册行已绑定账号（教师批量建号即可达成，不代表学生登录过） */
+  provisioned_count?: number
+  /** 学生本人凭任务码加入过的人数——与 provisioned_count / started_count 三个口径分开 */
   joined_count: number
   started_count: number; finished_count: number; assessed_count: number
   completion_rate: number
@@ -347,9 +351,12 @@ function exportDashCsv() {
   // 对「技术汇报」无证据（score=null）时，按数据键取列会让该维整列消失，"全班六维"
   // 名不副实，且跨班级/场次合并 CSV 会错列。
   const dims: string[] = [...CAREER_DIM_ORDER]
+  // 「已加入」必须用 s.joined（学生本人凭码加入过），不能用 s.bound（教师建号即绑定）——
+  // 否则导出表会把「教师替全班建了号」写成「全班已加入」（2026-11-12 真实班实测）。
   const head = ['学号', '姓名', '是否加入', '完成场次', '总会话', 'best_overall', ...dims.map(dimLabel)]
   const rows = d.students.map(s =>
-    [s.student_no || '', s.name, s.bound ? '已加入' : '未加入',
+    [s.student_no || '', s.name,
+     s.joined ? '已加入' : (s.bound ? '已建号未加入' : '未建号'),
      s.finished_count, s.session_count, s.overall_best ?? '',
      ...dims.map(dim => s.dimension_avg[dim] ?? '')])
   // 末尾附班级六维均分（有聚合才有）
@@ -665,6 +672,7 @@ onMounted(() => {
               <!-- 加入 / 开练 / 完成 是三个不同口径，别合并成一个"参与"：
                    学生凭码加入只绑定花名册，不产生会话；合并会让"已加入但未开练"
                    显示成参与 0，教师会误判成没人来（2026-10-20 浏览器 E2E 实测）。 -->
+              <div class="stat"><span class="k">已建号</span><span class="v">{{ dash.summary.provisioned_count ?? 0 }}/{{ dash.summary.student_count }}</span></div>
               <div class="stat"><span class="k">已加入</span><span class="v">{{ dash.summary.joined_count ?? 0 }}/{{ dash.summary.student_count }}</span></div>
               <div class="stat"><span class="k">已开练</span><span class="v">{{ dash.summary.started_count }}/{{ dash.summary.student_count }}</span></div>
               <div class="stat"><span class="k">完成</span><span class="v">{{ dash.summary.finished_count }}/{{ dash.summary.student_count }}</span></div>

@@ -596,7 +596,11 @@ def add_students(cid: str, teacher_id: str, students: list[dict]) -> int:
         name = (stu.get("name") or "").strip()
         if not name:
             continue
-        _exec(f"INSERT INTO career_class_students (id,class_id,student_no,name) VALUES ({_ph(4)})",
+        # joined_at 显式写 NULL：导入名册 / 教师建号都**不等于**学生已加入课堂。
+        # 只有学生本人凭任务码 join 时由 bind_student 写入真实加入时间，
+        # 否则看板会把「教师替全班建了号」误报成「全班都来了」（2026-11-12 实测撞到）。
+        _exec(f"INSERT INTO career_class_students (id,class_id,student_no,name,joined_at) "
+              f"VALUES ({_ph(4)}, NULL)",
               (new_id("stu"), cid, (stu.get("student_no") or "").strip(), name))
         n += 1
     q = "?" if pg_client.is_fallback else "%s"
@@ -741,6 +745,9 @@ def class_dashboard(cid: str, teacher_id: str) -> Optional[dict]:
         students.append({
             "student_no": stu.get("student_no"), "name": stu.get("name"),
             "user_id": stu.get("user_id"), "bound": bool(stu.get("user_id")),
+            # joined 只认学生本人的加入时间；教师建号不写 joined_at（见 import_students 注释）
+            "joined": bool(stu.get("joined_at")),
+            "joined_at": str(stu.get("joined_at") or "") or None,
             "session_count": len(sessions),
             "finished_count": sum(1 for s in sessions if s.get("status") == "finished"),
             "dimension_avg": dim_avg, "overall_best": overall_best,
@@ -748,13 +755,15 @@ def class_dashboard(cid: str, teacher_id: str) -> Optional[dict]:
         })
 
     # ── 班级级聚合 ──
-    # joined / started 是两个**不同口径**，必须分开统计（2026-10-20 浏览器 E2E 实测）：
-    # 学生凭任务码 join 时只写花名册的 user_id 绑定，**不创建会话**；
-    # 只有真正开局作答才有 session。试点首日教师最想问的是"多少人进来了"，
-    # 若只给 started_count，典型场景（学生已加入但还没开练）会显示"参与 0/3"，
-    # 教师会误判成"没人来"。故单独给出 joined_count（已绑定账号的名册行）。
+    # joined / started 是三个**不同口径**，必须分开统计（2026-10-20 浏览器 E2E 实测）：
+    #   已建号 = 名册行有 user_id（教师批量建号即可达成，学生本人可能一次都没登录）
+    #   已加入 = 学生本人凭任务码 join 过（joined_at 非空，由 bind_student 写入）
+    #   已开练 = 有 session。
+    # 2026-11-12 真实班实测：教师替 48 人建号后，旧实现把「已建号」直接算成「已加入」，
+    # 看板显示 48/48 已加入而实际 0 人登录过 —— 三个数必须分开报。
     total = len(students)
-    joined = [s for s in students if s["bound"]]
+    provisioned = [s for s in students if s["bound"]]
+    joined = [s for s in students if s.get("joined")]
     started = [s for s in students if s["session_count"] > 0]
     finished = [s for s in students if s["finished_count"] > 0]
     scored = [s for s in students if s["overall_best"] is not None]
@@ -788,7 +797,10 @@ def class_dashboard(cid: str, teacher_id: str) -> Optional[dict]:
     uncovered = []
     unbound = [s for s in students if not s["bound"]]
     if unbound:
-        uncovered.append(f"{len(unbound)} 人尚未加入")
+        uncovered.append(f"{len(unbound)} 人未建号（名册行没有账号）")
+    provisioned_only = [s for s in provisioned if not s.get("joined")]
+    if provisioned_only:
+        uncovered.append(f"{len(provisioned_only)} 人已建号但本人尚未加入（没登录过 / 没输过任务码）")
     started_unfinished = [s for s in started if s["finished_count"] == 0]
     if started_unfinished:
         uncovered.append(f"{len(started_unfinished)} 人已开练未完成")
@@ -798,7 +810,8 @@ def class_dashboard(cid: str, teacher_id: str) -> Optional[dict]:
     if total == 0:
         coverage_note = "名册为空：本页所有比率均不成立（0% 是占位，不是『0 人完成』），请先导入名册。"
     else:
-        parts = [f"分母 = 名册 {total} 人；{len(joined)} 人已加入、{len(started)} 人已开练、"
+        parts = [f"分母 = 名册 {total} 人；{len(provisioned)} 人已建号、{len(joined)} 人已加入、"
+                 f"{len(started)} 人已开练、"
                  f"{len(finished)} 人已完成、{len(scored)} 人有可评分结果"]
         if uncovered:
             parts.append("未纳入完成率的：" + "、".join(uncovered))
@@ -809,6 +822,7 @@ def class_dashboard(cid: str, teacher_id: str) -> Optional[dict]:
             "student_count": total, "students": students,
             "summary": {
                 "student_count": total,
+                "provisioned_count": len(provisioned),
                 "joined_count": len(joined),
                 "started_count": len(started),
                 "finished_count": len(finished),
@@ -842,6 +856,18 @@ def bind_student(class_id: str, user_id: str, name: str = "") -> Optional[dict]:
     """
     ensure_tables()
     q = "?" if pg_client.is_fallback else "%s"
+    # 教师批量建号后，花名册行已有 user_id；学生本人凭码加入时必须先认出
+    # 「这行就是我」并记下真实加入时间，否则会落到下面的未绑定行查找里、
+    # 一行都找不到而回 roster_bound=False（2026-11-12 真实班实测）。
+    self_rows = _query(
+        f"SELECT id, student_no, name FROM career_class_students "
+        f"WHERE class_id={q} AND user_id={q}", (class_id, user_id))
+    if self_rows:
+        row = self_rows[0]
+        _exec(f"UPDATE career_class_students SET joined_at=CURRENT_TIMESTAMP WHERE id={q}",
+              (row["id"],))
+        return {"student_no": row.get("student_no"), "name": row.get("name"),
+                "matched_by": "already_bound"}
     rows = _query(
         f"SELECT id, student_no, name FROM career_class_students "
         f"WHERE class_id={q} AND user_id IS NULL", (class_id,))
@@ -857,7 +883,7 @@ def bind_student(class_id: str, user_id: str, name: str = "") -> Optional[dict]:
             matched_by = "name"
     if picked is None:
         picked = rows[0]
-    _exec(f"UPDATE career_class_students SET user_id={q} WHERE id={q}",
+    _exec(f"UPDATE career_class_students SET user_id={q}, joined_at=CURRENT_TIMESTAMP WHERE id={q}",
           (user_id, picked["id"]))
     return {"student_no": picked.get("student_no"), "name": picked.get("name"),
             "matched_by": matched_by}

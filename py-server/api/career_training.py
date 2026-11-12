@@ -1073,6 +1073,7 @@ def _render_class_export_html(dash: dict) -> str:
     # 导出的 HTML 里搜不到「已加入」。归档产物必须带齐三档，否则过程性考核依据丢信息。
     stat_cards = [
         ("班级人数", summary.get("student_count", len(students))),
+        ("已建号", summary.get("provisioned_count", 0)),
         ("已加入", summary.get("joined_count", 0)),
         ("已开练", summary.get("started_count", 0)),
         ("已完成", summary.get("finished_count", 0)),
