@@ -33,7 +33,7 @@ except ImportError:
     _HAS_FILELOCK = False
 
 from db.milvus_client import vector_db
-from config import load_config
+from config import load_config, get_embedding_config
 
 logger = logging.getLogger("netlearn.import_worker")
 
@@ -463,7 +463,8 @@ class ImportWorker:
         except Exception as e:
             logger.warning(f"[import] E5 编码失败，使用零向量: {e}")
             import numpy as np
-            return [np.zeros(768).tolist() for _ in texts]
+            _dim = get_embedding_config().get("dimension", 768)
+            return [np.zeros(_dim).tolist() for _ in texts]
 
     def _persist(self, job: dict):
         """把 job 状态持久化到 journal 文件（崩溃后可审计/标记 interrupted）。"""

@@ -6,6 +6,8 @@
 #   GET /metrics                 Prometheus 文本格式指标（D5）
 # ============================================================
 
+import time
+
 from fastapi import FastAPI
 from fastapi.responses import PlainTextResponse
 
@@ -16,6 +18,25 @@ from db.redis_client import redis_client
 from shared.metrics import render_prometheus
 
 __all__ = ["install", "status", "competition_status", "metrics"]
+
+
+_KB_COUNT_TTL = 15.0  # 秒：集合规模极低频变化，缓存避免每次探针都打一次 Milvus 网络往返
+_kb_count_cache: dict = {"value": None, "ts": 0.0}
+
+
+def _kb_count() -> int:
+    """带 TTL 的向量库条目计数（探针高频调用，集合规模近乎静态）。
+
+    仅缓存「成功计数」；探测抛异常时透传，由调用方记降级原因，不污染缓存。
+    """
+    now = time.monotonic()
+    cache = _kb_count_cache
+    if cache["value"] is not None and (now - cache["ts"]) < _KB_COUNT_TTL:
+        return cache["value"]
+    val = vector_db.count("netlearn_kb")
+    cache["value"] = val
+    cache["ts"] = now
+    return val
 
 
 async def status():
@@ -39,7 +60,7 @@ async def status():
     milvus_connected = bool(getattr(vector_db, "_milvus_connected", False))
     vector_db_mode = "milvus" if milvus_connected else "inmemory"
     try:
-        count = vector_db.count("netlearn_kb")
+        count = _kb_count()
     except Exception as e:  # noqa: BLE001 — 探针必须吞异常改走降级通道
         count = 0
         probe_failures.append(f"vector_db: 健康探测失败({type(e).__name__})")
@@ -172,7 +193,7 @@ def _profile_dimension_count() -> int:
 
 async def competition_status():
     """返回赛题5项功能 + 2项加分项的实现状态"""
-    count = vector_db.count("netlearn_kb")
+    count = _kb_count()
     from services.user_service import get_db_conn
     user_count = 0
     try:
@@ -225,7 +246,7 @@ def install(app: FastAPI) -> None:
     #
     # ⚠️ 必须保持「一条 route、两个方法」，不要拆成 app.get + app.head 两条：
     #   `scripts/verify_auth_coverage.py::collect()` 按 **route 对象**计数，拆两条会把
-    #   /api 端点总数从 245 顶到 246、认证覆盖率从 94.69% 掉到 94.31%（分母虚增），
+    #   /api 端点总数从 263 顶到 264、认证覆盖率从 95.06% 掉到 94.70%（分母虚增），
     #   而这两个数都是已固化的对外口径（见 tests/test_app_status_invariants.py 的重算断言）。
     #
     # ⚠️ 必须**显式固定 operation_id**：不给时 FastAPI 用 `route.unique_id` 派生，而它依赖

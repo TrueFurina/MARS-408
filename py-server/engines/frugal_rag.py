@@ -339,9 +339,23 @@ class FrugalRAG:
             logger.error(f"E5 embedding 失败: {e}")
             logger.warning("E5 不可用，降级为 BM25-only 检索（纯词频，不依赖模型）")
             try:
-                docs, _total = await asyncio.to_thread(
-                    vector_db.get_all_with_texts, "netlearn_kb", 0, 100000
-                )
+                # 游标分页拉取全库文本（每页 2000，全集合封顶 100000），
+                # 避免单次巨量查询打满内存 / 触发 Milvus 查询上限。
+                # 仍累积为完整语料后做全语料 BM25 打分，降级召回与一次性拉取完全一致。
+                BM25_FALLBACK_PAGE = 2000
+                BM25_FALLBACK_CAP = 100000
+                docs = []
+                _skip = 0
+                while _skip < BM25_FALLBACK_CAP:
+                    _page, _total = await asyncio.to_thread(
+                        vector_db.get_all_with_texts, "netlearn_kb", _skip, BM25_FALLBACK_PAGE
+                    )
+                    if not _page:
+                        break
+                    docs.extend(_page)
+                    _skip += len(_page)
+                    if _skip >= _total:
+                        break
                 # 排除检索禁用 chunk（模板变体/脚手架）
                 docs = [
                     d for d in docs

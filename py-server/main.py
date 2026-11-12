@@ -47,7 +47,7 @@ app = FastAPI(
                 "前端: Vue 3 + TypeScript + Vite\n"
                 "LLM: 四通道容灾 讯飞星火 X2 / DeepSeek / Qwen / 智谱 GLM（auto 按此优先级逐级回退，ADR-020）\n\n"
                 "## 安全\n"
-                "- 95.04% API 认证覆盖率（249/262 个 /api 端点；"
+                "- 95.06% API 认证覆盖率（250/263 个 /api 端点；"
                 "scripts/verify_auth_coverage.py 可复现重算）\n"
                 "- JWT HMAC-SHA256 Token\n"
                 "- PBKDF2 密码哈希\n"
@@ -59,7 +59,7 @@ app = FastAPI(
 
 # ── OpenAPI 去重：GET+HEAD 同挂一条 route 时的 operationId 重号 ─────────────────
 # /api/status 用 `api_route(methods=["GET","HEAD"])` 一条 route 挂两个方法（必须是一条，
-# 否则 `verify_auth_coverage.collect()` 按 route 计数会把 /api 端点从 245 顶到 246）。
+# 否则 `verify_auth_coverage.collect()` 按 route 计数会把 /api 端点从 263 顶到 264）。
 # 但 FastAPI 会为这两个方法各生成一个 operation，且**复用同一个 operationId**
 # （实测：get 与 head 都写成 `status_api_status_head`，并告警
 #  "Duplicate Operation ID ..."）。OpenAPI 规范要求 operationId 唯一 ⇒ 不对齐的话
