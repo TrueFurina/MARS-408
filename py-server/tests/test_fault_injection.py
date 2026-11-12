@@ -88,12 +88,15 @@ def test_token_bucket_refills_over_time():
 # ── LLM 层故障观测 ──
 
 def test_llm_chat_uses_breaker_key_convention():
-    """验证 LLM 通道使用 llm_bucket_{channel} 令牌桶 + LLMUnavailable 快速失败约定"""
+    """验证 LLM 通道使用 llm_bucket_{channel} 令牌桶 + LLMThrottled 约定
+    （2026-11-12 起：令牌桶超限抛 LLMThrottled，它是 LLMUnavailable 的子类，
+    仍能触发通道回退；区别是 chat() 会先排队等待，且不计入通道熔断）"""
     import inspect
-    from db.llm_provider import LLMProvider
+    from db.llm_provider import LLMProvider, LLMThrottled, LLMUnavailable
     src = inspect.getsource(LLMProvider._call_provider)
     assert "llm_bucket_" in src  # 令牌桶命名约定
-    assert "LLMUnavailable" in src  # 超限快速失败（触发通道回退）
+    assert "LLMThrottled" in src  # 超限快速失败（触发排队或通道回退）
+    assert issubclass(LLMThrottled, LLMUnavailable)  # 兼容既有"不可用即回退"契约
 
 
 def test_llm_chat_uses_token_bucket_key_convention():
