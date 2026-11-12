@@ -1,9 +1,12 @@
 <script setup lang="ts">
 // P4 教师端：建班 → 导花名册 → 发任务（任务码）→ 班级学情看板
 // F1（2026-10-15）：学生个体下钻；F2：任务管理中心（进度 + 关闭）
-import { ref, onMounted, watch } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { api, friendlyError } from '@/utils/api'
-import { CAREER_DIM_LABEL, CAREER_DIM_ORDER } from '@/data/careerDimensions'
+import {
+  CAREER_DIM_LABEL, CAREER_DIM_ORDER,
+  careerDimRows, careerPartialMissingDimText, isDemoClassName,
+} from '@/data/careerDimensions'
 import { useModalFocus } from '@/composables/useModalFocus'
 
 interface ClassItem { class_id: string; class_name: string; student_count: number }
@@ -69,6 +72,10 @@ const STATUS_LABEL: Record<string, string> = { ongoing: '进行中', finished: '
 
 /** 维度 key → 中文名（未收录时回落原 key，不隐藏异常） */
 function dimLabel(d: string) { return CAREER_DIM_LABEL[d] || d }
+
+/** 可操作班级：过滤演示样例班（只影响显示层，后端 /career/classes 仍返回全量） */
+const visibleClasses = computed(() => classes.value.filter(c => !isDemoClassName(c.class_name)))
+const hiddenDemoCount = computed(() => classes.value.length - visibleClasses.value.length)
 
 const classes = ref<ClassItem[]>([])
 const scenarios = ref<ScenarioItem[]>([])
@@ -552,14 +559,20 @@ onMounted(() => {
           <button :disabled="loading" @click="createClass">创建</button>
         </div>
         <ul class="class-list">
-          <li v-for="c in classes" :key="c.class_id"
+          <li v-for="c in visibleClasses" :key="c.class_id"
               :class="{ active: c.class_id === activeClassId }">
             <button class="link" @click="selectClass(c.class_id)">
               {{ c.class_name }}（{{ c.student_count }}人）
             </button>
             <button class="link dim" @click="loadDashboard(c)">看板</button>
           </li>
+          <li v-if="!visibleClasses.length" class="dim">还没有真实班级，请先建班</li>
         </ul>
+        <!-- 演示班已从可选列表隐藏：它是 61 人虚构数据，与真实班并列时选错会让全班数据进错班。
+             不删数据，只挡住入口；确需查看时可直接访问班级 id（后端未改）。 -->
+        <p v-if="hiddenDemoCount" class="hint">
+          演示样例班（{{ hiddenDemoCount }} 个）为虚构数据，已从可选列表隐藏
+        </p>
       </div>
 
       <!-- 花名册 + 发任务 -->
@@ -689,13 +702,18 @@ onMounted(() => {
             <p class="agg-line">
               <span class="agg-k">全班六维均分</span>
               <template v-if="Object.keys(dash.summary.dimension_avg).length">
-                <!-- 固定渲染 canonical 六维：无数据的维度显「无数据」而非消失（2026-10-15 走查修复） -->
-                <span v-for="d in CAREER_DIM_ORDER" :key="d"
-                      :class="['chip', { dim: dash.summary.dimension_avg[d] === undefined }]">
-                  {{ dimLabel(d) }} {{ dash.summary.dimension_avg[d] ?? '无数据' }}
+                <!-- 固定渲染 canonical 六维：缺失维度显式写「本场景未覆盖」，不静默消失、
+                     也不写「无数据」（后者会被读成 0 分或采集故障） -->
+                <span v-for="r in careerDimRows(dash.summary.dimension_avg)" :key="r.key"
+                      :class="['chip', { dim: !r.covered }]">
+                  {{ r.label }} {{ r.covered ? r.value : '本场景未覆盖' }}
                 </span>
               </template>
               <span v-else class="dim">暂无</span>
+            </p>
+            <!-- 口径说明：缺失维度不是 0 分。一次对抗只考察部分维度，其余维度没有证据 -->
+            <p class="hint">
+              「本场景未覆盖」= 本场对抗没有取得该维度的证据，不代表 0 分；六维均分只统计有评分的学生。
             </p>
             <p class="hint">{{ dash.summary.note }}</p>
             <!-- 覆盖率：直接引用后端 coverage_note，不在此重算比率（单一真值源） -->
@@ -734,7 +752,8 @@ onMounted(() => {
                 <td>{{ s.finished_count }} / {{ s.session_count }}</td>
                 <td>{{ s.overall_best ?? '—' }}</td>
                 <td>
-                  <span v-for="(v, d) in s.dimension_avg" :key="d" class="chip">{{ dimLabel(d) }} {{ v }}</span>
+                  <span v-for="r in careerDimRows(s.dimension_avg)" v-show="r.covered" :key="r.key" class="chip">{{ r.label }} {{ r.value }}</span>
+                  <span v-if="careerPartialMissingDimText(s.dimension_avg)" class="dim">{{ careerPartialMissingDimText(s.dimension_avg) }}</span>
                   <span v-if="!Object.keys(s.dimension_avg).length" class="dim">—</span>
                 </td>
               </tr>
@@ -844,7 +863,8 @@ onMounted(() => {
           </p>
           <p v-if="Object.keys(detail.dimension_avg).length" class="agg-line">
             <span class="agg-k">六维均分</span>
-            <span v-for="(v, d) in detail.dimension_avg" :key="d" class="chip">{{ dimLabel(d) }} {{ v }}</span>
+            <span v-for="r in careerDimRows(detail.dimension_avg)" v-show="r.covered" :key="r.key" class="chip">{{ r.label }} {{ r.value }}</span>
+            <span v-if="careerPartialMissingDimText(detail.dimension_avg)" class="dim">{{ careerPartialMissingDimText(detail.dimension_avg) }}</span>
           </p>
           <table v-if="detail.sessions.length">
             <thead>
@@ -857,7 +877,8 @@ onMounted(() => {
                 <td>{{ s.turn_count }}</td>
                 <td>{{ s.overall ?? '—' }}</td>
                 <td>
-                  <span v-for="(v, d) in s.dimension_scores" :key="d" class="chip">{{ dimLabel(d) }} {{ v }}</span>
+                  <span v-for="r in careerDimRows(s.dimension_scores)" v-show="r.covered" :key="r.key" class="chip">{{ r.label }} {{ r.value }}</span>
+                  <span v-if="careerPartialMissingDimText(s.dimension_scores)" class="dim">{{ careerPartialMissingDimText(s.dimension_scores) }}</span>
                   <span v-if="!Object.keys(s.dimension_scores).length" class="dim">—</span>
                 </td>
               </tr>
