@@ -5,8 +5,9 @@ import { computed, ref, onMounted, watch } from 'vue'
 import { api, friendlyError } from '@/utils/api'
 import {
   CAREER_DIM_LABEL, CAREER_DIM_ORDER,
-  careerDimRows, careerMissingDimText, careerPartialMissingDimText, isDemoClassName,
+  careerDimRows, careerPartialMissingDimText, isDemoClassName,
 } from '@/data/careerDimensions'
+import { csvCell, dashCsvRows, dashCsvText } from '@/data/careerDashCsv'
 import { useModalFocus } from '@/composables/useModalFocus'
 
 interface ClassItem { class_id: string; class_name: string; student_count: number }
@@ -343,43 +344,14 @@ async function loadDashboard(cls: ClassItem) {
   await loadFeedback()
 }
 
-/** CSV 单元格转义：含逗号 / 引号 / 换行时加双引号并转义内部引号（防姓名等破列） */
-function csvCell(v: unknown): string {
-  const s = v == null ? '' : String(v)
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
-}
-
 /** 导出班级看板 CSV（过程性考核依据落盘；与素养测评导出一致，纯前端生成，零后端依赖） */
 function exportDashCsv() {
   if (!dash.value) return
   const d = dash.value
-  // 维度列：固定取 canonical 六维（CAREER_DIM_ORDER，与后端 agents/career_state.DIMENSIONS
-  // 同序同集），无数据留空。**不按数据键取列** —— 2026-10-15 浏览器走查实测：某轮评估
-  // 对「技术汇报」无证据（score=null）时，按数据键取列会让该维整列消失，"全班六维"
-  // 名不副实，且跨班级/场次合并 CSV 会错列。
-  const dims: string[] = [...CAREER_DIM_ORDER]
-  // 「已加入」必须用 s.joined（学生本人凭码加入过），不能用 s.bound（教师建号即绑定）——
-  // 否则导出表会把「教师替全班建了号」写成「全班已加入」（2026-11-12 真实班实测）。
-  const head = ['学号', '姓名', '是否加入', '完成场次', '总会话', 'best_overall', ...dims.map(dimLabel), '未覆盖维度']
-  // 缺失维度在六个数字列里保持空白（不写文字，教师还要拿去做统计），
-  // 另起一列显式说明缺了哪几维：空白 + 无解释会被读成 0 分或导出丢列。
-  const missCell = (scores: Record<string, number | undefined>) =>
-    Object.keys(scores || {}).length === 0
-      ? '未评分（六维均无分数）'
-      : careerMissingDimText(scores)
-  const rows = d.students.map(s =>
-    [s.student_no || '', s.name,
-     s.joined ? '已加入' : (s.bound ? '已建号未加入' : '未建号'),
-     s.finished_count, s.session_count, s.overall_best ?? '',
-     ...dims.map(dim => s.dimension_avg[dim] ?? ''), missCell(s.dimension_avg)])
-  // 末尾附班级六维均分（有聚合才有）
-  if (d.summary) {
-    rows.push(['', `班级均分（${d.summary.student_count}人）`, '',
-      d.summary.finished_count, d.summary.started_count, '',
-      ...dims.map(dim => d.summary!.dimension_avg[dim] ?? ''),
-      missCell(d.summary.dimension_avg)])
-  }
-  const csv = [head, ...rows].map(r => r.map(csvCell).join(',')).join('\n')
+  // 表头/行/缺失文案统一由 careerDashCsv.ts 组装（纯函数，有单测锁口径）：
+  // 六维固定展开、缺失维度留空并另起「未覆盖维度」列写明缺哪几维。
+  const rows = dashCsvRows(d)
+  const csv = dashCsvText(d)
   const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' })
   const a = document.createElement('a')
   a.href = URL.createObjectURL(blob)
