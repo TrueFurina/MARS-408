@@ -91,10 +91,23 @@ def main():
     if not os.path.exists(kb_path):
         sys.exit(f"[FATAL] 找不到 KB 文件: {kb_path}")
 
-    # 1) 强制目标模型后再导入 embedder（embed_batch 在调用时才读 config，故 patch 生效）
-    force_target_model(args.model)
+    # 1) 强制目标模型后再导入 embedder
+    cfg = force_target_model(args.model)
     from db import embedder  # noqa: E402  (import after patch 才吃得到目标模型)
     from db.embedder import embed_batch  # noqa: E402
+
+    # 1b) 防「导入顺序」陷阱：db/embedder.py 用 `from config import get_embedding_config`
+    #     在 import 期就把函数对象绑死了。若 embedder 在本脚本 patch 之前已被别的模块
+    #     拉起（例如复用进程、将来重构 main），上面的 patch 会静默失效——重编码会拿
+    #     回旧模型跑，却不报任何错。这里显式重绑到已打补丁的版本，使结果与导入顺序无关。
+    embedder.get_embedding_config = cfg.get_embedding_config
+    _effective = embedder._effective_model_name()
+    if _effective != args.model:
+        sys.exit(
+            f"[FATAL] 模型补丁未生效：期望 {args.model}，实际 {_effective}。"
+            f"重编码若继续会用错模型，中止。"
+        )
+    print(f"[info] 生效模型已确认={_effective}（补丁与导入顺序无关）")
 
     # 2) 读盘
     t0 = time.time()
