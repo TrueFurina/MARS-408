@@ -112,6 +112,7 @@ def verify_token(token: str) -> dict:
 def get_current_user(
     authorization: Optional[str] = Header(default=None),
     x_app_token: Optional[str] = Header(default=None, alias="X-App-Token"),
+    request: Request = None,
 ) -> dict:
     """FastAPI dependency: parse current user from `X-App-Token` (preferred) or `Authorization: Bearer`.
 
@@ -131,7 +132,9 @@ def get_current_user(
     if not token:
         raise HTTPException(status_code=401, detail="Not logged in or missing credentials")
     payload = verify_token(token)
-    return {"user_id": payload["sub"], "role": payload.get("role", "student")}
+    user = {"user_id": payload["sub"], "role": payload.get("role", "student")}
+    # 只读演示账号在任何写方法上就地拦截（2026-11-09）
+    return enforce_readonly(user, request)
 
 
 def require_admin(user: dict = Depends(get_current_user)) -> dict:
@@ -168,6 +171,74 @@ def _is_demo_teacher_open() -> bool:
 
 # 生产环境开启演示放宽时，只允许这些演示账号（其余学生一律 403）。
 _DEMO_TEACHER_ACCOUNTS = ("demo",)
+
+# ── 只读演示账号（2026-11-09）──
+# 背景：评审/演示需要一个"能看教师端、但不能改动任何数据"的账号。
+# 现有 users.role 只有 student/teacher/admin 三种（api/admin_users.py:VALID_ROLES）。
+# 这里采用**账号级禁写**而不是新增第五种角色：账号本身仍是 teacher（教师端可见），
+# 但非安全方法（POST/PUT/PATCH/DELETE）在鉴权入口即被 403，不进入业务逻辑。
+# 之所以不新增角色：`src/router/navConfig.ts` 的 resolveRole 会把未知角色兜底成
+# student（路由守卫则直接重定向到 /），扩角色需要连带改前端映射与守卫，改动面更大；
+# 账号级禁写只需一处收口。名单来自环境变量，不硬编码 user_id（账号重建后 ID 会变）。
+_READONLY_ENV = "NETLEARN_READONLY_USERS"
+# 只读账号可放行的「POST 承载读语义」接口（2026-11-09 复核补丁）。
+# 背景：本仓库有多个 POST 路由实际是检索/报告/推荐（/literacy/class-report、
+# /rag/search、/knowledge-base/search 等），按 HTTP 方法一刀切会把读功能误杀。
+# 格式：逗号分隔的 `METHOD:/api/path`，精确匹配（不含 query）。
+_READONLY_ALLOW_ENV = "NETLEARN_READONLY_ALLOW"
+_SAFE_METHODS = ("GET", "HEAD", "OPTIONS")
+
+
+def _readonly_user_ids() -> set:
+    """读取只读账号 user_id 名单（逗号分隔），未配置则为空集。"""
+    raw = os.environ.get(_READONLY_ENV, "")
+    return {s.strip().lower() for s in raw.split(",") if s.strip()}
+
+
+def is_readonly_user(user_id: str) -> bool:
+    """该 user_id 是否为只读演示账号（供登录/me 接口向前端暴露只读态）。
+
+    前端据此显示「只读演示账号」标识，避免用户在点击写操作后只看到一句 403
+    却不知道原因（2026-11-09 复核：闸门生效，但前端全程不知情）。
+    """
+    return str(user_id or "").strip().lower() in _readonly_user_ids()
+
+
+def _readonly_allow() -> set:
+    """读取只读账号可用的非 GET 路径白名单，形如 {'POST:/API/LITERACY/CLASS-REPORT'}。"""
+    raw = os.environ.get(_READONLY_ALLOW_ENV, "")
+    out = set()
+    for item in raw.split(","):
+        item = item.strip()
+        if not item or ":" not in item:
+            continue
+        out.add(item.upper().rstrip("/"))
+    return out
+
+
+def enforce_readonly(user: dict, request: object = None) -> dict:
+    """只读账号的写操作闸门：安全方法放行，白名单内的读语义 POST 放行，其余 403。
+
+    request 为 None 时（单测/内部直接调用）不拦截，保持既有调用兼容。
+    """
+    if request is None:
+        return user
+    method = str(getattr(request, "method", "GET")).upper()
+    if method in _SAFE_METHODS:
+        return user
+    uid = str(user.get("user_id", "")).lower()
+    if not uid or uid not in _readonly_user_ids():
+        return user
+    path = str(getattr(getattr(request, "url", None), "path", "")).rstrip("/")
+    if ("%s:%s" % (method, path)).upper() in _readonly_allow():
+        return user
+    logger.warning("[READONLY] 只读账号 %s 试图执行 %s %s，已拒绝",
+                   uid, method, path or "<unknown>")
+    raise HTTPException(
+        status_code=403,
+        detail="该账号为只读演示账号，不允许执行任何写操作",
+    )
+
 
 
 def _demo_open_allowed(user: dict) -> bool:

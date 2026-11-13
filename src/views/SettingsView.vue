@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStudyStore } from '@/stores/studyStore'
-import { api } from '@/utils/api'
+import { useAuthStore } from '@/stores/authStore'
+import { api, ApiError } from '@/utils/api'
 import { icons } from '@/components/icons'
 import type { operations } from '@/types/api.generated'
 
@@ -13,6 +14,10 @@ type ConfigTestLLMResp = operations['config_test_llm_api_config_test_llm_post'][
 
 const router = useRouter()
 const store = useStudyStore()
+const authStore = useAuthStore()
+// 后端 /api/config 三个端点都是 require_admin；教师能看到表单、填完点保存才 403，
+// 等于把无权操作做成一次踩坑。这里按角色直接收口。
+const canManageApi = computed(() => authStore.isAdmin)
 
 const config = ref({
   llm_api_key: '',
@@ -27,12 +32,66 @@ const testing = ref(false)
 const testResult = ref('')
 const statusMsg = ref('')
 const hasExistingKey = ref(false)
-const isDark = ref(localStorage.getItem('mangdehenzhi_theme') !== 'light')
+const isDark = ref(localStorage.getItem('mangdehenzhi-theme') !== 'light')
+
+/* 配色方案：与明暗正交的第二维。真正的 DOM 写入与持久化由 App.vue 的 applyAccent 承担，
+   这里只派事件，避免两处各写一份状态导致键名/取值打架。 */
+const ACCENTS = [
+  { key: 'violet', name: '紫罗兰', color: '#7c6af2' },
+  { key: 'teal',   name: '青碧',   color: '#3FB6A8' },
+  { key: 'blue',   name: '靛蓝',   color: '#5B9CF0' },
+  { key: 'amber',  name: '琥珀',   color: '#E0A84A' },
+  { key: 'rose',   name: '玫红',   color: '#EF7FA8' },
+] as const
+const accent = ref<string>(localStorage.getItem('mangdehenzhi-accent') || 'violet')
+
+/* 账号安全：学生自助改密（2026-11-13）
+   登录卡上的初始口令是一次性明文，丢了原本只能找教师重设。
+   前端只做长度提示，真正的旧口令校验在后端 /api/auth/change-password。 */
+const pwdOld = ref('')
+const pwdNew = ref('')
+const pwdSaving = ref(false)
+const pwdMsg = ref('')
+const pwdErr = ref('')
+
+async function changePassword() {
+  if (pwdSaving.value) return
+  pwdMsg.value = ''
+  pwdErr.value = ''
+  if (pwdNew.value.length < 8) {
+    pwdErr.value = '新口令至少 8 位'
+    return
+  }
+  if (!pwdOld.value) {
+    pwdErr.value = '请填写当前口令'
+    return
+  }
+  pwdSaving.value = true
+  try {
+    const res = await api.post<{ message: string }>('/auth/change-password', {
+      old_password: pwdOld.value,
+      new_password: pwdNew.value,
+    })
+    pwdMsg.value = res?.message || '口令已更新'
+    pwdOld.value = ''
+    pwdNew.value = ''
+  } catch (e) {
+    pwdErr.value = e instanceof ApiError ? e.message : '修改失败，请稍后重试'
+  } finally {
+    pwdSaving.value = false
+  }
+}
+
+function pickAccent(key: string) {
+  accent.value = key
+  window.dispatchEvent(new CustomEvent('mangdehenzhi:accent', { detail: key }))
+}
 
 function toggleTheme() {
   isDark.value = !isDark.value
-  document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : 'light')
-  localStorage.setItem('mangdehenzhi_theme', isDark.value ? 'dark' : 'light')
+  window.dispatchEvent(
+    new CustomEvent('mangdehenzhi:theme', { detail: isDark.value ? 'dark' : 'light' })
+  )
 }
 
 async function loadConfig() {
@@ -94,7 +153,10 @@ async function saveConfig() {
   }
 }
 
-onMounted(loadConfig)
+onMounted(() => {
+  if (canManageApi.value) loadConfig()
+  else loading.value = false
+})
 </script>
 
 <template>
@@ -107,20 +169,26 @@ onMounted(loadConfig)
     </div>
 
     <div v-else class="settings-shell">
-      <div class="section-header section-header--center">
+      <div class="section-header" v-if="canManageApi">
         <div class="section-title">
           <span v-html="icons.shield" class="section-title-icon"></span>API 管理
         </div>
-        <div class="section-desc">配置 LLM 和 Embedding 模型参数</div>
+        <div class="section-desc">配置 LLM 和 Embedding 模型参数（仅管理员）</div>
+      </div>
+      <div class="section-header" v-else>
+        <div class="section-title">
+          <span v-html="icons.shield" class="section-title-icon"></span>外观与偏好
+        </div>
+        <div class="section-desc">配色与明暗主题；模型配置由管理员维护</div>
       </div>
 
       <!-- L1/L2/L3 三层学情记忆薄弱点提示（低侵入联动） -->
-      <div v-if="memoryOverview?.weak_points?.length" class="memory-mini-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-size:12px;">
-        <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);"> 记忆薄弱点:</span>
-        <span v-for="w in memoryOverview.weak_points.slice(0, 6)" :key="w" style="padding:3px 10px;border-radius:12px;background:rgba(239,68,68,0.12);color:var(--accent-danger);">{{ w }}</span>
+      <div v-if="canManageApi && memoryOverview?.weak_points?.length" class="memory-mini-strip" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:14px;font-size:12px;">
+        <span style="padding:3px 10px;border-radius:12px;background:var(--color-accent-subtle);color:var(--accent-primary);font-weight:600;">记忆薄弱点</span>
+        <span v-for="w in memoryOverview.weak_points.slice(0, 6)" :key="w" style="padding:3px 10px;border-radius:12px;background:var(--color-surface-2);border:1px solid var(--color-border);color:var(--color-text-2);">{{ w }}</span>
       </div>
 
-      <div class="card">
+      <div class="card" v-if="canManageApi">
         <div class="settings-block">
           <div class="settings-subtitle">LLM 配置</div>
 
@@ -168,12 +236,12 @@ onMounted(loadConfig)
         </div>
 
         <div class="settings-block">
-          <div class="settings-subtitle settings-subtitle--secondary">Embedding 模型</div>
+          <div class="settings-subtitle">Embedding 模型</div>
           <div class="embed-options">
             <label
               class="embed-option"
               :class="{ 'is-active': config.embedding_mode === 'local' }"
-              :style="{ borderColor: config.embedding_mode === 'local' ? 'var(--accent-primary)' : 'var(--border-color)', background: config.embedding_mode === 'local' ? 'var(--accent-primary-10)' : 'transparent' }"
+              :style="{ borderColor: config.embedding_mode === 'local' ? 'var(--accent-primary)' : 'var(--border-color)', background: config.embedding_mode === 'local' ? 'var(--color-accent-subtle)' : 'transparent' }"
             >
               <input type="radio" value="local" v-model="config.embedding_mode" class="embed-radio" />
               <div>
@@ -184,7 +252,7 @@ onMounted(loadConfig)
             <label
               class="embed-option"
               :class="{ 'is-active': config.embedding_mode === 'api' }"
-              :style="{ borderColor: config.embedding_mode === 'api' ? 'var(--accent-primary)' : 'var(--border-color)', background: config.embedding_mode === 'api' ? 'var(--accent-primary-10)' : 'transparent' }"
+              :style="{ borderColor: config.embedding_mode === 'api' ? 'var(--accent-primary)' : 'var(--border-color)', background: config.embedding_mode === 'api' ? 'var(--color-accent-subtle)' : 'transparent' }"
             >
               <input type="radio" value="api" v-model="config.embedding_mode" class="embed-radio" />
               <div>
@@ -196,12 +264,71 @@ onMounted(loadConfig)
         </div>
       </div>
 
+      <div class="card">
+        <div class="settings-block">
+          <div class="settings-subtitle">外观</div>
+          <p class="appearance-hint">配色只换强调色，画布与文字层级不变；与明暗主题自由组合。</p>
+          <div class="accent-row" role="radiogroup" aria-label="配色方案">
+            <button
+              v-for="a in ACCENTS"
+              :key="a.key"
+              type="button"
+              class="accent-chip"
+              :class="{ 'is-active': accent === a.key }"
+              :aria-checked="accent === a.key"
+              role="radio"
+              @click="pickAccent(a.key)"
+            >
+              <span class="accent-dot" :style="{ background: a.color }"></span>
+              <span class="accent-name">{{ a.name }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="settings-block">
+          <div class="settings-subtitle">账号安全</div>
+          <p class="pwd-hint">登录卡上的初始口令是一次性的，可在此改成你自己的口令（至少 8 位）。改完请用新口令登录。</p>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="pwd-old">当前口令</label>
+              <input
+                id="pwd-old"
+                v-model="pwdOld"
+                class="form-input"
+                type="password"
+                autocomplete="current-password"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="pwd-new">新口令</label>
+              <input
+                id="pwd-new"
+                v-model="pwdNew"
+                class="form-input"
+                type="password"
+                autocomplete="new-password"
+                placeholder="至少 8 位"
+              />
+            </div>
+          </div>
+          <div class="settings-inline">
+            <button class="btn btn-primary" :disabled="pwdSaving" @click="changePassword">
+              {{ pwdSaving ? '提交中…' : '修改口令' }}
+            </button>
+            <span v-if="pwdMsg" class="pwd-msg" role="status">{{ pwdMsg }}</span>
+            <span v-if="pwdErr" class="pwd-err" role="alert">{{ pwdErr }}</span>
+          </div>
+        </div>
+      </div>
+
       <div class="settings-actions">
         <button class="btn btn-ghost" @click="toggleTheme">
           {{ isDark ? '切换亮色模式' : '切换暗色模式' }}
         </button>
         <router-link to="/" class="settings-backlink">返回对话</router-link>
-        <button class="btn btn-primary" :disabled="saving" @click="saveConfig">
+        <button class="btn btn-primary" v-if="canManageApi" :disabled="saving" @click="saveConfig">
           {{ saving ? '保存中…' : '保存配置' }}
         </button>
       </div>
@@ -213,19 +340,54 @@ onMounted(loadConfig)
 /* 本视图 .card 补内边距（全局 .card 不带 padding，避免内容贴边） */
 .card { padding: var(--space-6); }
 
-.settings-shell { max-width: 35rem; margin: 0 auto; }
-.section-header--center { text-align: center; }
+.settings-shell { max-width: 40rem; margin: 0 auto; }
+
+/* 页头：图标与标题同行。全局 .section-title-icon 是块级，会独占一行把标题顶下去。 */
+.section-title { display: flex; align-items: center; gap: 8px; }
+.section-title-icon { width: 18px; height: 18px; flex: none; display: inline-flex; align-items: center; }
 
 .settings-block { margin-bottom: var(--space-6); }
 .settings-block:last-child { margin-bottom: 0; }
 
+/* 三个区块标题统一用中性强色，层级靠字号与间距承担；
+   原先主色标题 + 另一块灰标题，会让人误判"Embedding 模型"是次级模块。 */
 .settings-subtitle {
   font-size: var(--text-md); font-weight: var(--weight-semibold); margin-bottom: var(--space-4);
-  color: var(--accent-primary);
+  color: var(--color-text);
 }
-.settings-subtitle--secondary { color: var(--accent-secondary); }
+.settings-subtitle--secondary { color: var(--color-text-2); }
 
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin-top: var(--space-3); }
+
+/* 表单原子：全局样式区没有 .form-group / .form-label / .form-input，
+   缺了它们 label 与 input 会按 inline 排在同一行、输入框只剩默认宽度。 */
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-label {
+  display: block;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--color-text-2);
+  margin-bottom: 2px;
+}
+.form-input {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 9px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  transition: var(--transition);
+  box-sizing: border-box;
+}
+.form-input::placeholder { color: var(--color-text-3); }
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 3px var(--color-accent-subtle);
+}
 
 .input-with-action { position: relative; margin-bottom: var(--space-3); }
 .input-secret { padding-right: var(--space-10); }
@@ -243,7 +405,7 @@ onMounted(loadConfig)
   background: var(--accent-success-10);
 }
 
-.settings-inline { display: flex; align-items: center; gap: var(--space-3); }
+.settings-inline { display: flex; align-items: center; gap: var(--space-3); margin-top: var(--space-3); }
 
 .embed-options { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
 .embed-option {
@@ -253,7 +415,7 @@ onMounted(loadConfig)
 }
 .embed-option.is-active {
   border-color: var(--accent-primary);
-  background: var(--accent-primary-10);
+  background: var(--color-accent-subtle);   /* 原 --accent-primary-10 未定义，背景实际是透明的 */
 }
 .embed-radio { accent-color: var(--accent-primary); width: auto; }
 .embed-option-title { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
@@ -262,6 +424,53 @@ onMounted(loadConfig)
 .test-result { font-size: var(--text-xs); }
 .test-result.is-ok { color: var(--accent-success); }
 .test-result.is-err { color: var(--accent-danger); }
+
+/* ── 外观：配色方案 ── */
+.appearance-hint {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-2xs);
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* ── 账号安全：改密 ── */
+.pwd-hint {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-2xs);
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.pwd-msg { font-size: var(--text-2xs); color: var(--accent-success); }
+.pwd-err { font-size: var(--text-2xs); color: var(--accent-danger); }
+.accent-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.accent-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: 9px;
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  color: var(--color-text-2);
+  font-family: inherit;
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.accent-chip:hover { border-color: var(--color-border-strong); color: var(--color-text); }
+.accent-chip.is-active {
+  border-color: var(--accent-primary);
+  color: var(--color-text);
+  box-shadow: 0 0 0 3px var(--color-accent-subtle);
+}
+.accent-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+.accent-name { white-space: nowrap; }
 
 .settings-actions {
   display: flex; gap: var(--space-3); justify-content: flex-end; align-items: center;

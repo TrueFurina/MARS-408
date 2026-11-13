@@ -129,7 +129,17 @@ async function loadScenarios() {
   loadingScenarios.value = true
   try {
     const res = await api.get<ScenarioListResponse>('/career/scenarios')
-    scenarios.value = res.scenarios || []
+    // 按标题去重：动态生成的场景曾被重复入库（实测同一"线上事故：核心查询接口慢查询
+    // 拖垮数据库"出现 4 次，卡片区一片重复），学生看到的就是"列表坏了"。
+    // 展示层先去重，后端生成侧另做入库前查重。
+    const seen = new Set<string>()
+    scenarios.value = (res.scenarios || []).filter((s) => {
+      const key = ((s as any).title || '').trim()
+      if (!key) return true
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
   } catch (e) {
     errorMsg.value = friendlyError(e, '场景加载失败')
   } finally {
@@ -190,6 +200,9 @@ const consent = ref<{ agreed: boolean | null; text: string; version: string }>({
   agreed: null, text: '', version: '',
 })
 const consentBusy = ref(false)
+// 同意书全文较长（手机端实测占掉半屏多，把场景列表推到第二屏）。
+// 默认折叠成两行，需要时点开看全文 —— 信息量不减，首屏可用性回来。
+const consentExpanded = ref(false)
 
 async function loadConsent() {
   try {
@@ -447,25 +460,33 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
   <div class="career-page">
     <!-- ============ 步骤1：情景选择 ============ -->
     <template v-if="step === 'select'">
-      <div class="c-header">
-        <div class="c-title"> 职业素养对抗实训</div>
-        <div class="c-desc">多智能体扮演高压职场对手，多轮追问并全程留证，结束后按证据中心设计（ECD）生成六维能力报告</div>
-        <router-link class="growth-link" to="/career/growth">查看我的成长（六维趋势 · 前后测对比 · 证据金句）→</router-link>
-      </div>
+      <header class="c-head">
+        <span class="c-eyebrow">CAREER SCENARIO TRAINING</span>
+        <h1 class="c-title">职业素养对抗实训</h1>
+        <p class="c-desc">多智能体扮演高压职场对手，多轮追问并全程留证，结束后按证据中心设计（ECD）生成六维能力报告</p>
+        <router-link class="c-link" to="/career/growth">查看我的成长（六维趋势 · 前后测对比 · 证据金句）→</router-link>
+        <router-link class="c-link c-link--sub" to="/settings">修改登录口令 →</router-link>
+      </header>
 
-      <!-- F6 知情同意门禁：无同意记录时展示（不强制阻断——不同意也可自由练习） -->
-      <div v-if="consent.agreed === null" class="consent-gate">
-        <div class="cg-title"> 知情同意</div>
-        <p class="cg-text">{{ consent.text }}</p>
-        <div class="cg-actions">
-          <button class="ghost-btn" :disabled="consentBusy" @click="submitConsent(false)">不同意</button>
-          <button class="primary-btn" :disabled="consentBusy" @click="submitConsent(true)">
+      <!-- F6 知情同意门禁：收成一条，默认两行封顶，不占首屏 -->
+      <div v-if="consent.agreed === null" class="consent-strip">
+        <div class="cs-body">
+          <span class="cs-label">知情同意</span>
+          <span class="cs-text" :class="{ 'cs-text--clamp': !consentExpanded }">{{ consent.text }}</span>
+          <button v-if="!consentExpanded" class="cs-more" type="button" @click="consentExpanded = true">展开</button>
+        </div>
+        <div class="cs-actions">
+          <button class="ghost-btn ghost-btn--sm" :disabled="consentBusy" @click="submitConsent(false)">不同意</button>
+          <button class="primary-btn primary-btn--sm" :disabled="consentBusy" @click="submitConsent(true)">
             {{ consentBusy ? '提交中…' : '同意并继续' }}
           </button>
         </div>
       </div>
-      <div v-else-if="consent.agreed === false" class="consent-note">
-        你已记录「不同意」：仍可自由练习，但本次数据不会纳入试用分析（可在刷新后重新考虑）。
+      <div v-else-if="consent.agreed === false" class="consent-strip consent-strip--off">
+        <div class="cs-body">
+          <span class="cs-label">已记录「不同意」</span>
+          <span class="cs-text">仍可自由练习，本次数据不会纳入试用分析（刷新后可重新考虑）</span>
+        </div>
       </div>
 
       <!-- 教师任务码：有码即加入老师布置的实训（加入后场景/难度/轮数由任务锁定） -->
@@ -518,6 +539,11 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
         </ul>
       </div>
 
+      <section class="c-sec">
+        <div class="c-sec-head">
+          <h2 class="c-sec-title"><span class="c-sec-no">01</span>选择实训情景</h2>
+          <span class="c-sec-meta">{{ joinedTask ? '已由教师任务指定' : scenarios.length + ' 个可选 · 点击切换' }}</span>
+        </div>
       <div v-if="joinedTask" class="task-locked">
         <div class="tl-sub">{{ currentScenario?.type_label }} · {{ currentScenario?.subtype_label }}</div>
         <div class="tl-title">{{ currentScenario?.title || '（任务指定场景）' }}</div>
@@ -540,8 +566,14 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
           <div class="sc-title">{{ s.title }}</div>
         </div>
       </div>
+      </section>
 
-      <div v-if="!joinedTask" class="opt-bar">
+      <section v-if="!joinedTask" class="c-sec">
+        <div class="c-sec-head">
+          <h2 class="c-sec-title"><span class="c-sec-no">02</span>对抗设置</h2>
+          <span class="c-sec-meta">按老师安排选择前后测</span>
+        </div>
+        <div class="opt-bar">
         <div class="opt-group">
           <span class="opt-label">难度</span>
           <button v-for="d in ['easy','medium','hard']" :key="d" class="chip"
@@ -557,12 +589,18 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
           <button v-for="p in ['', 'pre', 'post']" :key="p" class="chip"
                   :class="{ on: phase === p }" @click="phase = p">{{ PHASE_LABEL[p] }}</button>
         </div>
-      </div>
+        </div>
+      </section>
 
       <div v-if="errorMsg" class="c-error">{{ errorMsg }}</div>
-      <button class="primary-btn" :disabled="busy || !scenarioId" @click="startTraining">
-        {{ busy ? '正在生成对抗脚本…' : (joinedTask ? '开始本次任务实训' : '开始实训') }}
-      </button>
+      <div class="c-foot">
+        <span class="c-foot-hint">
+          {{ scenarioId ? (joinedTask ? '任务情景已锁定，可直接开始' : '情景已选，可开始') : '先选一个情景' }}
+        </span>
+        <button class="primary-btn primary-btn--lg" :disabled="busy || !scenarioId" @click="startTraining">
+          {{ busy ? '正在生成对抗脚本…' : (joinedTask ? '开始本次任务实训' : '开始实训') }}
+        </button>
+      </div>
     </template>
 
     <!-- ============ 步骤2：场景简报 ============ -->
@@ -748,10 +786,50 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
 </template>
 
 <style scoped>
-.career-page { max-width: 960px; margin: 0 auto; padding: 18px var(--space-4) 60px; color: var(--text-primary); }
-.c-header { margin-bottom: var(--space-4); }
-.c-title { font-size: 22px; font-weight: var(--weight-bold); }
-.c-desc { font-size: var(--text-sm); color: var(--text-secondary); margin-top: 6px; line-height: 1.6; }
+.career-page { max-width: 1080px; margin: 0 auto; padding: 24px var(--space-5) 80px; color: var(--text-primary); }
+
+/* 页头：小字 eyebrow 压大标题，说明压成一行，视图层级才立得住 */
+.c-head { margin-bottom: var(--space-6); }
+.c-eyebrow { display: block; font-size: 11px; letter-spacing: 0.16em; font-weight: var(--weight-semibold);
+  color: var(--accent-primary); margin-bottom: 8px; }
+.c-title { font-size: 30px; font-weight: var(--weight-bold); letter-spacing: -0.01em; margin: 0; line-height: 1.25; }
+.c-desc { font-size: var(--text-sm); color: var(--text-secondary); margin: 8px 0 0; max-width: 640px; line-height: 1.65; }
+.c-link { display: inline-block; margin-top: 10px; font-size: var(--text-sm); color: var(--accent-primary); text-decoration: none; }
+.c-link:hover { text-decoration: underline; }
+.c-link--sub { margin-left: 16px; color: var(--text-muted); }
+
+/* 分区：每块自带编号与标题，上面一根分隔线，内容才不会糊成一片 */
+.c-sec { margin-top: var(--space-8); }
+.c-sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  padding-bottom: 10px; margin-bottom: var(--space-4); border-bottom: 1px solid var(--border-color); }
+.c-sec-title { display: flex; align-items: baseline; gap: 10px; font-size: var(--text-lg);
+  font-weight: var(--weight-bold); margin: 0; }
+.c-sec-no { font-size: 11px; letter-spacing: 0.1em; color: var(--text-secondary); font-weight: var(--weight-semibold); }
+.c-sec-meta { font-size: var(--text-2xs); color: var(--text-secondary); }
+
+/* 底部操作条：把"开始"从一片参数里拎出来，单独承重 */
+.c-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  margin-top: var(--space-6); padding: 14px 18px; border-radius: 14px;
+  background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: var(--shadow-card); }
+.c-foot-hint { font-size: var(--text-sm); color: var(--text-secondary); }
+
+/* 手机端：标题收一号，同意条与任务码条改竖排，底部操作条让按钮占满 */
+@media (max-width: 640px) {
+  .career-page { padding: 16px var(--space-4) 96px; }
+  .c-head { margin-bottom: var(--space-5); }
+  .c-title { font-size: 22px; }
+  .c-desc { font-size: var(--text-xs); max-width: none; }
+  .c-sec { margin-top: var(--space-6); }
+  .cs-body { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .cs-text--clamp { -webkit-line-clamp: 3; }
+  .consent-strip { padding: 12px 14px; }
+  .join-input { max-width: none; min-width: 120px; }
+  .join-bar .ghost-btn { margin-left: auto; }
+  .c-foot { flex-direction: column; align-items: stretch; gap: 10px; padding: 12px 14px; }
+  .c-foot-hint { font-size: var(--text-2xs); }
+  .c-foot .primary-btn { width: 100%; }
+}
+
 .c-loading, .c-error { padding: 14px; border-radius: 10px; font-size: var(--text-sm); margin: var(--space-3) 0; }
 .c-loading { background: var(--bg-secondary); }
 .c-error { background: var(--accent-danger-10); color: var(--accent-danger); }
@@ -779,7 +857,12 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
 .tl-title { font-size: var(--text-base); font-weight: var(--weight-semibold); line-height: 1.5; }
 
 /* 情景卡片 */
+/* auto-fit 在 5 张卡时会排成 3+2 且第二行两张被拉宽，与第一行不齐；
+   宽屏固定 3 列，末行不满时保持与上排同宽，视觉才整齐。 */
 .scenario-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-3); }
+@media (min-width: 1024px) {
+  .scenario-grid { grid-template-columns: repeat(3, 1fr); }
+}
 .scenario-card { padding: 14px; border-radius: 14px; background: var(--bg-card);
   border: 1.5px solid var(--border-color); cursor: pointer; transition: .15s; }
 .scenario-card:hover { transform: translateY(-2px); border-color: var(--accent-primary); }
@@ -787,9 +870,13 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
 .sc-type { font-size: var(--text-2xs); color: var(--accent-primary); font-weight: var(--weight-semibold); margin-bottom: 6px; }
 .sc-title { font-size: var(--text-base); font-weight: var(--weight-semibold); line-height: 1.5; }
 
-.opt-bar { display: flex; gap: var(--space-6); flex-wrap: wrap; margin: 18px 0; }
-.opt-group { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
-.opt-label { font-size: var(--text-sm); color: var(--text-secondary); }
+/* 参数区：三组并排，每组标签独占一行、选项横向换行 */
+.opt-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-5) var(--space-6); margin: 0; align-items: start; }
+.opt-group { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.opt-label { font-size: var(--text-2xs); color: var(--text-secondary); letter-spacing: 0.02em; }
+/* 只有参数组内部的标签才独占一行，任务码条里的标签要和输入框同行 */
+.opt-group .opt-label { flex-basis: 100%; }
 
 /* F3 我的任务（2026-10-15） */
 .my-tasks { margin-bottom: var(--space-4); padding: .6rem .8rem; border: 1px dashed var(--border, var(--color-border)); border-radius: 10px; }
@@ -799,16 +886,21 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
 .mt-class { font-weight: var(--weight-semibold); }
 .mt-title { color: var(--accent); }
 .mt-meta { color: var(--text-secondary); font-size: var(--text-sm); }
-.chip { padding: 5px 14px; border-radius: 16px; border: 1px solid var(--border-color);
-  background: var(--bg-card); font-size: var(--text-sm); cursor: pointer; color: var(--text-primary); }
+.chip { padding: 7px 16px; border-radius: 9px; border: 1px solid var(--border-color);
+  background: var(--bg-card); font-size: var(--text-sm); cursor: pointer; color: var(--text-primary);
+  transition: var(--transition); }
+.chip:hover { border-color: var(--accent-primary); }
 .chip.on { background: var(--accent-primary); color: var(--color-text-on-accent); border-color: transparent; }
 
 .primary-btn { padding: 10px 22px; border-radius: 10px; border: none; cursor: pointer; font-size: var(--text-base); font-weight: var(--weight-semibold);
   background: var(--accent-primary); color: var(--color-text-on-accent); }
 .primary-btn:disabled { opacity: .5; cursor: not-allowed; }
+.primary-btn--lg { padding: 12px 30px; font-size: var(--text-base); border-radius: 11px; }
+.primary-btn--sm { padding: 7px 16px; font-size: var(--text-sm); border-radius: 9px; }
 .ghost-btn { padding: 10px 18px; border-radius: 10px; cursor: pointer; font-size: var(--text-base);
   background: transparent; border: 1px solid var(--border-color); color: var(--text-primary); }
 .ghost-btn:disabled { opacity: .5; cursor: not-allowed; }
+.ghost-btn--sm { padding: 7px 14px; font-size: var(--text-sm); border-radius: 9px; }
 
 /* 简报 */
 .brief-card { background: var(--bg-card); border: 1px solid var(--border-color);
@@ -935,14 +1027,22 @@ function levelClass(lv?: string) { return `lv-${lv || 'none'}` }
 .growth-link { display: inline-block; margin-top: 8px; font-size: var(--text-sm); color: var(--accent-primary); text-decoration: none; }
 .growth-link:hover { text-decoration: underline; }
 
-/* F6 知情同意门禁 */
-.consent-gate { background: var(--bg-card); border: 1px solid var(--accent-primary); border-radius: 12px;
-  padding: var(--space-4); margin-bottom: var(--space-4); }
-.cg-title { font-size: var(--text-md); font-weight: var(--weight-semibold); margin-bottom: var(--space-2); }
-.cg-text { font-size: var(--text-sm); color: var(--text-secondary); line-height: 1.7; margin: 0 0 var(--space-3); }
-.cg-actions { display: flex; gap: 10px; justify-content: flex-end; }
-.consent-note { background: var(--bg-secondary); border-radius: 10px; padding: 10px 14px;
-  font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--space-4); }
+/* F6 知情同意：一条窄条，文字单行截断，选择权靠右侧两个小按钮 */
+.consent-strip { display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  background: var(--bg-secondary); border-radius: 12px; padding: 12px 16px; margin-bottom: var(--space-4); }
+.consent-strip--off { opacity: 0.85; }
+.cs-body { flex: 1; min-width: 240px; display: flex; align-items: baseline; gap: 10px; }
+.cs-label { font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--text-primary); flex-shrink: 0; }
+.cs-text { flex: 1; min-width: 0; font-size: var(--text-xs); color: var(--text-secondary); line-height: 1.6; }
+.cs-text--clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.cs-more { background: none; border: 0; padding: 0; color: var(--accent-primary);
+  font-size: var(--text-2xs); cursor: pointer; flex-shrink: 0; }
+.cs-more:hover { text-decoration: underline; }
+.cs-actions { display: flex; gap: 8px; flex-shrink: 0; }
+@media (max-width: 480px) {
+  .cs-actions { width: 100%; }
+  .cs-actions > button { flex: 1 1 0; }
+}
 
 /* F6 课后简评 */
 .feedback-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;

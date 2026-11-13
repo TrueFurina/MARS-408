@@ -189,25 +189,27 @@ watch(() => route.query.tab, syncTabFromRoute)
 
 <template>
   <div class="page-section">
+    <div class="wq-eyebrow">WRONG QUESTIONS</div>
     <div class="section-title"> 错题本</div>
     <div class="section-desc">自动收录答错的题目，按科目和知识点分类，支持标记掌握</div>
 
-    <!-- 统计概览条 -->
+    <!-- 统计概览条：原来四个数字各染一色（紫/绿/红/橙），四条并列时像四个互不相干的色块；
+         四个数字含义同属一个维度，统一用中性色，强弱交给标签区分。 -->
     <div v-if="stats" class="stats-strip">
       <div class="stat-chip">
         <span class="stat-num">{{ stats.total }}</span>
         <span class="stat-label">错题总数</span>
       </div>
       <div class="stat-chip">
-        <span class="stat-num mastered">{{ stats.mastered }}</span>
+        <span class="stat-num">{{ stats.mastered }}</span>
         <span class="stat-label">已掌握</span>
       </div>
       <div class="stat-chip">
-        <span class="stat-num unmastered">{{ stats.unmastered }}</span>
+        <span class="stat-num">{{ stats.unmastered }}</span>
         <span class="stat-label">待攻克</span>
       </div>
       <div class="stat-chip">
-        <span class="stat-num rate">{{ stats.mastery_rate }}%</span>
+        <span class="stat-num">{{ stats.mastery_rate }}%</span>
         <span class="stat-label">掌握率</span>
       </div>
     </div>
@@ -328,6 +330,7 @@ watch(() => route.query.tab, syncTabFromRoute)
 </template>
 
 <style scoped>
+.wq-eyebrow { font-size: 11px; line-height: 1; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent-primary); font-weight: 600; margin-bottom: 10px; }
 .stats-strip {
   display: flex; gap: var(--space-3); flex-wrap: wrap; margin-bottom: var(--space-4);
 }
@@ -336,11 +339,16 @@ watch(() => route.query.tab, syncTabFromRoute)
   background: var(--glass-bg); border: 1px solid var(--glass-border);
   border-radius: var(--radius-md); text-align: center;
 }
-.stat-num { display: block; font-size: 22px; font-weight: var(--weight-bold); color: var(--accent-primary); }
-.stat-num.mastered { color: var(--color-success); }
-.stat-num.unmastered { color: var(--color-danger); }
-.stat-num.rate { color: var(--color-warning); }
-.stat-label { font-size: var(--text-xs); color: var(--text-muted); }
+.stat-num { display: block; font-size: 22px; font-weight: var(--weight-bold); color: var(--color-text); }
+.stat-label { font-size: var(--text-xs); color: var(--color-text-2); }
+
+/* 手机端：flex-wrap 下 3 个挤一行、第 4 个被 flex:1 拉成整行大卡（实测 "掌握率" 单占一行且比前三个高一倍）；
+   改 2×2 网格，四卡等宽等高 */
+@media (max-width: 640px) {
+  .stats-strip { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+  .stat-chip { min-width: 0; padding: var(--space-3); }
+  .stat-num { font-size: 19px; }
+}
 
 .tab-bar { display: flex; gap: var(--space-2); margin-bottom: var(--space-4); border-bottom: 1px solid var(--glass-border); }
 .tab-btn {

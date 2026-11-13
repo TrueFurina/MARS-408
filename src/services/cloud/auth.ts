@@ -43,16 +43,6 @@ export function toCallError(err: unknown, fallback: string): CloudCallError {
   return new CloudCallError(e.message || fallback, kind, e.code)
 }
 
-interface Envelope<T> {
-  data: T | null
-  error: unknown
-}
-
-export function unwrap<T>(res: Envelope<T>, fallback = '云服务调用失败'): T {
-  if (res.error) throw toCallError(res.error, fallback)
-  return res.data as T
-}
-
 /** 当前云端会话（未登录返回 null；其它错误抛出、由 UI 提示重试）。 */
 export async function getSession(): Promise<CloudSession | null> {
   const res = await cloud.auth.getSession()

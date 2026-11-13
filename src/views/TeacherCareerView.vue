@@ -1,9 +1,13 @@
 <script setup lang="ts">
 // P4 教师端：建班 → 导花名册 → 发任务（任务码）→ 班级学情看板
 // F1（2026-10-15）：学生个体下钻；F2：任务管理中心（进度 + 关闭）
-import { ref, onMounted, watch } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { api, friendlyError } from '@/utils/api'
-import { CAREER_DIM_LABEL, CAREER_DIM_ORDER } from '@/data/careerDimensions'
+import {
+  CAREER_DIM_LABEL, CAREER_DIM_ORDER,
+  careerDimRows, careerPartialMissingDimText, isDemoClassName,
+} from '@/data/careerDimensions'
+import { csvCell, dashCsvRows, dashCsvText } from '@/data/careerDashCsv'
 import { useModalFocus } from '@/composables/useModalFocus'
 
 interface ClassItem { class_id: string; class_name: string; student_count: number }
@@ -17,13 +21,17 @@ interface TaskItem {
 interface DashSession { session_id: string; status: string; turn_count: number; overall: number | null }
 interface DashStudent {
   student_no: string; name: string; user_id: string | null; bound: boolean
+  /** 学生本人凭任务码加入过（教师建号不算）；旧响应无此字段时按未加入处理 */
+  joined?: boolean; joined_at?: string | null
   session_count: number; finished_count: number
   dimension_avg: Record<string, number>; overall_best: number | null
   sessions: DashSession[]
 }
 interface DashSummary {
   student_count: number
-  /** 名册行已绑定账号的人数（凭码加入过）——与 started_count「已开练」是两个口径 */
+  /** 名册行已绑定账号（教师批量建号即可达成，不代表学生登录过） */
+  provisioned_count?: number
+  /** 学生本人凭任务码加入过的人数——与 provisioned_count / started_count 三个口径分开 */
   joined_count: number
   started_count: number; finished_count: number; assessed_count: number
   completion_rate: number
@@ -65,6 +73,10 @@ const STATUS_LABEL: Record<string, string> = { ongoing: '进行中', finished: '
 
 /** 维度 key → 中文名（未收录时回落原 key，不隐藏异常） */
 function dimLabel(d: string) { return CAREER_DIM_LABEL[d] || d }
+
+/** 可操作班级：过滤演示样例班（只影响显示层，后端 /career/classes 仍返回全量） */
+const visibleClasses = computed(() => classes.value.filter(c => !isDemoClassName(c.class_name)))
+const hiddenDemoCount = computed(() => classes.value.length - visibleClasses.value.length)
 
 const classes = ref<ClassItem[]>([])
 const scenarios = ref<ScenarioItem[]>([])
@@ -161,6 +173,76 @@ async function importRoster(cls: ClassItem) {
   } finally {
     loading.value = false
   }
+}
+
+/**
+ * 一键建号（2026-11-12）：花名册导入后直接生成平台账号并确定性绑定。
+ *
+ * 为什么要这个：注册在课堂统一开通，学生不能自注册；61 人的班靠人工建号
+ * 会直接吃掉第一节课。口径与后端一致 —— 账号=学号，初始口令=Mc{学号后4位}#2026，
+ * 口令只在这一次响应里返回，页面必须让教师当场导出账号卡，否则口令就丢了。
+ */
+interface ProvisionAccount {
+  student_no: string
+  name: string
+  username: string
+  password: string
+  status: 'created' | 'existing' | 'already_bound'
+}
+const busyProvision = ref(false)
+const provisionAccounts = ref<ProvisionAccount[] | null>(null)
+const provisionSkipped = ref<{ student_no?: string; name: string; reason: string }[]>([])
+
+async function generateAccounts(cls: ClassItem) {
+  if (!cls || busyProvision.value) return
+  // 建号是发生型动作：账号一旦创建无法回收，口令只显示一次。批量越大越要先确认。
+  const ok = window.confirm(
+    `将在「${cls.class_name}」按学号批量创建学生账号（名单 ${cls.student_count} 人）。\n`
+    + '账号 = 学号，初始口令在生成后只显示一次；账号目前没有删除入口，请确认名单已定稿。确认继续？',
+  )
+  if (!ok) return
+  busyProvision.value = true
+  try {
+    const res = await api.post<{
+      created: number; bound: number
+      accounts: ProvisionAccount[]
+      skipped: { student_no?: string; name: string; reason: string }[]
+    }>(`/career/classes/${cls.class_id}/provision-accounts`, {})
+    provisionAccounts.value = res.accounts || []
+    provisionSkipped.value = res.skipped || []
+    const created = (res.accounts || []).filter(a => a.status === 'created').length
+    msg.value = created > 0
+      ? `已新建 ${created} 个账号并绑定名单，请立刻下载账号卡（口令只显示这一次）`
+      : `名单已全部绑定（新增 0 个），无新口令需要下发`
+    await selectClass(cls.class_id)
+  } catch (e) {
+    msg.value = friendlyError(e, '生成账号失败')
+  } finally {
+    busyProvision.value = false
+  }
+}
+
+/** 账号卡 CSV：教师打印/发群，学生凭「学号 + 初始口令」登录 */
+function exportAccountCards() {
+  const list = provisionAccounts.value
+  if (!list || !list.length) return
+  const head = ['学号', '姓名', '登录账号', '初始口令', '状态']
+  const statusLabel: Record<string, string> = {
+    created: '新建', existing: '账号已存在', already_bound: '已在名单绑定',
+  }
+  const rows = list.map(a => [
+    a.student_no, a.name, a.username,
+    a.password || '（沿用原口令，未重置）',
+    statusLabel[a.status] || a.status,
+  ])
+  const csv = [head, ...rows].map(r => r.map(csvCell).join(',')).join('\n')
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = '学生账号卡.csv'
+  a.click()
+  URL.revokeObjectURL(a.href)
+  msg.value = `已导出账号卡 CSV（${rows.length} 人）`
 }
 
 async function selectClass(classId: string) {
@@ -262,33 +344,14 @@ async function loadDashboard(cls: ClassItem) {
   await loadFeedback()
 }
 
-/** CSV 单元格转义：含逗号 / 引号 / 换行时加双引号并转义内部引号（防姓名等破列） */
-function csvCell(v: unknown): string {
-  const s = v == null ? '' : String(v)
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
-}
-
 /** 导出班级看板 CSV（过程性考核依据落盘；与素养测评导出一致，纯前端生成，零后端依赖） */
 function exportDashCsv() {
   if (!dash.value) return
   const d = dash.value
-  // 维度列：固定取 canonical 六维（CAREER_DIM_ORDER，与后端 agents/career_state.DIMENSIONS
-  // 同序同集），无数据留空。**不按数据键取列** —— 2026-10-15 浏览器走查实测：某轮评估
-  // 对「技术汇报」无证据（score=null）时，按数据键取列会让该维整列消失，"全班六维"
-  // 名不副实，且跨班级/场次合并 CSV 会错列。
-  const dims: string[] = [...CAREER_DIM_ORDER]
-  const head = ['学号', '姓名', '是否加入', '完成场次', '总会话', 'best_overall', ...dims.map(dimLabel)]
-  const rows = d.students.map(s =>
-    [s.student_no || '', s.name, s.bound ? '已加入' : '未加入',
-     s.finished_count, s.session_count, s.overall_best ?? '',
-     ...dims.map(dim => s.dimension_avg[dim] ?? '')])
-  // 末尾附班级六维均分（有聚合才有）
-  if (d.summary) {
-    rows.push(['', `班级均分（${d.summary.student_count}人）`, '',
-      d.summary.finished_count, d.summary.started_count, '',
-      ...dims.map(dim => d.summary!.dimension_avg[dim] ?? '')])
-  }
-  const csv = [head, ...rows].map(r => r.map(csvCell).join(',')).join('\n')
+  // 表头/行/缺失文案统一由 careerDashCsv.ts 组装（纯函数，有单测锁口径）：
+  // 六维固定展开、缺失维度留空并另起「未覆盖维度」列写明缺哪几维。
+  const rows = dashCsvRows(d)
+  const csv = dashCsvText(d)
   const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' })
   const a = document.createElement('a')
   a.href = URL.createObjectURL(blob)
@@ -297,7 +360,7 @@ function exportDashCsv() {
   URL.revokeObjectURL(a.href)
   // 浏览器下载不进页面、也不报错：点了没反应时教师会以为导出坏了（2026-10-20 实测
   // 点击后 .msg 仍是上一次操作的文案）。这里给一条显式回执。
-  msg.value = `已导出 CSV：${d.class_name}（${rows.length} 行，含表头与班级均分行）`
+  msg.value = `已导出 CSV：${d.class_name}（${rows.length} 行，含表头、未覆盖维度列与班级均分行）`
 }
 
 /** F7：导出班级学情一页纸（后端渲染自包含 HTML，浏览器另存为 PDF；镜像学生端证据一页纸） */
@@ -475,14 +538,20 @@ onMounted(() => {
           <button :disabled="loading" @click="createClass">创建</button>
         </div>
         <ul class="class-list">
-          <li v-for="c in classes" :key="c.class_id"
+          <li v-for="c in visibleClasses" :key="c.class_id"
               :class="{ active: c.class_id === activeClassId }">
             <button class="link" @click="selectClass(c.class_id)">
               {{ c.class_name }}（{{ c.student_count }}人）
             </button>
             <button class="link dim" @click="loadDashboard(c)">看板</button>
           </li>
+          <li v-if="!visibleClasses.length" class="dim">还没有真实班级，请先建班</li>
         </ul>
+        <!-- 演示班已从可选列表隐藏：它是 61 人虚构数据，与真实班并列时选错会让全班数据进错班。
+             不删数据，只挡住入口；确需查看时可直接访问班级 id（后端未改）。 -->
+        <p v-if="hiddenDemoCount" class="hint">
+          演示样例班（{{ hiddenDemoCount }} 个）为虚构数据，已从可选列表隐藏
+        </p>
       </div>
 
       <!-- 花名册 + 发任务 -->
@@ -502,6 +571,29 @@ onMounted(() => {
         <button :disabled="loading || !activeClassId" @click="importRoster(classes.find(c => c.class_id === activeClassId)!)">
           导入花名册
         </button>
+        <!-- 建号口径：账号=学号（必须纯数字，否则会被花名册解析成姓名）；口令只回传一次 -->
+        <button :disabled="loading || busyProvision || !activeClassId"
+                data-testid="provision-accounts"
+                @click="generateAccounts(classes.find(c => c.class_id === activeClassId)!)">
+          {{ busyProvision ? '生成中…' : '生成学生账号' }}
+        </button>
+        <p class="hint">生成规则：账号 = 学号，初始口令 = Mc + 学号后 4 位 + #2026；口令只在生成当次返回，请当场下载账号卡再关闭页面。</p>
+
+        <div v-if="provisionAccounts && provisionAccounts.length" class="account-cards" data-testid="account-cards">
+          <p class="agg-k">账号卡（{{ provisionAccounts.length }} 人 · 新建
+            {{ provisionAccounts.filter(a => a.status === 'created').length }} 个）</p>
+          <ul class="roster">
+            <li v-for="(a, i) in provisionAccounts" :key="i">
+              {{ a.student_no }} · {{ a.name }} → <strong>{{ a.username }}</strong>
+              <span class="dim">{{ a.password || '沿用原口令' }}</span>
+            </li>
+          </ul>
+          <button @click="exportAccountCards">下载账号卡 CSV</button>
+          <p v-if="provisionSkipped.length" class="hint">
+            跳过 {{ provisionSkipped.length }} 行：
+            <span v-for="(s, i) in provisionSkipped" :key="i">{{ s.name || s.student_no }}（{{ s.reason }}）<span v-if="i < provisionSkipped.length - 1">、</span></span>
+          </p>
+        </div>
 
         <div class="row task-row">
           <select v-model="taskScenarioId">
@@ -572,6 +664,7 @@ onMounted(() => {
               <!-- 加入 / 开练 / 完成 是三个不同口径，别合并成一个"参与"：
                    学生凭码加入只绑定花名册，不产生会话；合并会让"已加入但未开练"
                    显示成参与 0，教师会误判成没人来（2026-10-20 浏览器 E2E 实测）。 -->
+              <div class="stat"><span class="k">已建号</span><span class="v">{{ dash.summary.provisioned_count ?? 0 }}/{{ dash.summary.student_count }}</span></div>
               <div class="stat"><span class="k">已加入</span><span class="v">{{ dash.summary.joined_count ?? 0 }}/{{ dash.summary.student_count }}</span></div>
               <div class="stat"><span class="k">已开练</span><span class="v">{{ dash.summary.started_count }}/{{ dash.summary.student_count }}</span></div>
               <div class="stat"><span class="k">完成</span><span class="v">{{ dash.summary.finished_count }}/{{ dash.summary.student_count }}</span></div>
@@ -587,14 +680,18 @@ onMounted(() => {
             </p>
             <p class="agg-line">
               <span class="agg-k">全班六维均分</span>
-              <template v-if="Object.keys(dash.summary.dimension_avg).length">
-                <!-- 固定渲染 canonical 六维：无数据的维度显「无数据」而非消失（2026-10-15 走查修复） -->
-                <span v-for="d in CAREER_DIM_ORDER" :key="d"
-                      :class="['chip', { dim: dash.summary.dimension_avg[d] === undefined }]">
-                  {{ dimLabel(d) }} {{ dash.summary.dimension_avg[d] ?? '无数据' }}
-                </span>
-              </template>
-              <span v-else class="dim">暂无</span>
+              <!-- 固定渲染 canonical 六维：缺失维度显式写「本场景未覆盖」，不静默消失、
+                   也不写「无数据」（后者会被读成 0 分或采集故障）。零评估时六维全部
+                   未覆盖，仍然把六个维度列出来——否则教师无法区分「这场景只考三维」
+                   与「六维中某一维压根没采集」。 -->
+              <span v-for="r in careerDimRows(dash.summary.dimension_avg)" :key="r.key"
+                    :class="['chip', { dim: !r.covered }]">
+                {{ r.label }} {{ r.covered ? r.value : '本场景未覆盖' }}
+              </span>
+            </p>
+            <!-- 口径说明：缺失维度不是 0 分。一次对抗只考察部分维度，其余维度没有证据 -->
+            <p class="hint">
+              「本场景未覆盖」= 本场对抗没有取得该维度的证据，不代表 0 分；六维均分只统计有评分的学生。
             </p>
             <p class="hint">{{ dash.summary.note }}</p>
             <!-- 覆盖率：直接引用后端 coverage_note，不在此重算比率（单一真值源） -->
@@ -633,7 +730,8 @@ onMounted(() => {
                 <td>{{ s.finished_count }} / {{ s.session_count }}</td>
                 <td>{{ s.overall_best ?? '—' }}</td>
                 <td>
-                  <span v-for="(v, d) in s.dimension_avg" :key="d" class="chip">{{ dimLabel(d) }} {{ v }}</span>
+                  <span v-for="r in careerDimRows(s.dimension_avg)" v-show="r.covered" :key="r.key" class="chip">{{ r.label }} {{ r.value }}</span>
+                  <span v-if="careerPartialMissingDimText(s.dimension_avg)" class="dim">{{ careerPartialMissingDimText(s.dimension_avg) }}</span>
                   <span v-if="!Object.keys(s.dimension_avg).length" class="dim">—</span>
                 </td>
               </tr>
@@ -743,7 +841,8 @@ onMounted(() => {
           </p>
           <p v-if="Object.keys(detail.dimension_avg).length" class="agg-line">
             <span class="agg-k">六维均分</span>
-            <span v-for="(v, d) in detail.dimension_avg" :key="d" class="chip">{{ dimLabel(d) }} {{ v }}</span>
+            <span v-for="r in careerDimRows(detail.dimension_avg)" v-show="r.covered" :key="r.key" class="chip">{{ r.label }} {{ r.value }}</span>
+            <span v-if="careerPartialMissingDimText(detail.dimension_avg)" class="dim">{{ careerPartialMissingDimText(detail.dimension_avg) }}</span>
           </p>
           <table v-if="detail.sessions.length">
             <thead>
@@ -756,7 +855,8 @@ onMounted(() => {
                 <td>{{ s.turn_count }}</td>
                 <td>{{ s.overall ?? '—' }}</td>
                 <td>
-                  <span v-for="(v, d) in s.dimension_scores" :key="d" class="chip">{{ dimLabel(d) }} {{ v }}</span>
+                  <span v-for="r in careerDimRows(s.dimension_scores)" v-show="r.covered" :key="r.key" class="chip">{{ r.label }} {{ r.value }}</span>
+                  <span v-if="careerPartialMissingDimText(s.dimension_scores)" class="dim">{{ careerPartialMissingDimText(s.dimension_scores) }}</span>
                   <span v-if="!Object.keys(s.dimension_scores).length" class="dim">—</span>
                 </td>
               </tr>

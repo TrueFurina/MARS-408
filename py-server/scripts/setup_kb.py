@@ -35,9 +35,20 @@ logging.basicConfig(
 )
 logger = logging.getLogger("setup_kb")
 
-EMBED_MODEL_NAME = "intfloat/multilingual-e5-base"
-EMBED_DIM = 768
-MODEL_DIR = ROOT / "models" / "multilingual-e5-base"
+# 模型名/目录与运行时保持一致（config.json → embedding.model / local_model_repo；
+# 缺省回退 multilingual-e5-base），避免「下载的模型」与「实际加载的模型」漂移。
+try:
+    from config import get_embedding_config as _get_emb_cfg
+
+    _emb_cfg = _get_emb_cfg()
+    EMBED_MODEL_NAME = _emb_cfg.get("model", "intfloat/multilingual-e5-base")
+    EMBED_DIM = int(_emb_cfg.get("dimension", 768))
+    _local_repo = _emb_cfg.get("local_model_repo") or str(ROOT / "models" / "multilingual-e5-base")
+    MODEL_DIR = Path(_local_repo)
+except Exception:  # config 解析失败也不阻塞脚本，回退内置默认
+    EMBED_MODEL_NAME = "intfloat/multilingual-e5-base"
+    EMBED_DIM = 768
+    MODEL_DIR = ROOT / "models" / "multilingual-e5-base"
 VECTOR_DIR = ROOT / "vectordb_data"
 
 

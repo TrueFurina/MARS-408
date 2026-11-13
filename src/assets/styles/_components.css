@@ -27,10 +27,13 @@
 .section-header{margin-bottom:1.5rem}
 .section-title{font-size:1.375rem;font-weight:700;color:var(--text-primary)}
 .section-desc{font-size:0.875rem;color:var(--text-secondary);margin-top:0.25rem}
+/* main.css 里全局 svg{display:block}，放在标题前的图标因此独占一行、把标题顶下去。
+   这里把它收成行内 flex，图标与标题同行。 */
+.section-title-icon{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;margin-right:0.5rem}
 
 /* ── 卡片 ── */
-.card,.stat-card,.question-card,.chat-session-card,.agent-node,.agent-conversation,.profile-header-card,.mastery-card,.graph-container,.insight-card,.feature-card{background:var(--glass-bg);backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));border:1px solid var(--glass-border);border-radius:var(--radius-md);transition:var(--transition)}
-.card:hover,.stat-card:hover,.question-card:hover,.chat-session-card:hover,.agent-node:hover,.feature-card:hover{border-color:transparent;transform:scale(1.02);box-shadow:var(--shadow-card-hover),var(--glow-accent-soft),0 0 0 1px var(--color-border-glow)}
+.card,.stat-card,.question-card,.chat-session-card,.agent-node,.agent-conversation,.profile-header-card,.mastery-card,.graph-container,.insight-card,.feature-card{background:var(--color-card);border:1px solid var(--color-border);border-radius:var(--radius-md);box-shadow:var(--shadow-card);transition:var(--transition)}
+.card:hover,.stat-card:hover,.question-card:hover,.chat-session-card:hover,.agent-node:hover,.feature-card:hover{border-color:var(--color-border-focus);transform:translateY(-2px);box-shadow:var(--shadow-card-hover)}
 .card{padding:1.25rem}
 .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
 .card-title{font-size:1rem;font-weight:600;color:var(--text-primary)}
@@ -58,11 +61,15 @@
 /* ── Dashboard ── */
 .dashboard-hero{margin-bottom:1.75rem}
 .greeting-text{font-size:1.625rem;font-weight:700;color:var(--text-primary);letter-spacing:-0.0312rem}
-.greeting-highlight{background:var(--gradient-text);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+/* 渐变文字改纯主色：标题里嵌一段彩色渐变是海报手法，工作台里会持续抢注意力。 */
+.greeting-highlight{color:var(--color-accent)}
 .greeting-sub{font-size:0.875rem;color:var(--text-secondary);margin-top:0.375rem}
 .hero-cta-btn{padding:0.625rem 1.375rem;border-radius:var(--radius-full);border:none;background:var(--gradient-primary);color:var(--color-text-on-accent);font-size:0.875rem;font-weight:600;cursor:pointer;transition:var(--transition-bounce)}
 .hero-cta-btn:hover{opacity:0.92;transform:translateY(-2px) scale(1.02);box-shadow:var(--shadow-3),var(--glow-accent-bloom)}
-.section-label{font-size:0.8125rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.0312rem;margin-bottom:0.75rem}
+/* 区块标题统一口径：16px 中性强色 + 左侧 3px 主色竖条。
+   原为 13px 灰字 + uppercase，深色底上几乎不构成标题，整页读起来只剩一堆平级卡片。 */
+.section-label{display:flex;align-items:center;gap:10px;font-size:var(--text-lg);font-weight:600;color:var(--text-primary);letter-spacing:0;margin-bottom:var(--space-3)}
+.section-label::before{content:'';width:3px;height:1em;border-radius:2px;background:var(--color-accent);flex:none}
 .features-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:0.75rem}
 .feature-card{display:flex;align-items:center;gap:0.875rem;padding:1rem;cursor:pointer}
 .feature-icon{width:2.75rem;height:2.75rem;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:1.375rem;flex-shrink:0;background:var(--accent-primary-10);color:var(--accent-primary)}
@@ -91,7 +98,9 @@
 
 /* ── 聊天界面 ── */
 .chat-view{display:flex;flex-direction:column;height:100%;overflow:hidden;position:relative;background:var(--bg-primary)}
-.chat-messages{flex:1;overflow-y:auto;padding:0 0 1rem;scroll-behavior:auto}
+/* flex 子项默认 min-height:auto：虚拟滚动的总高度会把这一列撑高，
+   进而把外层主内容区顶出可滚范围，顶部页头被滚掉半截。补 min-height:0 收敛。 */
+.chat-messages{flex:1;min-height:0;overflow-y:auto;padding:0 0 1rem;scroll-behavior:auto}
 .chat-messages-inner{max-width:var(--chat-max-width);margin:0 auto;padding:1.5rem 1.5rem 0}
 .message{display:flex;gap:0.75rem;margin-bottom:1.5rem;animation:msg-fade-in 0.3s ease}
 @keyframes msg-fade-in{from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)}}
@@ -131,7 +140,7 @@
 /* ── 学生画像面板 ── */
 .panel-overlay{position:fixed;inset:0;background:var(--bg-overlay);z-index:900;opacity:0;pointer-events:none;transition:var(--transition-slow);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 .panel-overlay.open{opacity:1;pointer-events:auto}
-.profile-panel{position:fixed;top:0;right:0;bottom:0;width:25rem;max-width:90vw;z-index:950;transform:translateX(100%);transition:transform var(--duration-slow) cubic-bezier(0.4,0,0.2,1);display:flex;flex-direction:column;background:var(--glass-bg);backdrop-filter:blur(var(--glass-blur-heavy));-webkit-backdrop-filter:blur(var(--glass-blur-heavy));border-left:1px solid var(--glass-border);box-shadow:var(--shadow-xl)}
+.profile-panel{position:fixed;top:0;right:0;bottom:0;width:25rem;max-width:90vw;z-index:950;transform:translateX(100%);transition:transform var(--duration-slow) cubic-bezier(0.4,0,0.2,1);display:flex;flex-direction:column;background:var(--color-elevated);backdrop-filter:blur(var(--glass-blur-heavy));-webkit-backdrop-filter:blur(var(--glass-blur-heavy));border-left:1px solid var(--glass-border);box-shadow:var(--shadow-xl)}
 .profile-panel.open{transform:translateX(0)}
 .profile-panel-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid var(--border-color);flex-shrink:0}
 .profile-panel-header h2{font-size:1rem;font-weight:700;color:var(--text-primary);margin:0}
@@ -145,6 +154,12 @@
 .profile-tag{font-size:0.6875rem;padding:0.1875rem 0.625rem;border-radius:var(--radius-full);background:var(--bg-tertiary);color:var(--text-secondary)}
 .profile-stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.625rem;margin-bottom:1.25rem}
 .profile-stat-card{padding:1rem;background:var(--bg-tertiary);border-radius:var(--radius-md);text-align:center}
+/* 职业素养场景下替代考研四项统计的说明块（不编造六维分数，只指向真实入口） */
+.profile-career-hint{margin-bottom:1.25rem;padding:1rem;background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:var(--radius-md)}
+.profile-career-hint-title{font-size:0.8125rem;font-weight:600;color:var(--text-primary);margin-bottom:0.375rem}
+.profile-career-hint-desc{font-size:0.75rem;line-height:1.6;color:var(--text-secondary)}
+.profile-career-hint-link{display:inline-block;margin-top:0.5rem;font-size:0.75rem;color:var(--accent-primary);text-decoration:none}
+.profile-career-hint-link:hover{text-decoration:underline}
 .trait-row{display:flex;align-items:center;gap:0.625rem;margin-bottom:0.625rem}
 .trait-bar-bg{flex:1;height:0.5rem;background:var(--bg-tertiary);border-radius:var(--radius-full);overflow:hidden}
 .trait-bar-fill{height:100%;border-radius:var(--radius-full);width:100%;transform-origin:left;transition:transform var(--duration-slow) var(--ease-standard)}
@@ -252,7 +267,7 @@
 .code-block-wrapper code{font-family:var(--font-mono);white-space:pre}
 
 /* ── 实用类 ── */
-.glass-card{background:var(--glass-bg);backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));border:1px solid var(--glass-border);border-radius:var(--radius-md)}
+.glass-card{background:var(--color-card);border:1px solid var(--color-border);border-radius:var(--radius-md);box-shadow:var(--shadow-card)}
 .glow-primary{box-shadow:var(--glow-primary)}
 .glow-success{box-shadow:var(--glow-success)}
 .gradient-text{background:var(--gradient-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
@@ -403,3 +418,31 @@
 .motion-card-detail{position:absolute;inset:0;background:var(--color-surface);padding:var(--space-5);opacity:0;transform:scale(.98);pointer-events:none;transition:var(--motion-transition)}
 .motion-card.open .motion-card-detail{opacity:1;transform:scale(1);pointer-events:auto}
 .motion-card.open .motion-card-summary{opacity:0}
+
+/* ── 学情记忆条（Memory Mini Strip）──
+   .memory-mini-strip / .memory-mini-chip 在多页复用但此前全站无定义，
+   四个字段直接连成一串「L3 画像 0/8 维掌握度 0 点情景事件 4」，看不出是两个字段。
+   这里补成「标签 + 中性胶囊」两层结构。 */
+.memory-mini-strip{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);margin-top:var(--space-3);font-size:var(--text-xs)}
+.memory-mini-chip{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 10px;border-radius:var(--radius-full);
+  background:var(--color-surface-2);border:1px solid var(--color-border);
+  color:var(--color-text-2);font-weight:var(--weight-medium);white-space:nowrap;
+}
+
+/* ── 空态（Empty State）──
+   .empty-state / .empty-title / .empty-desc 被 12 个页面引用，但全站 CSS 一直没有定义：
+   结果是一行默认字号的小字贴在最左，下面挂着半屏空白。这里补一套统一空态——
+   卡片承载、左对齐（与全站版式一致）、小标题 + 说明两层，不居中堆叠。 */
+.empty-state{
+  display:flex;flex-direction:column;align-items:flex-start;gap:var(--space-2);
+  padding:var(--space-6) var(--space-5);
+  background:var(--color-card);border:1px solid var(--color-border);border-radius:var(--radius-lg);
+}
+.empty-title{font-size:var(--text-base);font-weight:var(--weight-semibold);color:var(--color-text);line-height:1.4}
+.empty-desc{font-size:var(--text-sm);color:var(--color-text-2);line-height:1.65;max-width:52rem}
+.empty-state svg{width:2.25rem;height:2.25rem;opacity:.32;margin-bottom:var(--space-1)}
+@media (max-width:640px){
+  .empty-state{padding:var(--space-5) var(--space-4)}
+}

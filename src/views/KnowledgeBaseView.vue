@@ -186,66 +186,68 @@ async function askAboutText(text: string) {
 </script>
 
 <template>
-  <div class="page-section" style="max-width:100%;padding:1rem;">
-    <div class="section-header" style="max-width:75rem;margin:0 auto 1rem;">
-      <div class="section-title-group">
+  <div class="kb-page">
+    <div class="kb-head">
+      <div class="kb-eyebrow">KNOWLEDGE BASE</div>
+      <div class="kb-head-row">
         <div>
-          <div class="section-title"> 课程知识库</div>
-          <div class="section-desc">读原文 · 问选中 · 回答有出处</div>
+          <div class="kb-title">课程知识库</div>
+          <div class="kb-desc">读原文 · 问选中 · 回答有出处</div>
         </div>
-      </div>
-      <div class="section-actions">
-        <div class="search-input-wrap" style="position:relative;display:flex;align-items:center;">
-          <input v-model="searchQuery" class="search-input" placeholder="搜索教材内容..." @keyup.enter="doSearch" style="padding:8px 14px;border:1px solid var(--color-border);border-radius:8px;background:var(--color-surface-2);color:var(--color-text);font-size:14px;width:250px;" />
+        <div class="kb-search-row">
+          <input v-model="searchQuery" class="kb-search" placeholder="搜索教材内容..." @keyup.enter="doSearch" />
+          <button class="btn btn-sm btn-soft" @click="doSearch">搜索</button>
         </div>
       </div>
     </div>
 
     <!-- L1/L2/L3 三层学情记忆薄弱点提示（低侵入联动） -->
-    <div v-if="memoryOverview?.weak_points?.length" class="memory-mini-strip" style="display:flex;gap:8px;flex-wrap:wrap;max-width:75rem;margin:0 auto 12px;font-size:12px;">
-      <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);"> 记忆薄弱点:</span>
-      <span v-for="w in memoryOverview.weak_points.slice(0, 6)" :key="w" style="padding:3px 10px;border-radius:12px;background:rgba(239,68,68,0.12);color:var(--accent-danger);">{{ w }}</span>
+    <div v-if="memoryOverview?.weak_points?.length" class="memory-mini-strip kb-strip">
+      <span class="memory-mini-chip kb-strip-label">记忆薄弱点</span>
+      <span v-for="w in memoryOverview.weak_points.slice(0, 6)" :key="w" class="memory-mini-chip">{{ w }}</span>
     </div>
 
     <!-- 教材列表 -->
-    <div v-if="!selectedTextbook" class="textbook-grid" style="max-width:75rem;margin:0 auto;">
-      <!-- RAG 知识库统计卡片 -->
-      <div class="rag-stats-card" style="grid-column:1/-1;display:flex;align-items:center;gap:1rem;padding:1rem;background:var(--color-surface);border:1px solid var(--color-border);border-radius:12px;margin-bottom:8px;">
-        <div style="font-size:2rem;"></div>
-        <div style="flex:1;">
-          <div style="font-size:1rem;font-weight:600;color:var(--color-text);">知识库文档</div>
-          <div style="font-size:0.875rem;color:var(--color-text-2);">共 <strong style="color:var(--accent-primary);">{{ ragStats.total_docs }}</strong> 条知识文档，覆盖专业四科核心知识点</div>
+    <div v-if="!selectedTextbook" class="kb-list-wrap">
+      <!-- RAG 知识库统计 -->
+      <div class="kb-rag-card">
+        <div class="kb-rag-stat">
+          <span class="kb-rag-num">{{ ragStats.total_docs }}</span>
+          <span class="kb-rag-label">知识文档</span>
+          <span class="kb-rag-desc">覆盖专业四科核心知识点</span>
         </div>
-        <div style="display:flex;gap:0.5rem;align-items:center;">
-          <input v-model="ragSearchQuery" placeholder="搜索知识库..." @keyup.enter="searchRag" style="padding:6px 10px;border-radius:6px;border:1px solid var(--color-border);background:var(--color-surface-2);color:var(--color-text);font-size:13px;width:180px;" />
+        <div class="kb-rag-actions">
+          <input v-model="ragSearchQuery" class="kb-input-sm" placeholder="搜索知识库..." @keyup.enter="searchRag" />
           <button class="btn btn-sm btn-soft" @click="searchRag" :disabled="ragSearching">{{ ragSearching ? '搜索中...' : '搜索' }}</button>
         </div>
       </div>
+
       <!-- RAG 搜索结果 -->
-      <div v-if="ragSearchResults.length > 0" style="grid-column:1/-1;margin-bottom:12px;">
-        <div style="font-size:0.875rem;font-weight:600;margin-bottom:8px;color:var(--color-text-2);">搜索结果 ({{ ragSearchResults.length }})</div>
-        <div v-for="(r, i) in ragSearchResults" :key="i" class="rag-result-item" style="padding:8px 12px;margin-bottom:6px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:8px;">
-          <div style="font-size:0.75rem;color:var(--accent-primary);font-weight:600;margin-bottom:2px;">{{ (r.metadata && r.metadata.subject) || '未知科目' }} · {{ (r.metadata && r.metadata.topic) || '' }}</div>
-          <div style="font-size:0.8125rem;color:var(--color-text-2);line-height:1.5;">{{ (r.content || '').slice(0, 200) }}{{ (r.content || '').length > 200 ? '...' : '' }}</div>
-          <div style="font-size:0.6875rem;color:var(--color-text-3);margin-top:4px;">相关度: {{ (typeof r.distance === 'number' && isFinite(r.distance)) ? ((1 - r.distance) * 100).toFixed(0) + '%' : '—' }}</div>
+      <div v-if="ragSearchResults.length > 0" class="kb-rag-results">
+        <div class="kb-rag-results-title">搜索结果 · {{ ragSearchResults.length }}</div>
+        <div v-for="(r, i) in ragSearchResults" :key="i" class="kb-result">
+          <div class="kb-result-src">{{ (r.metadata && r.metadata.subject) || '未知科目' }} · {{ (r.metadata && r.metadata.topic) || '' }}</div>
+          <div class="kb-result-body">{{ (r.content || '').slice(0, 200) }}{{ (r.content || '').length > 200 ? '...' : '' }}</div>
+          <div class="kb-result-meta">相关度 {{ (typeof r.distance === 'number' && isFinite(r.distance)) ? ((1 - r.distance) * 100).toFixed(0) + '%' : '—' }}</div>
         </div>
       </div>
-      <div v-for="tb in textbooks" :key="tb.id" class="textbook-card" role="button" tabindex="0" :aria-label="'教材: ' + (tb.name || tb.id)" @click="loadTextbook(tb.id)" @keydown.enter="loadTextbook(tb.id)" @keydown.space.prevent="loadTextbook(tb.id)">
-        <div class="textbook-icon"></div>
-        <div class="textbook-name">{{ tb.name }}</div>
-        <div class="textbook-meta">{{ tb.chapter_count }} 章 · {{ (tb.total_chars / 1000).toFixed(0) }}K 字</div>
-      </div>
-      <div v-if="textbooks.length === 0" class="empty-state" style="grid-column:1/-1;text-align:center;padding:60px;">
-        <div class="empty-icon"></div>
-        <div class="empty-title">暂无教材</div>
-        <div class="empty-desc">请先上传 PDF 教材文件</div>
+
+      <div class="kb-list">
+        <div v-for="tb in textbooks" :key="tb.id" class="kb-card" role="button" tabindex="0" :aria-label="'教材: ' + (tb.name || tb.id)" @click="loadTextbook(tb.id)" @keydown.enter="loadTextbook(tb.id)" @keydown.space.prevent="loadTextbook(tb.id)">
+          <div class="kb-card-name">{{ tb.name }}</div>
+          <div class="kb-card-meta">{{ tb.chapter_count }} 章 · {{ (tb.total_chars / 1000).toFixed(0) }}K 字</div>
+        </div>
+        <div v-if="textbooks.length === 0" class="empty-state kb-empty">
+          <div class="empty-title">暂无教材</div>
+          <div class="empty-desc">请先上传 PDF 教材文件</div>
+        </div>
       </div>
     </div>
 
     <!-- 搜索面板 -->
-    <div v-if="showSearch" class="search-panel" style="max-width:75rem;margin:0 auto 1rem;">
+    <div v-if="showSearch" class="kb-panel">
       <div class="search-header">
-        <span class="search-title"> 搜索结果 ({{ searchResults.length }})</span>
+        <span class="search-title">搜索结果 · {{ searchResults.length }}</span>
         <button class="btn btn-sm btn-ghost" @click="showSearch = false; searchResults = []">关闭</button>
       </div>
       <div v-for="r in searchResults" :key="r.source" class="search-item">
@@ -256,18 +258,18 @@ async function askAboutText(text: string) {
     </div>
 
     <!-- 问答面板 -->
-    <div v-if="askAnswer || askLoading" class="ask-panel" style="max-width:75rem;margin:0 auto 1rem;">
-      <div class="ask-header"> 对选中文本提问</div>
+    <div v-if="askAnswer || askLoading" class="kb-panel kb-panel--ask">
+      <div class="ask-header">对选中文本提问</div>
       <div class="ask-selected">「{{ askText.slice(0, 100) }}...」</div>
       <div v-if="askLoading" class="ask-loading">思考中...</div>
       <div v-else class="ask-answer" style="white-space:pre-wrap;">{{ askAnswer }}</div>
     </div>
 
     <!-- PDF 阅读器 -->
-    <div v-if="selectedTextbook" style="max-width:75rem;margin:0 auto;">
-      <div class="back-row" style="margin-bottom:8px;">
+    <div v-if="selectedTextbook">
+      <div class="back-row">
         <button class="btn btn-ghost btn-sm" @click="selectedTextbook = null">← 返回教材列表</button>
-        <span style="margin-left:12px;font-size:16px;font-weight:600;color:var(--color-text);">{{ selectedTextbook.name }}</span>
+        <span class="kb-back-name">{{ selectedTextbook.name }}</span>
       </div>
       <PdfReader
         :textbook-id="selectedTextbook.id"
@@ -280,33 +282,74 @@ async function askAboutText(text: string) {
 </template>
 
 <style scoped>
-.textbook-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--space-3); }
-.textbook-card { padding: var(--space-5); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; cursor: pointer; text-align: center; transition: var(--transition) }
-.textbook-card:hover { border-color: var(--color-border-focus); transform: translateY(-2px); }
-.textbook-icon { font-size: 40px; margin-bottom: var(--space-2); }
-.textbook-name { font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--color-text); margin-bottom: var(--space-1); }
-.textbook-meta { font-size: var(--text-xs); color: var(--color-text-3); }
-.search-panel { padding: var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; }
+.kb-page { max-width: 100%; padding: var(--space-5) var(--space-6); }
+
+/* 页头：eyebrow → 30px 标题 → 灰色说明，和全站其他页对齐。
+   之前是 section-header 居中 + 内联 max-width，整块缩在中间 75rem 里。 */
+.kb-head { margin: 0; padding-bottom: var(--space-4); border-bottom: 1px solid var(--color-border); margin-bottom: var(--space-4); }
+.kb-eyebrow { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.16em; color: var(--color-accent); margin-bottom: 6px; }
+.kb-head-row { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; }
+.kb-title { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; color: var(--color-text); line-height: 1.2; }
+.kb-desc { font-size: var(--text-sm); color: var(--color-text-2); margin-top: 6px; }
+.kb-search-row { display: flex; gap: var(--space-2); align-items: center; }
+.kb-search { width: 15rem; padding: 0.5rem 0.75rem; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface-2); color: var(--color-text); font-size: var(--text-sm); }
+.kb-search:focus { outline: none; border-color: var(--color-border-focus); }
+
+.kb-strip { margin-bottom: var(--space-4); }
+.kb-strip-label { color: var(--color-accent); }
+
+.kb-list-wrap { display: flex; flex-direction: column; gap: var(--space-3); }
+.kb-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-3); }
+
+/* RAG 统计卡：原来左边是个 emoji 已经丢成空 div，只剩 2rem 空白；改成数字 + 说明的水平排布 */
+.kb-rag-card { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; padding: var(--space-4) var(--space-5); background: var(--color-card); border: 1px solid var(--color-border); border-radius: 12px; box-shadow: var(--shadow-card); }
+.kb-rag-stat { display: flex; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; }
+.kb-rag-num { font-size: 28px; font-weight: 800; color: var(--color-accent); line-height: 1; }
+.kb-rag-label { font-size: var(--text-sm); color: var(--color-text-2); }
+.kb-rag-desc { font-size: var(--text-xs); color: var(--color-text-3); }
+.kb-rag-actions { display: flex; gap: var(--space-2); align-items: center; }
+.kb-input-sm { width: 11rem; padding: 0.375rem 0.625rem; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-surface-2); color: var(--color-text); font-size: var(--text-xs); }
+
+.kb-rag-results { margin-bottom: var(--space-2); }
+.kb-rag-results-title { font-size: var(--text-xs); font-weight: 600; color: var(--color-text-2); margin-bottom: var(--space-2); }
+.kb-result { padding: var(--space-3) var(--space-4); margin-bottom: var(--space-2); background: var(--color-card); border: 1px solid var(--color-border); border-radius: 9px; }
+.kb-result-src { font-size: var(--text-2xs); font-weight: 600; color: var(--color-accent); margin-bottom: 4px; }
+.kb-result-body { font-size: var(--text-xs); color: var(--color-text-2); line-height: 1.6; }
+.kb-result-meta { font-size: var(--text-2xs); color: var(--color-text-3); margin-top: 6px; }
+
+/* 教材卡：原先 text-align:center + 40px emoji 图标，emoji 丢失后卡里就剩一块空 */
+.kb-card { padding: var(--space-4) var(--space-5); background: var(--color-card); border: 1px solid var(--color-border); border-radius: 12px; cursor: pointer; text-align: left; transition: var(--transition); box-shadow: var(--shadow-card); }
+.kb-card:hover { border-color: var(--color-border-focus); box-shadow: var(--shadow-card-hover); transform: translateY(-2px); }
+.kb-card-name { font-size: var(--text-base); font-weight: 600; color: var(--color-text); margin-bottom: var(--space-1); }
+.kb-card-meta { font-size: var(--text-xs); color: var(--color-text-3); }
+.kb-empty { grid-column: 1 / -1; }
+
+.kb-panel { margin-bottom: var(--space-4); padding: var(--space-4) var(--space-5); background: var(--color-card); border: 1px solid var(--color-border); border-radius: 12px; box-shadow: var(--shadow-card); }
+.kb-panel--ask { border-color: var(--color-border-focus); }
 .search-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-3); }
-.search-title { font-size: var(--text-md); font-weight: var(--weight-semibold); color: var(--color-text); }
+.search-title { font-size: var(--text-md); font-weight: 600; color: var(--color-text); }
 .search-item { padding: 10px 0; border-bottom: 1px solid var(--color-border); }
 .search-item:last-child { border-bottom: none; }
-.search-source { font-size: var(--text-xs); color: var(--accent); font-weight: var(--weight-semibold); margin-bottom: var(--space-1); }
+.search-source { font-size: var(--text-xs); color: var(--color-accent); font-weight: 600; margin-bottom: var(--space-1); }
 .search-content { font-size: var(--text-sm); color: var(--color-text-2); line-height: 1.5; }
-.search-empty { text-align: center; padding: var(--space-5); color: var(--color-text-3); }
-.ask-panel { padding: var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border-focus); border-radius: 12px; }
-.ask-header { font-size: var(--text-md); font-weight: var(--weight-semibold); color: var(--color-text); margin-bottom: var(--space-2); }
+.search-empty { text-align: left; padding: var(--space-4) 0; color: var(--color-text-3); font-size: var(--text-sm); }
+.ask-header { font-size: var(--text-md); font-weight: 600; color: var(--color-text); margin-bottom: var(--space-2); }
 .ask-selected { font-size: var(--text-sm); color: var(--color-text-3); font-style: italic; padding: var(--space-2) var(--space-3); background: var(--color-surface-2); border-radius: 6px; margin-bottom: var(--space-3); }
 .ask-answer { font-size: var(--text-base); line-height: var(--leading-relaxed); color: var(--color-text-2); }
 .ask-loading { font-size: var(--text-base); color: var(--color-text-3); font-style: italic; }
 
-/* 移动端适配 */
-@media (max-width: 768px) {
-  .page-section { padding: var(--space-3); }
-  .section-header { flex-direction: column; gap: var(--space-2); }
-  .textbook-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
-  .section-actions { width: 100%; }
-  .search-input-wrap { width: 100%; }
-  .search-input { width: 100% !important; }
+.back-row { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3); flex-wrap: wrap; }
+.kb-back-name { font-size: var(--text-md); font-weight: 600; color: var(--color-text); }
+
+@media (max-width: 640px) {
+  .kb-page { padding: var(--space-4) var(--space-4) var(--space-8); }
+  .kb-title { font-size: 24px; }
+  .kb-head-row { flex-direction: column; align-items: stretch; }
+  .kb-search-row { width: 100%; }
+  .kb-search { flex: 1; width: auto; }
+  .kb-list { grid-template-columns: 1fr; }
+  .kb-card { padding: 14px 16px; }
+  .kb-rag-card { flex-direction: column; align-items: stretch; }
+  .kb-input-sm { flex: 1; width: auto; }
 }
 </style>

@@ -12,6 +12,7 @@ from models import (
 from seed_data import SEED_QUESTIONS
 from shared.auth import get_current_user
 from shared.ratelimit import require_llm_quota
+from config import get_embedding_config
 
 logger = logging.getLogger("netlearn.rag")
 # F-011：RAG 检索端点统一鉴权 + 每用户 LLM 配额（429）
@@ -42,8 +43,8 @@ async def rag_status(user: dict = Depends(get_current_user)):
         "total_docs": total,
         "by_subject": dict(subject_counts.most_common()),
         "engine": "FrugalRAG (E5 + BM25 + Reranker)",
-        "dimension": 768,
-        "embedding_model": "intfloat/multilingual-e5-base",
+        "dimension": get_embedding_config().get("dimension", 768),
+        "embedding_model": get_embedding_config().get("model", "intfloat/multilingual-e5-base"),
     }
 
 

@@ -2,6 +2,7 @@
 // 教师端：班级素养六维报告（前后测聚合 + 逐人明细）——对照实验过程性考核依据
 import { onMounted, ref } from 'vue'
 import { api, ApiError } from '@/utils/api'
+import { gradeColor } from '@/utils/grade'
 
 interface ClassAvg { [dim: string]: number | null }
 interface StudentRow {
@@ -24,14 +25,6 @@ const report = ref<ClassReport | null>(null)
 const loading = ref(false)
 const errorMsg = ref('')
 const queried = ref('')
-
-function scoreColor(score: number | null | undefined): string {
-  if (score == null) return '#94a3b8'
-  if (score >= 90) return '#22c55e'
-  if (score >= 75) return '#84cc16'
-  if (score >= 60) return '#eab308'
-  return '#ef4444'
-}
 
 function fmt(v: number | null | undefined): string {
   return v == null ? '—' : String(v)
@@ -93,7 +86,7 @@ onMounted(load)
     </header>
 
     <div class="toolbar">
-      <input v-model="className" class="text-input" placeholder="班级名称（如：信息安全1班-实验组）" @keyup.enter="load" />
+      <input v-model="className" class="text-input" placeholder="班级名称（如：24信安1班）" @keyup.enter="load" />
       <button class="btn primary" :disabled="loading" @click="load">{{ loading ? '加载中…' : '查询报告' }}</button>
       <button v-if="report" class="btn ghost" @click="exportCsv">导出 CSV</button>
     </div>
@@ -117,8 +110,8 @@ onMounted(load)
           <tbody>
             <tr v-for="d in report.dimensions" :key="d">
               <td class="dim-name">{{ d }}</td>
-              <td :style="{ color: scoreColor(report.class_avg.pre[d]) }">{{ fmt(report.class_avg.pre[d]) }}</td>
-              <td :style="{ color: scoreColor(report.class_avg.post[d]) }">{{ fmt(report.class_avg.post[d]) }}</td>
+              <td :style="{ color: gradeColor(report.class_avg.pre[d]) }">{{ fmt(report.class_avg.pre[d]) }}</td>
+              <td :style="{ color: gradeColor(report.class_avg.post[d]) }">{{ fmt(report.class_avg.post[d]) }}</td>
               <td>
                 <span v-if="deltaOf(d) != null" :style="{ color: deltaOf(d)! >= 0 ? '#22c55e' : '#ef4444' }">
                   {{ deltaOf(d)! > 0 ? '+' : '' }}{{ deltaOf(d) }}
@@ -142,7 +135,7 @@ onMounted(load)
               <td class="mono">{{ s.user_id }}</td>
               <td>{{ s.user_name || '—' }}</td>
               <td><span class="phase-tag" :class="s.phase">{{ s.phase === 'pre' ? '前测' : '后测' }}</span></td>
-              <td :style="{ color: scoreColor(s.total), fontWeight: 600 }">{{ s.total }}</td>
+              <td :style="{ color: gradeColor(s.total), fontWeight: 600 }">{{ s.total }}</td>
               <td v-for="d in report.dimensions" :key="d">{{ fmt(s.dims[d] ?? null) }}</td>
             </tr>
           </tbody>

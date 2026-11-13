@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "芒得很职 — 基于 GOMARL 与 FrugalRAG 的计算机类学生职业素养对抗实训平台",
-    "description": "芒得很职 计算机类学生职业素养对抗实训多智能体系统。\n\n## 核心架构\n- 11 节点 LangGraph 多智能体流水线（含 evidence_check 证据校验 + quality_gate 产物验收闸门）\n- GOMARL 共识引擎（NeuralMixer 神经网络加权融合）\n- FrugalRAG 检索增强生成（E5 + BM25 + 个性化重排）\n- 7 种学习资源并行生成\n\n## 技术栈\n后端: FastAPI + LangGraph + PyTorch + Milvus\n前端: Vue 3 + TypeScript + Vite\nLLM: 四通道容灾 讯飞星火 X2 / DeepSeek / Qwen / 智谱 GLM（auto 按此优先级逐级回退，ADR-020）\n\n## 安全\n- 95.02% API 认证覆盖率（248/261 个 /api 端点；scripts/verify_auth_coverage.py 可复现重算）\n- JWT HMAC-SHA256 Token\n- PBKDF2 密码哈希\n- DOMPurify XSS 防护\n- 安全响应头 (CSP/HSTS/X-Frame-Options)",
+    "description": "芒得很职 计算机类学生职业素养对抗实训多智能体系统。\n\n## 核心架构\n- 11 节点 LangGraph 多智能体流水线（含 evidence_check 证据校验 + quality_gate 产物验收闸门）\n- GOMARL 共识引擎（NeuralMixer 神经网络加权融合）\n- FrugalRAG 检索增强生成（E5 + BM25 + 个性化重排）\n- 7 种学习资源并行生成\n\n## 技术栈\n后端: FastAPI + LangGraph + PyTorch + Milvus\n前端: Vue 3 + TypeScript + Vite\nLLM: 四通道容灾 讯飞星火 X2 / DeepSeek / Qwen / 智谱 GLM（auto 按此优先级逐级回退，ADR-020）\n\n## 安全\n- 95.06% API 认证覆盖率（250/263 个 /api 端点；scripts/verify_auth_coverage.py 可复现重算）\n- JWT HMAC-SHA256 Token\n- PBKDF2 密码哈希\n- DOMPurify XSS 防护\n- 安全响应头 (CSP/HSTS/X-Frame-Options)",
     "version": "2.0.0"
   },
   "paths": {
@@ -6601,6 +6601,80 @@
         }
       }
     },
+    "/api/auth/change-password": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Change Password",
+        "description": "本人修改登录口令（学生自助入口）。\n\n课堂场景的现实问题：48 张登录卡上的 `Mg#xxxxxx` 是一次性明文口令，\n学生丢了只能找教师重设。此端点让学生自己换口令，教师不再当人工客服。\n\n安全口径：\n- 必须验证**当前口令**，仅凭 Token 不足以改密（防 token 泄漏后被静默换密）；\n- 新口令不得与当前口令相同；\n- 只读演示账号由 `get_current_user` 的 enforce_readonly 在任何\n  POST 上直接 403，本端点无需重复判断；\n- 账户级限流 5 次/10 分钟，避免被用来暴力试探旧口令。",
+        "operationId": "change_password_api_auth_change_password_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-App-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-App-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/user/profile": {
       "get": {
         "tags": [
@@ -11761,6 +11835,70 @@
                 "schema": {
                   "$ref": "#/components/schemas/DiagnosticSubmitResponse"
                 }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/diagnostic/history": {
+      "get": {
+        "tags": [
+          "diagnostic"
+        ],
+        "summary": "Diagnostic History",
+        "description": "历次入学测评记录（含逐题明细），供「答题历史」页回看与核对答案。",
+        "operationId": "diagnostic_history_api_diagnostic_history_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-App-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-App-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           },
@@ -17274,6 +17412,79 @@
         }
       }
     },
+    "/api/career/classes/{class_id}/provision-accounts": {
+      "post": {
+        "tags": [
+          "career-training"
+        ],
+        "summary": "Provision Accounts",
+        "description": "为班级花名册批量创建平台账号并确定性绑定（幂等）\n\n口径：\n- 账号名 = 学号；初始口令 = `Mc{学号后4位}#2026`（首次登录后由教师/学生自行修改）\n- 只处理「未绑定且填了学号」的行；缺学号的行如实上报，不猜账号名\n- 已绑定行原样回传、不重建账号；同名账号已存在时复用其 id（口令不回传）\n- 口令仅在本响应中返回一次，不落库、不写日志",
+        "operationId": "provision_accounts_api_career_classes__class_id__provision_accounts_post",
+        "parameters": [
+          {
+            "name": "class_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Class Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-App-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-App-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/career/tasks": {
       "post": {
         "tags": [
@@ -20352,6 +20563,29 @@
         "title": "CareerTaskJoinResult",
         "description": "POST /career/task/join 的返回。\n\n`roster_bound` / `bound_name` / `bound_match` 三个字段是**如实回传绑定结果**：\n`matched_by=name` 表示按姓名命中花名册；`first_unbound` 表示退回旧行为（可能错位）。\n前端据此提示\"可能匹配到错误的人\"，所以这三个字段不能省。"
       },
+      "ChangePasswordRequest": {
+        "properties": {
+          "old_password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Old Password"
+          },
+          "new_password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "New Password",
+            "description": "新口令至少8位"
+          }
+        },
+        "type": "object",
+        "required": [
+          "old_password",
+          "new_password"
+        ],
+        "title": "ChangePasswordRequest"
+      },
       "ChatSendRequest": {
         "properties": {
           "conv_id": {
@@ -21009,6 +21243,25 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Profile"
+          },
+          "details": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Details",
+            "default": []
+          },
+          "session_id": {
+            "type": "string",
+            "title": "Session Id",
+            "default": ""
+          },
+          "taken_at": {
+            "type": "string",
+            "title": "Taken At",
+            "default": ""
           }
         },
         "type": "object",

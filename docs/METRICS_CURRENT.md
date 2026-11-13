@@ -66,14 +66,14 @@
 | 指标 | 真值 | 口径（可复现） |
 | --- | --- | --- |
 | 前端 views（页面级组件） | 49 | `git ls-files 'src/views/*.vue'` 计数 |
-| 前端 .vue 总数 | 88 | `git ls-files 'src/*.vue' 'src/**/*.vue' | sort -u` 计数（含顶层 App.vue；勿单用 `src/**/*.vue`，git 的 `**` 不匹配顶层文件，会漏 1） |
-| 前端 .ts 总数 | 78 | `git ls-files 'src/*.ts' 'src/**/*.ts' | sort -u` 计数（含顶层 main.ts；勿单用 `src/**/*.ts`，git 的 `**` 不匹配顶层文件，会漏 1） |
-| 前端代码行数（.vue+.ts） | 60931 | git 跟踪的 `.vue` + `.ts` 全部行数 |
-| 后端 Python 文件数 | 400 | `git ls-files 'py-server/**/*.py'` 计数 |
-| 后端代码行数 | 95821 | git 跟踪的 `.py` 全部行数 |
+| 前端 .vue 总数 | 89 | `git ls-files 'src/*.vue' 'src/**/*.vue' | sort -u` 计数（含顶层 App.vue；勿单用 `src/**/*.vue`，git 的 `**` 不匹配顶层文件，会漏 1） |
+| 前端 .ts 总数 | 83 | `git ls-files 'src/*.ts' 'src/**/*.ts' | sort -u` 计数（含顶层 main.ts；勿单用 `src/**/*.ts`，git 的 `**` 不匹配顶层文件，会漏 1） |
+| 前端代码行数（.vue+.ts） | 62915 | git 跟踪的 `.vue` + `.ts` 全部行数 |
+| 后端 Python 文件数 | 406 | `git ls-files 'py-server/**/*.py'` 计数 |
+| 后端代码行数 | 97268 | git 跟踪的 `.py` 全部行数 |
 | API 路由模块数 | 42 | `git ls-files 'py-server/api/*.py'` 去 `__init__.py` |
-| API 路径数（/api） | 243 | `py-server/openapi.json` 中 `/api` 路径数 |
-| API 操作数（/api，method 级） | 261 | `py-server/openapi.json` 中 `/api` 操作数（method 级） |
+| API 路径数（/api） | 246 | `py-server/openapi.json` 中 `/api` 路径数 |
+| API 操作数（/api，method 级） | 264 | `py-server/openapi.json` 中 `/api` 操作数（method 级） |
 <!-- METRICS_TABLE_END -->
 
 > **测试数不在上表**：passed / skipped / xfail 需真正跑一遍 pytest，耗时且依赖环境，
@@ -81,7 +81,11 @@
 > **1524 通过 / 38 跳过 / 1 xfail / 0 失败（2026-10-17 CI run 38938041036）** → **已更新（2026-10-18）：1654 通过 / 38 跳过 / 1 xfail / 0 失败（CI run 39101268904，head 3bae4b9，Backend Test Linux 默认档；约 1702 collected，`addopts` deselect 9。1524→1654 增量 = 教师端三方向新测试。旧 1389/38/1 为 2026-10-09 run 37917008258，已作废）** → **已更新（2026-10-20）：1693 通过 / 38 跳过 / 1 xfail / 0 失败（CI run 39467891052，head 22a7469，Backend Test Linux 默认档，384.74s；约 1741 collected。1654→1693 增量 = 教师端看板口径 + 错误文案分类 + 四组运行时契约测试）** → **已更新（2026-10-21）：1737 通过 / 38 跳过 / 1 xfail / 0 失败（CI run 39681618692，head 2ba7e6b，Backend Test Linux 默认档，266.31s；约 1785 collected。1693→1737 增量 = SAGE 分级提示功能新增 44 条测试）** → **已更新（2026-11-04）：1883 通过 / 40 跳过 / 1 xfail / 0 失败（CI run 41838176855，head 6508cc4，Backend Test Linux 默认档，252.71s；约 1933 collected，addopts deselect 9。1737→1883 增量 = WS1 六模块覆盖率测试 + 契约/性能/安全回归等同期新增）**。
 >
 > **认证覆盖率**同理由独立脚本产出：`py-server/scripts/verify_auth_coverage.py`
-> （当前 total=261 / protected=248 / public=13 / coverage=**95.02%** / unregistered=0）。
+> （当前 total=263 / protected=250 / public=13 / coverage=**95.06%** / unregistered=0；
+> 2026-11-12 复核重算，旧值 262/249/95.04%（2026-11-10 口径）与 261/248/95.02% 均已作废）。
+> 注：本行"当前"值必须与 `verify_auth_coverage.py` 的 `__SUMMARY__` 逐字对齐，
+> `tests/test_app_status_invariants.py::test_openapi_description_auth_coverage_matches_recomputation`
+> 已把对外数字锁死；改路由后须先跑脚本再更新本行。
 
 ## 漂移防护
 

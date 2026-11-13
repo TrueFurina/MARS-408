@@ -71,6 +71,9 @@ function heatLevel(count: number): number {
 function heatToken(count: number): string {
   return `var(--seq-${heatLevel(count)})`
 }
+/** 后端在字段缺失时会回传字符串 "unknown"，直接铺到界面上就是裸露的占位词 */
+const isKnown = (v?: string | null): boolean => !!v && v !== 'unknown'
+const knownOr = (v: string | undefined): string => (isKnown(v) ? (v as string) : '科目未标注')
 
 /** 当前选中的科目筛选（点击科目卡片可联动薄弱点列表） */
 const selectedSubject = ref<string>('')
@@ -137,12 +140,13 @@ onMounted(() => {
 
 <template>
   <div class="page-section">
+    <div class="mm-eyebrow">MASTERY MAP</div>
     <div class="section-title">
       <span v-html="icons.mapPin" class="section-title-icon"></span>
       掌握度地图
     </div>
     <div class="section-desc">
-      科目级掌握度与薄弱点可视化 —— 一眼看清四科强弱，优先突破高频错题
+      科目级掌握度与薄弱点可视化，一眼看清四科强弱，优先突破高频错题
     </div>
 
     <!-- 加载态 -->
@@ -185,36 +189,32 @@ onMounted(() => {
             :key="m.subject"
             class="subject-tile"
             :class="{ active: selectedSubject === m.subject }" :aria-selected="selectedSubject === m.subject"
-            :style="{ borderColor: selectedSubject === m.subject ? tierToken(m.pct) : 'var(--color-border)' }"
+            :style="{ borderColor: selectedSubject === m.subject ? 'var(--color-accent)' : 'var(--color-border)' }"
             @click="selectSubject(m.subject)"
           >
             <RingProgress
               :value="m.pct"
               :size="84"
               :stroke="8"
-              :label="m.label"
-              :color="tierToken(m.pct)"
+              color="var(--color-accent)"
             />
-            <!-- 掌握度进度条：scaleX 填充（遵循 SSOT 动效约束，禁止 width 过渡） -->
-            <div class="tile-bar-bg">
-              <div
-                class="tile-bar-fill"
-                :style="{ width: '100%', transform: `scaleX(${Math.max(0, Math.min(100, m.pct)) / 100})`, background: tierToken(m.pct) }"
-              ></div>
-            </div>
+            <!-- 科目名不进环心：84px 环里塞「24px 数字 + 科目名」两行会贴住内壁。
+                 环只留百分比，科目名单独一行放环下 -->
+            <span class="tile-name">{{ m.label }}</span>
+            <!-- 原先环下还有一条同值的横向进度条：与 84px 环表达同一个百分比，属重复编码，
+                 四张卡排在一起时一层环一层条，看着像两组控件叠放，已移除。 -->
             <div class="tile-meta">
-              <span class="tile-label">{{ m.label }}</span>
-              <span class="tile-tier" :style="{ color: tierToken(m.pct) }">{{ tierLabel(m.pct) }}</span>
+              <span class="tile-tier">{{ tierLabel(m.pct) }}</span>
             </div>
           </button>
         </div>
 
-        <!-- 梯度图例 -->
+        <!-- 档位分界（纯文字）：环已统一主色，再挂四个彩色点会让人以为环色代表档位 -->
         <div v-if="!allZero" class="tier-legend">
-          <span class="legend-item"><span class="legend-dot" :style="{ background: 'var(--mastery-high)' }"></span>扎实 (≥75%)</span>
-          <span class="legend-item"><span class="legend-dot" :style="{ background: 'var(--mastery-mid)' }"></span>一般 (50–74%)</span>
-          <span class="legend-item"><span class="legend-dot" :style="{ background: 'var(--mastery-low)' }"></span>薄弱 (&lt;50%)</span>
-          <span class="legend-item"><span class="legend-dot" :style="{ background: 'var(--mastery-none)' }"></span>未测 (0%)</span>
+          <span class="legend-item">扎实 ≥75%</span>
+          <span class="legend-item">一般 50–74%</span>
+          <span class="legend-item">薄弱 &lt;50%</span>
+          <span class="legend-item">未测 0%</span>
         </div>
       </div>
 
@@ -252,13 +252,13 @@ onMounted(() => {
                 >{{ w.mastered ? '已掌握' : '待加强' }}</span>
               </div>
               <div class="weak-sub">
-                <span class="weak-tag">{{ w.subject }}</span>
-                <span class="weak-tag">· {{ w.chapter }}</span>
-                <span class="weak-tag weak-error" :style="{ color: 'var(--mastery-low)' }">{{ w.error_type }}</span>
+                <span class="weak-tag">{{ knownOr(w.subject) }}</span>
+                <span class="weak-tag" v-if="isKnown(w.chapter)">· {{ w.chapter }}</span>
+                <span class="weak-tag" v-if="isKnown(w.error_type)">· {{ w.error_type }}</span>
               </div>
             </div>
-            <div class="weak-count" :style="{ color: 'var(--mastery-low)' }">
-              <span class="weak-count-num" :style="{ color: 'var(--mastery-low)' }">{{ w.count }}</span>
+            <div class="weak-count">
+              <span class="weak-count-num">{{ w.count }}</span>
               <span class="weak-count-unit">次错</span>
             </div>
           </div>
@@ -329,6 +329,7 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.mm-eyebrow { font-size: 11px; line-height: 1; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent-primary); font-weight: 600; margin-bottom: 10px; }
 .inline-icon { display: inline-flex; vertical-align: middle; margin-right: var(--space-1); }
 .inline-icon svg { width: 1rem; height: 1rem; }
 .section-title-icon { display: inline-flex; vertical-align: middle; margin-right: 0.375rem; }
@@ -380,40 +381,30 @@ onMounted(() => {
 /* ── 科目网格 ── */
 .subject-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  /* auto-fit 而非 auto-fill：四科正好铺满一行，右侧不留半排空位 */
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: var(--space-4);
 }
+/* 科目卡在 --color-card 面板上，同色会融成一块；--color-surface 更深（内凹）。
+   深色下 surface-3 比 card 亮一档，才是面板里浮起的子卡；浅色下是浅灰，
+   配 --shadow-card 读作分区。 */
 .subject-tile {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-4);
-  background: var(--color-surface-2);
+  background: var(--color-surface-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
   cursor: pointer;
   transition: var(--motion-transition);
 }
 .subject-tile:hover { transform: translateY(-2px); box-shadow: var(--shadow-card-hover); }
-.subject-tile.active { box-shadow: var(--shadow-glow); }
-.tile-bar-bg {
-  width: 100%;
-  height: 0.5rem;
-  background: var(--bg-tertiary);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-}
-.tile-bar-fill {
-  height: 100%;
-  border-radius: var(--radius-full);
-  width: 100%;
-  transform-origin: left;
-  transition: transform var(--duration-slow) var(--ease-standard);
-}
-.tile-meta { display: flex; align-items: center; justify-content: space-between; width: 100%; }
-.tile-label { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
-.tile-tier { font-size: var(--text-2xs); font-weight: var(--weight-bold); }
+.subject-tile.active { border-color: var(--color-accent); box-shadow: var(--shadow-glow); }
+.tile-meta { display: flex; align-items: center; justify-content: center; width: 100%; }
+.tile-tier { font-size: var(--text-2xs); font-weight: 600; color: var(--color-text-3); }
 
 /* ── 梯度图例 ── */
 .tier-legend {
@@ -424,13 +415,21 @@ onMounted(() => {
   padding-top: var(--space-3);
   border-top: 1px solid var(--color-border);
   font-size: var(--text-2xs);
-  color: var(--text-secondary);
+  color: var(--color-text-2);
 }
+/* 去掉色点后四项纯文字会连读成一句话；用 1px 竖线做分隔。 */
 .legend-item { display: inline-flex; align-items: center; gap: var(--space-1); }
+.legend-item + .legend-item::before {
+  content: '';
+  width: 1px;
+  height: 10px;
+  background: var(--color-border);
+  margin-right: var(--space-3);
+}
 .legend-dot { width: 0.625rem; height: 0.625rem; border-radius: 50%; display: inline-block; }
 
 /* ── 薄弱点 ── */
-.weak-empty { font-size: var(--text-sm); color: var(--text-muted); padding: var(--space-3) 0; }
+.weak-empty { font-size: var(--text-sm); color: var(--color-text-3); padding: var(--space-3) 0; }
 .weak-list { display: flex; flex-direction: column; gap: var(--space-2); }
 .weak-item {
   display: flex;
@@ -439,7 +438,9 @@ onMounted(() => {
   padding: var(--space-3) var(--space-4);
   background: var(--color-surface-2);
   border-radius: var(--radius-sm);
-  border-left: 3px solid var(--state-weak);
+  /* 左侧再补一条 1px 边框就变成"热力条 + 边框"两条竖线；这里彻底不加左边框，
+     强弱只由热力条承载，行与行之间靠背景差与间距分开。 */
+  border: 1px solid var(--color-border);
   transition: var(--motion-transition);
 }
 .weak-item:hover { background: var(--color-surface-hover); transform: translateX(2px); }
@@ -458,14 +459,16 @@ onMounted(() => {
   border-radius: var(--radius-full);
   font-weight: var(--weight-bold);
 }
-.badge-open { background: var(--accent-danger-10); color: var(--accent-danger); }
-.badge-mastered { background: var(--accent-success-10); color: var(--accent-success); }
+/* 「待加强」原来整条红底红字，一屏 5 条就是一片红海；改成主色淡底 + 主色字，
+   强弱只由左侧热力条承载。选择器提到 .weak-badge 一级，避免被同权重规则吃掉。 */
+.weak-badge.badge-open { background: var(--accent-primary-10); color: var(--color-accent); border: 1px solid transparent; }
+.weak-badge.badge-mastered { background: var(--accent-success-10); color: var(--accent-success); border: 1px solid transparent; }
 .weak-sub { display: flex; flex-wrap: wrap; gap: var(--space-1); margin-top: var(--space-1); }
-.weak-tag { font-size: var(--text-xs); color: var(--text-muted); }
+.weak-tag { font-size: var(--text-xs); color: var(--color-text-3); }
 .weak-error { font-weight: var(--weight-medium); }
 .weak-count { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
-.weak-count-num { font-size: var(--text-lg); font-weight: var(--weight-bold); font-variant-numeric: tabular-nums; }
-.weak-count-unit { font-size: var(--text-2xs); color: var(--text-muted); }
+.weak-count-num { font-size: var(--text-lg); font-weight: var(--weight-bold); font-variant-numeric: tabular-nums; color: var(--color-text-2); }
+.weak-count-unit { font-size: var(--text-2xs); color: var(--color-text-3); }
 
 /* ── 知识点掌握度 ── */
 .kp-list { display: flex; flex-direction: column; gap: var(--space-2); }
@@ -514,8 +517,17 @@ onMounted(() => {
 .kp-count-num { font-size: var(--text-lg); font-weight: var(--weight-bold); font-variant-numeric: tabular-nums; color: var(--text-primary); }
 .kp-count-sub { font-size: var(--text-2xs); color: var(--text-muted); }
 
+/* 科目名：环下独立一行（环心只放百分比） */
+.tile-name { display: block; font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--color-text); text-align: center; margin-top: 2px; }
+
 @media (max-width: 768px) {
   .map-card { padding: var(--space-4); }
   .subject-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* 手机端：卡片压短，间距收紧 */
+@media (max-width: 640px) {
+  .subject-grid { grid-template-columns: repeat(2, 1fr); gap: var(--space-3); }
+  .subject-tile { padding: var(--space-3) var(--space-2); gap: var(--space-1); }
 }
 </style>

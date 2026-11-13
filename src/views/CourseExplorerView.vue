@@ -5,11 +5,13 @@ import { api } from '@/utils/api'
 import KnowledgeGraph from '@/components/KnowledgeGraph.vue'
 
 // ── 四科「专属查看器」定义（真实映射后端 KNOWLEDGE_GRAPH 节点 id 前缀）──
+// 四科原本各配一套色相（数据结构紫/组成橙/操作系统绿/网络蓝），页面上八处入口同时四色，
+// 是「模块乱」最直观的来源；统一跟随配色维度，只靠科目名区分。
 const COURSES = [
-  { key: 'ds', label: '数据结构', prefix: 'ds_', color: 'var(--subject-ds)', icon: '', tagline: '线性表 · 树 · 图 · 查找 · 排序' },
-  { key: 'co', label: '计算机组成原理', prefix: 'co_', color: 'var(--subject-co)', icon: '', tagline: '数据表示 · 存储 · CPU · 总线 · I/O' },
-  { key: 'os', label: '操作系统', prefix: 'os_', color: 'var(--subject-os)', icon: '', tagline: '进程 · 调度 · 内存 · 文件 · I/O' },
-  { key: 'cn', label: '计算机网络', prefix: '', color: 'var(--subject-cn)', icon: '', tagline: '体系结构 · 各层协议 · 安全' },
+  { key: 'ds', label: '数据结构', prefix: 'ds_', color: 'var(--color-accent)', tagline: '线性表 · 树 · 图 · 查找 · 排序' },
+  { key: 'co', label: '计算机组成原理', prefix: 'co_', color: 'var(--color-accent)', tagline: '数据表示 · 存储 · CPU · 总线 · I/O' },
+  { key: 'os', label: '操作系统', prefix: 'os_', color: 'var(--color-accent)', tagline: '进程 · 调度 · 内存 · 文件 · I/O' },
+  { key: 'cn', label: '计算机网络', prefix: '', color: 'var(--color-accent)', tagline: '体系结构 · 各层协议 · 安全' },
 ] as const
 
 type CourseKey = (typeof COURSES)[number]['key']
@@ -21,11 +23,19 @@ const subjects = ref<Record<string, { name: string; chapters: string[] }>>({})
 const graph = ref<{ nodes: any[]; edges: any[] }>({ nodes: [], edges: [] })
 const viewMode = ref<'graph' | 'outline' | 'mindmap' | 'map'>('graph')
 
+// 画布位图尺寸必须跟显示尺寸同量级：手机上传 760 宽会被 CSS 压到 ~360，
+// 节点名称（10px）缩到 5px 以下，等于看不见。手机端单独给一套尺寸。
+const narrow = typeof window !== 'undefined' && window.innerWidth <= 640
+const graphW = narrow ? 360 : 760
+// 高度取接近方形：360×470 是个窄长条，23 个圆只能沿竖向挤，
+// 左右两列总被裁掉半个；接近方形后节点能铺开、也更容易"一屏看全"。
+const graphH = narrow ? 390 : 620
+
 const viewModes = [
-  { value: 'graph', label: '关系图谱', icon: '' },
-  { value: 'mindmap', label: '思维导图', icon: '' },
-  { value: 'map', label: '学习地图', icon: '' },
-  { value: 'outline', label: '大纲', icon: '' },
+  { value: 'graph', label: '关系图谱' },
+  { value: 'mindmap', label: '思维导图' },
+  { value: 'map', label: '学习地图' },
+  { value: 'outline', label: '大纲' },
 ] as const
 
 const activeCourseMeta = computed(() => COURSES.find((c) => c.key === activeCourse.value)!)
@@ -44,25 +54,49 @@ const courseSubjects = computed(() => {
   return out
 })
 
-// 去重（后端图谱存在同 id 重复节点，渲染前合并）
-function dedupeNodes(nodes: any[]): any[] {
+// 后端图谱存在同 id 重复节点；更麻烦的是同 name 重复——四科的「查找」「排序」「树和二叉树」
+// 各有一份，画到一张图上就是几个位置不同、名字一样的圆，既看不出区别又把版面挤满。
+// 按名称合并，同时给出 id→合并名 的映射表，供边重新连。
+const mergedGraph = computed(() => {
+  const raw = graph.value.nodes.filter((n) => matchId(n.id, activeCourse.value))
+  const labelOf = (n: any) => String(n.label || n.id).trim()
+  const byLabel = new Map<string, any>()
+  const idMap = new Map<string, string>()
+  for (const n of raw) {
+    const k = labelOf(n)
+    const hit = byLabel.get(k)
+    if (hit) hit.value = (hit.value || 0) + (n.value || 0)
+    else byLabel.set(k, { ...n, id: k, label: k })
+    idMap.set(n.id, k)
+  }
+  return { nodes: [...byLabel.values()], idMap }
+})
+const courseNodes = computed(() => mergedGraph.value.nodes)
+const courseEdges = computed(() => {
+  const nodes = courseNodes.value
+  if (!nodes.length) return []
+  // 名称合并后，节点 id 就是名称本身；边按合并名重新连
+  const ids = new Set(nodes.map((n) => n.id))
   const seen = new Set<string>()
   const out: any[] = []
-  for (const n of nodes) {
-    if (seen.has(n.id)) continue
-    seen.add(n.id)
-    out.push(n)
+  for (const e of graph.value.edges) {
+    const s = mergedGraph.value.idMap.get(e.source)
+    const t = mergedGraph.value.idMap.get(e.target)
+    if (!s || !t || s === t || !ids.has(s) || !ids.has(t)) continue
+    const k = s + '>' + t
+    if (seen.has(k)) continue
+    seen.add(k)
+    out.push({ ...e, source: s, target: t })
   }
   return out
-}
-
-const courseNodes = computed(() => dedupeNodes(graph.value.nodes.filter((n) => matchId(n.id, activeCourse.value))))
-const courseNodeIds = computed(() => new Set(courseNodes.value.map((n) => n.id)))
-const courseEdges = computed(() =>
-  graph.value.edges.filter((e) => courseNodeIds.value.has(e.source) && courseNodeIds.value.has(e.target)),
-)
+})
 
 const totalChapters = computed(() => courseSubjects.value.reduce((s, c) => s + c.chapters.length, 0))
+
+// 密度按原始 id 前缀统计（合并后的 id 是名称，前缀信息已丢）
+const courseNodeIds = computed(() =>
+  new Set(graph.value.nodes.filter((n) => matchId(n.id, activeCourse.value)).map((n) => n.id)),
+)
 
 // 每章知识点密度（真实：按节点 id 前缀归并到章节）
 function densityFor(key: string): number {
@@ -114,7 +148,6 @@ onMounted(load)
         :style="{ '--pill-color': c.color }"
         @click="activeCourse = c.key"
       >
-        <span class="ce-pill-icon">{{ c.icon }}</span>
         <span class="ce-pill-text">
           <span class="ce-pill-label">{{ c.label }}</span>
           <span class="ce-pill-tag">{{ c.tagline }}</span>
@@ -124,8 +157,8 @@ onMounted(load)
 
     <!-- 课程头 -->
     <div class="ce-hero">
-      <div class="ce-hero-icon">{{ activeCourseMeta.icon }}</div>
       <div class="ce-hero-body">
+        <div class="ce-eyebrow">COURSE EXPLORER</div>
         <h1 class="ce-hero-title">{{ activeCourseMeta.label }}<span class="ce-hero-badge">专属知识查看器</span></h1>
         <p class="ce-hero-sub">{{ activeCourseMeta.tagline }} · 基于真实知识图谱与章节结构渲染</p>
       </div>
@@ -146,7 +179,7 @@ onMounted(load)
       <!-- 左：章节路线图 -->
       <section class="ce-panel ce-roadmap">
         <div class="ce-panel-head">
-          <span class="ce-panel-title"> 章节路线图</span>
+          <span class="ce-panel-title">章节路线图</span>
           <span class="ce-panel-hint">密度 = 该章知识点数量（真实）</span>
         </div>
         <div class="ce-chapter-list">
@@ -155,7 +188,9 @@ onMounted(load)
               <span class="ce-chapter-name">{{ s.name }}</span>
               <span class="ce-chapter-count">{{ densityFor(s.key) }} 点</span>
             </div>
-            <div class="ce-density"><div class="ce-density-fill" :style="{ width: '100%', transform: 'scaleX(' + (densityFor(s.key) / maxDensity) + ')', transformOrigin: 'left' }"></div></div>
+            <!-- 每章都只有 1 个点时 maxDensity=1，四条都铺满 100%，读起来只是四条装饰紫线；
+                 这种情况下不渲染密度条（数量已由右侧「1 点」表达）。 -->
+            <div v-if="maxDensity > 1" class="ce-density"><div class="ce-density-fill" :style="{ width: '100%', transform: 'scaleX(' + (densityFor(s.key) / maxDensity) + ')', transformOrigin: 'left' }"></div></div>
             <div class="ce-chapter-chips">
               <span v-for="ch in s.chapters" :key="ch" class="ce-chip">{{ ch }}</span>
             </div>
@@ -166,7 +201,7 @@ onMounted(load)
       <!-- 右：知识图谱 -->
       <section class="ce-panel ce-graph-panel">
         <div class="ce-panel-head">
-          <span class="ce-panel-title"> {{ activeCourseMeta.label }} 知识图谱</span>
+          <span class="ce-panel-title">{{ activeCourseMeta.label }}知识图谱</span>
           <div class="view-mode-tabs">
             <button
               v-for="m in viewModes"
@@ -174,15 +209,15 @@ onMounted(load)
               class="view-mode-tab"
               :class="{ active: viewMode === m.value }" :aria-selected="viewMode === m.value"
               @click="viewMode = m.value"
-            >{{ m.icon }} {{ m.label }}</button>
+            >{{ m.label }}</button>
           </div>
         </div>
         <div class="ce-graph-wrap">
           <KnowledgeGraph
             :nodes="courseNodes"
             :edges="courseEdges"
-            :width="760"
-            :height="560"
+            :width="graphW"
+            :height="graphH"
             :view-mode="viewMode"
             :show-search="true"
           />
@@ -197,64 +232,66 @@ onMounted(load)
 .course-explorer { --course-color: var(--color-accent); }
 
 /* 课程切换器 */
-.ce-course-switch { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); margin-bottom: 18px; }
+.ce-course-switch { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); margin-bottom: var(--space-4); }
 @media (max-width: 900px) { .ce-course-switch { grid-template-columns: repeat(2, 1fr); } }
 .ce-course-pill {
   --pill-color: var(--color-accent);
   display: flex; align-items: center; gap: var(--space-3);
-  padding: 14px var(--space-4); border-radius: 14px; cursor: pointer; text-align: left;
-  background: var(--color-surface); border: 1px solid var(--color-border);
+  padding: 14px var(--space-4); border-radius: 12px; cursor: pointer; text-align: left;
+  background: var(--color-card); border: 1px solid var(--color-border);
   transition: var(--transition); color: var(--color-text);
+  overflow: hidden;
 }
-.ce-course-pill:hover { border-color: var(--pill-color); transform: translateY(-2px); }
+.ce-course-pill:hover { border-color: var(--color-border-focus); }
 .ce-course-pill.active {
-  border-color: var(--pill-color);
-  box-shadow: 0 0 0 1px var(--pill-color), 0 8px 24px -8px var(--pill-color);
-  background: color-mix(in srgb, var(--pill-color) 12%, var(--color-surface));
+  border-color: var(--color-accent);
+  background: var(--accent-primary-05);
 }
-.ce-pill-icon { font-size: 26px; line-height: var(--leading-none); }
 .ce-pill-text { display: flex; flex-direction: column; min-width: 0; }
-.ce-pill-label { font-size: var(--text-base); font-weight: var(--weight-bold); color: var(--color-text); }
+.ce-pill-label { font-size: var(--text-base); font-weight: 700; color: var(--color-text); }
 .ce-pill-tag { font-size: var(--text-2xs); color: var(--color-text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* Hero */
+/* Hero：原先是渐变 + 64px 彩色图标块，四科各一色；改成中性卡片面 + eyebrow 三层 */
 .ce-hero {
-  display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
-  padding: var(--space-5) 22px; border-radius: 16px; margin-bottom: 18px;
-  background: linear-gradient(120deg, color-mix(in srgb, var(--course-color) 16%, var(--color-surface)), var(--color-surface));
+  /* 左侧是 eyebrow + 标题 + 说明三行，右侧是四个「数字 + 标签」；原来 flex-start 让
+     统计顶到卡片上沿、与标题不在同一基线。改成 center 让两组在垂直方向对齐。 */
+  display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap;
+  padding: var(--space-5) 22px; border-radius: 12px; margin-bottom: var(--space-4);
+  background: var(--color-card);
   border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
 }
-.ce-hero-icon {
-  font-size: 40px; width: 64px; height: 64px; display: grid; place-items: center;
-  border-radius: 16px; background: color-mix(in srgb, var(--course-color) 20%, transparent);
-  border: 1px solid color-mix(in srgb, var(--course-color) 40%, transparent);
-}
+.ce-eyebrow { font-size: 11px; line-height: 1; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-accent); font-weight: 600; margin-bottom: 8px; }
 .ce-hero-body { flex: 1; min-width: 220px; }
-.ce-hero-title { font-size: 22px; font-weight: 800; margin: 0; display: flex; align-items: center; gap: var(--space-3); color: var(--color-text); }
-.ce-hero-badge { font-size: var(--text-2xs); font-weight: var(--weight-semibold); padding: 3px 10px; border-radius: 999px; color: var(--color-text-on-accent); background: var(--course-color); }
-.ce-hero-sub { margin: 6px 0 0; font-size: var(--text-sm); color: var(--color-text-2); }
-.ce-stat-row { display: flex; gap: 22px; }
-.ce-stat { text-align: center; }
-.ce-stat-num { display: block; font-size: var(--text-3xl); font-weight: 800; color: var(--course-color); font-variant-numeric: tabular-nums; }
+.ce-hero-title { font-size: 24px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: var(--space-3); color: var(--color-text); letter-spacing: -0.02em; flex-wrap: wrap; }
+.ce-hero-badge { font-size: var(--text-2xs); font-weight: 600; padding: 3px 10px; border-radius: 999px; color: var(--color-text-2); background: var(--color-surface-2); border: 1px solid var(--color-border); }
+.ce-hero-sub { margin: 6px 0 0; font-size: var(--text-sm); color: var(--color-text-2); max-width: 640px; }
+.ce-stat-row { display: flex; gap: 28px; }
+.ce-stat { text-align: left; display: flex; flex-direction: column; gap: 2px; }
+.ce-stat-num { display: block; font-size: 26px; font-weight: 800; color: var(--color-text); font-variant-numeric: tabular-nums; line-height: 1.1; }
 .ce-stat-cap { font-size: var(--text-2xs); color: var(--color-text-3); }
 
 /* Grid */
 .ce-grid { display: grid; grid-template-columns: 380px 1fr; gap: 18px; align-items: start; }
 @media (max-width: 1100px) { .ce-grid { grid-template-columns: 1fr; } }
 
-.ce-panel { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 16px; padding: var(--space-4); }
+.ce-panel { background: var(--color-card); border: 1px solid var(--color-border); border-radius: 12px; padding: var(--space-4); box-shadow: var(--shadow-card); }
 .ce-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
-.ce-panel-title { font-size: var(--text-md); font-weight: var(--weight-bold); color: var(--color-text); }
+.ce-panel-title { font-size: var(--text-base); font-weight: 700; color: var(--color-text); }
 .ce-panel-hint { font-size: var(--text-2xs); color: var(--color-text-3); }
 
 /* 章节 */
 .ce-chapter-list { display: flex; flex-direction: column; gap: var(--space-3); max-height: 620px; overflow: auto; padding-right: var(--space-1); }
-.ce-chapter { padding: var(--space-3); border-radius: 12px; background: var(--color-surface-2); border: 1px solid var(--color-border); }
+/* 章节块原来用 --color-surface-2，在 --color-card 面板里比面板更暗，像"陷进去"；
+   改成 --color-surface，比卡片略亮，读作面板里的一组浮起子卡。 */
+.ce-chapter { padding: var(--space-3); border-radius: 10px; background: var(--color-surface); border: 1px solid var(--color-border); }
 .ce-chapter-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2); }
-.ce-chapter-name { font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--color-text); }
-.ce-chapter-count { font-size: var(--text-2xs); font-weight: var(--weight-bold); color: var(--course-color); }
-.ce-density { height: 6px; border-radius: 4px; background: var(--color-surface-hover); overflow: hidden; margin-bottom: var(--space-2); }
-.ce-density-fill { height: 100%; border-radius: 4px; background: var(--course-color); width: 100%; transform-origin: left; transition: transform var(--duration-slow) var(--ease-standard); }
+.ce-chapter-name { font-size: var(--text-sm); font-weight: 600; color: var(--color-text); }
+.ce-chapter-count { font-size: var(--text-2xs); font-weight: 600; color: var(--color-text-3); }
+/* 密度条：四章都是 1 点时会连成四条满格粗紫条，像四个装饰色块。
+   压到 3px、填充用主色 55% 透明度，让「1 点 / 2 点」的差异可读但不抢标题。 */
+.ce-density { height: 3px; border-radius: 2px; background: var(--color-border); overflow: hidden; margin-bottom: var(--space-2); }
+.ce-density-fill { height: 100%; border-radius: 2px; background: var(--course-color); opacity: 0.6; width: 100%; transform-origin: left; transition: transform var(--duration-slow) var(--ease-standard); }
 .ce-chapter-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .ce-chip { font-size: var(--text-2xs); padding: 3px var(--space-2); border-radius: 6px; background: var(--color-elevated); color: var(--color-text-2); border: 1px solid var(--color-border); }
 
@@ -264,10 +301,35 @@ onMounted(load)
 .ce-graph-empty { position: absolute; inset: 0; display: grid; place-items: center; color: var(--color-text-3); font-size: var(--text-base); }
 
 /* tabs */
-.view-mode-tabs { display: flex; gap: var(--space-1); background: var(--color-surface-2); border-radius: 10px; padding: 3px; }
-.view-mode-tab { padding: 6px var(--space-3); border: none; border-radius: 8px; background: transparent; color: var(--color-text-2); font-size: var(--text-xs); font-weight: var(--weight-medium); cursor: pointer; transition: var(--transition); white-space: nowrap; }
+.view-mode-tabs { display: flex; gap: var(--space-1); background: var(--color-surface-2); border: 1px solid var(--color-border); border-radius: 9px; padding: 3px; }
+.view-mode-tab { padding: 6px var(--space-3); border: none; border-radius: 7px; background: transparent; color: var(--color-text-2); font-size: var(--text-xs); font-weight: 500; cursor: pointer; transition: var(--transition); white-space: nowrap; }
 .view-mode-tab:hover { color: var(--color-text); }
-.view-mode-tab.active { background: var(--color-elevated); color: var(--color-text); box-shadow: var(--shadow-2); }
+.view-mode-tab.active { background: var(--color-accent-solid); color: var(--text-user); }
+
+@media (max-width: 640px) {
+  .ce-hero { padding: var(--space-4); gap: 14px; }
+  .ce-hero-title { font-size: 20px; }
+  /* 统计块原来 2×2，390px 下把课程头撑到 190px 高、占了半屏，首屏只露得到章节标题。
+     改成一行四列、数字降到 18px —— 四个数本来就是一个整体指标，不该占两行。 */
+  .ce-stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px 10px; width: 100%; }
+  .ce-stat { text-align: center; }
+  .ce-stat-num { font-size: 18px; line-height: 1.2; }
+  .ce-stat-cap { font-size: 9px; }
+  .ce-chapter-list { max-height: none; }
+
+  /* 四个科目块原来 2×2 铺满约 200px 高，副标题又长又断。改成一条横滚的胶囊行 */
+  .ce-course-switch {
+    display: flex; gap: var(--space-2); overflow-x: auto; padding-bottom: var(--space-1);
+    scrollbar-width: none; margin-bottom: var(--space-3);
+  }
+  .ce-course-switch::-webkit-scrollbar { display: none; }
+  .ce-course-pill { flex: 0 0 auto; padding: 9px var(--space-3); border-radius: 999px; }
+  .ce-pill-tag { display: none; }
+
+  /* 手机上「章节路线图」先铺满一屏，图谱要滑很久才看得到；
+     把图谱提到前面，章节列表作为它的下方补充 */
+  .ce-graph-panel { order: -1; }
+}
 
 .ce-loading, .ce-error { padding: var(--space-10); text-align: center; color: var(--color-text-2); }
 .ce-error { color: var(--accent-danger); }

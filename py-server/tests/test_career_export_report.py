@@ -141,8 +141,8 @@ def test_export_report_evidence_chain_has_real_tracing(client: TestClient):
 
 def test_class_export_renders_all_six_dimensions_with_nodata_marker():
     """诚信守护（2026-10-15 浏览器走查发现）：维度数据不完整时，无证据维度必须
-    渲染为「无数据」而非从六维中整项消失——否则「六维均分」名不副实，
-    且跨班级/场次合并导出会错列。"""
+    显式渲染为「本场景未覆盖」而非从六维中整项消失——否则「六维均分」名不副实，
+    且跨班级/场次合并导出会错列。文案口径与前端看板统一（2026-11-13）。"""
     from api.career_training import _render_class_export_html
 
     dash = {
@@ -165,7 +165,7 @@ def test_class_export_renders_all_six_dimensions_with_nodata_marker():
     html = _render_class_export_html(dash)
     for label in ["表达逻辑", "抗压应变", "方案拆解", "协作沟通", "技术汇报", "问题解决"]:
         assert label in html, f"六维标签 {label} 不得从导出中消失"
-    assert "技术汇报 无数据" in html, "无证据维度必须显式标注无数据，不得静默省略"
+    assert "技术汇报 本场景未覆盖" in html, "无证据维度必须显式标注本场景未覆盖，不得静默省略"
     assert "表达逻辑 2.0" in html, "有数据维度必须带真实分值"
 
 

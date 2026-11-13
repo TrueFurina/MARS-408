@@ -2,7 +2,7 @@
 import { errMessage } from '@/utils/errorMessage'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { useStudyStore } from '@/stores/studyStore'
+import { useStudyStore, COURSE_MAP } from '@/stores/studyStore'
 import { icons } from '@/components/icons'
 import EmptyState from '@/components/EmptyState.vue'
 import ForceGraph from '@/components/ForceGraph.vue'
@@ -58,6 +58,10 @@ const SUBJECT_TOKENS: string[] = [
   '--subject-co',  // 计组 — 青
   '--subject-os',  // 操作系统 — 粉
 ]
+
+/** 图例用的科目名，顺序与 SUBJECT_TOKENS 对齐（计网/数据结构/计组/操作系统）。
+   注意 store.subjects 是「章节」集合，不是科目集合，直接用会把章节名当科目名。 */
+const SUBJECT_LABELS = computed(() => Object.values(COURSE_MAP).map(c => c.name))
 
 /** Canvas 取色：把语义令牌解析为实际色值（双主题安全，避免裸 hex） */
 function resolveToken(name: string): string {
@@ -187,6 +191,7 @@ watch(currentSubject, () => {
 
 <template>
   <div class="page-section">
+    <div class="kb-eyebrow">KNOWLEDGE GRAPH</div>
     <div class="section-title">知识图谱</div>
     <div class="section-desc">专业四科知识点之间的关联关系可视化</div>
 
@@ -201,11 +206,11 @@ watch(currentSubject, () => {
     <div v-if="isGraph">
     <!-- L1/L2/L3 三层学情记忆薄弱点提示（低侵入联动） -->
     <div v-if="memoryOverview?.weak_points?.length" class="memory-mini-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-size:12px;">
-      <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);"> 记忆薄弱点:</span>
-      <span v-for="w in memoryOverview.weak_points.slice(0, 6)" :key="w" style="padding:3px 10px;border-radius:12px;background:rgba(239,68,68,0.12);color:var(--accent-danger);">{{ w }}</span>
+      <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);font-weight:600;">记忆薄弱点:</span>
+      <span v-for="w in memoryOverview.weak_points.slice(0, 6)" :key="w" style="padding:3px 10px;border-radius:12px;background:var(--color-surface-2);color:var(--color-text-2);border:1px solid var(--color-border);">{{ w }}</span>
     </div>
 
-    <div class="rag-config" style="justify-content:center;">
+    <div class="rag-config" style="justify-content:flex-start;">
       <select class="rag-select" v-model="currentSubject" :disabled="loading">
         <option value="all">所有章节</option>
         <option v-for="(info, id) in store.subjects" :key="id" :value="id">{{ info.name }}</option>
@@ -253,6 +258,7 @@ watch(currentSubject, () => {
         :nodes="nodes"
         :edges="edges"
         :subject-tokens="SUBJECT_TOKENS"
+        :subject-labels="SUBJECT_LABELS"
         :group-to-label="groupToLabel"
         @group-click="onGroupClick"
       />
@@ -272,6 +278,7 @@ watch(currentSubject, () => {
 </template>
 
 <style scoped>
+.kb-eyebrow { font-size: 11px; line-height: 1; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent-primary); font-weight: 600; margin-bottom: 10px; }
 .back-all-btn {
   padding:0.4375rem var(--space-4);
   border-radius:var(--radius-full);

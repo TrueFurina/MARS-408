@@ -147,6 +147,7 @@ const nextStepNode = computed<PathNode | null>(() => {
 <template>
   <div class="page-section active">
     <div class="section-header">
+      <div class="lp-eyebrow">LEARNING PATH</div>
       <div class="section-title">个性化学习路径</div>
       <div class="section-desc">基于你的画像、学情记忆和进度自动生成的学习路线图</div>
     </div>
@@ -154,12 +155,12 @@ const nextStepNode = computed<PathNode | null>(() => {
     <!-- L1/L2/L3 三层学情记忆健康度（低侵入联动） -->
     <div v-if="memoryOverview" class="memory-mini-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
       <span class="memory-mini-chip" style="font-size:11px;padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);"> {{ memoryOverview.memory_level || 'L3' }}</span>
-      <span class="memory-mini-chip" style="font-size:11px;padding:3px 10px;border-radius:12px;background:var(--bg-tertiary);color:var(--text-secondary);">薄弱点: {{ memoryOverview.weak_points?.length ?? 0 }} 个</span>
-      <span class="memory-mini-chip" style="font-size:11px;padding:3px 10px;border-radius:12px;background:var(--bg-tertiary);color:var(--text-secondary);">掌握度: {{ memoryOverview.mastery_points ?? 0 }} 点</span>
+      <span class="memory-mini-chip" style="font-size:11px;padding:3px 10px;border-radius:12px;background:var(--color-surface-2);color:var(--color-text-2);">薄弱点: {{ memoryOverview.weak_points?.length ?? 0 }} 个</span>
+      <span class="memory-mini-chip" style="font-size:11px;padding:3px 10px;border-radius:12px;background:var(--color-surface-2);color:var(--color-text-2);">掌握度: {{ memoryOverview.mastery_points ?? 0 }} 点</span>
     </div>
 
     <!-- 进度总览 -->
-    <div class="card" style="margin-bottom:20px;text-align:center;padding:24px;">
+    <div class="card path-overview">
       <!-- 专业四科切换 -->
       <div class="subject-tabs">
         <button
@@ -170,15 +171,13 @@ const nextStepNode = computed<PathNode | null>(() => {
         >{{ opt.label }}</button>
       </div>
 
-      <div style="font-size:32px;font-weight:700;color:var(--accent-1);margin-top:12px;">{{ pct }}%</div>
-      <div style="font-size:14px;color:var(--text-secondary);margin-top:4px;">
-        已完成 {{ completed }}/{{ total }} 章
+      <div class="path-pct">{{ pct }}%</div>
+      <div class="path-pct-sub">已完成 {{ completed }}/{{ total }} 章</div>
+      <div class="path-bar">
+        <div class="path-bar-fill" :style="{ transform:'scaleX(' + (pct/100) + ')' }"></div>
       </div>
-      <div style="margin-top:12px;height:8px;background:var(--bg-secondary);border-radius:var(--radius-full);overflow:hidden;max-width:400px;margin-left:auto;margin-right:auto;">
-        <div :style="{width:'100%', height:'100%', background:'var(--gradient-accent)', borderRadius:'var(--radius-full)', transform:'scaleX(' + (pct/100) + ')', transformOrigin:'left', transition:'transform calc(0.6s * var(--motion-scale)) ease'}"></div>
-      </div>
-      <div v-if="!store.profileCompleted" style="margin-top:12px;font-size:13px;color:var(--accent-4);">
-        建议先完成<a href="/profile/build" style="color:var(--accent-1);text-decoration:underline;">学生画像</a>，获取更精准的学习路径
+      <div v-if="!store.profileCompleted" class="path-hint">
+        建议先完成<a href="/profile/build">学生画像</a>，获取更精准的学习路径
       </div>
     </div>
 
@@ -257,10 +256,25 @@ const nextStepNode = computed<PathNode | null>(() => {
 </template>
 
 <style scoped>
+/* 概览卡原来整块居中：科目居中、32px 百分比居中、进度条只占中间 400px、
+   提示也居中，宽屏上左右各空一大片。改成与全站一致的左对齐版式。 */
+.path-overview { margin-bottom: var(--space-5); padding: var(--space-5); }
+.lp-eyebrow { font-size: 11px; line-height: 1; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent-primary); font-weight: 600; margin-bottom: 10px; }
+/* 原来 spinner 与文字是上下两个块，圆形贴在上面、文字压在下面，
+   且 spinner 用的四科目色环和全站主色不一致。 */
+.generation-loading { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-5) 0; }
+.generation-loading .loading-spinner { width: 1.125rem; height: 1.125rem; flex-shrink: 0; background: conic-gradient(from 0deg, transparent, var(--color-accent)); }
+.loading-text { font-size: var(--text-sm); color: var(--color-text-2); }
+.path-pct { font-size: 30px; font-weight: 700; color: var(--color-accent); margin-top: var(--space-3); line-height: 1.1; }
+.path-pct-sub { font-size: var(--text-sm); color: var(--color-text-2); margin-top: 4px; }
+.path-bar { margin-top: var(--space-3); height: 6px; background: var(--color-surface-2); border-radius: 3px; overflow: hidden; }
+.path-bar-fill { width: 100%; height: 100%; background: var(--color-accent-solid); border-radius: 3px; transform-origin: left; transition: transform calc(0.6s * var(--motion-scale)) ease; }
+.path-hint { margin-top: var(--space-3); font-size: var(--text-sm); color: var(--color-text-2); }
+.path-hint a { color: var(--color-accent); text-decoration: underline; }
 .subject-tabs {
   display: flex;
   gap:0.375rem;
-  justify-content: center;
+  justify-content: flex-start;
   margin-bottom:var(--space-2);
   flex-wrap: wrap;
 }

@@ -14,7 +14,7 @@ from typing import Optional
 from shared.auth import get_current_user
 from shared.audit import log_event
 from services import career_service
-from db import career_store
+from db import career_store, user_store
 from agents.career_state import DIMENSIONS, DIMENSION_LABELS
 
 logger = logging.getLogger("netlearn.career.api")
@@ -785,6 +785,62 @@ async def get_students(class_id: str, user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=404, detail=str(e))
 
 
+# ── 一键为花名册生成平台账号（教师线下发账号卡，学生无需自注册）──
+@router.post("/classes/{class_id}/provision-accounts")
+async def provision_accounts(class_id: str, req: Request,
+                             user: dict = Depends(get_current_user)):
+    """为班级花名册批量创建平台账号并确定性绑定（幂等）
+
+    口径：
+    - 账号名 = 学号；初始口令 = `Mc{学号后4位}#2026`（首次登录后由教师/学生自行修改）
+    - 只处理「未绑定且填了学号」的行；缺学号的行如实上报，不猜账号名
+    - 已绑定行原样回传、不重建账号；同名账号已存在时复用其 id（口令不回传）
+    - 口令仅在本响应中返回一次，不落库、不写日志
+    """
+    _require_teacher(user)
+    try:
+        students = career_store.list_students(class_id, user["user_id"])
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    accounts: list[dict] = []
+    skipped: list[dict] = []
+    created = 0
+    for s in students:
+        sn = (s.get("student_no") or "").strip()
+        name = (s.get("name") or "").strip()
+        if not sn:
+            skipped.append({"name": name, "reason": "缺学号，无法作为账号名"})
+            continue
+        if s.get("user_id"):
+            accounts.append({"student_no": sn, "name": name, "username": sn,
+                             "password": "", "status": "already_bound"})
+            continue
+        existed = user_store.get_user_by_username(sn)
+        if existed:
+            uid, status, pwd = existed["id"], "existing", ""
+        else:
+            pwd = f"Mc{sn[-4:]}#2026"
+            try:
+                created_user = user_store.create_user(sn, pwd, name or sn, role="student")
+            except ValueError as e:
+                skipped.append({"student_no": sn, "name": name, "reason": f"建号失败: {e}"})
+                continue
+            uid, status, created = created_user["id"], "created", created + 1
+        if not career_store.set_student_user(class_id, sn, uid):
+            skipped.append({"student_no": sn, "name": name, "reason": "绑定未生效，请重试"})
+            continue
+        accounts.append({"student_no": sn, "name": name, "username": sn,
+                         "password": pwd, "status": status})
+
+    ip = req.client.host if req and req.client else "unknown"
+    log_event(action="class_provision_accounts", user_id=str(user.get("user_id", "")), ip=ip,
+              result="success",
+              detail=f"class_id={class_id} created={created} bound={len(accounts)} skipped={len(skipped)}")
+    return {"class_id": class_id, "created": created, "bound": len(accounts),
+            "accounts": accounts, "skipped": skipped}
+
+
 # ── 发任务（生成任务码）──
 @router.post("/tasks")
 async def create_task(req: TaskCreateRequest, user: dict = Depends(get_current_user)):
@@ -1017,6 +1073,7 @@ def _render_class_export_html(dash: dict) -> str:
     # 导出的 HTML 里搜不到「已加入」。归档产物必须带齐三档，否则过程性考核依据丢信息。
     stat_cards = [
         ("班级人数", summary.get("student_count", len(students))),
+        ("已建号", summary.get("provisioned_count", 0)),
         ("已加入", summary.get("joined_count", 0)),
         ("已开练", summary.get("started_count", 0)),
         ("已完成", summary.get("finished_count", 0)),
@@ -1029,12 +1086,12 @@ def _render_class_export_html(dash: dict) -> str:
         for k, v in stat_cards)
 
     dim_avg = summary.get("dimension_avg") or {}
-    # 固定按 canonical 六维渲染：无数据维度显「无数据」而非从行里消失
+    # 固定按 canonical 六维渲染：缺失维度显式写「本场景未覆盖」而非从行里消失
     # （2026-10-15 浏览器走查发现：按数据键渲染时，无证据维度整项消失，"六维"名不副实）
     if dim_avg:
         dim_html = "、".join(
             (f"{_esc(dim_label(d))} {_esc(dim_avg[d])}" if d in dim_avg
-             else f"{_esc(dim_label(d))} 无数据")
+             else f"{_esc(dim_label(d))} 本场景未覆盖")
             for d in DIMENSIONS)
     else:
         dim_html = "暂无已评分数据"
@@ -1044,7 +1101,7 @@ def _render_class_export_html(dash: dict) -> str:
         dims = s.get("dimension_avg") or {}
         dim_cell = ("、".join(
             (f"{_esc(dim_label(d))} {_esc(dims[d])}" if d in dims
-             else f"{_esc(dim_label(d))} 无数据")
+             else f"{_esc(dim_label(d))} 本场景未覆盖")
             for d in DIMENSIONS) if dims else "—")
         best = s.get("overall_best")
         rows.append(

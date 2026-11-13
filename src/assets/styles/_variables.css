@@ -250,6 +250,9 @@
   --color-surface-3:     #232A34;   /* surface-3：最高层（选中、代码区）*/
   --color-surface-hover: #1D242C;   /* 卡片悬浮态 */
   --color-elevated:      #1B2129;   /* 浮层：弹窗 / 菜单 / 下拉 */
+  /* 承载内容的"卡片面"：深色下要比画布亮一档才浮得起来 */
+  --color-card:          #1B2129;
+  --color-card-hover:    #1F262E;
   --color-overlay:       rgba(6, 9, 13, 0.62);
 
   /* ── 2.2 玻璃态（克制：仅顶栏 / 侧边抽屉 / 悬浮按钮使用）── */
@@ -408,8 +411,8 @@
   --shadow-3: 0 4px 12px rgba(0, 0, 0, 0.36), 0 1px 3px rgba(0, 0, 0, 0.28);
   --shadow-4: 0 12px 28px rgba(0, 0, 0, 0.44), 0 2px 6px rgba(0, 0, 0, 0.30);
   --shadow-5: 0 24px 56px rgba(0, 0, 0, 0.52);
-  --shadow-card:       0 1px 2px rgba(0, 0, 0, 0.34), 0 0 0 1px rgba(255, 255, 255, 0.04);
-  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.42), 0 0 0 1px rgba(255, 255, 255, 0.07);
+  --shadow-card:       0 1px 2px rgba(0, 0, 0, 0.30), 0 10px 28px rgba(0, 0, 0, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --shadow-card-hover: 0 12px 34px rgba(0, 0, 0, 0.40), 0 0 0 1px rgba(255, 255, 255, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.07);
   --shadow-glow:       0 4px 16px rgba(0, 0, 0, 0.34), 0 0 0 1px rgba(var(--accent-rgb), 0.18);
   --shadow-edge:       14px 0 36px -18px rgba(0, 0, 0, 0.45);   /* 侧边栏右缘投影（中性，无彩色泛光）*/
 
@@ -429,7 +432,8 @@
 
   /* ── 2.12 渐变（低对比、无彩色光污染）── */
   /* 主渐变 = 实底色（承载白字），由 --color-accent-solid → 其按下态 */
-  --gradient-primary: linear-gradient(135deg, #8b7bf5 0%, #6b5cdb 100%);
+  /* 主按钮渐变：由配色 token 派生，切换 data-accent 时自动跟随，不再写死紫色 */
+  --gradient-primary: linear-gradient(135deg, var(--color-accent-hover) 0%, var(--color-accent-solid) 100%);
   --gradient-card:    linear-gradient(180deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0.008) 100%);
   --gradient-text:    linear-gradient(135deg, #E6E9ED 0%, #a99ff7 100%);
   --gradient-hero:    radial-gradient(ellipse 600px 400px at 30% 30%, rgba(124, 106, 242, 0.10) 0%, transparent 70%),
@@ -463,6 +467,9 @@
   --color-surface-3:     #E5E8EB;
   --color-surface-hover: #EDF0F2;
   --color-elevated:      #FFFFFF;
+  /* 浅色下卡片就是纯白（用 surface-2 会让卡片比底色更灰、反而陷下去） */
+  --color-card:          #FFFFFF;
+  --color-card-hover:    #FFFFFF;
   --color-overlay:       rgba(20, 24, 30, 0.34);
 
   /* ── 3.2 玻璃态（浅色下更不透明，保证文字对比度）── */
@@ -586,8 +593,8 @@
   --shadow-3: 0 4px 12px rgba(16, 20, 26, 0.09), 0 1px 3px rgba(16, 20, 26, 0.05);
   --shadow-4: 0 12px 28px rgba(16, 20, 26, 0.12), 0 2px 6px rgba(16, 20, 26, 0.06);
   --shadow-5: 0 24px 56px rgba(16, 20, 26, 0.16);
-  --shadow-card:       0 1px 3px rgba(16, 20, 26, 0.07), 0 0 0 1px rgba(16, 20, 26, 0.04);
-  --shadow-card-hover: 0 8px 24px rgba(16, 20, 26, 0.11), 0 0 0 1px rgba(16, 20, 26, 0.07);
+  --shadow-card:       0 1px 2px rgba(16, 20, 26, 0.06), 0 8px 24px rgba(16, 20, 26, 0.07), 0 0 0 1px rgba(16, 20, 26, 0.04);
+  --shadow-card-hover: 0 12px 32px rgba(16, 20, 26, 0.13), 0 0 0 1px rgba(16, 20, 26, 0.08);
   --shadow-glow:       0 4px 16px rgba(16, 20, 26, 0.10), 0 0 0 1px rgba(var(--accent-rgb), 0.22);
   --shadow-edge:       14px 0 36px -18px rgba(16, 20, 26, 0.16);
 
@@ -597,7 +604,8 @@
   --glow-accent-strong: 0 10px 30px rgba(var(--accent-rgb), 0.22), 0 0 0 1px rgba(var(--accent-rgb), 0.18);
 
   /* ── 3.12 渐变 · 浅色覆盖 ── */
-  --gradient-primary: linear-gradient(135deg, #7c6af2 0%, #6b5cdb 100%);
+  /* 主按钮渐变：同深色分支，由配色 token 派生 */
+  --gradient-primary: linear-gradient(135deg, var(--color-accent-hover) 0%, var(--color-accent-solid) 100%);
   --gradient-card:    linear-gradient(180deg, rgba(16, 20, 26, 0.015) 0%, rgba(16, 20, 26, 0.005) 100%);
   --gradient-text:    linear-gradient(135deg, #16191D 0%, #6b5cdb 100%);
   --gradient-hero:    radial-gradient(ellipse 600px 400px at 30% 30%, rgba(107, 92, 219, 0.08) 0%, transparent 70%),
@@ -843,3 +851,152 @@
 /* 7.4 浅色主题下背景装饰与空态插画的透明度修正（沿用 v7 规则，勿删） */
 [data-theme="light"] body::before { opacity: 0.5; }
 [data-theme="light"] .empty-state svg { opacity: 0.35; }
+
+/* ============================================================================
+ * 8. 配色方案（data-accent）— 第二维，只覆盖强调色系
+ *
+ *    明暗（data-theme）决定画布/表面/文本层级；配色（data-accent）只管一个色相：
+ *    主色、实底色、淡底、焦点环、协调角色色。
+ *    两者正交 —— 5 套配色 × 2 套明暗 = 10 种组合，画布与文字对比度不随配色变化。
+ *
+ *    每套配色在两套主题下分别取值：
+ *      深色 → 文字态要亮（对画布 ≥ 4.5:1）、实底要暗（白字 ≥ 4.5:1）；
+ *      浅色 → 两者都取深值（白底上的文字/图标与实底共用同一深色调）。
+ *    violet 是默认，不在此声明，由第 2/3 节的原始值承担。
+ * ========================================================================== */
+
+/* ── 8.1 青碧 teal ── */
+html[data-accent="teal"]:not([data-theme="light"]) {
+  --color-accent:        #3FB6A8;
+  --color-accent-hover:  #55C6B9;
+  --color-accent-active: #2E9187;
+  --color-accent-text:   #7FD8CC;
+  --color-accent-solid:        #2E9187;
+  --color-accent-solid-hover:  #3FB6A8;
+  --color-accent-solid-active: #237A72;
+  --color-accent-subtle: rgba(63, 182, 168, 0.14);
+  --color-accent-border: rgba(63, 182, 168, 0.35);
+  --accent-rgb:          63, 182, 168;
+  --accent-solid-rgb:    46, 145, 135;
+  --color-border-focus:  rgba(63, 182, 168, 0.55);
+  --color-border-glow:   rgba(63, 182, 168, 0.22);
+  --agent-coord:         #3FB6A8;
+}
+html[data-accent="teal"][data-theme="light"] {
+  --color-accent:        #12796F;
+  --color-accent-hover:  #1C8F84;
+  --color-accent-active: #0D625A;
+  --color-accent-text:   #12796F;
+  --color-accent-solid:        #12796F;
+  --color-accent-solid-hover:  #1C8F84;
+  --color-accent-solid-active: #0D625A;
+  --color-accent-subtle: rgba(18, 121, 111, 0.10);
+  --color-accent-border: rgba(18, 121, 111, 0.35);
+  --accent-rgb:          18, 121, 111;
+  --accent-solid-rgb:    18, 121, 111;
+  --color-border-focus:  rgba(18, 121, 111, 0.55);
+  --color-border-glow:   rgba(18, 121, 111, 0.22);
+  --agent-coord:         #12796F;
+}
+
+/* ── 8.2 靛蓝 blue ── */
+html[data-accent="blue"]:not([data-theme="light"]) {
+  --color-accent:        #5B9CF0;
+  --color-accent-hover:  #74AEF5;
+  --color-accent-active: #3E7BD4;
+  --color-accent-text:   #8FBEF7;
+  --color-accent-solid:        #3E7BD4;
+  --color-accent-solid-hover:  #5B9CF0;
+  --color-accent-solid-active: #2F63AE;
+  --color-accent-subtle: rgba(91, 156, 240, 0.14);
+  --color-accent-border: rgba(91, 156, 240, 0.35);
+  --accent-rgb:          91, 156, 240;
+  --accent-solid-rgb:    62, 123, 212;
+  --color-border-focus:  rgba(91, 156, 240, 0.55);
+  --color-border-glow:   rgba(91, 156, 240, 0.22);
+  --agent-coord:         #5B9CF0;
+}
+html[data-accent="blue"][data-theme="light"] {
+  --color-accent:        #2A5CA8;
+  --color-accent-hover:  #3569BC;
+  --color-accent-active: #1F4A8A;
+  --color-accent-text:   #2A5CA8;
+  --color-accent-solid:        #2A5CA8;
+  --color-accent-solid-hover:  #3569BC;
+  --color-accent-solid-active: #1F4A8A;
+  --color-accent-subtle: rgba(42, 92, 168, 0.10);
+  --color-accent-border: rgba(42, 92, 168, 0.35);
+  --accent-rgb:          42, 92, 168;
+  --accent-solid-rgb:    42, 92, 168;
+  --color-border-focus:  rgba(42, 92, 168, 0.55);
+  --color-border-glow:   rgba(42, 92, 168, 0.22);
+  --agent-coord:         #2A5CA8;
+}
+
+/* ── 8.3 琥珀 amber ── */
+html[data-accent="amber"]:not([data-theme="light"]) {
+  --color-accent:        #E0A84A;
+  --color-accent-hover:  #EBB963;
+  --color-accent-active: #B0802E;
+  --color-accent-text:   #EDC57F;
+  --color-accent-solid:        #B0802E;
+  --color-accent-solid-hover:  #E0A84A;
+  --color-accent-solid-active: #8E6521;
+  --color-accent-subtle: rgba(224, 168, 74, 0.14);
+  --color-accent-border: rgba(224, 168, 74, 0.35);
+  --accent-rgb:          224, 168, 74;
+  --accent-solid-rgb:    176, 128, 46;
+  --color-border-focus:  rgba(224, 168, 74, 0.55);
+  --color-border-glow:   rgba(224, 168, 74, 0.22);
+  --agent-coord:         #E0A84A;
+}
+html[data-accent="amber"][data-theme="light"] {
+  --color-accent:        #8A6114;
+  --color-accent-hover:  #A0721B;
+  --color-accent-active: #6E4D0D;
+  --color-accent-text:   #8A6114;
+  --color-accent-solid:        #8A6114;
+  --color-accent-solid-hover:  #A0721B;
+  --color-accent-solid-active: #6E4D0D;
+  --color-accent-subtle: rgba(138, 97, 20, 0.10);
+  --color-accent-border: rgba(138, 97, 20, 0.35);
+  --accent-rgb:          138, 97, 20;
+  --accent-solid-rgb:    138, 97, 20;
+  --color-border-focus:  rgba(138, 97, 20, 0.55);
+  --color-border-glow:   rgba(138, 97, 20, 0.22);
+  --agent-coord:         #8A6114;
+}
+
+/* ── 8.4 玫红 rose ── */
+html[data-accent="rose"]:not([data-theme="light"]) {
+  --color-accent:        #EF7FA8;
+  --color-accent-hover:  #F498B9;
+  --color-accent-active: #C0557F;
+  --color-accent-text:   #F5A7C4;
+  --color-accent-solid:        #C0557F;
+  --color-accent-solid-hover:  #EF7FA8;
+  --color-accent-solid-active: #9E4066;
+  --color-accent-subtle: rgba(239, 127, 168, 0.14);
+  --color-accent-border: rgba(239, 127, 168, 0.35);
+  --accent-rgb:          239, 127, 168;
+  --accent-solid-rgb:    192, 85, 127;
+  --color-border-focus:  rgba(239, 127, 168, 0.55);
+  --color-border-glow:   rgba(239, 127, 168, 0.22);
+  --agent-coord:         #EF7FA8;
+}
+html[data-accent="rose"][data-theme="light"] {
+  --color-accent:        #A83568;
+  --color-accent-hover:  #C04479;
+  --color-accent-active: #8C2A55;
+  --color-accent-text:   #A83568;
+  --color-accent-solid:        #A83568;
+  --color-accent-solid-hover:  #C04479;
+  --color-accent-solid-active: #8C2A55;
+  --color-accent-subtle: rgba(168, 53, 104, 0.10);
+  --color-accent-border: rgba(168, 53, 104, 0.35);
+  --accent-rgb:          168, 53, 104;
+  --accent-solid-rgb:    168, 53, 104;
+  --color-border-focus:  rgba(168, 53, 104, 0.55);
+  --color-border-glow:   rgba(168, 53, 104, 0.22);
+  --agent-coord:         #A83568;
+}

@@ -10,9 +10,9 @@ import { resolveLandingRoute } from './landing'
  * 任何人把逻辑改回「先判 diagnostic_required」都会让teacher/admin 两条用例红。
  */
 describe('resolveLandingRoute — 登录落点按角色（F1 回归守护）', () => {
-  it('学生且需入学测评 → /diagnostic/start', () => {
+  it('学生且需入学测评 → 仍落平台首页 /（2026-11-07 起测评不再作为着陆页）', () => {
     expect(resolveLandingRoute({ role: 'student', diagnostic_required: true }))
-      .toBe('/diagnostic/start')
+      .toBe('/')
   })
 
   it('学生且不需测评 → 平台首页 /', () => {
@@ -42,7 +42,7 @@ describe('resolveLandingRoute — 登录落点按角色（F1 回归守护）', (
 
   it('角色缺失 → 按学生处理（与后端 register 只建 student 一致）', () => {
     expect(resolveLandingRoute({})).toBe('/')
-    expect(resolveLandingRoute({ diagnostic_required: true })).toBe('/diagnostic/start')
+    expect(resolveLandingRoute({ diagnostic_required: true })).toBe('/')
     expect(resolveLandingRoute(null)).toBe('/')
   })
 })

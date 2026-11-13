@@ -36,6 +36,20 @@ class StudentsOverviewResponse(BaseModel):
     students: list[StudentOverviewRow]
 
 
+# 测试/探测账号不进入教学看板的名册：它们是自动化测试与运维探活的产物，
+# 混在真实班级里会让「总学生」这个数字失真，也让人误以为平台在拿测试数据充数。
+_TEST_USERNAME_PREFIXES = ("testuser_", "e2e_", "pytest_", "test_")
+_TEST_DISPLAY_TOKENS = ("探活", "冒烟", "压测", "测试账号")
+
+
+def _is_test_account(u: dict) -> bool:
+    username = str(u.get("username") or "").lower()
+    if username.startswith(_TEST_USERNAME_PREFIXES):
+        return True
+    display = str(u.get("display_name") or "").strip()
+    return any(tok in display for tok in _TEST_DISPLAY_TOKENS)
+
+
 @router.get("/students/overview", response_model=StudentsOverviewResponse)
 @cached(ttl=120)
 async def get_students_overview(user: dict = Depends(require_teacher_or_demo_open)):
@@ -44,7 +58,7 @@ async def get_students_overview(user: dict = Depends(require_teacher_or_demo_ope
     from datetime import datetime
 
     users = list_all_users()
-    students = [u for u in users if u.get("role") == "student"]
+    students = [u for u in users if u.get("role") == "student" and not _is_test_account(u)]
 
     today = datetime.now().strftime("%Y-%m-%d")
     active_today = 0
@@ -73,7 +87,9 @@ async def get_students_overview(user: dict = Depends(require_teacher_or_demo_ope
         "active_today": active_today,
         "avg_mastery": avg_mastery,
         "avg_progress": avg_progress,
-        "students": student_rows[:50],
+        # 不再截断：原来只回 50 条、前端又只渲染 8 条，而 total 仍是全量，
+        # 于是页面显示「75 总学生」却只能看到 8 个人，口径自相矛盾。
+        "students": student_rows,
     }
 
 

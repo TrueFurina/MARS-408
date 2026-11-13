@@ -2,8 +2,8 @@
 # 嵌入服务 — 独立模块，不依赖 engines 层
 # 解决循环依赖: db/milvus_client.py 不再导入 engines/frugal_rag.py
 #
-# 模型: intfloat/multilingual-e5-base (768维, ~1.1GB)
-# 注意: 与 config.json embedding 配置保持一致
+# 模型: 由 config.json embedding.model 决定（默认 intfloat/multilingual-e5-base, 768维）
+# 注意: 必须与 config.json embedding 配置保持一致；_effective_model_name() 是唯一真值源
 #
 # v2 优化（2026-07-22）：内容寻址的磁盘嵌入缓存。
 #   相同文本（种子数据 / 教材分块）在跨进程重启、重复导入时无需重新跑 E5，
@@ -30,6 +30,18 @@ _e5_model = None
 # 模型配置（与 config.json embedding 保持一致）
 EMBED_MODEL_NAME = "intfloat/multilingual-e5-base"
 EMBED_DIM = 768
+
+
+def _effective_model_name() -> str:
+    """实际生效的嵌入模型名（config 优先，回退默认常量）。
+
+    唯一真值源：缓存元数据、加载判断、``/api/status`` 都必须引用它，
+    不得再直接用常量 ``EMBED_MODEL_NAME``。否则在 config.json 里切换
+    ``embedding.model`` 后，缓存会静默错配——落盘元数据写死成旧常量，
+    重启时旧缓存被误判为有效，向量与模型名对不上却不报任何降级。
+    """
+    return get_embedding_config().get("model", EMBED_MODEL_NAME)
+
 
 # ── 嵌入缓存（内容寻址）──
 # 缓存文件: vectordb_data/e5_embed_cache.npz
@@ -100,15 +112,15 @@ def _load_cache():
             vectors = data.get("vectors")
             if hashes is None or vectors is None:
                 return
-            if meta_model and meta_model != EMBED_MODEL_NAME:
+            if meta_model and meta_model != _effective_model_name():
                 logger.info(
                     "嵌入缓存模型(%s)与当前(%s)不一致，缓存失效重建",
-                    meta_model, EMBED_MODEL_NAME,
+                    meta_model, _effective_model_name(),
                 )
                 return
             for h, v in zip(hashes, vectors):
                 _CACHE[str(h)] = np.asarray(v, dtype=np.float32)
-        _CACHE_MODEL = EMBED_MODEL_NAME
+        _CACHE_MODEL = _effective_model_name()
         _CACHE_DIM = meta_dim
         logger.info("嵌入缓存加载: %d 条", len(_CACHE))
     except Exception as e:  # 任何损坏都降级为空缓存，绝不抛错阻断启动
@@ -134,7 +146,7 @@ def _flush_cache():
         tmp = _CACHE_PATH + f".tmp.{os.getpid()}.npz"
         np.savez(
             tmp,
-            meta_model=np.array(EMBED_MODEL_NAME),
+            meta_model=np.array(_effective_model_name()),
             meta_dim=np.array([EMBED_DIM]),
             hashes=hashes,
             vectors=vectors,
@@ -161,7 +173,7 @@ def _get_e5_model():
         return _e5_model
 
     emb_config = get_embedding_config()
-    model_name = emb_config.get("model", EMBED_MODEL_NAME)
+    model_name = _effective_model_name()
 
     try:
         from sentence_transformers import SentenceTransformer

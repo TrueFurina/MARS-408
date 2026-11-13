@@ -168,6 +168,81 @@ def test_llm_provider_token_bucket_real_key_matches_chat():
 
 
 # ══════════════════════════════════════════════════════════
+# 课堂并发：令牌桶排队而非立刻失败；节流不得计入通道熔断
+#
+# 背景（2026-11-12 48 并发实测）：本地桶 5/s，一上课 48 人同时发一轮必然打空；
+# 旧实现把「本进程太挤」当通道故障，连撞 3 次就把健康的 deepseek 熔断 30s，
+# 全班一起报错。现改为在预算内排队，且节流不计入熔断。
+# ══════════════════════════════════════════════════════════
+
+def test_call_with_queue_waits_then_succeeds(monkeypatch):
+    """令牌桶打空后应在预算内排队重试，而不是立刻回退下一通道"""
+    import asyncio
+    from db.llm_provider import LLMProvider, LLMThrottled
+
+    monkeypatch.setenv("LLM_BUCKET_WAIT_SECONDS", "3")
+    p = LLMProvider()
+    calls = {"n": 0}
+
+    async def fake_call(provider, mode, messages, temperature, max_tokens, tools, thinking, timeout):
+        calls["n"] += 1
+        if calls["n"] < 3:
+            raise LLMThrottled("挤")
+        return {"choices": [{"message": {"content": "ok"}}]}
+
+    p._call_provider = fake_call
+    result = asyncio.run(p._call_with_queue(
+        {"name": "deepseek"}, "chat", [{"role": "user", "content": "hi"}],
+        0.7, 32, None, False, 5,
+    ))
+    assert result["choices"][0]["message"]["content"] == "ok"
+    assert calls["n"] == 3  # 前两次排队后重试成功，未提前放弃
+
+
+def test_call_with_queue_gives_up_after_budget(monkeypatch):
+    """等待预算为 0 时应立刻抛出 LLMThrottled（可回退，且不阻塞）"""
+    import asyncio
+    from db.llm_provider import LLMProvider, LLMThrottled
+
+    monkeypatch.setenv("LLM_BUCKET_WAIT_SECONDS", "0")
+    p = LLMProvider()
+
+    async def fake_call(*args, **kwargs):
+        raise LLMThrottled("挤")
+
+    p._call_provider = fake_call
+    t0 = time.monotonic()
+    with pytest.raises(LLMThrottled):
+        asyncio.run(p._call_with_queue(
+            {"name": "deepseek"}, "chat", [{"role": "user", "content": "hi"}],
+            0.7, 32, None, False, 5,
+        ))
+    assert time.monotonic() - t0 < 1.0
+
+
+def test_chat_loop_skips_breaker_on_throttle():
+    """chat() 必须把令牌桶节流单独处理：不计熔断失败，只记回退"""
+    import pathlib
+    import db.llm_provider as lp
+
+    src = pathlib.Path(lp.__file__).read_text(encoding="utf-8")
+    chat_src = src.split("async def chat(", 1)[1].split("async def stream_chat(", 1)[0]
+    assert "except LLMThrottled" in chat_src, "节流需有独立分支，不能落进通用异常"
+    throttle_branch = chat_src.split("except LLMThrottled", 1)[1].split("except Exception", 1)[0]
+    assert "record_failure" not in throttle_branch, "节流不应计入通道熔断失败"
+
+
+def test_channel_order_env_override(monkeypatch):
+    """LLM_CHAIN 可把欠费/无权限通道排到后面，默认顺序保持不变"""
+    from db.llm_provider import _channel_order, _DEFAULT_CHAIN
+
+    monkeypatch.delenv("LLM_CHAIN", raising=False)
+    assert _channel_order() == _DEFAULT_CHAIN
+    monkeypatch.setenv("LLM_CHAIN", "deepseek, glm ,bogus")
+    assert _channel_order() == ["deepseek", "glm"]
+
+
+# ══════════════════════════════════════════════════════════
 # db.redis_client.check_rate_limit —— Redis 不可用时的「进程内滑动窗口兜底」
 #
 # 背景（发布沙箱无 Redis）：原实现 STRICT(production) 下 Redis 不可用即 fail-closed

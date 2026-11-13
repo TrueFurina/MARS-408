@@ -228,49 +228,49 @@
 .main-content { flex: 1; overflow: hidden auto; display: flex; flex-direction: column; position: relative; background: var(--bg-primary); }
 
 /* 底部导航（移动端）— 玻璃态 */
-.bottom-nav { display: none; height:var(--bottom-nav-height); background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border-top: 1px solid var(--glass-border); z-index: 200; flex-shrink: 0; padding:0 0.25rem; }
-.bottom-nav-list { display: flex; align-items: center; justify-content: space-around; height:100%; }
-.bottom-nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap:0.1875rem; padding:0.375rem 0.625rem; border-radius:var(--radius-sm); color: var(--text-muted); font-size:0.6875rem; transition: var(--transition); flex: 1; max-width:5rem; }
+.bottom-nav { display: none; width: 100%; height:var(--bottom-nav-height); background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border-top: 1px solid var(--glass-border); z-index: 200; flex-shrink: 0; padding:0 0.25rem; box-sizing: border-box; }
+/* width:100% + 每项 flex:1 1 0 才保证三项均分整个底栏；
+   少了 width 时 flex 容器按内容收缩，只有三项时会全挤在左侧 */
+.bottom-nav-list { display: flex; align-items: center; justify-content: space-around; height:100%; width:100%; }
+.bottom-nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap:0.1875rem; padding:0.375rem 0.25rem; border-radius:var(--radius-sm); color: var(--text-muted); font-size:0.6875rem; transition: var(--transition); flex: 1 1 0; min-width: 0; }
+/* 文字必须单行：390px 宽下 5 项均分 78px，"智能对话"曾折成"智能对 / 话"两行 */
+.bottom-nav-item > span:last-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .bottom-nav-item:hover { color: var(--text-primary); }
 .bottom-nav-item.active { color: var(--accent-primary); }
 .bottom-nav-item svg { width:1.375rem; height:1.375rem; }
 
+/* 手机全屏模式下的浮动入口：导航 + 主题。
+   顶栏与底栏已不再常驻，这里给一条随时可达但不占画面的竖排圆钮。 */
+.mobile-fab { display: none; position: fixed; right: 0.75rem; bottom: 0.75rem; z-index: 220; flex-direction: column; gap: 0.5rem; align-items: flex-end; }
+.mobile-fab .fab-btn { width: 2.5rem; height: 2.5rem; border-radius: var(--radius-full); border: 1px solid var(--glass-border); background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); color: var(--text-secondary); display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-2); cursor: pointer; transition: var(--transition); }
+.mobile-fab .fab-btn:hover { color: var(--accent-primary); }
+.mobile-fab .fab-btn svg { width: 1.25rem; height: 1.25rem; }
+/* 悬浮态下菜单必须向上弹：锚点在屏幕底部，向下弹会直接出屏 */
+.mobile-fab .more-menu-container .topbar-btn { width: 2.5rem; height: 2.5rem; border-radius: var(--radius-full); border: 1px solid var(--glass-border); background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); box-shadow: var(--shadow-2); }
+.mobile-fab .more-dropdown { top: auto; bottom: calc(100% + 0.5rem); right: 0; max-height: 62vh; overflow-y: auto; }
+
 /* 响应式 */
 
-/* ── 平板（769–1024px）：侧栏收为 72px 图标栏，沿用 --sidebar-collapsed 令牌 ──
-   仅隐藏文字、居中对齐图标，不改动任何数据结构；桌面(>1024)与移动(≤768)不受影响。 */
+/* ── 平板（769–1024px）：保持文字标签，仅压缩尺寸 ──
+   原实现把侧栏收成 72px 纯图标栏。实测 820px 下形成 22 个无文字图标，
+   同形状重复出现、完全无法辨识，是"模块乱"观感的主要来源，故取消该模式。 */
 @media (max-width: 1024px) and (min-width: 769px) {
   .sidebar {
-    width: var(--sidebar-collapsed);
-    min-width: var(--sidebar-collapsed);
+    width: 12rem;
+    min-width: 12rem;
   }
-  .sidebar-header { justify-content: center; padding: 0; }
-  .sidebar-brand { display: none; }
-  .nav-group + .nav-group { margin-top: 0.375rem; }
-  .nav-group-title {
-    justify-content: center;
-    gap: 0;
-    padding: 0.375rem 0;
-  }
-  .nav-group-label,
-  .nav-group-badge,
-  .nav-group-chevron { display: none; }
+  .sidebar-header { gap: 0.5rem; padding: 0 0.75rem; }
+  .sidebar-brand { font-size: 0.875rem; }
   .nav-item,
   .nav-subitem {
-    justify-content: center;
-    gap: 0;
-    padding-left: 0;
-    padding-right: 0;
+    gap: 0.5rem;
+    padding: 0.5625rem 0.5rem;
+    font-size: 0.8125rem;
   }
-  .nav-item > span:last-child,
-  .nav-subitem > span:last-child { display: none; }
-  .nav-subitem { margin-left: 0; }
-  .nav-subitem::after { display: none; }
+  .nav-subitem { margin-left: 1rem; }
   .sidebar-footer { padding: 0.5rem; }
-  .sidebar-footer .user-info { display: none; }
-  .sidebar-footer-status { justify-content: center; padding: 0.5rem 0 0.625rem; }
-  .sidebar-footer-status .status-text { display: none; }
-  .logout-btn { margin-left: 0; }
+  .nav-group-title { padding: 0.375rem 0.5rem; }
+  .nav-group-badge { display: none; }
 }
 
 /* ── 手机（≤480px）：顶栏/底栏进一步收紧 ── */
@@ -287,10 +287,14 @@
   .bottom-nav-item svg { width: 1.25rem; height: 1.25rem; }
 }
 
-/* ── 移动/桌面总开关（≤768px）：侧栏隐藏，切顶栏 + 底部导航 ── */
+/* ── 移动/桌面总开关（≤768px）：侧栏隐藏，内容区独占全屏 ──
+   原本这里是「顶栏 + 底部导航」双栏常驻：上下各吃掉 56px / 64px，
+   390×844 上手势可滚动的区域只剩约 720px，观感上永远在一条缝里滑。
+   现在两条栏都不占位，.main-content 直接撑满整屏；
+   导航与主题改用右下角浮动圆钮（.mobile-fab），不占布局、不切画面。 */
 @media (max-width: 768px) {
   .sidebar { display: none; }
-  .topbar { display: flex; }
-  .bottom-nav { display: flex; }
-  .main-content { padding-bottom:var(--bottom-nav-height); }
+  .topbar { display: none; }
+  .bottom-nav { display: none; }
+  .mobile-fab { display: flex; }
 }

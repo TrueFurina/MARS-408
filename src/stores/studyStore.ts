@@ -246,6 +246,20 @@ export const useStudyStore = defineStore('study', () => {
   }
   const daysToExam = ref(calcDaysToExam())
 
+  // 跨天自动刷新：daysToExam 是初始化时算出来的定值，页面挂着过零点（或标签页
+  // 在后台放了一夜再回来）会一直显示旧天数。这里在页面重新可见时重算，并每 30
+  // 分钟兜底一次，保证首页倒计时不会停在打开页面的那一天。
+  function refreshDaysToExam(): void {
+    const next = calcDaysToExam()
+    if (next !== daysToExam.value) daysToExam.value = next
+  }
+  if (typeof window !== 'undefined') {
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) refreshDaysToExam()
+    })
+    window.setInterval(refreshDaysToExam, 30 * 60 * 1000)
+  }
+
   function loadProfile() {
     try {
       const raw = localStorage.getItem(_ns('profile'))
@@ -564,7 +578,12 @@ const userMsg: ChatMessage = {
       }
     } catch (e) {
       if (!conv.messages[msgIndex]?.content) {
-        conv.messages[msgIndex]!.content = '连接失败，请检查后端服务是否运行'
+        // 403 是「权限不足」，跟后端起没起来是两回事：只读评审账号打到这里会被拒，
+        // 若统一报成"请检查后端服务"，用户会以为是服务挂了，去排查一个不存在的故障。
+        const status = (e as { status?: number })?.status
+        conv.messages[msgIndex]!.content = status === 403
+          ? '当前账号没有发起作答的权限（只读评审账号），如需体验请用学生账号'
+          : '连接失败，请检查后端服务是否运行'
       }
       conv.updatedAt = new Date()
       saveConversations()

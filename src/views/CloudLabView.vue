@@ -447,7 +447,7 @@ input, select, textarea { background: var(--color-surface-2, rgba(255,255,255,.0
 label.inline select { width: auto; min-width: 220px; }
 .code { width: 120px; }
 .primary-btn, .ghost-btn, .mini { border-radius: 8px; padding: 8px 12px; cursor: pointer; font: inherit; border: 1px solid var(--color-border, rgba(255,255,255,.16)); }
-.primary-btn { background: var(--color-accent); color: #fff; border-color: transparent; }
+.primary-btn { background: var(--color-accent); color: var(--color-text-on-accent); border-color: transparent; }
 .ghost-btn { background: transparent; color: inherit; }
 .mini { padding: 2px 8px; font-size: var(--text-xs, .78rem); background: transparent; color: inherit; }
 .mini.danger { color: var(--accent-danger); }

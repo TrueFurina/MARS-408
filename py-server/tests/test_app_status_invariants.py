@@ -387,3 +387,65 @@ async def test_llm_available_covers_every_llm_channel(monkeypatch):
     assert any(
         "llm:" in r for r in payload["degraded_reasons"]
     ), payload["degraded_reasons"]
+
+
+def test_metrics_current_ssot_auth_coverage_matches_recomputation():
+    """SSOT 文档 docs/METRICS_CURRENT.md 的「当前」认证覆盖率必须等于重算值。
+
+    为什么需要这条：``scripts/scan_stale_calibration.py`` 的豁免清单里包含
+    ``METRICS_CURRENT.md``（SSOT 自身需要列出「已作废旧口径」作参考），因此该文件
+    的口径漂移**不会**被机检拦下——2026-11-12 实测它仍以「当前」陈述
+    total=262/protected=249/coverage=95.04%，而真值已是 263/250/95.06%，
+    滞后一个受保护路由且无人发现。这属于「对外文档数字比真实值低」的静默失锚，
+    与 ``test_openapi_description_auth_coverage_matches_recomputation`` 同类。
+
+    真值来源与上一条测试完全一致：直接复用 ``scripts/verify_auth_coverage.py``
+    的 ``collect()``，不另写第二套判定逻辑，避免两套口径再次分叉。
+    """
+    import importlib.util
+    import os
+    import re
+
+    py_server_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    script = os.path.join(py_server_dir, "scripts", "verify_auth_coverage.py")
+    spec = importlib.util.spec_from_file_location("_verify_auth_coverage_ssot", script)
+    cov = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cov)
+
+    protected, public = cov.collect()
+    total = len(protected) + len(public)
+    assert total, "未采集到任何 /api 端点，覆盖率判定口径可能已失效"
+    measured_cov = round(len(protected) / total * 100, 2)
+
+    doc = os.path.join(os.path.dirname(py_server_dir), "docs", "METRICS_CURRENT.md")
+    with open(doc, "r", encoding="utf-8") as f:
+        text = f.read()
+
+    m = re.search(
+        r"当前\s*total=(\d+)\s*/\s*protected=(\d+)\s*/\s*public=(\d+)\s*/\s*"
+        r"coverage=\*\*([\d.]+)%\*\*",
+        text,
+    )
+    assert m, (
+        "docs/METRICS_CURRENT.md 未按 "
+        "「当前 total=N / protected=N / public=N / coverage=**X%**」声明认证覆盖率，"
+        "SSOT 口径失锚，请补回该格式。"
+    )
+
+    doc_total, doc_protected, doc_public, doc_cov = (
+        int(m.group(1)),
+        int(m.group(2)),
+        int(m.group(3)),
+        round(float(m.group(4)), 2),
+    )
+    assert (doc_total, doc_protected, doc_public, doc_cov) == (
+        total,
+        len(protected),
+        len(public),
+        measured_cov,
+    ), (
+        f"SSOT 宣称 total={doc_total}/protected={doc_protected}/public={doc_public}"
+        f"/coverage={doc_cov}%，而重算为 total={total}/protected={len(protected)}"
+        f"/public={len(public)}/coverage={measured_cov}%。"
+        " 请跑 scripts/verify_auth_coverage.py 后同步 docs/METRICS_CURRENT.md。"
+    )

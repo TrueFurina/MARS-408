@@ -773,18 +773,19 @@ function parseWeakPoints(wpStr: string): string[] {
   <div class="page-section active">
     <ErrorBoundary title="资源生成异常">
     <div class="section-header">
+      <div class="rv-eyebrow">RESOURCE STUDIO</div>
       <div class="section-title"><span class="section-title-icon" v-html="icons.robot"></span>多智能体资源生成</div>
       <div class="section-desc">输入知识点，7个AI智能体协作为你生成7种个性化学习资源（讲解/题目/导图/拓展/PPT/代码实操/视频脚本）</div>
     </div>
 
     <!-- AI 原生工作台（文章词 25）：左＝需求与历史，右＝任务状态与结果 -->
-    <div class="rv-workspace">
+    <div class="rv-workspace" :class="{ 'is-empty': !result && !loading }">
       <div class="rv-col-side">
 
     <!-- L1/L2/L3 三层学情记忆薄弱点提示（低侵入联动） -->
     <div v-if="memoryOverview?.weak_points?.length" class="memory-mini-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-size:12px;">
-      <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);"> 记忆薄弱点:</span>
-      <span v-for="w in memoryOverview.weak_points.slice(0, 6)" :key="w" style="padding:3px 10px;border-radius:12px;background:rgba(239,68,68,0.12);color:var(--accent-danger);">{{ w }}</span>
+      <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);font-weight:600;">记忆薄弱点:</span>
+      <span v-for="w in memoryOverview.weak_points.slice(0, 6)" :key="w" style="padding:3px 10px;border-radius:12px;background:var(--color-surface-2);color:var(--color-text-2);border:1px solid var(--color-border);">{{ w }}</span>
     </div>
 
     <!-- 输入区 -->
@@ -1375,6 +1376,13 @@ function parseWeakPoints(wpStr: string): string[] {
   gap: var(--space-5);
   align-items: start;
 }
+/* 还没出结果时右栏是空的，两栏版式会让整页只剩左边一条 330px、右侧大片留白。
+   空态先收成单列，出结果后再并排。 */
+.rv-workspace.is-empty { grid-template-columns: minmax(0, 1fr); }
+.rv-eyebrow { font-size: 11px; line-height: 1; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent-primary); font-weight: 600; margin-bottom: 10px; }
+/* 输入区原来靠 flex-wrap 折行：输入框和难度选择挤在第一行，生成按钮掉到第二行左端。 */
+.rv-card .rag-config { display: grid; grid-template-columns: minmax(0,1fr) 7rem auto; gap: var(--space-3); align-items: center; }
+@media (max-width: 640px) { .rv-card .rag-config { grid-template-columns: minmax(0,1fr); } }
 .rv-col-side { position: sticky; top: var(--space-2); z-index: 1; }
 .rv-col-side .rv-card, .rv-col-main > .rv-card { margin-bottom: var(--space-4); }
 /* 窄屏回归单栏，避免两栏都被压扁 */
@@ -1490,10 +1498,12 @@ function parseWeakPoints(wpStr: string): string[] {
 .rv-stat-value { font-size: var(--text-2xl); font-weight: var(--weight-bold); }
 .rv-stat-label { font-size: var(--text-xs); color: var(--text-muted); }
 
-.rv-weak-box { margin-top: var(--space-3); padding: var(--space-3); background: color-mix(in srgb, var(--accent-warm) 10%, transparent); border-radius: var(--radius-sm); }
-.rv-weak-title { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--accent-warm); margin-bottom: 0.375rem; }
+/* 结果区的薄弱知识点框：原来整块暖橙色底 + 橙字，和其他页已统一成中性的薄弱点 chip 是两套语言。
+   这里跟随中性：容器走卡片色，标签走 surface-2 + 细边框，标签名前缀保留主色。 */
+.rv-weak-box { margin-top: var(--space-3); padding: var(--space-3); background: var(--color-surface-2); border: 1px solid var(--color-border); border-radius: 9px; }
+.rv-weak-title { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--accent-primary); margin-bottom: 0.375rem; }
 .rv-weak-tags { display: flex; gap: 0.375rem; flex-wrap: wrap; }
-.rv-weak-tag { padding: 0.1875rem 0.625rem; background: color-mix(in srgb, var(--accent-warm) 14%, transparent); border-radius: var(--radius-full); font-size: var(--text-xs); color: var(--accent-warm); }
+.rv-weak-tag { padding: 0.1875rem 0.625rem; background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-full); font-size: var(--text-xs); color: var(--color-text-2); white-space: nowrap; }
 
 .rv-empty { text-align: center; padding: 1.875rem; color: var(--text-muted); }
 .rv-empty-title { font-size: var(--text-base); }
@@ -1516,7 +1526,7 @@ function parseWeakPoints(wpStr: string): string[] {
 .rv-ae-hint { font-size: var(--text-xs); color: var(--text-secondary); font-weight: var(--weight-regular); }
 .rv-ae-icon {
   flex-shrink: 0; width: 1.125rem; height: 1.125rem; border-radius: 50%;
-  background: var(--accent-warm); color: #fff;
+  background: var(--accent-warm); color: var(--color-text-on-accent);
   display: flex; align-items: center; justify-content: center;
   font-size: var(--text-xs); font-weight: var(--weight-bold);
 }

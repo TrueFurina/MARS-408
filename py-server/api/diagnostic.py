@@ -109,6 +109,32 @@ DIAGNOSTIC_QUESTIONS = [
      "answer": "D", "difficulty": "medium", "topic": "死锁"},
 ]
 
+# ── 逐题解析 ──
+# 题库里不放解析，是为了让 /start 返回的题目保持干净的"题干+选项"；
+# 交卷后按 id 取，随 details 一起下发，学生才能在结果页核对"为什么错"。
+EXPLANATIONS = {
+    "d_cn_1": "TCP 建立连接要三次握手：客户端先发 SYN（同步序号），服务端回 SYN+ACK，客户端再回 ACK。第一个报文只能是 SYN，客户端此时还没有任何可确认的数据。",
+    "d_cn_2": "A 类地址首字节最高位为 0，第一字节取值 1–126（0 与 127 保留），所以范围写作 0.0.0.0–127.255.255.255。B 类是 128–191，C 类是 192–223，D 类 224 起是组播。",
+    "d_cn_3": "OSI 七层自上而下：应用层、表示层、会话层、传输层、网络层、数据链路层、物理层。TCP/IP 常说的「五层」是折中模型，不是 OSI 本身。",
+    "d_cn_4": "以太网 CSMA/CD 冲突后用的是「截断二进制指数退避」：第 n 次冲突从 0 到 2^n−1 中随机取值作为退避时隙数，重传 10 次后范围封顶，16 次放弃。",
+    "d_cn_5": "慢启动阶段拥塞窗口按 RTT 翻倍（每收到一个 ACK 加 1 个 MSS），是指数增长；到慢启动阈值后转拥塞避免，才变成线性增长。",
+    "d_ds_1": "栈是后进先出（LIFO），插入删除都在栈顶；先进先出是队列的特征。",
+    "d_ds_2": "前序：根 → 左 → 右；中序：左 → 根 → 右；后序：左 → 右 → 根。",
+    "d_ds_3": "快排平均 O(n log n)，最坏（每次划分都极不均衡）退化到 O(n²)。归并排序才是稳定的 O(n log n) 且最坏也是 O(n log n)。",
+    "d_ds_4": "哈希冲突的常规处理是开放定址、再哈希、链地址、建立公共溢出区。二分查找要求表有序并按位置折半，是查找算法，不用于解决冲突。",
+    "d_ds_5": "DFS 用栈（递归实现时用的是系统调用栈）回溯；BFS 用队列按层推进。",
+    "d_co_1": "冯·诺依曼结构的核心是「存储程序」：指令和数据以同等地位存放在同一存储器，按地址顺序取出执行。",
+    "d_co_2": "8 位补码中 −1 是全 1，即 11111111；10000000 是 −128，10000001 是 −127。",
+    "d_co_3": "Cache 与主存的地址映射只有三种：直接映射、全相联映射、组相联映射。「顺序映射」不是映射方式。",
+    "d_co_4": "PC（程序计数器）存放的是下一条待取指令的地址，取指后自动递增；它不存指令内容，也不存运算结果或状态标志（那些在 IR、ACC、PSW 里）。",
+    "d_co_5": "DMA 由专门的控制器直接在内存和外设之间搬运数据块，CPU 只需在开始和结束时介入，因此传输期间 CPU 可以并行做别的事。",
+    "d_os_1": "程序是静态的指令集合，存放在磁盘上；进程是程序在某数据集上的一次动态执行过程，有创建、就绪、运行、阻塞、终止的生命周期。",
+    "d_os_2": "FCFS、SJF、时间片轮转都是进程调度算法；银行家算法是死锁避免算法，用来判断分配资源后系统是否仍处于安全状态。",
+    "d_os_3": "虚拟内存靠「分页（或分段）+ 请求调页」实现：只把当前要用的页调入内存，缺页时再调，从而让逻辑地址空间可以远大于物理内存。单说分页只是地址划分，不构成虚拟内存。",
+    "d_os_4": "LRU 替换的是「最近最久未使用」的页面，依据是局部性原理——很久没被访问的页，短期内大概率也不会被访问。注意它和 LFU（访问频率最低）不是一回事。",
+    "d_os_5": "死锁四个必要条件：互斥、请求与保持、不可剥夺、循环等待。优先级反转是调度中的另一个问题（低优先级任务持锁导致高优先级任务被阻塞），不属于死锁条件。",
+}
+
 
 # ── 请求/响应模型 ──
 
@@ -142,6 +168,10 @@ class DiagnosticSubmitResponse(BaseModel):
     overall_accuracy: float
     overall_recommendation: str
     profile: dict
+    # 逐题明细：学生交卷后要能核对「我选的 / 正确答案 / 对错 / 解析」
+    details: list[dict] = []
+    session_id: str = ""
+    taken_at: str = ""
 
 
 # ── 端点 ──
@@ -251,6 +281,24 @@ async def submit_diagnostic(req: DiagnosticSubmitRequest, user: dict = Depends(g
 
     overall_accuracy = total_correct / total_questions if total_questions > 0 else 0
 
+    # 逐题明细：交卷后要能逐题核对（用户作答 / 正确答案 / 对错 / 解析）。
+    # 正确答案在这里才下发——/start 阶段刻意不发，避免边做边看答案。
+    details = []
+    for q in DIAGNOSTIC_QUESTIONS:
+        ua = req.answers.get(q["id"], "")
+        details.append({
+            "question_id": q["id"],
+            "subject": q["subject"],
+            "subject_name": q["subject_name"],
+            "topic": q["topic"],
+            "question": q["question"],
+            "options": q["options"],
+            "user_answer": ua,
+            "correct_answer": q["answer"],
+            "is_correct": ua == q["answer"],
+            "explanation": EXPLANATIONS.get(q["id"], ""),
+        })
+
     # 生成整体推荐
     if overall_accuracy >= 0.8:
         overall_recommendation = "整体基础扎实，建议进入强化阶段，重点攻克高频考点和跨科目综合题"
@@ -278,9 +326,46 @@ async def submit_diagnostic(req: DiagnosticSubmitRequest, user: dict = Depends(g
     except Exception as e:
         logger.warning(f"画像保存失败（非阻塞）: {e}")
 
+    # 整场测评落库：只存汇总的话，"去历史里核对答案"这件事就无从谈起
+    import uuid
+    from db.profile_store import append_diagnostic_history
+
+    session_id = uuid.uuid4().hex[:12]
+    taken_at = ""
+    try:
+        payload = {
+            "results": [r.model_dump() for r in results],
+            "overall_recommendation": overall_recommendation,
+            "details": details,
+        }
+        taken_at = append_diagnostic_history(
+            user["user_id"], session_id, round(overall_accuracy, 2), payload
+        )
+    except Exception as e:
+        logger.warning(f"测评历史写入失败（非阻塞）: {e}")
+        from datetime import datetime
+        taken_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     return DiagnosticSubmitResponse(
         results=results,
         overall_accuracy=round(overall_accuracy, 2),
         overall_recommendation=overall_recommendation,
         profile=profile,
+        session_id=session_id,
+        taken_at=taken_at,
+        details=details,
     )
+
+
+@router.get("/history")
+async def diagnostic_history(user: dict = Depends(get_current_user)):
+    """历次入学测评记录（含逐题明细），供「答题历史」页回看与核对答案。"""
+    from db.profile_store import get_diagnostic_history
+
+    user_id = user.get("user_id") or user.get("id") or ""
+    try:
+        records = get_diagnostic_history(user_id)
+    except Exception as e:
+        logger.warning(f"读取测评历史失败: {e}")
+        records = []
+    return {"status": "ok", "records": records}

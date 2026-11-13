@@ -2,6 +2,7 @@
 // 职业素养测评页（对照实验载体）：10 题分档计分 → 六维雷达条 → 前后测对比
 import { computed, onMounted, ref } from 'vue'
 import { api, ApiError } from '@/utils/api'
+import { gradeColor } from '@/utils/grade'
 
 interface Question {
   id: number
@@ -33,8 +34,9 @@ const dimensions = ref<string[]>([])
 const currentIndex = ref(0)
 const answers = ref<Record<number, number>>({})   // qid -> option_index
 const phase = ref<'pre' | 'post'>('pre')
-const className = ref('')
-const studentId = ref('')   // 实验编号=学号后4位：课堂身份主键（共享 demo 登录下唯一区分）
+const className = ref(localStorage.getItem('mangdehenzhi-class') || '')
+const studentId = ref('')   // 真实账号 user_id：前测/后测必须落到本人账号名下
+const identityName = ref('') // 页面展示用：姓名（登录账号）
 const submitting = ref(false)
 const loading = ref(true)
 const errorMsg = ref('')
@@ -44,13 +46,6 @@ const report = ref<Report | null>(null)
 const answeredCount = computed(() => Object.keys(answers.value).length)
 const allAnswered = computed(() => questions.value.length > 0 && answeredCount.value === questions.value.length)
 const currentQ = computed(() => questions.value[currentIndex.value])
-
-function scoreColor(score: number): string {
-  if (score >= 90) return '#22c55e'
-  if (score >= 75) return '#84cc16'
-  if (score >= 60) return '#eab308'
-  return '#ef4444'
-}
 
 async function loadReport() {
   // 身份必须来自学号而非写死的 demo：后端 submit 以请求体 user_id（学号后4位）为身份主键，
@@ -87,7 +82,22 @@ async function loadQuestions() {
 
 onMounted(() => {
   void loadQuestions()
+  void bindIdentity()
 })
+
+/** 身份绑定（2026-11-13）：48 名学生已有各自账号，前测必须记到真实 user_id 上。
+ *  此前让学手填"学号后4位"作 user_id 是"全班共用 demo 登录"时代的产物；
+ *  现在若继续手填，提交会落在 "5101" 这类伪 ID 上，与班级花名册、成长页、
+ *  教师端报告全部对不上。改为从 /auth/me 取真实 id，学号只用于展示。 */
+async function bindIdentity() {
+  try {
+    const me = await api.get<{ id: string; username: string; display_name?: string }>('/auth/me')
+    studentId.value = me.id
+    identityName.value = me.display_name ? `${me.display_name}（${me.username}）` : me.username
+  } catch {
+    // 未登录时保留手填入口（本地调试用），线上课堂一律走账号登录
+  }
+}
 
 function pick(optionIndex: number) {
   if (!currentQ.value) return
@@ -102,11 +112,14 @@ async function submit() {
   submitting.value = true
   errorMsg.value = ''
   try {
+    // 班级口径必须全班一字不差，教师端按 class_name 汇总前后测；
+    // 记住上一次输入，避免每名学生手打时打出"24信安一班"这类变体。
+    localStorage.setItem('mangdehenzhi-class', className.value.trim())
     result.value = await api.post<SubmitResult>('/literacy/submit', {
       phase: phase.value,
-      class_name: className.value,
+      class_name: className.value.trim(),
       user_id: studentId.value,
-      user_name: studentId.value,
+      user_name: identityName.value || studentId.value,
       answers: Object.entries(answers.value).map(([qid, option_index]) => ({
         qid: Number(qid), option_index,
       })),
@@ -146,14 +159,14 @@ function restart(nextPhase: 'pre' | 'post') {
       <section v-if="result" class="result-card">
         <div class="result-total">
           <span class="label">综合素养分</span>
-          <span class="value" :style="{ color: scoreColor(result.total_score) }">{{ result.total_score }}</span>
+          <span class="value" :style="{ color: gradeColor(result.total_score) }">{{ result.total_score }}</span>
           <span class="phase-tag">{{ result.phase === 'pre' ? '前测' : '后测' }}</span>
         </div>
         <div class="dim-bars">
           <div v-for="d in dimensions" :key="d" class="dim-row">
             <span class="dim-name">{{ d }}</span>
             <div class="bar-track">
-              <div class="bar-fill" :style="{ width: '100%', transform: 'scaleX(' + ((result.dim_scores[d] || 0) / 100) + ')', transformOrigin: 'left', background: scoreColor(result.dim_scores[d] || 0) }" />
+              <div class="bar-fill" :style="{ width: '100%', transform: 'scaleX(' + ((result.dim_scores[d] || 0) / 100) + ')', transformOrigin: 'left', background: gradeColor(result.dim_scores[d] || 0) }" />
             </div>
             <span class="dim-score">{{ result.dim_scores[d] ?? 0 }}</span>
           </div>
@@ -177,7 +190,7 @@ function restart(nextPhase: 'pre' | 'post') {
             <div v-for="d in dimensions" :key="'d-' + d" class="dim-row">
               <span class="dim-name">{{ d }}</span>
               <div class="bar-track">
-                <div class="bar-fill" :style="{ width: '100%', transform: 'scaleX(' + ((report.post.dims[d] || 0) / 100) + ')', transformOrigin: 'left', background: scoreColor(report.post.dims[d] || 0) }" />
+                <div class="bar-fill" :style="{ width: '100%', transform: 'scaleX(' + ((report.post.dims[d] || 0) / 100) + ')', transformOrigin: 'left', background: gradeColor(report.post.dims[d] || 0) }" />
               </div>
               <span class="dim-score">{{ report.pre.dims[d] ?? '-' }} → {{ report.post.dims[d] ?? '-' }}</span>
             </div>
@@ -206,7 +219,10 @@ function restart(nextPhase: 'pre' | 'post') {
             class="option-btn"
             :class="{ selected: answers[currentQ!.id] === i }"
             @click="pick(i)"
-          >{{ opt }}</button>
+          >
+            <span class="option-letter">{{ String.fromCharCode(65 + i) }}</span>
+            <span class="option-text">{{ opt }}</span>
+          </button>
         </div>
 
         <div class="quiz-nav">
@@ -215,8 +231,9 @@ function restart(nextPhase: 'pre' | 'post') {
         </div>
 
         <div class="submit-row">
-          <input v-model="studentId" class="text-input" placeholder="学号 / 昵称（可选，如 9001）" maxlength="4" />
-          <input v-model="className" class="text-input" placeholder="班级（如：信息安全1班-实验组）" />
+          <span v-if="studentId" class="identity-chip">当前账号：{{ identityName || studentId }}</span>
+          <input v-else v-model="studentId" class="text-input" placeholder="学号 / 昵称（可选，如 9001）" maxlength="4" />
+          <input v-model="className" class="text-input" placeholder="班级（统一填 24信安1班）" />
           <button class="btn primary" :disabled="!allAnswered || !studentId.trim() || submitting" @click="submit">
             {{ submitting ? '提交中…' : `提交测评（${answeredCount}/${questions.length}）` }}
           </button>
@@ -246,11 +263,20 @@ function restart(nextPhase: 'pre' | 'post') {
 .progress-fill { height: 100%; background: var(--color-accent); width: 100%; transform-origin: left; transition: transform var(--duration-slow) var(--ease-standard); }
 .stem { font-size: 17px; line-height: 1.6; margin: 0 0 18px; }
 .options { display: flex; flex-direction: column; gap: 10px; }
-.option-btn { text-align: left; padding: 14px var(--space-4); border-radius: 10px; border: 1.5px solid var(--border); background: transparent; cursor: pointer; font-size: var(--text-base); line-height: 1.5; transition: var(--transition) }
+.option-btn { display: flex; align-items: flex-start; gap: 12px; text-align: left; padding: 13px var(--space-4); border-radius: 10px; border: 1.5px solid var(--color-border-strong); background: var(--color-surface-2); cursor: pointer; font-size: var(--text-base); line-height: 1.5; transition: var(--transition) }
+/* 选项编号：可点区域要一眼看出是「A/B/C/D」而不是四段纯文本 */
+.option-letter { flex: none; width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: var(--text-xs); font-weight: var(--weight-bold); background: var(--color-elevated); color: var(--text-secondary); border: 1px solid var(--color-border-strong); }
+.option-text { flex: 1; }
 .option-btn:hover { border-color: var(--accent-primary-30); }
 .option-btn.selected { border-color: var(--color-accent); background: var(--accent-primary-10); }
+.option-btn.selected .option-letter { background: var(--color-accent); color: var(--color-text-on-accent); border-color: var(--color-accent); }
 .quiz-nav { display: flex; gap: 10px; margin-top: 18px; }
 .submit-row { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+.identity-chip {
+  display: inline-flex; align-items: center; padding: 9px var(--space-3);
+  border: 1.5px solid var(--border); border-radius: 8px; font-size: var(--text-sm);
+  color: var(--text-muted); background: var(--surface-2, transparent);
+}
 .text-input { flex: 1; min-width: 160px; padding: 9px var(--space-3); border: 1.5px solid var(--border); border-radius: 8px; font-size: var(--text-sm); }
 .btn { padding: 9px 18px; border-radius: 8px; font-size: var(--text-base); cursor: pointer; border: 1.5px solid transparent; }
 .btn.primary { background: var(--color-accent); color: var(--color-text-on-accent); }

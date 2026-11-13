@@ -178,7 +178,7 @@ def _excluded(path: Path) -> bool:
 
 
 def _allowed(line: str) -> bool:
-    """功能性 URL（GitHub 仓名未更名）不算品牌展示，放行。"""
+    """功能性 URL（GitHub 仓名未更名）与临时复原文案不算品牌展示，放行。"""
     return any(s in line for s in ALLOW_SUBSTRINGS)
 
 

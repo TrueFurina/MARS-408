@@ -70,4 +70,4 @@
 | 默认集测试 | 1737 passed / 38 skipped / 1 xfailed / 0 failed | run `39681618692` step1 完全一致 | ✅ |
 | 代码覆盖率 | CI 63%；本机 fresh 57.19%（TEST_TRUTH 口径） | TOTAL 22666/8450 = 63%（run `39681618692`） | ✅（带口径引用） |
 | p0 档 | 67 条 | run `37905229979` = 67 passed | ✅ |
-| API / 认证覆盖率 | 261 ops / 243 paths（/api 口径，全量 262/244）、**95.02%（248/261）** | `openapi.json` 实测 + `verify_auth_coverage.py`（2026-10-21 复算，unregistered=0） | ✅ |
+| API / 认证覆盖率 | 262 ops / 244 paths（/api 口径，全量 263/245）、**95.04%（249/262）** | `openapi.json` 实测 + `verify_auth_coverage.py`（2026-10-21 复算，unregistered=0） | ✅ |

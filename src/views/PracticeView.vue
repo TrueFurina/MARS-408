@@ -173,19 +173,20 @@ async function refreshQuestions() { await generateQuestions() }
 
 <template>
   <div class="page-section">
+    <div class="pv-eyebrow">PRACTICE</div>
     <div class="section-title">智能出题</div>
     <div class="section-desc">根据知识点自动生成练习题，答题后更新学生画像</div>
 
     <!-- L1/L2/L3 三层学情记忆薄弱点提示（低侵入联动） -->
-    <div v-if="memoryOverview?.weak_points?.length" class="memory-mini-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-size:12px;">
-      <span style="padding:3px 10px;border-radius:12px;background:var(--accent-primary-10);color:var(--accent-primary);"> 记忆薄弱点:</span>
-      <span v-for="w in memoryOverview.weak_points.slice(0, 6)" :key="w" style="padding:3px 10px;border-radius:12px;background:rgba(239,68,68,0.12);color:var(--accent-danger);">{{ w }}</span>
+    <div v-if="memoryOverview?.weak_points?.length" class="memory-mini-strip pv-strip">
+      <span class="memory-mini-chip pv-strip-label">记忆薄弱点</span>
+      <span v-for="w in memoryOverview.weak_points.slice(0, 6)" :key="w" class="memory-mini-chip">{{ w }}</span>
     </div>
 
-    <div class="mode-tabs" style="margin-bottom:14px;">
+    <div class="mode-tabs">
       <button class="mode-tab" :class="{ active: !showStepQuiz }" :aria-selected="!showStepQuiz" @click="showStepQuiz = false"><span class="tab-ic" v-html="icons.edit"></span>普通出题</button>
       <button class="mode-tab" :class="{ active: showStepQuiz }" :aria-selected="showStepQuiz" @click="showStepQuiz = true"><span class="tab-ic" v-html="icons.clipboard"></span>步骤化答题</button>
-      <router-link to="/quiz-history" class="mode-tab" style="text-decoration:none;margin-left:auto;"><span class="tab-ic" v-html="icons.chart"></span>答题历史</router-link>
+      <router-link to="/quiz-history" class="mode-tab mode-tab--link"><span class="tab-ic" v-html="icons.chart"></span>答题历史</router-link>
     </div>
 
     <StepQuiz v-if="showStepQuiz" @back="showStepQuiz = false" />
@@ -219,9 +220,9 @@ async function refreshQuestions() { await generateQuestions() }
     </div>
 
     <!-- 错误 -->
-    <div v-if="error" class="engine-error" style="margin-bottom:16px;">
+    <div v-if="error" class="engine-error pv-error">
       {{ error }}
-      <button v-if="error.includes('后端') || error.includes('失败')" class="engine-btn" style="margin-left:12px;padding:4px 12px;font-size:12px;" @click="generateQuestions">重试</button>
+      <button v-if="error.includes('后端') || error.includes('失败')" class="engine-btn pv-retry" @click="generateQuestions">重试</button>
     </div>
 
     <!-- 加载 -->
@@ -286,7 +287,7 @@ async function refreshQuestions() { await generateQuestions() }
         <div class="feedback-title"><span class="tab-ic" v-html="icons.chart"></span>答题结果</div>
         <div class="feedback-stats">
           <div class="feedback-stat">
-            <span class="feedback-stat-value" :style="{color: (feedback?.accuracy ?? 0) >= 0.6 ? 'var(--accent-success)' : 'var(--accent-danger)'}">
+            <span class="feedback-stat-value">
               {{ ((feedback?.accuracy ?? 0) * 100).toFixed(0) }}%
             </span>
             <span class="feedback-stat-label">正确率</span>
@@ -372,6 +373,8 @@ async function refreshQuestions() { await generateQuestions() }
 .feedback-stat-label { font-size:var(--text-xs); color: var(--text-muted); }
 .feedback-suggestions { font-size:var(--text-sm); color: var(--text-secondary); line-height:1.6; padding:var(--space-3); background: var(--bg-tertiary); border-radius:var(--radius-sm); }
 .feedback-profile-updated { margin-top:0.625rem; font-size:var(--text-sm); color: var(--accent-success); font-weight: var(--weight-semibold); }
+/* 页头加一行小号眉题，和诊断页、学习路径页保持同一节奏 */
+.pv-eyebrow { font-size: 11px; line-height: 1; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent-primary); font-weight: 600; margin-bottom: 10px; }
 .tab-ic {
   width: 1rem;
   height: 1rem;
@@ -384,10 +387,10 @@ async function refreshQuestions() { await generateQuestions() }
   height: 100%;
 }
 .empty-quiz-icon {
-  width: 64px;
-  height: 64px;
-  margin: 0 auto var(--space-3);
-  opacity: 0.3;
+  width: 40px;
+  height: 40px;
+  margin: 0 0 var(--space-3);
+  opacity: 0.32;
   color: var(--accent-primary);
 }
 .empty-quiz-icon :deep(svg) {
@@ -420,5 +423,18 @@ async function refreshQuestions() { await generateQuestions() }
   .quiz-actions { flex-direction: column; gap: var(--space-2); }
   .quiz-actions .engine-btn { width: 100%; }
   .memory-mini-strip { font-size: var(--text-2xs); }
+}
+/* 模式切换条：原来只靠内联 margin-bottom 撑间距，scoped 里根本没有 .mode-tabs 规则 */
+.mode-tabs { display: inline-flex; align-items: center; gap: var(--space-1); margin-bottom: 14px; padding: 3px; border-radius: 9px; border: 1px solid var(--color-border); background: var(--color-surface-2); flex-wrap: wrap; }
+.mode-tab { display: inline-flex; align-items: center; gap: 6px; padding: 0.375rem 0.875rem; border-radius: 7px; border: none; background: transparent; color: var(--color-text-2); font-size: var(--text-sm); cursor: pointer; transition: var(--transition); }
+.mode-tab:hover { color: var(--color-text); }
+.mode-tab.active { background: var(--color-accent-solid); color: var(--text-user); font-weight: 600; }
+.mode-tab--link { margin-left: auto; text-decoration: none; }
+.pv-strip { margin-bottom: 12px; }
+.pv-strip-label { color: var(--color-accent); font-weight: 600; }
+.pv-error { margin-bottom: 16px; }
+.pv-retry { margin-left: 12px; padding: 4px 12px; font-size: 12px; }
+@media (max-width: 640px) {
+  .mode-tab--link { margin-left: 0; }
 }
 </style>

@@ -168,6 +168,7 @@ onMounted(() => {
 
 <template>
   <div class="page-section">
+    <div class="dp-eyebrow">DAILY PLAN</div>
     <div class="section-title"> 每日学习计划</div>
     <div class="section-desc">为你自动生成每日学习任务，追踪学习进度</div>
 
@@ -246,9 +247,7 @@ onMounted(() => {
               <div class="task-header">
                 <span class="task-icon">{{ taskIcon(task.type) }}</span>
                 <span class="task-title">{{ task.title }}</span>
-                <span class="task-subject" :style="{ background: subjectColor(task.subject) + '20', color: subjectColor(task.subject) }">
-                  {{ task.subject }}
-                </span>
+                <span class="task-subject">{{ task.subject }}</span>
               </div>
               <div class="task-progress-row">
                 <input type="range" min="0" max="100" :value="task.progress" class="progress-slider"
@@ -319,21 +318,23 @@ onMounted(() => {
 .plan-overview {
   padding: var(--space-5); margin-bottom: var(--space-4);
   display: flex; flex-direction: column; gap: var(--space-4);
+  position: relative;
 }
-.overview-top { display: flex; align-items: center; gap: var(--space-6); }
-.progress-ring-wrap { position: relative; width: 100px; height: 100px; flex-shrink: 0; }
+.overview-top { display: flex; align-items: center; gap: var(--space-6); flex-wrap: wrap; }
+.progress-ring-wrap { position: relative; width: 88px; height: 88px; flex-shrink: 0; }
 .progress-ring { width: 100%; height: 100%; transform: scale(1); }
 .progress-text {
   position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
   text-align: center;
 }
-.rate-num { display: block; font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--accent-primary); }
-.rate-label { font-size: var(--text-2xs); color: var(--text-muted); }
+.rate-num { display: block; font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--accent-primary); line-height: 1.1; }
+.rate-label { font-size: var(--text-2xs); color: var(--color-text-3); }
 .overview-stats { flex: 1; display: flex; flex-direction: column; gap: var(--space-2); }
-.ov-stat { font-size: var(--text-base); color: var(--text-muted); }
-.ov-stat strong { font-size: 22px; color: var(--text-primary); margin-right: 6px; }
+.ov-stat { font-size: var(--text-base); color: var(--color-text-2); }
+.ov-stat strong { font-size: 22px; color: var(--color-text); margin-right: 6px; }
 .ov-stat span { font-size: var(--text-xs); }
-.overview-actions { display: flex; gap: var(--space-2); }
+/* 重置按钮原来单独占一行吊在左下，视觉上像被挤出来的；挂到卡片右上角。 */
+.overview-actions { position: absolute; top: var(--space-5); right: var(--space-5); display: flex; gap: var(--space-2); }
 .action-btn {
   padding: 7px var(--space-4); border-radius: var(--radius-sm); cursor: pointer; font-size: var(--text-sm);
   background: var(--accent-primary-10); color: var(--accent-primary);
@@ -365,7 +366,10 @@ onMounted(() => {
 .task-title { font-size: var(--text-base); font-weight: var(--weight-semibold); flex: 1; min-width: 0; }
 .task-subject {
   padding: 2px var(--space-2); border-radius: 8px; font-size: var(--text-2xs); font-weight: var(--weight-semibold);
+  background: var(--color-surface-2); color: var(--color-text-2); border: 1px solid var(--color-border);
+  white-space: nowrap;
 }
+.dp-eyebrow { font-size: 11px; line-height: 1; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent-primary); font-weight: 600; margin-bottom: 10px; }
 
 .task-progress-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
 .progress-slider {

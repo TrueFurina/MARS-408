@@ -39,7 +39,7 @@ Group=career
 WorkingDirectory=/opt/career-pilot/backend
 
 # ── 环境：密钥与运行态全在 .env（chmod 600，不入库）──
-# .env 中应包含：NETLEARN_ENV=production / HOST=127.0.0.1 / PORT=8000
+# .env 中应包含：NETLEARN_ENV=production / HOST=127.0.0.1 / PORT=8002
 #               AUTH_SECRET(>=32) / ADMIN_PASSWORD(>=16) / DEEPSEEK_API_KEY
 #               STATIC_DIR=site / HF_HUB_OFFLINE=1 / TRANSFORMERS_OFFLINE=1
 EnvironmentFile=/opt/career-pilot/backend/.env
@@ -50,7 +50,7 @@ Environment=UVICORN_WORKERS=1
 
 # ── 启动：走 main.py 入口（由 resolve_bind() 吃 HOST/PORT）──
 # 等价写法：/opt/career-pilot/venv/bin/python -m uvicorn main:app \
-#             --host 127.0.0.1 --port 8000 --workers 1
+#             --host 127.0.0.1 --port 8002 --workers 1
 ExecStart=/opt/career-pilot/venv/bin/python main.py
 
 # ── 生命周期 ──

@@ -46,7 +46,7 @@
 ## 5. 收尾待决（P1/P2）
 - ~~**P1（必须，否则留 gap）**：当前 HEAD 的 1543 collected 已比 10-09 的 1436 多 7 条 → 1389/38/1 微陈旧。收尾动作：在 de86da4 跑一次 CI 全量回归 → 用新数回填 `METRICS_CURRENT.md:81` + `AGENTS.md:11/33` + `README:83/263` → 转 ✅。该动作依赖 CI（GitHub Actions），非本地可独立完成。~~ → ✅ **已闭环（2026-10-17）**：CI 全量回归已跑（run `38938041036`，head `dc18dd2`，success，377.60s）→ **1524 passed / 38 skipped / 9 deselected / 1 xfailed / 0 failed**（1572 collected）。新数已回填 `METRICS_CURRENT.md:81` + `AGENTS.md:11/33` + `README:83/263` + `README_EN:57/190` + `证据页:38` + `submission/00+02` + `site/website/index.html` + `build_roadshow_pptx.py` + `docs/ci-backend-test-result.md`（新增 run 节）。
 - **P2（格式锁 + 数字同步）**：
-  - 认证覆盖率：SSOT 现记 **95.02%（261 端点 / 248 受保护 / 13 公开，unregistered=0）**（2026-10-20 `d8eeb3b` 起；2026-10-21 机检复核 total=261 protected=248）；旧值 94.88%（254/241/13，2026-10-17）与 94.69%（245/232/13）随端点扩张陆续作废。README/AGENTS/ShowcaseView/submission/证据页等已同步至 95.02%。
+  - 认证覆盖率：SSOT 现记 **95.04%（262 端点 / 249 受保护 / 13 公开，unregistered=0）**（2026-11-10 随 diagnostic 新增受保护路由 `/history` 重算，当前 total=262 / protected=249；原 2026-10-20 `d8eeb3b` 起记 95.02%，2026-10-21 机检旧值为 261 端点 / 248 受保护）；旧值 94.88%（254/241/13，2026-10-17）与 94.69%（245/232/13）随端点扩张陆续作废。README/AGENTS/ShowcaseView/submission/证据页等已同步至 95.04%。
   - submission 文档数 sign-off：实质数（教学 DAG 86/82、seed KG 643/639、StateGraph 11、讯飞 10）已实测为真；commit `243fd3c` 已重同步 10 份 docx，但 zero-residual-drift 正式签核待 engineer-6/PM 回执。
 
 ## 6. qa-2 权限核查结论

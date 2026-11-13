@@ -44,16 +44,34 @@
       "_note": "同上（:28/:40/:54）"
     },
     {
-      "file": "src/views/ProfileView.vue",
+      "file": "src/views/SettingsView.vue",
       "value": "#7c6af2",
-      "reason": "category-palette",
-      "_note": "TRAIT_COLORS 八维画像调色板（:48）"
+      "reason": "palette-data",
+      "_note": "ACCENTS 配色方案选择器色板（:40 violet）；色值本身作为色块展示给用户，非 CSS 样式硬编码"
     },
     {
-      "file": "src/views/ProfileView.vue",
-      "value": "#8b5cf6",
-      "reason": "category-palette",
-      "_note": "同上（:48）"
+      "file": "src/views/SettingsView.vue",
+      "value": "#3fb6a8",
+      "reason": "palette-data",
+      "_note": "同上（:41 teal）"
+    },
+    {
+      "file": "src/views/SettingsView.vue",
+      "value": "#5b9cf0",
+      "reason": "palette-data",
+      "_note": "同上（:42 blue）"
+    },
+    {
+      "file": "src/views/SettingsView.vue",
+      "value": "#e0a84a",
+      "reason": "palette-data",
+      "_note": "同上（:43 amber）"
+    },
+    {
+      "file": "src/views/SettingsView.vue",
+      "value": "#ef7fa8",
+      "reason": "palette-data",
+      "_note": "同上（:44 rose）。若该配色方案后续改用设计令牌，需删除本组 5 条豁免"
     }
   ]
 }

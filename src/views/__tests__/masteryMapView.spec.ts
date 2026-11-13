@@ -244,24 +244,27 @@ describe('MasteryMapView 四档分档 tierOf', () => {
     ])
   })
 
-  it('档位同时驱动色令牌 var(--mastery-*)（标签与配色同源，不允许各写一套）', async () => {
+  it('档位标签与 tierOf 同源；卡片不再按档位分色（2026-11 视觉去重后的新契约）', async () => {
     const w = await mountLoaded({
       mastery: [mi('s0', '零', 0), mi('s49', '四十九', 49), mi('s50', '五十', 50), mi('s75', '七十五', 75)],
     })
-    const colors = w.findAll('.tile-tier').map((e) => styleOf(e))
-    expect(colors[0]).toContain('var(--mastery-none)')
-    expect(colors[1]).toContain('var(--mastery-low)')
-    expect(colors[2]).toContain('var(--mastery-mid)')
-    expect(colors[3]).toContain('var(--mastery-high)')
+    expect(w.findAll('.tile-tier').map((e) => e.text())).toEqual([
+      '未测', '薄弱', '一般', '扎实',
+    ])
+    // 设计变更：四张卡的环已统一主色，档位标签统一 --color-text-3，
+    // 不再挂 var(--mastery-*)（否则会让人误以为环色代表档位）。
+    // 分档色令牌仍用于 KP 明细条，由本文件后续用例守护。
+    const styles = w.findAll('.tile-tier').map((e) => styleOf(e))
+    expect(styles.every((s) => !s.includes('var(--mastery-'))).toBe(true)
   })
 
-  it('梯度图例四档文案与阈值口径一致', async () => {
+  it('梯度图例四档文案与阈值口径一致（纯文字，无彩色点）', async () => {
     const w = await mountLoaded({ mastery: [mi('s1', '一', 80)] })
     const legend = w.find('.tier-legend').text()
-    expect(legend).toContain('扎实 (≥75%)')
-    expect(legend).toContain('一般 (50–74%)')
-    expect(legend).toContain('薄弱 (<50%)')
-    expect(legend).toContain('未测 (0%)')
+    expect(legend).toContain('扎实 ≥75%')
+    expect(legend).toContain('一般 50–74%')
+    expect(legend).toContain('薄弱 <50%')
+    expect(legend).toContain('未测 0%')
   })
 })
 
