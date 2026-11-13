@@ -7,8 +7,10 @@
   .\scripts\deploy-oneclick.ps1 -Files api/auth.py -NoRestart -DryRun
 
 做的事：预检免密通道 → 远端暂存并 py_compile → 备份 → 覆盖 → sha256 回读 →
-重启 mango-backend → 轮询 /api/status；任一步失败自动回滚并重启。
+重启 mango-backend → 轮询 /api/status；上传/编译/校验/重启任一步失败都会自动回滚并重启。
 前端：本地 dist 打包上传 → 校验文件数 → 备份并整体替换两处 dist。
+2026-11-13 加固：部署动作整体纳入 try/catch；重启后严格校验 degraded/llm/embedding
+（紧急跳过用 -SkipHealthGate）；-DryRun 不再触发真实重启；收尾打印备份清单供人工清理。
 #>
 param(
     [string[]]$Files = @(),
@@ -16,6 +18,7 @@ param(
     [switch]$HealthOnly,
     [switch]$NoRestart,
     [switch]$DryRun,
+    [switch]$SkipHealthGate,
     [int]$TimeoutSeconds = 60
 )
 
@@ -69,7 +72,33 @@ function Restart-Backend {
     Invoke-Ssh "sudo -n systemctl reset-failed mango-backend; sudo -n systemctl restart mango-backend" | Out-Null
     $h = Wait-Healthy
     if ($null -eq $h) { throw "重启后 /api/status 未恢复 ok（$TimeoutSeconds 秒内）" }
+    if (-not $SkipHealthGate) {
+        $issues = @()
+        $deg = @($h.degraded_reasons | Where-Object { $_ })
+        if ($deg.Count -gt 0) { $issues += ("degraded=" + ($deg -join ",")) }
+        if ("$($h.health.llm.available)" -ne "True") { $issues += "llm.available=false" }
+        if ("$($h.health.embedding.loaded)" -ne "True") { $issues += "embedding.loaded=false" }
+        if ($issues.Count -gt 0) {
+            throw ("重启后健康检查降级：{0}（多为 LLM 通道/配置问题，回滚代码不修 key；请查 /home/ubuntu/backend.log 与 LLM_CHAIN，紧急时可加 -SkipHealthGate 跳过）" -f ($issues -join "; "))
+        }
+    }
     return $h
+}
+
+function Invoke-Rollback {
+    param([object[]]$Backups, [string]$Reason)
+    Write-Warning $Reason
+    Write-Output "开始回滚…"
+    foreach ($pair in $Backups) {
+        $t = $pair[0]; $bak = $pair[1]
+        try {
+            Invoke-Ssh "if [ -f '$bak' ]; then cp -p '$bak' '$t'; fi; if [ -d '$bak' ]; then rm -rf '$t' && mv '$bak' '$t'; fi" | Out-Null
+            Write-Output "已回滚 $t"
+        } catch {
+            Write-Warning ("回滚失败：{0} -> {1}" -f $bak, $_.Exception.Message)
+        }
+    }
+    try { Invoke-Ssh "sudo -n systemctl restart mango-backend; sleep 3; curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8002/api/status" } catch { }
 }
 
 Write-Output "== 预检 =="
@@ -95,6 +124,7 @@ $uploaded = @()
 $backed   = @()
 $stage    = "/home/ubuntu/app/.deploy-stage-$Stamp"
 
+try {
 if ($Files.Count -gt 0) {
     Write-Output "== 后端文件 =="
     Invoke-Ssh "mkdir -p '$stage'" | Out-Null
@@ -158,6 +188,16 @@ if ($Frontend) {
         Write-Output ("已发布 dist：{0} 个文件（备份后缀 .bak.{1}）" -f $fileCount, $Stamp)
     }
 }
+} catch {
+    try { Invoke-Ssh "rm -rf '$stage'" | Out-Null } catch { }
+    Invoke-Rollback -Backups $backed -Reason $_.Exception.Message
+    throw "部署失败，已回滚到部署前状态：$($_.Exception.Message)"
+}
+
+if ($DryRun) {
+    Write-Output "[dry-run] 预演结束：未修改远端、未重启服务。"
+    exit 0
+}
 
 if ($NoRestart) {
     Write-Output "已按要求跳过重启（-NoRestart）。改动需手动重启后生效。"
@@ -169,21 +209,14 @@ Write-Output "  正在重启 mango-backend…"
 try {
     $h = Restart-Backend
 } catch {
-    Write-Warning $_.Exception.Message
-    Write-Output "开始回滚…"
-    foreach ($pair in $backed) {
-        $t = $pair[0]; $bak = $pair[1]
-        try {
-            Invoke-Ssh "if [ -f '$bak' ]; then cp -p '$bak' '$t'; fi; if [ -d '$bak' ]; then rm -rf '$t' && mv '$bak' '$t'; fi" | Out-Null
-            Write-Output "已回滚 $t"
-        } catch {
-            Write-Warning ("回滚失败：{0} -> {1}" -f $bak, $_.Exception.Message)
-        }
-    }
-    try { Invoke-Ssh "sudo -n systemctl restart mango-backend; sleep 3; curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8002/api/status" } catch { }
-    throw "部署失败，已回滚到部署前状态"
+    Invoke-Rollback -Backups $backed -Reason $_.Exception.Message
+    throw "部署失败，已回滚到部署前状态：$($_.Exception.Message)"
 }
 
-Write-Output ("完成：status={0} degraded={1} llm={2} embedding={3}" -f `
-    $h.status, ($h.degraded_reasons -join ","), $h.health.llm.available, $h.health.embedding.loaded)
+Write-Output ("完成：status={0} degraded={1} llm={2} embedding={3} 向量库={4}条" -f `
+    $h.status, (@($h.degraded_reasons | Where-Object { $_ }) -join ","), $h.health.llm.available, $h.health.embedding.loaded, $h.health.vector_db.collection_size)
 Write-Output ("备份时间戳：{0}" -f $Stamp)
+if ($backed.Count -gt 0) {
+    Write-Output "本次备份（确认无误后再人工清理，脚本不自动删除）："
+    foreach ($pair in $backed) { Write-Output ("  {0}" -f $pair[1]) }
+}
